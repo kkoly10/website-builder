@@ -8,31 +8,54 @@ export type IntakeData = {
   timeline: "4+ weeks" | "2-3 weeks" | "Under 14 days";
 };
 
-export function calculatePrice(data: IntakeData) {
-  let base = 0;
+export type PriceBreakdown = {
+  basePrice: number;
+  pageAddOn: number;
+  featureAddOn: number;
+  designMultiplier: number;
+  rushFee: number;
+  total: number;
+};
 
-  // Base pricing
-  if (data.websiteType === "Landing") base = 350;
-  if (data.websiteType === "Portfolio") base = 650;
-  if (data.websiteType === "Business") base = 750;
-  if (data.websiteType === "Ecommerce") base = 1200;
+export function calculatePrice(data: IntakeData): PriceBreakdown {
+  let basePrice = 0;
+  let pageAddOn = 0;
+  let featureAddOn = 0;
+  let designMultiplier = 1;
+  let rushFee = 0;
 
-  // Page add-ons
-  if (data.pages === "3-5") base += 250;
-  if (data.pages === "6-10") base += 500;
+  // Base price
+  if (data.websiteType === "Landing") basePrice = 350;
+  if (data.websiteType === "Portfolio") basePrice = 650;
+  if (data.websiteType === "Business") basePrice = 750;
+  if (data.websiteType === "Ecommerce") basePrice = 1200;
+
+  // Pages
+  if (data.pages === "3-5") pageAddOn = 250;
+  if (data.pages === "6-10") pageAddOn = 500;
 
   // Features
-  if (data.booking) base += 250;
-  if (data.payments) base += 300;
-  if (data.blog) base += 150;
+  if (data.booking) featureAddOn += 250;
+  if (data.payments) featureAddOn += 300;
+  if (data.blog) featureAddOn += 150;
 
   // Design multiplier
-  if (data.design === "Modern") base *= 1.1;
-  if (data.design === "Creative") base *= 1.25;
+  if (data.design === "Modern") designMultiplier = 1.1;
+  if (data.design === "Creative") designMultiplier = 1.25;
 
   // Rush fee
-  if (data.timeline === "2-3 weeks") base *= 1.15;
-  if (data.timeline === "Under 14 days") base *= 1.3;
+  if (data.timeline === "2-3 weeks") rushFee = 0.15;
+  if (data.timeline === "Under 14 days") rushFee = 0.3;
 
-  return Math.round(base);
+  const subtotal = (basePrice + pageAddOn + featureAddOn) * designMultiplier;
+  const total = Math.round(subtotal + subtotal * rushFee);
+
+  return {
+    basePrice,
+    pageAddOn,
+    featureAddOn,
+    designMultiplier,
+    rushFee: Math.round(subtotal * rushFee),
+    total,
+  };
 }
