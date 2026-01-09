@@ -14,48 +14,27 @@ export default function EstimatePage() {
     blog: params.get("blog") === "true",
     design: params.get("design") as any,
     timeline: params.get("timeline") as any,
-    email: params.get("email") || "",
   };
 
-  const price = calculatePrice(data);
+  const breakdown = calculatePrice(data);
 
   return (
     <main style={{ maxWidth: 800, margin: "80px auto", padding: 24 }}>
       <h1 style={{ fontSize: 36, marginBottom: 12 }}>
-        Your Project Estimate
+        Project Estimate
       </h1>
 
       <p style={{ fontSize: 18, color: "#555" }}>
-        Based on your selections, your estimated investment is:
+        Here is your estimated investment:
       </p>
 
-      <h2 style={{ fontSize: 52, margin: "28px 0" }}>
-        ${price}
+      <h2 style={{ fontSize: 48, margin: "24px 0" }}>
+        ${breakdown.total}
       </h2>
 
-      <p style={{ color: "#666", maxWidth: 600 }}>
-        This estimate reflects your project scope and timeline.
-        Final pricing may adjust slightly after review.
-      </p>
-
-      {data.email && (
-        <p style={{ marginTop: 16, color: "#444" }}>
-          Estimate prepared for <strong>{data.email}</strong>
-        </p>
-      )}
-
-      <button
-        style={{
-          marginTop: 36,
-          padding: "14px 22px",
-          background: "#000",
-          color: "#fff",
-          borderRadius: 10,
-          cursor: "pointer",
-        }}
-      >
-        Book a Call
-      </button>
+      <pre style={{ background: "#f7f7f7", padding: 16, borderRadius: 8 }}>
+{JSON.stringify(breakdown, null, 2)}
+      </pre>
     </main>
   );
 }
