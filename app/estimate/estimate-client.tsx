@@ -32,81 +32,79 @@ export default function EstimateClient() {
 
   return (
     <main style={{ maxWidth: 900, margin: "80px auto", padding: 24 }}>
-      <h1 style={{ fontSize: 38, marginBottom: 10 }}>
-        Your Website Estimate
-      </h1>
+      <h1 style={{ fontSize: 38, marginBottom: 10 }}>Your Website Estimate</h1>
 
       <p style={{ fontSize: 18, color: "#555", marginBottom: 32 }}>
         Based on your selections, here’s a transparent breakdown of your project.
       </p>
 
-      {/* PRICE BREAKDOWN */}
       <div
         style={{
           border: "1px solid #e5e7eb",
           borderRadius: 12,
           padding: 24,
-          marginBottom: 32,
+          marginBottom: 24,
         }}
       >
         <h3 style={{ marginBottom: 16 }}>Project Cost Breakdown</h3>
 
         <Row label="Base website" value={breakdown.basePrice} />
-        {breakdown.pageAddOn > 0 && (
-          <Row label="Additional pages" value={breakdown.pageAddOn} />
-        )}
+        {breakdown.pageAddOn > 0 && <Row label="Additional pages" value={breakdown.pageAddOn} />}
         {breakdown.featureAddOn > 0 && (
           <Row label="Features & functionality" value={breakdown.featureAddOn} />
         )}
         {breakdown.designMultiplier > 1 && (
-          <Row
-            label="Design complexity"
-            value={`${breakdown.designMultiplier}×`}
-            isText
-          />
+          <Row label="Design complexity" value={`${breakdown.designMultiplier}×`} isText />
         )}
-        {breakdown.rushFeeAmount > 0 && (
-          <Row label="Rush timeline" value={breakdown.rushFeeAmount} />
-        )}
+        {breakdown.rushFeeAmount > 0 && <Row label="Rush timeline" value={breakdown.rushFeeAmount} />}
 
         <hr style={{ margin: "20px 0" }} />
 
-        <Row
-          label="Total Estimated Investment"
-          value={breakdown.total}
-          bold
-          large
-        />
+        <Row label="Total Estimated Investment" value={breakdown.total} bold large />
       </div>
 
-      {/* EMAIL CAPTURE */}
-      {!locked ? (
-        <div
+      {/* Conversion-saver block */}
+      <div
+        style={{
+          border: "1px solid #e5e7eb",
+          borderRadius: 12,
+          padding: 18,
+          marginBottom: 24,
+          background: "#fafafa",
+        }}
+      >
+        <div style={{ fontWeight: 600, marginBottom: 6 }}>
+          Not ready for a custom build budget?
+        </div>
+        <div style={{ color: "#555", marginBottom: 12 }}>
+          Try our AI-Generated Website — faster and much cheaper. You can upgrade anytime.
+        </div>
+
+        <a
+          href="/ai"
           style={{
-            border: "1px solid #e5e7eb",
-            borderRadius: 12,
-            padding: 24,
+            display: "inline-block",
+            padding: "10px 14px",
+            background: "#000",
+            color: "#fff",
+            borderRadius: 10,
+            textDecoration: "none",
           }}
         >
-          <h3 style={{ marginBottom: 10 }}>
-            Get this estimate sent to your email
-          </h3>
+          Try AI Website →
+        </a>
+      </div>
 
-          <p style={{ color: "#555", marginBottom: 16 }}>
-            We’ll save your estimate and send next steps.
-          </p>
+      {!locked ? (
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 24 }}>
+          <h3 style={{ marginBottom: 10 }}>Get this estimate sent to your email</h3>
 
           <input
             type="email"
             placeholder="you@company.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            style={{
-              width: "100%",
-              padding: 12,
-              fontSize: 16,
-              marginBottom: 16,
-            }}
+            style={{ width: "100%", padding: 12, fontSize: 16, marginBottom: 16 }}
           />
 
           <button
