@@ -13,7 +13,7 @@ export type PriceBreakdown = {
   pageAddOn: number;
   featureAddOn: number;
   designMultiplier: number;
-  rushFee: number;
+  rushFeeAmount: number;
   total: number;
 };
 
@@ -22,7 +22,7 @@ export function calculatePrice(data: IntakeData): PriceBreakdown {
   let pageAddOn = 0;
   let featureAddOn = 0;
   let designMultiplier = 1;
-  let rushFee = 0;
+  let rushPercent = 0;
 
   // Base price
   if (data.websiteType === "Landing") basePrice = 350;
@@ -43,19 +43,20 @@ export function calculatePrice(data: IntakeData): PriceBreakdown {
   if (data.design === "Modern") designMultiplier = 1.1;
   if (data.design === "Creative") designMultiplier = 1.25;
 
-  // Rush fee
-  if (data.timeline === "2-3 weeks") rushFee = 0.15;
-  if (data.timeline === "Under 14 days") rushFee = 0.3;
+  // Rush percentage
+  if (data.timeline === "2-3 weeks") rushPercent = 0.15;
+  if (data.timeline === "Under 14 days") rushPercent = 0.3;
 
   const subtotal = (basePrice + pageAddOn + featureAddOn) * designMultiplier;
-  const total = Math.round(subtotal + subtotal * rushFee);
+  const rushFeeAmount = Math.round(subtotal * rushPercent);
+  const total = Math.round(subtotal + rushFeeAmount);
 
   return {
     basePrice,
     pageAddOn,
     featureAddOn,
     designMultiplier,
-    rushFee: Math.round(subtotal * rushFee),
+    rushFeeAmount,
     total,
   };
 }
