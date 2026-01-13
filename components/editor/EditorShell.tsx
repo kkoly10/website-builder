@@ -6,7 +6,7 @@ import {
   EditorSite,
   PageType,
   Section,
-} from "@/lib/editorState";
+} from "../../lib/editorState";
 import Sidebar from "./Sidebar";
 import Preview from "./Preview";
 
