@@ -1,6 +1,6 @@
 "use client";
 
-import { PageType, Section } from "@/lib/editorState";
+import { PageType, Section } from "../../lib/editorState";
 import { getEditableFields } from "./sectionSchemas";
 
 type Props = {
