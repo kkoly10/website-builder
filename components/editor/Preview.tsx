@@ -1,6 +1,6 @@
 "use client";
 
-import { Page } from "@/lib/editorState";
+import { Page } from "../../lib/editorState";
 
 type Props = {
   page: Page;
