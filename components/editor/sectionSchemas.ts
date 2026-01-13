@@ -1,4 +1,4 @@
-import { Section } from "@/lib/editorState";
+import { Section } from "../../lib/editorState";
 
 export function getEditableFields(section: Section) {
   switch (section.type) {
