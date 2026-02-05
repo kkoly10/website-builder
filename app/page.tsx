@@ -1,80 +1,34 @@
-"use client";
-
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { calculatePrice, IntakeData } from "@/lib/pricing";
 
-/* ---------- SAFE PARSERS ---------- */
+export const dynamic = "force-dynamic";
 
-function parseWebsiteType(value: string | null): IntakeData["websiteType"] {
-  if (value === "Ecommerce") return "Ecommerce";
-  if (value === "Portfolio") return "Portfolio";
-  if (value === "Landing") return "Landing";
-  return "Business";
-}
-
-function parsePages(value: string | null): IntakeData["pages"] {
-  if (value === "1") return "1";
-  if (value === "6-10") return "6-10";
-  return "3-5";
-}
-
-function parseDesign(value: string | null): IntakeData["design"] {
-  if (value === "Classic") return "Classic";
-  if (value === "Creative") return "Creative";
-  return "Modern";
-}
-
-function parseTimeline(value: string | null): IntakeData["timeline"] {
-  if (value === "2-3 weeks") return "2-3 weeks";
-  if (value === "Under 14 days") return "Under 14 days";
-  return "4+ weeks";
-}
-
-/* ---------- PAGE ---------- */
-
-export default function EstimatePage() {
-  const params = useSearchParams();
-
-  const data: IntakeData = {
-    websiteType: parseWebsiteType(params.get("websiteType")),
-    pages: parsePages(params.get("pages")),
-    booking: params.get("booking") === "true",
-    payments: params.get("payments") === "true",
-    blog: params.get("blog") === "true",
-    design: parseDesign(params.get("design")),
-    timeline: parseTimeline(params.get("timeline")),
-  };
-
-  const price = calculatePrice(data);
-
+export default function Home() {
   return (
-    <main style={{ maxWidth: 1100, margin: "80px auto", padding: 24 }}>
-      <h1 style={{ fontSize: 36, marginBottom: 12 }}>
-        Your Project Estimate
+    <main style={{ maxWidth: 900, margin: "80px auto", padding: 24 }}>
+      <h1 style={{ fontSize: 42, fontWeight: 600, marginBottom: 12 }}>
+        Website Project Builder
       </h1>
 
-      <p style={{ color: "#555", marginBottom: 32 }}>
-        Based on your answers, here is a recommended pricing range and build
-        structure.
+      <p style={{ fontSize: 18, lineHeight: 1.6, color: "#444" }}>
+        Get a clear, transparent website quote in minutes — no calls required.
+        Choose a build option that fits your goals and budget.
       </p>
 
-      <pre
+      <Link
+        href="/build"
         style={{
-          background: "#f7f7f7",
-          padding: 20,
-          borderRadius: 12,
-          fontSize: 14,
+          display: "inline-block",
+          marginTop: 32,
+          padding: "14px 22px",
+          background: "#000",
+          color: "#fff",
+          borderRadius: 10,
+          textDecoration: "none",
+          fontSize: 16,
         }}
       >
-        {JSON.stringify(price, null, 2)}
-      </pre>
-
-      <div style={{ marginTop: 32 }}>
-        <Link href="/" style={{ color: "#666", textDecoration: "none" }}>
-          ← Back to home
-        </Link>
-      </div>
+        Start Your Project →
+      </Link>
     </main>
   );
 }
