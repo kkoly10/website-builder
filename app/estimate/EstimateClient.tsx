@@ -1,226 +1,211 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { calculatePrice, IntakeData } from "@/lib/pricing";
-
-/* -------- SAFE PARSERS -------- */
-
-function parseWebsiteType(v: string | null): IntakeData["websiteType"] {
-  if (v === "Ecommerce") return "Ecommerce";
-  if (v === "Portfolio") return "Portfolio";
-  if (v === "Landing") return "Landing";
-  return "Business";
-}
-
-function parsePages(v: string | null): IntakeData["pages"] {
-  if (v === "1") return "1";
-  if (v === "6-10") return "6-10";
-  return "3-5";
-}
-
-function parseDesign(v: string | null): IntakeData["design"] {
-  if (v === "Classic") return "Classic";
-  if (v === "Creative") return "Creative";
-  return "Modern";
-}
-
-function parseTimeline(v: string | null): IntakeData["timeline"] {
-  if (v === "Under 14 days") return "Under 14 days";
-  if (v === "2-3 weeks") return "2-3 weeks";
-  return "4+ weeks";
-}
-
-/* -------- PAGE -------- */
 
 export default function EstimateClient() {
-  const params = useSearchParams();
-
-  const data: IntakeData = {
-    websiteType: parseWebsiteType(params.get("websiteType")),
-    pages: parsePages(params.get("pages")),
-    booking: params.get("booking") === "true",
-    payments: params.get("payments") === "true",
-    blog: params.get("blog") === "true",
-    design: parseDesign(params.get("design")),
-    timeline: parseTimeline(params.get("timeline")),
-  };
-
-  const price = calculatePrice(data);
-
-  const recommended =
-    price.total <= 600 ? "standard" :
-    price.total <= 1000 ? "professional" :
-    "advanced";
-
   return (
-    <main style={{ maxWidth: 1200, margin: "80px auto", padding: 24 }}>
+    <main style={container}>
       {/* HEADER */}
-      <section style={{ marginBottom: 48 }}>
-        <h1 style={{ fontSize: 40, marginBottom: 12 }}>
-          Your Website Estimate
-        </h1>
-        <p style={{ fontSize: 18, color: "#555", maxWidth: 720 }}>
-          Based on your project details, here’s a clear breakdown of your
-          recommended build options. Final pricing depends on selected scope.
+      <header style={{ marginBottom: 48 }}>
+        <h1 style={title}>Your Website Options</h1>
+        <p style={subtitle}>
+          Based on your answers, here are the best ways we can build your website.
+          Choose the option that fits your goals and budget.
         </p>
-      </section>
+      </header>
 
-      {/* TIERS */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-          gap: 32,
-        }}
-      >
-        <Tier
+      {/* PRICING TIERS */}
+      <section style={grid}>
+        {/* STANDARD */}
+        <PricingCard
           title="Standard Website"
           price="$450 – $600"
-          highlight={recommended === "standard"}
           badge="Best for small businesses"
           features={[
-            "Up to 3–6 pages",
+            "3–6 pages",
             "Mobile-responsive design",
-            "Contact or booking form",
+            "Contact form or booking form",
             "Basic SEO structure",
-            "2 revisions (50% & 90%)",
-            "Email notifications + analytics",
+            "Email notifications",
           ]}
-          cta="/build"
-          ctaText="Proceed with Standard →"
+          revisions="2 revisions (50% & 90%)"
+          automation="No automation"
+          cta="Continue with Standard →"
         />
 
-        <Tier
+        {/* PROFESSIONAL */}
+        <PricingCard
           title="Professional Website"
           price="$750 – $1,000"
-          highlight={recommended === "professional"}
           badge="⭐ Most Popular"
+          highlight
           features={[
             "Up to 8 pages",
-            "Enhanced layout & structure",
             "Booking + contact forms",
             "SEO titles & meta setup",
-            "4 total revisions",
-            "Email automation included",
+            "Email automation",
+            "Priority build queue",
           ]}
-          cta="/build"
-          ctaText="Choose Professional →"
+          revisions="4 revisions"
+          automation="Email automation included"
+          cta="Continue with Professional →"
         />
 
-        <Tier
-          title="Advanced / Growth"
+        {/* ADVANCED */}
+        <PricingCard
+          title="Advanced / Growth Website"
           price="$1,500+"
-          highlight={recommended === "advanced"}
-          badge="Growth-focused"
+          badge="For scaling businesses"
           features={[
             "10+ pages",
-            "Custom layouts & features",
-            "SEO + marketing setup",
-            "Advanced integrations",
-            "Unlimited revisions (within scope)",
-            "Optional SMS automation add-on",
+            "Advanced SEO & analytics",
+            "Integrations & APIs",
+            "Marketing setup",
+            "Upgrade paths supported",
           ]}
-          cta="/build"
-          ctaText="Request Advanced Build →"
+          revisions="Unlimited revisions (within scope)"
+          automation="Email automation + optional SMS add-on"
+          cta="Request Advanced Build →"
         />
-      </div>
+      </section>
 
-      {/* WHY PRICE */}
-      <section
-        style={{
-          marginTop: 64,
-          padding: 32,
-          background: "#f9f9f9",
-          borderRadius: 16,
-        }}
-      >
-        <h2 style={{ marginBottom: 12 }}>How we calculated this</h2>
-        <ul style={{ lineHeight: 1.8, color: "#444", paddingLeft: 18 }}>
-          <li>• Page count and feature requirements</li>
-          <li>• Design complexity</li>
-          <li>• Timeline urgency</li>
-        </ul>
-        <p style={{ marginTop: 12, fontSize: 14, color: "#666" }}>
-          Third-party tools, APIs, and messaging services may require separate
-          accounts and usage fees.
+      {/* DISCLAIMER */}
+      <section style={disclaimer}>
+        <p>
+          Third-party tools, APIs, analytics platforms, and SMS services may
+          require separate accounts and usage fees. SMS automation is available
+          only as an optional add-on for Advanced projects.
         </p>
       </section>
 
-      <div style={{ marginTop: 48 }}>
+      <div style={{ marginTop: 40 }}>
         <Link href="/" style={{ color: "#666", textDecoration: "none" }}>
-          ← Back to homepage
+          ← Back to home
         </Link>
       </div>
     </main>
   );
 }
 
-/* -------- COMPONENT -------- */
+/* ---------- COMPONENTS ---------- */
 
-function Tier({
+function PricingCard({
   title,
   price,
   features,
+  revisions,
+  automation,
   cta,
-  ctaText,
   badge,
   highlight,
 }: any) {
   return (
     <div
       style={{
+        ...card,
         border: highlight ? "2px solid #000" : "1px solid #e5e5e5",
-        borderRadius: 18,
-        padding: 28,
-        background: "#fff",
-        position: "relative",
       }}
     >
-      {badge && (
-        <div
-          style={{
-            position: "absolute",
-            top: -14,
-            left: 20,
-            background: "#000",
-            color: "#fff",
-            padding: "6px 12px",
-            borderRadius: 999,
-            fontSize: 12,
-            fontWeight: 600,
-          }}
-        >
-          {badge}
-        </div>
-      )}
+      {badge && <div style={badgeStyle}>{badge}</div>}
 
-      <h3 style={{ marginBottom: 8 }}>{title}</h3>
-      <div style={{ fontSize: 26, fontWeight: 700, marginBottom: 16 }}>
-        {price}
-      </div>
+      <h2 style={{ marginBottom: 8 }}>{title}</h2>
+      <div style={priceStyle}>{price}</div>
 
-      <ul style={{ lineHeight: 1.8, paddingLeft: 18 }}>
+      <ul style={list}>
         {features.map((f: string) => (
-          <li key={f}>{f}</li>
+          <li key={f}>✔ {f}</li>
         ))}
       </ul>
 
-      <Link
-        href={cta}
-        style={{
-          display: "inline-block",
-          marginTop: 20,
-          padding: "14px 22px",
-          background: "#000",
-          color: "#fff",
-          borderRadius: 12,
-          textDecoration: "none",
-          fontWeight: 600,
-        }}
-      >
-        {ctaText}
-      </Link>
+      <p style={meta}>
+        <strong>Revisions:</strong> {revisions}
+      </p>
+      <p style={meta}>
+        <strong>Automation:</strong> {automation}
+      </p>
+
+      <button style={primaryBtn}>{cta}</button>
     </div>
   );
 }
+
+/* ---------- STYLES ---------- */
+
+const container = {
+  maxWidth: 1200,
+  margin: "0 auto",
+  padding: "80px 24px",
+};
+
+const title = {
+  fontSize: 40,
+  fontWeight: 700,
+  marginBottom: 12,
+};
+
+const subtitle = {
+  fontSize: 18,
+  color: "#555",
+  maxWidth: 720,
+};
+
+const grid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+  gap: 32,
+};
+
+const card = {
+  background: "#fff",
+  borderRadius: 20,
+  padding: 32,
+};
+
+const badgeStyle = {
+  display: "inline-block",
+  background: "#000",
+  color: "#fff",
+  padding: "4px 10px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 600,
+  marginBottom: 12,
+};
+
+const priceStyle = {
+  fontSize: 28,
+  fontWeight: 700,
+  marginBottom: 16,
+};
+
+const list = {
+  lineHeight: 1.8,
+  paddingLeft: 0,
+  listStyle: "none",
+};
+
+const meta = {
+  fontSize: 14,
+  color: "#555",
+  marginTop: 12,
+};
+
+const primaryBtn = {
+  marginTop: 20,
+  padding: "14px 22px",
+  background: "#000",
+  color: "#fff",
+  borderRadius: 12,
+  border: "none",
+  fontWeight: 600,
+  cursor: "pointer",
+};
+
+const disclaimer = {
+  marginTop: 48,
+  fontSize: 14,
+  color: "#555",
+  background: "#f9f9f9",
+  padding: 20,
+  borderRadius: 12,
+};
