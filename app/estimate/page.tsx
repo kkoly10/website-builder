@@ -13,10 +13,11 @@ export default function EstimatePage() {
 
 function Loading() {
   return (
-    <main style={{ maxWidth: 800, margin: "100px auto", padding: 24 }}>
-      <h2>Calculating your estimate…</h2>
+    <main style={{ maxWidth: 900, margin: "120px auto", padding: 24 }}>
+      <h2 style={{ fontSize: 28 }}>Preparing your estimate…</h2>
       <p style={{ color: "#666" }}>
-        Please wait while we prepare your project options.
+        We’re reviewing your answers and matching you with the right build
+        option.
       </p>
     </main>
   );
