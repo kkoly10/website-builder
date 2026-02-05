@@ -37,175 +37,173 @@ export default function BuildPage() {
   }
 
   return (
-    <main style={{ maxWidth: 900, margin: "80px auto", padding: 24 }}>
-      <h1 style={{ fontSize: 36, marginBottom: 12 }}>
-        Custom Website Project
-      </h1>
+    <main style={container}>
+      <header style={{ marginBottom: 40 }}>
+        <h1 style={title}>Custom Website Project</h1>
+        <p style={subtitle}>
+          Step {step} of 4 — answer a few questions so we can recommend the best
+          build option for your needs.
+        </p>
+      </header>
 
-      <p style={{ color: "#555", marginBottom: 32 }}>
-        Step {step} of 4 — help us understand your project so we can recommend the
-        right build.
-      </p>
+      <section style={card}>
+        {/* STEP 1 */}
+        {step === 1 && (
+          <>
+            <h2 style={sectionTitle}>Project Scope</h2>
 
-      {/* STEP 1 */}
-      {step === 1 && (
-        <>
-          <h3>Project Scope</h3>
+            <Field label="Website type">
+              <select
+                value={form.websiteType}
+                onChange={(e) =>
+                  setForm({ ...form, websiteType: e.target.value })
+                }
+              >
+                <option>Business</option>
+                <option>Portfolio</option>
+                <option>Landing</option>
+                <option>Ecommerce</option>
+              </select>
+            </Field>
 
-          <label>Website type</label>
-          <select
-            value={form.websiteType}
-            onChange={(e) =>
-              setForm({ ...form, websiteType: e.target.value })
-            }
-          >
-            <option>Business</option>
-            <option>Portfolio</option>
-            <option>Landing</option>
-            <option>Ecommerce</option>
-          </select>
+            <Field label="Estimated number of pages">
+              <select
+                value={form.pages}
+                onChange={(e) => setForm({ ...form, pages: e.target.value })}
+              >
+                <option value="1">1</option>
+                <option value="3-5">3–5</option>
+                <option value="6-10">6–10</option>
+              </select>
+            </Field>
 
-          <label style={{ marginTop: 12 }}>Estimated pages</label>
-          <select
-            value={form.pages}
-            onChange={(e) => setForm({ ...form, pages: e.target.value })}
-          >
-            <option value="1">1</option>
-            <option value="3-5">3–5</option>
-            <option value="6-10">6–10</option>
-          </select>
+            <Field label="Key features">
+              <Checkbox
+                label="Booking / appointments"
+                checked={form.booking}
+                onChange={(v) => setForm({ ...form, booking: v })}
+              />
+              <Checkbox
+                label="Payments / checkout"
+                checked={form.payments}
+                onChange={(v) => setForm({ ...form, payments: v })}
+              />
+              <Checkbox
+                label="Blog / articles"
+                checked={form.blog}
+                onChange={(v) => setForm({ ...form, blog: v })}
+              />
+            </Field>
+          </>
+        )}
 
-          <label style={{ marginTop: 12 }}>
-            <input
-              type="checkbox"
-              checked={form.booking}
-              onChange={(e) =>
-                setForm({ ...form, booking: e.target.checked })
-              }
-            />{" "}
-            Booking / appointments
-          </label>
+        {/* STEP 2 */}
+        {step === 2 && (
+          <>
+            <h2 style={sectionTitle}>Design & Timeline</h2>
 
-          <label>
-            <input
-              type="checkbox"
-              checked={form.payments}
-              onChange={(e) =>
-                setForm({ ...form, payments: e.target.checked })
-              }
-            />{" "}
-            Payments / checkout
-          </label>
+            <Field label="Design preference">
+              <select
+                value={form.design}
+                onChange={(e) => setForm({ ...form, design: e.target.value })}
+              >
+                <option>Modern</option>
+                <option>Classic</option>
+                <option>Creative</option>
+              </select>
+            </Field>
 
-          <label>
-            <input
-              type="checkbox"
-              checked={form.blog}
-              onChange={(e) =>
-                setForm({ ...form, blog: e.target.checked })
-              }
-            />{" "}
-            Blog / articles
-          </label>
-        </>
-      )}
+            <Field label="Desired timeline">
+              <select
+                value={form.timeline}
+                onChange={(e) =>
+                  setForm({ ...form, timeline: e.target.value })
+                }
+              >
+                <option>2-3 weeks</option>
+                <option>4+ weeks</option>
+                <option>Under 14 days</option>
+              </select>
+            </Field>
+          </>
+        )}
 
-      {/* STEP 2 */}
-      {step === 2 && (
-        <>
-          <h3>Design & Timeline</h3>
+        {/* STEP 3 */}
+        {step === 3 && (
+          <>
+            <h2 style={sectionTitle}>Project Readiness</h2>
 
-          <label>Design preference</label>
-          <select
-            value={form.design}
-            onChange={(e) => setForm({ ...form, design: e.target.value })}
-          >
-            <option>Modern</option>
-            <option>Classic</option>
-            <option>Creative</option>
-          </select>
+            <Field label="Reference website (optional)">
+              <input
+                placeholder="https://example.com"
+                value={form.referenceWebsite}
+                onChange={(e) =>
+                  setForm({ ...form, referenceWebsite: e.target.value })
+                }
+              />
+            </Field>
 
-          <label style={{ marginTop: 12 }}>Timeline</label>
-          <select
-            value={form.timeline}
-            onChange={(e) => setForm({ ...form, timeline: e.target.value })}
-          >
-            <option>2-3 weeks</option>
-            <option>4+ weeks</option>
-            <option>Under 14 days</option>
-          </select>
-        </>
-      )}
+            <Field label="Do you have a logo?">
+              <select
+                value={form.hasLogo}
+                onChange={(e) =>
+                  setForm({ ...form, hasLogo: e.target.value })
+                }
+              >
+                <option>Yes</option>
+                <option>No</option>
+              </select>
+            </Field>
 
-      {/* STEP 3 */}
-      {step === 3 && (
-        <>
-          <h3>Project Readiness</h3>
+            <Field label="Do you have website text & images ready?">
+              <select
+                value={form.hasContent}
+                onChange={(e) =>
+                  setForm({ ...form, hasContent: e.target.value })
+                }
+              >
+                <option>Yes</option>
+                <option>No (I’ll need help)</option>
+              </select>
+            </Field>
 
-          <label>Reference website (optional)</label>
-          <input
-            placeholder="https://example.com"
-            value={form.referenceWebsite}
-            onChange={(e) =>
-              setForm({ ...form, referenceWebsite: e.target.value })
-            }
-          />
+            <Field label="Anything else we should know? (optional)">
+              <textarea
+                rows={4}
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              />
+            </Field>
+          </>
+        )}
 
-          <label style={{ marginTop: 12 }}>Do you have a logo?</label>
-          <select
-            value={form.hasLogo}
-            onChange={(e) => setForm({ ...form, hasLogo: e.target.value })}
-          >
-            <option>Yes</option>
-            <option>No</option>
-          </select>
+        {/* STEP 4 */}
+        {step === 4 && (
+          <>
+            <h2 style={sectionTitle}>Review & Continue</h2>
+            <p style={{ color: "#555" }}>
+              We’ll now generate clear pricing options based on your answers.
+            </p>
+          </>
+        )}
+      </section>
 
-          <label style={{ marginTop: 12 }}>
-            Do you have website text & images ready?
-          </label>
-          <select
-            value={form.hasContent}
-            onChange={(e) =>
-              setForm({ ...form, hasContent: e.target.value })
-            }
-          >
-            <option>Yes</option>
-            <option>No (I need help)</option>
-          </select>
-
-          <label style={{ marginTop: 12 }}>Notes (optional)</label>
-          <textarea
-            rows={4}
-            value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })}
-          />
-        </>
-      )}
-
-      {/* STEP 4 */}
-      {step === 4 && (
-        <>
-          <h3>Review & Continue</h3>
-          <p style={{ color: "#555" }}>
-            We’ll now generate clear pricing options based on your answers.
-          </p>
-        </>
-      )}
-
-      <div style={{ marginTop: 32 }}>
+      {/* NAV */}
+      <div style={nav}>
         {step > 1 && (
-          <button onClick={back} style={{ marginRight: 12 }}>
+          <button onClick={back} style={secondaryBtn}>
             Back
           </button>
         )}
 
-        {step < 4 && <button onClick={next}>Next</button>}
+        {step < 4 && (
+          <button onClick={next} style={primaryBtn}>
+            Next →
+          </button>
+        )}
 
         {step === 4 && (
-          <button
-            onClick={submit}
-            style={{ background: "#000", color: "#fff" }}
-          >
+          <button onClick={submit} style={primaryBtn}>
             View Pricing →
           </button>
         )}
@@ -213,3 +211,87 @@ export default function BuildPage() {
     </main>
   );
 }
+
+/* ---------- UI HELPERS ---------- */
+
+function Field({ label, children }: any) {
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <label style={{ fontWeight: 600, marginBottom: 6, display: "block" }}>
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function Checkbox({ label, checked, onChange }: any) {
+  return (
+    <label style={{ display: "block", marginBottom: 8 }}>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        style={{ marginRight: 8 }}
+      />
+      {label}
+    </label>
+  );
+}
+
+/* ---------- STYLES ---------- */
+
+const container = {
+  maxWidth: 900,
+  margin: "0 auto",
+  padding: "80px 24px",
+};
+
+const title = {
+  fontSize: 36,
+  fontWeight: 700,
+  marginBottom: 8,
+};
+
+const subtitle = {
+  color: "#555",
+  fontSize: 16,
+};
+
+const card = {
+  background: "#fff",
+  borderRadius: 20,
+  padding: 32,
+  border: "1px solid #e5e5e5",
+};
+
+const sectionTitle = {
+  fontSize: 22,
+  marginBottom: 20,
+};
+
+const nav = {
+  marginTop: 32,
+  display: "flex",
+  gap: 12,
+};
+
+const primaryBtn = {
+  padding: "14px 26px",
+  background: "#000",
+  color: "#fff",
+  borderRadius: 12,
+  border: "none",
+  fontWeight: 600,
+  cursor: "pointer",
+};
+
+const secondaryBtn = {
+  padding: "14px 26px",
+  background: "#fff",
+  color: "#000",
+  borderRadius: 12,
+  border: "1px solid #ddd",
+  fontWeight: 600,
+  cursor: "pointer",
+};
