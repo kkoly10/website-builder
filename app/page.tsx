@@ -1,198 +1,80 @@
-import Link from "next/link";
+"use client";
 
-export default function Home() {
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { calculatePrice, IntakeData } from "@/lib/pricing";
+
+/* ---------- SAFE PARSERS ---------- */
+
+function parseWebsiteType(value: string | null): IntakeData["websiteType"] {
+  if (value === "Ecommerce") return "Ecommerce";
+  if (value === "Portfolio") return "Portfolio";
+  if (value === "Landing") return "Landing";
+  return "Business";
+}
+
+function parsePages(value: string | null): IntakeData["pages"] {
+  if (value === "1") return "1";
+  if (value === "6-10") return "6-10";
+  return "3-5";
+}
+
+function parseDesign(value: string | null): IntakeData["design"] {
+  if (value === "Classic") return "Classic";
+  if (value === "Creative") return "Creative";
+  return "Modern";
+}
+
+function parseTimeline(value: string | null): IntakeData["timeline"] {
+  if (value === "2-3 weeks") return "2-3 weeks";
+  if (value === "Under 14 days") return "Under 14 days";
+  return "4+ weeks";
+}
+
+/* ---------- PAGE ---------- */
+
+export default function EstimatePage() {
+  const params = useSearchParams();
+
+  const data: IntakeData = {
+    websiteType: parseWebsiteType(params.get("websiteType")),
+    pages: parsePages(params.get("pages")),
+    booking: params.get("booking") === "true",
+    payments: params.get("payments") === "true",
+    blog: params.get("blog") === "true",
+    design: parseDesign(params.get("design")),
+    timeline: parseTimeline(params.get("timeline")),
+  };
+
+  const price = calculatePrice(data);
+
   return (
     <main style={{ maxWidth: 1100, margin: "80px auto", padding: 24 }}>
-      {/* HERO */}
-      <section style={{ marginBottom: 80 }}>
-        <h1
-          style={{
-            fontSize: 48,
-            fontWeight: 700,
-            letterSpacing: -0.8,
-            marginBottom: 16,
-          }}
-        >
-          Professional Websites, Built With a Clear Process
-        </h1>
+      <h1 style={{ fontSize: 36, marginBottom: 12 }}>
+        Your Project Estimate
+      </h1>
 
-        <p
-          style={{
-            fontSize: 20,
-            lineHeight: 1.6,
-            color: "#444",
-            maxWidth: 720,
-          }}
-        >
-          We design and build modern websites for businesses using a guided
-          process with transparent pricing, milestones, and revisions — so you
-          always know what to expect.
-        </p>
+      <p style={{ color: "#555", marginBottom: 32 }}>
+        Based on your answers, here is a recommended pricing range and build
+        structure.
+      </p>
 
-        <div style={{ marginTop: 32, display: "flex", gap: 16, flexWrap: "wrap" }}>
-          <Link
-            href="/build"
-            style={{
-              padding: "14px 22px",
-              background: "#000",
-              color: "#fff",
-              borderRadius: 12,
-              textDecoration: "none",
-              fontSize: 16,
-              fontWeight: 600,
-            }}
-          >
-            Start Your Project →
-          </Link>
-
-          <a
-            href="#how-it-works"
-            style={{
-              padding: "14px 22px",
-              border: "1px solid #ddd",
-              borderRadius: 12,
-              textDecoration: "none",
-              fontSize: 16,
-              fontWeight: 600,
-              color: "#000",
-            }}
-          >
-            How It Works
-          </a>
-        </div>
-      </section>
-
-      {/* TRUST / VALUE */}
-      <section style={{ marginBottom: 80 }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: 32,
-          }}
-        >
-          {[
-            {
-              title: "Clear Pricing",
-              desc: "Answer a few questions and receive an estimate based on your actual needs — not guesswork.",
-            },
-            {
-              title: "Milestone-Based Work",
-              desc: "Projects are broken into stages with approvals and payments tied to progress.",
-            },
-            {
-              title: "Revision Control",
-              desc: "Defined revision rounds keep projects focused, efficient, and on schedule.",
-            },
-          ].map((item) => (
-            <div
-              key={item.title}
-              style={{
-                border: "1px solid #eee",
-                borderRadius: 16,
-                padding: 24,
-                background: "#fff",
-              }}
-            >
-              <h3 style={{ marginTop: 0, fontSize: 18 }}>{item.title}</h3>
-              <p style={{ color: "#555", lineHeight: 1.6 }}>{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* HOW IT WORKS */}
-      <section id="how-it-works" style={{ marginBottom: 80 }}>
-        <h2 style={{ fontSize: 32, marginBottom: 24 }}>
-          How the Process Works
-        </h2>
-
-        <ol
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: 32,
-            paddingLeft: 0,
-            listStyle: "none",
-          }}
-        >
-          {[
-            {
-              step: "1",
-              title: "Answer Guided Questions",
-              desc: "Tell us what you’re building, how many pages you need, and your timeline.",
-            },
-            {
-              step: "2",
-              title: "Receive an Estimate",
-              desc: "We calculate pricing based on scope, features, and design complexity.",
-            },
-            {
-              step: "3",
-              title: "Build With Milestones",
-              desc: "We design, review, revise, and launch — all tracked through a dashboard.",
-            },
-          ].map((s) => (
-            <li
-              key={s.step}
-              style={{
-                border: "1px solid #eee",
-                borderRadius: 16,
-                padding: 24,
-                background: "#fafafa",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "#666",
-                  marginBottom: 8,
-                }}
-              >
-                STEP {s.step}
-              </div>
-              <h3 style={{ marginTop: 0 }}>{s.title}</h3>
-              <p style={{ color: "#555", lineHeight: 1.6 }}>{s.desc}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      {/* CTA */}
-      <section
+      <pre
         style={{
-          border: "1px solid #eee",
-          borderRadius: 20,
-          padding: 40,
-          background: "#fff",
-          textAlign: "center",
+          background: "#f7f7f7",
+          padding: 20,
+          borderRadius: 12,
+          fontSize: 14,
         }}
       >
-        <h2 style={{ fontSize: 28, marginBottom: 12 }}>
-          Ready to Build Your Website?
-        </h2>
-        <p style={{ color: "#555", fontSize: 16 }}>
-          Start with a few questions and get a tailored estimate.
-        </p>
+        {JSON.stringify(price, null, 2)}
+      </pre>
 
-        <Link
-          href="/build"
-          style={{
-            display: "inline-block",
-            marginTop: 24,
-            padding: "14px 26px",
-            background: "#000",
-            color: "#fff",
-            borderRadius: 12,
-            textDecoration: "none",
-            fontSize: 16,
-            fontWeight: 600,
-          }}
-        >
-          Start Project →
+      <div style={{ marginTop: 32 }}>
+        <Link href="/" style={{ color: "#666", textDecoration: "none" }}>
+          ← Back to home
         </Link>
-      </section>
+      </div>
     </main>
   );
 }
