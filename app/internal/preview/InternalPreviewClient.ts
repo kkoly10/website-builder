@@ -25,8 +25,8 @@ export default function InternalPreviewClient() {
         <h1>PIE — Internal Evaluation</h1>
         <p>Report not found or expired.</p>
         <p style={{ color: "#666" }}>
-          (V1 uses in-memory storage. Reports won’t survive server restarts. Next
-          step is a DB/KV store.)
+          (V1 uses in-memory storage. Next step: store tokens in Supabase so links
+          persist.)
         </p>
       </main>
     );
@@ -78,6 +78,7 @@ export default function InternalPreviewClient() {
           <div>
             <strong>Minimum:</strong> ${report.pricing.minimum}
           </div>
+
           {report.pricing.buffers.length > 0 && (
             <>
               <div style={{ marginTop: 10, fontWeight: 600 }}>Buffers</div>
@@ -139,17 +140,17 @@ export default function InternalPreviewClient() {
   );
 }
 
-function box(): React.CSSProperties {
+function box() {
   return {
     border: "1px solid #e5e7eb",
     borderRadius: 12,
     padding: 14,
     background: "#fff",
-  };
+  } as const;
 }
-function label(): React.CSSProperties {
-  return { fontSize: 12, color: "#6b7280", marginBottom: 6 };
+function label() {
+  return { fontSize: 12, color: "#6b7280", marginBottom: 6 } as const;
 }
-function value(): React.CSSProperties {
-  return { fontSize: 18, fontWeight: 700 };
+function value() {
+  return { fontSize: 18, fontWeight: 700 } as const;
 }
