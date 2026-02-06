@@ -31,9 +31,9 @@ export type PIEReport = {
 
 export function evaluatePIE(input: ProjectInput): PIEReport {
   let score = 0;
+  let systemCount = 0;
   const risks: string[] = [];
   const buffers: string[] = [];
-  let systemCount = 0;
 
   // Pages
   if (input.pages === "1") score += 5;
@@ -43,18 +43,39 @@ export function evaluatePIE(input: ProjectInput): PIEReport {
 
   // Booking
   if (input.booking === "external") score += 10;
-  if (input.booking === "builtin") { score += 25; systemCount++; }
-  if (input.booking === "unsure") { score += 7; buffers.push("Booking scope not finalized"); risks.push("Booking uncertainty"); }
+  if (input.booking === "builtin") {
+    score += 25;
+    systemCount++;
+  }
+  if (input.booking === "unsure") {
+    score += 7;
+    buffers.push("Booking scope not finalized");
+    risks.push("Booking uncertainty");
+  }
 
   // Payments
   if (input.payments === "link") score += 12;
-  if (input.payments === "system") { score += 28; systemCount++; }
-  if (input.payments === "unsure") { score += 7; buffers.push("Payment scope not finalized"); risks.push("Payment uncertainty"); }
+  if (input.payments === "system") {
+    score += 28;
+    systemCount++;
+  }
+  if (input.payments === "unsure") {
+    score += 7;
+    buffers.push("Payment scope not finalized");
+    risks.push("Payment uncertainty");
+  }
 
   // Automation
   if (input.automation === "basic") score += 10;
-  if (input.automation === "advanced") { score += 22; systemCount++; }
-  if (input.automation === "unsure") { score += 7; buffers.push("Automation requirements unclear"); risks.push("Automation uncertainty"); }
+  if (input.automation === "advanced") {
+    score += 22;
+    systemCount++;
+  }
+  if (input.automation === "unsure") {
+    score += 7;
+    buffers.push("Automation requirements unclear");
+    risks.push("Automation uncertainty");
+  }
 
   // Integrations
   if (input.integrations === "1-2") score += 10;
@@ -62,17 +83,26 @@ export function evaluatePIE(input: ProjectInput): PIEReport {
 
   // Content
   if (input.content === "partial") score += 8;
-  if (input.content === "not-ready") { score += 15; risks.push("Content not ready"); }
+  if (input.content === "not-ready") {
+    score += 15;
+    risks.push("Content not ready");
+  }
 
   // Stakeholders
   if (input.stakeholders === "2-3") score += 6;
-  if (input.stakeholders === "4+") { score += 12; risks.push("Multiple stakeholders"); }
+  if (input.stakeholders === "4+") {
+    score += 12;
+    risks.push("Multiple stakeholders");
+  }
 
   // Timeline
   if (input.timeline === "2-3 weeks") score += 8;
-  if (input.timeline === "under-14") { score += 15; risks.push("Rush timeline"); }
+  if (input.timeline === "under-14") {
+    score += 15;
+    risks.push("Rush timeline");
+  }
 
-  // Tier determination (stacked-only for Advanced)
+  // Tier logic
   let tier: Tier = "Standard";
   if (score >= 46) tier = "Professional";
   if (score >= 66 && systemCount >= 2) tier = "Advanced";
@@ -83,32 +113,37 @@ export function evaluatePIE(input: ProjectInput): PIEReport {
     (tier === "Standard" && score >= 41) ||
     (tier === "Professional" && (score <= 51 || score >= 60)) ||
     (tier === "Advanced" && score <= 71)
-  ) confidence = "Medium";
+  ) {
+    confidence = "Medium";
+  }
 
   // Pricing
-  let target = 550, minimum = 450;
-  if (tier === "Professional") { target = 900; minimum = 700; }
-  if (tier === "Advanced") { target = 1500; minimum = 1200; }
+  let target = 550;
+  let minimum = 450;
 
-  // Buffers add small uplift to target
+  if (tier === "Professional") {
+    target = 900;
+    minimum = 700;
+  }
+
+  if (tier === "Advanced") {
+    target = 1500;
+    minimum = 1200;
+  }
+
   target += buffers.length * 75;
 
-  const summary =
-    `This project is estimated at ${score}/100 complexity with ${tier} scope. ` +
-    `Key drivers include pages, feature depth, and readiness.`;
-
-  const pitch = {
-    recommend: `Recommend ${tier} due to scope and risk balance.`,
-    emphasize: [
-      "Clear scope & revisions",
-      "Performance and reliability",
-      "Upgrade path if needs expand",
-    ],
-    objections: [
-      "Can we start cheaper?",
-      "Do we need automation now?",
-    ],
+  return {
+    score,
+    tier,
+    confidence,
+    summary: `Estimated complexity ${score}/100 with ${tier} scope.`,
+    pricing: { target, minimum, buffers },
+    risks,
+    pitch: {
+      recommend: `Recommend ${tier} based on complexity and risk.`,
+      emphasize: ["Clear scope", "Upgrade flexibility", "Performance"],
+      objections: ["Can we start cheaper?", "Do we need all features now?"],
+    },
   };
-
-  return { score, tier, confidence, summary, pricing: { target, minimum, buffers }, risks, pitch };
 }
