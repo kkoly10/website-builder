@@ -1,4 +1,10 @@
-export function getEcomInterestEndpoint(): string {
-  const v = process.env.NEXT_PUBLIC_ECOM_INTEREST_FORM_ENDPOINT;
-  return v || "";
+export type ComingSoonInterest = {
+  name?: string;
+  email: string;
+  interest?: string; // e.g. "ecommerce_support", "website_building", etc.
+  message?: string;
+};
+
+export function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
