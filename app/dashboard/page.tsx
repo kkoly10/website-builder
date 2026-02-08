@@ -1,4 +1,4 @@
-import DashboardShell from "@/components/dashboard/DashboardShell";
+import DashboardShell from "@/components/dashbord/DashboardShell";
 import { getMockProject } from "@/lib/mockProject";
 
 export default function DashboardPage() {
