@@ -6,10 +6,11 @@ import { useRouter } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 /**
- * This page is the Hybrid Dynamic Intake:
- * - Starts with a chooser: "Help me decide" vs "I know what I need"
- * - Uses progressive disclosure + branching to reveal scope
- * - Sends summarized inputs to /estimate via query params (estimate can ignore extra params for now)
+ * Hybrid Dynamic Intake:
+ * - Chooser: guided vs known
+ * - Dynamic branching
+ * - Adds required lead email + optional phone at the end
+ * - Sends everything to /estimate as query params
  */
 
 type Mode = "chooser" | "guided" | "known";
@@ -32,48 +33,42 @@ type ContentReady = "Ready" | "Some" | "Not ready";
 type AssetsSource = "Client provides" | "Stock" | "Need help";
 
 type FormState = {
-  // chooser + routing
   mode: Mode;
 
-  // “I know what I need”
   websiteType: WebsiteType;
 
-  // “Help me decide”
   intent: Intent;
   intentOther: string;
 
-  // scope basics
   pages: Pages;
 
-  // feature flags (universal-ish)
   booking: boolean;
   payments: boolean;
   blog: boolean;
   membership: boolean;
 
-  // automation + integrations (advanced signals)
   wantsAutomation: YesNo;
-  automationTypes: string[]; // email, sms, crm, etc.
-  integrations: string[]; // google maps, calendly, stripe, etc.
+  automationTypes: string[];
+  integrations: string[];
   integrationOther: string;
 
-  // content + assets
   hasLogo: YesNo;
   hasBrandGuide: YesNo;
   contentReady: ContentReady;
   assetsSource: AssetsSource;
   referenceWebsite: string;
 
-  // decisions & stakeholders
   decisionMaker: YesNo;
   stakeholdersCount: "1" | "2-3" | "4+";
 
-  // design + timeline
   design: Design;
   timeline: Timeline;
 
-  // notes
   notes: string;
+
+  // NEW: lead capture
+  leadEmail: string;
+  leadPhone: string;
 };
 
 const INTENTS: Intent[] = [
@@ -112,6 +107,7 @@ const INTEGRATION_OPTIONS = [
 export default function BuildPage() {
   const router = useRouter();
 
+  // steps: 0 chooser, 1..6 intake, 7 contact, 8 review
   const [step, setStep] = useState<number>(0);
 
   const [form, setForm] = useState<FormState>({
@@ -147,9 +143,11 @@ export default function BuildPage() {
     timeline: "2-3 weeks",
 
     notes: "",
+
+    leadEmail: "",
+    leadPhone: "",
   });
 
-  // The “guided” path sets intent first; we map intent → suggested type + default features.
   const suggested = useMemo(() => {
     const s: Partial<FormState> = {};
     if (form.intent === "Booking") {
@@ -180,7 +178,7 @@ export default function BuildPage() {
   }
 
   function next() {
-    setStep((s) => Math.min(s + 1, 6));
+    setStep((s) => Math.min(s + 1, 8));
   }
 
   function back() {
@@ -201,10 +199,18 @@ export default function BuildPage() {
   }
 
   function submit() {
-    // Minimal “public estimate inputs” — your estimate page can ignore extra fields for now.
-    // We still pass them because PIE will use them later.
+    const leadEmail = form.leadEmail.trim();
+    if (!leadEmail) {
+      alert("Please enter your email so we can send your estimate and follow up.");
+      return;
+    }
+
     const params = new URLSearchParams({
-      // keep old-friendly keys too
+      // lead
+      leadEmail,
+      leadPhone: form.leadPhone.trim(),
+
+      // old-friendly keys
       websiteType: form.websiteType,
       pages: form.pages,
       booking: String(form.booking),
@@ -213,7 +219,7 @@ export default function BuildPage() {
       design: form.design,
       timeline: form.timeline,
 
-      // richer PIE keys
+      // richer keys
       mode: form.mode,
       intent: form.intent,
       intentOther: form.intentOther,
@@ -242,8 +248,10 @@ export default function BuildPage() {
   const stepLabel =
     step === 0
       ? "Choose how you'd like to start"
-      : form.mode === "chooser"
-      ? "Start"
+      : step === 7
+      ? "Contact"
+      : step === 8
+      ? "Review"
       : `Step ${step} of 6`;
 
   return (
@@ -274,7 +282,7 @@ export default function BuildPage() {
         </section>
       )}
 
-      {/* STEP 1: Intent OR Website Type */}
+      {/* STEP 1 */}
       {step === 1 && (
         <section style={card}>
           {form.mode === "guided" ? (
@@ -300,7 +308,9 @@ export default function BuildPage() {
                 <Field label="Briefly describe your goal">
                   <input
                     value={form.intentOther}
-                    onChange={(e) => setForm((f) => ({ ...f, intentOther: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, intentOther: e.target.value }))
+                    }
                     placeholder="e.g., recruiting, investor credibility, event promotion…"
                   />
                 </Field>
@@ -332,7 +342,7 @@ export default function BuildPage() {
         </section>
       )}
 
-      {/* STEP 2: Suggested defaults (guided only) + pages */}
+      {/* STEP 2 */}
       {step === 2 && (
         <section style={card}>
           <h2 style={sectionTitle}>Basic Scope</h2>
@@ -352,11 +362,7 @@ export default function BuildPage() {
                 </ul>
               </div>
 
-              <button
-                type="button"
-                onClick={applySuggested}
-                style={secondaryBtn}
-              >
+              <button type="button" onClick={applySuggested} style={secondaryBtn}>
                 Apply suggested setup
               </button>
             </div>
@@ -381,12 +387,11 @@ export default function BuildPage() {
         </section>
       )}
 
-      {/* STEP 3: Branch features by intent/type */}
+      {/* STEP 3 */}
       {step === 3 && (
         <section style={card}>
           <h2 style={sectionTitle}>Features (Only What Applies)</h2>
 
-          {/* Always show core toggles */}
           <div style={twoCol}>
             <ToggleRow
               label="Booking / appointments"
@@ -410,7 +415,6 @@ export default function BuildPage() {
             />
           </div>
 
-          {/* Dynamic follow-ups */}
           {(form.booking || form.payments || form.membership || form.intent === "Selling") && (
             <div style={{ marginTop: 18 }}>
               <Field label="Do you want automations? (advanced)">
@@ -475,7 +479,7 @@ export default function BuildPage() {
         </section>
       )}
 
-      {/* STEP 4: Assets & readiness (universal, dispute prevention) */}
+      {/* STEP 4 */}
       {step === 4 && (
         <section style={card}>
           <h2 style={sectionTitle}>Assets & Readiness</h2>
@@ -546,7 +550,7 @@ export default function BuildPage() {
         </section>
       )}
 
-      {/* STEP 5: Decision makers + design + timeline */}
+      {/* STEP 5 */}
       {step === 5 && (
         <section style={card}>
           <h2 style={sectionTitle}>Decision & Delivery</h2>
@@ -621,21 +625,20 @@ export default function BuildPage() {
         </section>
       )}
 
-      {/* STEP 6: Review */}
+      {/* STEP 6 */}
       {step === 6 && (
         <section style={card}>
-          <h2 style={sectionTitle}>Review & Continue</h2>
+          <h2 style={sectionTitle}>Review</h2>
           <p style={{ color: "#555", lineHeight: 1.7 }}>
-            We’ll generate your estimate options next. If you book a consultation,
-            PIE will also prepare an internal scope evaluation, tier justification,
-            and pricing guidance for our meeting.
+            Next we’ll generate a personalized estimate, then show tier options.
           </p>
 
-          <div style={{ marginTop: 16, color: "#444", lineHeight: 1.8 }}>
+          <div style={{ marginTop: 12, color: "#444", lineHeight: 1.8 }}>
             <strong>Summary:</strong>
             <ul style={miniList}>
               <li>
-                Mode: <strong>{form.mode === "guided" ? "Help me decide" : "I know what I need"}</strong>
+                Mode:{" "}
+                <strong>{form.mode === "guided" ? "Help me decide" : "I know what I need"}</strong>
               </li>
               <li>
                 Website type: <strong>{form.websiteType}</strong>
@@ -646,7 +649,12 @@ export default function BuildPage() {
               <li>
                 Features:{" "}
                 <strong>
-                  {[form.booking && "Booking", form.payments && "Payments", form.blog && "Blog", form.membership && "Membership"]
+                  {[
+                    form.booking && "Booking",
+                    form.payments && "Payments",
+                    form.blog && "Blog",
+                    form.membership && "Membership",
+                  ]
                     .filter(Boolean)
                     .join(", ") || "None selected"}
                 </strong>
@@ -659,6 +667,52 @@ export default function BuildPage() {
               </li>
             </ul>
           </div>
+
+          <div style={hint}>
+            After you continue, we’ll ask for your email so we can send your estimate and follow up.
+          </div>
+        </section>
+      )}
+
+      {/* STEP 7: CONTACT */}
+      {step === 7 && (
+        <section style={card}>
+          <h2 style={sectionTitle}>Where should we send your estimate?</h2>
+
+          <Field label="Email (required)">
+            <input
+              value={form.leadEmail}
+              onChange={(e) => setForm((f) => ({ ...f, leadEmail: e.target.value }))}
+              placeholder="you@company.com"
+            />
+          </Field>
+
+          <Field label="Phone (optional)">
+            <input
+              value={form.leadPhone}
+              onChange={(e) => setForm((f) => ({ ...f, leadPhone: e.target.value }))}
+              placeholder="(555) 555-5555"
+            />
+          </Field>
+
+          <div style={hint}>
+            We’ll use this to send your estimate and schedule a free consultation if you want one.
+          </div>
+        </section>
+      )}
+
+      {/* STEP 8: FINAL CONFIRM */}
+      {step === 8 && (
+        <section style={card}>
+          <h2 style={sectionTitle}>All set</h2>
+          <p style={{ color: "#555", lineHeight: 1.7 }}>
+            We’ll generate your estimate next. You’ll also see tier options if you want to upgrade.
+          </p>
+
+          <div style={miniBox}>
+            <div><strong>Email:</strong> {form.leadEmail || "(missing)"}</div>
+            {form.leadPhone ? <div><strong>Phone:</strong> {form.leadPhone}</div> : null}
+          </div>
         </section>
       )}
 
@@ -669,7 +723,7 @@ export default function BuildPage() {
             Back
           </button>
 
-          {step < 6 ? (
+          {step < 8 ? (
             <button onClick={next} style={primaryBtn}>
               Next →
             </button>
@@ -894,4 +948,13 @@ const miniList: React.CSSProperties = {
   marginTop: 10,
   lineHeight: 1.8,
   paddingLeft: 18,
+};
+
+const miniBox: React.CSSProperties = {
+  marginTop: 14,
+  border: "1px solid #eee",
+  background: "#fafafa",
+  padding: 14,
+  borderRadius: 14,
+  lineHeight: 1.8,
 };
