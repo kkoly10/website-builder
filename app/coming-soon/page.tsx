@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { getEcomInterestEndpoint } from "@/lib/forms";
+import { getEcomInterestEndpoint } from "../../lib/forms";
 
 type SellerType =
   | "Amazon seller"
@@ -213,7 +213,11 @@ export default function ComingSoonPage() {
               </Field>
 
               <Field label="Monthly order volume (optional)">
-                <select value={volume} onChange={(e) => setVolume(e.target.value as VolumeOption)} style={input}>
+                <select
+                  value={volume}
+                  onChange={(e) => setVolume(e.target.value as VolumeOption)}
+                  style={input}
+                >
                   <option>Not selling yet</option>
                   <option>Under 100 orders / month</option>
                   <option>100–500 orders / month</option>
