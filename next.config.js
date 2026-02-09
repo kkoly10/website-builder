@@ -3,9 +3,12 @@ const path = require("path");
 
 const nextConfig = {
   reactStrictMode: true,
-  webpack: (config) => {
-    config.resolve.alias["@"] = path.resolve(__dirname);
-    return config;
+
+  // Next 16 enables Turbopack by default. Configure aliases here.
+  turbopack: {
+    resolveAlias: {
+      "@": path.resolve(__dirname),
+    },
   },
 };
 
