@@ -1,39 +1,44 @@
-export type MockProject = {
-  id: string;
-  clientName: string;
-  status: "new" | "in_progress" | "review" | "completed";
-  total: number;
-  paid: number;
-  remaining: number;
-  pages: string;
-  features: string[];
-  milestones: { label: string; percent: number; paid: boolean }[];
-  references: { label: string; url: string }[];
-  revisions: { phase: "50%" | "90%"; included: number; used: number }[];
-};
+import type { Project } from "./projectTypes";
 
-export function getMockProject(): MockProject {
+/**
+ * Mock data used ONLY for the /dashboard demo page.
+ * Must match Project type exactly.
+ */
+export function getMockProject(): Project {
   return {
     id: "mock-001",
     clientName: "Sample Client",
+    projectName: "Sample Client Website",
+    websiteType: "Business website",
+    platform: "Custom",
+    startDateLabel: "Feb 8, 2026",
+    estimatedLaunchLabel: "2–3 weeks",
     status: "in_progress",
-    total: 600,
-    paid: 300,
-    remaining: 300,
-    pages: "4–5",
-    features: ["Contact form", "Booking form"],
+
     milestones: [
-      { label: "Deposit", percent: 10, paid: true },
-      { label: "50% completion", percent: 50, paid: true },
-      { label: "90% completion", percent: 90, paid: false },
-      { label: "Launch", percent: 100, paid: false },
+      { key: "deposit_received", title: "Deposit received" },
+      { key: "design_in_progress", title: "Design in progress" },
+      { key: "design_review", title: "Design review" },
+      { key: "final_build", title: "Final build" },
+      { key: "launch", title: "Launch" },
     ],
-    references: [
-      { label: "Reference website", url: "https://example.com" },
-    ],
-    revisions: [
-      { phase: "50%", included: 1, used: 0 },
-      { phase: "90%", included: 1, used: 0 },
-    ],
+    activeMilestoneKey: "design_in_progress",
+
+    payment: {
+      totalPrice: 600,
+      amountPaid: 300,
+      nextPaymentDueLabel: "At design approval",
+    },
+
+    revisions: {
+      included: 2,
+      used: 0,
+    },
+
+    references: {
+      referenceUrl: "https://example.com",
+      clientNotes: "Client provided logo and some content.",
+      internalNotes: "Focus on booking flow + mobile speed.",
+    },
   };
 }
