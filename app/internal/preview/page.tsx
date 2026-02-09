@@ -22,7 +22,9 @@ export default async function InternalPreviewPage({
 
   const { data, error } = await admin
     .from("pie_reports")
-    .select("created_at, expires_at, report, projects(lead_email, lead_phone, client_estimate)")
+    .select(
+      "created_at, expires_at, report, projects(lead_email, lead_phone, client_estimate)"
+    )
     .eq("token", token)
     .single();
 
@@ -35,21 +37,49 @@ export default async function InternalPreviewPage({
     );
   }
 
+  // Supabase relation can come back as object or array depending on config/types
+  const project = Array.isArray((data as any).projects)
+    ? (data as any).projects[0]
+    : (data as any).projects;
+
   return (
     <main style={{ maxWidth: 1100, margin: "80px auto", padding: 24 }}>
       <h1>PIE — Internal Evaluation</h1>
 
       <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
-        <div><strong>Lead:</strong> {data.projects?.lead_email}</div>
-        {data.projects?.lead_phone ? <div><strong>Phone:</strong> {data.projects.lead_phone}</div> : null}
-        <div><strong>Client Estimate Shown:</strong> ${data.projects?.client_estimate}</div>
-        <div><strong>Created:</strong> {new Date(data.created_at).toLocaleString()}</div>
-        {data.expires_at ? <div><strong>Expires:</strong> {new Date(data.expires_at).toLocaleString()}</div> : null}
+        <div>
+          <strong>Lead:</strong> {project?.lead_email ?? "—"}
+        </div>
+
+        {project?.lead_phone ? (
+          <div>
+            <strong>Phone:</strong> {project.lead_phone}
+          </div>
+        ) : null}
+
+        <div>
+          <strong>Client Estimate Shown:</strong> $
+          {project?.client_estimate ?? "—"}
+        </div>
+
+        <div>
+          <strong>Created:</strong>{" "}
+          {new Date(data.created_at).toLocaleString()}
+        </div>
+
+        {data.expires_at ? (
+          <div>
+            <strong>Expires:</strong>{" "}
+            {new Date(data.expires_at).toLocaleString()}
+          </div>
+        ) : null}
       </div>
 
       <hr style={{ margin: "18px 0" }} />
 
-      <pre style={{ whiteSpace: "pre-wrap" }}>{JSON.stringify(data.report, null, 2)}</pre>
+      <pre style={{ whiteSpace: "pre-wrap" }}>
+        {JSON.stringify(data.report, null, 2)}
+      </pre>
     </main>
   );
 }
