@@ -1,218 +1,301 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
 
-type Props = {
-  intake: any;
-  leadEmail: string;
-  leadPhone: string;
-};
+type SearchParams = Record<string, string | string[] | undefined>;
 
-function truthy(v: any) {
-  return v === true || v === "true" || v === "Yes";
+/** Accept either the new style (searchParams) OR legacy style (intake/leadEmail/leadPhone). */
+type Props =
+  | { searchParams: SearchParams }
+  | { intake: any; leadEmail?: string; leadPhone?: string };
+
+function pick(sp: SearchParams, key: string): string {
+  const v = sp?.[key];
+  if (Array.isArray(v)) return v[0] ?? "";
+  return v ?? "";
 }
 
-function toList(csvOrArr: any): string[] {
-  if (Array.isArray(csvOrArr)) return csvOrArr.filter(Boolean);
-  if (typeof csvOrArr === "string" && csvOrArr.trim()) {
-    return csvOrArr.split(",").map((s) => s.trim()).filter(Boolean);
-  }
-  return [];
+function truthy(v: string) {
+  return v === "true" || v === "1" || v === "Yes";
 }
 
-export default function EstimateClient({ intake, leadEmail, leadPhone }: Props) {
-  const [copied, setCopied] = useState<null | "email" | "phone">(null);
+function clamp(n: number, a: number, b: number) {
+  return Math.max(a, Math.min(b, n));
+}
 
-  const summary = useMemo(() => {
-    const pages = intake?.pages || "4-5";
-    const websiteType = intake?.websiteType || "Business";
-    const design = intake?.design || "Modern";
-    const timeline = intake?.timeline || "2-3 weeks";
+function money(n: number) {
+  return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
 
-    const features: string[] = [];
-    if (truthy(intake?.booking)) features.push("Booking / appointments");
-    if (truthy(intake?.payments)) features.push("Payments / checkout");
-    if (truthy(intake?.blog)) features.push("Blog / articles");
-    if (truthy(intake?.membership)) features.push("Membership / gated content");
+export default function EstimateClient(props: Props) {
+  const normalized = useMemo(() => {
+    // If page.tsx passes searchParams, reconstruct intake from query
+    if ("searchParams" in props) {
+      const sp = props.searchParams ?? {};
+      const intake = {
+        mode: pick(sp, "mode") || "known",
+        intent: pick(sp, "intent") || "Marketing",
+        intentOther: pick(sp, "intentOther") || "",
+        websiteType: pick(sp, "websiteType") || "Business",
+        pages: pick(sp, "pages") || "4-5",
+        booking: truthy(pick(sp, "booking")),
+        payments: truthy(pick(sp, "payments")),
+        blog: truthy(pick(sp, "blog")),
+        membership: truthy(pick(sp, "membership")),
+        wantsAutomation: pick(sp, "wantsAutomation") || "No",
+        automationTypes: (pick(sp, "automationTypes") || "").split(",").map(s => s.trim()).filter(Boolean),
+        integrations: (pick(sp, "integrations") || "").split(",").map(s => s.trim()).filter(Boolean),
+        integrationOther: pick(sp, "integrationOther") || "",
+        hasLogo: pick(sp, "hasLogo") || "Yes",
+        hasBrandGuide: pick(sp, "hasBrandGuide") || "No",
+        contentReady: pick(sp, "contentReady") || "Some",
+        assetsSource: pick(sp, "assetsSource") || "Client provides",
+        referenceWebsite: pick(sp, "referenceWebsite") || "",
+        decisionMaker: pick(sp, "decisionMaker") || "Yes",
+        stakeholdersCount: pick(sp, "stakeholdersCount") || "1",
+        design: pick(sp, "design") || "Modern",
+        timeline: pick(sp, "timeline") || "2-3 weeks",
+        notes: pick(sp, "notes") || "",
+      };
 
-    const integrations = toList(intake?.integrations);
-    const automationTypes = toList(intake?.automationTypes);
+      const leadEmail = pick(sp, "leadEmail") || pick(sp, "email") || "";
+      const leadPhone = pick(sp, "leadPhone") || pick(sp, "phone") || "";
 
-    // Simple heuristic tiers (you can refine later)
-    let tier: "Starter" | "Growth" | "Pro" = "Starter";
-    if (pages === "6-8" || pages === "9+" || features.length >= 2) tier = "Growth";
-    if (pages === "9+" || truthy(intake?.payments) || truthy(intake?.membership)) tier = "Pro";
+      return { intake, leadEmail, leadPhone };
+    }
 
-    // Price hints (your estimate page can replace with your own pricing logic)
-    const priceRange =
-      tier === "Starter" ? "$450 – $750" : tier === "Growth" ? "$750 – $1,200" : "$1,200 – $1,800+";
-
+    // Legacy props
     return {
-      pages,
-      websiteType,
-      design,
-      timeline,
-      features,
-      integrations,
-      automationTypes,
-      tier,
-      priceRange,
-      intent: intake?.intent || "",
-      mode: intake?.mode || "",
-      contentReady: intake?.contentReady || "",
-      notes: intake?.notes || "",
+      intake: props.intake ?? {},
+      leadEmail: props.leadEmail ?? "",
+      leadPhone: props.leadPhone ?? "",
     };
+  }, [props]);
+
+  const intake = normalized.intake;
+
+  const score = useMemo(() => {
+    // A simple “effort score” used for ranges.
+    const pages = String(intake.pages || "4-5");
+    let s = 0;
+
+    if (pages === "1-3") s += 1;
+    else if (pages === "4-5") s += 2;
+    else if (pages === "6-8") s += 3;
+    else s += 4;
+
+    if (intake.booking) s += 1;
+    if (intake.payments) s += 2;
+    if (intake.blog) s += 1;
+    if (intake.membership) s += 2;
+
+    if (String(intake.wantsAutomation || "No") === "Yes") s += 2;
+    if ((intake.integrations || []).length >= 3) s += 1;
+
+    if (String(intake.contentReady) === "Not ready") s += 1;
+    if (String(intake.hasBrandGuide) === "No") s += 1;
+
+    if (String(intake.timeline) === "Under 14 days") s += 2;
+
+    return clamp(s, 1, 12);
   }, [intake]);
 
-  async function copy(text: string, kind: "email" | "phone") {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(kind);
-      setTimeout(() => setCopied(null), 1200);
-    } catch {
-      // ignore
-    }
-  }
+  const tiers = useMemo(() => {
+    // Convert score to pricing bands
+    const base = 300 + score * 65;
+    const mid = 450 + score * 95;
+    const pro = 650 + score * 140;
+
+    return [
+      {
+        name: "Starter",
+        tag: "Fast + clean launch",
+        priceFrom: Math.round(base),
+        includes: [
+          "Modern single-page or small site",
+          "Mobile-first layout",
+          "Basic SEO setup",
+          "1 revision round",
+        ],
+        bestFor: "Simple marketing sites",
+      },
+      {
+        name: "Growth",
+        tag: "Most popular",
+        priceFrom: Math.round(mid),
+        highlight: true,
+        includes: [
+          "Multi-page build",
+          "Conversion sections + CTA flow",
+          "Forms / booking options",
+          "2 revision rounds",
+        ],
+        bestFor: "Businesses needing leads + trust",
+      },
+      {
+        name: "Pro",
+        tag: "Advanced features",
+        priceFrom: Math.round(pro),
+        includes: [
+          "Payments / membership ready",
+          "Automation + integrations support",
+          "Performance + analytics setup",
+          "Priority delivery options",
+        ],
+        bestFor: "High-intent businesses",
+      },
+    ];
+  }, [score]);
+
+  const featureBadges = useMemo(() => {
+    const badges: string[] = [];
+    if (intake.booking) badges.push("Booking");
+    if (intake.payments) badges.push("Payments");
+    if (intake.blog) badges.push("Blog");
+    if (intake.membership) badges.push("Membership");
+    if (String(intake.wantsAutomation) === "Yes") badges.push("Automations");
+    if ((intake.integrations || []).length) badges.push("Integrations");
+    return badges.length ? badges : ["Core site"];
+  }, [intake]);
 
   return (
-    <main className="container">
-      <section className="reveal" style={{ marginBottom: 18 }}>
-        <div className="glass" style={{ padding: 22, borderRadius: 24 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
-            <div>
-              <div style={{ fontWeight: 950, color: "rgba(255,255,255,0.85)" }}>Your Estimate</div>
-              <div style={{ marginTop: 6, color: "rgba(255,255,255,0.72)", lineHeight: 1.6 }}>
-                Based on your answers, here’s the recommended tier and ballpark range.
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-              <Link href="/build" className="btn btnGhost">
-                Edit intake
-              </Link>
-              <Link href="/" className="btn btnGhost">
-                Home
-              </Link>
-            </div>
-          </div>
-
-          <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
-            <div className="card" style={{ padding: 16 }}>
-              <div style={{ fontWeight: 950, fontSize: 12, color: "rgba(255,255,255,0.7)" }}>
-                Recommended tier
-              </div>
-              <div style={{ fontWeight: 980, fontSize: 24, marginTop: 8 }}>
-                {summary.tier}
-              </div>
-              <div style={{ color: "rgba(255,255,255,0.78)", marginTop: 6 }}>
-                Range: <strong>{summary.priceRange}</strong>
-              </div>
-            </div>
-
-            <div className="card" style={{ padding: 16 }}>
-              <div style={{ fontWeight: 950, fontSize: 12, color: "rgba(255,255,255,0.7)" }}>
-                Scope snapshot
-              </div>
-              <div style={{ marginTop: 10, color: "rgba(255,255,255,0.82)", lineHeight: 1.7 }}>
-                <div><strong>{summary.websiteType}</strong> • <strong>{summary.pages}</strong> pages</div>
-                <div>Design: <strong>{summary.design}</strong></div>
-                <div>Timeline: <strong>{summary.timeline}</strong></div>
-              </div>
-            </div>
-
-            <div className="card" style={{ padding: 16 }}>
-              <div style={{ fontWeight: 950, fontSize: 12, color: "rgba(255,255,255,0.7)" }}>
-                Next step
-              </div>
-              <div style={{ marginTop: 10, color: "rgba(255,255,255,0.78)", lineHeight: 1.7 }}>
-                Book a quick call and we’ll confirm scope + exact price.
-              </div>
-              <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <a className="btn btnPrimary btnShimmer" href="mailto:couranr@couranauto.com">
-                  Email to book →
-                </a>
-                <a className="btn btnGhost" href="tel:+17033819462">
-                  Call →
-                </a>
-              </div>
-            </div>
-          </div>
+    <main style={{ padding: "8px 0 0" }}>
+      <section className="glass" style={{ padding: 22, marginBottom: 18 }}>
+        <div className="kicker">Instant Estimate</div>
+        <div className="h1" style={{ marginTop: 10 }}>
+          Premium pricing, without the guessing.
         </div>
+        <div className="p" style={{ maxWidth: 860 }}>
+          Based on your intake, here are the best-fit options. You’ll also see exactly
+          what drives complexity so there are no surprises.
+        </div>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
+          {featureBadges.map((b) => (
+            <span
+              key={b}
+              style={{
+                padding: "8px 10px",
+                borderRadius: 999,
+                border: "1px solid rgba(255,255,255,0.14)",
+                background: "rgba(255,255,255,0.06)",
+                fontWeight: 900,
+                fontSize: 12,
+                color: "rgba(255,255,255,0.80)",
+              }}
+            >
+              {b}
+            </span>
+          ))}
+        </div>
+
+        {(normalized.leadEmail || normalized.leadPhone) ? (
+          <div className="small" style={{ marginTop: 10 }}>
+            Saved for follow-up:{" "}
+            <strong>{normalized.leadEmail || "—"}</strong>{" "}
+            {normalized.leadPhone ? <>· <strong>{normalized.leadPhone}</strong></> : null}
+          </div>
+        ) : (
+          <div className="small" style={{ marginTop: 10 }}>
+            Tip: add your email/phone in the form so we can follow up.
+          </div>
+        )}
       </section>
 
-      {/* DETAILS GRID */}
-      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 14 }}>
-        <div className="card cardHover reveal" style={{ padding: 18, animationDelay: "0.08s" as any }}>
-          <div style={{ fontWeight: 950, marginBottom: 10 }}>Features selected</div>
-          <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.9, color: "rgba(255,255,255,0.78)" }}>
-            {(summary.features.length ? summary.features : ["None selected"]).map((f: string) => (
-              <li key={f}>{f}</li>
-            ))}
-          </ul>
-
-          {(summary.integrations.length || summary.automationTypes.length) ? (
-            <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-              <div>
-                <div style={{ fontWeight: 950, fontSize: 12, color: "rgba(255,255,255,0.7)" }}>Integrations</div>
-                <div style={{ marginTop: 6, color: "rgba(255,255,255,0.78)" }}>
-                  {summary.integrations.length ? summary.integrations.join(", ") : "—"}
-                </div>
+      <section style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
+        {tiers.map((t) => (
+          <div
+            key={t.name}
+            className={t.highlight ? "card" : "glass"}
+            style={{
+              padding: 18,
+              border: t.highlight ? "1px solid rgba(124,58,237,0.35)" : undefined,
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            {t.highlight ? (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 12,
+                  right: 12,
+                  padding: "8px 10px",
+                  borderRadius: 999,
+                  background: "rgba(124,58,237,0.20)",
+                  border: "1px solid rgba(124,58,237,0.35)",
+                  fontWeight: 950,
+                  fontSize: 12,
+                }}
+              >
+                ★ Recommended
               </div>
+            ) : null}
+
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
               <div>
-                <div style={{ fontWeight: 950, fontSize: 12, color: "rgba(255,255,255,0.7)" }}>Automations</div>
-                <div style={{ marginTop: 6, color: "rgba(255,255,255,0.78)" }}>
-                  {summary.automationTypes.length ? summary.automationTypes.join(", ") : "—"}
+                <div className="h2">{t.name}</div>
+                <div className="small">{t.tag}</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontWeight: 950, fontSize: 22 }}>
+                  ${money(t.priceFrom)}+
                 </div>
+                <div className="small">starting</div>
               </div>
             </div>
-          ) : null}
-        </div>
 
-        <div className="card cardHover reveal" style={{ padding: 18, animationDelay: "0.12s" as any }}>
-          <div style={{ fontWeight: 950, marginBottom: 10 }}>Intake notes</div>
-          <div style={{ color: "rgba(255,255,255,0.78)", lineHeight: 1.8 }}>
-            <div><strong>Goal:</strong> {summary.intent || "—"}</div>
-            <div><strong>Content readiness:</strong> {summary.contentReady || "—"}</div>
-            <div style={{ marginTop: 10 }}>
-              <strong>Notes:</strong>{" "}
-              <span style={{ color: "rgba(255,255,255,0.72)" }}>{summary.notes || "—"}</span>
+            <div className="hr" />
+
+            <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.85, color: "rgba(255,255,255,0.80)" }}>
+              {t.includes.map((x) => (
+                <li key={x}><strong>✓</strong> {x}</li>
+              ))}
+            </ul>
+
+            <div className="small" style={{ marginTop: 12 }}>
+              <strong>Best for:</strong> {t.bestFor}
             </div>
+
+            <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
+              <a className={"btn " + (t.highlight ? "btnPrimary" : "btnGhost")} href="/build">
+                Book / Request quote →
+              </a>
+              <Link className="btn btnGhost" href="/build">
+                Refine scope
+              </Link>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      <section className="glass" style={{ padding: 18, marginTop: 14 }}>
+        <div className="h2">What drove this estimate</div>
+        <div className="grid2" style={{ marginTop: 10 }}>
+          <div>
+            <div className="label">Website type</div>
+            <div className="p">{String(intake.websiteType || "—")}</div>
+          </div>
+          <div>
+            <div className="label">Pages</div>
+            <div className="p">{String(intake.pages || "—")}</div>
+          </div>
+          <div>
+            <div className="label">Timeline</div>
+            <div className="p">{String(intake.timeline || "—")}</div>
+          </div>
+          <div>
+            <div className="label">Design direction</div>
+            <div className="p">{String(intake.design || "—")}</div>
           </div>
         </div>
 
-        <div className="card cardHover reveal" style={{ padding: 18, animationDelay: "0.16s" as any }}>
-          <div style={{ fontWeight: 950, marginBottom: 10 }}>Lead details (internal)</div>
+        <div className="hr" />
 
-          <div style={{ display: "grid", gap: 10, color: "rgba(255,255,255,0.78)" }}>
-            <div className="card" style={{ padding: 12, background: "rgba(255,255,255,0.04)" }}>
-              <div style={{ fontWeight: 950, fontSize: 12, color: "rgba(255,255,255,0.7)" }}>Email</div>
-              <div style={{ marginTop: 6, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                <code style={{ color: "rgba(255,255,255,0.85)" }}>{leadEmail || "—"}</code>
-                {leadEmail ? (
-                  <button className="btn btnGhost" style={{ padding: "10px 12px" }} onClick={() => copy(leadEmail, "email")}>
-                    {copied === "email" ? "Copied ✓" : "Copy"}
-                  </button>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="card" style={{ padding: 12, background: "rgba(255,255,255,0.04)" }}>
-              <div style={{ fontWeight: 950, fontSize: 12, color: "rgba(255,255,255,0.7)" }}>Phone</div>
-              <div style={{ marginTop: 6, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                <code style={{ color: "rgba(255,255,255,0.85)" }}>{leadPhone || "—"}</code>
-                {leadPhone ? (
-                  <button className="btn btnGhost" style={{ padding: "10px 12px" }} onClick={() => copy(leadPhone, "phone")}>
-                    {copied === "phone" ? "Copied ✓" : "Copy"}
-                  </button>
-                ) : null}
-              </div>
-            </div>
-
-            <div style={{ color: "rgba(255,255,255,0.66)", fontSize: 12, lineHeight: 1.6 }}>
-              Tip: This section is for internal use. You can hide it for public-facing estimates later.
-            </div>
-          </div>
+        <div className="small">
+          Final pricing is confirmed after a quick scope check (usually 5–10 minutes). We keep it transparent:
+          if scope changes, the price changes — and you’ll see why.
         </div>
       </section>
     </main>
