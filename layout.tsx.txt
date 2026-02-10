@@ -1,0 +1,1 @@
+Path('layout.tsx.txt').read_text()
