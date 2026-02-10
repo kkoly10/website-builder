@@ -4,164 +4,170 @@ export const dynamic = "force-dynamic";
 
 export default function Home() {
   return (
-    <main className="container">
+    <main style={{ display: "grid", gap: 18 }}>
       {/* HERO */}
-      <section className="reveal" style={{ marginBottom: 72 }}>
-        <div
-          className="glass"
-          style={{
-            padding: 26,
-            borderRadius: 24,
-            maxWidth: 980,
-          }}
-        >
-          <div style={{ color: "rgba(255,255,255,0.75)", fontWeight: 900, letterSpacing: 0.2 }}>
-            Transparent pricing • Clear scope • Fast builds
-          </div>
+      <section className="glass" style={{ padding: 26, overflow: "hidden" }}>
+        <div className="kicker">Websites that convert</div>
 
-          <h1
+        <div className="h1" style={{ marginTop: 10, maxWidth: 980 }}>
+          Professional websites, built the right way —{" "}
+          <span
             style={{
-              fontSize: 54,
-              lineHeight: 1.05,
-              margin: "14px 0 10px",
-              fontWeight: 950,
-              letterSpacing: -1.2,
+              background:
+                "linear-gradient(135deg, rgba(124,58,237,1), rgba(34,211,238,1))",
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              color: "transparent",
             }}
           >
-            Websites that look premium
-            <br />
-            and convert.
-          </h1>
+            fast, clean, and transparent.
+          </span>
+        </div>
 
-          <p style={{ color: "rgba(255,255,255,0.78)", fontSize: 18, lineHeight: 1.7, maxWidth: 820 }}>
-            Get a modern, conversion-focused website with transparent pricing, clear revisions,
-            and zero surprises. Start with a guided intake and get an estimate instantly.
-          </p>
+        <div className="p" style={{ maxWidth: 820 }}>
+          Get a modern, conversion-focused website with clear scope, clear revisions, and zero
+          surprises. Choose a custom build or launch faster with the AI option.
+        </div>
 
-          <div style={{ marginTop: 18, display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <Link href="/build" className="btn btnPrimary btnShimmer">
-              Start Intake → Get Estimate
-            </Link>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 16 }}>
+          <Link href="/estimate" className="btn btnPrimary">
+            Get instant estimate →
+          </Link>
+          <Link href="/build" className="btn btnGhost">
+            Start custom project
+          </Link>
+          <Link href="/ai" className="btn btnGhost">
+            Try AI option
+          </Link>
+        </div>
 
-            <Link href="/ai" className="btn btnGhost">
-              Try AI Website Option
-            </Link>
-          </div>
-
-          <div style={{ marginTop: 14, display: "flex", gap: 14, flexWrap: "wrap", color: "rgba(255,255,255,0.66)", fontSize: 13 }}>
-            <span>✓ Revision policy included</span>
-            <span>✓ Fast loading pages</span>
-            <span>✓ Booking / forms / payments</span>
-            <span>✓ Upgrade anytime</span>
-          </div>
+        <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", marginTop: 18 }}>
+          <Stat title="Fast delivery" desc="Modern stack, clean handoff, no bloat." />
+          <Stat title="Transparent pricing" desc="You see what drives cost — upfront." />
+          <Stat title="Clear revisions" desc="Limits prevent disputes and scope creep." />
         </div>
       </section>
 
-      {/* CARDS */}
-      <section
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: 16,
-          marginBottom: 54,
-        }}
-      >
-        <div className="card cardHover reveal" style={{ padding: 22, animationDelay: "0.08s" as any }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 950 }}>Custom Website</h2>
-          <p style={{ marginTop: 10, color: "rgba(255,255,255,0.75)", lineHeight: 1.7 }}>
+      {/* OPTIONS */}
+      <section style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
+        <div className="glass" style={{ padding: 18 }}>
+          <div className="h2">Custom Website</div>
+          <div className="p">
             Built by a real developer. Best for businesses that want full control, stronger branding,
             and room to grow.
-          </p>
-
-          <ul style={{ marginTop: 12, lineHeight: 1.9, paddingLeft: 18, color: "rgba(255,255,255,0.78)" }}>
-            <li>Hand-built design</li>
-            <li>Clear scope & revisions</li>
-            <li>Booking, forms, payments</li>
-            <li>SEO & integrations available</li>
-          </ul>
-
-          <div style={{ marginTop: 12, color: "rgba(255,255,255,0.85)", fontWeight: 900 }}>
-            Typical projects: $450 – $1,500+
           </div>
 
-          <div style={{ marginTop: 14 }}>
-            <Link href="/build" className="btn btnPrimary btnShimmer">
-              Get Custom Quote →
-            </Link>
+          <div className="hr" />
+
+          <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.85, color: "rgba(255,255,255,0.80)" }}>
+            <li><strong>✓</strong> Hand-built layout + sections</li>
+            <li><strong>✓</strong> Booking, forms, payments</li>
+            <li><strong>✓</strong> SEO + integrations available</li>
+            <li><strong>✓</strong> Clear scope & revisions</li>
+          </ul>
+
+          <div className="small" style={{ marginTop: 12 }}>
+            Typical projects: <strong>$450 – $1,500+</strong>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
+            <Link href="/build" className="btn btnPrimary">Start custom →</Link>
+            <Link href="/estimate" className="btn btnGhost">See estimate</Link>
           </div>
         </div>
 
-        <div className="card cardHover reveal" style={{ padding: 22, animationDelay: "0.14s" as any, borderColor: "rgba(255,255,255,0.18)" }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 950 }}>AI-Assisted Website</h2>
-          <p style={{ marginTop: 10, color: "rgba(255,255,255,0.75)", lineHeight: 1.7 }}>
-            Faster + lower cost. Ideal for MVPs, side projects, and early-stage businesses.
-            Upgrade to custom whenever you’re ready.
-          </p>
-
-          <ul style={{ marginTop: 12, lineHeight: 1.9, paddingLeft: 18, color: "rgba(255,255,255,0.78)" }}>
-            <li>Industry-specific content</li>
-            <li>Goal-focused layout</li>
-            <li>Launch quickly</li>
-            <li>Upgradeable paths</li>
-          </ul>
-
-          <div style={{ marginTop: 12, color: "rgba(255,255,255,0.85)", fontWeight: 900 }}>
-            Lower cost • Faster launch
+        <div className="card" style={{ padding: 18, border: "1px solid rgba(124,58,237,0.35)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+            <div>
+              <div className="h2">AI Website Option</div>
+              <div className="small">Fastest way to launch</div>
+            </div>
+            <div
+              style={{
+                padding: "8px 10px",
+                borderRadius: 999,
+                background: "rgba(124,58,237,0.20)",
+                border: "1px solid rgba(124,58,237,0.35)",
+                fontWeight: 950,
+                fontSize: 12,
+              }}
+            >
+              ★ Popular
+            </div>
           </div>
 
-          <div style={{ marginTop: 14 }}>
-            <Link href="/ai" className="btn btnGhost">
-              Explore AI Option →
-            </Link>
+          <div className="p" style={{ marginTop: 6 }}>
+            Great for MVPs, side-projects, and early-stage businesses. Generate a layout + content in
+            minutes, then refine.
+          </div>
+
+          <div className="hr" />
+
+          <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.85, color: "rgba(255,255,255,0.80)" }}>
+            <li><strong>✓</strong> Industry-specific content</li>
+            <li><strong>✓</strong> Goal-focused sections</li>
+            <li><strong>✓</strong> Quick launch + upgrades later</li>
+            <li><strong>✓</strong> Professional tone and structure</li>
+          </ul>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
+            <Link href="/ai" className="btn btnPrimary">Try AI →</Link>
+            <Link href="/estimate" className="btn btnGhost">Compare pricing</Link>
           </div>
         </div>
       </section>
 
-      {/* WHY US */}
-      <section className="reveal" style={{ maxWidth: 980, animationDelay: "0.18s" as any }}>
-        <div className="glass" style={{ padding: 22 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 950 }}>Why work with us</h2>
+      {/* PROOF / TRUST */}
+      <section className="glass" style={{ padding: 18 }}>
+        <div className="h2">How it works</div>
+        <div className="grid2" style={{ marginTop: 12 }}>
+          <Step n="01" title="Estimate" desc="Get a range based on pages + features." />
+          <Step n="02" title="Scope check" desc="Quick call/message to confirm details." />
+          <Step n="03" title="Build + review" desc="You get a link to review and request revisions." />
+          <Step n="04" title="Launch" desc="We publish and hand off with next steps." />
+        </div>
 
-          <div
-            style={{
-              marginTop: 12,
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-              gap: 12,
-              color: "rgba(255,255,255,0.78)",
-              lineHeight: 1.7,
-            }}
-          >
-            <div className="card" style={{ padding: 16 }}>
-              <div style={{ fontWeight: 950 }}>Transparent pricing</div>
-              <div style={{ marginTop: 6, color: "rgba(255,255,255,0.72)" }}>
-                No hidden fees — scope is clear before you pay.
-              </div>
-            </div>
+        <div className="hr" />
 
-            <div className="card" style={{ padding: 16 }}>
-              <div style={{ fontWeight: 950 }}>Revision limits</div>
-              <div style={{ marginTop: 6, color: "rgba(255,255,255,0.72)" }}>
-                Prevents disputes and keeps projects moving.
-              </div>
-            </div>
-
-            <div className="card" style={{ padding: 16 }}>
-              <div style={{ fontWeight: 950 }}>Speed + performance</div>
-              <div style={{ marginTop: 6, color: "rgba(255,255,255,0.72)" }}>
-                Modern stack, fast load times, mobile-first.
-              </div>
-            </div>
-
-            <div className="card" style={{ padding: 16 }}>
-              <div style={{ fontWeight: 950 }}>Human support</div>
-              <div style={{ marginTop: 6, color: "rgba(255,255,255,0.72)" }}>
-                You’re not just dealing with software.
-              </div>
-            </div>
-          </div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <Link href="/estimate" className="btn btnPrimary">Get estimate →</Link>
+          <Link href="/build" className="btn btnGhost">Start custom</Link>
+          <Link href="/coming-soon" className="btn btnGhost">E-commerce support</Link>
         </div>
       </section>
     </main>
+  );
+}
+
+function Stat({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div
+      style={{
+        padding: 14,
+        borderRadius: 16,
+        border: "1px solid rgba(255,255,255,0.10)",
+        background: "rgba(255,255,255,0.04)",
+      }}
+    >
+      <div style={{ fontWeight: 950, marginBottom: 6 }}>{title}</div>
+      <div className="small">{desc}</div>
+    </div>
+  );
+}
+
+function Step({ n, title, desc }: { n: string; title: string; desc: string }) {
+  return (
+    <div
+      style={{
+        padding: 14,
+        borderRadius: 16,
+        border: "1px solid rgba(255,255,255,0.10)",
+        background: "rgba(255,255,255,0.04)",
+      }}
+    >
+      <div className="kicker" style={{ marginBottom: 8 }}>{n}</div>
+      <div style={{ fontWeight: 950, marginBottom: 6 }}>{title}</div>
+      <div className="small">{desc}</div>
+    </div>
   );
 }
