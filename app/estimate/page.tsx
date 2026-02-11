@@ -1,50 +1,58 @@
 import EstimateClient from "./EstimateClient";
 
-export const dynamic = "force-dynamic";
-
 type SearchParams = Record<string, string | string[] | undefined>;
 
 function pick(sp: SearchParams, key: string) {
-  const v = sp[key];
-  return Array.isArray(v) ? v[0] : v;
+  const v = sp?.[key];
+  return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
 }
 
-function toBool(v: string | undefined) {
-  if (!v) return false;
-  return ["1", "true", "yes", "y", "on"].includes(v.toLowerCase());
+function asBool(v: string) {
+  return v === "1" || v === "true" || v === "yes" || v === "on";
 }
+
+export const dynamic = "force-dynamic";
 
 export default function EstimatePage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
-  // Lead fields
-  const leadEmail = pick(searchParams, "leadEmail") || pick(searchParams, "email") || "";
-  const leadPhone = pick(searchParams, "leadPhone") || pick(searchParams, "phone") || "";
-
-  // Build a lightweight intake object from query params (safe defaults)
   const intake = {
-    mode: pick(searchParams, "mode") || "",
-    intent: pick(searchParams, "intent") || "",
+    mode: pick(searchParams, "mode") || "estimate",
+    intent: pick(searchParams, "intent") || "business",
     intentOther: pick(searchParams, "intentOther") || "",
-    websiteType: pick(searchParams, "websiteType") || "Business website",
-    pages: pick(searchParams, "pages") || "4-5",
-    design: pick(searchParams, "design") || "Modern",
-    timeline: pick(searchParams, "timeline") || "2–3 weeks",
-    contentReady: pick(searchParams, "contentReady") || "",
+    websiteType: pick(searchParams, "websiteType") || "business",
+    pages: pick(searchParams, "pages") || "1-3",
 
-    booking: toBool(pick(searchParams, "booking")),
-    payments: toBool(pick(searchParams, "payments")),
-    blog: toBool(pick(searchParams, "blog")),
-    membership: toBool(pick(searchParams, "membership")),
+    // optional fields some versions had
+    design: pick(searchParams, "design") || "modern",
+    timeline: pick(searchParams, "timeline") || "2-4w",
+    contentReady: pick(searchParams, "contentReady") || "some",
 
-    integrations: pick(searchParams, "integrations") || "",
-    wantsAutomation: pick(searchParams, "wantsAutomation") || "",
-    automationTypes: pick(searchParams, "automationTypes") || "",
+    // features
+    booking: asBool(pick(searchParams, "booking")),
+    payments: asBool(pick(searchParams, "payments")),
+    blog: asBool(pick(searchParams, "blog")),
+    membership: asBool(pick(searchParams, "membership")),
 
+    // add-ons
+    wantsAutomation: pick(searchParams, "wantsAutomation") || "no",
+
+    // ✅ REQUIRED BY Intake (fix)
+    hasBrand: pick(searchParams, "hasBrand") || "no",
+    domainHosting: pick(searchParams, "domainHosting") || "no",
+    budget: pick(searchParams, "budget") || "500-1000",
+    competitorUrl: pick(searchParams, "competitorUrl") || "",
+
+    // notes
     notes: pick(searchParams, "notes") || "",
   };
 
-  return <EstimateClient intake={intake} leadEmail={leadEmail} leadPhone={leadPhone} />;
+  const leadEmail = pick(searchParams, "leadEmail") || "";
+  const leadPhone = pick(searchParams, "leadPhone") || "";
+
+  return (
+    <EstimateClient intake={intake} leadEmail={leadEmail} leadPhone={leadPhone} />
+  );
 }
