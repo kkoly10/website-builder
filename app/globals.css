@@ -1,81 +1,321 @@
-/* app/globals.css — THEME 6 (Slate + Violet) */
-*{box-sizing:border-box}
-html,body{padding:0;margin:0}
-a{color:inherit}
-:focus-visible{outline:2px solid #b18cff;outline-offset:2px}
+/* =========================================
+   THEME #8 — Minimalist (Black/White + Accent)
+   Brand: CrecyStudio
+   Style: Apple-like, luxury tech, clean SaaS
+========================================= */
 
 :root{
-  --bg:#080a12;
-  --fg:rgba(255,255,255,.92);
-  --muted:rgba(255,255,255,.70);
+  /* Core */
+  --bg: #07090f;                 /* near-black */
+  --fg: #f7f8fb;                 /* near-white text on dark */
+  --muted: rgba(247,248,251,.72);
 
-  --panel:rgba(255,255,255,.06);
-  --panel2:rgba(255,255,255,.09);
-  --stroke:rgba(255,255,255,.12);
+  /* Surfaces (LIGHT panels on dark background) */
+  --panel: rgba(255,255,255,.96);
+  --panel2: rgba(255,255,255,.88);
+  --stroke: rgba(0,0,0,.08);
 
-  --accent:#b18cff;
-  --accent2:#ff7bd5;
+  /* Text on panels */
+  --ink: #0b1020;                /* dark text for light cards */
+  --inkMuted: rgba(11,16,32,.70);
 
-  --shadow:0 22px 70px rgba(0,0,0,.55);
-  --radius:18px;
+  /* Accent (single) */
+  --accent: #3b82f6;             /* Electric Blue (change this if needed) */
+  --accent2: #60a5fa;
 
-  --font:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,"Apple Color Emoji","Segoe UI Emoji";
+  /* Shadows / radii */
+  --shadow: 0 18px 60px rgba(0,0,0,.45);
+  --shadowSoft: 0 10px 30px rgba(0,0,0,.35);
+
+  --r12: 12px;
+  --r16: 16px;
+  --r20: 20px;
+
+  /* Layout */
+  --container: 1160px;
+  --gap: 18px;
+
+  /* Typography */
+  --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
 }
 
-body{background:var(--bg);color:var(--fg);font-family:var(--font);min-height:100vh}
-.page{min-height:calc(100vh - 120px)}
+*{ box-sizing: border-box; }
+html, body{ height: 100%; }
 
+body{
+  margin: 0;
+  font-family: var(--font);
+  background: radial-gradient(1200px 700px at 20% 10%, rgba(59,130,246,.14), transparent 55%),
+              radial-gradient(900px 600px at 90% 20%, rgba(255,255,255,.08), transparent 55%),
+              var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Links */
+a{ color: inherit; text-decoration: none; }
+a:hover{ opacity: .92; }
+
+/* Container */
+.container{
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 18px;
+}
+
+/* =========================================
+   Background FX (subtle, not distracting)
+========================================= */
 .bgFx{
-  position:fixed; inset:-20%;
-  pointer-events:none; z-index:-1;
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
   background:
-    radial-gradient(700px 700px at 16% 18%, rgba(177,140,255,.18) 0%, transparent 64%),
-    radial-gradient(760px 760px at 82% 25%, rgba(255,123,213,.12) 0%, transparent 66%),
-    radial-gradient(900px 900px at 55% 92%, rgba(255,255,255,.10) 0%, transparent 60%);
-  filter:blur(22px);
-  opacity:.95;
+    radial-gradient(800px 400px at 30% 0%, rgba(59,130,246,.10), transparent 55%),
+    radial-gradient(700px 420px at 80% 10%, rgba(255,255,255,.06), transparent 60%);
+  filter: blur(0px);
+  opacity: 1;
 }
 
-.container{max-width:1100px;margin:0 auto;padding:0 18px}
-
+/* =========================================
+   Top Nav
+========================================= */
 .topNav{
-  position:sticky; top:0; z-index:10;
-  backdrop-filter:blur(14px);
-  background:color-mix(in oklab, var(--bg) 68%, transparent);
-  border-bottom:1px solid var(--stroke);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: rgba(7,9,15,.75);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,.08);
 }
-.navInner{height:64px;display:flex;align-items:center;justify-content:space-between}
-.brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none}
+
+.navInner{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  gap: 14px;
+}
+
+.brand{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 900;
+  letter-spacing: .2px;
+}
+
 .brandMark{
-  width:14px;height:14px;border-radius:6px;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  box-shadow:0 0 0 6px rgba(255,255,255,.04);
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px rgba(59,130,246,.16);
 }
-.brandText{font-weight:900;letter-spacing:-.4px}
-.brandDot{width:6px;height:6px;border-radius:999px;background:var(--accent);opacity:.9}
 
-.navLinks{display:flex;gap:10px;align-items:center}
+.navLinks{
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
 .navLink{
-  text-decoration:none;padding:9px 11px;border:1px solid transparent;border-radius:12px;
-  color:var(--muted);font-weight:800;font-size:13px;
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.90);
 }
-.navLink:hover{border-color:var(--stroke);color:var(--fg);background:var(--panel)}
 
-.footer{border-top:1px solid var(--stroke);background:color-mix(in oklab, var(--bg) 74%, transparent)}
-.footerInner{padding:18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.footerBrand{font-weight:900;letter-spacing:-.2px}
-.footerMuted{color:var(--muted);font-size:13px}
-.footerRight{color:var(--muted);font-size:13px;display:flex;gap:10px;align-items:center}
-.footerLink{text-decoration:none}
-.footerLink:hover{color:var(--fg)}
-.footerSep{opacity:.5}
-
-input,select,textarea{
-  background:rgba(255,255,255,.92);
-  color:#0b1020;
-  border:1px solid rgba(0,0,0,.10);
-  border-radius:14px;
-  padding:12px 12px;
+.navLink:hover{
+  border-color: rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
 }
-label{color:var(--fg)}
-small,p{color:var(--muted)}
+
+/* =========================================
+   Buttons
+========================================= */
+.btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
+  user-select: none;
+}
+
+.btn:active{ transform: translateY(1px) scale(.99); }
+
+.btnPrimary{
+  background: var(--accent);
+  color: #081226;
+  box-shadow: 0 12px 28px rgba(59,130,246,.28);
+}
+
+.btnPrimary:hover{
+  box-shadow: 0 16px 34px rgba(59,130,246,.34);
+}
+
+.btnGhost{
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.14);
+  color: rgba(255,255,255,.92);
+}
+
+.btnGhost:hover{
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.18);
+}
+
+/* =========================================
+   Panels / Cards (WHITE panels, DARK text)
+========================================= */
+.panel{
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r20);
+  box-shadow: var(--shadowSoft);
+}
+
+.panelHeader{
+  padding: 16px 16px 0 16px;
+}
+
+.panelBody{
+  padding: 16px;
+}
+
+.cardGrid{
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 980px){
+  .cardGrid{ grid-template-columns: 1fr; }
+}
+
+/* Hover micro-interactions */
+.cardHover{
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.cardHover:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px rgba(0,0,0,.22);
+}
+
+/* =========================================
+   Typography helpers
+========================================= */
+.h1{
+  font-size: clamp(34px, 5vw, 56px);
+  line-height: 1.05;
+  letter-spacing: -0.7px;
+  margin: 0;
+}
+
+.h2{
+  font-size: 20px;
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+
+.p{
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.pDark{
+  margin: 0;
+  color: var(--inkMuted);
+  line-height: 1.6;
+}
+
+.kicker{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.86);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.kickerDot{
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+/* =========================================
+   Form Styling (fix white-on-white issue)
+========================================= */
+.input, .select, .textarea{
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.98);
+  color: var(--ink);
+  outline: none;
+  font-size: 14px;
+}
+
+.input::placeholder, .textarea::placeholder{
+  color: rgba(11,16,32,.45);
+}
+
+.input:focus, .select:focus, .textarea:focus{
+  border-color: rgba(59,130,246,.55);
+  box-shadow: 0 0 0 4px rgba(59,130,246,.14);
+}
+
+.fieldLabel{
+  font-size: 13px;
+  font-weight: 900;
+  color: rgba(11,16,32,.88);
+}
+
+.pill{
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.95);
+  color: var(--ink);
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease;
+}
+
+.pill:hover{
+  border-color: rgba(0,0,0,.14);
+  box-shadow: 0 10px 20px rgba(0,0,0,.08);
+}
+
+.pillActive{
+  border-color: rgba(59,130,246,.60);
+  box-shadow: 0 0 0 4px rgba(59,130,246,.16);
+}
+
+/* =========================================
+   Utility
+========================================= */
+.row{ display:flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.spacer{ height: 18px; }
+.hr{ height: 1px; background: rgba(255,255,255,.10); border: 0; margin: 18px 0; }
