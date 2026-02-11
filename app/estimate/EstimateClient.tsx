@@ -1,310 +1,170 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
+import Link from "next/link";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
 type Intake = {
-  mode?: string;
-  intent?: string;
-  intentOther?: string;
-  websiteType?: string;
-  pages?: string;
-
-  booking?: boolean;
-  payments?: boolean;
-  blog?: boolean;
-  membership?: boolean;
-
-  wantsAutomation?: string;
-  wantsBranding?: string;
-  wantsContent?: string;
-  wantsLogo?: string;
-
-  deadline?: string;
-  budget?: string;
-
-  businessName?: string;
-  industry?: string;
-  location?: string;
-
-  notes?: string;
+  mode: string;
+  intent: string;
+  intentOther: string;
+  websiteType: string;
+  pages: string;
+  booking: boolean;
+  payments: boolean;
+  blog: boolean;
+  membership: boolean;
+  wantsAutomation: string;
+  hasBrand: string;
+  contentReady: string;
+  domainHosting: string;
+  timeline: string;
+  budget: string;
+  competitorUrl: string;
+  notes: string;
 };
 
-type Props =
-  | { searchParams: SearchParams }
-  | { intake: Intake; leadEmail: string; leadPhone: string };
+type LegacyProps = { intake: Intake; leadEmail: string; leadPhone: string };
+type NewProps = { searchParams: SearchParams };
+type Props = Partial<LegacyProps> & Partial<NewProps>;
 
-function pick(sp: SearchParams, key: string) {
-  const v = sp?.[key];
-  if (Array.isArray(v)) return v[0] ?? "";
-  return v ?? "";
+function pick(params: SearchParams, key: string) {
+  const v = params?.[key];
+  return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
 }
 
-function parseBool(x: string) {
-  return x === "true" || x === "1" || x === "yes" || x === "on";
-}
-
-function normalizeFromSearchParams(searchParams: SearchParams) {
-  const intake: Intake = {
-    mode: pick(searchParams, "mode"),
-    intent: pick(searchParams, "intent"),
-    intentOther: pick(searchParams, "intentOther"),
-    websiteType: pick(searchParams, "websiteType"),
-    pages: pick(searchParams, "pages"),
-
-    booking: parseBool(pick(searchParams, "booking")),
-    payments: parseBool(pick(searchParams, "payments")),
-    blog: parseBool(pick(searchParams, "blog")),
-    membership: parseBool(pick(searchParams, "membership")),
-
-    wantsAutomation: pick(searchParams, "wantsAutomation"),
-    wantsBranding: pick(searchParams, "wantsBranding"),
-    wantsContent: pick(searchParams, "wantsContent"),
-    wantsLogo: pick(searchParams, "wantsLogo"),
-
-    deadline: pick(searchParams, "deadline"),
-    budget: pick(searchParams, "budget"),
-
-    businessName: pick(searchParams, "businessName"),
-    industry: pick(searchParams, "industry"),
-    location: pick(searchParams, "location"),
-
-    notes: pick(searchParams, "notes"),
-  };
-
-  const leadEmail = pick(searchParams, "leadEmail") || pick(searchParams, "email");
-  const leadPhone = pick(searchParams, "leadPhone") || pick(searchParams, "phone");
-
-  return { intake, leadEmail, leadPhone };
-}
-
-function money(n: number) {
-  return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
-}
-
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
+function asBool(v: string) {
+  return v === "1" || v === "true" || v === "yes" || v === "on";
 }
 
 export default function EstimateClient(props: Props) {
-  const { intake, leadEmail, leadPhone } = useMemo(() => {
-    if ("searchParams" in props) return normalizeFromSearchParams(props.searchParams);
-    return { intake: props.intake, leadEmail: props.leadEmail, leadPhone: props.leadPhone };
-  }, [props]);
+  const intake: Intake = useMemo(() => {
+    if (props.intake) return props.intake;
 
-  const [showBreakdown, setShowBreakdown] = useState(false);
+    const sp = props.searchParams || {};
+    return {
+      mode: pick(sp, "mode") || "estimate",
+      intent: pick(sp, "intent") || "business",
+      intentOther: pick(sp, "intentOther") || "",
+      websiteType: pick(sp, "websiteType") || "business",
+      pages: pick(sp, "pages") || "1-3",
+      booking: asBool(pick(sp, "booking")),
+      payments: asBool(pick(sp, "payments")),
+      blog: asBool(pick(sp, "blog")),
+      membership: asBool(pick(sp, "membership")),
+      wantsAutomation: pick(sp, "wantsAutomation") || "no",
+      hasBrand: pick(sp, "hasBrand") || "no",
+      contentReady: pick(sp, "contentReady") || "some",
+      domainHosting: pick(sp, "domainHosting") || "no",
+      timeline: pick(sp, "timeline") || "2-4w",
+      budget: pick(sp, "budget") || "500-1000",
+      competitorUrl: pick(sp, "competitorUrl") || "",
+      notes: pick(sp, "notes") || "",
+    };
+  }, [props.intake, props.searchParams]);
 
-  const calc = useMemo(() => {
-    // base
+  const [email, setEmail] = useState(props.leadEmail || pick(props.searchParams || {}, "leadEmail") || "");
+  const [phone, setPhone] = useState(props.leadPhone || pick(props.searchParams || {}, "leadPhone") || "");
+
+  // NOTE: estimate logic is intentionally simple right now.
+  // Next step: real pricing rules based on selections (we’ll do that next).
+  const estimate = useMemo(() => {
     let base = 450;
 
-    // website type boost
-    const type = (intake.websiteType || "").toLowerCase();
-    if (type.includes("landing")) base = 450;
-    else if (type.includes("business")) base = 650;
-    else if (type.includes("ecommerce") || type.includes("shop")) base = 1100;
-    else if (type.includes("portfolio")) base = 550;
-
     // pages
-    const pagesRaw = intake.pages || "";
-    let pageCount = 4;
-    const m = pagesRaw.match(/\d+/);
-    if (m?.[0]) pageCount = clamp(parseInt(m[0], 10), 1, 20);
-    base += Math.max(0, pageCount - 4) * 85;
+    if (intake.pages === "4-6") base += 250;
+    if (intake.pages === "7-10") base += 600;
+    if (intake.pages === "10+") base += 1000;
 
     // features
-    const features: { label: string; on: boolean; add: number }[] = [
-      { label: "Booking / Scheduling", on: !!intake.booking, add: 180 },
-      { label: "Payments / Checkout", on: !!intake.payments, add: 240 },
-      { label: "Blog / Articles", on: !!intake.blog, add: 120 },
-      { label: "Membership / Login", on: !!intake.membership, add: 320 },
-    ];
+    if (intake.booking) base += 150;
+    if (intake.payments) base += 250;
+    if (intake.blog) base += 120;
+    if (intake.membership) base += 400;
 
-    // add-ons
-    const addons: { label: string; when: boolean; add: number }[] = [
-      { label: "Automation setup", when: (intake.wantsAutomation || "").toLowerCase() === "yes", add: 160 },
-      { label: "Branding refresh", when: (intake.wantsBranding || "").toLowerCase() === "yes", add: 220 },
-      { label: "Content writing help", when: (intake.wantsContent || "").toLowerCase() === "yes", add: 180 },
-      { label: "Logo help", when: (intake.wantsLogo || "").toLowerCase() === "yes", add: 160 },
-    ];
+    // automation
+    if (intake.wantsAutomation === "yes") base += 200;
 
-    let total = base;
-    let featuresTotal = 0;
-    for (const f of features) if (f.on) featuresTotal += f.add;
-    total += featuresTotal;
+    // timeline
+    if (intake.timeline === "rush") base += 250;
 
-    let addonsTotal = 0;
-    for (const a of addons) if (a.when) addonsTotal += a.add;
-    total += addonsTotal;
+    // clamp
+    const min = 450;
+    const max = 3500;
+    const total = Math.max(min, Math.min(max, base));
 
-    // nice range (+/-)
-    const low = Math.round(total * 0.92);
-    const high = Math.round(total * 1.12);
-
-    return { base, pageCount, features, addons, featuresTotal, addonsTotal, total, low, high };
+    return {
+      total,
+      rangeLow: Math.round(total * 0.9),
+      rangeHigh: Math.round(total * 1.15),
+    };
   }, [intake]);
 
   return (
-    <main className="container" style={{ paddingTop: 56, paddingBottom: 30 }}>
-      <section className="panel" style={{ padding: 22 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
-          <div>
-            <div style={{ color: "var(--muted)", fontWeight: 900, letterSpacing: 0.2, fontSize: 12 }}>
-              Instant estimate
-            </div>
-            <h1 style={{ margin: "8px 0 0", fontSize: 34, letterSpacing: -0.6 }}>
-              Your website range:{" "}
-              <span style={{ background: "linear-gradient(135deg, var(--accentA), var(--accentC))", WebkitBackgroundClip: "text", color: "transparent" }}>
-                ${money(calc.low)} – ${money(calc.high)}
-              </span>
-            </h1>
-            <div style={{ marginTop: 10, color: "var(--muted)", lineHeight: 1.6 }}>
-              Based on your inputs. If you want, we can lock scope + price after a quick review (usually 5–10 minutes).
-            </div>
-          </div>
+    <main className="container" style={{ padding: "42px 0 80px" }}>
+      <div className="kicker">
+        <span className="kickerDot" aria-hidden="true" />
+        CrecyStudio • Instant Estimate
+      </div>
 
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <Link href="/build" className="btn btnPrimary">
-              Start Custom Build →
-            </Link>
-            <button
-              className="btn btnGhost"
-              onClick={() => setShowBreakdown((v) => !v)}
-              type="button"
-              aria-expanded={showBreakdown}
-            >
-              {showBreakdown ? "Hide breakdown" : "Show breakdown"}
-            </button>
-          </div>
+      <div style={{ height: 12 }} />
+
+      <h1 className="h1">Get a quick estimate</h1>
+      <p className="p" style={{ maxWidth: 760, marginTop: 10 }}>
+        Answer a few questions and we’ll generate a ballpark price instantly. Then you can submit to save your quote.
+      </p>
+
+      <div style={{ height: 22 }} />
+
+      <section className="panel">
+        <div className="panelHeader">
+          <h2 className="h2">Your estimate</h2>
+          <p className="pDark" style={{ marginTop: 8 }}>
+            Based on your selections.
+          </p>
         </div>
 
-        {/* small “summary pills” */}
-        <div style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <Pill label="Website type" value={intake.websiteType || "—"} />
-          <Pill label="Pages" value={intake.pages || `${calc.pageCount}`} />
-          <Pill label="Deadline" value={intake.deadline || "—"} />
-          <Pill label="Budget" value={intake.budget || "—"} />
-        </div>
+        <div className="panelBody">
+          <div style={{ display: "grid", gap: 10 }}>
+            <div style={{ fontSize: 36, fontWeight: 950, letterSpacing: -0.6 }}>
+              ${estimate.total.toLocaleString()}
+            </div>
+            <div style={{ color: "rgba(11,16,32,.72)", fontWeight: 800 }}>
+              Typical range: ${estimate.rangeLow.toLocaleString()} – ${estimate.rangeHigh.toLocaleString()}
+            </div>
 
-        {showBreakdown ? (
-          <div style={{ marginTop: 18, display: "grid", gap: 14, gridTemplateColumns: "1.2fr 0.8fr" }}>
-            <div className="card" style={{ padding: 16 }}>
-              <h2 style={{ margin: 0, fontSize: 16 }}>Breakdown</h2>
+            <div style={{ height: 10 }} />
 
-              <Row label="Base" value={`$${money(calc.base)}`} />
-              <Row label="Pages considered" value={`${calc.pageCount}`} />
-
-              <div style={{ height: 1, background: "rgba(255,255,255,0.10)", margin: "12px 0" }} />
-
-              <div style={{ color: "var(--muted)", fontWeight: 900, fontSize: 12, marginBottom: 8 }}>
-                Features
+            <div style={{ display: "grid", gap: 12 }}>
+              <div>
+                <div className="fieldLabel">Email</div>
+                <input className="input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@domain.com" />
               </div>
-              {calc.features.filter((x) => x.on).length ? (
-                calc.features.filter((x) => x.on).map((f) => (
-                  <Row key={f.label} label={f.label} value={`+$${money(f.add)}`} />
-                ))
-              ) : (
-                <div style={{ color: "var(--muted)" }}>No extra features selected.</div>
-              )}
 
-              <div style={{ height: 1, background: "rgba(255,255,255,0.10)", margin: "12px 0" }} />
-
-              <div style={{ color: "var(--muted)", fontWeight: 900, fontSize: 12, marginBottom: 8 }}>
-                Add-ons
-              </div>
-              {calc.addons.filter((x) => x.when).length ? (
-                calc.addons.filter((x) => x.when).map((a) => (
-                  <Row key={a.label} label={a.label} value={`+$${money(a.add)}`} />
-                ))
-              ) : (
-                <div style={{ color: "var(--muted)" }}>No add-ons selected.</div>
-              )}
-
-              <div style={{ height: 1, background: "rgba(255,255,255,0.10)", margin: "12px 0" }} />
-
-              <Row label="Estimated total" value={`~ $${money(calc.total)}`} strong />
-              <div style={{ color: "var(--muted)", fontSize: 12, marginTop: 8 }}>
-                Range accounts for complexity + polish. Final price is confirmed after scope review.
+              <div>
+                <div className="fieldLabel">Phone (optional)</div>
+                <input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(555) 555-5555" />
               </div>
             </div>
 
-            <div className="card" style={{ padding: 16 }}>
-              <h2 style={{ margin: 0, fontSize: 16 }}>Your details</h2>
+            <div style={{ height: 14 }} />
 
-              <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-                <Meta label="Business name" value={intake.businessName || "—"} />
-                <Meta label="Industry" value={intake.industry || "—"} />
-                <Meta label="Location" value={intake.location || "—"} />
-                <Meta label="Email" value={leadEmail || "—"} />
-                <Meta label="Phone" value={leadPhone || "—"} />
-              </div>
+            <div className="row">
+              <Link className="btn btnPrimary" href="/build">
+                Start Custom Build →
+              </Link>
+              <Link className="btn btnGhost" href="/">
+                Back home
+              </Link>
+            </div>
 
-              {intake.notes ? (
-                <div style={{ marginTop: 12 }}>
-                  <div style={{ color: "var(--muted)", fontWeight: 900, fontSize: 12 }}>Notes</div>
-                  <div style={{ marginTop: 6, lineHeight: 1.6 }}>{intake.notes}</div>
-                </div>
-              ) : null}
-
-              <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-                <Link href="/build" className="btn btnPrimary">
-                  Lock scope + start →
-                </Link>
-                <Link href="/ai" className="btn btnGhost">
-                  Try AI option
-                </Link>
-              </div>
+            <div style={{ fontSize: 12, color: "rgba(11,16,32,.62)", marginTop: 6 }}>
+              Next: we’ll connect this to Supabase so every submission is saved and pricing becomes fully personalized.
             </div>
           </div>
-        ) : null}
+        </div>
       </section>
     </main>
-  );
-}
-
-function Pill({ label, value }: { label: string; value: string }) {
-  return (
-    <div
-      style={{
-        border: "1px solid rgba(255,255,255,0.10)",
-        background: "rgba(255,255,255,0.04)",
-        padding: "10px 12px",
-        borderRadius: 999,
-        display: "inline-flex",
-        gap: 8,
-        alignItems: "center",
-      }}
-    >
-      <span style={{ color: "var(--muted)", fontWeight: 900, fontSize: 12 }}>{label}:</span>
-      <span style={{ fontWeight: 900 }}>{value}</span>
-    </div>
-  );
-}
-
-function Row({
-  label,
-  value,
-  strong,
-}: {
-  label: string;
-  value: string;
-  strong?: boolean;
-}) {
-  return (
-    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 8 }}>
-      <div style={{ color: "var(--muted)", fontWeight: 800 }}>{label}</div>
-      <div style={{ fontWeight: strong ? 900 : 800 }}>{value}</div>
-    </div>
-  );
-}
-
-function Meta({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-      <div style={{ color: "var(--muted)", fontWeight: 900, fontSize: 12 }}>{label}</div>
-      <div style={{ fontWeight: 900, textAlign: "right" }}>{value}</div>
-    </div>
   );
 }
