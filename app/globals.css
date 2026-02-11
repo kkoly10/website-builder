@@ -1,11 +1,11 @@
-/* app/globals.css — THEME 2 (Graphite + Lime) */
+/* app/globals.css — THEME 3 (Midnight + Cyan) */
 *{box-sizing:border-box}
 html,body{padding:0;margin:0}
 a{color:inherit}
-:focus-visible{outline:2px solid #a3ff12;outline-offset:2px}
+:focus-visible{outline:2px solid #36d7ff;outline-offset:2px}
 
 :root{
-  --bg:#070a12;
+  --bg:#050816;
   --fg:rgba(255,255,255,.92);
   --muted:rgba(255,255,255,.70);
 
@@ -13,32 +13,27 @@ a{color:inherit}
   --panel2:rgba(255,255,255,.09);
   --stroke:rgba(255,255,255,.12);
 
-  --accent:#a3ff12;
-  --accent2:#5fffbf;
+  --accent:#36d7ff;
+  --accent2:#8cfffb;
 
-  --shadow:0 20px 60px rgba(0,0,0,.45);
+  --shadow:0 20px 60px rgba(0,0,0,.50);
   --radius:18px;
 
   --font:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,"Apple Color Emoji","Segoe UI Emoji";
 }
 
-body{
-  background:var(--bg);
-  color:var(--fg);
-  font-family:var(--font);
-  min-height:100vh;
-}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);min-height:100vh}
 .page{min-height:calc(100vh - 120px)}
 
 .bgFx{
   position:fixed; inset:-20%;
   pointer-events:none; z-index:-1;
   background:
-    radial-gradient(600px 600px at 20% 20%, color-mix(in oklab, var(--accent) 25%, transparent) 0%, transparent 60%),
-    radial-gradient(700px 700px at 80% 30%, color-mix(in oklab, var(--accent2) 20%, transparent) 0%, transparent 62%),
-    radial-gradient(800px 800px at 50% 90%, rgba(255,255,255,.10) 0%, transparent 60%);
-  filter:blur(20px);
-  opacity:.9;
+    radial-gradient(680px 680px at 18% 18%, rgba(54,215,255,.20) 0%, transparent 62%),
+    radial-gradient(760px 760px at 82% 24%, rgba(140,255,251,.16) 0%, transparent 64%),
+    radial-gradient(900px 900px at 52% 92%, rgba(255,255,255,.10) 0%, transparent 60%);
+  filter:blur(22px);
+  opacity:.95;
 }
 
 .container{max-width:1100px;margin:0 auto;padding:0 18px}
@@ -46,7 +41,7 @@ body{
 .topNav{
   position:sticky; top:0; z-index:10;
   backdrop-filter:blur(14px);
-  background:color-mix(in oklab, var(--bg) 70%, transparent);
+  background:color-mix(in oklab, var(--bg) 68%, transparent);
   border-bottom:1px solid var(--stroke);
 }
 .navInner{height:64px;display:flex;align-items:center;justify-content:space-between}
@@ -66,10 +61,7 @@ body{
 }
 .navLink:hover{border-color:var(--stroke);color:var(--fg);background:var(--panel)}
 
-.footer{
-  border-top:1px solid var(--stroke);
-  background:color-mix(in oklab, var(--bg) 75%, transparent);
-}
+.footer{border-top:1px solid var(--stroke);background:color-mix(in oklab, var(--bg) 74%, transparent)}
 .footerInner{padding:18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .footerBrand{font-weight:900;letter-spacing:-.2px}
 .footerMuted{color:var(--muted);font-size:13px}
@@ -78,10 +70,9 @@ body{
 .footerLink:hover{color:var(--fg)}
 .footerSep{opacity:.5}
 
-/* ✅ Fix questionnaire readability */
 input,select,textarea{
   background:rgba(255,255,255,.92);
-  color:#0b1020;
+  color:#061022;
   border:1px solid rgba(0,0,0,.10);
   border-radius:14px;
   padding:12px 12px;
