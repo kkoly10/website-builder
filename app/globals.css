@@ -1,246 +1,90 @@
-/* ===== Global Brand System (Theme Switchable) ===== */
+/* app/globals.css — THEME 2 (Graphite + Lime) */
+*{box-sizing:border-box}
+html,body{padding:0;margin:0}
+a{color:inherit}
+:focus-visible{outline:2px solid #a3ff12;outline-offset:2px}
 
-:root {
-  /* Base (will be overridden by theme blocks below) */
-  --bg: #0b0f14;
-  --fg: rgba(255, 255, 255, 0.92);
-  --muted: rgba(255, 255, 255, 0.68);
+:root{
+  --bg:#070a12;
+  --fg:rgba(255,255,255,.92);
+  --muted:rgba(255,255,255,.70);
 
-  --panel: rgba(255, 255, 255, 0.06);
-  --panel2: rgba(255, 255, 255, 0.08);
-  --stroke: rgba(255, 255, 255, 0.12);
+  --panel:rgba(255,255,255,.06);
+  --panel2:rgba(255,255,255,.09);
+  --stroke:rgba(255,255,255,.12);
 
-  --brand: #22c55e; /* accent 1 */
-  --brand2: #a3e635; /* accent 2 */
-  --danger: #ef4444;
+  --accent:#a3ff12;
+  --accent2:#5fffbf;
 
-  --shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
-  --shadow2: 0 12px 30px rgba(0, 0, 0, 0.25);
+  --shadow:0 20px 60px rgba(0,0,0,.45);
+  --radius:18px;
 
-  --radius: 18px;
-  --radius2: 24px;
-
-  --container: 1180px;
-
-  --ring: rgba(34, 197, 94, 0.22);
-  --ring2: rgba(163, 230, 53, 0.18);
+  --font:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,"Apple Color Emoji","Segoe UI Emoji";
 }
 
-/* =========================================================
-   THEME #2 — Graphite + Lime (Modern SaaS)
-   Use: data-theme="graphite-lime"
-========================================================= */
-:root[data-theme="graphite-lime"] {
-  --bg: #0b0f14;
-  --fg: rgba(255, 255, 255, 0.92);
-  --muted: rgba(255, 255, 255, 0.68);
-
-  --panel: rgba(255, 255, 255, 0.06);
-  --panel2: rgba(255, 255, 255, 0.08);
-  --stroke: rgba(255, 255, 255, 0.12);
-
-  --brand: #22c55e;
-  --brand2: #a3e635;
-
-  --ring: rgba(34, 197, 94, 0.22);
-  --ring2: rgba(163, 230, 53, 0.18);
+body{
+  background:var(--bg);
+  color:var(--fg);
+  font-family:var(--font);
+  min-height:100vh;
 }
+.page{min-height:calc(100vh - 120px)}
 
-/* =========================================================
-   THEME #3 — Clean White + Electric Blue (Enterprise Trust)
-   Use: data-theme="white-blue"
-========================================================= */
-:root[data-theme="white-blue"] {
-  --bg: #ffffff;
-  --fg: rgba(11, 18, 32, 0.92);
-  --muted: rgba(11, 18, 32, 0.62);
-
-  --panel: rgba(37, 99, 235, 0.04);
-  --panel2: rgba(37, 99, 235, 0.06);
-  --stroke: rgba(11, 18, 32, 0.12);
-
-  --brand: #2563eb;
-  --brand2: #60a5fa;
-
-  --shadow: 0 18px 60px rgba(15, 23, 42, 0.10);
-  --shadow2: 0 12px 30px rgba(15, 23, 42, 0.08);
-
-  --ring: rgba(37, 99, 235, 0.20);
-  --ring2: rgba(96, 165, 250, 0.18);
-}
-
-/* =========================================================
-   THEME #5 — Minimal Monochrome (Apple-ish)
-   Use: data-theme="mono"
-========================================================= */
-:root[data-theme="mono"] {
-  --bg: #0b0b0d;
-  --fg: rgba(255, 255, 255, 0.92);
-  --muted: rgba(255, 255, 255, 0.62);
-
-  --panel: rgba(255, 255, 255, 0.05);
-  --panel2: rgba(255, 255, 255, 0.07);
-  --stroke: rgba(255, 255, 255, 0.12);
-
-  --brand: #ffffff;
-  --brand2: rgba(255, 255, 255, 0.78);
-
-  --ring: rgba(255, 255, 255, 0.16);
-  --ring2: rgba(255, 255, 255, 0.12);
-}
-
-/* =========================================================
-   THEME #6 — Cyber Teal (Dev tools vibe)
-   Use: data-theme="cyber-teal"
-========================================================= */
-:root[data-theme="cyber-teal"] {
-  --bg: #041016;
-  --fg: rgba(255, 255, 255, 0.92);
-  --muted: rgba(255, 255, 255, 0.68);
-
-  --panel: rgba(255, 255, 255, 0.06);
-  --panel2: rgba(255, 255, 255, 0.08);
-  --stroke: rgba(255, 255, 255, 0.12);
-
-  --brand: #14f195;
-  --brand2: #22d3ee;
-
-  --ring: rgba(20, 241, 149, 0.20);
-  --ring2: rgba(34, 211, 238, 0.18);
-}
-
-/* ===== Resets ===== */
-* { box-sizing: border-box; }
-html, body { height: 100%; }
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-}
-
-/* ===== Layout Helpers ===== */
-.container {
-  max-width: var(--container);
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-.bgFx {
-  position: fixed;
-  inset: -20vh -20vw;
-  pointer-events: none;
-  opacity: 0.9;
+.bgFx{
+  position:fixed; inset:-20%;
+  pointer-events:none; z-index:-1;
   background:
-    radial-gradient(700px 400px at 12% 12%, color-mix(in srgb, var(--brand) 20%, transparent), transparent 60%),
-    radial-gradient(600px 420px at 85% 25%, color-mix(in srgb, var(--brand2) 18%, transparent), transparent 62%),
-    radial-gradient(900px 700px at 40% 90%, rgba(255,255,255,0.06), transparent 55%);
-  filter: blur(10px);
-  z-index: -1;
+    radial-gradient(600px 600px at 20% 20%, color-mix(in oklab, var(--accent) 25%, transparent) 0%, transparent 60%),
+    radial-gradient(700px 700px at 80% 30%, color-mix(in oklab, var(--accent2) 20%, transparent) 0%, transparent 62%),
+    radial-gradient(800px 800px at 50% 90%, rgba(255,255,255,.10) 0%, transparent 60%);
+  filter:blur(20px);
+  opacity:.9;
 }
 
-/* ===== Cards / Panels ===== */
-.card, .panel {
-  border: 1px solid var(--stroke);
-  border-radius: var(--radius2);
-  background: var(--panel);
-  box-shadow: var(--shadow2);
-}
-.panel { background: var(--panel2); }
+.container{max-width:1100px;margin:0 auto;padding:0 18px}
 
-/* ===== Typography ===== */
-h1, h2, h3 { margin: 0; letter-spacing: -0.02em; }
-p { margin: 0; color: var(--muted); line-height: 1.65; }
+.topNav{
+  position:sticky; top:0; z-index:10;
+  backdrop-filter:blur(14px);
+  background:color-mix(in oklab, var(--bg) 70%, transparent);
+  border-bottom:1px solid var(--stroke);
+}
+.navInner{height:64px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none}
+.brandMark{
+  width:14px;height:14px;border-radius:6px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  box-shadow:0 0 0 6px rgba(255,255,255,.04);
+}
+.brandText{font-weight:900;letter-spacing:-.4px}
+.brandDot{width:6px;height:6px;border-radius:999px;background:var(--accent);opacity:.9}
 
-/* ===== Buttons ===== */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 14px;
-  border: 1px solid var(--stroke);
-  background: var(--panel);
-  color: var(--fg);
-  text-decoration: none;
-  font-weight: 900;
-  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+.navLinks{display:flex;gap:10px;align-items:center}
+.navLink{
+  text-decoration:none;padding:9px 11px;border:1px solid transparent;border-radius:12px;
+  color:var(--muted);font-weight:800;font-size:13px;
 }
-.btn:hover { transform: translateY(-1px); box-shadow: var(--shadow2); }
-.btn:active { transform: translateY(0px); }
-.btnPrimary {
-  border-color: color-mix(in srgb, var(--brand) 48%, var(--stroke));
-  background: color-mix(in srgb, var(--brand) 22%, var(--panel));
-  box-shadow: 0 0 0 0 transparent;
-}
-.btnPrimary:hover { box-shadow: 0 0 0 6px var(--ring), var(--shadow2); }
-.btnGhost {
-  background: transparent;
-}
+.navLink:hover{border-color:var(--stroke);color:var(--fg);background:var(--panel)}
 
-/* ===== Top Nav ===== */
-.topNav {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  backdrop-filter: blur(10px);
-  background: color-mix(in srgb, var(--bg) 75%, transparent);
-  border-bottom: 1px solid var(--stroke);
+.footer{
+  border-top:1px solid var(--stroke);
+  background:color-mix(in oklab, var(--bg) 75%, transparent);
 }
-.navInner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 14px 0;
-}
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-  color: var(--fg);
-  font-weight: 950;
-  letter-spacing: -0.02em;
-}
-.brandMark {
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--brand), var(--brand2));
-  box-shadow: 0 0 0 6px var(--ring2);
-}
-.navLinks { display: flex; gap: 10px; flex-wrap: wrap; }
-.navLink {
-  color: var(--muted);
-  text-decoration: none;
-  font-weight: 900;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid transparent;
-}
-.navLink:hover {
-  color: var(--fg);
-  border-color: var(--stroke);
-  background: var(--panel);
-}
+.footerInner{padding:18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.footerBrand{font-weight:900;letter-spacing:-.2px}
+.footerMuted{color:var(--muted);font-size:13px}
+.footerRight{color:var(--muted);font-size:13px;display:flex;gap:10px;align-items:center}
+.footerLink{text-decoration:none}
+.footerLink:hover{color:var(--fg)}
+.footerSep{opacity:.5}
 
-/* ===== Forms (fix white-on-white issues) ===== */
-input, select, textarea, button { font: inherit; }
-label { color: color-mix(in srgb, var(--fg) 85%, var(--muted)); font-weight: 900; }
-
-input, select, textarea {
-  width: 100%;
-  color: var(--fg);
-  background: var(--panel);
-  border: 1px solid var(--stroke);
-  border-radius: 14px;
-  padding: 12px 12px;
-  outline: none;
+/* ✅ Fix questionnaire readability */
+input,select,textarea{
+  background:rgba(255,255,255,.92);
+  color:#0b1020;
+  border:1px solid rgba(0,0,0,.10);
+  border-radius:14px;
+  padding:12px 12px;
 }
-input::placeholder, textarea::placeholder { color: color-mix(in srgb, var(--muted) 75%, transparent); }
-input:focus, select:focus, textarea:focus {
-  border-color: color-mix(in srgb, var(--brand) 55%, var(--stroke));
-  box-shadow: 0 0 0 6px var(--ring), var(--shadow2);
-}
+label{color:var(--fg)}
+small,p{color:var(--muted)}
