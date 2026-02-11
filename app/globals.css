@@ -1,11 +1,11 @@
-/* app/globals.css — THEME 5 (Obsidian + Gold) */
+/* app/globals.css — THEME 6 (Slate + Violet) */
 *{box-sizing:border-box}
 html,body{padding:0;margin:0}
 a{color:inherit}
-:focus-visible{outline:2px solid #f6c453;outline-offset:2px}
+:focus-visible{outline:2px solid #b18cff;outline-offset:2px}
 
 :root{
-  --bg:#07070a;
+  --bg:#080a12;
   --fg:rgba(255,255,255,.92);
   --muted:rgba(255,255,255,.70);
 
@@ -13,8 +13,8 @@ a{color:inherit}
   --panel2:rgba(255,255,255,.09);
   --stroke:rgba(255,255,255,.12);
 
-  --accent:#f6c453;
-  --accent2:#ffea9a;
+  --accent:#b18cff;
+  --accent2:#ff7bd5;
 
   --shadow:0 22px 70px rgba(0,0,0,.55);
   --radius:18px;
@@ -29,8 +29,8 @@ body{background:var(--bg);color:var(--fg);font-family:var(--font);min-height:100
   position:fixed; inset:-20%;
   pointer-events:none; z-index:-1;
   background:
-    radial-gradient(650px 650px at 20% 20%, rgba(246,196,83,.18) 0%, transparent 62%),
-    radial-gradient(760px 760px at 80% 30%, rgba(255,234,154,.12) 0%, transparent 65%),
+    radial-gradient(700px 700px at 16% 18%, rgba(177,140,255,.18) 0%, transparent 64%),
+    radial-gradient(760px 760px at 82% 25%, rgba(255,123,213,.12) 0%, transparent 66%),
     radial-gradient(900px 900px at 55% 92%, rgba(255,255,255,.10) 0%, transparent 60%);
   filter:blur(22px);
   opacity:.95;
@@ -41,7 +41,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--font);min-height:100
 .topNav{
   position:sticky; top:0; z-index:10;
   backdrop-filter:blur(14px);
-  background:color-mix(in oklab, var(--bg) 70%, transparent);
+  background:color-mix(in oklab, var(--bg) 68%, transparent);
   border-bottom:1px solid var(--stroke);
 }
 .navInner{height:64px;display:flex;align-items:center;justify-content:space-between}
@@ -61,7 +61,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--font);min-height:100
 }
 .navLink:hover{border-color:var(--stroke);color:var(--fg);background:var(--panel)}
 
-.footer{border-top:1px solid var(--stroke);background:color-mix(in oklab, var(--bg) 76%, transparent)}
+.footer{border-top:1px solid var(--stroke);background:color-mix(in oklab, var(--bg) 74%, transparent)}
 .footerInner{padding:18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .footerBrand{font-weight:900;letter-spacing:-.2px}
 .footerMuted{color:var(--muted);font-size:13px}
@@ -72,7 +72,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--font);min-height:100
 
 input,select,textarea{
   background:rgba(255,255,255,.92);
-  color:#120d06;
+  color:#0b1020;
   border:1px solid rgba(0,0,0,.10);
   border-radius:14px;
   padding:12px 12px;
