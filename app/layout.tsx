@@ -5,7 +5,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "CrecyStudio — Custom Websites",
   description:
-    "Custom websites built with clear scope, transparent tiers, and a professional process.",
+    "Professional websites with transparent pricing, clear scope, and fast delivery. Wix, Squarespace, or Custom (Next.js).",
 };
 
 export default function RootLayout({
@@ -13,33 +13,28 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Change theme here:
-  // theme-lux | theme-carbon | theme-ink | theme-obsidian | theme-graphite
-  const themeClass = "theme-obsidian";
-
   return (
-    <html lang="en" className={themeClass}>
+    <html lang="en">
       <body>
         {/* Background FX */}
-        <div className="bgFX" aria-hidden="true">
-          <div className="bgFX__grid" />
-          <div className="bgFX__glow bgFX__glow--a" />
-          <div className="bgFX__glow bgFX__glow--b" />
-          <div className="bgFX__noise" />
-        </div>
+        <div className="bgFx" aria-hidden="true" />
+        <div className="bgNoise" aria-hidden="true" />
 
-        {/* Top nav */}
+        {/* Top Nav */}
         <header className="topNav">
           <div className="container navInner">
-            <Link href="/" className="brand">
-              <span className="brandMark" aria-hidden="true" />
+            <Link href="/" className="brand" aria-label="CrecyStudio Home">
+              <span className="logoMark" aria-hidden="true">
+                <span className="logoRing" />
+                <span className="logoCS">C</span>
+              </span>
               <span className="brandText">
-                <span className="brandName">CrecyStudio</span>
-                <span className="brandTag">Custom Websites</span>
+                Crecy<span className="accentText">Studio</span>
+                <span className="brandSub">Custom Websites</span>
               </span>
             </Link>
 
-            <nav className="navLinks">
+            <nav className="navLinks" aria-label="Primary">
               <Link href="/build" className="navLink">
                 Custom Build
               </Link>
@@ -51,71 +46,61 @@ export default function RootLayout({
               </Link>
             </nav>
 
-            <div className="navCTA">
+            <div className="navCtas">
               <Link href="/estimate" className="btn btnPrimary">
-                Get Estimate <span className="btnArrow">→</span>
+                Get Estimate
               </Link>
             </div>
           </div>
         </header>
 
         {/* Page */}
-        <main className="page">{children}</main>
+        <div className="page">{children}</div>
 
         {/* Footer */}
         <footer className="footer">
           <div className="container footerInner">
-            <div className="footerLeft">
-              <div className="footerBrand">
-                <span className="brandMark brandMark--sm" aria-hidden="true" />
-                <div className="footerBrandText">
-                  <div className="footerTitle">CrecyStudio</div>
-                  <div className="footerMuted">
-                    Custom websites with clear scope & revisions.
-                  </div>
-                </div>
+            <div className="footerBrand">
+              <div className="footerLogo" aria-hidden="true">
+                <span className="logoRing" />
+                <span className="logoCS">C</span>
               </div>
-
-              <div className="footerMini">
-                <span className="chip">Virginia</span>
-                <span className="chip">Delivery-ready</span>
-                <span className="chip">Fast turnaround</span>
+              <div>
+                <div className="footerTitle">CrecyStudio</div>
+                <div className="footerMuted">
+                  Custom websites on Wix, Squarespace, or Next.js.
+                </div>
               </div>
             </div>
 
-            <div className="footerRight">
+            <div className="footerCols">
               <div className="footerCol">
                 <div className="footerHead">Explore</div>
-                <Link className="footerLink" href="/build">
+                <Link href="/build" className="footerLink">
                   Custom Build
                 </Link>
-                <Link className="footerLink" href="/estimate">
+                <Link href="/estimate" className="footerLink">
                   Pricing / Estimate
                 </Link>
-                <Link className="footerLink" href="/dashboard">
+                <Link href="/dashboard" className="footerLink">
                   Client Portal
                 </Link>
               </div>
 
               <div className="footerCol">
+                <div className="footerHead">Service Area</div>
+                <div className="footerMuted">Virginia (Remote OK)</div>
+                <div className="footerMuted">Fast turnaround</div>
+              </div>
+
+              <div className="footerCol">
                 <div className="footerHead">Contact</div>
-                <a className="footerLink" href="mailto:couranr@couranauto.com">
-                  couranr@couranauto.com
+                <a className="footerLink" href="mailto:hello@crecystudio.com">
+                  hello@crecystudio.com
                 </a>
-                <a className="footerLink" href="tel:+17033819462">
-                  (703) 381-9462
-                </a>
+                <div className="footerMuted">Response: same day</div>
               </div>
             </div>
-          </div>
-
-          <div className="container footerBottom">
-            <span className="footerMuted">
-              © {new Date().getFullYear()} CrecyStudio. All rights reserved.
-            </span>
-            <span className="footerMuted">
-              Built for clarity, not surprises.
-            </span>
           </div>
         </footer>
       </body>
