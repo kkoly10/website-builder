@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -81,7 +81,12 @@ const INTENTS: Intent[] = [
   "Other",
 ];
 
-const WEBSITE_TYPES: WebsiteType[] = ["Business", "Ecommerce", "Portfolio", "Landing"];
+const WEBSITE_TYPES: WebsiteType[] = [
+  "Business",
+  "Ecommerce",
+  "Portfolio",
+  "Landing",
+];
 const PAGES: Pages[] = ["1-3", "4-5", "6-8", "9+"];
 const DESIGNS: Design[] = ["Modern", "Classic", "Creative"];
 const TIMELINES: Timeline[] = ["2-3 weeks", "4+ weeks", "Under 14 days"];
@@ -255,504 +260,527 @@ export default function BuildPage() {
       : `Step ${step} of 6`;
 
   return (
-    <main className="container" style={{ padding: "42px 0 80px" }}>
-      <div className="kicker">
-        <span className="kickerDot" aria-hidden="true" />
-        CrecyStudio • Get a Quote
-      </div>
+    <main style={container}>
+      <header style={{ marginBottom: 28 }}>
+        <h1 style={title}>Get a Quote</h1>
+        <p style={subtitle}>
+          {stepLabel} — we’ll ask only what’s relevant so we can recommend the right tier.
+        </p>
+      </header>
 
-      <div style={{ height: 12 }} />
+      {/* STEP 0: CHOOSER */}
+      {step === 0 && (
+        <section style={grid2}>
+          <Card
+            title="Help me decide"
+            desc="Not sure what you need? We’ll ask goal-based questions and recommend the best approach."
+            cta="Start guided intake →"
+            onClick={() => goMode("guided")}
+            highlight
+          />
+          <Card
+            title="I know what I need"
+            desc="You already know the type of site you want. We’ll jump straight into scope details."
+            cta="Start scope intake →"
+            onClick={() => goMode("known")}
+          />
+        </section>
+      )}
 
-      <h1 className="h1">Scope your website project</h1>
-      <p className="p" style={{ maxWidth: 860, marginTop: 10 }}>
-        {stepLabel} — we’ll ask only what’s relevant so we can recommend the right tier.
-      </p>
+      {/* STEP 1 */}
+      {step === 1 && (
+        <section style={card}>
+          {form.mode === "guided" ? (
+            <>
+              <h2 style={sectionTitle}>What are you trying to achieve?</h2>
 
-      <div style={{ height: 18 }} />
-
-      {/* ✅ Paper wrapper (forces readable dark text & proper inputs) */}
-      <section className="formPaper">
-        {/* STEP 0: CHOOSER */}
-        {step === 0 && (
-          <div style={grid2}>
-            <Card
-              title="Help me decide"
-              desc="Not sure what you need? We’ll ask goal-based questions and recommend the best approach."
-              cta="Start guided intake →"
-              onClick={() => goMode("guided")}
-              highlight
-            />
-            <Card
-              title="I know what I need"
-              desc="You already know the type of site you want. We’ll jump straight into scope details."
-              cta="Start scope intake →"
-              onClick={() => goMode("known")}
-            />
-          </div>
-        )}
-
-        {/* STEP 1 */}
-        {step === 1 && (
-          <PaperCard>
-            {form.mode === "guided" ? (
-              <>
-                <h2 style={sectionTitle}>What are you trying to achieve?</h2>
-
-                <Field label="Primary goal">
-                  <select
-                    value={form.intent}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, intent: e.target.value as Intent }))
-                    }
-                  >
-                    {INTENTS.map((i) => (
-                      <option key={i} value={i}>
-                        {i}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-
-                {form.intent === "Other" && (
-                  <Field label="Briefly describe your goal">
-                    <input
-                      value={form.intentOther}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, intentOther: e.target.value }))
-                      }
-                      placeholder="e.g., recruiting, investor credibility, event promotion…"
-                    />
-                  </Field>
-                )}
-
-                <div style={hint}>
-                  <strong>Tip:</strong> After you pick a goal, we’ll suggest the typical setup (you can change it).
-                </div>
-              </>
-            ) : (
-              <>
-                <h2 style={sectionTitle}>What type of website do you need?</h2>
-                <Field label="Website type">
-                  <select
-                    value={form.websiteType}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, websiteType: e.target.value as WebsiteType }))
-                    }
-                  >
-                    {WEBSITE_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-              </>
-            )}
-          </PaperCard>
-        )}
-
-        {/* STEP 2 */}
-        {step === 2 && (
-          <PaperCard>
-            <h2 style={sectionTitle}>Basic Scope</h2>
-
-            {form.mode === "guided" && (
-              <div style={{ marginBottom: 18 }}>
-                <div style={{ color: PAPER.text, lineHeight: 1.6 }}>
-                  Based on your goal, we typically recommend:
-                  <ul style={miniList}>
-                    <li>
-                      <strong>Website type:</strong> {suggested.websiteType ?? form.websiteType}
-                    </li>
-                    {suggested.booking && <li>Booking enabled</li>}
-                    {suggested.payments && <li>Payments enabled</li>}
-                    {suggested.blog && <li>Blog enabled</li>}
-                    {suggested.membership && <li>Membership enabled</li>}
-                  </ul>
-                </div>
-
-                <button type="button" onClick={applySuggested} style={secondaryBtn}>
-                  Apply suggested setup
-                </button>
-              </div>
-            )}
-
-            <Field label="Estimated pages">
-              <select
-                value={form.pages}
-                onChange={(e) => setForm((f) => ({ ...f, pages: e.target.value as Pages }))}
-              >
-                {PAGES.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <div style={hint}>
-              Pages help us estimate effort — final scope is confirmed during your consultation.
-            </div>
-          </PaperCard>
-        )}
-
-        {/* STEP 3 */}
-        {step === 3 && (
-          <PaperCard>
-            <h2 style={sectionTitle}>Features (Only What Applies)</h2>
-
-            <div style={twoCol}>
-              <ToggleRow
-                label="Booking / appointments"
-                checked={form.booking}
-                onChange={(v) => setForm((f) => ({ ...f, booking: v }))}
-              />
-              <ToggleRow
-                label="Payments / checkout"
-                checked={form.payments}
-                onChange={(v) => setForm((f) => ({ ...f, payments: v }))}
-              />
-              <ToggleRow
-                label="Blog / articles"
-                checked={form.blog}
-                onChange={(v) => setForm((f) => ({ ...f, blog: v }))}
-              />
-              <ToggleRow
-                label="Membership / gated content"
-                checked={form.membership}
-                onChange={(v) => setForm((f) => ({ ...f, membership: v }))}
-              />
-            </div>
-
-            {(form.booking || form.payments || form.membership || form.intent === "Selling") && (
-              <div style={{ marginTop: 18 }}>
-                <Field label="Do you want automations? (advanced)">
-                  <select
-                    value={form.wantsAutomation}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, wantsAutomation: e.target.value as YesNo }))
-                    }
-                  >
-                    <option value="No">No</option>
-                    <option value="Yes">Yes</option>
-                  </select>
-                </Field>
-
-                {form.wantsAutomation === "Yes" && (
-                  <div style={subCard}>
-                    <div style={{ fontWeight: 800, marginBottom: 10, color: PAPER.text }}>
-                      What automations do you want?
-                    </div>
-
-                    {AUTOMATION_OPTIONS.map((a) => (
-                      <CheckLine
-                        key={a}
-                        label={a}
-                        checked={form.automationTypes.includes(a)}
-                        onChange={() => toggleInList("automationTypes", a)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {(form.payments || form.booking || form.intent === "Selling") && (
-              <div style={{ marginTop: 18 }}>
-                <div style={subCard}>
-                  <div style={{ fontWeight: 800, marginBottom: 10, color: PAPER.text }}>
-                    Any integrations needed?
-                  </div>
-
-                  {INTEGRATION_OPTIONS.map((i) => (
-                    <CheckLine
-                      key={i}
-                      label={i}
-                      checked={form.integrations.includes(i)}
-                      onChange={() => toggleInList("integrations", i)}
-                    />
-                  ))}
-
-                  <Field label="Other integration (optional)">
-                    <input
-                      value={form.integrationOther}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, integrationOther: e.target.value }))
-                      }
-                      placeholder="e.g., a specific CRM, booking platform, inventory tool…"
-                    />
-                  </Field>
-                </div>
-              </div>
-            )}
-          </PaperCard>
-        )}
-
-        {/* STEP 4 */}
-        {step === 4 && (
-          <PaperCard>
-            <h2 style={sectionTitle}>Assets & Readiness</h2>
-
-            <Field label="Reference website (optional)">
-              <input
-                placeholder="https://example.com"
-                value={form.referenceWebsite}
-                onChange={(e) => setForm((f) => ({ ...f, referenceWebsite: e.target.value }))}
-              />
-            </Field>
-
-            <div style={twoCol}>
-              <Field label="Do you have a logo?">
+              <Field label="Primary goal">
                 <select
-                  value={form.hasLogo}
-                  onChange={(e) => setForm((f) => ({ ...f, hasLogo: e.target.value as YesNo }))}
-                >
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </Field>
-
-              <Field label="Brand guide / colors already defined?">
-                <select
-                  value={form.hasBrandGuide}
+                  value={form.intent}
                   onChange={(e) =>
-                    setForm((f) => ({ ...f, hasBrandGuide: e.target.value as YesNo }))
+                    setForm((f) => ({ ...f, intent: e.target.value as Intent }))
                   }
                 >
-                  <option value="No">No</option>
-                  <option value="Yes">Yes</option>
-                </select>
-              </Field>
-            </div>
-
-            <div style={twoCol}>
-              <Field label="Content readiness (text / services / about)">
-                <select
-                  value={form.contentReady}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, contentReady: e.target.value as ContentReady }))
-                  }
-                >
-                  <option value="Ready">Ready</option>
-                  <option value="Some">Some</option>
-                  <option value="Not ready">Not ready</option>
-                </select>
-              </Field>
-
-              <Field label="Images source">
-                <select
-                  value={form.assetsSource}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, assetsSource: e.target.value as AssetsSource }))
-                  }
-                >
-                  <option value="Client provides">Client provides</option>
-                  <option value="Stock">Stock</option>
-                  <option value="Need help">Need help</option>
-                </select>
-              </Field>
-            </div>
-
-            <div style={hint}>
-              These answers help prevent delays and revision disputes later.
-            </div>
-          </PaperCard>
-        )}
-
-        {/* STEP 5 */}
-        {step === 5 && (
-          <PaperCard>
-            <h2 style={sectionTitle}>Decision & Delivery</h2>
-
-            <div style={twoCol}>
-              <Field label="Are you the final decision-maker?">
-                <select
-                  value={form.decisionMaker}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, decisionMaker: e.target.value as YesNo }))
-                  }
-                >
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </Field>
-
-              <Field label="How many stakeholders will review?">
-                <select
-                  value={form.stakeholdersCount}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, stakeholdersCount: e.target.value as any }))
-                  }
-                >
-                  <option value="1">1</option>
-                  <option value="2-3">2–3</option>
-                  <option value="4+">4+</option>
-                </select>
-              </Field>
-            </div>
-
-            <div style={twoCol}>
-              <Field label="Design direction">
-                <select
-                  value={form.design}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, design: e.target.value as Design }))
-                  }
-                >
-                  {DESIGNS.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
+                  {INTENTS.map((i) => (
+                    <option key={i} value={i}>
+                      {i}
                     </option>
                   ))}
                 </select>
               </Field>
 
-              <Field label="Timeline">
+              {form.intent === "Other" && (
+                <Field label="Briefly describe your goal">
+                  <input
+                    value={form.intentOther}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, intentOther: e.target.value }))
+                    }
+                    placeholder="e.g., recruiting, investor credibility, event promotion…"
+                  />
+                </Field>
+              )}
+
+              <div style={hint}>
+                <strong>Tip:</strong> After you pick a goal, we’ll suggest the typical setup (you can change it).
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 style={sectionTitle}>What type of website do you need?</h2>
+              <Field label="Website type">
                 <select
-                  value={form.timeline}
+                  value={form.websiteType}
                   onChange={(e) =>
-                    setForm((f) => ({ ...f, timeline: e.target.value as Timeline }))
+                    setForm((f) => ({
+                      ...f,
+                      websiteType: e.target.value as WebsiteType,
+                    }))
                   }
                 >
-                  {TIMELINES.map((t) => (
+                  {WEBSITE_TYPES.map((t) => (
                     <option key={t} value={t}>
                       {t}
                     </option>
                   ))}
                 </select>
               </Field>
-            </div>
+            </>
+          )}
+        </section>
+      )}
 
-            <Field label="Notes (optional)">
-              <textarea
-                rows={4}
-                value={form.notes}
-                onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-                placeholder="Anything special you want us to know (pages, sections, examples, features)…"
-              />
-            </Field>
-          </PaperCard>
-        )}
+      {/* STEP 2 */}
+      {step === 2 && (
+        <section style={card}>
+          <h2 style={sectionTitle}>Basic Scope</h2>
 
-        {/* STEP 6 */}
-        {step === 6 && (
-          <PaperCard>
-            <h2 style={sectionTitle}>Review</h2>
-            <p style={{ color: PAPER.muted, lineHeight: 1.7 }}>
-              Next we’ll generate a personalized estimate, then show tier options.
-            </p>
+          {form.mode === "guided" && (
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ color: "#444", lineHeight: 1.6 }}>
+                Based on your goal, we typically recommend:
+                <ul style={miniList}>
+                  <li>
+                    <strong>Website type:</strong>{" "}
+                    {suggested.websiteType ?? form.websiteType}
+                  </li>
+                  {suggested.booking && <li>Booking enabled</li>}
+                  {suggested.payments && <li>Payments enabled</li>}
+                  {suggested.blog && <li>Blog enabled</li>}
+                  {suggested.membership && <li>Membership enabled</li>}
+                </ul>
+              </div>
 
-            <div style={{ marginTop: 12, color: PAPER.text, lineHeight: 1.8 }}>
-              <strong>Summary:</strong>
-              <ul style={miniList}>
-                <li>
-                  Mode:{" "}
-                  <strong>{form.mode === "guided" ? "Help me decide" : "I know what I need"}</strong>
-                </li>
-                <li>
-                  Website type: <strong>{form.websiteType}</strong>
-                </li>
-                <li>
-                  Pages: <strong>{form.pages}</strong>
-                </li>
-                <li>
-                  Features:{" "}
-                  <strong>
-                    {[
-                      form.booking && "Booking",
-                      form.payments && "Payments",
-                      form.blog && "Blog",
-                      form.membership && "Membership",
-                    ]
-                      .filter(Boolean)
-                      .join(", ") || "None selected"}
-                  </strong>
-                </li>
-                <li>
-                  Content readiness: <strong>{form.contentReady}</strong>
-                </li>
-                <li>
-                  Timeline: <strong>{form.timeline}</strong>
-                </li>
-              </ul>
-            </div>
-
-            <div style={hint}>
-              After you continue, we’ll ask for your email so we can send your estimate and follow up.
-            </div>
-          </PaperCard>
-        )}
-
-        {/* STEP 7: CONTACT */}
-        {step === 7 && (
-          <PaperCard>
-            <h2 style={sectionTitle}>Where should we send your estimate?</h2>
-
-            <Field label="Email (required)">
-              <input
-                value={form.leadEmail}
-                onChange={(e) => setForm((f) => ({ ...f, leadEmail: e.target.value }))}
-                placeholder="you@company.com"
-              />
-            </Field>
-
-            <Field label="Phone (optional)">
-              <input
-                value={form.leadPhone}
-                onChange={(e) => setForm((f) => ({ ...f, leadPhone: e.target.value }))}
-                placeholder="(555) 555-5555"
-              />
-            </Field>
-
-            <div style={hint}>
-              We’ll use this to send your estimate and schedule a free consultation if you want one.
-            </div>
-          </PaperCard>
-        )}
-
-        {/* STEP 8: FINAL CONFIRM */}
-        {step === 8 && (
-          <PaperCard>
-            <h2 style={sectionTitle}>All set</h2>
-            <p style={{ color: PAPER.muted, lineHeight: 1.7 }}>
-              We’ll generate your estimate next. You’ll also see tier options if you want to upgrade.
-            </p>
-
-            <div style={miniBox}>
-              <div><strong>Email:</strong> {form.leadEmail || "(missing)"}</div>
-              {form.leadPhone ? <div><strong>Phone:</strong> {form.leadPhone}</div> : null}
-            </div>
-          </PaperCard>
-        )}
-
-        {/* NAV */}
-        {step > 0 && (
-          <div style={nav}>
-            <button onClick={back} style={secondaryBtn}>
-              Back
-            </button>
-
-            {step < 8 ? (
-              <button onClick={next} style={primaryBtn}>
-                Next →
+              <button type="button" onClick={applySuggested} style={secondaryBtn}>
+                Apply suggested setup
               </button>
-            ) : (
-              <button onClick={submit} style={primaryBtn}>
-                View Estimate →
-              </button>
-            )}
+            </div>
+          )}
+
+          <Field label="Estimated pages">
+            <select
+              value={form.pages}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, pages: e.target.value as Pages }))
+              }
+            >
+              {PAGES.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <div style={hint}>
+            Pages help us estimate effort — final scope is confirmed during your consultation.
           </div>
-        )}
-      </section>
+        </section>
+      )}
+
+      {/* STEP 3 */}
+      {step === 3 && (
+        <section style={card}>
+          <h2 style={sectionTitle}>Features (Only What Applies)</h2>
+
+          <div style={twoCol}>
+            <ToggleRow
+              label="Booking / appointments"
+              checked={form.booking}
+              onChange={(v) => setForm((f) => ({ ...f, booking: v }))}
+            />
+            <ToggleRow
+              label="Payments / checkout"
+              checked={form.payments}
+              onChange={(v) => setForm((f) => ({ ...f, payments: v }))}
+            />
+            <ToggleRow
+              label="Blog / articles"
+              checked={form.blog}
+              onChange={(v) => setForm((f) => ({ ...f, blog: v }))}
+            />
+            <ToggleRow
+              label="Membership / gated content"
+              checked={form.membership}
+              onChange={(v) => setForm((f) => ({ ...f, membership: v }))}
+            />
+          </div>
+
+          {(form.booking || form.payments || form.membership || form.intent === "Selling") && (
+            <div style={{ marginTop: 18 }}>
+              <Field label="Do you want automations? (advanced)">
+                <select
+                  value={form.wantsAutomation}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      wantsAutomation: e.target.value as YesNo,
+                    }))
+                  }
+                >
+                  <option value="No">No</option>
+                  <option value="Yes">Yes</option>
+                </select>
+              </Field>
+
+              {form.wantsAutomation === "Yes" && (
+                <div style={subCard}>
+                  <div style={{ fontWeight: 700, marginBottom: 10 }}>
+                    What automations do you want?
+                  </div>
+
+                  {AUTOMATION_OPTIONS.map((a) => (
+                    <CheckLine
+                      key={a}
+                      label={a}
+                      checked={form.automationTypes.includes(a)}
+                      onChange={() => toggleInList("automationTypes", a)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {(form.payments || form.booking || form.intent === "Selling") && (
+            <div style={{ marginTop: 18 }}>
+              <div style={subCard}>
+                <div style={{ fontWeight: 700, marginBottom: 10 }}>
+                  Any integrations needed?
+                </div>
+
+                {INTEGRATION_OPTIONS.map((i) => (
+                  <CheckLine
+                    key={i}
+                    label={i}
+                    checked={form.integrations.includes(i)}
+                    onChange={() => toggleInList("integrations", i)}
+                  />
+                ))}
+
+                <Field label="Other integration (optional)">
+                  <input
+                    value={form.integrationOther}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, integrationOther: e.target.value }))
+                    }
+                    placeholder="e.g., a specific CRM, booking platform, inventory tool…"
+                  />
+                </Field>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* STEP 4 */}
+      {step === 4 && (
+        <section style={card}>
+          <h2 style={sectionTitle}>Assets & Readiness</h2>
+
+          <Field label="Reference website (optional)">
+            <input
+              placeholder="https://example.com"
+              value={form.referenceWebsite}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, referenceWebsite: e.target.value }))
+              }
+            />
+          </Field>
+
+          <div style={twoCol}>
+            <Field label="Do you have a logo?">
+              <select
+                value={form.hasLogo}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, hasLogo: e.target.value as YesNo }))
+                }
+              >
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </Field>
+
+            <Field label="Brand guide / colors already defined?">
+              <select
+                value={form.hasBrandGuide}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    hasBrandGuide: e.target.value as YesNo,
+                  }))
+                }
+              >
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+              </select>
+            </Field>
+          </div>
+
+          <div style={twoCol}>
+            <Field label="Content readiness (text / services / about)">
+              <select
+                value={form.contentReady}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    contentReady: e.target.value as ContentReady,
+                  }))
+                }
+              >
+                <option value="Ready">Ready</option>
+                <option value="Some">Some</option>
+                <option value="Not ready">Not ready</option>
+              </select>
+            </Field>
+
+            <Field label="Images source">
+              <select
+                value={form.assetsSource}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    assetsSource: e.target.value as AssetsSource,
+                  }))
+                }
+              >
+                <option value="Client provides">Client provides</option>
+                <option value="Stock">Stock</option>
+                <option value="Need help">Need help</option>
+              </select>
+            </Field>
+          </div>
+
+          <div style={hint}>
+            These answers help prevent delays and revision disputes later.
+          </div>
+        </section>
+      )}
+
+      {/* STEP 5 */}
+      {step === 5 && (
+        <section style={card}>
+          <h2 style={sectionTitle}>Decision & Delivery</h2>
+
+          <div style={twoCol}>
+            <Field label="Are you the final decision-maker?">
+              <select
+                value={form.decisionMaker}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    decisionMaker: e.target.value as YesNo,
+                  }))
+                }
+              >
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </Field>
+
+            <Field label="How many stakeholders will review?">
+              <select
+                value={form.stakeholdersCount}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, stakeholdersCount: e.target.value as any }))
+                }
+              >
+                <option value="1">1</option>
+                <option value="2-3">2–3</option>
+                <option value="4+">4+</option>
+              </select>
+            </Field>
+          </div>
+
+          <div style={twoCol}>
+            <Field label="Design direction">
+              <select
+                value={form.design}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, design: e.target.value as Design }))
+                }
+              >
+                {DESIGNS.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label="Timeline">
+              <select
+                value={form.timeline}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, timeline: e.target.value as Timeline }))
+                }
+              >
+                {TIMELINES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+
+          <Field label="Notes (optional)">
+            <textarea
+              rows={4}
+              value={form.notes}
+              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+              placeholder="Anything special you want us to know (pages, sections, examples, features)…"
+            />
+          </Field>
+        </section>
+      )}
+
+      {/* STEP 6 */}
+      {step === 6 && (
+        <section style={card}>
+          <h2 style={sectionTitle}>Review</h2>
+          <p style={{ color: "#555", lineHeight: 1.7 }}>
+            Next we’ll generate a personalized estimate, then show tier options.
+          </p>
+
+          <div style={{ marginTop: 12, color: "#444", lineHeight: 1.8 }}>
+            <strong>Summary:</strong>
+            <ul style={miniList}>
+              <li>
+                Mode:{" "}
+                <strong>
+                  {form.mode === "guided" ? "Help me decide" : "I know what I need"}
+                </strong>
+              </li>
+              <li>
+                Website type: <strong>{form.websiteType}</strong>
+              </li>
+              <li>
+                Pages: <strong>{form.pages}</strong>
+              </li>
+              <li>
+                Features:{" "}
+                <strong>
+                  {[
+                    form.booking && "Booking",
+                    form.payments && "Payments",
+                    form.blog && "Blog",
+                    form.membership && "Membership",
+                  ]
+                    .filter(Boolean)
+                    .join(", ") || "None selected"}
+                </strong>
+              </li>
+              <li>
+                Content readiness: <strong>{form.contentReady}</strong>
+              </li>
+              <li>
+                Timeline: <strong>{form.timeline}</strong>
+              </li>
+            </ul>
+          </div>
+
+          <div style={hint}>
+            After you continue, we’ll ask for your email so we can send your estimate and follow up.
+          </div>
+        </section>
+      )}
+
+      {/* STEP 7: CONTACT */}
+      {step === 7 && (
+        <section style={card}>
+          <h2 style={sectionTitle}>Where should we send your estimate?</h2>
+
+          <Field label="Email (required)">
+            <input
+              value={form.leadEmail}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, leadEmail: e.target.value }))
+              }
+              placeholder="you@company.com"
+            />
+          </Field>
+
+          <Field label="Phone (optional)">
+            <input
+              value={form.leadPhone}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, leadPhone: e.target.value }))
+              }
+              placeholder="(555) 555-5555"
+            />
+          </Field>
+
+          <div style={hint}>
+            We’ll use this to send your estimate and schedule a free consultation if you want one.
+          </div>
+        </section>
+      )}
+
+      {/* STEP 8: FINAL CONFIRM */}
+      {step === 8 && (
+        <section style={card}>
+          <h2 style={sectionTitle}>All set</h2>
+          <p style={{ color: "#555", lineHeight: 1.7 }}>
+            We’ll generate your estimate next. You’ll also see tier options if you want to upgrade.
+          </p>
+
+          <div style={miniBox}>
+            <div>
+              <strong>Email:</strong> {form.leadEmail || "(missing)"}
+            </div>
+            {form.leadPhone ? (
+              <div>
+                <strong>Phone:</strong> {form.leadPhone}
+              </div>
+            ) : null}
+          </div>
+        </section>
+      )}
+
+      {/* NAV */}
+      {step > 0 && (
+        <div style={nav}>
+          <button onClick={back} style={secondaryBtn}>
+            Back
+          </button>
+
+          {step < 8 ? (
+            <button onClick={next} style={primaryBtn}>
+              Next →
+            </button>
+          ) : (
+            <button onClick={submit} style={primaryBtn}>
+              View Estimate →
+            </button>
+          )}
+        </div>
+      )}
     </main>
   );
 }
 
 /* ---------------- UI COMPONENTS ---------------- */
-
-function PaperCard({ children }: { children: React.ReactNode }) {
-  return <section style={card}>{children}</section>;
-}
 
 function Card({
   title,
@@ -774,12 +802,12 @@ function Card({
       tabIndex={0}
       style={{
         ...cardChoice,
-        border: highlight ? `2px solid ${PAPER.strokeStrong}` : `1px solid ${PAPER.stroke}`,
+        border: highlight ? "2px solid #000" : "1px solid #e5e5e5",
       }}
     >
-      <h2 style={{ marginBottom: 10, color: PAPER.text }}>{title}</h2>
-      <p style={{ color: PAPER.muted, lineHeight: 1.6, marginBottom: 18 }}>{desc}</p>
-      <div style={{ fontWeight: 900, color: PAPER.text }}>{cta}</div>
+      <h2 style={{ marginBottom: 10 }}>{title}</h2>
+      <p style={{ color: "#555", lineHeight: 1.6, marginBottom: 18 }}>{desc}</p>
+      <div style={{ fontWeight: 700 }}>{cta}</div>
     </div>
   );
 }
@@ -787,44 +815,31 @@ function Card({
 function Field({ label, children }: { label: string; children: any }) {
   return (
     <div style={{ marginBottom: 18 }}>
-      <label style={{ display: "block", fontWeight: 900, marginBottom: 6, color: PAPER.text }}>
+      <label style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>
         {label}
       </label>
-
-      <div className="paperField">{children}</div>
-
-      {/* ✅ Force readable inputs regardless of global theme */}
+      {children}
       <style jsx>{`
-        .paperField :global(select),
-        .paperField :global(input),
-        .paperField :global(textarea) {
+        select,
+        input,
+        textarea {
           width: 100%;
           padding: 12px 12px;
-          border-radius: 14px;
-          border: 1px solid rgba(15, 17, 20, 0.16);
-          background: rgba(255, 255, 255, 0.92);
-          color: rgba(15, 17, 20, 0.92);
+          border-radius: 12px;
+          border: 1px solid #ddd;
+          background: #fff;
           font-size: 15px;
           outline: none;
         }
-        .paperField :global(input::placeholder),
-        .paperField :global(textarea::placeholder) {
-          color: rgba(15, 17, 20, 0.45);
-        }
-        .paperField :global(textarea) {
+        textarea {
           resize: vertical;
-        }
-        .paperField :global(select:focus),
-        .paperField :global(input:focus),
-        .paperField :global(textarea:focus) {
-          box-shadow: 0 0 0 4px rgba(255, 122, 24, 0.18);
-          border-color: rgba(255, 122, 24, 0.45);
         }
       `}</style>
     </div>
   );
 }
 
+/** ✅ FIXED: checkbox placement + alignment */
 function ToggleRow({
   label,
   checked,
@@ -840,13 +855,14 @@ function ToggleRow({
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        style={{ marginRight: 10 }}
+        style={chk}
       />
-      <span style={{ color: PAPER.text, fontWeight: 850 }}>{label}</span>
+      <span style={{ lineHeight: 1.35 }}>{label}</span>
     </label>
   );
 }
 
+/** ✅ FIXED: checkbox placement + alignment */
 function CheckLine({
   label,
   checked,
@@ -857,25 +873,33 @@ function CheckLine({
   onChange: () => void;
 }) {
   return (
-    <label style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, color: PAPER.text }}>
-      <input type="checkbox" checked={checked} onChange={onChange} />
-      <span style={{ fontWeight: 800 }}>{label}</span>
+    <label style={checkLine}>
+      <input type="checkbox" checked={checked} onChange={onChange} style={chk} />
+      <span style={{ lineHeight: 1.35 }}>{label}</span>
     </label>
   );
 }
 
-/* ---------------- PAPER THEME ---------------- */
+/* ---------------- STYLES ---------------- */
 
-const PAPER = {
-  text: "rgba(15,17,20,0.92)",
-  muted: "rgba(15,17,20,0.66)",
-  stroke: "rgba(15,17,20,0.14)",
-  strokeStrong: "rgba(15,17,20,0.22)",
-  cardBg: "rgba(255,255,255,0.92)",
-  cardBg2: "rgba(255,255,255,0.84)",
+const container: React.CSSProperties = {
+  maxWidth: 1000,
+  margin: "0 auto",
+  padding: "80px 24px",
 };
 
-/* ---------------- STYLES ---------------- */
+const title: React.CSSProperties = {
+  fontSize: 40,
+  fontWeight: 800,
+  marginBottom: 10,
+};
+
+const subtitle: React.CSSProperties = {
+  color: "#555",
+  fontSize: 16,
+  lineHeight: 1.6,
+  maxWidth: 760,
+};
 
 const grid2: React.CSSProperties = {
   display: "grid",
@@ -884,62 +908,57 @@ const grid2: React.CSSProperties = {
 };
 
 const cardChoice: React.CSSProperties = {
-  background: PAPER.cardBg,
-  borderRadius: 22,
+  background: "#fff",
+  borderRadius: 20,
   padding: 26,
   cursor: "pointer",
-  boxShadow: "0 12px 34px rgba(0,0,0,0.12)",
 };
 
 const card: React.CSSProperties = {
-  background: PAPER.cardBg,
-  borderRadius: 22,
+  background: "#fff",
+  borderRadius: 20,
   padding: 30,
-  border: `1px solid ${PAPER.stroke}`,
-  boxShadow: "0 14px 40px rgba(0,0,0,0.14)",
+  border: "1px solid #e5e5e5",
 };
 
 const sectionTitle: React.CSSProperties = {
   fontSize: 22,
   marginBottom: 16,
-  color: PAPER.text,
-  fontWeight: 950,
 };
 
 const nav: React.CSSProperties = {
-  marginTop: 18,
+  marginTop: 22,
   display: "flex",
   gap: 12,
 };
 
 const primaryBtn: React.CSSProperties = {
   padding: "14px 22px",
-  background: "#0f1114",
+  background: "#000",
   color: "#fff",
-  borderRadius: 14,
-  border: "1px solid rgba(15,17,20,0.18)",
-  fontWeight: 950,
+  borderRadius: 12,
+  border: "none",
+  fontWeight: 800,
   cursor: "pointer",
 };
 
 const secondaryBtn: React.CSSProperties = {
   padding: "14px 22px",
-  background: "rgba(255,255,255,0.88)",
-  color: PAPER.text,
-  borderRadius: 14,
-  border: `1px solid ${PAPER.stroke}`,
-  fontWeight: 950,
+  background: "#fff",
+  color: "#000",
+  borderRadius: 12,
+  border: "1px solid #ddd",
+  fontWeight: 800,
   cursor: "pointer",
 };
 
 const hint: React.CSSProperties = {
   marginTop: 10,
-  background: PAPER.cardBg2,
-  borderRadius: 16,
+  background: "#f7f7f7",
+  borderRadius: 14,
   padding: 12,
-  color: PAPER.muted,
+  color: "#444",
   lineHeight: 1.6,
-  border: `1px solid ${PAPER.stroke}`,
 };
 
 const twoCol: React.CSSProperties = {
@@ -948,20 +967,42 @@ const twoCol: React.CSSProperties = {
   gap: 12,
 };
 
+/** ✅ improved row alignment for checkbox + text */
 const toggleRow: React.CSSProperties = {
   display: "flex",
-  alignItems: "center",
+  alignItems: "flex-start",
+  gap: 10,
   padding: "10px 12px",
-  border: `1px solid ${PAPER.stroke}`,
-  borderRadius: 14,
-  background: PAPER.cardBg2,
+  border: "1px solid #eee",
+  borderRadius: 12,
+  background: "#fafafa",
+  cursor: "pointer",
+  userSelect: "none",
+};
+
+const checkLine: React.CSSProperties = {
+  display: "flex",
+  alignItems: "flex-start",
+  gap: 10,
+  marginBottom: 10,
+  cursor: "pointer",
+  userSelect: "none",
+};
+
+/** ✅ checkbox size + position fix */
+const chk: React.CSSProperties = {
+  width: 18,
+  height: 18,
+  flex: "0 0 18px",
+  marginTop: 2, // aligns with first line of label text
+  accentColor: "#ff7a18",
 };
 
 const subCard: React.CSSProperties = {
-  border: `1px solid ${PAPER.stroke}`,
-  borderRadius: 18,
+  border: "1px solid #eee",
+  borderRadius: 16,
   padding: 16,
-  background: PAPER.cardBg2,
+  background: "#fafafa",
 };
 
 const miniList: React.CSSProperties = {
@@ -972,10 +1013,9 @@ const miniList: React.CSSProperties = {
 
 const miniBox: React.CSSProperties = {
   marginTop: 14,
-  border: `1px solid ${PAPER.stroke}`,
-  background: PAPER.cardBg2,
+  border: "1px solid #eee",
+  background: "#fafafa",
   padding: 14,
-  borderRadius: 16,
+  borderRadius: 14,
   lineHeight: 1.8,
-  color: PAPER.text,
 };
