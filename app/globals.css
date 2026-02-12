@@ -1,12 +1,12 @@
 :root{
-  --bg:#070a12;
+  --bg:#070a16;
   --fg:rgba(255,255,255,.92);
   --muted:rgba(255,255,255,.72);
   --panel:rgba(255,255,255,.06);
   --panel2:rgba(255,255,255,.09);
   --stroke:rgba(255,255,255,.14);
-  --accent:#b9ff3a;            /* LIME */
-  --accent2:#74d000;
+  --accent:#2f6bff;            /* ROYAL BLUE */
+  --accent2:#7aa2ff;
   --shadow: 0 18px 60px rgba(0,0,0,.45);
   --radius:16px;
 }
@@ -15,16 +15,14 @@
 html,body{height:100%}
 body{
   margin:0;
-  background: radial-gradient(1200px 700px at 15% 15%, rgba(185,255,58,.14), transparent 62%),
-              radial-gradient(900px 600px at 85% 20%, rgba(0,170,255,.10), transparent 60%),
+  background: radial-gradient(1200px 700px at 20% 10%, rgba(47,107,255,.18), transparent 62%),
+              radial-gradient(900px 600px at 80% 35%, rgba(122,162,255,.10), transparent 60%),
               var(--bg);
   color:var(--fg);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
 }
 
 a{color:var(--accent)}
-a:hover{filter:brightness(1.05)}
-
 .container{max-width:1100px; margin:0 auto; padding:0 18px}
 .card{
   background:linear-gradient(180deg,var(--panel),var(--panel2));
@@ -32,21 +30,9 @@ a:hover{filter:brightness(1.05)}
   border-radius:var(--radius);
   box-shadow:var(--shadow);
 }
-.btn{
-  display:inline-flex; align-items:center; justify-content:center; gap:10px;
-  padding:12px 14px; border-radius:14px;
-  border:1px solid var(--stroke);
-  background:rgba(255,255,255,.03); color:var(--fg);
-  font-weight:800;
-  transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
-}
-.btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.06)}
-.btnPrimary{
-  background:linear-gradient(135deg, rgba(185,255,58,.95), rgba(116,208,0,.95));
-  color:#0b1206;
-  border:1px solid rgba(185,255,58,.35);
-}
-.btnPrimary:hover{box-shadow:0 14px 44px rgba(185,255,58,.18)}
+.btn{padding:12px 14px; border-radius:14px; border:1px solid var(--stroke); background:rgba(255,255,255,.03); color:var(--fg); font-weight:800}
+.btnPrimary{background:linear-gradient(135deg, rgba(47,107,255,.95), rgba(122,162,255,.95)); border:1px solid rgba(47,107,255,.35); color:#070a16}
+.btnPrimary:hover{box-shadow:0 14px 44px rgba(47,107,255,.20)}
 
 input,select,textarea{
   width:100%;
