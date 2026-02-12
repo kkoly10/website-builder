@@ -15,7 +15,7 @@ export default function RootLayout({
 }>) {
   // Change theme here:
   // theme-lux | theme-carbon | theme-ink | theme-obsidian | theme-graphite
-  const themeClass = "theme-lux";
+  const themeClass = "theme-graphite";
 
   return (
     <html lang="en" className={themeClass}>
