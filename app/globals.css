@@ -6,58 +6,47 @@
   --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
 }
 
-html{
-  color-scheme: dark;
-  background: #050607;
-}
+html{ color-scheme: dark; background:#060812; }
 
 body{
   margin:0;
   font-family: var(--font);
   color: rgba(255,255,255,.92);
   background:
-    radial-gradient(1200px 600px at 10% 10%, rgba(255,255,255,.06), transparent 60%),
-    radial-gradient(900px 500px at 90% 20%, rgba(47,107,255,.16), transparent 55%),
-    linear-gradient(180deg, #050607, #0a0b0c);
+    radial-gradient(1200px 600px at 8% 12%, rgba(255,255,255,.05), transparent 60%),
+    radial-gradient(900px 500px at 92% 18%, rgba(0,229,255,.18), transparent 55%),
+    linear-gradient(180deg, #060812, #03040a);
 }
 
-.container{
-  width: min(1120px, calc(100% - 48px));
-  margin: 0 auto;
-}
+.container{ width:min(1120px, calc(100% - 48px)); margin:0 auto; }
 
 .card{
-  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.08));
-  border: 1px solid rgba(255,255,255,.14);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.10));
+  border: 1px solid rgba(255,255,255,.16);
   border-radius: var(--radius);
   box-shadow: var(--shadow2);
 }
 
 .btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
+  display:inline-flex; align-items:center; justify-content:center; gap:10px;
   padding: 12px 16px;
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.16);
   text-decoration:none;
   font-weight: 800;
   color: rgba(255,255,255,.92);
   background: rgba(255,255,255,.06);
   transition: transform .15s ease, background .15s ease, border-color .15s ease;
 }
-.btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.09); border-color: rgba(255,255,255,.22); }
+.btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.09); border-color: rgba(255,255,255,.24); }
 .btn.primary{
-  border: 1px solid rgba(47,107,255,.45);
-  background: linear-gradient(135deg, #2f6bff, #66a3ff);
+  border: 1px solid rgba(0,229,255,.45);
+  background: linear-gradient(135deg, #00e5ff, #6ff7ff);
   color: #061018;
 }
 
-h1,h2,h3{ letter-spacing:-0.5px; }
-
 label{ color: rgba(255,255,255,.92); font-weight: 800; }
-.help{ color: rgba(255,255,255,.65); font-size: 12px; line-height: 1.4; }
+.help{ color: rgba(255,255,255,.66); font-size: 12px; line-height: 1.4; }
 
 input, select, textarea{
   width: 100%;
@@ -70,6 +59,6 @@ input, select, textarea{
 }
 input::placeholder, textarea::placeholder{ color: rgba(255,255,255,.55); }
 input:focus, select:focus, textarea:focus{
-  border-color: rgba(47,107,255,.55);
-  box-shadow: 0 0 0 4px rgba(47,107,255,.18);
+  border-color: rgba(0,229,255,.60);
+  box-shadow: 0 0 0 4px rgba(0,229,255,.18);
 }
