@@ -1,36 +1,42 @@
 /* ===============================
    CrecyStudio — Obsidian Orange
-   "WOW" Brand System
+   Site: dark luxury tech
+   Questionnaire: paper (always legible)
 ================================ */
 
 :root{
   --bg: #07070a;
   --fg: rgba(255,255,255,0.92);
   --muted: rgba(255,255,255,0.68);
-  --muted2: rgba(255,255,255,0.52);
 
   --panel: rgba(255,255,255,0.06);
-  --panel2: rgba(255,255,255,0.08);
   --stroke: rgba(255,255,255,0.12);
-  --stroke2: rgba(255,255,255,0.16);
 
   --accent: #FF6A2A;
   --accent2: #FFB07A;
   --accentSoft: rgba(255,106,42,0.16);
   --accentStroke: rgba(255,106,42,0.32);
 
-  --shadow: 0 14px 40px rgba(0,0,0,0.55);
+  /* Paper surface (for forms/questionnaire) */
+  --paperBg: #F6F4F1;
+  --paperFg: rgba(15,17,20,0.92);
+  --paperMuted: rgba(15,17,20,0.68);
+  --paperStroke: rgba(15,17,20,0.14);
+  --paperPanel: rgba(255,255,255,0.85);
+
   --radius: 18px;
   --radius2: 22px;
+  --shadow: 0 18px 55px rgba(0,0,0,0.55);
 }
 
 *{ box-sizing: border-box; }
 html, body{ height: 100%; }
 body{
   margin: 0;
-  background: radial-gradient(1200px 600px at 20% 0%, rgba(255,106,42,0.10), transparent 55%),
-              radial-gradient(900px 500px at 80% 20%, rgba(255,106,42,0.06), transparent 60%),
-              var(--bg);
+  background:
+    radial-gradient(1200px 600px at 20% 0%, rgba(255,106,42,0.10), transparent 55%),
+    radial-gradient(900px 500px at 80% 20%, rgba(255,106,42,0.06), transparent 60%),
+    var(--bg);
   color: var(--fg);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
   letter-spacing: -0.1px;
@@ -52,10 +58,9 @@ ul{ color: var(--muted); }
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(900px 500px at 15% 10%, rgba(255,106,42,0.18), transparent 60%),
+    radial-gradient(900px 520px at 15% 10%, rgba(255,106,42,0.18), transparent 60%),
     radial-gradient(700px 420px at 85% 25%, rgba(255,106,42,0.10), transparent 65%),
     radial-gradient(600px 380px at 60% 90%, rgba(255,106,42,0.06), transparent 65%);
-  filter: blur(0px);
   opacity: 0.9;
   z-index: 0;
 }
@@ -65,9 +70,9 @@ ul{ color: var(--muted); }
   inset: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(circle at 10px 10px, rgba(255,255,255,0.16) 1px, transparent 1.5px),
-    radial-gradient(circle at 30px 35px, rgba(255,255,255,0.12) 1px, transparent 1.5px),
-    radial-gradient(circle at 70px 55px, rgba(255,255,255,0.10) 1px, transparent 1.5px);
+    radial-gradient(circle at 10px 10px, rgba(255,255,255,0.16) 1px, transparent 1.6px),
+    radial-gradient(circle at 30px 35px, rgba(255,255,255,0.12) 1px, transparent 1.6px),
+    radial-gradient(circle at 70px 55px, rgba(255,255,255,0.10) 1px, transparent 1.6px);
   background-size: 120px 120px;
   opacity: 0.35;
   z-index: 0;
@@ -182,7 +187,7 @@ ul{ color: var(--muted); }
   box-decoration-break: clone;
 }
 
-/* ---------- UI Blocks ---------- */
+/* ---------- Blocks ---------- */
 .section{ padding: 42px 0; position: relative; z-index: 1; }
 .sectionSm{ padding: 20px 0; position: relative; z-index: 1; }
 
@@ -190,7 +195,6 @@ ul{ color: var(--muted); }
   border-radius: var(--radius2);
   border: 1px solid rgba(255,255,255,0.10);
   background: rgba(255,255,255,0.04);
-  box-shadow: 0 0 0 rgba(0,0,0,0);
   position: relative;
 }
 .cardInner{ padding: 18px; }
@@ -204,27 +208,6 @@ ul{ color: var(--muted); }
   box-shadow: var(--shadow);
 }
 
-.panel{
-  border-radius: var(--radius2);
-  border: 1px solid rgba(255,255,255,0.10);
-  background: rgba(0,0,0,0.25);
-  overflow: hidden;
-}
-.panelHeader{
-  padding: 18px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  background: radial-gradient(600px 200px at 20% 0%, rgba(255,106,42,0.10), transparent 60%),
-              rgba(255,255,255,0.02);
-}
-.panelBody{ padding: 18px; }
-
-.hr{
-  height: 1px;
-  background: rgba(255,255,255,0.10);
-  margin: 16px 0;
-}
-
-/* ---------- Buttons ---------- */
 .btn{
   display: inline-flex;
   align-items: center;
@@ -245,16 +228,14 @@ ul{ color: var(--muted); }
 }
 .btnPrimary{
   border-color: var(--accentStroke);
-  background: radial-gradient(500px 160px at 30% 10%, rgba(255,255,255,0.14), transparent 55%),
-              rgba(255,106,42,0.18);
+  background:
+    radial-gradient(500px 160px at 30% 10%, rgba(255,255,255,0.14), transparent 55%),
+    rgba(255,106,42,0.18);
   color: rgba(255,240,232,0.96);
 }
-.btnGhost{
-  background: rgba(0,0,0,0.18);
-}
+.btnGhost{ background: rgba(0,0,0,0.18); }
 .btnArrow{ opacity: .92; }
 
-/* ---------- Pills / Badges ---------- */
 .pills{ display:flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
 .pill{
   padding: 8px 10px;
@@ -283,7 +264,7 @@ ul{ color: var(--muted); }
   color: rgba(255,240,232,0.95);
 }
 
-/* ---------- Homepage Layout helpers (already used by your app/page.tsx) ---------- */
+/* ---------- Homepage helpers ---------- */
 .hero{ padding: 46px 0 26px; position: relative; z-index: 1; }
 .heroGrid{
   display: grid;
@@ -292,7 +273,6 @@ ul{ color: var(--muted); }
   align-items: start;
 }
 @media (max-width: 980px){ .heroGrid{ grid-template-columns: 1fr; } }
-
 .heroCopy p{ margin-top: 12px; max-width: 720px; }
 .heroActions{
   display:flex;
@@ -300,7 +280,6 @@ ul{ color: var(--muted); }
   flex-wrap: wrap;
   margin-top: 18px;
 }
-
 .heroSide .statRow{
   display:grid;
   grid-template-columns: 1fr 1fr;
@@ -324,14 +303,12 @@ ul{ color: var(--muted); }
   font-weight: 850;
   color: rgba(255,255,255,0.62);
 }
-
 .tierGrid{
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
 @media (max-width: 980px){ .tierGrid{ grid-template-columns: 1fr; } }
-
 .tierHead{
   display:flex;
   justify-content: space-between;
@@ -341,7 +318,6 @@ ul{ color: var(--muted); }
 .tierName{ font-weight: 980; letter-spacing: -0.4px; }
 .tierSub{ margin-top: 6px; font-size: 12px; color: rgba(255,255,255,0.62); font-weight: 850; }
 .tierPrice{ font-weight: 980; letter-spacing: -0.6px; font-size: 20px; color: rgba(255,255,255,0.92); }
-
 .tierList{
   margin: 14px 0 0;
   padding-left: 18px;
@@ -350,36 +326,102 @@ ul{ color: var(--muted); }
 }
 .tierCTA{ display:flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
 
-/* ---------- Form Controls ---------- */
-.fieldLabel{
+/* =========================================
+   ✅ Questionnaire “Paper” Theme (Always Legible)
+   Apply via wrapper: class="formPaper"
+========================================= */
+
+.formPaper{
+  position: relative;
+  z-index: 1;
+  background:
+    radial-gradient(900px 260px at 20% 0%, rgba(255,106,42,0.18), transparent 60%),
+    radial-gradient(700px 240px at 80% 10%, rgba(255,106,42,0.10), transparent 62%),
+    var(--paperBg);
+  border: 1px solid var(--paperStroke);
+  border-radius: var(--radius2);
+  box-shadow: 0 22px 70px rgba(0,0,0,0.40);
+  overflow: hidden;
+}
+
+.formPaper .paperHead{
+  padding: 18px 18px 12px;
+  border-bottom: 1px solid var(--paperStroke);
+  background: rgba(255,255,255,0.55);
+}
+
+.formPaper .paperBody{
+  padding: 18px;
+}
+
+.formPaper .paperH1,
+.formPaper .paperH2,
+.formPaper .paperText,
+.formPaper .paperKicker{
+  color: var(--paperFg);
+}
+
+.formPaper .paperText{ color: var(--paperMuted); line-height: 1.65; }
+
+.formPaper .fieldLabel{
   font-size: 12px;
   font-weight: 900;
-  color: rgba(255,255,255,0.66);
+  color: rgba(15,17,20,0.72);
   margin-bottom: 8px;
 }
-.input{
+
+/* This fixes your “parentheses text not visible” issue */
+.formPaper .hint{
+  color: rgba(15,17,20,0.62);
+  font-size: 12px;
+  font-weight: 800;
+  margin-top: 6px;
+}
+
+.formPaper input,
+.formPaper textarea,
+.formPaper select{
   width: 100%;
   padding: 12px 12px;
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(0,0,0,0.22);
-  color: rgba(255,255,255,0.92);
+  border: 1px solid rgba(15,17,20,0.18);
+  background: rgba(255,255,255,0.80);
+  color: rgba(15,17,20,0.92);
   outline: none;
   font-weight: 850;
 }
-.input::placeholder{ color: rgba(255,255,255,0.44); }
-.input:focus{
-  border-color: rgba(255,106,42,0.30);
-  box-shadow: 0 0 0 4px rgba(255,106,42,0.12);
+
+.formPaper input::placeholder,
+.formPaper textarea::placeholder{
+  color: rgba(15,17,20,0.45);
 }
 
-.pTiny{
-  font-size: 12px;
-  color: rgba(255,255,255,0.62);
-  line-height: 1.6;
+.formPaper input:focus,
+.formPaper textarea:focus,
+.formPaper select:focus{
+  border-color: rgba(255,106,42,0.45);
+  box-shadow: 0 0 0 4px rgba(255,106,42,0.18);
 }
 
-/* ---------- Footer ---------- */
+/* Buttons inside paper */
+.formPaper .btn{
+  border: 1px solid rgba(15,17,20,0.14);
+  background: rgba(255,255,255,0.85);
+  color: rgba(15,17,20,0.92);
+}
+.formPaper .btn:hover{
+  background: rgba(255,255,255,0.95);
+}
+.formPaper .btnPrimary{
+  border-color: rgba(255,106,42,0.45);
+  background: rgba(255,106,42,0.18);
+  color: rgba(15,17,20,0.92);
+}
+.formPaper .btnGhost{
+  background: rgba(255,255,255,0.70);
+}
+
+/* Footer */
 .footer{
   border-top: 1px solid rgba(255,255,255,0.08);
   background: rgba(0,0,0,0.35);
