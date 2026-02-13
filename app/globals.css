@@ -1,976 +1,363 @@
-"use client";
-
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-
-export const dynamic = "force-dynamic";
-
-/**
- * Hybrid Dynamic Intake:
- * - Chooser: guided vs known
- * - Dynamic branching
- * - Adds required lead email + optional phone at the end
- * - Sends everything to /estimate as query params
- */
-
-type Mode = "chooser" | "guided" | "known";
-type Intent =
-  | "Marketing"
-  | "Leads"
-  | "Booking"
-  | "Selling"
-  | "Content"
-  | "Membership"
-  | "Other";
-
-type WebsiteType = "Business" | "Ecommerce" | "Portfolio" | "Landing";
-type Pages = "1-3" | "4-5" | "6-8" | "9+";
-type Design = "Modern" | "Classic" | "Creative";
-type Timeline = "2-3 weeks" | "4+ weeks" | "Under 14 days";
-
-type YesNo = "Yes" | "No";
-type ContentReady = "Ready" | "Some" | "Not ready";
-type AssetsSource = "Client provides" | "Stock" | "Need help";
-
-type FormState = {
-  mode: Mode;
-
-  websiteType: WebsiteType;
-
-  intent: Intent;
-  intentOther: string;
-
-  pages: Pages;
-
-  booking: boolean;
-  payments: boolean;
-  blog: boolean;
-  membership: boolean;
-
-  wantsAutomation: YesNo;
-  automationTypes: string[];
-  integrations: string[];
-  integrationOther: string;
-
-  hasLogo: YesNo;
-  hasBrandGuide: YesNo;
-  contentReady: ContentReady;
-  assetsSource: AssetsSource;
-  referenceWebsite: string;
-
-  decisionMaker: YesNo;
-  stakeholdersCount: "1" | "2-3" | "4+";
-
-  design: Design;
-  timeline: Timeline;
-
-  notes: string;
-
-  // lead capture
-  leadEmail: string;
-  leadPhone: string;
-};
-
-const INTENTS: Intent[] = [
-  "Marketing",
-  "Leads",
-  "Booking",
-  "Selling",
-  "Content",
-  "Membership",
-  "Other",
-];
-
-const WEBSITE_TYPES: WebsiteType[] = ["Business", "Ecommerce", "Portfolio", "Landing"];
-const PAGES: Pages[] = ["1-3", "4-5", "6-8", "9+"];
-const DESIGNS: Design[] = ["Modern", "Classic", "Creative"];
-const TIMELINES: Timeline[] = ["2-3 weeks", "4+ weeks", "Under 14 days"];
-
-const AUTOMATION_OPTIONS = [
-  "Email confirmations",
-  "Email follow-ups",
-  "SMS reminders",
-  "CRM integration",
-  "Lead routing (multiple recipients)",
-];
-
-const INTEGRATION_OPTIONS = [
-  "Google Maps / location",
-  "Calendly / scheduling",
-  "Stripe payments",
-  "PayPal payments",
-  "Mailchimp / email list",
-  "Analytics (GA4 / Pixel)",
-  "Live chat",
-];
-
-export default function BuildPage() {
-  const router = useRouter();
-
-  // steps: 0 chooser, 1..6 intake, 7 contact, 8 review
-  const [step, setStep] = useState<number>(0);
-
-  const [form, setForm] = useState<FormState>({
-    mode: "chooser",
-
-    websiteType: "Business",
-
-    intent: "Marketing",
-    intentOther: "",
-
-    pages: "4-5",
-
-    booking: false,
-    payments: false,
-    blog: false,
-    membership: false,
-
-    wantsAutomation: "No",
-    automationTypes: [],
-    integrations: [],
-    integrationOther: "",
-
-    hasLogo: "Yes",
-    hasBrandGuide: "No",
-    contentReady: "Some",
-    assetsSource: "Client provides",
-    referenceWebsite: "",
-
-    decisionMaker: "Yes",
-    stakeholdersCount: "1",
-
-    design: "Modern",
-    timeline: "2-3 weeks",
-
-    notes: "",
-
-    leadEmail: "",
-    leadPhone: "",
-  });
-
-  const suggested = useMemo(() => {
-    const s: Partial<FormState> = {};
-    if (form.intent === "Booking") {
-      s.websiteType = "Business";
-      s.booking = true;
-    }
-    if (form.intent === "Leads" || form.intent === "Marketing") {
-      s.websiteType = "Business";
-    }
-    if (form.intent === "Selling") {
-      s.websiteType = "Ecommerce";
-      s.payments = true;
-    }
-    if (form.intent === "Content") {
-      s.websiteType = "Portfolio";
-      s.blog = true;
-    }
-    if (form.intent === "Membership") {
-      s.websiteType = "Business";
-      s.membership = true;
-    }
-    return s;
-  }, [form.intent]);
-
-  function goMode(mode: Mode) {
-    setForm((f) => ({ ...f, mode }));
-    setStep(1);
-  }
-
-  function next() {
-    setStep((s) => Math.min(s + 1, 8));
-  }
-
-  function back() {
-    setStep((s) => Math.max(s - 1, 0));
-  }
-
-  function applySuggested() {
-    setForm((f) => ({ ...f, ...suggested }));
-  }
-
-  function toggleInList(key: "automationTypes" | "integrations", value: string) {
-    setForm((f) => {
-      const current = new Set(f[key]);
-      if (current.has(value)) current.delete(value);
-      else current.add(value);
-      return { ...f, [key]: Array.from(current) } as FormState;
-    });
-  }
-
-  function submit() {
-    const leadEmail = form.leadEmail.trim();
-    if (!leadEmail) {
-      alert("Please enter your email so we can send your estimate and follow up.");
-      return;
-    }
-
-    const params = new URLSearchParams({
-      // lead
-      leadEmail,
-      leadPhone: form.leadPhone.trim(),
-
-      // old-friendly keys
-      websiteType: form.websiteType,
-      pages: form.pages,
-      booking: String(form.booking),
-      payments: String(form.payments),
-      blog: String(form.blog),
-      design: form.design,
-      timeline: form.timeline,
-
-      // richer keys
-      mode: form.mode,
-      intent: form.intent,
-      intentOther: form.intentOther,
-      membership: String(form.membership),
-
-      wantsAutomation: form.wantsAutomation,
-      automationTypes: form.automationTypes.join(","),
-      integrations: form.integrations.join(","),
-      integrationOther: form.integrationOther,
-
-      hasLogo: form.hasLogo,
-      hasBrandGuide: form.hasBrandGuide,
-      contentReady: form.contentReady,
-      assetsSource: form.assetsSource,
-      referenceWebsite: form.referenceWebsite,
-
-      decisionMaker: form.decisionMaker,
-      stakeholdersCount: form.stakeholdersCount,
-
-      notes: form.notes,
-    }).toString();
-
-    router.push(`/estimate?${params}`);
-  }
-
-  const stepLabel =
-    step === 0
-      ? "Choose how you'd like to start"
-      : step === 7
-      ? "Contact"
-      : step === 8
-      ? "Review"
-      : `Step ${step} of 6`;
-
-  return (
-    <main className="container" style={{ padding: "42px 0 80px" }}>
-      <div className="kicker">
-        <span className="kickerDot" aria-hidden="true" />
-        CrecyStudio • Get a Quote
-      </div>
-
-      <div style={{ height: 12 }} />
-
-      <h1 className="h1">Get a Quote</h1>
-      <p className="p" style={{ maxWidth: 820, marginTop: 10 }}>
-        {stepLabel} — we’ll ask only what’s relevant so your estimate feels accurate.
-      </p>
-
-      <div style={{ height: 18 }} />
-
-      {/* STEP 0: CHOOSER */}
-      {step === 0 && (
-        <section className="grid2" style={{ marginTop: 14 }}>
-          <ChoiceCard
-            title="Help me decide"
-            desc="Not sure what you need? We’ll ask goal-based questions and recommend the best setup."
-            cta="Start guided intake →"
-            onClick={() => goMode("guided")}
-            highlight
-          />
-          <ChoiceCard
-            title="I know what I need"
-            desc="You already know the type of site you want. We’ll jump straight into scope."
-            cta="Start scope intake →"
-            onClick={() => goMode("known")}
-          />
-        </section>
-      )}
-
-      {/* Steps 1..8 wrapped in a LIGHT panel so text is always readable */}
-      {step !== 0 && (
-        <section className="csLightPanel" style={{ marginTop: 14 }}>
-          {/* STEP 1 */}
-          {step === 1 && (
-            <>
-              {form.mode === "guided" ? (
-                <>
-                  <h2 className="csTitle">What are you trying to achieve?</h2>
-
-                  <Field label="Primary goal">
-                    <select
-                      value={form.intent}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, intent: e.target.value as Intent }))
-                      }
-                    >
-                      {INTENTS.map((i) => (
-                        <option key={i} value={i}>
-                          {i}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-
-                  {form.intent === "Other" && (
-                    <Field label="Briefly describe your goal">
-                      <input
-                        value={form.intentOther}
-                        onChange={(e) =>
-                          setForm((f) => ({ ...f, intentOther: e.target.value }))
-                        }
-                        placeholder="e.g., recruiting, investor credibility, event promotion…"
-                      />
-                    </Field>
-                  )}
-
-                  <div className="csHint">
-                    <strong>Tip:</strong> After you pick a goal, we’ll suggest the typical setup.
-                  </div>
-                </>
-              ) : (
-                <>
-                  <h2 className="csTitle">What type of website do you need?</h2>
-                  <Field label="Website type">
-                    <select
-                      value={form.websiteType}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          websiteType: e.target.value as WebsiteType,
-                        }))
-                      }
-                    >
-                      {WEBSITE_TYPES.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                </>
-              )}
-            </>
-          )}
-
-          {/* STEP 2 */}
-          {step === 2 && (
-            <>
-              <h2 className="csTitle">Basic Scope</h2>
-
-              {form.mode === "guided" && (
-                <div style={{ marginBottom: 18 }}>
-                  <div className="csText">
-                    Based on your goal, we typically recommend:
-                    <ul className="csMiniList">
-                      <li>
-                        <strong>Website type:</strong>{" "}
-                        {suggested.websiteType ?? form.websiteType}
-                      </li>
-                      {suggested.booking && <li>Booking enabled</li>}
-                      {suggested.payments && <li>Payments enabled</li>}
-                      {suggested.blog && <li>Blog enabled</li>}
-                      {suggested.membership && <li>Membership enabled</li>}
-                    </ul>
-                  </div>
-
-                  <button type="button" onClick={applySuggested} className="csBtnSecondary">
-                    Apply suggested setup
-                  </button>
-                </div>
-              )}
-
-              <Field label="Estimated pages">
-                <select
-                  value={form.pages}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, pages: e.target.value as Pages }))
-                  }
-                >
-                  {PAGES.map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-
-              <div className="csHint">
-                Pages help estimate effort — final scope is confirmed during your consultation.
-              </div>
-            </>
-          )}
-
-          {/* STEP 3 */}
-          {step === 3 && (
-            <>
-              <h2 className="csTitle">Features (Only What Applies)</h2>
-
-              <div className="csTwoCol">
-                <ToggleRow
-                  label="Booking / appointments"
-                  checked={form.booking}
-                  onChange={(v) => setForm((f) => ({ ...f, booking: v }))}
-                />
-                <ToggleRow
-                  label="Payments / checkout"
-                  checked={form.payments}
-                  onChange={(v) => setForm((f) => ({ ...f, payments: v }))}
-                />
-                <ToggleRow
-                  label="Blog / articles"
-                  checked={form.blog}
-                  onChange={(v) => setForm((f) => ({ ...f, blog: v }))}
-                />
-                <ToggleRow
-                  label="Membership / gated content"
-                  checked={form.membership}
-                  onChange={(v) => setForm((f) => ({ ...f, membership: v }))}
-                />
-              </div>
-
-              {(form.booking || form.payments || form.membership || form.intent === "Selling") && (
-                <div style={{ marginTop: 18 }}>
-                  <Field label="Do you want automations? (advanced)">
-                    <select
-                      value={form.wantsAutomation}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, wantsAutomation: e.target.value as YesNo }))
-                      }
-                    >
-                      <option value="No">No</option>
-                      <option value="Yes">Yes</option>
-                    </select>
-                  </Field>
-
-                  {form.wantsAutomation === "Yes" && (
-                    <div className="csSubCard">
-                      <div className="csSubTitle">What automations do you want?</div>
-
-                      {AUTOMATION_OPTIONS.map((a) => (
-                        <CheckLine
-                          key={a}
-                          label={a}
-                          checked={form.automationTypes.includes(a)}
-                          onChange={() => toggleInList("automationTypes", a)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {(form.payments || form.booking || form.intent === "Selling") && (
-                <div style={{ marginTop: 18 }}>
-                  <div className="csSubCard">
-                    <div className="csSubTitle">Any integrations needed?</div>
-
-                    {INTEGRATION_OPTIONS.map((i) => (
-                      <CheckLine
-                        key={i}
-                        label={i}
-                        checked={form.integrations.includes(i)}
-                        onChange={() => toggleInList("integrations", i)}
-                      />
-                    ))}
-
-                    <Field label="Other integration (optional)">
-                      <input
-                        value={form.integrationOther}
-                        onChange={(e) =>
-                          setForm((f) => ({ ...f, integrationOther: e.target.value }))
-                        }
-                        placeholder="e.g., a specific CRM, booking platform, inventory tool…"
-                      />
-                    </Field>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-
-          {/* STEP 4 */}
-          {step === 4 && (
-            <>
-              <h2 className="csTitle">Assets & Readiness</h2>
-
-              <Field label="Reference website (optional)">
-                <input
-                  placeholder="https://example.com"
-                  value={form.referenceWebsite}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, referenceWebsite: e.target.value }))
-                  }
-                />
-              </Field>
-
-              <div className="csTwoCol">
-                <Field label="Do you have a logo?">
-                  <select
-                    value={form.hasLogo}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, hasLogo: e.target.value as YesNo }))
-                    }
-                  >
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                </Field>
-
-                <Field label="Brand guide / colors already defined?">
-                  <select
-                    value={form.hasBrandGuide}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, hasBrandGuide: e.target.value as YesNo }))
-                    }
-                  >
-                    <option value="No">No</option>
-                    <option value="Yes">Yes</option>
-                  </select>
-                </Field>
-              </div>
-
-              <div className="csTwoCol">
-                <Field label="Content readiness (text / services / about)">
-                  <select
-                    value={form.contentReady}
-                    onChange={(e) =>
-                      setForm((f) => ({
-                        ...f,
-                        contentReady: e.target.value as ContentReady,
-                      }))
-                    }
-                  >
-                    <option value="Ready">Ready</option>
-                    <option value="Some">Some</option>
-                    <option value="Not ready">Not ready</option>
-                  </select>
-                </Field>
-
-                <Field label="Images source">
-                  <select
-                    value={form.assetsSource}
-                    onChange={(e) =>
-                      setForm((f) => ({
-                        ...f,
-                        assetsSource: e.target.value as AssetsSource,
-                      }))
-                    }
-                  >
-                    <option value="Client provides">Client provides</option>
-                    <option value="Stock">Stock</option>
-                    <option value="Need help">Need help</option>
-                  </select>
-                </Field>
-              </div>
-
-              <div className="csHint">These answers help prevent delays and revision disputes later.</div>
-            </>
-          )}
-
-          {/* STEP 5 */}
-          {step === 5 && (
-            <>
-              <h2 className="csTitle">Decision & Delivery</h2>
-
-              <div className="csTwoCol">
-                <Field label="Are you the final decision-maker?">
-                  <select
-                    value={form.decisionMaker}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, decisionMaker: e.target.value as YesNo }))
-                    }
-                  >
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                </Field>
-
-                <Field label="How many stakeholders will review?">
-                  <select
-                    value={form.stakeholdersCount}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, stakeholdersCount: e.target.value as any }))
-                    }
-                  >
-                    <option value="1">1</option>
-                    <option value="2-3">2–3</option>
-                    <option value="4+">4+</option>
-                  </select>
-                </Field>
-              </div>
-
-              <div className="csTwoCol">
-                <Field label="Design direction">
-                  <select
-                    value={form.design}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, design: e.target.value as Design }))
-                    }
-                  >
-                    {DESIGNS.map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-
-                <Field label="Timeline">
-                  <select
-                    value={form.timeline}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, timeline: e.target.value as Timeline }))
-                    }
-                  >
-                    {TIMELINES.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-              </div>
-
-              <Field label="Notes (optional)">
-                <textarea
-                  rows={4}
-                  value={form.notes}
-                  onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-                  placeholder="Anything special you want us to know (pages, sections, examples, features)…"
-                />
-              </Field>
-            </>
-          )}
-
-          {/* STEP 6 */}
-          {step === 6 && (
-            <>
-              <h2 className="csTitle">Review</h2>
-              <p className="csText">
-                Next we’ll generate a personalized estimate, then show tier options.
-              </p>
-
-              <div className="csMiniBox">
-                <strong>Summary:</strong>
-                <ul className="csMiniList">
-                  <li>
-                    Mode:{" "}
-                    <strong>
-                      {form.mode === "guided" ? "Help me decide" : "I know what I need"}
-                    </strong>
-                  </li>
-                  <li>
-                    Website type: <strong>{form.websiteType}</strong>
-                  </li>
-                  <li>
-                    Pages: <strong>{form.pages}</strong>
-                  </li>
-                  <li>
-                    Features:{" "}
-                    <strong>
-                      {[
-                        form.booking && "Booking",
-                        form.payments && "Payments",
-                        form.blog && "Blog",
-                        form.membership && "Membership",
-                      ]
-                        .filter(Boolean)
-                        .join(", ") || "None selected"}
-                    </strong>
-                  </li>
-                  <li>
-                    Content readiness: <strong>{form.contentReady}</strong>
-                  </li>
-                  <li>
-                    Timeline: <strong>{form.timeline}</strong>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="csHint">
-                After you continue, we’ll ask for your email so we can send your estimate.
-              </div>
-            </>
-          )}
-
-          {/* STEP 7 */}
-          {step === 7 && (
-            <>
-              <h2 className="csTitle">Where should we send your estimate?</h2>
-
-              <Field label="Email (required)">
-                <input
-                  value={form.leadEmail}
-                  onChange={(e) => setForm((f) => ({ ...f, leadEmail: e.target.value }))}
-                  placeholder="you@company.com"
-                />
-              </Field>
-
-              <Field label="Phone (optional)">
-                <input
-                  value={form.leadPhone}
-                  onChange={(e) => setForm((f) => ({ ...f, leadPhone: e.target.value }))}
-                  placeholder="(555) 555-5555"
-                />
-              </Field>
-
-              <div className="csHint">
-                We’ll use this to send your estimate and schedule a consultation if you want.
-              </div>
-            </>
-          )}
-
-          {/* STEP 8 */}
-          {step === 8 && (
-            <>
-              <h2 className="csTitle">All set</h2>
-              <p className="csText">
-                We’ll generate your estimate next. You’ll also see tier options.
-              </p>
-
-              <div className="csMiniBox">
-                <div>
-                  <strong>Email:</strong> {form.leadEmail || "(missing)"}
-                </div>
-                {form.leadPhone ? (
-                  <div>
-                    <strong>Phone:</strong> {form.leadPhone}
-                  </div>
-                ) : null}
-              </div>
-            </>
-          )}
-        </section>
-      )}
-
-      {/* NAV */}
-      {step > 0 && (
-        <div style={{ marginTop: 18, display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <button onClick={back} className="btn btnGhost" type="button">
-            Back
-          </button>
-
-          {step < 8 ? (
-            <button onClick={next} className="btn btnPrimary" type="button">
-              Next <span className="btnArrow">→</span>
-            </button>
-          ) : (
-            <button onClick={submit} className="btn btnPrimary" type="button">
-              View Estimate <span className="btnArrow">→</span>
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Scoped styles so we never break global theme again */}
-      <style jsx global>{`
-        .csLightPanel {
-          background: #ffffff;
-          color: #111;
-          border-radius: 18px;
-          padding: 26px;
-          border: 1px solid rgba(0, 0, 0, 0.08);
-          box-shadow: 0 18px 55px rgba(0, 0, 0, 0.25);
-        }
-        .csTitle {
-          font-size: 22px;
-          margin: 0 0 14px 0;
-          font-weight: 900;
-          letter-spacing: -0.2px;
-          color: #0b1220;
-        }
-        .csText {
-          color: rgba(11, 18, 32, 0.72);
-          line-height: 1.7;
-          margin: 0 0 14px 0;
-          font-weight: 600;
-        }
-        .csHint {
-          margin-top: 10px;
-          background: rgba(255, 122, 24, 0.08);
-          border: 1px solid rgba(255, 122, 24, 0.2);
-          border-radius: 14px;
-          padding: 12px;
-          color: rgba(11, 18, 32, 0.75);
-          line-height: 1.6;
-          font-weight: 650;
-        }
-        .csTwoCol {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-          gap: 12px;
-        }
-        .csSubCard {
-          margin-top: 14px;
-          border: 1px solid rgba(0, 0, 0, 0.10);
-          border-radius: 16px;
-          padding: 14px;
-          background: rgba(0, 0, 0, 0.02);
-        }
-        .csSubTitle {
-          font-weight: 900;
-          margin-bottom: 10px;
-          color: #0b1220;
-        }
-        .csMiniList {
-          margin-top: 10px;
-          line-height: 1.8;
-          padding-left: 18px;
-          color: rgba(11, 18, 32, 0.75);
-          font-weight: 650;
-        }
-        .csMiniBox {
-          margin-top: 14px;
-          border: 1px solid rgba(0, 0, 0, 0.10);
-          background: rgba(0, 0, 0, 0.02);
-          padding: 14px;
-          border-radius: 14px;
-          line-height: 1.8;
-          color: rgba(11, 18, 32, 0.75);
-          font-weight: 650;
-        }
-        .csBtnSecondary {
-          padding: 12px 16px;
-          border-radius: 12px;
-          border: 1px solid rgba(0, 0, 0, 0.14);
-          background: #fff;
-          font-weight: 900;
-          cursor: pointer;
-        }
-
-        /* inputs inside the light panel */
-        .csLightPanel select,
-        .csLightPanel input,
-        .csLightPanel textarea {
-          width: 100%;
-          padding: 12px 12px;
-          border-radius: 12px;
-          border: 1px solid rgba(0, 0, 0, 0.14);
-          background: #fff;
-          font-size: 15px;
-          outline: none;
-          color: #0b1220;
-          font-weight: 650;
-        }
-        .csLightPanel textarea {
-          resize: vertical;
-        }
-
-        /* ✅ checkbox alignment fix */
-        .csCheckRow,
-        .csCheckLine {
-          display: flex;
-          align-items: flex-start;
-          gap: 10px;
-          cursor: pointer;
-          user-select: none;
-        }
-        .csCheckRow {
-          padding: 10px 12px;
-          border: 1px solid rgba(0, 0, 0, 0.08);
-          border-radius: 12px;
-          background: rgba(0, 0, 0, 0.02);
-        }
-        .csCheckLine {
-          margin-bottom: 10px;
-        }
-        .csCheck {
-          width: 18px;
-          height: 18px;
-          flex: 0 0 18px;
-          margin-top: 2px;
-          accent-color: #ff7a18;
-        }
-      `}</style>
-    </main>
-  );
+/* CrecyStudio — Obsidian Orange (global) */
+/* NOTE: This file must be pure CSS. No JS/TS, no "use client". */
+
+:root{
+  --bg: #07090d;
+  --bg2:#0b0f16;
+  --fg: rgba(255,255,255,.92);
+  --muted: rgba(255,255,255,.70);
+  --muted2: rgba(255,255,255,.56);
+
+  --card: rgba(255,255,255,.05);
+  --card2: rgba(255,255,255,.07);
+  --stroke: rgba(255,255,255,.12);
+
+  --accent: #ff7a18;       /* orange */
+  --accent2:#ffb36b;       /* warm highlight */
+  --good: #38d69b;
+
+  --shadow: 0 22px 70px rgba(0,0,0,.45);
+  --shadow2: 0 12px 40px rgba(0,0,0,.35);
+  --radius: 18px;
+  --radius2: 22px;
+  --max: 1120px;
+
+  --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+          "Apple Color Emoji","Segoe UI Emoji";
 }
 
-/* ---------------- UI COMPONENTS ---------------- */
-
-function ChoiceCard({
-  title,
-  desc,
-  cta,
-  onClick,
-  highlight,
-}: {
-  title: string;
-  desc: string;
-  cta: string;
-  onClick: () => void;
-  highlight?: boolean;
-}) {
-  return (
-    <div
-      onClick={onClick}
-      role="button"
-      tabIndex={0}
-      className={`card cardHover ${highlight ? "cardHot" : ""}`}
-      style={{ cursor: "pointer" }}
-    >
-      <div className="cardInner">
-        <div style={{ fontWeight: 950, fontSize: 18 }}>{title}</div>
-        <div className="p" style={{ marginTop: 10 }}>
-          {desc}
-        </div>
-        <div style={{ marginTop: 14, fontWeight: 900 }}>
-          {cta}
-        </div>
-      </div>
-    </div>
-  );
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  background: radial-gradient(900px 500px at 20% -10%, rgba(255,122,24,.18), transparent 55%),
+              radial-gradient(900px 500px at 90% 0%, rgba(255,255,255,.08), transparent 55%),
+              linear-gradient(180deg, var(--bg), var(--bg2));
+  color: var(--fg);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-function Field({ label, children }: { label: string; children: any }) {
-  return (
-    <div style={{ marginBottom: 18 }}>
-      <label style={{ display: "block", fontWeight: 900, marginBottom: 6, color: "#0b1220" }}>
-        {label}
-      </label>
-      {children}
-    </div>
-  );
+a{ color:inherit; text-decoration:none; }
+img{ max-width:100%; height:auto; display:block; }
+
+.container{
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 24px;
 }
 
-function ToggleRow({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <label className="csCheckRow">
-      <input
-        className="csCheck"
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-      />
-      <span style={{ color: "#0b1220", fontWeight: 750 }}>{label}</span>
-    </label>
-  );
+/* Background FX */
+.bgFx{
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .9;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255,122,24,.13), transparent 50%),
+    radial-gradient(circle at 86% 10%, rgba(255,255,255,.07), transparent 52%),
+    radial-gradient(circle at 50% 90%, rgba(255,122,24,.10), transparent 55%),
+    radial-gradient(rgba(255,255,255,.11) 1px, transparent 1px);
+  background-size:
+    auto,
+    auto,
+    auto,
+    26px 26px;
+  background-position:
+    center,
+    center,
+    center,
+    0 0;
+  filter: blur(.0px);
 }
 
-function CheckLine({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: () => void;
-}) {
-  return (
-    <label className="csCheckLine">
-      <input className="csCheck" type="checkbox" checked={checked} onChange={onChange} />
-      <span style={{ color: "#0b1220", fontWeight: 700 }}>{label}</span>
-    </label>
-  );
+/* Top nav */
+.topNav{
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(10px);
+  background: rgba(7,9,13,.55);
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+.navInner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding: 14px 0;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight: 950;
+  letter-spacing: -0.3px;
+}
+.brandMark{
+  width: 14px;
+  height: 14px;
+  border-radius: 6px;
+  background: radial-gradient(circle at 30% 30%, var(--accent2), var(--accent));
+  box-shadow: 0 0 0 1px rgba(255,255,255,.12);
+}
+.brandText{ opacity:.95; }
+
+.navLinks{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.navLink{
+  padding: 8px 10px;
+  border-radius: 10px;
+  color: rgba(255,255,255,.78);
+  font-weight: 800;
+}
+.navLink:hover{
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.92);
+}
+
+/* Typography */
+.kicker{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight: 900;
+  color: rgba(255,255,255,.72);
+  letter-spacing: .2px;
+}
+.kickerDot{
+  width: 10px;
+  height: 10px;
+  border-radius: 99px;
+  background: rgba(255,122,24,.95);
+  box-shadow: 0 0 0 4px rgba(255,122,24,.18);
+}
+.h1{
+  font-size: clamp(34px, 3.3vw, 54px);
+  line-height: 1.05;
+  letter-spacing: -0.9px;
+  font-weight: 950;
+  margin: 0;
+}
+.h2{
+  font-size: clamp(22px, 2.0vw, 30px);
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  font-weight: 950;
+  margin: 0;
+}
+.p{
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+  font-weight: 650;
+}
+.pDark{
+  margin: 0;
+  color: rgba(11,16,32,.72);
+  line-height: 1.65;
+  font-weight: 650;
+}
+
+.underline{
+  background: linear-gradient(180deg, transparent 62%, rgba(255,122,24,.38) 0);
+  padding: 0 2px;
+  border-radius: 6px;
+}
+
+/* Cards */
+.card{
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius2);
+  box-shadow: var(--shadow2);
+}
+.cardInner{ padding: 18px; }
+.cardHover{ transition: transform .18s ease, border-color .18s ease, background .18s ease; }
+.cardHover:hover{
+  transform: translateY(-2px);
+  border-color: rgba(255,122,24,.28);
+  background: rgba(255,255,255,.06);
+}
+.panel{
+  border-radius: var(--radius2);
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  box-shadow: var(--shadow);
+}
+.panelHeader{
+  padding: 18px 18px 0 18px;
+}
+.panelBody{
+  padding: 18px;
+}
+
+/* Buttons */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-weight: 900;
+  border: 1px solid rgba(255,255,255,.14);
+  transition: transform .14s ease, background .14s ease, border-color .14s ease;
+}
+.btnArrow{ opacity:.9; }
+.btn:hover{ transform: translateY(-1px); }
+
+.btnPrimary{
+  background: linear-gradient(180deg, rgba(255,122,24,.92), rgba(255,122,24,.78));
+  border-color: rgba(255,122,24,.55);
+  color: rgba(9,11,16,.94);
+}
+.btnPrimary:hover{
+  background: linear-gradient(180deg, rgba(255,122,24,.98), rgba(255,122,24,.84));
+}
+
+.btnGhost{
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.88);
+}
+.btnGhost:hover{
+  background: rgba(255,255,255,.07);
+  border-color: rgba(255,255,255,.20);
+}
+
+/* Layout helpers */
+.section{ padding: 34px 0; }
+.sectionSm{ padding: 18px 0; }
+
+.hero{ padding: 34px 0; }
+.heroGrid{
+  display:grid;
+  grid-template-columns: 1.25fr .85fr;
+  gap: 16px;
+}
+@media (max-width: 980px){
+  .heroGrid{ grid-template-columns: 1fr; }
+}
+
+.heroCopy p{ margin-top: 12px; }
+.heroActions{
+  display:flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+.pills{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+.pill{
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(255,255,255,.78);
+  font-weight: 850;
+  font-size: 12px;
+}
+
+.statRow{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.stat{
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 16px;
+  padding: 14px;
+}
+.statNum{ font-weight: 950; font-size: 18px; letter-spacing: -0.3px; }
+.statLab{ color: rgba(255,255,255,.70); font-weight: 750; margin-top: 4px; font-size: 12px; }
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(255,255,255,.78);
+  font-weight: 850;
+  font-size: 12px;
+}
+.badgeHot{
+  background: rgba(255,122,24,.14);
+  border-color: rgba(255,122,24,.32);
+  color: rgba(255,220,200,.92);
+}
+
+.tierGrid{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+@media (max-width: 980px){
+  .tierGrid{ grid-template-columns: 1fr; }
+}
+.tierHead{
+  display:flex;
+  justify-content:space-between;
+  gap: 12px;
+  align-items:flex-start;
+}
+.tierName{ font-weight: 950; font-size: 18px; letter-spacing: -0.2px; }
+.tierSub{ color: rgba(255,255,255,.70); font-weight: 750; margin-top: 4px; }
+.tierPrice{ font-weight: 950; font-size: 18px; }
+.tierList{
+  margin: 14px 0 0 0;
+  padding-left: 18px;
+  line-height: 1.85;
+  color: rgba(255,255,255,.82);
+  font-weight: 700;
+}
+.tierCTA{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+/* Inputs (estimate page uses .input) */
+.fieldLabel{
+  font-weight: 900;
+  color: rgba(255,255,255,.78);
+  margin-bottom: 6px;
+}
+.input{
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.90);
+  outline: none;
+  font-weight: 650;
+}
+.input::placeholder{ color: rgba(255,255,255,.48); }
+.input:focus{
+  border-color: rgba(255,122,24,.45);
+  box-shadow: 0 0 0 4px rgba(255,122,24,.14);
+}
+
+.row{ display:flex; gap:12px; flex-wrap: wrap; }
+
+footer{
+  margin-top: 40px;
+  padding: 24px 0;
+  border-top: 1px solid rgba(255,255,255,.10);
+  color: rgba(255,255,255,.70);
+  font-weight: 700;
 }
