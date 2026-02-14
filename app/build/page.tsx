@@ -5,41 +5,22 @@ import { useRouter } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Hybrid Dynamic Intake:
- * - Chooser: guided vs known
- * - Dynamic branching
- * - Adds required lead email + optional phone at the end
- * - Sends everything to /estimate as query params
- */
+type Mode = "guided" | "known";
 
-type Mode = "chooser" | "guided" | "known";
-type Intent =
-  | "Marketing"
-  | "Leads"
-  | "Booking"
-  | "Selling"
-  | "Content"
-  | "Membership"
-  | "Other";
-
+type Intent = "Marketing" | "Leads" | "Booking" | "Selling" | "Content" | "Membership" | "Other";
 type WebsiteType = "Business" | "Ecommerce" | "Portfolio" | "Landing";
 type Pages = "1-3" | "4-5" | "6-8" | "9+";
 type Design = "Modern" | "Classic" | "Creative";
 type Timeline = "2-3 weeks" | "4+ weeks" | "Under 14 days";
-
 type YesNo = "Yes" | "No";
 type ContentReady = "Ready" | "Some" | "Not ready";
 type AssetsSource = "Client provides" | "Stock" | "Need help";
 
 type FormState = {
   mode: Mode;
-
   websiteType: WebsiteType;
-
   intent: Intent;
   intentOther: string;
-
   pages: Pages;
 
   booking: boolean;
@@ -48,76 +29,38 @@ type FormState = {
   membership: boolean;
 
   wantsAutomation: YesNo;
-  automationTypes: string[];
-  integrations: string[];
-  integrationOther: string;
-
   hasLogo: YesNo;
   hasBrandGuide: YesNo;
   contentReady: ContentReady;
   assetsSource: AssetsSource;
   referenceWebsite: string;
 
-  decisionMaker: YesNo;
-  stakeholdersCount: "1" | "2-3" | "4+";
-
   design: Design;
   timeline: Timeline;
-
   notes: string;
 
-  // lead capture
   leadEmail: string;
   leadPhone: string;
 };
 
-const INTENTS: Intent[] = [
-  "Marketing",
-  "Leads",
-  "Booking",
-  "Selling",
-  "Content",
-  "Membership",
-  "Other",
-];
-
+const INTENTS: Intent[] = ["Marketing", "Leads", "Booking", "Selling", "Content", "Membership", "Other"];
 const WEBSITE_TYPES: WebsiteType[] = ["Business", "Ecommerce", "Portfolio", "Landing"];
 const PAGES: Pages[] = ["1-3", "4-5", "6-8", "9+"];
 const DESIGNS: Design[] = ["Modern", "Classic", "Creative"];
 const TIMELINES: Timeline[] = ["2-3 weeks", "4+ weeks", "Under 14 days"];
 
-const AUTOMATION_OPTIONS = [
-  "Email confirmations",
-  "Email follow-ups",
-  "SMS reminders",
-  "CRM integration",
-  "Lead routing (multiple recipients)",
-];
-
-const INTEGRATION_OPTIONS = [
-  "Google Maps / location",
-  "Calendly / scheduling",
-  "Stripe payments",
-  "PayPal payments",
-  "Mailchimp / email list",
-  "Analytics (GA4 / Pixel)",
-  "Live chat",
-];
-
 export default function BuildPage() {
   const router = useRouter();
 
-  // steps: 0 chooser, 1..6 intake, 7 contact, 8 review
+  // steps: 0 mode, 1..6 questions, 7 contact, 8 review
   const [step, setStep] = useState<number>(0);
 
   const [form, setForm] = useState<FormState>({
-    mode: "chooser",
+    mode: "guided",
 
     websiteType: "Business",
-
     intent: "Marketing",
     intentOther: "",
-
     pages: "4-5",
 
     booking: false,
@@ -126,22 +69,14 @@ export default function BuildPage() {
     membership: false,
 
     wantsAutomation: "No",
-    automationTypes: [],
-    integrations: [],
-    integrationOther: "",
-
     hasLogo: "Yes",
     hasBrandGuide: "No",
     contentReady: "Some",
     assetsSource: "Client provides",
     referenceWebsite: "",
 
-    decisionMaker: "Yes",
-    stakeholdersCount: "1",
-
     design: "Modern",
     timeline: "2-3 weeks",
-
     notes: "",
 
     leadEmail: "",
@@ -172,30 +107,15 @@ export default function BuildPage() {
     return s;
   }, [form.intent]);
 
-  function goMode(mode: Mode) {
-    setForm((f) => ({ ...f, mode }));
-    setStep(1);
-  }
-
   function next() {
     setStep((s) => Math.min(s + 1, 8));
   }
-
   function back() {
     setStep((s) => Math.max(s - 1, 0));
   }
 
   function applySuggested() {
     setForm((f) => ({ ...f, ...suggested }));
-  }
-
-  function toggleInList(key: "automationTypes" | "integrations", value: string) {
-    setForm((f) => {
-      const current = new Set(f[key]);
-      if (current.has(value)) current.delete(value);
-      else current.add(value);
-      return { ...f, [key]: Array.from(current) } as FormState;
-    });
   }
 
   function submit() {
@@ -206,53 +126,39 @@ export default function BuildPage() {
     }
 
     const params = new URLSearchParams({
-      // lead
       leadEmail,
       leadPhone: form.leadPhone.trim(),
 
-      // old-friendly keys
       websiteType: form.websiteType,
       pages: form.pages,
       booking: String(form.booking),
       payments: String(form.payments),
       blog: String(form.blog),
-      design: form.design,
-      timeline: form.timeline,
+      membership: String(form.membership),
+      wantsAutomation: form.wantsAutomation,
 
-      // richer keys
+      hasBrand: form.hasBrandGuide === "Yes" || form.hasLogo === "Yes" ? "yes" : "no",
+      contentReady: form.contentReady,
+      domainHosting: "no", // later we’ll ask
+      timeline: form.timeline,
+      budget: "500-1000", // later we’ll ask
+      competitorUrl: form.referenceWebsite,
+      notes: form.notes,
+
       mode: form.mode,
       intent: form.intent,
       intentOther: form.intentOther,
-      membership: String(form.membership),
-
-      wantsAutomation: form.wantsAutomation,
-      automationTypes: form.automationTypes.join(","),
-      integrations: form.integrations.join(","),
-      integrationOther: form.integrationOther,
-
-      hasLogo: form.hasLogo,
-      hasBrandGuide: form.hasBrandGuide,
-      contentReady: form.contentReady,
-      assetsSource: form.assetsSource,
-      referenceWebsite: form.referenceWebsite,
-
-      decisionMaker: form.decisionMaker,
-      stakeholdersCount: form.stakeholdersCount,
-
-      notes: form.notes,
+      design: form.design,
     }).toString();
 
     router.push(`/estimate?${params}`);
   }
 
-  const stepLabel =
-    step === 0
-      ? "Choose how you'd like to start"
-      : step === 7
-      ? "Contact"
-      : step === 8
-      ? "Review"
-      : `Step ${step} of 6`;
+  const stepTitle =
+    step === 0 ? "Start your quote" :
+    step === 7 ? "Contact" :
+    step === 8 ? "Review" :
+    `Step ${step} of 6`;
 
   return (
     <main className="container" style={{ padding: "42px 0 80px" }}>
@@ -263,538 +169,330 @@ export default function BuildPage() {
 
       <div style={{ height: 12 }} />
 
-      <h1 className="h1">Get a Quote</h1>
-      <p className="p" style={{ maxWidth: 820, marginTop: 10 }}>
-        {stepLabel} — we’ll ask only what’s relevant so your estimate feels accurate.
+      <h1 className="h1">Get a quote in minutes</h1>
+      <p className="p" style={{ maxWidth: 860, marginTop: 10 }}>
+        {stepTitle} — we only ask what’s relevant so your estimate is accurate.
       </p>
 
       <div style={{ height: 18 }} />
 
-      {/* STEP 0 */}
+      {/* Step 0 */}
       {step === 0 && (
-        <section className="grid2" style={{ marginTop: 14 }}>
+        <div className="grid2">
           <ChoiceCard
             title="Help me decide"
-            desc="Not sure what you need? We’ll ask goal-based questions and recommend the best setup."
-            cta="Start guided intake →"
-            onClick={() => goMode("guided")}
-            highlight
+            desc="Goal-based questions and we recommend the right setup."
+            onClick={() => { setForm((f)=>({ ...f, mode: "guided"})); setStep(1); }}
+            primary
           />
           <ChoiceCard
             title="I know what I need"
-            desc="You already know the type of site you want. We’ll jump straight into scope."
-            cta="Start scope intake →"
-            onClick={() => goMode("known")}
+            desc="Skip guidance and go straight into scope."
+            onClick={() => { setForm((f)=>({ ...f, mode: "known"})); setStep(1); }}
           />
-        </section>
+        </div>
       )}
 
-      {/* STEP 1 */}
+      {/* Step 1 */}
       {step === 1 && (
-        <section className="panel" style={{ marginTop: 14 }}>
+        <section className="panel">
           <div className="panelHeader">
-            <h2 className="h2">Step 1 — Goal / Type</h2>
-            <p className="p" style={{ marginTop: 8 }}>
-              Pick a goal (guided) or choose the site type (direct). You can adjust later.
+            <h2 className="h2">Goal</h2>
+            <p className="pDark" style={{ marginTop: 8 }}>
+              This helps us recommend features and tier.
             </p>
           </div>
 
-          <div className="panelBody">
+          <div className="panelBody" style={{ display: "grid", gap: 14 }}>
             {form.mode === "guided" ? (
               <>
-                <div className="field">
+                <div>
                   <div className="fieldLabel">Primary goal</div>
                   <select
-                    className="input"
+                    className="select"
                     value={form.intent}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, intent: e.target.value as Intent }))
-                    }
+                    onChange={(e) => setForm((f) => ({ ...f, intent: e.target.value as Intent }))}
                   >
                     {INTENTS.map((i) => (
-                      <option key={i} value={i}>
-                        {i}
-                      </option>
+                      <option key={i} value={i}>{i}</option>
                     ))}
                   </select>
                 </div>
 
                 {form.intent === "Other" && (
-                  <div className="field">
+                  <div>
                     <div className="fieldLabel">Briefly describe your goal</div>
                     <input
                       className="input"
                       value={form.intentOther}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, intentOther: e.target.value }))
-                      }
+                      onChange={(e) => setForm((f) => ({ ...f, intentOther: e.target.value }))}
                       placeholder="e.g., recruiting, investor credibility, event promotion…"
                     />
                   </div>
                 )}
 
-                <div className="hintBox">
-                  <strong>Tip:</strong> After you pick a goal, we’ll suggest a typical setup
-                  (you can override it).
+                <div className="smallNote">
+                  Tip: after you pick a goal, we’ll suggest the typical setup (you can change it).
                 </div>
               </>
             ) : (
-              <>
-                <div className="field">
-                  <div className="fieldLabel">Website type</div>
-                  <select
-                    className="input"
-                    value={form.websiteType}
-                    onChange={(e) =>
-                      setForm((f) => ({
-                        ...f,
-                        websiteType: e.target.value as WebsiteType,
-                      }))
-                    }
-                  >
-                    {WEBSITE_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* STEP 2 */}
-      {step === 2 && (
-        <section className="panel" style={{ marginTop: 14 }}>
-          <div className="panelHeader">
-            <h2 className="h2">Step 2 — Basic scope</h2>
-            <p className="p" style={{ marginTop: 8 }}>
-              Pages help estimate effort. Final scope is confirmed during your consultation.
-            </p>
-          </div>
-
-          <div className="panelBody">
-            {form.mode === "guided" && (
-              <div className="subPanel">
-                <div className="subPanelTitle">Suggested setup</div>
-                <ul className="miniList">
-                  <li>
-                    <strong>Website type:</strong> {suggested.websiteType ?? form.websiteType}
-                  </li>
-                  {suggested.booking && <li>Booking enabled</li>}
-                  {suggested.payments && <li>Payments enabled</li>}
-                  {suggested.blog && <li>Blog enabled</li>}
-                  {suggested.membership && <li>Membership enabled</li>}
-                </ul>
-
-                <button type="button" onClick={applySuggested} className="btn btnGhost">
-                  Apply suggested setup
-                </button>
-              </div>
-            )}
-
-            <div className="field">
-              <div className="fieldLabel">Estimated pages</div>
-              <select
-                className="input"
-                value={form.pages}
-                onChange={(e) => setForm((f) => ({ ...f, pages: e.target.value as Pages }))}
-              >
-                {PAGES.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="hintBox">
-              We’ll confirm pages/sections during the Scope Snapshot step.
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* STEP 3 */}
-      {step === 3 && (
-        <section className="panel" style={{ marginTop: 14 }}>
-          <div className="panelHeader">
-            <h2 className="h2">Step 3 — Features</h2>
-            <p className="p" style={{ marginTop: 8 }}>
-              Select only what applies — this is where pricing differences come from.
-            </p>
-          </div>
-
-          <div className="panelBody">
-            <div className="twoCol">
-              <ToggleRow
-                label="Booking / appointments"
-                checked={form.booking}
-                onChange={(v) => setForm((f) => ({ ...f, booking: v }))}
-              />
-              <ToggleRow
-                label="Payments / checkout"
-                checked={form.payments}
-                onChange={(v) => setForm((f) => ({ ...f, payments: v }))}
-              />
-              <ToggleRow
-                label="Blog / articles"
-                checked={form.blog}
-                onChange={(v) => setForm((f) => ({ ...f, blog: v }))}
-              />
-              <ToggleRow
-                label="Membership / gated content"
-                checked={form.membership}
-                onChange={(v) => setForm((f) => ({ ...f, membership: v }))}
-              />
-            </div>
-
-            {(form.booking || form.payments || form.membership || form.intent === "Selling") && (
-              <div style={{ marginTop: 16 }}>
-                <div className="field">
-                  <div className="fieldLabel">Do you want automations? (advanced)</div>
-                  <select
-                    className="input"
-                    value={form.wantsAutomation}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, wantsAutomation: e.target.value as YesNo }))
-                    }
-                  >
-                    <option value="No">No</option>
-                    <option value="Yes">Yes</option>
-                  </select>
-                </div>
-
-                {form.wantsAutomation === "Yes" && (
-                  <div className="subPanel">
-                    <div className="subPanelTitle">Automation types</div>
-                    {AUTOMATION_OPTIONS.map((a) => (
-                      <CheckLine
-                        key={a}
-                        label={a}
-                        checked={form.automationTypes.includes(a)}
-                        onChange={() => toggleInList("automationTypes", a)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {(form.payments || form.booking || form.intent === "Selling") && (
-              <div style={{ marginTop: 16 }}>
-                <div className="subPanel">
-                  <div className="subPanelTitle">Integrations</div>
-
-                  {INTEGRATION_OPTIONS.map((i) => (
-                    <CheckLine
-                      key={i}
-                      label={i}
-                      checked={form.integrations.includes(i)}
-                      onChange={() => toggleInList("integrations", i)}
-                    />
+              <div>
+                <div className="fieldLabel">Website type</div>
+                <select
+                  className="select"
+                  value={form.websiteType}
+                  onChange={(e) => setForm((f) => ({ ...f, websiteType: e.target.value as WebsiteType }))}
+                >
+                  {WEBSITE_TYPES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
                   ))}
-
-                  <div className="field" style={{ marginTop: 12 }}>
-                    <div className="fieldLabel">Other integration (optional)</div>
-                    <input
-                      className="input"
-                      value={form.integrationOther}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, integrationOther: e.target.value }))
-                      }
-                      placeholder="e.g., HubSpot, a specific CRM, booking platform…"
-                    />
-                  </div>
-                </div>
+                </select>
               </div>
             )}
           </div>
         </section>
       )}
 
-      {/* STEP 4 */}
-      {step === 4 && (
-        <section className="panel" style={{ marginTop: 14 }}>
+      {/* Step 2 */}
+      {step === 2 && (
+        <section className="panel">
           <div className="panelHeader">
-            <h2 className="h2">Step 4 — Assets & readiness</h2>
-            <p className="p" style={{ marginTop: 8 }}>
-              These answers prevent delays and revision disputes later.
+            <h2 className="h2">Scope</h2>
+            <p className="pDark" style={{ marginTop: 8 }}>
+              Pages help estimate effort. Final scope is confirmed during consultation.
             </p>
           </div>
 
-          <div className="panelBody">
-            <div className="field">
+          <div className="panelBody" style={{ display: "grid", gap: 14 }}>
+            {form.mode === "guided" && (
+              <div className="card" style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.10)" }}>
+                <div className="cardInner">
+                  <div style={{ fontWeight: 950 }}>Suggested setup</div>
+                  <div className="smallNote" style={{ marginTop: 6 }}>
+                    Website type: <strong>{suggested.websiteType ?? form.websiteType}</strong>{" "}
+                    {suggested.booking ? " • Booking" : ""}{suggested.payments ? " • Payments" : ""}{suggested.blog ? " • Blog" : ""}{suggested.membership ? " • Membership" : ""}
+                  </div>
+                  <div style={{ marginTop: 10 }}>
+                    <button className="btn btnGhost" type="button" onClick={applySuggested}>
+                      Apply suggested setup
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="grid2">
+              <div>
+                <div className="fieldLabel">Website type</div>
+                <select
+                  className="select"
+                  value={form.websiteType}
+                  onChange={(e) => setForm((f) => ({ ...f, websiteType: e.target.value as WebsiteType }))}
+                >
+                  {WEBSITE_TYPES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <div className="fieldLabel">Estimated pages</div>
+                <select
+                  className="select"
+                  value={form.pages}
+                  onChange={(e) => setForm((f) => ({ ...f, pages: e.target.value as Pages }))}
+                >
+                  {PAGES.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Step 3 */}
+      {step === 3 && (
+        <section className="panel">
+          <div className="panelHeader">
+            <h2 className="h2">Features</h2>
+            <p className="pDark" style={{ marginTop: 8 }}>Select only what applies.</p>
+          </div>
+
+          <div className="panelBody" style={{ display: "grid", gap: 10 }}>
+            <CheckRow label="Booking / appointments" hint="Calendly or native scheduling" checked={form.booking} onChange={(v)=>setForm(f=>({ ...f, booking: v }))} />
+            <CheckRow label="Payments / checkout" hint="Stripe/PayPal setup and flow" checked={form.payments} onChange={(v)=>setForm(f=>({ ...f, payments: v }))} />
+            <CheckRow label="Blog / articles" hint="Categories + SEO structure" checked={form.blog} onChange={(v)=>setForm(f=>({ ...f, blog: v }))} />
+            <CheckRow label="Membership / gated content" hint="Login + restricted pages" checked={form.membership} onChange={(v)=>setForm(f=>({ ...f, membership: v }))} />
+
+            <div style={{ marginTop: 6 }}>
+              <div className="fieldLabel">Automations?</div>
+              <select className="select" value={form.wantsAutomation} onChange={(e)=>setForm(f=>({ ...f, wantsAutomation: e.target.value as YesNo }))}>
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+              </select>
+              <div className="smallNote" style={{ marginTop: 6 }}>
+                Automations include confirmations, follow-ups, reminders, routing.
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Step 4 */}
+      {step === 4 && (
+        <section className="panel">
+          <div className="panelHeader">
+            <h2 className="h2">Assets & readiness</h2>
+            <p className="pDark" style={{ marginTop: 8 }}>Helps prevent delays and revision disputes.</p>
+          </div>
+
+          <div className="panelBody" style={{ display: "grid", gap: 14 }}>
+            <div>
               <div className="fieldLabel">Reference website (optional)</div>
-              <input
-                className="input"
-                placeholder="https://example.com"
-                value={form.referenceWebsite}
-                onChange={(e) => setForm((f) => ({ ...f, referenceWebsite: e.target.value }))}
-              />
+              <input className="input" value={form.referenceWebsite} onChange={(e)=>setForm(f=>({ ...f, referenceWebsite: e.target.value }))} placeholder="https://example.com" />
             </div>
 
-            <div className="twoCol">
-              <div className="field">
+            <div className="grid2">
+              <div>
                 <div className="fieldLabel">Do you have a logo?</div>
-                <select
-                  className="input"
-                  value={form.hasLogo}
-                  onChange={(e) => setForm((f) => ({ ...f, hasLogo: e.target.value as YesNo }))}
-                >
+                <select className="select" value={form.hasLogo} onChange={(e)=>setForm(f=>({ ...f, hasLogo: e.target.value as YesNo }))}>
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
                 </select>
               </div>
 
-              <div className="field">
-                <div className="fieldLabel">Brand guide / colors already defined?</div>
-                <select
-                  className="input"
-                  value={form.hasBrandGuide}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, hasBrandGuide: e.target.value as YesNo }))
-                  }
-                >
+              <div>
+                <div className="fieldLabel">Brand guide / colors defined?</div>
+                <select className="select" value={form.hasBrandGuide} onChange={(e)=>setForm(f=>({ ...f, hasBrandGuide: e.target.value as YesNo }))}>
                   <option value="No">No</option>
                   <option value="Yes">Yes</option>
                 </select>
               </div>
             </div>
 
-            <div className="twoCol">
-              <div className="field">
-                <div className="fieldLabel">Content readiness (text / services / about)</div>
-                <select
-                  className="input"
-                  value={form.contentReady}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, contentReady: e.target.value as ContentReady }))
-                  }
-                >
+            <div className="grid2">
+              <div>
+                <div className="fieldLabel">Content readiness</div>
+                <select className="select" value={form.contentReady} onChange={(e)=>setForm(f=>({ ...f, contentReady: e.target.value as ContentReady }))}>
                   <option value="Ready">Ready</option>
                   <option value="Some">Some</option>
                   <option value="Not ready">Not ready</option>
                 </select>
               </div>
 
-              <div className="field">
+              <div>
                 <div className="fieldLabel">Images source</div>
-                <select
-                  className="input"
-                  value={form.assetsSource}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, assetsSource: e.target.value as AssetsSource }))
-                  }
-                >
+                <select className="select" value={form.assetsSource} onChange={(e)=>setForm(f=>({ ...f, assetsSource: e.target.value as AssetsSource }))}>
                   <option value="Client provides">Client provides</option>
                   <option value="Stock">Stock</option>
                   <option value="Need help">Need help</option>
                 </select>
               </div>
             </div>
-
-            <div className="hintBox">
-              We’ll keep the scope clean so you don’t get stuck in endless edits.
-            </div>
           </div>
         </section>
       )}
 
-      {/* STEP 5 */}
+      {/* Step 5 */}
       {step === 5 && (
-        <section className="panel" style={{ marginTop: 14 }}>
+        <section className="panel">
           <div className="panelHeader">
-            <h2 className="h2">Step 5 — Decision & delivery</h2>
-            <p className="p" style={{ marginTop: 8 }}>
-              Helps us forecast revision cycles and delivery risk.
-            </p>
+            <h2 className="h2">Style & timeline</h2>
+            <p className="pDark" style={{ marginTop: 8 }}>Timeline affects pricing if rush.</p>
           </div>
 
-          <div className="panelBody">
-            <div className="twoCol">
-              <div className="field">
-                <div className="fieldLabel">Are you the final decision-maker?</div>
-                <select
-                  className="input"
-                  value={form.decisionMaker}
-                  onChange={(e) => setForm((f) => ({ ...f, decisionMaker: e.target.value as YesNo }))}
-                >
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </div>
-
-              <div className="field">
-                <div className="fieldLabel">How many stakeholders will review?</div>
-                <select
-                  className="input"
-                  value={form.stakeholdersCount}
-                  onChange={(e) => setForm((f) => ({ ...f, stakeholdersCount: e.target.value as any }))}
-                >
-                  <option value="1">1</option>
-                  <option value="2-3">2–3</option>
-                  <option value="4+">4+</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="twoCol">
-              <div className="field">
+          <div className="panelBody" style={{ display: "grid", gap: 14 }}>
+            <div className="grid2">
+              <div>
                 <div className="fieldLabel">Design direction</div>
-                <select
-                  className="input"
-                  value={form.design}
-                  onChange={(e) => setForm((f) => ({ ...f, design: e.target.value as Design }))}
-                >
-                  {DESIGNS.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
+                <select className="select" value={form.design} onChange={(e)=>setForm(f=>({ ...f, design: e.target.value as Design }))}>
+                  {DESIGNS.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
-
-              <div className="field">
+              <div>
                 <div className="fieldLabel">Timeline</div>
-                <select
-                  className="input"
-                  value={form.timeline}
-                  onChange={(e) => setForm((f) => ({ ...f, timeline: e.target.value as Timeline }))}
-                >
-                  {TIMELINES.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
+                <select className="select" value={form.timeline} onChange={(e)=>setForm(f=>({ ...f, timeline: e.target.value as Timeline }))}>
+                  {TIMELINES.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
             </div>
 
-            <div className="field">
+            <div>
               <div className="fieldLabel">Notes (optional)</div>
-              <textarea
-                className="input"
-                rows={4}
-                value={form.notes}
-                onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-                placeholder="Anything special you want us to know (pages, sections, examples, features)…"
-              />
+              <textarea className="textarea" value={form.notes} onChange={(e)=>setForm(f=>({ ...f, notes: e.target.value }))} placeholder="Any special sections/features/examples…"/>
             </div>
           </div>
         </section>
       )}
 
-      {/* STEP 6 */}
+      {/* Step 6 */}
       {step === 6 && (
-        <section className="panel" style={{ marginTop: 14 }}>
+        <section className="panel">
           <div className="panelHeader">
-            <h2 className="h2">Step 6 — Review</h2>
-            <p className="p" style={{ marginTop: 8 }}>
-              Next we generate your estimate + show tier options.
-            </p>
+            <h2 className="h2">Summary</h2>
+            <p className="pDark" style={{ marginTop: 8 }}>Next we’ll collect your email and generate your estimate.</p>
           </div>
 
-          <div className="panelBody">
-            <div className="subPanel">
-              <div className="subPanelTitle">Summary</div>
-              <ul className="miniList">
-                <li>
-                  Mode:{" "}
-                  <strong>{form.mode === "guided" ? "Help me decide" : "I know what I need"}</strong>
-                </li>
-                <li>
-                  Website type: <strong>{form.websiteType}</strong>
-                </li>
-                <li>
-                  Pages: <strong>{form.pages}</strong>
-                </li>
-                <li>
-                  Features:{" "}
-                  <strong>
-                    {[
-                      form.booking && "Booking",
-                      form.payments && "Payments",
-                      form.blog && "Blog",
-                      form.membership && "Membership",
-                    ]
-                      .filter(Boolean)
-                      .join(", ") || "None selected"}
-                  </strong>
-                </li>
-                <li>
-                  Content readiness: <strong>{form.contentReady}</strong>
-                </li>
-                <li>
-                  Timeline: <strong>{form.timeline}</strong>
-                </li>
-              </ul>
+          <div className="panelBody" style={{ display: "grid", gap: 8 }}>
+            <div className="smallNote">
+              Website type: <strong>{form.websiteType}</strong> • Pages: <strong>{form.pages}</strong> • Goal: <strong>{form.intent}</strong>
             </div>
-
-            <div className="hintBox">
-              After you continue, we’ll ask for your email so we can send your estimate.
+            <div className="smallNote">
+              Features:{" "}
+              <strong>
+                {[
+                  form.booking && "Booking",
+                  form.payments && "Payments",
+                  form.blog && "Blog",
+                  form.membership && "Membership",
+                ].filter(Boolean).join(", ") || "None"}
+              </strong>
+            </div>
+            <div className="smallNote">
+              Content: <strong>{form.contentReady}</strong> • Timeline: <strong>{form.timeline}</strong>
             </div>
           </div>
         </section>
       )}
 
-      {/* STEP 7 */}
+      {/* Step 7 */}
       {step === 7 && (
-        <section className="panel" style={{ marginTop: 14 }}>
+        <section className="panel">
           <div className="panelHeader">
-            <h2 className="h2">Contact</h2>
-            <p className="p" style={{ marginTop: 8 }}>
-              Where should we send your estimate?
-            </p>
+            <h2 className="h2">Where should we send your estimate?</h2>
+            <p className="pDark" style={{ marginTop: 8 }}>Email is required.</p>
           </div>
 
-          <div className="panelBody">
-            <div className="field">
-              <div className="fieldLabel">Email (required)</div>
-              <input
-                className="input"
-                value={form.leadEmail}
-                onChange={(e) => setForm((f) => ({ ...f, leadEmail: e.target.value }))}
-                placeholder="you@company.com"
-              />
+          <div className="panelBody" style={{ display: "grid", gap: 14 }}>
+            <div>
+              <div className="fieldLabel">Email</div>
+              <input className="input" value={form.leadEmail} onChange={(e)=>setForm(f=>({ ...f, leadEmail: e.target.value }))} placeholder="you@company.com" />
             </div>
-
-            <div className="field">
+            <div>
               <div className="fieldLabel">Phone (optional)</div>
-              <input
-                className="input"
-                value={form.leadPhone}
-                onChange={(e) => setForm((f) => ({ ...f, leadPhone: e.target.value }))}
-                placeholder="(555) 555-5555"
-              />
+              <input className="input" value={form.leadPhone} onChange={(e)=>setForm(f=>({ ...f, leadPhone: e.target.value }))} placeholder="(555) 555-5555" />
             </div>
-
-            <div className="hintBox">
-              We’ll use this to follow up and schedule a call if you want one.
+            <div className="smallNote">
+              We’ll use this to send your estimate and offer a free consultation if you want one.
             </div>
           </div>
         </section>
       )}
 
-      {/* STEP 8 */}
+      {/* Step 8 */}
       {step === 8 && (
-        <section className="panel" style={{ marginTop: 14 }}>
+        <section className="panel">
           <div className="panelHeader">
             <h2 className="h2">All set</h2>
-            <p className="p" style={{ marginTop: 8 }}>
-              Next: we’ll generate your estimate and show tier options.
-            </p>
+            <p className="pDark" style={{ marginTop: 8 }}>View your estimate and tier recommendation.</p>
           </div>
 
           <div className="panelBody">
-            <div className="subPanel">
-              <div className="subPanelTitle">Confirm</div>
-              <div style={{ lineHeight: 1.8, color: "rgba(255,255,255,0.82)" }}>
-                <div><strong>Email:</strong> {form.leadEmail || "(missing)"}</div>
-                {form.leadPhone ? <div><strong>Phone:</strong> {form.leadPhone}</div> : null}
-              </div>
+            <div className="smallNote">
+              Email: <strong>{form.leadEmail || "(missing)"}</strong>
+              {form.leadPhone ? <> • Phone: <strong>{form.leadPhone}</strong></> : null}
             </div>
           </div>
         </section>
@@ -802,17 +500,16 @@ export default function BuildPage() {
 
       {/* NAV */}
       {step > 0 && (
-        <div className="row" style={{ marginTop: 18 }}>
-          <button onClick={back} className="btn btnGhost" type="button">
+        <div className="row" style={{ marginTop: 16 }}>
+          <button className="btn btnGhost" onClick={back} type="button">
             Back
           </button>
-
           {step < 8 ? (
-            <button onClick={next} className="btn btnPrimary" type="button">
+            <button className="btn btnPrimary" onClick={next} type="button">
               Next <span className="btnArrow">→</span>
             </button>
           ) : (
-            <button onClick={submit} className="btn btnPrimary" type="button">
+            <button className="btn btnPrimary" onClick={submit} type="button">
               View Estimate <span className="btnArrow">→</span>
             </button>
           )}
@@ -822,79 +519,60 @@ export default function BuildPage() {
   );
 }
 
-/* ---------------- UI COMPONENTS ---------------- */
-
 function ChoiceCard({
   title,
   desc,
-  cta,
   onClick,
-  highlight,
+  primary,
 }: {
   title: string;
   desc: string;
-  cta: string;
   onClick: () => void;
-  highlight?: boolean;
+  primary?: boolean;
 }) {
   return (
     <div
-      onClick={onClick}
+      className="card cardHover"
       role="button"
       tabIndex={0}
-      className={`card cardHover ${highlight ? "cardHot" : ""}`}
-      style={{ cursor: "pointer" }}
+      onClick={onClick}
+      style={{
+        borderColor: primary ? "rgba(255,122,24,0.40)" : "rgba(255,255,255,0.12)",
+        background: primary ? "rgba(255,122,24,0.10)" : "rgba(255,255,255,0.05)",
+      }}
     >
       <div className="cardInner">
         <div style={{ fontWeight: 950, fontSize: 18 }}>{title}</div>
-        <div className="p" style={{ marginTop: 10 }}>
-          {desc}
-        </div>
-        <div style={{ marginTop: 14, fontWeight: 900, color: "rgba(255,255,255,0.92)" }}>
-          {cta}
+        <div className="p" style={{ marginTop: 8 }}>{desc}</div>
+        <div style={{ marginTop: 12 }}>
+          <span className={`badge ${primary ? "badgeHot" : ""}`}>Start →</span>
         </div>
       </div>
     </div>
   );
 }
 
-/** ✅ FIXED: checkbox alignment + no more white UI */
-function ToggleRow({
+function CheckRow({
   label,
+  hint,
   checked,
   onChange,
 }: {
   label: string;
+  hint: string;
   checked: boolean;
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="checkRow">
-      <input
-        className="check"
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-      />
-      <span>{label}</span>
-    </label>
-  );
-}
-
-/** ✅ FIXED: checkbox alignment + no more white UI */
-function CheckLine({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: () => void;
-}) {
-  return (
-    <label className="checkLine">
-      <input className="check" type="checkbox" checked={checked} onChange={onChange} />
-      <span>{label}</span>
-    </label>
+    <div className="checkRow">
+      <div className="checkLeft">
+        <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+        <div style={{ minWidth: 0 }}>
+          <div className="checkLabel">{label}</div>
+          <div className="checkHint">{hint}</div>
+        </div>
+      </div>
+      <div className={`badge ${checked ? "badgeHot" : ""}`}>{checked ? "On" : "Off"}</div>
+    </div>
   );
 }
