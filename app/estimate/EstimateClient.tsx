@@ -36,19 +36,55 @@ function pick(params: SearchParams, key: string) {
   const v = params?.[key];
   return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
 }
+
 function asBool(v: string) {
-  return v === "1" || v === "true" || v === "yes" || v === "on";
+  const s = (v ?? "").toString().trim().toLowerCase();
+  return s === "1" || s === "true" || s === "yes" || s === "on";
 }
 
-function normalizeTimeline(t: string) {
-  const x = (t || "").toLowerCase();
-  if (x.includes("under") || x.includes("rush") || x.includes("14")) return "rush";
-  if (x.includes("4") || x.includes("+")) return "4+";
-  return "2-3";
+function norm(s: string) {
+  return (s ?? "").toString().trim();
 }
 
-function clamp(n: number, lo: number, hi: number) {
-  return Math.max(lo, Math.min(hi, n));
+function normLower(s: string) {
+  return norm(s).toLowerCase();
+}
+
+function normPages(p: string) {
+  const v = norm(p);
+
+  // support multiple historical page labels you used across versions
+  const map: Record<string, string> = {
+    "1-3": "1-3",
+    "1–3": "1-3",
+    "1 to 3": "1-3",
+
+    "4-5": "4-5",
+    "4–5": "4-5",
+
+    "4-6": "4-6",
+    "4–6": "4-6",
+
+    "6-8": "6-8",
+    "6–8": "6-8",
+
+    "7-10": "7-10",
+    "7–10": "7-10",
+
+    "9+": "9+",
+    "9 +": "9+",
+    "9plus": "9+",
+
+    "10+": "10+",
+    "10 +": "10+",
+  };
+
+  const key = v.replace(/\s+/g, " ").trim();
+  return map[key] ?? v;
+}
+
+function money(n: number) {
+  return `$${Math.round(n).toLocaleString()}`;
 }
 
 export default function EstimateClient(props: Props) {
@@ -60,7 +96,7 @@ export default function EstimateClient(props: Props) {
       mode: pick(sp, "mode") || "estimate",
       intent: pick(sp, "intent") || "business",
       intentOther: pick(sp, "intentOther") || "",
-      websiteType: pick(sp, "websiteType") || "Business",
+      websiteType: pick(sp, "websiteType") || "business",
       pages: pick(sp, "pages") || "1-3",
 
       booking: asBool(pick(sp, "booking")),
@@ -70,117 +106,185 @@ export default function EstimateClient(props: Props) {
 
       wantsAutomation: pick(sp, "wantsAutomation") || "no",
 
-      hasBrand: pick(sp, "hasBrand") || pick(sp, "hasLogo") || "no",
+      hasBrand: pick(sp, "hasBrand") || "no",
       contentReady: pick(sp, "contentReady") || "some",
       domainHosting: pick(sp, "domainHosting") || "no",
-      timeline: pick(sp, "timeline") || "2-3 weeks",
+      timeline: pick(sp, "timeline") || "2-4w",
       budget: pick(sp, "budget") || "500-1000",
-      competitorUrl: pick(sp, "competitorUrl") || pick(sp, "referenceWebsite") || "",
+      competitorUrl: pick(sp, "competitorUrl") || "",
       notes: pick(sp, "notes") || "",
     };
   }, [props.intake, props.searchParams]);
 
-  const [email, setEmail] = useState(props.leadEmail || pick(props.searchParams || {}, "leadEmail") || "");
-  const [phone, setPhone] = useState(props.leadPhone || pick(props.searchParams || {}, "leadPhone") || "");
+  const [email, setEmail] = useState(
+    props.leadEmail || pick(props.searchParams || {}, "leadEmail") || ""
+  );
+  const [phone, setPhone] = useState(
+    props.leadPhone || pick(props.searchParams || {}, "leadPhone") || ""
+  );
 
   const pricing = useMemo(() => {
-    // System 2 baselines
-    let base = 550;
+    // ===== System 2 baseline =====
+    const START_PRICE = 550;
 
     const breakdown: { label: string; amount: number }[] = [];
+    const add = (label: string, amount: number) => {
+      if (amount === 0) return;
+      breakdown.push({ label, amount });
+    };
 
-    // pages (accept both formats: 1-3, 4-5, 6-8, 9+ etc.)
-    const pages = (intake.pages || "").toLowerCase();
-    if (pages.includes("1-3") || pages.includes("1") || pages.includes("3")) {
-      breakdown.push({ label: "Base (small site)", amount: 0 });
-    } else if (pages.includes("4") || pages.includes("5")) {
-      base += 220;
-      breakdown.push({ label: "More pages (4–5)", amount: 220 });
-    } else if (pages.includes("6") || pages.includes("7") || pages.includes("8")) {
-      base += 520;
-      breakdown.push({ label: "More pages (6–8)", amount: 520 });
-    } else {
-      base += 900;
-      breakdown.push({ label: "Large site (9+)", amount: 900 });
-    }
+    let total = START_PRICE;
 
-    // website type signal
-    const wt = (intake.websiteType || "").toLowerCase();
-    if (wt.includes("ecom")) {
-      base += 450;
-      breakdown.push({ label: "E-commerce complexity", amount: 450 });
-    } else if (wt.includes("portfolio") || wt.includes("landing")) {
-      base += 0;
-    } else {
-      base += 120;
-      breakdown.push({ label: "Business site structure", amount: 120 });
-    }
+    // normalize inputs
+    const pages = normPages(intake.pages);
+    const websiteType = normLower(intake.websiteType);
+    const intent = normLower(intake.intent);
+    const contentReady = normLower(intake.contentReady);
+    const timeline = normLower(intake.timeline);
+    const wantsAutomation = normLower(intake.wantsAutomation);
+    const hasBrand = normLower(intake.hasBrand);
+    const domainHosting = normLower(intake.domainHosting);
 
-    // features
+    // ===== Pages / size =====
+    const pageAddMap: Record<string, number> = {
+      "1-3": 0,
+      "4-5": 220,
+      "4-6": 320,
+      "6-8": 650,
+      "7-10": 900,
+      "9+": 1100,
+      "10+": 1300,
+    };
+    const pageAdd = pageAddMap[pages] ?? 220; // safe default
+    total += pageAdd;
+    add(`Pages (${pages})`, pageAdd);
+
+    // ===== Website type / intent complexity =====
+    // keep it conservative + predictable
+    const typeAdd =
+      websiteType.includes("ecommerce") || intent.includes("selling") ? 380 : 120;
+    total += typeAdd;
+    add("Base structure & UX", typeAdd);
+
+    // ===== Features =====
     if (intake.booking) {
-      base += 220;
-      breakdown.push({ label: "Booking / scheduling", amount: 220 });
+      total += 220;
+      add("Booking / scheduling", 220);
     }
     if (intake.payments) {
-      base += 380;
-      breakdown.push({ label: "Payments / checkout", amount: 380 });
+      total += 420;
+      add("Payments / checkout", 420);
     }
     if (intake.blog) {
-      base += 160;
-      breakdown.push({ label: "Blog setup", amount: 160 });
+      total += 180;
+      add("Blog / content setup", 180);
     }
     if (intake.membership) {
-      base += 520;
-      breakdown.push({ label: "Membership / gated content", amount: 520 });
+      total += 650;
+      add("Membership / gated content", 650);
     }
 
-    // automation
-    if ((intake.wantsAutomation || "").toLowerCase() === "yes") {
-      base += 260;
-      breakdown.push({ label: "Automations", amount: 260 });
+    // ===== Automation =====
+    if (wantsAutomation === "yes") {
+      total += 260;
+      add("Automations", 260);
     }
 
-    // brand + content readiness affect effort
-    const hasBrand = (intake.hasBrand || "").toLowerCase();
+    // ===== Readiness =====
+    // if content is not ready, scope expands (copy + structure)
+    if (contentReady === "not ready") {
+      total += 320;
+      add("Content not ready (extra copy/structure)", 320);
+    } else if (contentReady === "some") {
+      total += 140;
+      add("Partial content readiness", 140);
+    }
+
+    // ===== Brand =====
+    // hasBrand = yes/no (your estimate page uses hasBrand)
     if (hasBrand === "no") {
-      base += 180;
-      breakdown.push({ label: "Brand direction support", amount: 180 });
+      total += 220;
+      add("No brand kit (basic brand direction)", 220);
     }
 
-    const contentReady = (intake.contentReady || "").toLowerCase();
-    if (contentReady.includes("not")) {
-      base += 240;
-      breakdown.push({ label: "Content help / placeholders", amount: 240 });
-    } else if (contentReady.includes("some")) {
-      base += 120;
-      breakdown.push({ label: "Partial content coordination", amount: 120 });
+    // ===== Domain/hosting help =====
+    if (domainHosting === "no") {
+      total += 90;
+      add("Domain/hosting guidance", 90);
     }
 
-    const dh = (intake.domainHosting || "").toLowerCase();
-    if (dh === "no") {
-      base += 90;
-      breakdown.push({ label: "Domain/hosting setup help", amount: 90 });
+    // ===== Rush =====
+    // support multiple label styles
+    const isRush =
+      timeline.includes("rush") ||
+      timeline.includes("under 14") ||
+      timeline.includes("under14") ||
+      timeline.includes("1-2") ||
+      timeline.includes("1–2");
+    if (isRush) {
+      total += 280;
+      add("Rush timeline", 280);
     }
 
-    // timeline
-    const tl = normalizeTimeline(intake.timeline);
-    if (tl === "rush") {
-      base += 300;
-      breakdown.push({ label: "Rush timeline", amount: 300 });
-    }
-
-    // clamp into your System 2 range
-    const total = clamp(Math.round(base), 550, 3500);
+    // ===== Clamp to System 2 envelope =====
+    const min = 550;
+    const max = 3500;
+    total = Math.max(min, Math.min(max, total));
 
     const rangeLow = Math.round(total * 0.9);
-    const rangeHigh = Math.round(total * 1.18);
+    const rangeHigh = Math.round(total * 1.15);
 
-    // recommend tier based on total
-    const tier =
-      total <= 850 ? "Essential Launch" : total <= 1500 ? "Growth Build" : "Premium Platform";
+    // ===== Tier recommendation =====
+    let tier: "Essential" | "Growth" | "Premium" = "Growth";
+    if (total <= 850) tier = "Essential";
+    else if (total <= 1500) tier = "Growth";
+    else tier = "Premium";
 
-    return { total, rangeLow, rangeHigh, tier, breakdown };
+    return { total, rangeLow, rangeHigh, tier, breakdown, pages };
   }, [intake]);
+
+  const tierCards = useMemo(() => {
+    const tiers = [
+      {
+        key: "Essential",
+        name: "Essential Launch",
+        price: "$550–$850",
+        badge: "Best for simple launches",
+        bullets: [
+          "Up to ~5 sections / pages",
+          "Clean layout + mobile responsive",
+          "Contact form + basic SEO",
+          "1 revision round (structured)",
+        ],
+      },
+      {
+        key: "Growth",
+        name: "Growth Build",
+        price: "$900–$1,500",
+        badge: "Most chosen",
+        bullets: [
+          "5–8 pages/sections + stronger UX",
+          "Booking + lead capture improvements",
+          "Better SEO structure + analytics",
+          "2 revision rounds (structured)",
+        ],
+      },
+      {
+        key: "Premium",
+        name: "Premium Platform",
+        price: "$1,700–$3,500+",
+        badge: "Best for scale",
+        bullets: [
+          "Custom features + integrations",
+          "Advanced UI + performance focus",
+          "Payments/membership/automation options",
+          "2–3 revision rounds (by scope)",
+        ],
+      },
+    ] as const;
+
+    return tiers;
+  }, []);
 
   return (
     <main className="container" style={{ padding: "42px 0 80px" }}>
@@ -191,149 +295,158 @@ export default function EstimateClient(props: Props) {
 
       <div style={{ height: 12 }} />
 
-      <h1 className="h1">Your estimate (actually personalized)</h1>
-      <p className="p" style={{ maxWidth: 860, marginTop: 10 }}>
-        This number changes based on pages, features, timeline, and content readiness. Next we’ll save submissions to Supabase.
+      <h1 className="h1">Get a quick estimate</h1>
+      <p className="p" style={{ maxWidth: 820, marginTop: 10 }}>
+        Answer a few questions and we’ll generate a ballpark price instantly — plus a
+        tier recommendation. Then we finalize scope together.
       </p>
+
+      <div style={{ height: 22 }} />
+
+      <section className="panel">
+        <div className="panelHeader">
+          <h2 className="h2">Your estimate</h2>
+          <p className="pDark" style={{ marginTop: 8 }}>
+            Based on your selections (pages: <strong>{pricing.pages}</strong>).
+          </p>
+        </div>
+
+        <div className="panelBody">
+          <div style={{ display: "grid", gap: 14 }}>
+            <div style={{ fontSize: 44, fontWeight: 950, letterSpacing: -0.8 }}>
+              {money(pricing.total)}
+            </div>
+
+            <div style={{ fontWeight: 800, opacity: 0.92 }}>
+              Typical range: {money(pricing.rangeLow)} – {money(pricing.rangeHigh)}
+            </div>
+
+            {/* breakdown */}
+            <div className="card" style={{ background: "rgba(255,255,255,0.04)" }}>
+              <div className="cardInner">
+                <div style={{ fontWeight: 950, marginBottom: 10 }}>Breakdown</div>
+                <div style={{ display: "grid", gap: 8 }}>
+                  <Row label="Start price (System 2)" value={money(550)} />
+                  {pricing.breakdown.map((x) => (
+                    <Row key={x.label} label={x.label} value={`+ ${money(x.amount)}`} />
+                  ))}
+                </div>
+
+                <div style={{ marginTop: 12, fontSize: 12, opacity: 0.78 }}>
+                  Note: if budget is tight, we can do scope trade-offs or admin-only discounts
+                  (10–25%) without changing public tier pricing.
+                </div>
+              </div>
+            </div>
+
+            {/* lead */}
+            <div style={{ display: "grid", gap: 12 }}>
+              <div>
+                <div className="fieldLabel">Email</div>
+                <input
+                  className="input"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@domain.com"
+                />
+              </div>
+
+              <div>
+                <div className="fieldLabel">Phone (optional)</div>
+                <input
+                  className="input"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="(555) 555-5555"
+                />
+              </div>
+            </div>
+
+            <div className="row" style={{ marginTop: 10 }}>
+              <Link className="btn btnPrimary" href="/build">
+                Update answers <span className="btnArrow">→</span>
+              </Link>
+              <Link className="btn btnGhost" href="/">
+                Back home
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div style={{ height: 18 }} />
 
-      <div className="grid2">
-        {/* LEFT: estimate */}
-        <section className="panel">
-          <div className="panelHeader">
-            <h2 className="h2">Estimated price</h2>
-            <div className="pDark" style={{ marginTop: 8 }}>
-              Recommended tier: <span style={{ color: "rgba(255,255,255,0.92)", fontWeight: 950 }}>{pricing.tier}</span>
+      <section className="section">
+        <div style={{ display: "flex", alignItems: "end", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <div className="kicker">System 2 • 3 Tiers</div>
+            <h2 className="h2" style={{ marginTop: 12 }}>
+              Recommended:{" "}
+              <span className="underline">{pricing.tier === "Essential" ? "Essential Launch" : pricing.tier === "Growth" ? "Growth Build" : "Premium Platform"}</span>
+            </h2>
+            <div style={{ opacity: 0.78, marginTop: 8, maxWidth: 780, lineHeight: 1.6 }}>
+              Your answers suggest the tier above — but you can choose any tier and we’ll finalize scope together.
             </div>
           </div>
 
-          <div className="panelBody">
-            <div style={{ display: "grid", gap: 10 }}>
-              <div style={{ fontSize: 44, fontWeight: 950, letterSpacing: -0.8 }}>
-                ${pricing.total.toLocaleString()}
-              </div>
+          <Link className="btn btnPrimary" href="/build">
+            Adjust scope <span className="btnArrow">→</span>
+          </Link>
+        </div>
 
-              <div style={{ color: "rgba(255,255,255,0.70)", fontWeight: 850 }}>
-                Typical range: ${pricing.rangeLow.toLocaleString()} – ${pricing.rangeHigh.toLocaleString()}
-              </div>
+        <div className="tierGrid" style={{ marginTop: 16 }}>
+          {tierCards.map((t) => {
+            const hot = t.key === pricing.tier;
+            return (
+              <div key={t.key} className="card cardHover">
+                <div className="cardInner">
+                  <div className="tierHead">
+                    <div>
+                      <div className="tierName">{t.name}</div>
+                      <div className="tierSub">{t.badge}</div>
+                    </div>
 
-              <div style={{ height: 10 }} />
+                    <div style={{ textAlign: "right" }}>
+                      <div className="tierPrice">{t.price}</div>
+                      <div className={`badge ${hot ? "badgeHot" : ""}`} style={{ marginTop: 10 }}>
+                        {hot ? "Recommended" : "Tier"}
+                      </div>
+                    </div>
+                  </div>
 
-              <div className="panel" style={{ borderRadius: 16 }}>
-                <div className="panelHeader" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                  <div style={{ fontWeight: 950 }}>What influenced the estimate</div>
-                  <div className="smallNote">This helps you see why the number moved.</div>
-                </div>
-                <div className="panelBody" style={{ padding: 14 }}>
-                  <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.85, color: "rgba(255,255,255,0.82)" }}>
-                    {pricing.breakdown.map((b) => (
-                      <li key={b.label}>
-                        {b.label}{" "}
-                        {b.amount > 0 ? (
-                          <span style={{ color: "rgba(255,255,255,0.65)" }}>+${b.amount}</span>
-                        ) : null}
-                      </li>
+                  <ul className="tierList">
+                    {t.bullets.map((b) => (
+                      <li key={b}>{b}</li>
                     ))}
                   </ul>
+
+                  <div className="tierCTA">
+                    <Link className="btn btnPrimary" href="/build">
+                      Refine scope <span className="btnArrow">→</span>
+                    </Link>
+                    <Link className="btn btnGhost" href="/dashboard">
+                      Dashboard
+                    </Link>
+                  </div>
                 </div>
               </div>
+            );
+          })}
+        </div>
 
-              <div style={{ height: 8 }} />
-
-              <div style={{ display: "grid", gap: 12 }}>
-                <div>
-                  <div className="fieldLabel">Email</div>
-                  <input className="input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@domain.com" />
-                </div>
-
-                <div>
-                  <div className="fieldLabel">Phone (optional)</div>
-                  <input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(555) 555-5555" />
-                </div>
-              </div>
-
-              <div style={{ height: 12 }} />
-
-              <div className="row">
-                <Link className="btn btnPrimary" href="/build">
-                  Edit answers <span className="btnArrow">→</span>
-                </Link>
-                <Link className="btn btnGhost" href="/">
-                  Back home
-                </Link>
-              </div>
-
-              <div className="smallNote">
-                Next: add Scope Snapshot preview
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* RIGHT: tiers */}
-        <section className="panel">
-          <div className="panelHeader">
-            <h2 className="h2">Tier options</h2>
-            <p className="pDark" style={{ marginTop: 8 }}>
-              Based on your estimate, we’ll recommend one—but you can choose any.
-            </p>
-          </div>
-
-          <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-            <TierMini
-              name="Essential Launch"
-              price="$550–$850"
-              hot={pricing.tier === "Essential Launch"}
-              bullets={["Up to ~5 pages/sections", "Contact + basic SEO", "1 revision round"]}
-            />
-            <TierMini
-              name="Growth Build"
-              price="$900–$1,500"
-              hot={pricing.tier === "Growth Build"}
-              bullets={["5–8 pages/sections", "Better UX + analytics", "2 revision rounds"]}
-            />
-            <TierMini
-              name="Premium Platform"
-              price="$1,700–$3,500+"
-              hot={pricing.tier === "Premium Platform"}
-              bullets={["Custom features/integrations", "Performance focus", "2–3 revision rounds"]}
-            />
-          </div>
-        </section>
-      </div>
+        <div style={{ marginTop: 16, opacity: 0.78, fontSize: 13 }}>
+          Next: add Scope Snapshot preview
+        </div>
+      </section>
     </main>
   );
 }
 
-function TierMini({
-  name,
-  price,
-  bullets,
-  hot,
-}: {
-  name: string;
-  price: string;
-  bullets: string[];
-  hot?: boolean;
-}) {
+function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="card" style={{ background: "rgba(255,255,255,0.04)", borderColor: hot ? "rgba(255,122,24,0.45)" : "rgba(255,255,255,0.10)" }}>
-      <div className="cardInner">
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-          <div>
-            <div style={{ fontWeight: 950 }}>{name}</div>
-            <div style={{ color: "rgba(255,255,255,0.62)", fontWeight: 850, marginTop: 4 }}>{price}</div>
-          </div>
-          <div className={`badge ${hot ? "badgeHot" : ""}`}>{hot ? "Recommended" : "Tier"}</div>
-        </div>
-
-        <ul style={{ margin: "10px 0 0", paddingLeft: 18, color: "rgba(255,255,255,0.78)", lineHeight: 1.75 }}>
-          {bullets.map((b) => (
-            <li key={b}>{b}</li>
-          ))}
-        </ul>
-      </div>
+    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+      <div style={{ opacity: 0.86 }}>{label}</div>
+      <div style={{ fontWeight: 900 }}>{value}</div>
     </div>
   );
 }
