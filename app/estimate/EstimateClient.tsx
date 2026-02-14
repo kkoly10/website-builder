@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -53,7 +53,7 @@ function normLower(s: string) {
 function normPages(p: string) {
   const v = norm(p);
 
-  // support multiple historical page labels you used across versions
+  // supports multiple historical labels (you used different ones across versions)
   const map: Record<string, string> = {
     "1-3": "1-3",
     "1–3": "1-3",
@@ -87,8 +87,131 @@ function money(n: number) {
   return `$${Math.round(n).toLocaleString()}`;
 }
 
+function computePricing(intake: Intake) {
+  // System 2 baseline
+  const START_PRICE = 550;
+
+  const breakdown: { label: string; amount: number }[] = [];
+  const add = (label: string, amount: number) => {
+    if (!amount) return;
+    breakdown.push({ label, amount });
+  };
+
+  let total = START_PRICE;
+
+  const pages = normPages(intake.pages);
+  const websiteType = normLower(intake.websiteType);
+  const intent = normLower(intake.intent);
+  const contentReady = normLower(intake.contentReady);
+  const timeline = normLower(intake.timeline);
+  const wantsAutomation = normLower(intake.wantsAutomation);
+  const hasBrand = normLower(intake.hasBrand);
+  const domainHosting = normLower(intake.domainHosting);
+
+  // Pages mapping (STRICT)
+  const pageAddMap: Record<string, number> = {
+    "1-3": 0,
+    "4-5": 220,
+    "4-6": 320,
+    "6-8": 650,
+    "7-10": 900,
+    "9+": 1100,
+    "10+": 1300,
+  };
+  const pageAdd = pageAddMap[pages] ?? 220; // safe fallback
+  total += pageAdd;
+  add(`Pages (${pages || "unknown"})`, pageAdd);
+
+  // Base structure complexity
+  const isEcom = websiteType.includes("ecommerce") || intent.includes("selling");
+  const typeAdd = isEcom ? 380 : 120;
+  total += typeAdd;
+  add("Base structure & UX", typeAdd);
+
+  // Features
+  if (intake.booking) {
+    total += 220;
+    add("Booking / scheduling", 220);
+  }
+  if (intake.payments) {
+    total += 420;
+    add("Payments / checkout", 420);
+  }
+  if (intake.blog) {
+    total += 180;
+    add("Blog / content setup", 180);
+  }
+  if (intake.membership) {
+    total += 650;
+    add("Membership / gated content", 650);
+  }
+
+  // Automation
+  if (wantsAutomation === "yes") {
+    total += 260;
+    add("Automations", 260);
+  }
+
+  // Content readiness
+  if (contentReady === "not ready") {
+    total += 320;
+    add("Content not ready (extra copy/structure)", 320);
+  } else if (contentReady === "some") {
+    total += 140;
+    add("Partial content readiness", 140);
+  }
+
+  // Brand kit
+  if (hasBrand === "no") {
+    total += 220;
+    add("No brand kit (basic brand direction)", 220);
+  }
+
+  // Domain/hosting help
+  if (domainHosting === "no") {
+    total += 90;
+    add("Domain/hosting guidance", 90);
+  }
+
+  // Rush handling (supports multiple label styles)
+  const isRush =
+    timeline.includes("rush") ||
+    timeline.includes("under 14") ||
+    timeline.includes("under14") ||
+    timeline.includes("1-2") ||
+    timeline.includes("1–2");
+  if (isRush) {
+    total += 280;
+    add("Rush timeline", 280);
+  }
+
+  // Clamp
+  total = Math.max(550, Math.min(3500, total));
+
+  const rangeLow = Math.round(total * 0.9);
+  const rangeHigh = Math.round(total * 1.15);
+
+  // Tier
+  let tier: "Essential" | "Growth" | "Premium" = "Growth";
+  if (total <= 850) tier = "Essential";
+  else if (total <= 1500) tier = "Growth";
+  else tier = "Premium";
+
+  return { total, rangeLow, rangeHigh, tier, breakdown, pages };
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+      <div style={{ opacity: 0.86 }}>{label}</div>
+      <div style={{ fontWeight: 900 }}>{value}</div>
+    </div>
+  );
+}
+
 export default function EstimateClient(props: Props) {
-  const intake: Intake = useMemo(() => {
+  // ALWAYS derive intake fresh (no memo traps)
+  const intake: Intake = (() => {
     if (props.intake) return props.intake;
 
     const sp = props.searchParams || {};
@@ -114,7 +237,10 @@ export default function EstimateClient(props: Props) {
       competitorUrl: pick(sp, "competitorUrl") || "",
       notes: pick(sp, "notes") || "",
     };
-  }, [props.intake, props.searchParams]);
+  })();
+
+  // ALWAYS compute pricing fresh
+  const pricing = computePricing(intake);
 
   const [email, setEmail] = useState(
     props.leadEmail || pick(props.searchParams || {}, "leadEmail") || ""
@@ -123,168 +249,53 @@ export default function EstimateClient(props: Props) {
     props.leadPhone || pick(props.searchParams || {}, "leadPhone") || ""
   );
 
-  const pricing = useMemo(() => {
-    // ===== System 2 baseline =====
-    const START_PRICE = 550;
+  const [showDebug, setShowDebug] = useState(false);
 
-    const breakdown: { label: string; amount: number }[] = [];
-    const add = (label: string, amount: number) => {
-      if (amount === 0) return;
-      breakdown.push({ label, amount });
-    };
+  const tiers = [
+    {
+      key: "Essential",
+      name: "Essential Launch",
+      price: "$550–$850",
+      badge: "Best for simple launches",
+      bullets: [
+        "Up to ~5 sections / pages",
+        "Clean layout + mobile responsive",
+        "Contact form + basic SEO",
+        "1 revision round (structured)",
+      ],
+    },
+    {
+      key: "Growth",
+      name: "Growth Build",
+      price: "$900–$1,500",
+      badge: "Most chosen",
+      bullets: [
+        "5–8 pages/sections + stronger UX",
+        "Booking + lead capture improvements",
+        "Better SEO structure + analytics",
+        "2 revision rounds (structured)",
+      ],
+    },
+    {
+      key: "Premium",
+      name: "Premium Platform",
+      price: "$1,700–$3,500+",
+      badge: "Best for scale",
+      bullets: [
+        "Custom features + integrations",
+        "Advanced UI + performance focus",
+        "Payments/membership/automation options",
+        "2–3 revision rounds (by scope)",
+      ],
+    },
+  ] as const;
 
-    let total = START_PRICE;
-
-    // normalize inputs
-    const pages = normPages(intake.pages);
-    const websiteType = normLower(intake.websiteType);
-    const intent = normLower(intake.intent);
-    const contentReady = normLower(intake.contentReady);
-    const timeline = normLower(intake.timeline);
-    const wantsAutomation = normLower(intake.wantsAutomation);
-    const hasBrand = normLower(intake.hasBrand);
-    const domainHosting = normLower(intake.domainHosting);
-
-    // ===== Pages / size =====
-    const pageAddMap: Record<string, number> = {
-      "1-3": 0,
-      "4-5": 220,
-      "4-6": 320,
-      "6-8": 650,
-      "7-10": 900,
-      "9+": 1100,
-      "10+": 1300,
-    };
-    const pageAdd = pageAddMap[pages] ?? 220; // safe default
-    total += pageAdd;
-    add(`Pages (${pages})`, pageAdd);
-
-    // ===== Website type / intent complexity =====
-    // keep it conservative + predictable
-    const typeAdd =
-      websiteType.includes("ecommerce") || intent.includes("selling") ? 380 : 120;
-    total += typeAdd;
-    add("Base structure & UX", typeAdd);
-
-    // ===== Features =====
-    if (intake.booking) {
-      total += 220;
-      add("Booking / scheduling", 220);
-    }
-    if (intake.payments) {
-      total += 420;
-      add("Payments / checkout", 420);
-    }
-    if (intake.blog) {
-      total += 180;
-      add("Blog / content setup", 180);
-    }
-    if (intake.membership) {
-      total += 650;
-      add("Membership / gated content", 650);
-    }
-
-    // ===== Automation =====
-    if (wantsAutomation === "yes") {
-      total += 260;
-      add("Automations", 260);
-    }
-
-    // ===== Readiness =====
-    // if content is not ready, scope expands (copy + structure)
-    if (contentReady === "not ready") {
-      total += 320;
-      add("Content not ready (extra copy/structure)", 320);
-    } else if (contentReady === "some") {
-      total += 140;
-      add("Partial content readiness", 140);
-    }
-
-    // ===== Brand =====
-    // hasBrand = yes/no (your estimate page uses hasBrand)
-    if (hasBrand === "no") {
-      total += 220;
-      add("No brand kit (basic brand direction)", 220);
-    }
-
-    // ===== Domain/hosting help =====
-    if (domainHosting === "no") {
-      total += 90;
-      add("Domain/hosting guidance", 90);
-    }
-
-    // ===== Rush =====
-    // support multiple label styles
-    const isRush =
-      timeline.includes("rush") ||
-      timeline.includes("under 14") ||
-      timeline.includes("under14") ||
-      timeline.includes("1-2") ||
-      timeline.includes("1–2");
-    if (isRush) {
-      total += 280;
-      add("Rush timeline", 280);
-    }
-
-    // ===== Clamp to System 2 envelope =====
-    const min = 550;
-    const max = 3500;
-    total = Math.max(min, Math.min(max, total));
-
-    const rangeLow = Math.round(total * 0.9);
-    const rangeHigh = Math.round(total * 1.15);
-
-    // ===== Tier recommendation =====
-    let tier: "Essential" | "Growth" | "Premium" = "Growth";
-    if (total <= 850) tier = "Essential";
-    else if (total <= 1500) tier = "Growth";
-    else tier = "Premium";
-
-    return { total, rangeLow, rangeHigh, tier, breakdown, pages };
-  }, [intake]);
-
-  const tierCards = useMemo(() => {
-    const tiers = [
-      {
-        key: "Essential",
-        name: "Essential Launch",
-        price: "$550–$850",
-        badge: "Best for simple launches",
-        bullets: [
-          "Up to ~5 sections / pages",
-          "Clean layout + mobile responsive",
-          "Contact form + basic SEO",
-          "1 revision round (structured)",
-        ],
-      },
-      {
-        key: "Growth",
-        name: "Growth Build",
-        price: "$900–$1,500",
-        badge: "Most chosen",
-        bullets: [
-          "5–8 pages/sections + stronger UX",
-          "Booking + lead capture improvements",
-          "Better SEO structure + analytics",
-          "2 revision rounds (structured)",
-        ],
-      },
-      {
-        key: "Premium",
-        name: "Premium Platform",
-        price: "$1,700–$3,500+",
-        badge: "Best for scale",
-        bullets: [
-          "Custom features + integrations",
-          "Advanced UI + performance focus",
-          "Payments/membership/automation options",
-          "2–3 revision rounds (by scope)",
-        ],
-      },
-    ] as const;
-
-    return tiers;
-  }, []);
+  const tierLabel =
+    pricing.tier === "Essential"
+      ? "Essential Launch"
+      : pricing.tier === "Growth"
+      ? "Growth Build"
+      : "Premium Platform";
 
   return (
     <main className="container" style={{ padding: "42px 0 80px" }}>
@@ -297,8 +308,8 @@ export default function EstimateClient(props: Props) {
 
       <h1 className="h1">Get a quick estimate</h1>
       <p className="p" style={{ maxWidth: 820, marginTop: 10 }}>
-        Answer a few questions and we’ll generate a ballpark price instantly — plus a
-        tier recommendation. Then we finalize scope together.
+        Answer a few questions and we’ll generate a ballpark price instantly — plus a tier
+        recommendation. Then we finalize scope together.
       </p>
 
       <div style={{ height: 22 }} />
@@ -321,7 +332,6 @@ export default function EstimateClient(props: Props) {
               Typical range: {money(pricing.rangeLow)} – {money(pricing.rangeHigh)}
             </div>
 
-            {/* breakdown */}
             <div className="card" style={{ background: "rgba(255,255,255,0.04)" }}>
               <div className="cardInner">
                 <div style={{ fontWeight: 950, marginBottom: 10 }}>Breakdown</div>
@@ -336,10 +346,54 @@ export default function EstimateClient(props: Props) {
                   Note: if budget is tight, we can do scope trade-offs or admin-only discounts
                   (10–25%) without changing public tier pricing.
                 </div>
+
+                <div style={{ marginTop: 12 }}>
+                  <button
+                    type="button"
+                    className="btn btnGhost"
+                    onClick={() => setShowDebug((s) => !s)}
+                  >
+                    {showDebug ? "Hide debug" : "Show debug (what the page received)"}
+                  </button>
+                </div>
+
+                {showDebug && (
+                  <pre
+                    style={{
+                      marginTop: 12,
+                      padding: 12,
+                      borderRadius: 12,
+                      background: "rgba(0,0,0,0.35)",
+                      border: "1px solid rgba(255,255,255,0.10)",
+                      overflowX: "auto",
+                      fontSize: 12,
+                      lineHeight: 1.5,
+                      color: "rgba(255,255,255,0.86)",
+                    }}
+                  >
+{JSON.stringify(
+  {
+    pages: intake.pages,
+    booking: intake.booking,
+    payments: intake.payments,
+    blog: intake.blog,
+    membership: intake.membership,
+    wantsAutomation: intake.wantsAutomation,
+    contentReady: intake.contentReady,
+    hasBrand: intake.hasBrand,
+    domainHosting: intake.domainHosting,
+    timeline: intake.timeline,
+    websiteType: intake.websiteType,
+    intent: intake.intent,
+  },
+  null,
+  2
+)}
+                  </pre>
+                )}
               </div>
             </div>
 
-            {/* lead */}
             <div style={{ display: "grid", gap: 12 }}>
               <div>
                 <div className="fieldLabel">Email</div>
@@ -381,8 +435,7 @@ export default function EstimateClient(props: Props) {
           <div>
             <div className="kicker">System 2 • 3 Tiers</div>
             <h2 className="h2" style={{ marginTop: 12 }}>
-              Recommended:{" "}
-              <span className="underline">{pricing.tier === "Essential" ? "Essential Launch" : pricing.tier === "Growth" ? "Growth Build" : "Premium Platform"}</span>
+              Recommended: <span className="underline">{tierLabel}</span>
             </h2>
             <div style={{ opacity: 0.78, marginTop: 8, maxWidth: 780, lineHeight: 1.6 }}>
               Your answers suggest the tier above — but you can choose any tier and we’ll finalize scope together.
@@ -395,7 +448,7 @@ export default function EstimateClient(props: Props) {
         </div>
 
         <div className="tierGrid" style={{ marginTop: 16 }}>
-          {tierCards.map((t) => {
+          {tiers.map((t) => {
             const hot = t.key === pricing.tier;
             return (
               <div key={t.key} className="card cardHover">
@@ -439,14 +492,5 @@ export default function EstimateClient(props: Props) {
         </div>
       </section>
     </main>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-      <div style={{ opacity: 0.86 }}>{label}</div>
-      <div style={{ fontWeight: 900 }}>{value}</div>
-    </div>
   );
 }
