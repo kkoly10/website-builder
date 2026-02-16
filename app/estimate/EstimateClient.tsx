@@ -4,12 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 type FormState = {
-  mode?: string;
-
   websiteType?: string;
   intent?: string;
-  intentOther?: string;
-
   pages?: string;
 
   booking?: boolean;
@@ -17,28 +13,22 @@ type FormState = {
   blog?: boolean;
   membership?: boolean;
 
-  wantsAutomation?: string; // "Yes" | "No" | "yes" | "no"
-  hasLogo?: string;         // "Yes" | "No"
-  hasBrandGuide?: string;   // "Yes" | "No"
-  contentReady?: string;    // "Ready" | "Some" | "Not ready"
-  assetsSource?: string;
+  wantsAutomation?: string; // Yes/No or yes/no
+  hasBrandGuide?: string;   // Yes/No
+  contentReady?: string;    // Ready/Some/Not ready
+  domainHosting?: string;   // (older) yes/no
+  hasBrand?: string;        // (older) yes/no
 
-  design?: string;
-  timeline?: string;
-
-  domainHosting?: string;   // sometimes present in your older versions
-  hasBrand?: string;        // sometimes present in your older versions
-
-  notes?: string;
+  integrations?: string[];
 
   leadEmail?: string;
   leadPhone?: string;
+  notes?: string;
 };
 
 function norm(v: any) {
   return String(v ?? "").trim();
 }
-
 function yn(v: any) {
   const x = norm(v).toLowerCase();
   return x === "yes" || x === "true" || x === "1" || x === "on";
@@ -54,7 +44,6 @@ function normalizeWebsiteType(v: any) {
 
 function normalizePages(v: any) {
   const x = norm(v);
-  // Accept your build labels + old estimate labels
   if (x === "1-3" || x === "1–3") return "1-3";
   if (x === "4-5" || x === "4–5") return "4-6";
   if (x === "4-6" || x === "4–6") return "4-6";
@@ -62,15 +51,14 @@ function normalizePages(v: any) {
   if (x === "7-10" || x === "7–10") return "7-10";
   if (x === "9+" || x === "9＋") return "10+";
   if (x === "10+") return "10+";
-
-  const n = parseInt(x.replace(/[^\d]/g, ""), 10);
-  if (!Number.isNaN(n)) {
-    if (n <= 3) return "1-3";
-    if (n <= 6) return "4-6";
-    if (n <= 10) return "7-10";
-    return "10+";
-  }
   return "1-3";
+}
+
+function normalizeContentReady(v: any) {
+  const x = norm(v).toLowerCase();
+  if (x.includes("not")) return "not";
+  if (x.includes("ready")) return "ready";
+  return "some";
 }
 
 function normalizeTimeline(v: any) {
@@ -80,13 +68,6 @@ function normalizeTimeline(v: any) {
   return "2-4w";
 }
 
-function normalizeContentReady(v: any) {
-  const x = norm(v).toLowerCase();
-  if (x.includes("not")) return "no";
-  if (x.includes("ready")) return "ready";
-  return "some";
-}
-
 function money(n: number) {
   return `$${Math.round(n).toLocaleString()}`;
 }
@@ -94,16 +75,10 @@ function money(n: number) {
 export default function EstimateClient() {
   const [form, setForm] = useState<FormState | null>(null);
 
-  // load the saved intake from /build
   useEffect(() => {
     try {
       const raw = localStorage.getItem("crecy_intake_v1");
-      if (!raw) {
-        setForm({});
-        return;
-      }
-      const parsed = JSON.parse(raw);
-      setForm(parsed || {});
+      setForm(raw ? (JSON.parse(raw) as FormState) : {});
     } catch {
       setForm({});
     }
@@ -114,14 +89,12 @@ export default function EstimateClient() {
     const websiteType = normalizeWebsiteType(f.websiteType);
     const pages = normalizePages(f.pages);
 
-    // unify old/new brand fields
+    // Unify brand fields (older/newer)
     const hasBrand =
-      (typeof f.hasBrand === "string" ? f.hasBrand : "") ||
-      (typeof f.hasBrandGuide === "string" ? (yn(f.hasBrandGuide) ? "yes" : "no") : "no");
+      norm(f.hasBrand) || (yn(f.hasBrandGuide) ? "yes" : "no");
 
-    const domainHosting =
-      (typeof f.domainHosting === "string" ? f.domainHosting : "") ||
-      (typeof f.domainHosting === "boolean" ? (f.domainHosting ? "yes" : "no") : "no");
+    // Unify hosting guidance
+    const domainHosting = norm(f.domainHosting) || "no";
 
     return {
       websiteType,
@@ -134,8 +107,9 @@ export default function EstimateClient() {
       contentReady: normalizeContentReady(f.contentReady),
       hasBrand: yn(hasBrand) ? "yes" : "no",
       domainHosting: yn(domainHosting) ? "yes" : "no",
-      timeline: normalizeTimeline(f.timeline),
+      timeline: normalizeTimeline((f as any).timeline),
       intent: norm(f.intent || "business") || "business",
+      integrations: Array.isArray(f.integrations) ? f.integrations : [],
       leadEmail: norm(f.leadEmail),
       leadPhone: norm(f.leadPhone),
       notes: norm(f.notes),
@@ -143,13 +117,19 @@ export default function EstimateClient() {
   }, [form]);
 
   const estimate = useMemo(() => {
-    // ✅ System 2 base
+    /**
+     * ✅ NEW MODEL (No double counting)
+     * System 2 base $550 already INCLUDES:
+     * - Small site scope (1–3)
+     * - Base structure & UX (for business)
+     */
     let total = 550;
+
     const breakdown: { label: string; amount: number }[] = [
-      { label: "Start price (System 2)", amount: 550 },
+      { label: "Essential base (System 2: 1–3 pages + core UX)", amount: 550 },
     ];
 
-    // Type complexity (kept modest)
+    // Website type delta
     if (intake.websiteType === "ecommerce") {
       total += 250;
       breakdown.push({ label: "Ecommerce complexity", amount: 250 });
@@ -157,28 +137,27 @@ export default function EstimateClient() {
       total += 80;
       breakdown.push({ label: "Portfolio layout", amount: 80 });
     } else if (intake.websiteType === "landing") {
-      total += 0;
-      breakdown.push({ label: "Landing page focus", amount: 0 });
+      total -= 60;
+      breakdown.push({ label: "Landing page focus discount", amount: -60 });
     } else {
-      total += 120;
-      breakdown.push({ label: "Base structure & UX", amount: 120 });
+      breakdown.push({ label: "Business site baseline", amount: 0 });
     }
 
-    // Pages
+    // Pages delta (only above 1–3)
     if (intake.pages === "4-6") {
       total += 220;
-      breakdown.push({ label: "Medium site scope (4–6)", amount: 220 });
+      breakdown.push({ label: "Medium scope (4–6)", amount: 220 });
     } else if (intake.pages === "7-10") {
       total += 520;
-      breakdown.push({ label: "Large site scope (7–10)", amount: 520 });
+      breakdown.push({ label: "Large scope (7–10)", amount: 520 });
     } else if (intake.pages === "10+") {
       total += 920;
-      breakdown.push({ label: "XL site scope (10+)", amount: 920 });
+      breakdown.push({ label: "XL scope (10+)", amount: 920 });
     } else {
-      breakdown.push({ label: "Small site scope (1–3)", amount: 0 });
+      breakdown.push({ label: "Small scope (1–3)", amount: 0 });
     }
 
-    // Features
+    // Feature add-ons
     if (intake.booking) {
       total += 150;
       breakdown.push({ label: "Booking / scheduling", amount: 150 });
@@ -201,23 +180,29 @@ export default function EstimateClient() {
       breakdown.push({ label: "Automations", amount: 200 });
     }
 
-    // Readiness / brand / hosting guidance
-    if (intake.contentReady === "no") {
+    // Readiness / Brand / Hosting guidance
+    if (intake.contentReady === "not") {
       total += 240;
       breakdown.push({ label: "Content not ready (assist)", amount: 240 });
     } else if (intake.contentReady === "some") {
-      total += 140;
-      breakdown.push({ label: "Partial content readiness", amount: 140 });
+      total += 100;
+      breakdown.push({ label: "Partial content readiness", amount: 100 });
+    } else {
+      breakdown.push({ label: "Content ready", amount: 0 });
     }
 
     if (intake.hasBrand === "no") {
-      total += 220;
-      breakdown.push({ label: "No brand kit (basic direction)", amount: 220 });
+      total += 150;
+      breakdown.push({ label: "No brand kit (basic direction)", amount: 150 });
+    } else {
+      breakdown.push({ label: "Brand kit provided", amount: 0 });
     }
 
     if (intake.domainHosting === "no") {
       total += 90;
       breakdown.push({ label: "Domain/hosting guidance", amount: 90 });
+    } else {
+      breakdown.push({ label: "Domain/hosting handled", amount: 0 });
     }
 
     if (intake.timeline === "rush") {
@@ -225,13 +210,16 @@ export default function EstimateClient() {
       breakdown.push({ label: "Rush timeline", amount: 250 });
     }
 
+    // Guardrails
+    total = Math.max(450, Math.round(total));
+
     const rangeLow = Math.round(total * 0.9);
     const rangeHigh = Math.round(total * 1.15);
 
-    // Tier fit (simple + predictable)
+    // Tier recommendation aligned to public ranges
     let tier: "essential" | "growth" | "premium" = "essential";
-    if (total >= 1700 || intake.pages === "10+" || intake.membership || intake.payments) tier = "premium";
-    else if (total >= 900 || intake.pages === "7-10" || intake.booking) tier = "growth";
+    if (total >= 1700 || intake.pages === "10+" || intake.membership) tier = "premium";
+    else if (total >= 900 || intake.pages === "7-10" || intake.payments || intake.booking) tier = "growth";
 
     return { total, rangeLow, rangeHigh, breakdown, tier };
   }, [intake]);
@@ -295,9 +283,16 @@ export default function EstimateClient() {
                         background: "rgba(255,255,255,0.05)",
                       }}
                     >
-                      <div style={{ color: "rgba(255,255,255,0.86)", fontWeight: 700 }}>{b.label}</div>
+                      <div style={{ color: "rgba(255,255,255,0.86)", fontWeight: 700 }}>
+                        {b.label}
+                      </div>
+
                       <div style={{ color: "rgba(255,255,255,0.90)", fontWeight: 950 }}>
-                        {b.amount === 0 ? "$0" : `+ ${money(b.amount)}`}
+                        {b.amount === 0
+                          ? "$0"
+                          : b.amount > 0
+                          ? `+ ${money(b.amount)}`
+                          : `− ${money(Math.abs(b.amount))}`}
                       </div>
                     </div>
                   ))}
@@ -333,9 +328,7 @@ export default function EstimateClient() {
           <section className="panel">
             <div className="panelHeader">
               <h2 className="h2">Recommended tier</h2>
-              <p className="pDark" style={{ marginTop: 8 }}>
-                Best fit based on scope.
-              </p>
+              <p className="pDark" style={{ marginTop: 8 }}>Best fit based on scope.</p>
             </div>
             <div className="panelBody">
               <div className="tierGrid">
@@ -344,36 +337,18 @@ export default function EstimateClient() {
                   price="$550–$850"
                   badge="Best for simple launches"
                   bestFit={estimate.tier === "essential"}
-                  bullets={[
-                    "Up to ~5 sections / pages",
-                    "Clean layout + mobile responsive",
-                    "Contact form + basic SEO",
-                    "1 revision round (structured)",
-                  ]}
                 />
                 <TierCard
                   name="Growth Build"
                   price="$900–$1,500"
                   badge="Most chosen"
                   bestFit={estimate.tier === "growth"}
-                  bullets={[
-                    "5–8 pages/sections + stronger UX",
-                    "Booking + lead capture improvements",
-                    "Better SEO structure + analytics",
-                    "2 revision rounds (structured)",
-                  ]}
                 />
                 <TierCard
                   name="Premium Platform"
                   price="$1,700–$3,500+"
                   badge="Best for scale"
                   bestFit={estimate.tier === "premium"}
-                  bullets={[
-                    "Custom features + integrations",
-                    "Advanced UI + performance focus",
-                    "Payments/membership/automation options",
-                    "2–3 revision rounds (by scope)",
-                  ]}
                 />
               </div>
             </div>
@@ -425,13 +400,11 @@ export default function EstimateClient() {
 function TierCard({
   name,
   price,
-  bullets,
   badge,
   bestFit,
 }: {
   name: string;
   price: string;
-  bullets: string[];
   badge: string;
   bestFit?: boolean;
 }) {
@@ -450,21 +423,6 @@ function TierCard({
               {bestFit ? "Best fit" : "Tier"}
             </div>
           </div>
-        </div>
-
-        <ul className="tierList">
-          {bullets.map((b) => (
-            <li key={b}>{b}</li>
-          ))}
-        </ul>
-
-        <div className="tierCTA">
-          <Link className="btn btnPrimary" href="/build">
-            Start build <span className="btnArrow">→</span>
-          </Link>
-          <Link className="btn btnGhost" href="/">
-            Home
-          </Link>
         </div>
       </div>
     </div>
