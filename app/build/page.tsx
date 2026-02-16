@@ -5,24 +5,33 @@ import { useRouter } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Build / Quote Questionnaire (Obsidian Edition)
- * - Uses global CSS classes for consistent styling
- * - Fixes checkbox layout (no weird placement)
- * - Sends EXACT param names that /estimate expects
- * - Includes a Review step with URL preview (so you can confirm pages/websiteType are being sent)
- */
+type Mode = "chooser" | "guided" | "known";
+type Intent =
+  | "Marketing"
+  | "Leads"
+  | "Booking"
+  | "Selling"
+  | "Content"
+  | "Membership"
+  | "Other";
 
-type WebsiteType = "business" | "ecommerce" | "portfolio" | "landing";
+type WebsiteType = "Business" | "Ecommerce" | "Portfolio" | "Landing";
 type Pages = "1-3" | "4-5" | "6-8" | "9+";
-type YesNo = "yes" | "no";
+type Design = "Modern" | "Classic" | "Creative";
+type Timeline = "2-3 weeks" | "4+ weeks" | "Under 14 days";
 
-type ContentReady = "ready" | "some" | "not_ready";
-type Timeline = "2-4w" | "4-8w" | "rush";
-type Budget = "under_550" | "550-850" | "900-1500" | "1700-3500" | "3500+";
+type YesNo = "Yes" | "No";
+type ContentReady = "Ready" | "Some" | "Not ready";
+type AssetsSource = "Client provides" | "Stock" | "Need help";
 
 type FormState = {
+  mode: Mode;
+
   websiteType: WebsiteType;
+
+  intent: Intent;
+  intentOther: string;
+
   pages: Pages;
 
   booking: boolean;
@@ -31,483 +40,576 @@ type FormState = {
   membership: boolean;
 
   wantsAutomation: YesNo;
+  automationTypes: string[];
+  integrations: string[];
+  integrationOther: string;
 
-  hasBrand: YesNo;
+  hasLogo: YesNo;
+  hasBrandGuide: YesNo;
   contentReady: ContentReady;
-  domainHosting: YesNo;
+  assetsSource: AssetsSource;
+  referenceWebsite: string;
 
+  decisionMaker: YesNo;
+  stakeholdersCount: "1" | "2-3" | "4+";
+
+  design: Design;
   timeline: Timeline;
-  budget: Budget;
 
-  competitorUrl: string;
   notes: string;
 
   leadEmail: string;
   leadPhone: string;
 };
 
-const WEBSITE_TYPES: { label: string; value: WebsiteType; desc: string }[] = [
-  { label: "Business", value: "business", desc: "Most service businesses, agencies, local brands" },
-  { label: "Ecommerce", value: "ecommerce", desc: "Selling products, checkout, catalog" },
-  { label: "Portfolio", value: "portfolio", desc: "Creators, professionals, personal branding" },
-  { label: "Landing", value: "landing", desc: "Single offer, lead-gen, campaign page" },
+const INTENTS: Intent[] = [
+  "Marketing",
+  "Leads",
+  "Booking",
+  "Selling",
+  "Content",
+  "Membership",
+  "Other",
 ];
 
-const PAGES: { label: string; value: Pages }[] = [
-  { label: "1–3 pages", value: "1-3" },
-  { label: "4–5 pages", value: "4-5" },
-  { label: "6–8 pages", value: "6-8" },
-  { label: "9+ pages", value: "9+" },
+const WEBSITE_TYPES: WebsiteType[] = ["Business", "Ecommerce", "Portfolio", "Landing"];
+const PAGES: Pages[] = ["1-3", "4-5", "6-8", "9+"];
+const DESIGNS: Design[] = ["Modern", "Classic", "Creative"];
+const TIMELINES: Timeline[] = ["2-3 weeks", "4+ weeks", "Under 14 days"];
+
+const AUTOMATION_OPTIONS = [
+  "Email confirmations",
+  "Email follow-ups",
+  "SMS reminders",
+  "CRM integration",
+  "Lead routing (multiple recipients)",
+];
+
+const INTEGRATION_OPTIONS = [
+  "Google Maps / location",
+  "Calendly / scheduling",
+  "Stripe payments",
+  "PayPal payments",
+  "Mailchimp / email list",
+  "Analytics (GA4 / Pixel)",
+  "Live chat",
 ];
 
 export default function BuildPage() {
   const router = useRouter();
-
-  const [step, setStep] = useState<number>(1);
+  const [step, setStep] = useState<number>(0);
 
   const [form, setForm] = useState<FormState>({
-    websiteType: "business",
+    mode: "chooser",
+    websiteType: "Business",
+    intent: "Marketing",
+    intentOther: "",
     pages: "4-5",
-
     booking: false,
     payments: false,
     blog: false,
     membership: false,
-
-    wantsAutomation: "no",
-
-    hasBrand: "no",
-    contentReady: "some",
-    domainHosting: "no",
-
-    timeline: "2-4w",
-    budget: "550-850",
-
-    competitorUrl: "",
+    wantsAutomation: "No",
+    automationTypes: [],
+    integrations: [],
+    integrationOther: "",
+    hasLogo: "Yes",
+    hasBrandGuide: "No",
+    contentReady: "Some",
+    assetsSource: "Client provides",
+    referenceWebsite: "",
+    decisionMaker: "Yes",
+    stakeholdersCount: "1",
+    design: "Modern",
+    timeline: "2-3 weeks",
     notes: "",
-
     leadEmail: "",
     leadPhone: "",
   });
 
+  const suggested = useMemo(() => {
+    const s: Partial<FormState> = {};
+    if (form.intent === "Booking") {
+      s.websiteType = "Business";
+      s.booking = true;
+    }
+    if (form.intent === "Leads" || form.intent === "Marketing") {
+      s.websiteType = "Business";
+    }
+    if (form.intent === "Selling") {
+      s.websiteType = "Ecommerce";
+      s.payments = true;
+    }
+    if (form.intent === "Content") {
+      s.websiteType = "Portfolio";
+      s.blog = true;
+    }
+    if (form.intent === "Membership") {
+      s.websiteType = "Business";
+      s.membership = true;
+    }
+    return s;
+  }, [form.intent]);
+
+  function goMode(mode: Mode) {
+    setForm((f) => ({ ...f, mode }));
+    setStep(1);
+  }
+
   function next() {
-    setStep((s) => Math.min(s + 1, 5));
+    setStep((s) => Math.min(s + 1, 8));
   }
 
   function back() {
-    setStep((s) => Math.max(s - 1, 1));
+    setStep((s) => Math.max(s - 1, 0));
   }
 
-  // Build query string using the EXACT keys EstimateClient expects
-  const queryString = useMemo(() => {
-    const params = new URLSearchParams({
-      // REQUIRED keys used by EstimateClient/EstimatePage
-      websiteType: form.websiteType,
-      pages: form.pages,
+  function applySuggested() {
+    setForm((f) => ({ ...f, ...suggested }));
+  }
 
-      booking: String(form.booking),
-      payments: String(form.payments),
-      blog: String(form.blog),
-      membership: String(form.membership),
-
-      wantsAutomation: form.wantsAutomation,
-
-      hasBrand: form.hasBrand,
-      contentReady: form.contentReady === "not_ready" ? "not ready" : form.contentReady, // EstimateClient supports "not ready"/"some"/"ready"
-      domainHosting: form.domainHosting,
-
-      timeline: form.timeline,
-      budget: form.budget,
-
-      competitorUrl: form.competitorUrl.trim(),
-      notes: form.notes.trim(),
-
-      // lead
-      leadEmail: form.leadEmail.trim(),
-      leadPhone: form.leadPhone.trim(),
-
-      // these exist in some older flows; harmless but useful
-      mode: "estimate",
-      intent: "business",
-      intentOther: "",
+  function toggleInList(key: "automationTypes" | "integrations", value: string) {
+    setForm((f) => {
+      const current = new Set(f[key]);
+      if (current.has(value)) current.delete(value);
+      else current.add(value);
+      return { ...f, [key]: Array.from(current) } as FormState;
     });
-
-    return params.toString();
-  }, [form]);
+  }
 
   function submit() {
-    const email = form.leadEmail.trim();
-    if (!email) {
+    const leadEmail = form.leadEmail.trim();
+    if (!leadEmail) {
       alert("Please enter your email so we can send your estimate and follow up.");
       return;
     }
-    router.push(`/estimate?${queryString}`);
+
+    // ✅ NEW: Save full intake as the single source of truth
+    try {
+      localStorage.setItem("crecy_intake_v1", JSON.stringify(form));
+    } catch {
+      // ignore
+    }
+
+    // ✅ route clean (no fragile query mapping)
+    router.push("/estimate");
   }
 
+  const stepLabel =
+    step === 0
+      ? "Choose how you'd like to start"
+      : step === 7
+      ? "Contact"
+      : step === 8
+      ? "Review"
+      : `Step ${step} of 6`;
+
   return (
-    <main className="container" style={{ padding: "42px 0 80px" }}>
-      <div className="kicker">
-        <span className="kickerDot" aria-hidden="true" />
-        CrecyStudio • Get a Quote
-      </div>
+    <main style={container}>
+      <header style={{ marginBottom: 28 }}>
+        <h1 style={title}>Get a Quote</h1>
+        <p style={subtitle}>{stepLabel} — we’ll ask only what’s relevant.</p>
+      </header>
 
-      <div style={{ height: 10 }} />
+      {step === 0 && (
+        <section style={grid2}>
+          <Card
+            title="Help me decide"
+            desc="Goal-based questions and a recommendation."
+            cta="Start guided intake →"
+            onClick={() => goMode("guided")}
+            highlight
+          />
+          <Card
+            title="I know what I need"
+            desc="Go straight into scope details."
+            cta="Start scope intake →"
+            onClick={() => goMode("known")}
+          />
+        </section>
+      )}
 
-      <h1 className="h1">Scope your website</h1>
-      <p className="p" style={{ maxWidth: 860, marginTop: 10 }}>
-        Answer a few questions. We’ll generate a personalized estimate + tier recommendation.
-      </p>
-
-      <div style={{ height: 18 }} />
-
-      {/* STEP INDICATOR */}
-      <div className="card" style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.10)" }}>
-        <div className="cardInner" style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ fontWeight: 950 }}>
-            Step {step} of 5
-          </div>
-          <div style={{ opacity: 0.75 }}>
-            {step === 1 && "Type & pages"}
-            {step === 2 && "Features"}
-            {step === 3 && "Readiness"}
-            {step === 4 && "Timeline & budget"}
-            {step === 5 && "Review & submit"}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ height: 14 }} />
-
-      {/* STEP 1 */}
       {step === 1 && (
-        <section className="panel">
-          <div className="panelHeader">
-            <h2 className="h2">Type & pages</h2>
-            <p className="pDark" style={{ marginTop: 8 }}>
-              Choose the closest match — we’ll refine later.
-            </p>
-          </div>
+        <section style={card}>
+          {form.mode === "guided" ? (
+            <>
+              <h2 style={sectionTitle}>What are you trying to achieve?</h2>
 
-          <div className="panelBody">
-            <div style={{ display: "grid", gap: 12 }}>
-              <div>
-                <div className="fieldLabel">Website type</div>
-                <div className="grid2">
-                  {WEBSITE_TYPES.map((t) => (
-                    <button
-                      key={t.value}
-                      type="button"
-                      className={`card cardHover`}
-                      onClick={() => setForm((f) => ({ ...f, websiteType: t.value }))}
-                      style={{
-                        textAlign: "left",
-                        background:
-                          form.websiteType === t.value
-                            ? "rgba(255,122,24,0.12)"
-                            : "rgba(255,255,255,0.03)",
-                        borderColor:
-                          form.websiteType === t.value
-                            ? "rgba(255,122,24,0.35)"
-                            : "rgba(255,255,255,0.10)",
-                      }}
-                    >
-                      <div className="cardInner">
-                        <div style={{ fontWeight: 950 }}>{t.label}</div>
-                        <div style={{ opacity: 0.72, marginTop: 6, lineHeight: 1.5 }}>{t.desc}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <div className="fieldLabel">Pages</div>
+              <Field label="Primary goal">
                 <select
-                  className="select"
-                  value={form.pages}
-                  onChange={(e) => setForm((f) => ({ ...f, pages: e.target.value as Pages }))}
+                  value={form.intent}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, intent: e.target.value as Intent }))
+                  }
                 >
-                  {PAGES.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.label}
+                  {INTENTS.map((i) => (
+                    <option key={i} value={i}>
+                      {i}
                     </option>
                   ))}
                 </select>
-                <div className="help">
-                  Pages help estimate effort; final scope gets confirmed in your Scope Snapshot.
-                </div>
+              </Field>
+
+              {form.intent === "Other" && (
+                <Field label="Briefly describe your goal">
+                  <input
+                    value={form.intentOther}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, intentOther: e.target.value }))
+                    }
+                    placeholder="e.g., recruiting, investor credibility, event promotion…"
+                  />
+                </Field>
+              )}
+
+              <div style={hint}>
+                <strong>Tip:</strong> After you pick a goal, we’ll suggest the typical setup (you can change it).
               </div>
-            </div>
-          </div>
+            </>
+          ) : (
+            <>
+              <h2 style={sectionTitle}>What type of website do you need?</h2>
+              <Field label="Website type">
+                <select
+                  value={form.websiteType}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, websiteType: e.target.value as WebsiteType }))
+                  }
+                >
+                  {WEBSITE_TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </>
+          )}
         </section>
       )}
 
-      {/* STEP 2 */}
       {step === 2 && (
-        <section className="panel">
-          <div className="panelHeader">
-            <h2 className="h2">Features</h2>
-            <p className="pDark" style={{ marginTop: 8 }}>
-              Pick what you actually need.
-            </p>
+        <section style={card}>
+          <h2 style={sectionTitle}>Basic Scope</h2>
+
+          {form.mode === "guided" && (
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ color: "#444", lineHeight: 1.6 }}>
+                Based on your goal, we typically recommend:
+                <ul style={miniList}>
+                  <li>
+                    <strong>Website type:</strong> {suggested.websiteType ?? form.websiteType}
+                  </li>
+                  {suggested.booking && <li>Booking enabled</li>}
+                  {suggested.payments && <li>Payments enabled</li>}
+                  {suggested.blog && <li>Blog enabled</li>}
+                  {suggested.membership && <li>Membership enabled</li>}
+                </ul>
+              </div>
+
+              <button type="button" onClick={applySuggested} style={secondaryBtn}>
+                Apply suggested setup
+              </button>
+            </div>
+          )}
+
+          <Field label="Estimated pages">
+            <select
+              value={form.pages}
+              onChange={(e) => setForm((f) => ({ ...f, pages: e.target.value as Pages }))}
+            >
+              {PAGES.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <div style={hint}>Final scope is confirmed during your consultation.</div>
+        </section>
+      )}
+
+      {step === 3 && (
+        <section style={card}>
+          <h2 style={sectionTitle}>Features</h2>
+
+          <div style={twoCol}>
+            <ToggleRow label="Booking / appointments" checked={form.booking} onChange={(v) => setForm((f) => ({ ...f, booking: v }))} />
+            <ToggleRow label="Payments / checkout" checked={form.payments} onChange={(v) => setForm((f) => ({ ...f, payments: v }))} />
+            <ToggleRow label="Blog / articles" checked={form.blog} onChange={(v) => setForm((f) => ({ ...f, blog: v }))} />
+            <ToggleRow label="Membership / gated content" checked={form.membership} onChange={(v) => setForm((f) => ({ ...f, membership: v }))} />
           </div>
 
-          <div className="panelBody">
-            <div className="checkGrid">
-              <CheckRow
-                label="Booking / appointments"
-                checked={form.booking}
-                onChange={(v) => setForm((f) => ({ ...f, booking: v }))}
-              />
-              <CheckRow
-                label="Payments / checkout"
-                checked={form.payments}
-                onChange={(v) => setForm((f) => ({ ...f, payments: v }))}
-              />
-              <CheckRow
-                label="Blog / articles"
-                checked={form.blog}
-                onChange={(v) => setForm((f) => ({ ...f, blog: v }))}
-              />
-              <CheckRow
-                label="Membership / gated content"
-                checked={form.membership}
-                onChange={(v) => setForm((f) => ({ ...f, membership: v }))}
-              />
-            </div>
-
-            <div style={{ marginTop: 14 }}>
-              <div className="fieldLabel">Automations</div>
+          <div style={{ marginTop: 18 }}>
+            <Field label="Do you want automations? (advanced)">
               <select
-                className="select"
                 value={form.wantsAutomation}
                 onChange={(e) => setForm((f) => ({ ...f, wantsAutomation: e.target.value as YesNo }))}
               >
-                <option value="no">No</option>
-                <option value="yes">Yes</option>
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
               </select>
-              <div className="help">
-                Automations include confirmations, follow-ups, routing leads, and simple workflows.
+            </Field>
+
+            {form.wantsAutomation === "Yes" && (
+              <div style={subCard}>
+                <div style={{ fontWeight: 700, marginBottom: 10 }}>What automations do you want?</div>
+                {AUTOMATION_OPTIONS.map((a) => (
+                  <CheckLine
+                    key={a}
+                    label={a}
+                    checked={form.automationTypes.includes(a)}
+                    onChange={() => toggleInList("automationTypes", a)}
+                  />
+                ))}
               </div>
-            </div>
+            )}
           </div>
-        </section>
-      )}
 
-      {/* STEP 3 */}
-      {step === 3 && (
-        <section className="panel">
-          <div className="panelHeader">
-            <h2 className="h2">Readiness</h2>
-            <p className="pDark" style={{ marginTop: 8 }}>
-              This prevents delays and revision disputes later.
-            </p>
-          </div>
-
-          <div className="panelBody">
-            <div style={{ display: "grid", gap: 12 }}>
-              <div>
-                <div className="fieldLabel">Do you already have brand (logo/colors/fonts)?</div>
-                <select
-                  className="select"
-                  value={form.hasBrand}
-                  onChange={(e) => setForm((f) => ({ ...f, hasBrand: e.target.value as YesNo }))}
-                >
-                  <option value="no">No</option>
-                  <option value="yes">Yes</option>
-                </select>
-              </div>
-
-              <div>
-                <div className="fieldLabel">Content readiness (text, services, about)</div>
-                <select
-                  className="select"
-                  value={form.contentReady}
-                  onChange={(e) => setForm((f) => ({ ...f, contentReady: e.target.value as ContentReady }))}
-                >
-                  <option value="ready">Ready</option>
-                  <option value="some">Some</option>
-                  <option value="not_ready">Not ready</option>
-                </select>
-              </div>
-
-              <div>
-                <div className="fieldLabel">Do you need help with domain/hosting setup?</div>
-                <select
-                  className="select"
-                  value={form.domainHosting}
-                  onChange={(e) => setForm((f) => ({ ...f, domainHosting: e.target.value as YesNo }))}
-                >
-                  <option value="no">No</option>
-                  <option value="yes">Yes</option>
-                </select>
-              </div>
-
-              <div>
-                <div className="fieldLabel">Competitor / inspiration link (optional)</div>
+          <div style={{ marginTop: 18 }}>
+            <div style={subCard}>
+              <div style={{ fontWeight: 700, marginBottom: 10 }}>Any integrations needed?</div>
+              {INTEGRATION_OPTIONS.map((i) => (
+                <CheckLine
+                  key={i}
+                  label={i}
+                  checked={form.integrations.includes(i)}
+                  onChange={() => toggleInList("integrations", i)}
+                />
+              ))}
+              <Field label="Other integration (optional)">
                 <input
-                  className="input"
-                  value={form.competitorUrl}
-                  onChange={(e) => setForm((f) => ({ ...f, competitorUrl: e.target.value }))}
-                  placeholder="https://example.com"
+                  value={form.integrationOther}
+                  onChange={(e) => setForm((f) => ({ ...f, integrationOther: e.target.value }))}
+                  placeholder="e.g., a specific CRM, booking platform…"
                 />
-              </div>
+              </Field>
             </div>
           </div>
         </section>
       )}
 
-      {/* STEP 4 */}
       {step === 4 && (
-        <section className="panel">
-          <div className="panelHeader">
-            <h2 className="h2">Timeline & budget</h2>
-            <p className="pDark" style={{ marginTop: 8 }}>
-              We’ll recommend the best tier based on effort.
-            </p>
+        <section style={card}>
+          <h2 style={sectionTitle}>Assets & Readiness</h2>
+
+          <Field label="Reference website (optional)">
+            <input
+              placeholder="https://example.com"
+              value={form.referenceWebsite}
+              onChange={(e) => setForm((f) => ({ ...f, referenceWebsite: e.target.value }))}
+            />
+          </Field>
+
+          <div style={twoCol}>
+            <Field label="Do you have a logo?">
+              <select value={form.hasLogo} onChange={(e) => setForm((f) => ({ ...f, hasLogo: e.target.value as YesNo }))}>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </Field>
+
+            <Field label="Brand guide / colors already defined?">
+              <select value={form.hasBrandGuide} onChange={(e) => setForm((f) => ({ ...f, hasBrandGuide: e.target.value as YesNo }))}>
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+              </select>
+            </Field>
           </div>
 
-          <div className="panelBody">
-            <div style={{ display: "grid", gap: 12 }}>
-              <div>
-                <div className="fieldLabel">Timeline</div>
-                <select
-                  className="select"
-                  value={form.timeline}
-                  onChange={(e) => setForm((f) => ({ ...f, timeline: e.target.value as Timeline }))}
-                >
-                  <option value="2-4w">2–4 weeks</option>
-                  <option value="4-8w">4–8 weeks</option>
-                  <option value="rush">Rush (under 14 days)</option>
-                </select>
-              </div>
+          <div style={twoCol}>
+            <Field label="Content readiness">
+              <select value={form.contentReady} onChange={(e) => setForm((f) => ({ ...f, contentReady: e.target.value as ContentReady }))}>
+                <option value="Ready">Ready</option>
+                <option value="Some">Some</option>
+                <option value="Not ready">Not ready</option>
+              </select>
+            </Field>
 
-              <div>
-                <div className="fieldLabel">Budget range</div>
-                <select
-                  className="select"
-                  value={form.budget}
-                  onChange={(e) => setForm((f) => ({ ...f, budget: e.target.value as Budget }))}
-                >
-                  <option value="under_550">Under $550 (tight)</option>
-                  <option value="550-850">$550–$850</option>
-                  <option value="900-1500">$900–$1,500</option>
-                  <option value="1700-3500">$1,700–$3,500</option>
-                  <option value="3500+">$3,500+</option>
-                </select>
-                <div className="help">
-                  Public start is $550. If budget is tight, we reduce scope or use admin-only discounts (10–25%).
-                </div>
-              </div>
-
-              <div>
-                <div className="fieldLabel">Notes (optional)</div>
-                <textarea
-                  className="textarea"
-                  rows={4}
-                  value={form.notes}
-                  onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-                  placeholder="Anything special you want? Sections, features, examples…"
-                />
-              </div>
-            </div>
+            <Field label="Images source">
+              <select value={form.assetsSource} onChange={(e) => setForm((f) => ({ ...f, assetsSource: e.target.value as AssetsSource }))}>
+                <option value="Client provides">Client provides</option>
+                <option value="Stock">Stock</option>
+                <option value="Need help">Need help</option>
+              </select>
+            </Field>
           </div>
+
+          <div style={hint}>These help prevent delays and revision disputes later.</div>
         </section>
       )}
 
-      {/* STEP 5 */}
       {step === 5 && (
-        <section className="panel">
-          <div className="panelHeader">
-            <h2 className="h2">Review & submit</h2>
-            <p className="pDark" style={{ marginTop: 8 }}>
-              Confirm your answers and enter email to view your estimate.
-            </p>
+        <section style={card}>
+          <h2 style={sectionTitle}>Decision & Delivery</h2>
+
+          <div style={twoCol}>
+            <Field label="Are you the final decision-maker?">
+              <select value={form.decisionMaker} onChange={(e) => setForm((f) => ({ ...f, decisionMaker: e.target.value as YesNo }))}>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </Field>
+
+            <Field label="How many stakeholders will review?">
+              <select value={form.stakeholdersCount} onChange={(e) => setForm((f) => ({ ...f, stakeholdersCount: e.target.value as any }))}>
+                <option value="1">1</option>
+                <option value="2-3">2–3</option>
+                <option value="4+">4+</option>
+              </select>
+            </Field>
           </div>
 
-          <div className="panelBody">
-            <div className="card" style={{ background: "rgba(255,255,255,0.04)" }}>
-              <div className="cardInner" style={{ display: "grid", gap: 10 }}>
-                <div style={{ fontWeight: 950 }}>Summary</div>
-                <div style={{ opacity: 0.86, lineHeight: 1.7 }}>
-                  <div>Website type: <strong>{form.websiteType}</strong></div>
-                  <div>Pages: <strong>{form.pages}</strong></div>
-                  <div>
-                    Features:{" "}
-                    <strong>
-                      {[
-                        form.booking && "Booking",
-                        form.payments && "Payments",
-                        form.blog && "Blog",
-                        form.membership && "Membership",
-                      ].filter(Boolean).join(", ") || "None"}
-                    </strong>
-                  </div>
-                  <div>Automation: <strong>{form.wantsAutomation}</strong></div>
-                  <div>Content: <strong>{form.contentReady}</strong></div>
-                  <div>Has brand: <strong>{form.hasBrand}</strong></div>
-                  <div>Domain/hosting help: <strong>{form.domainHosting}</strong></div>
-                  <div>Timeline: <strong>{form.timeline}</strong></div>
-                  <div>Budget: <strong>{form.budget}</strong></div>
-                </div>
+          <div style={twoCol}>
+            <Field label="Design direction">
+              <select value={form.design} onChange={(e) => setForm((f) => ({ ...f, design: e.target.value as Design }))}>
+                {DESIGNS.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </Field>
 
-                <div style={{ marginTop: 8 }}>
-                  <div className="fieldLabel">Email (required)</div>
-                  <input
-                    className="input"
-                    value={form.leadEmail}
-                    onChange={(e) => setForm((f) => ({ ...f, leadEmail: e.target.value }))}
-                    placeholder="you@company.com"
-                  />
-                </div>
-
-                <div>
-                  <div className="fieldLabel">Phone (optional)</div>
-                  <input
-                    className="input"
-                    value={form.leadPhone}
-                    onChange={(e) => setForm((f) => ({ ...f, leadPhone: e.target.value }))}
-                    placeholder="(555) 555-5555"
-                  />
-                </div>
-
-                <div style={{ marginTop: 10, fontSize: 12, opacity: 0.78 }}>
-                  URL preview (should include pages + websiteType):{" "}
-                  <span style={{ opacity: 0.92 }}>/estimate?{queryString}</span>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ marginTop: 14 }} className="row">
-              <button type="button" className="btn btnPrimary" onClick={submit}>
-                View Estimate <span className="btnArrow">→</span>
-              </button>
-              <button type="button" className="btn btnGhost" onClick={() => router.push("/")}>
-                Back home
-              </button>
-            </div>
+            <Field label="Timeline">
+              <select value={form.timeline} onChange={(e) => setForm((f) => ({ ...f, timeline: e.target.value as Timeline }))}>
+                {TIMELINES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </Field>
           </div>
+
+          <Field label="Notes (optional)">
+            <textarea
+              rows={4}
+              value={form.notes}
+              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+              placeholder="Anything special you want us to know…"
+            />
+          </Field>
         </section>
       )}
 
-      {/* NAV */}
-      <div style={{ marginTop: 16 }} className="row">
-        <button type="button" className="btn btnGhost" onClick={back} disabled={step === 1}>
-          Back
-        </button>
-        <button type="button" className="btn btnPrimary" onClick={next} disabled={step === 5}>
-          Next <span className="btnArrow">→</span>
-        </button>
-      </div>
+      {step === 6 && (
+        <section style={card}>
+          <h2 style={sectionTitle}>Review</h2>
+          <p style={{ color: "#555", lineHeight: 1.7 }}>
+            Next we’ll generate a personalized estimate, then show tier options.
+          </p>
+          <div style={hint}>After you continue, we’ll ask for your email.</div>
+        </section>
+      )}
 
-      <div style={{ marginTop: 14, opacity: 0.78, fontSize: 13 }}>
-        Next: add Scope Snapshot preview
-      </div>
+      {step === 7 && (
+        <section style={card}>
+          <h2 style={sectionTitle}>Where should we send your estimate?</h2>
+
+          <Field label="Email (required)">
+            <input value={form.leadEmail} onChange={(e) => setForm((f) => ({ ...f, leadEmail: e.target.value }))} placeholder="you@company.com" />
+          </Field>
+
+          <Field label="Phone (optional)">
+            <input value={form.leadPhone} onChange={(e) => setForm((f) => ({ ...f, leadPhone: e.target.value }))} placeholder="(555) 555-5555" />
+          </Field>
+
+          <div style={hint}>We’ll use this to follow up if you want a consultation.</div>
+        </section>
+      )}
+
+      {step === 8 && (
+        <section style={card}>
+          <h2 style={sectionTitle}>All set</h2>
+          <p style={{ color: "#555", lineHeight: 1.7 }}>
+            Click below to view your estimate.
+          </p>
+        </section>
+      )}
+
+      {step > 0 && (
+        <div style={nav}>
+          <button onClick={back} style={secondaryBtn}>
+            Back
+          </button>
+
+          {step < 8 ? (
+            <button onClick={next} style={primaryBtn}>
+              Next →
+            </button>
+          ) : (
+            <button onClick={submit} style={primaryBtn}>
+              View Estimate →
+            </button>
+          )}
+        </div>
+      )}
     </main>
   );
 }
 
-function CheckRow({
+/* ---------------- UI COMPONENTS ---------------- */
+
+function Card({
+  title,
+  desc,
+  cta,
+  onClick,
+  highlight,
+}: {
+  title: string;
+  desc: string;
+  cta: string;
+  onClick: () => void;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      style={{
+        ...cardChoice,
+        border: highlight ? "2px solid #000" : "1px solid #e5e5e5",
+      }}
+    >
+      <h2 style={{ marginBottom: 10 }}>{title}</h2>
+      <p style={{ color: "#555", lineHeight: 1.6, marginBottom: 18 }}>{desc}</p>
+      <div style={{ fontWeight: 700 }}>{cta}</div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: any }) {
+  return (
+    <div style={{ marginBottom: 18 }}>
+      <label style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>
+        {label}
+      </label>
+      {children}
+      <style jsx>{`
+        select,
+        input,
+        textarea {
+          width: 100%;
+          padding: 12px 12px;
+          border-radius: 12px;
+          border: 1px solid #ddd;
+          background: #fff;
+          font-size: 15px;
+          outline: none;
+        }
+        textarea {
+          resize: vertical;
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function ToggleRow({
   label,
   checked,
   onChange,
@@ -517,32 +619,140 @@ function CheckRow({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label
-      className="checkRow"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        padding: "12px 12px",
-        borderRadius: 14,
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.10)",
-        cursor: "pointer",
-        userSelect: "none",
-      }}
-    >
+    <label style={toggleRow}>
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        style={{
-          width: 18,
-          height: 18,
-          accentColor: "rgb(255,122,24)",
-          margin: 0,
-        }}
+        style={{ marginRight: 10 }}
       />
-      <span style={{ fontWeight: 850, opacity: 0.92 }}>{label}</span>
+      {label}
     </label>
   );
 }
+
+function CheckLine({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <label style={{ display: "block", marginBottom: 8 }}>
+      <input type="checkbox" checked={checked} onChange={onChange} style={{ marginRight: 10 }} />
+      {label}
+    </label>
+  );
+}
+
+/* ---------------- STYLES ---------------- */
+
+const container: React.CSSProperties = {
+  maxWidth: 1000,
+  margin: "0 auto",
+  padding: "80px 24px",
+};
+
+const title: React.CSSProperties = {
+  fontSize: 40,
+  fontWeight: 800,
+  marginBottom: 10,
+};
+
+const subtitle: React.CSSProperties = {
+  color: "#555",
+  fontSize: 16,
+  lineHeight: 1.6,
+  maxWidth: 760,
+};
+
+const grid2: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+  gap: 22,
+};
+
+const cardChoice: React.CSSProperties = {
+  background: "#fff",
+  borderRadius: 20,
+  padding: 26,
+  cursor: "pointer",
+};
+
+const card: React.CSSProperties = {
+  background: "#fff",
+  borderRadius: 20,
+  padding: 30,
+  border: "1px solid #e5e5e5",
+};
+
+const sectionTitle: React.CSSProperties = {
+  fontSize: 22,
+  marginBottom: 16,
+};
+
+const nav: React.CSSProperties = {
+  marginTop: 22,
+  display: "flex",
+  gap: 12,
+};
+
+const primaryBtn: React.CSSProperties = {
+  padding: "14px 22px",
+  background: "#000",
+  color: "#fff",
+  borderRadius: 12,
+  border: "none",
+  fontWeight: 800,
+  cursor: "pointer",
+};
+
+const secondaryBtn: React.CSSProperties = {
+  padding: "14px 22px",
+  background: "#fff",
+  color: "#000",
+  borderRadius: 12,
+  border: "1px solid #ddd",
+  fontWeight: 800,
+  cursor: "pointer",
+};
+
+const hint: React.CSSProperties = {
+  marginTop: 10,
+  background: "#f7f7f7",
+  borderRadius: 14,
+  padding: 12,
+  color: "#444",
+  lineHeight: 1.6,
+};
+
+const twoCol: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+  gap: 12,
+};
+
+const toggleRow: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  padding: "10px 12px",
+  border: "1px solid #eee",
+  borderRadius: 12,
+  background: "#fafafa",
+};
+
+const subCard: React.CSSProperties = {
+  border: "1px solid #eee",
+  borderRadius: 16,
+  padding: 16,
+  background: "#fafafa",
+};
+
+const miniList: React.CSSProperties = {
+  marginTop: 10,
+  lineHeight: 1.8,
+  paddingLeft: 18,
+};
