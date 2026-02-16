@@ -1,307 +1,242 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
-type SearchParams = Record<string, string | string[] | undefined>;
+type FormState = {
+  mode?: string;
 
-export type Intake = {
-  mode: string;
-  intent: string;
-  intentOther: string;
-  websiteType: string; // business | ecommerce | landing | portfolio
-  pages: string; // 1-3 | 4-6 | 7-10 | 10+
-  booking: boolean;
-  payments: boolean;
-  blog: boolean;
-  membership: boolean;
-  wantsAutomation: string; // yes | no
-  hasBrand: string; // yes | no
-  contentReady: string; // ready | some | no
-  domainHosting: string; // yes | no
-  timeline: string; // 2-4w | rush | etc
-  budget: string; // 500-1000 | 900-1500 | etc
-  competitorUrl: string;
-  notes: string;
+  websiteType?: string;
+  intent?: string;
+  intentOther?: string;
+
+  pages?: string;
+
+  booking?: boolean;
+  payments?: boolean;
+  blog?: boolean;
+  membership?: boolean;
+
+  wantsAutomation?: string; // "Yes" | "No" | "yes" | "no"
+  hasLogo?: string;         // "Yes" | "No"
+  hasBrandGuide?: string;   // "Yes" | "No"
+  contentReady?: string;    // "Ready" | "Some" | "Not ready"
+  assetsSource?: string;
+
+  design?: string;
+  timeline?: string;
+
+  domainHosting?: string;   // sometimes present in your older versions
+  hasBrand?: string;        // sometimes present in your older versions
+
+  notes?: string;
+
+  leadEmail?: string;
+  leadPhone?: string;
 };
 
-type LegacyProps = { intake: Intake; leadEmail: string; leadPhone: string };
-type NewProps = { searchParams: SearchParams };
-type Props = Partial<LegacyProps> & Partial<NewProps>;
-
-function pick(params: SearchParams, key: string) {
-  const v = params?.[key];
-  return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
-}
-function asBool(v: string) {
-  return v === "1" || v === "true" || v === "yes" || v === "on";
+function norm(v: any) {
+  return String(v ?? "").trim();
 }
 
-type TierKey = "essential" | "growth" | "premium";
-
-const TIERS: Record<
-  TierKey,
-  { label: string; rangeLow: number; rangeHigh: number; base: number; priceLabel: string; blurb: string }
-> = {
-  essential: {
-    label: "Essential Launch",
-    rangeLow: 550,
-    rangeHigh: 850,
-    base: 650,
-    priceLabel: "$550–$850",
-    blurb: "Best for simple launches",
-  },
-  growth: {
-    label: "Growth Build",
-    rangeLow: 900,
-    rangeHigh: 1500,
-    base: 1100,
-    priceLabel: "$900–$1,500",
-    blurb: "Most chosen",
-  },
-  premium: {
-    label: "Premium Platform",
-    rangeLow: 1700,
-    rangeHigh: 3500,
-    base: 2200,
-    priceLabel: "$1,700–$3,500+",
-    blurb: "Best for scale",
-  },
-};
-
-function clamp(n: number, lo: number, hi: number) {
-  return Math.max(lo, Math.min(hi, n));
+function yn(v: any) {
+  const x = norm(v).toLowerCase();
+  return x === "yes" || x === "true" || x === "1" || x === "on";
 }
 
-function normalizeWebsiteType(v: string) {
-  const s = (v || "").toLowerCase().trim();
-  if (s.includes("ecom")) return "ecommerce";
-  if (s.includes("land")) return "landing";
-  if (s.includes("port")) return "portfolio";
+function normalizeWebsiteType(v: any) {
+  const x = norm(v).toLowerCase();
+  if (x.includes("ecom")) return "ecommerce";
+  if (x.includes("port")) return "portfolio";
+  if (x.includes("land")) return "landing";
   return "business";
 }
 
-function normalizePages(v: string) {
-  const s = (v || "").trim();
-  if (s === "4-6" || s === "4-5" || s === "4-5 pages" || s === "4-5") return "4-6";
-  if (s === "6-8" || s === "7-10") return "7-10";
-  if (s === "9+" || s === "10+" || s === "10+ pages") return "10+";
+function normalizePages(v: any) {
+  const x = norm(v);
+  // Accept your build labels + old estimate labels
+  if (x === "1-3" || x === "1–3") return "1-3";
+  if (x === "4-5" || x === "4–5") return "4-6";
+  if (x === "4-6" || x === "4–6") return "4-6";
+  if (x === "6-8" || x === "6–8") return "7-10";
+  if (x === "7-10" || x === "7–10") return "7-10";
+  if (x === "9+" || x === "9＋") return "10+";
+  if (x === "10+") return "10+";
+
+  const n = parseInt(x.replace(/[^\d]/g, ""), 10);
+  if (!Number.isNaN(n)) {
+    if (n <= 3) return "1-3";
+    if (n <= 6) return "4-6";
+    if (n <= 10) return "7-10";
+    return "10+";
+  }
   return "1-3";
 }
 
-function tierFromIntake(intake: Intake): TierKey {
-  const pages = normalizePages(intake.pages);
-  const wt = normalizeWebsiteType(intake.websiteType);
-
-  const heavyFeatures =
-    intake.payments || intake.membership || (intake.wantsAutomation || "").toLowerCase() === "yes";
-
-  // Premium triggers
-  if (pages === "10+") return "premium";
-  if (wt === "ecommerce" && (pages === "7-10" || heavyFeatures)) return "premium";
-  if (intake.membership) return "premium";
-
-  // Growth triggers
-  if (pages === "7-10") return "growth";
-  if (wt === "ecommerce") return "growth";
-  if (intake.booking || intake.payments || intake.blog || (intake.wantsAutomation || "").toLowerCase() === "yes")
-    return "growth";
-
-  // Otherwise Essential
-  return "essential";
+function normalizeTimeline(v: any) {
+  const x = norm(v).toLowerCase();
+  if (x.includes("under") || x.includes("14") || x.includes("rush")) return "rush";
+  if (x.includes("4")) return "4+w";
+  return "2-4w";
 }
 
-type Line = { label: string; amount: number; note?: string };
+function normalizeContentReady(v: any) {
+  const x = norm(v).toLowerCase();
+  if (x.includes("not")) return "no";
+  if (x.includes("ready")) return "ready";
+  return "some";
+}
 
-export default function EstimateClient(props: Props) {
-  const intake: Intake = useMemo(() => {
-    if (props.intake) return props.intake;
+function money(n: number) {
+  return `$${Math.round(n).toLocaleString()}`;
+}
 
-    const sp = props.searchParams || {};
+export default function EstimateClient() {
+  const [form, setForm] = useState<FormState | null>(null);
+
+  // load the saved intake from /build
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("crecy_intake_v1");
+      if (!raw) {
+        setForm({});
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      setForm(parsed || {});
+    } catch {
+      setForm({});
+    }
+  }, []);
+
+  const intake = useMemo(() => {
+    const f = form || {};
+    const websiteType = normalizeWebsiteType(f.websiteType);
+    const pages = normalizePages(f.pages);
+
+    // unify old/new brand fields
+    const hasBrand =
+      (typeof f.hasBrand === "string" ? f.hasBrand : "") ||
+      (typeof f.hasBrandGuide === "string" ? (yn(f.hasBrandGuide) ? "yes" : "no") : "no");
+
+    const domainHosting =
+      (typeof f.domainHosting === "string" ? f.domainHosting : "") ||
+      (typeof f.domainHosting === "boolean" ? (f.domainHosting ? "yes" : "no") : "no");
+
     return {
-      mode: pick(sp, "mode") || "estimate",
-      intent: pick(sp, "intent") || "business",
-      intentOther: pick(sp, "intentOther") || "",
-      websiteType: pick(sp, "websiteType") || "business",
-      pages: pick(sp, "pages") || "1-3",
-      booking: asBool(pick(sp, "booking")),
-      payments: asBool(pick(sp, "payments")),
-      blog: asBool(pick(sp, "blog")),
-      membership: asBool(pick(sp, "membership")),
-      wantsAutomation: pick(sp, "wantsAutomation") || "no",
-      hasBrand: pick(sp, "hasBrand") || "no",
-      contentReady: pick(sp, "contentReady") || "some",
-      domainHosting: pick(sp, "domainHosting") || "no",
-      timeline: pick(sp, "timeline") || "2-4w",
-      budget: pick(sp, "budget") || "500-1000",
-      competitorUrl: pick(sp, "competitorUrl") || "",
-      notes: pick(sp, "notes") || "",
+      websiteType,
+      pages,
+      booking: !!f.booking,
+      payments: !!f.payments,
+      blog: !!f.blog,
+      membership: !!f.membership,
+      wantsAutomation: yn(f.wantsAutomation) ? "yes" : "no",
+      contentReady: normalizeContentReady(f.contentReady),
+      hasBrand: yn(hasBrand) ? "yes" : "no",
+      domainHosting: yn(domainHosting) ? "yes" : "no",
+      timeline: normalizeTimeline(f.timeline),
+      intent: norm(f.intent || "business") || "business",
+      leadEmail: norm(f.leadEmail),
+      leadPhone: norm(f.leadPhone),
+      notes: norm(f.notes),
     };
-  }, [props.intake, props.searchParams]);
+  }, [form]);
 
-  const [email, setEmail] = useState(props.leadEmail || pick(props.searchParams || {}, "leadEmail") || "");
-  const [phone, setPhone] = useState(props.leadPhone || pick(props.searchParams || {}, "leadPhone") || "");
+  const estimate = useMemo(() => {
+    // ✅ System 2 base
+    let total = 550;
+    const breakdown: { label: string; amount: number }[] = [
+      { label: "Start price (System 2)", amount: 550 },
+    ];
 
-  const model = useMemo(() => {
-    const pages = normalizePages(intake.pages);
-    const wt = normalizeWebsiteType(intake.websiteType);
-    const automationYes = (intake.wantsAutomation || "").toLowerCase() === "yes";
-    const timeline = (intake.timeline || "").toLowerCase();
-
-    const tier: TierKey = tierFromIntake(intake);
-    const tierCfg = TIERS[tier];
-
-    const lines: Line[] = [];
-
-    // Base = includes the “Essentials” of that tier
-    let total = tierCfg.base;
-    lines.push({ label: `Start price (${tierCfg.label})`, amount: tierCfg.base });
-
-    // INCLUDED (show as $0 so it’s clear you’re not double-charging)
-    lines.push({ label: "Included: Base structure & UX", amount: 0 });
-    if (wt === "landing") lines.push({ label: "Included: Landing page focus", amount: 0 });
-    if (pages === "1-3") lines.push({ label: "Included: Small site scope (1–3 pages)", amount: 0 });
-
-    // Pages uplift beyond what the tier typically covers
-    // Essential: assumes 1–3 pages included; Growth: assumes up to ~6; Premium: assumes up to ~8 before uplift
-    if (tier === "essential") {
-      if (pages === "4-6") {
-        total += 220;
-        lines.push({ label: "Pages uplift (4–6)", amount: 220 });
-      }
-      if (pages === "7-10") {
-        total += 520;
-        lines.push({ label: "Pages uplift (7–10)", amount: 520 });
-      }
-      if (pages === "10+") {
-        total += 900;
-        lines.push({ label: "Pages uplift (10+)", amount: 900 });
-      }
-    } else if (tier === "growth") {
-      if (pages === "7-10") {
-        total += 260;
-        lines.push({ label: "Pages uplift (7–10)", amount: 260 });
-      }
-      if (pages === "10+") {
-        total += 650;
-        lines.push({ label: "Pages uplift (10+)", amount: 650 });
-      }
+    // Type complexity (kept modest)
+    if (intake.websiteType === "ecommerce") {
+      total += 250;
+      breakdown.push({ label: "Ecommerce complexity", amount: 250 });
+    } else if (intake.websiteType === "portfolio") {
+      total += 80;
+      breakdown.push({ label: "Portfolio layout", amount: 80 });
+    } else if (intake.websiteType === "landing") {
+      total += 0;
+      breakdown.push({ label: "Landing page focus", amount: 0 });
     } else {
-      // premium
-      if (pages === "10+") {
-        total += 450;
-        lines.push({ label: "Large scope uplift (10+)", amount: 450 });
-      }
+      total += 120;
+      breakdown.push({ label: "Base structure & UX", amount: 120 });
     }
 
-    // Website type complexity
-    if (wt === "ecommerce") {
-      const add = tier === "essential" ? 380 : tier === "growth" ? 260 : 180;
-      total += add;
-      lines.push({ label: "E-commerce complexity", amount: add });
+    // Pages
+    if (intake.pages === "4-6") {
+      total += 220;
+      breakdown.push({ label: "Medium site scope (4–6)", amount: 220 });
+    } else if (intake.pages === "7-10") {
+      total += 520;
+      breakdown.push({ label: "Large site scope (7–10)", amount: 520 });
+    } else if (intake.pages === "10+") {
+      total += 920;
+      breakdown.push({ label: "XL site scope (10+)", amount: 920 });
+    } else {
+      breakdown.push({ label: "Small site scope (1–3)", amount: 0 });
     }
 
-    // Feature add-ons (true extras)
+    // Features
     if (intake.booking) {
       total += 150;
-      lines.push({ label: "Booking / appointments", amount: 150 });
+      breakdown.push({ label: "Booking / scheduling", amount: 150 });
     }
     if (intake.payments) {
       total += 250;
-      lines.push({ label: "Payments / checkout", amount: 250 });
+      breakdown.push({ label: "Payments / checkout", amount: 250 });
     }
     if (intake.blog) {
       total += 120;
-      lines.push({ label: "Blog setup", amount: 120 });
+      breakdown.push({ label: "Blog / CMS setup", amount: 120 });
     }
     if (intake.membership) {
       total += 400;
-      lines.push({ label: "Membership / gated content", amount: 400 });
+      breakdown.push({ label: "Membership / gated content", amount: 400 });
     }
-    if (automationYes) {
+
+    if (intake.wantsAutomation === "yes") {
       total += 200;
-      lines.push({ label: "Automations setup", amount: 200 });
+      breakdown.push({ label: "Automations", amount: 200 });
     }
 
-    // Readiness (only charge when it will genuinely add labor)
-    const contentReady = (intake.contentReady || "").toLowerCase();
-    if (contentReady === "no" || contentReady === "not ready") {
+    // Readiness / brand / hosting guidance
+    if (intake.contentReady === "no") {
+      total += 240;
+      breakdown.push({ label: "Content not ready (assist)", amount: 240 });
+    } else if (intake.contentReady === "some") {
+      total += 140;
+      breakdown.push({ label: "Partial content readiness", amount: 140 });
+    }
+
+    if (intake.hasBrand === "no") {
       total += 220;
-      lines.push({ label: "Content not ready (writing/help)", amount: 220 });
-    } else {
-      lines.push({ label: "Included: Partial content readiness", amount: 0 });
+      breakdown.push({ label: "No brand kit (basic direction)", amount: 220 });
     }
 
-    const hasBrand = (intake.hasBrand || "").toLowerCase();
-    if (hasBrand === "no") {
-      // Included in Essential/Growth as “basic direction”, only charge in Premium if heavy custom branding implied
-      if (tier === "premium") {
-        total += 180;
-        lines.push({ label: "Brand direction (no existing brand kit)", amount: 180 });
-      } else {
-        lines.push({ label: "Included: Basic brand direction (no brand kit)", amount: 0 });
-      }
+    if (intake.domainHosting === "no") {
+      total += 90;
+      breakdown.push({ label: "Domain/hosting guidance", amount: 90 });
     }
 
-    const domainHosting = (intake.domainHosting || "").toLowerCase();
-    if (domainHosting === "no") {
-      // Included (quick guidance) — only charge if you later add a “hands-on setup” option
-      lines.push({ label: "Included: Domain/hosting guidance", amount: 0 });
-    }
-
-    if (timeline.includes("rush") || timeline.includes("under") || timeline.includes("14")) {
+    if (intake.timeline === "rush") {
       total += 250;
-      lines.push({ label: "Rush timeline", amount: 250 });
+      breakdown.push({ label: "Rush timeline", amount: 250 });
     }
 
-    // Clamp to public tier range (Premium can exceed, but keep it sane for now)
-    let clampedTotal = total;
-    if (tier !== "premium") {
-      clampedTotal = clamp(total, tierCfg.rangeLow, tierCfg.rangeHigh);
-    } else {
-      clampedTotal = Math.max(tierCfg.rangeLow, total);
-    }
+    const rangeLow = Math.round(total * 0.9);
+    const rangeHigh = Math.round(total * 1.15);
 
-    // If clamped changed the total, add a note line (not money) by showing $0 with note
-    if (clampedTotal !== total) {
-      lines.push({
-        label: "Tier range adjustment",
-        amount: 0,
-        note: `Kept within public ${tierCfg.priceLabel} range`,
-      });
-    }
+    // Tier fit (simple + predictable)
+    let tier: "essential" | "growth" | "premium" = "essential";
+    if (total >= 1700 || intake.pages === "10+" || intake.membership || intake.payments) tier = "premium";
+    else if (total >= 900 || intake.pages === "7-10" || intake.booking) tier = "growth";
 
-    const rangeLow = Math.round(clampedTotal * 0.9);
-    const rangeHigh = Math.round(clampedTotal * 1.15);
-
-    // Best-fit tier (you already like this behavior)
-    const bestFit: TierKey = tier;
-
-    return {
-      pages,
-      websiteType: wt,
-      tier,
-      bestFit,
-      total: clampedTotal,
-      rangeLow,
-      rangeHigh,
-      lines,
-      debug: {
-        pages,
-        booking: intake.booking,
-        payments: intake.payments,
-        blog: intake.blog,
-        membership: intake.membership,
-        wantsAutomation: automationYes ? "yes" : "no",
-        contentReady: intake.contentReady,
-        hasBrand: intake.hasBrand,
-        domainHosting: intake.domainHosting,
-        timeline: intake.timeline,
-        websiteType: wt,
-        intent: intake.intent,
-      },
-    };
+    return { total, rangeLow, rangeHigh, breakdown, tier };
   }, [intake]);
+
+  const loaded = form !== null;
 
   return (
     <main className="container" style={{ padding: "42px 0 80px" }}>
@@ -314,151 +249,224 @@ export default function EstimateClient(props: Props) {
 
       <h1 className="h1">Your estimate</h1>
       <p className="p" style={{ maxWidth: 820, marginTop: 10 }}>
-        Based on your selections (pages: <strong>{model.pages}</strong>).
+        Based on your selections (type: <strong>{intake.websiteType}</strong>, pages:{" "}
+        <strong>{intake.pages}</strong>).
       </p>
 
-      <div style={{ height: 18 }} />
+      <div style={{ height: 22 }} />
 
-      <section className="panel">
-        <div className="panelHeader">
-          <h2 className="h2">Estimate</h2>
-          <p className="pDark" style={{ marginTop: 8 }}>
-            Includes the right tier baseline + only true add-ons.
-          </p>
-        </div>
-
-        <div className="panelBody">
-          <div style={{ display: "grid", gap: 12 }}>
-            <div style={{ fontSize: 40, fontWeight: 950, letterSpacing: -0.6 }}>
-              ${model.total.toLocaleString()}
-            </div>
-            <div style={{ color: "rgba(255,255,255,0.72)", fontWeight: 800 }}>
-              Typical range: ${model.rangeLow.toLocaleString()} – ${model.rangeHigh.toLocaleString()}
-            </div>
-
-            <div style={{ height: 10 }} />
-
-            <div className="cardInner" style={{ padding: 14 }}>
-              <div style={{ fontWeight: 950, marginBottom: 10 }}>Breakdown</div>
-              <div style={{ display: "grid", gap: 8 }}>
-                {model.lines.map((l) => (
-                  <div
-                    key={l.label}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: 12,
-                      color: "rgba(255,255,255,0.86)",
-                    }}
-                  >
-                    <div style={{ maxWidth: 520 }}>
-                      {l.label}
-                      {l.note ? (
-                        <div style={{ color: "rgba(255,255,255,0.62)", fontSize: 12, marginTop: 2 }}>
-                          {l.note}
-                        </div>
-                      ) : null}
-                    </div>
-                    <div style={{ fontWeight: 900, whiteSpace: "nowrap" }}>
-                      {l.amount === 0 ? "$0" : `+ $${l.amount.toLocaleString()}`}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ marginTop: 12, color: "rgba(255,255,255,0.70)", fontSize: 13, lineHeight: 1.6 }}>
-                Note: if budget is tight, we can do scope trade-offs or admin-only discounts (10–25%) without changing public tier pricing.
-              </div>
+      {!loaded ? (
+        <section className="panel">
+          <div className="panelBody">
+            <div style={{ color: "rgba(255,255,255,0.75)" }}>Loading your intake…</div>
+          </div>
+        </section>
+      ) : (
+        <>
+          <section className="panel">
+            <div className="panelHeader">
+              <h2 className="h2">Estimated total</h2>
+              <p className="pDark" style={{ marginTop: 8 }}>
+                Typical range: {money(estimate.rangeLow)} – {money(estimate.rangeHigh)}
+              </p>
             </div>
 
-            <div style={{ height: 8 }} />
+            <div className="panelBody">
+              <div style={{ display: "grid", gap: 10 }}>
+                <div style={{ fontSize: 44, fontWeight: 950, letterSpacing: -0.6 }}>
+                  {money(estimate.total)}
+                </div>
 
-            <div style={{ display: "grid", gap: 12 }}>
-              <div>
-                <div className="fieldLabel">Email</div>
-                <input
-                  className="input"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@domain.com"
-                />
-              </div>
+                <div style={{ height: 6 }} />
 
-              <div>
-                <div className="fieldLabel">Phone (optional)</div>
-                <input
-                  className="input"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="(555) 555-5555"
-                />
-              </div>
-            </div>
-
-            <div style={{ height: 10 }} />
-
-            <div className="row">
-              <Link className="btn btnPrimary" href="/build">
-                Start a Build →
-              </Link>
-              <Link className="btn btnGhost" href="/">
-                Back home
-              </Link>
-            </div>
-
-            <div className="cardInner" style={{ padding: 14 }}>
-              <div style={{ fontWeight: 950, marginBottom: 10 }}>Recommended tier</div>
-              <div className="tierGrid">
-                {(Object.keys(TIERS) as TierKey[]).map((k) => {
-                  const t = TIERS[k];
-                  const best = k === model.bestFit;
-                  return (
+                <div style={{ fontWeight: 950 }}>Breakdown</div>
+                <div style={{ display: "grid", gap: 8 }}>
+                  {estimate.breakdown.map((b) => (
                     <div
-                      key={k}
-                      className="card"
+                      key={b.label}
                       style={{
-                        borderColor: best ? "rgba(255,122,24,0.55)" : "rgba(255,255,255,0.12)",
-                        background: best ? "rgba(255,122,24,0.10)" : "rgba(255,255,255,0.04)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        padding: "10px 12px",
+                        borderRadius: 14,
+                        border: "1px solid rgba(255,255,255,0.12)",
+                        background: "rgba(255,255,255,0.05)",
                       }}
                     >
-                      <div className="cardInner">
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                          <div>
-                            <div className="tierName">{t.label}</div>
-                            <div className="tierSub">{t.blurb}</div>
-                          </div>
-                          <div style={{ textAlign: "right" }}>
-                            <div className="tierPrice">{t.priceLabel}</div>
-                            <div className={`badge ${best ? "badgeHot" : ""}`} style={{ marginTop: 10 }}>
-                              {best ? "Best fit" : "Tier"}
-                            </div>
-                          </div>
-                        </div>
-                        <div style={{ marginTop: 10, color: "rgba(255,255,255,0.68)", lineHeight: 1.55 }}>
-                          {best ? "Matches your scope + features based on System 2." : "See tier details on the homepage."}
-                        </div>
+                      <div style={{ color: "rgba(255,255,255,0.86)", fontWeight: 700 }}>{b.label}</div>
+                      <div style={{ color: "rgba(255,255,255,0.90)", fontWeight: 950 }}>
+                        {b.amount === 0 ? "$0" : `+ ${money(b.amount)}`}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
 
-              <div style={{ marginTop: 10, fontSize: 12, color: "rgba(255,255,255,0.62)" }}>
-                Next: add Scope Snapshot preview
+                <div style={{ height: 12 }} />
+
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.72)", lineHeight: 1.5 }}>
+                  Note: if budget is tight, we can do scope trade-offs or admin-only discounts (10–25%)
+                  without changing public tier pricing.
+                </div>
+
+                <div style={{ height: 12 }} />
+
+                <div className="row">
+                  <Link className="btn btnPrimary" href="/build">
+                    Back to questionnaire →
+                  </Link>
+                  <Link className="btn btnGhost" href="/">
+                    Back home
+                  </Link>
+                </div>
+
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.72)", marginTop: 6 }}>
+                  Next: add Scope Snapshot preview
+                </div>
               </div>
             </div>
+          </section>
 
-            <details style={{ marginTop: 10 }}>
-              <summary style={{ cursor: "pointer", color: "rgba(255,255,255,0.75)", fontWeight: 800 }}>
-                Debug (what we parsed)
-              </summary>
-              <pre style={{ whiteSpace: "pre-wrap", color: "rgba(255,255,255,0.82)", marginTop: 10 }}>
-                {JSON.stringify(model.debug, null, 2)}
+          <div style={{ height: 18 }} />
+
+          <section className="panel">
+            <div className="panelHeader">
+              <h2 className="h2">Recommended tier</h2>
+              <p className="pDark" style={{ marginTop: 8 }}>
+                Best fit based on scope.
+              </p>
+            </div>
+            <div className="panelBody">
+              <div className="tierGrid">
+                <TierCard
+                  name="Essential Launch"
+                  price="$550–$850"
+                  badge="Best for simple launches"
+                  bestFit={estimate.tier === "essential"}
+                  bullets={[
+                    "Up to ~5 sections / pages",
+                    "Clean layout + mobile responsive",
+                    "Contact form + basic SEO",
+                    "1 revision round (structured)",
+                  ]}
+                />
+                <TierCard
+                  name="Growth Build"
+                  price="$900–$1,500"
+                  badge="Most chosen"
+                  bestFit={estimate.tier === "growth"}
+                  bullets={[
+                    "5–8 pages/sections + stronger UX",
+                    "Booking + lead capture improvements",
+                    "Better SEO structure + analytics",
+                    "2 revision rounds (structured)",
+                  ]}
+                />
+                <TierCard
+                  name="Premium Platform"
+                  price="$1,700–$3,500+"
+                  badge="Best for scale"
+                  bestFit={estimate.tier === "premium"}
+                  bullets={[
+                    "Custom features + integrations",
+                    "Advanced UI + performance focus",
+                    "Payments/membership/automation options",
+                    "2–3 revision rounds (by scope)",
+                  ]}
+                />
+              </div>
+            </div>
+          </section>
+
+          <div style={{ height: 18 }} />
+
+          <section className="panel">
+            <div className="panelHeader">
+              <h2 className="h2">Debug</h2>
+              <p className="pDark" style={{ marginTop: 8 }}>
+                This is exactly what we loaded from localStorage.
+              </p>
+            </div>
+            <div className="panelBody">
+              <pre
+                style={{
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                  margin: 0,
+                  padding: 12,
+                  borderRadius: 14,
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  background: "rgba(0,0,0,0.35)",
+                  color: "rgba(255,255,255,0.85)",
+                  fontSize: 12,
+                  lineHeight: 1.5,
+                }}
+              >
+{JSON.stringify(
+  {
+    loadedFromLocalStorage: form,
+    normalized: intake,
+    tier: estimate.tier,
+    total: estimate.total,
+  },
+  null,
+  2
+)}
               </pre>
-            </details>
+            </div>
+          </section>
+        </>
+      )}
+    </main>
+  );
+}
+
+function TierCard({
+  name,
+  price,
+  bullets,
+  badge,
+  bestFit,
+}: {
+  name: string;
+  price: string;
+  bullets: string[];
+  badge: string;
+  bestFit?: boolean;
+}) {
+  return (
+    <div className="card cardHover">
+      <div className="cardInner">
+        <div className="tierHead">
+          <div>
+            <div className="tierName">{name}</div>
+            <div className="tierSub">{badge}</div>
+          </div>
+
+          <div style={{ textAlign: "right" }}>
+            <div className="tierPrice">{price}</div>
+            <div className={`badge ${bestFit ? "badgeHot" : ""}`} style={{ marginTop: 10 }}>
+              {bestFit ? "Best fit" : "Tier"}
+            </div>
           </div>
         </div>
-      </section>
-    </main>
+
+        <ul className="tierList">
+          {bullets.map((b) => (
+            <li key={b}>{b}</li>
+          ))}
+        </ul>
+
+        <div className="tierCTA">
+          <Link className="btn btnPrimary" href="/build">
+            Start build <span className="btnArrow">→</span>
+          </Link>
+          <Link className="btn btnGhost" href="/">
+            Home
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }
