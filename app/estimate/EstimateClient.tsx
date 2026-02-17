@@ -3,356 +3,394 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
-type Intake = {
-  mode?: string;
-  intent?: string;
-  intentOther?: string;
+type IntakeLike = Record<string, any>;
 
-  websiteType?: string;
-  pages?: string;
-
-  booking?: boolean;
-  payments?: boolean;
-  blog?: boolean;
-  membership?: boolean;
-
-  wantsAutomation?: string;
-
-  contentReady?: string;
-
-  // old estimate params
-  hasBrand?: string;
-  domainHosting?: string;
-  timeline?: string;
-  budget?: string;
-  competitorUrl?: string;
-  notes?: string;
+type Normalized = {
+  websiteType: "business" | "ecommerce" | "portfolio" | "landing";
+  pages: "1" | "1-3" | "4-6" | "6-8" | "9+"; // ✅ 9+ stays 9+
+  booking: boolean;
+  payments: boolean;
+  blog: boolean;
+  membership: boolean;
+  wantsAutomation: "yes" | "no";
+  contentReady: "ready" | "some" | "not_ready";
+  domainHosting: "yes" | "no";
+  timeline: "2-3w" | "4+w" | "under14" | "2-4w";
+  intent: string;
+  integrations: string[];
+  automationTypes: string[];
+  integrationOther: string;
+  notes: string;
+  leadEmail: string;
+  leadPhone: string;
 };
 
 type Props = {
-  intake: Intake;
+  intake: IntakeLike;
   leadEmail?: string;
   leadPhone?: string;
 };
 
 const LS_KEY = "crecystudio:intake";
 
-function money(n: number) {
-  return `$${Math.round(n).toLocaleString()}`;
-}
+/**
+ * Light integrations = simple embeds (do NOT break starter caps).
+ * Heavy integrations = require setup/testing/custom work (DO break caps).
+ */
+const LIGHT_INTEGRATIONS = new Set([
+  "Mailchimp / email list",
+  "Analytics (GA4 / Pixel)",
+  "Google Maps / location",
+]);
 
-function normYesNo(v: any): "yes" | "no" {
+const HEAVY_INTEGRATIONS = new Set([
+  "Calendly / scheduling",
+  "Stripe payments",
+  "PayPal payments",
+  "CRM integration",
+  "Live chat",
+]);
+
+function toBool(v: any) {
   const s = String(v ?? "").toLowerCase().trim();
-  if (s === "yes" || s === "true" || s === "1") return "yes";
-  return "no";
+  return s === "1" || s === "true" || s === "yes" || s === "on";
 }
 
-function normContent(v: any): "ready" | "some" | "not ready" {
-  const s = String(v ?? "").toLowerCase().trim();
-  if (s.includes("ready")) return "ready";
-  if (s.includes("not")) return "not ready";
-  return "some";
-}
+function normalizePages(raw: any): Normalized["pages"] {
+  const v = String(raw ?? "").trim();
 
-function normWebsiteType(v: any): "business" | "ecommerce" | "portfolio" | "landing" {
-  const s = String(v ?? "business").toLowerCase().trim();
-  if (s.includes("ecom")) return "ecommerce";
-  if (s.includes("port")) return "portfolio";
-  if (s.includes("land")) return "landing";
-  return "business";
-}
+  // Values from /build
+  if (v === "1") return "1";
+  if (v === "1-3") return "1-3";
+  if (v === "4-5" || v === "4-6") return "4-6";
+  if (v === "6-8") return "6-8";
+  if (v === "9+") return "9+";
 
-function normPages(v: any): "1" | "1-3" | "4-6" | "6-8" | "9+" {
-  const s = String(v ?? "1-3").trim();
-  if (s === "1") return "1";
-  if (s === "1-3") return "1-3";
-  if (s === "4-5" || s === "4-6") return "4-6";
-  if (s === "6-8") return "6-8";
-  if (s === "9+") return "9+";
-  // fallback
+  // Older possible URL values
+  if (v === "4-6") return "4-6";
+  if (v === "7-10") return "9+"; // treat old 7-10 as large (still >= 9 feel)
+  if (v === "10+") return "9+";
+
   return "1-3";
 }
 
-function normBool(v: any): boolean {
-  if (typeof v === "boolean") return v;
-  const s = String(v ?? "").toLowerCase().trim();
-  return s === "true" || s === "1" || s === "yes" || s === "on";
+function normalizeWebsiteType(raw: any): Normalized["websiteType"] {
+  const v = String(raw ?? "").toLowerCase().trim();
+  if (v.includes("ecom")) return "ecommerce";
+  if (v.includes("port")) return "portfolio";
+  if (v.includes("land")) return "landing";
+  return "business";
 }
 
-function normWantsAutomation(v: any): "yes" | "no" {
-  const s = String(v ?? "").toLowerCase().trim();
-  if (s === "yes" || s === "true" || s === "1") return "yes";
-  return "no";
+function normalizeYesNo(raw: any): "yes" | "no" {
+  const v = String(raw ?? "").toLowerCase().trim();
+  return v === "yes" || v === "true" || v === "1" ? "yes" : "no";
 }
 
-function parseList(v: any): string[] {
-  if (Array.isArray(v)) return v.filter(Boolean).map(String);
-  if (!v) return [];
-  const s = String(v);
-  // could be comma-separated or already a single value
-  return s
+function normalizeContentReady(raw: any): Normalized["contentReady"] {
+  const v = String(raw ?? "").toLowerCase().trim();
+  if (v === "ready") return "ready";
+  if (v === "some") return "some";
+  if (v === "not ready" || v === "not_ready" || v === "not") return "not_ready";
+  // from old estimate URLs:
+  if (v === "partial") return "some";
+  return "some";
+}
+
+function normalizeTimeline(raw: any): Normalized["timeline"] {
+  const v = String(raw ?? "").toLowerCase().trim();
+  if (v.includes("under")) return "under14";
+  if (v.includes("4+")) return "4+w";
+  if (v.includes("2-3")) return "2-3w";
+  if (v.includes("2-4")) return "2-4w";
+  return "2-4w";
+}
+
+function parseCsv(raw: any): string[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.map(String).filter(Boolean);
+  return String(raw)
     .split(",")
-    .map((x) => x.trim())
+    .map((s) => s.trim())
     .filter(Boolean);
 }
 
-type Normalized = {
-  websiteType: "business" | "ecommerce" | "portfolio" | "landing";
-  pages: "1" | "1-3" | "4-6" | "6-8" | "9+";
-
-  booking: boolean;
-  payments: boolean;
-  blog: boolean;
-  membership: boolean;
-
-  wantsAutomation: "yes" | "no";
-  contentReady: "ready" | "some" | "not ready";
-
-  // domain/hosting handled?
-  domainHosting: "yes" | "no";
-
-  // from localStorage (build intake)
-  integrations: string[];
-  automationTypes: string[];
-
-  // used for debug / display
-  intent: string;
-  leadEmail: string;
-  leadPhone: string;
-  notes: string;
-
-  // optional from build intake if present
-  hasLogo?: "yes" | "no";
-  hasBrandGuide?: "yes" | "no";
-};
-
-function computeEstimate(n: Normalized) {
-  const breakdown: { label: string; amount: number }[] = [];
-
-  const hasAddons =
-    n.booking ||
-    n.payments ||
-    n.blog ||
-    n.membership ||
-    n.wantsAutomation === "yes" ||
-    (n.integrations?.length ?? 0) > 0 ||
-    (n.automationTypes?.length ?? 0) > 0;
-
-  // Your starter cap rule:
-  const qualifiesStarterCap =
-    !hasAddons && n.contentReady === "ready" && n.domainHosting === "yes";
-
-  // Base pricing (your vision)
-  let base = 0;
-  let baseLabel = "";
-
-  if (n.pages === "1") {
-    if (qualifiesStarterCap) {
-      base = 225;
-      baseLabel = "One-page starter (no add-ons)";
-    } else {
-      base = 400;
-      baseLabel = "Starter base (1–3 pages)";
-    }
-  } else if (n.pages === "1-3") {
-    base = 400;
-    baseLabel = "Starter base (1–3 pages)";
-  } else if (n.pages === "4-6") {
-    base = 550;
-    baseLabel = "Base (4–6 pages)";
-  } else if (n.pages === "6-8") {
-    base = 900;
-    baseLabel = "Base (6–8 pages)";
-  } else {
-    // 9+
-    base = 1200;
-    baseLabel = "Base (9+ pages)";
-  }
-
-  breakdown.push({ label: baseLabel, amount: base });
-
-  // Website type adjustments (light touch)
-  if (n.websiteType === "ecommerce") breakdown.push({ label: "Ecommerce setup", amount: 180 });
-  if (n.websiteType === "portfolio") breakdown.push({ label: "Portfolio layout polish", amount: 60 });
-  if (n.websiteType === "landing") breakdown.push({ label: "Landing focus", amount: 0 });
-
-  // Feature add-ons
-  if (n.booking) breakdown.push({ label: "Booking / appointments", amount: 150 });
-  if (n.payments) breakdown.push({ label: "Payments / checkout", amount: 250 });
-  if (n.blog) breakdown.push({ label: "Blog / articles", amount: 120 });
-  if (n.membership) breakdown.push({ label: "Membership / gated content", amount: 400 });
-
-  if (n.wantsAutomation === "yes") breakdown.push({ label: "Automation setup (advanced)", amount: 200 });
-
-  // Integrations should COUNT (this is the bug your output exposed)
-  // Flat per-integration fee (simple + predictable)
-  const integrationFeeEach = 60;
-  if ((n.integrations?.length ?? 0) > 0) {
-    breakdown.push({
-      label: `Integrations (${n.integrations.length})`,
-      amount: n.integrations.length * integrationFeeEach,
-    });
-  }
-
-  // Readiness
-  if (n.contentReady === "some") breakdown.push({ label: "Partial content readiness", amount: 60 });
-  if (n.contentReady === "not ready") breakdown.push({ label: "Content not ready (content help)", amount: 180 });
-
-  // Domain/hosting guidance
-  if (n.domainHosting === "no") breakdown.push({ label: "Domain/hosting guidance", amount: 60 });
-
-  // IMPORTANT: brand should NOT automatically punish people.
-  // So we do NOT charge “no brand” by default.
-  // (You can upsell brand direction during the call.)
-
-  const total = breakdown.reduce((sum, b) => sum + b.amount, 0);
-
-  // Typical range
-  const low = Math.round(total * 0.9);
-  const high = Math.round(total * 1.15);
-
-  // Tier recommendation
-  const heavy = n.payments || n.membership || n.wantsAutomation === "yes";
-  let tier: "essential" | "growth" | "premium" = "essential";
-
-  if (n.pages === "4-6" || n.pages === "6-8") tier = "growth";
-  if (n.pages === "9+" || heavy) tier = "premium";
-  if (n.pages === "1" || n.pages === "1-3") tier = "essential";
-
-  return { total, low, high, tier, breakdown, hasAddons, qualifiesStarterCap };
+function looksLikeRealIntake(intake: IntakeLike, leadEmail?: string) {
+  // Prefer URL/props intake when it looks intentional.
+  // This prevents stale localStorage from overriding fresh URLs.
+  if (leadEmail && leadEmail.trim()) return true;
+  const pages = String(intake?.pages ?? "");
+  const wt = String(intake?.websiteType ?? "");
+  const anyAddon =
+    toBool(intake?.booking) ||
+    toBool(intake?.payments) ||
+    toBool(intake?.blog) ||
+    toBool(intake?.membership) ||
+    String(intake?.wantsAutomation ?? "").toLowerCase().includes("yes") ||
+    String(intake?.integrations ?? "").length > 0;
+  return Boolean(pages || wt || anyAddon);
 }
 
-export default function EstimateClient({ intake, leadEmail, leadPhone }: Props) {
-  const [loaded, setLoaded] = useState<any>(null);
+export default function EstimateClient({ intake, leadEmail = "", leadPhone = "" }: Props) {
+  const [ls, setLs] = useState<any>(null);
 
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(LS_KEY);
       if (!raw) return;
       const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === "object") setLoaded(parsed);
-    } catch {}
+      setLs(parsed);
+    } catch {
+      setLs(null);
+    }
   }, []);
 
+  const source = useMemo(() => {
+    // Prefer URL intake unless it's basically empty
+    const useProps = looksLikeRealIntake(intake, leadEmail);
+    return useProps ? intake : (ls ?? intake);
+  }, [intake, leadEmail, ls]);
+
   const normalized: Normalized = useMemo(() => {
-    const source = loaded ?? {};
+    return {
+      websiteType: normalizeWebsiteType(source?.websiteType),
+      pages: normalizePages(source?.pages),
 
-    // Pull from localStorage build intake first, else server intake
-    const websiteTypeRaw = source.websiteType ?? intake.websiteType ?? "business";
-    const pagesRaw = source.pages ?? intake.pages ?? "1-3";
+      booking: toBool(source?.booking),
+      payments: toBool(source?.payments),
+      blog: toBool(source?.blog),
+      membership: toBool(source?.membership),
 
-    const bookingRaw = source.booking ?? intake.booking ?? false;
-    const paymentsRaw = source.payments ?? intake.payments ?? false;
-    const blogRaw = source.blog ?? intake.blog ?? false;
-    const membershipRaw = source.membership ?? intake.membership ?? false;
+      wantsAutomation: normalizeYesNo(source?.wantsAutomation),
 
-    const wantsAutomationRaw = source.wantsAutomation ?? intake.wantsAutomation ?? "no";
-    const contentReadyRaw = source.contentReady ?? intake.contentReady ?? "some";
+      contentReady: normalizeContentReady(source?.contentReady),
+      domainHosting: normalizeYesNo(source?.domainHosting),
 
-    // Domain/hosting from localStorage build intake ("Yes/No"), else estimate intake ("yes/no")
-    const domainHostingRaw = source.domainHosting ?? intake.domainHosting ?? "no";
+      timeline: normalizeTimeline(source?.timeline),
 
-    const integrationsRaw = source.integrations ?? intake["integrations"] ?? [];
-    const automationTypesRaw = source.automationTypes ?? intake["automationTypes"] ?? [];
+      intent: String(source?.intent ?? "business"),
+      integrations: parseCsv(source?.integrations),
+      automationTypes: parseCsv(source?.automationTypes),
+      integrationOther: String(source?.integrationOther ?? ""),
 
-    const n: Normalized = {
-      websiteType: normWebsiteType(websiteTypeRaw),
-      pages: normPages(pagesRaw),
+      notes: String(source?.notes ?? ""),
+      leadEmail: String(leadEmail || source?.leadEmail || "").trim(),
+      leadPhone: String(leadPhone || source?.leadPhone || "").trim(),
+    };
+  }, [source, leadEmail, leadPhone]);
 
-      booking: normBool(bookingRaw),
-      payments: normBool(paymentsRaw),
-      blog: normBool(blogRaw),
-      membership: normBool(membershipRaw),
+  const pricing = useMemo(() => {
+    const n = normalized;
 
-      wantsAutomation: normWantsAutomation(wantsAutomationRaw),
-      contentReady: normContent(contentReadyRaw),
-
-      domainHosting: normYesNo(domainHostingRaw),
-
-      integrations: parseList(integrationsRaw),
-      automationTypes: parseList(automationTypesRaw),
-
-      intent: String(source.intent ?? intake.intent ?? "business"),
-      leadEmail: String(source.leadEmail ?? leadEmail ?? "").trim(),
-      leadPhone: String(source.leadPhone ?? leadPhone ?? "").trim(),
-      notes: String(source.notes ?? intake.notes ?? "").trim(),
-
-      hasLogo: source.hasLogo ? normYesNo(source.hasLogo) : undefined,
-      hasBrandGuide: source.hasBrandGuide ? normYesNo(source.hasBrandGuide) : undefined,
+    // ✅ Base by pages (your vision)
+    const baseByPages: Record<Normalized["pages"], number> = {
+      "1": 225,
+      "1-3": 400,
+      "4-6": 550,
+      "6-8": 800,
+      "9+": 1100,
     };
 
-    return n;
-  }, [loaded, intake, leadEmail, leadPhone]);
+    const breakdown: { label: string; amt: number }[] = [];
+    let total = baseByPages[n.pages];
 
-  const result = useMemo(() => computeEstimate(normalized), [normalized]);
+    if (n.pages === "1") breakdown.push({ label: "One-page starter base", amt: baseByPages["1"] });
+    else if (n.pages === "1-3") breakdown.push({ label: "Starter base (1–3 pages)", amt: baseByPages["1-3"] });
+    else if (n.pages === "4-6") breakdown.push({ label: "Growth base (4–6 pages)", amt: baseByPages["4-6"] });
+    else if (n.pages === "6-8") breakdown.push({ label: "Larger scope base (6–8 pages)", amt: baseByPages["6-8"] });
+    else breakdown.push({ label: "Large scope base (9+ pages)", amt: baseByPages["9+"] });
+
+    // Add-ons (features)
+    const add = (label: string, amt: number) => {
+      if (amt === 0) return;
+      breakdown.push({ label, amt });
+      total += amt;
+    };
+
+    if (n.booking) add("Booking / appointments", 150);
+    if (n.payments) add("Payments / checkout", 250);
+    if (n.blog) add("Blog / articles", 120);
+    if (n.membership) add("Membership / gated content", 400);
+
+    // Automations
+    if (n.wantsAutomation === "yes") {
+      add("Automations setup", 200);
+      if (n.automationTypes.length) add(`Automation types (${n.automationTypes.length})`, n.automationTypes.length * 40);
+    }
+
+    // Integrations
+    const integrations = n.integrations || [];
+    const heavy = integrations.filter((x) => HEAVY_INTEGRATIONS.has(x));
+    const light = integrations.filter((x) => LIGHT_INTEGRATIONS.has(x));
+    const unknown = integrations.filter((x) => !HEAVY_INTEGRATIONS.has(x) && !LIGHT_INTEGRATIONS.has(x));
+
+    // Light = included (no cost, does NOT break starter caps)
+    if (light.length) breakdown.push({ label: `Light embeds included (${light.length})`, amt: 0 });
+
+    // Unknown integrations: treat as light unless you type "Other integration"
+    if (unknown.length) breakdown.push({ label: `Integrations noted (${unknown.length})`, amt: 0 });
+
+    // Heavy = paid add-on
+    if (heavy.length) add(`Heavy integrations (${heavy.length})`, heavy.length * 60);
+
+    if (n.integrationOther.trim()) add("Custom integration (other)", 60);
+
+    // Readiness (keep these SOFT for conversion)
+    if (n.contentReady === "some") add("Partial content readiness", 60);
+    if (n.contentReady === "not_ready") add("Content not ready (assist/setup)", 180);
+
+    if (n.domainHosting === "no") add("Domain/hosting guidance", 60);
+
+    // Rush
+    if (n.timeline === "under14") add("Rush timeline (under 14 days)", 250);
+
+    // Starter cap rules (your rule: cap only when no paid add-ons + ready + domain/hosting handled)
+    const hasPaidAddons =
+      n.booking ||
+      n.payments ||
+      n.blog ||
+      n.membership ||
+      n.wantsAutomation === "yes" ||
+      heavy.length > 0 ||
+      Boolean(n.integrationOther.trim());
+
+    const qualifiesStarterCap =
+      (n.pages === "1" || n.pages === "1-3") &&
+      !hasPaidAddons &&
+      n.contentReady === "ready" &&
+      n.domainHosting === "yes" &&
+      n.timeline !== "under14";
+
+    // Apply cap ONLY to the starter bases (exactly as you described)
+    if (qualifiesStarterCap) {
+      total = baseByPages[n.pages];
+      // Strip anything that added cost after base (leave base + notes)
+      const baseLine = breakdown[0];
+      breakdown.length = 0;
+      breakdown.push(baseLine);
+      breakdown.push({ label: "Starter cap applied (ready + domain/hosting handled + no paid add-ons)", amt: 0 });
+    } else {
+      breakdown.push({
+        label:
+          "Starter caps apply only when: no paid add-ons, content ready, and domain/hosting handled.",
+        amt: 0,
+      });
+    }
+
+    const rangeLow = Math.round(total * 0.9);
+    const rangeHigh = Math.round(total * 1.15);
+
+    // Tier recommendation
+    let tier: "essential" | "growth" | "premium" = "essential";
+    if (n.pages === "4-6" || n.pages === "6-8") tier = "growth";
+    if (n.pages === "9+" || n.payments || n.membership || n.wantsAutomation === "yes") tier = "premium";
+    if (total >= 1700) tier = "premium";
+
+    return {
+      total,
+      rangeLow,
+      rangeHigh,
+      tier,
+      breakdown,
+      qualifiesStarterCap,
+      hasPaidAddons,
+    };
+  }, [normalized]);
+
+  const headline = `Based on your selections (type: ${normalized.websiteType}, pages: ${normalized.pages}).`;
 
   return (
-    <main className="container" style={{ padding: "48px 0 80px" }}>
+    <main className="container" style={{ padding: "42px 0 80px" }}>
       <div className="kicker">
         <span className="kickerDot" aria-hidden="true" />
-        CrecyStudio • Estimate
+        CrecyStudio • Instant Estimate
       </div>
 
       <div style={{ height: 12 }} />
 
       <h1 className="h1">Your estimate</h1>
-      <p className="p" style={{ maxWidth: 920, marginTop: 10 }}>
-        One-page starter from <strong>$225</strong> (no add-ons).{" "}
-        <strong>1–3 pages from $400</strong> (no add-ons).{" "}
+      <p className="p" style={{ maxWidth: 860, marginTop: 10 }}>
+        One-page starter from <strong>$225</strong> (no paid add-ons).{" "}
+        <strong>1–3 pages from $400</strong> (no paid add-ons).{" "}
         <strong>4–6 pages start at $550</strong> + add-ons. We’ll confirm final scope together before you pay a deposit.
       </p>
 
-      <div style={{ height: 22 }} />
+      <div style={{ height: 18 }} />
 
       <section className="panel">
         <div className="panelHeader">
           <h2 className="h2">Estimated total</h2>
           <p className="pDark" style={{ marginTop: 8 }}>
-            Based on your selections (type: <strong>{normalized.websiteType}</strong>, pages:{" "}
-            <strong>{normalized.pages}</strong>).
+            {headline}
           </p>
         </div>
+
         <div className="panelBody">
-          <div style={{ fontSize: 44, fontWeight: 950, letterSpacing: "-1px" }}>
-            {money(result.total)}
-          </div>
-          <div className="smallNote" style={{ marginTop: 6 }}>
-            Typical range: {money(result.low)} – {money(result.high)}
-          </div>
-
-          <div style={{ height: 14 }} />
-
-          <div className="fieldLabel">Breakdown</div>
           <div style={{ display: "grid", gap: 10 }}>
-            {result.breakdown
-              .filter((b) => b.amount !== 0)
-              .map((b, idx) => (
-                <div key={idx} className="checkRow" style={{ justifyContent: "space-between" }}>
+            <div style={{ fontSize: 40, fontWeight: 950, letterSpacing: -0.6 }}>
+              ${pricing.total.toLocaleString()}
+            </div>
+            <div style={{ color: "rgba(255,255,255,0.72)", fontWeight: 900 }}>
+              Typical range: ${pricing.rangeLow.toLocaleString()} – ${pricing.rangeHigh.toLocaleString()}
+            </div>
+
+            <div style={{ height: 10 }} />
+
+            <div style={{ fontWeight: 950 }}>Breakdown</div>
+            <div style={{ display: "grid", gap: 10 }}>
+              {pricing.breakdown.map((b) => (
+                <div
+                  key={b.label}
+                  className="checkRow"
+                  style={{ justifyContent: "space-between" }}
+                >
                   <div className="checkLeft">
                     <div className="checkLabel">{b.label}</div>
                   </div>
-                  <div style={{ fontWeight: 950 }}>{b.amount > 0 ? `+ ${money(b.amount)}` : money(b.amount)}</div>
+                  <div style={{ fontWeight: 950, color: "rgba(255,255,255,0.85)" }}>
+                    {b.amt === 0 ? "$0" : `+ $${b.amt.toLocaleString()}`}
+                  </div>
                 </div>
               ))}
-          </div>
+            </div>
 
-          <div className="smallNote" style={{ marginTop: 12 }}>
-            Note: if budget is tight, we can do scope trade-offs or admin-only discounts (10–25%) without changing public tier pricing.
-          </div>
+            <div className="smallNote" style={{ marginTop: 10 }}>
+              Note: if budget is tight, we can do scope trade-offs or admin-only discounts (10–25%) without changing public tier pricing.
+              <br />
+              <strong>Next: add Scope Snapshot preview</strong>
+            </div>
 
-          <div className="smallNote" style={{ marginTop: 10 }}>
-            Starter caps apply only when: <strong>no add-ons</strong>, <strong>content ready</strong>, and{" "}
-            <strong>domain/hosting handled</strong>.
-          </div>
+            <div style={{ height: 14 }} />
 
-          <div className="smallNote" style={{ marginTop: 10, fontWeight: 900 }}>
-            Next: add Scope Snapshot preview
+            <div className="grid2">
+              <div>
+                <div className="fieldLabel">Email</div>
+                <input className="input" value={normalized.leadEmail} readOnly placeholder="you@domain.com" />
+              </div>
+
+              <div>
+                <div className="fieldLabel">Phone (optional)</div>
+                <input className="input" value={normalized.leadPhone} readOnly placeholder="(555) 555-5555" />
+              </div>
+            </div>
+
+            <div style={{ height: 14 }} />
+
+            <div className="row">
+              <Link className="btn btnPrimary" href="/build">
+                Get a Quote <span className="btnArrow">→</span>
+              </Link>
+              <Link className="btn btnGhost" href="/">
+                Back home
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
       <div style={{ height: 18 }} />
 
+      {/* TIERS */}
       <section className="panel">
         <div className="panelHeader">
           <h2 className="h2">Recommended tier</h2>
@@ -365,57 +403,49 @@ export default function EstimateClient({ intake, leadEmail, leadPhone }: Props) 
           <div className="tierGrid">
             <TierCard
               name="Essential Launch"
-              sub="Best for simple launches"
               price="$225–$850"
+              badge={pricing.tier === "essential" ? "Best fit" : "Tier"}
+              hot={pricing.tier === "essential"}
               bullets={[
-                "1 page starter available (no add-ons)",
+                "1 page starter available (no paid add-ons)",
                 "1–3 pages for small businesses",
                 "Mobile responsive + contact form",
                 "1 revision round (structured)",
               ]}
-              best={result.tier === "essential"}
             />
+
             <TierCard
               name="Growth Build"
-              sub="Most chosen"
               price="$550–$1,500"
+              badge={pricing.tier === "growth" ? "Best fit" : "Tier"}
+              hot={pricing.tier === "growth"}
               bullets={[
                 "4–6 pages/sections + stronger UX",
                 "Booking + lead capture improvements",
                 "Better SEO structure + analytics",
                 "2 revision rounds (structured)",
               ]}
-              best={result.tier === "growth"}
             />
+
             <TierCard
               name="Premium Platform"
-              sub="Best for scale"
               price="$1,700–$3,500+"
+              badge={pricing.tier === "premium" ? "Best fit" : "Tier"}
+              hot={pricing.tier === "premium"}
               bullets={[
                 "7+ pages or advanced features",
                 "Payments/membership/automation options",
                 "Integrations + custom workflows",
                 "2–3 revision rounds (by scope)",
               ]}
-              best={result.tier === "premium"}
             />
-          </div>
-
-          <div style={{ height: 16 }} />
-
-          <div className="row" style={{ justifyContent: "space-between" }}>
-            <Link className="btn btnGhost" href="/">
-              Back home
-            </Link>
-            <Link className="btn btnPrimary" href="/build">
-              Get a Quote <span className="btnArrow">→</span>
-            </Link>
           </div>
         </div>
       </section>
 
       <div style={{ height: 18 }} />
 
+      {/* DEBUG */}
       <section className="panel">
         <div className="panelHeader">
           <h2 className="h2">Debug</h2>
@@ -425,22 +455,21 @@ export default function EstimateClient({ intake, leadEmail, leadPhone }: Props) 
         </div>
         <div className="panelBody">
           <pre
+            className="textarea"
             style={{
-              margin: 0,
               whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-              fontSize: 12,
-              color: "rgba(255,255,255,0.82)",
+              margin: 0,
+              background: "rgba(10,12,18,0.55)",
             }}
           >
 {JSON.stringify(
   {
-    loadedFromLocalStorage: loaded,
+    loadedFromLocalStorage: ls,
     normalized,
-    tier: result.tier,
-    total: result.total,
-    qualifiesStarterCap: result.qualifiesStarterCap,
-    hasAddons: result.hasAddons,
+    tier: pricing.tier,
+    total: pricing.total,
+    qualifiesStarterCap: pricing.qualifiesStarterCap,
+    hasPaidAddons: pricing.hasPaidAddons,
   },
   null,
   2
@@ -448,44 +477,36 @@ export default function EstimateClient({ intake, leadEmail, leadPhone }: Props) 
           </pre>
         </div>
       </section>
-
-      <div className="footer">
-        © 2026 CrecyStudio. Built to convert. Clear scope. Clean builds.
-        <div className="footerLinks">
-          <Link href="/">Home</Link>
-          <Link href="/estimate">Estimate</Link>
-          <a href="mailto:hello@crecystudio.com">hello@crecystudio.com</a>
-        </div>
-      </div>
     </main>
   );
 }
 
 function TierCard({
   name,
-  sub,
   price,
   bullets,
-  best,
+  badge,
+  hot,
 }: {
   name: string;
-  sub: string;
   price: string;
   bullets: string[];
-  best?: boolean;
+  badge: string;
+  hot?: boolean;
 }) {
   return (
-    <div className={`card ${best ? "" : ""}`} style={{ borderColor: best ? "rgba(255,122,24,0.55)" : undefined }}>
+    <div className="card cardHover">
       <div className="cardInner">
         <div className="tierHead">
           <div>
             <div className="tierName">{name}</div>
-            <div className="tierSub">{sub}</div>
+            <div className="tierSub">{hot ? "Best fit based on scope." : "Tier"}</div>
           </div>
+
           <div style={{ textAlign: "right" }}>
             <div className="tierPrice">{price}</div>
-            <div className="badge" style={{ marginTop: 8, ...(best ? { borderColor: "rgba(255,122,24,0.50)", background: "rgba(255,122,24,0.16)" } : {}) }}>
-              {best ? "Best fit" : "Tier"}
+            <div className={`badge ${hot ? "badgeHot" : ""}`} style={{ marginTop: 10 }}>
+              {badge}
             </div>
           </div>
         </div>
