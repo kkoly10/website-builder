@@ -7,7 +7,7 @@ type IntakeLike = Record<string, any>;
 
 type Normalized = {
   websiteType: "business" | "ecommerce" | "portfolio" | "landing";
-  pages: "1" | "1-3" | "4-6" | "6-8" | "9+"; // ✅ 9+ stays 9+
+  pages: "1" | "1-3" | "4-6" | "6-8" | "9+";
   booking: boolean;
   payments: boolean;
   blog: boolean;
@@ -66,10 +66,8 @@ function normalizePages(raw: any): Normalized["pages"] {
   if (v === "6-8") return "6-8";
   if (v === "9+") return "9+";
 
-  // Older possible URL values
-  if (v === "4-6") return "4-6";
-  if (v === "7-10") return "9+"; // treat old 7-10 as large (still >= 9 feel)
-  if (v === "10+") return "9+";
+  // Older possible values
+  if (v === "7-10" || v === "10+") return "9+";
 
   return "1-3";
 }
@@ -92,8 +90,6 @@ function normalizeContentReady(raw: any): Normalized["contentReady"] {
   if (v === "ready") return "ready";
   if (v === "some") return "some";
   if (v === "not ready" || v === "not_ready" || v === "not") return "not_ready";
-  // from old estimate URLs:
-  if (v === "partial") return "some";
   return "some";
 }
 
@@ -115,41 +111,66 @@ function parseCsv(raw: any): string[] {
     .filter(Boolean);
 }
 
-function looksLikeRealIntake(intake: IntakeLike, leadEmail?: string) {
-  // Prefer URL/props intake when it looks intentional.
-  // This prevents stale localStorage from overriding fresh URLs.
-  if (leadEmail && leadEmail.trim()) return true;
-  const pages = String(intake?.pages ?? "");
-  const wt = String(intake?.websiteType ?? "");
-  const anyAddon =
-    toBool(intake?.booking) ||
-    toBool(intake?.payments) ||
-    toBool(intake?.blog) ||
-    toBool(intake?.membership) ||
-    String(intake?.wantsAutomation ?? "").toLowerCase().includes("yes") ||
-    String(intake?.integrations ?? "").length > 0;
-  return Boolean(pages || wt || anyAddon);
+/**
+ * ✅ Detect if the URL *actually* has query params that should override localStorage.
+ * This prevents “default intake props” (pages=1-3) from overwriting the real saved choice (pages=1).
+ */
+function hasMeaningfulQuery(): boolean {
+  if (typeof window === "undefined") return false;
+  const qs = new URLSearchParams(window.location.search);
+  if ([...qs.keys()].length === 0) return false;
+
+  // If any of these keys exist, we treat the query as intentional.
+  const meaningfulKeys = new Set([
+    "pages",
+    "websiteType",
+    "booking",
+    "payments",
+    "blog",
+    "membership",
+    "wantsAutomation",
+    "contentReady",
+    "domainHosting",
+    "timeline",
+    "intent",
+    "integrations",
+    "automationTypes",
+    "integrationOther",
+    "leadEmail",
+    "leadPhone",
+    "notes",
+  ]);
+
+  for (const k of qs.keys()) {
+    if (meaningfulKeys.has(k)) return true;
+  }
+  return false;
 }
 
 export default function EstimateClient({ intake, leadEmail = "", leadPhone = "" }: Props) {
   const [ls, setLs] = useState<any>(null);
+  const [queryWins, setQueryWins] = useState(false);
 
   useEffect(() => {
+    // localStorage
     try {
       const raw = window.localStorage.getItem(LS_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      setLs(parsed);
+      if (raw) setLs(JSON.parse(raw));
+      else setLs(null);
     } catch {
       setLs(null);
     }
+
+    // query detection
+    setQueryWins(hasMeaningfulQuery());
   }, []);
 
   const source = useMemo(() => {
-    // Prefer URL intake unless it's basically empty
-    const useProps = looksLikeRealIntake(intake, leadEmail);
-    return useProps ? intake : (ls ?? intake);
-  }, [intake, leadEmail, ls]);
+    // ✅ If URL has real query params: merge (LS as fallback, query props override)
+    // ✅ If URL has no query params: trust localStorage (real user choices)
+    if (queryWins) return { ...(ls ?? {}), ...(intake ?? {}) };
+    return ls ?? intake ?? {};
+  }, [queryWins, ls, intake]);
 
   const normalized: Normalized = useMemo(() => {
     return {
@@ -182,7 +203,7 @@ export default function EstimateClient({ intake, leadEmail = "", leadPhone = "" 
   const pricing = useMemo(() => {
     const n = normalized;
 
-    // ✅ Base by pages (your vision)
+    // ✅ Your vision: true base by pages (1 page NEVER becomes 400)
     const baseByPages: Record<Normalized["pages"], number> = {
       "1": 225,
       "1-3": 400,
@@ -200,13 +221,13 @@ export default function EstimateClient({ intake, leadEmail = "", leadPhone = "" 
     else if (n.pages === "6-8") breakdown.push({ label: "Larger scope base (6–8 pages)", amt: baseByPages["6-8"] });
     else breakdown.push({ label: "Large scope base (9+ pages)", amt: baseByPages["9+"] });
 
-    // Add-ons (features)
     const add = (label: string, amt: number) => {
       if (amt === 0) return;
       breakdown.push({ label, amt });
       total += amt;
     };
 
+    // Features
     if (n.booking) add("Booking / appointments", 150);
     if (n.payments) add("Payments / checkout", 250);
     if (n.blog) add("Blog / articles", 120);
@@ -224,27 +245,22 @@ export default function EstimateClient({ intake, leadEmail = "", leadPhone = "" 
     const light = integrations.filter((x) => LIGHT_INTEGRATIONS.has(x));
     const unknown = integrations.filter((x) => !HEAVY_INTEGRATIONS.has(x) && !LIGHT_INTEGRATIONS.has(x));
 
-    // Light = included (no cost, does NOT break starter caps)
     if (light.length) breakdown.push({ label: `Light embeds included (${light.length})`, amt: 0 });
-
-    // Unknown integrations: treat as light unless you type "Other integration"
     if (unknown.length) breakdown.push({ label: `Integrations noted (${unknown.length})`, amt: 0 });
 
-    // Heavy = paid add-on
+    // Heavy integrations are paid
     if (heavy.length) add(`Heavy integrations (${heavy.length})`, heavy.length * 60);
-
     if (n.integrationOther.trim()) add("Custom integration (other)", 60);
 
-    // Readiness (keep these SOFT for conversion)
+    // Readiness (soft)
     if (n.contentReady === "some") add("Partial content readiness", 60);
     if (n.contentReady === "not_ready") add("Content not ready (assist/setup)", 180);
-
     if (n.domainHosting === "no") add("Domain/hosting guidance", 60);
 
     // Rush
     if (n.timeline === "under14") add("Rush timeline (under 14 days)", 250);
 
-    // Starter cap rules (your rule: cap only when no paid add-ons + ready + domain/hosting handled)
+    // Starter cap rules (same as before)
     const hasPaidAddons =
       n.booking ||
       n.payments ||
@@ -261,18 +277,16 @@ export default function EstimateClient({ intake, leadEmail = "", leadPhone = "" 
       n.domainHosting === "yes" &&
       n.timeline !== "under14";
 
-    // Apply cap ONLY to the starter bases (exactly as you described)
     if (qualifiesStarterCap) {
+      // Cap keeps the correct base: 1 page stays 225, 1–3 stays 400
       total = baseByPages[n.pages];
-      // Strip anything that added cost after base (leave base + notes)
       const baseLine = breakdown[0];
       breakdown.length = 0;
       breakdown.push(baseLine);
       breakdown.push({ label: "Starter cap applied (ready + domain/hosting handled + no paid add-ons)", amt: 0 });
     } else {
       breakdown.push({
-        label:
-          "Starter caps apply only when: no paid add-ons, content ready, and domain/hosting handled.",
+        label: "Starter caps apply only when: no paid add-ons, content ready, and domain/hosting handled.",
         amt: 0,
       });
     }
@@ -339,11 +353,7 @@ export default function EstimateClient({ intake, leadEmail = "", leadPhone = "" 
             <div style={{ fontWeight: 950 }}>Breakdown</div>
             <div style={{ display: "grid", gap: 10 }}>
               {pricing.breakdown.map((b) => (
-                <div
-                  key={b.label}
-                  className="checkRow"
-                  style={{ justifyContent: "space-between" }}
-                >
+                <div key={b.label} className="checkRow" style={{ justifyContent: "space-between" }}>
                   <div className="checkLeft">
                     <div className="checkLabel">{b.label}</div>
                   </div>
@@ -390,7 +400,6 @@ export default function EstimateClient({ intake, leadEmail = "", leadPhone = "" 
 
       <div style={{ height: 18 }} />
 
-      {/* TIERS */}
       <section className="panel">
         <div className="panelHeader">
           <h2 className="h2">Recommended tier</h2>
@@ -445,7 +454,6 @@ export default function EstimateClient({ intake, leadEmail = "", leadPhone = "" 
 
       <div style={{ height: 18 }} />
 
-      {/* DEBUG */}
       <section className="panel">
         <div className="panelHeader">
           <h2 className="h2">Debug</h2>
@@ -456,14 +464,11 @@ export default function EstimateClient({ intake, leadEmail = "", leadPhone = "" 
         <div className="panelBody">
           <pre
             className="textarea"
-            style={{
-              whiteSpace: "pre-wrap",
-              margin: 0,
-              background: "rgba(10,12,18,0.55)",
-            }}
+            style={{ whiteSpace: "pre-wrap", margin: 0, background: "rgba(10,12,18,0.55)" }}
           >
 {JSON.stringify(
   {
+    queryWins,
     loadedFromLocalStorage: ls,
     normalized,
     tier: pricing.tier,
