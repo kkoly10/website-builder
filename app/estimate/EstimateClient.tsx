@@ -1,312 +1,386 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
-type IntakeLike = Record<string, any>;
+type YesNo = "yes" | "no";
+type PagesBucket = "1" | "1-3" | "4-6" | "6-8" | "9+";
 
 type Normalized = {
   websiteType: "business" | "ecommerce" | "portfolio" | "landing";
-  pages: "1" | "1-3" | "4-6" | "6-8" | "9+";
+  pages: PagesBucket;
+
   booking: boolean;
   payments: boolean;
   blog: boolean;
   membership: boolean;
-  wantsAutomation: "yes" | "no";
-  contentReady: "ready" | "some" | "not_ready";
-  domainHosting: "yes" | "no";
-  timeline: "2-3w" | "4+w" | "under14" | "2-4w";
-  intent: string;
-  integrations: string[];
+
+  wantsAutomation: YesNo;
   automationTypes: string[];
+
+  integrations: string[];
   integrationOther: string;
-  notes: string;
+
+  contentReady: "ready" | "some" | "not_ready";
+  domainHosting: YesNo;
+
+  timeline: string;
+  intent: string;
+
   leadEmail: string;
   leadPhone: string;
+  notes: string;
 };
 
-type Props = {
-  intake?: IntakeLike;
-  leadEmail?: string;
-  leadPhone?: string;
-};
+type BreakdownLine = { label: string; amount: number };
 
 const LS_KEY = "crecystudio:intake";
 
-/** Only allow real values to override (prevents undefined from clobbering LS) */
-function pickDefined(obj: any) {
-  const out: Record<string, any> = {};
-  if (!obj || typeof obj !== "object") return out;
-  for (const [k, v] of Object.entries(obj)) {
-    if (v === undefined || v === null) continue;
-    out[k] = v;
-  }
-  return out;
+/** FREE automations (never counted as paid add-ons) */
+const FREE_AUTOMATIONS = new Set(["Email confirmations", "Email confirmation"]);
+
+/** Integrations that are FREE if selected */
+const FREE_INTEGRATIONS = new Set(["Google Maps / location", "Analytics (GA4 / Pixel)"]);
+
+function money(n: number) {
+  return `$${Math.round(n).toLocaleString()}`;
 }
 
-function readQuery() {
-  if (typeof window === "undefined") return {};
-  const qs = new URLSearchParams(window.location.search);
-  const out: Record<string, string> = {};
-  for (const [k, v] of qs.entries()) {
-    if (!v) continue;
-    // join duplicates
-    out[k] = out[k] ? `${out[k]},${v}` : v;
-  }
-  return out;
-}
-
-function toBool(v: any) {
-  const s = String(v ?? "").toLowerCase().trim();
+function toBool(v: any): boolean {
+  if (typeof v === "boolean") return v;
+  const s = String(v ?? "").trim().toLowerCase();
   return s === "1" || s === "true" || s === "yes" || s === "on";
 }
 
-function normalizePages(raw: any): Normalized["pages"] {
-  const v = String(raw ?? "").trim();
-
-  // values from /build
-  if (v === "1") return "1";
-  if (v === "1-3") return "1-3";
-  if (v === "4-5" || v === "4-6") return "4-6";
-  if (v === "6-8") return "6-8";
-  if (v === "9+") return "9+";
-
-  // legacy values
-  if (v === "7-10" || v === "10+") return "9+";
-
-  return "1-3";
+function normYesNo(v: any, fallback: YesNo = "no"): YesNo {
+  const s = String(v ?? "").trim().toLowerCase();
+  if (s === "yes" || s === "true" || s === "1" || s === "on") return "yes";
+  if (s === "no" || s === "false" || s === "0" || s === "off") return "no";
+  return fallback;
 }
 
-function normalizeWebsiteType(raw: any): Normalized["websiteType"] {
-  const v = String(raw ?? "").toLowerCase().trim();
-  if (v.includes("ecom")) return "ecommerce";
-  if (v.includes("port")) return "portfolio";
-  if (v.includes("land")) return "landing";
+function normWebsiteType(v: any): Normalized["websiteType"] {
+  const s = String(v ?? "").trim().toLowerCase();
+  if (s.includes("ecom")) return "ecommerce";
+  if (s.includes("port")) return "portfolio";
+  if (s.includes("land")) return "landing";
   return "business";
 }
 
-function normalizeYesNo(raw: any): "yes" | "no" {
-  const v = String(raw ?? "").toLowerCase().trim();
-  return v === "yes" || v === "true" || v === "1" ? "yes" : "no";
-}
-
-function normalizeContentReady(raw: any): Normalized["contentReady"] {
-  const v = String(raw ?? "").toLowerCase().trim();
-  if (v === "ready") return "ready";
-  if (v === "some") return "some";
-  if (v === "not ready" || v === "not_ready" || v === "not") return "not_ready";
+function normContentReady(v: any): Normalized["contentReady"] {
+  const s = String(v ?? "").trim().toLowerCase();
+  if (s.includes("ready")) return "ready";
+  if (s.includes("not")) return "not_ready";
   return "some";
 }
 
-function normalizeTimeline(raw: any): Normalized["timeline"] {
-  const v = String(raw ?? "").toLowerCase().trim();
-  if (v.includes("under")) return "under14";
-  if (v.includes("4+")) return "4+w";
-  if (v.includes("2-3")) return "2-3w";
-  if (v.includes("2-4")) return "2-4w";
-  return "2-4w";
-}
-
-function parseCsv(raw: any): string[] {
-  if (!raw) return [];
-  if (Array.isArray(raw)) return raw.map(String).filter(Boolean);
-  return String(raw)
+function splitList(v: any): string[] {
+  if (Array.isArray(v)) return v.map(String).map((x) => x.trim()).filter(Boolean);
+  const s = String(v ?? "").trim();
+  if (!s) return [];
+  return s
     .split(",")
-    .map((s) => s.trim())
+    .map((x) => x.trim())
     .filter(Boolean);
 }
 
+function parsePagesMax(raw: any): { max: number; raw: string } {
+  const s = String(raw ?? "").trim();
+  if (!s) return { max: 3, raw: "" };
+  if (s.includes("+")) {
+    // treat "9+" as 9+ (big bucket)
+    const n = parseInt(s.replace("+", ""), 10);
+    return { max: Number.isFinite(n) ? n : 9, raw: s };
+  }
+  if (s.includes("-")) {
+    const [a, b] = s.split("-").map((x) => parseInt(x.trim(), 10));
+    const max = Number.isFinite(b) ? b : Number.isFinite(a) ? a : 3;
+    return { max, raw: s };
+  }
+  const n = parseInt(s, 10);
+  return { max: Number.isFinite(n) ? n : 3, raw: s };
+}
+
+function bucketPages(max: number): PagesBucket {
+  if (max <= 1) return "1";
+  if (max <= 3) return "1-3";
+  if (max <= 6) return "4-6";
+  if (max <= 8) return "6-8";
+  return "9+";
+}
+
 /**
- * Light integrations = simple embeds (do NOT break starter caps).
- * Heavy integrations = require setup/testing/custom work (DO break caps).
+ * Price model (your new vision):
+ * - pages=1 => base 225 always (add-ons stack)
+ * - pages=1–3 => base 400 always (add-ons stack)
+ * - pages=4–6 => base 550 + add-ons
+ * - pages=6–8 => base 550 + scope bump + add-ons
+ * - pages=9+ => base 550 + bigger scope bump + add-ons
+ *
+ * Included rules:
+ * - Email confirmations is free
+ * - Blog is $0 when pages >= 4–6 (light blog)
  */
-const LIGHT_INTEGRATIONS = new Set([
-  "Mailchimp / email list",
-  "Analytics (GA4 / Pixel)",
-  "Google Maps / location",
-]);
+function computeEstimate(n: Normalized) {
+  const lines: BreakdownLine[] = [];
 
-const HEAVY_INTEGRATIONS = new Set([
-  "Calendly / scheduling",
-  "Stripe payments",
-  "PayPal payments",
-  "CRM integration",
-  "Live chat",
-]);
+  // Base + scope
+  let base = 0;
+  let scopeBump = 0;
 
-export default function EstimateClient({ intake = {}, leadEmail = "", leadPhone = "" }: Props) {
-  const [ls, setLs] = useState<any>(null);
-  const [query, setQuery] = useState<Record<string, string>>({});
+  if (n.pages === "1") {
+    base = 225;
+    lines.push({ label: "One-page starter base", amount: 225 });
+  } else if (n.pages === "1-3") {
+    base = 400;
+    lines.push({ label: "Starter base (1–3 pages)", amount: 400 });
+  } else {
+    base = 550;
+    lines.push({ label: "Base (4–6 pages starts here)", amount: 550 });
 
+    if (n.pages === "6-8") {
+      scopeBump = 250;
+      lines.push({ label: "Larger scope (6–8)", amount: scopeBump });
+    }
+    if (n.pages === "9+") {
+      scopeBump = 500;
+      lines.push({ label: "Large scope (9+)", amount: scopeBump });
+    }
+  }
+
+  // Website type adjustments (small, not aggressive)
+  if (n.websiteType === "ecommerce") {
+    lines.push({ label: "Ecommerce baseline", amount: 150 });
+  } else if (n.websiteType === "portfolio") {
+    lines.push({ label: "Portfolio baseline", amount: 0 });
+  } else if (n.websiteType === "landing") {
+    lines.push({ label: "Landing focus", amount: 0 });
+  } else {
+    lines.push({ label: "Business site baseline", amount: 0 });
+  }
+
+  // FEATURES (paid)
+  if (n.booking) lines.push({ label: "Booking / appointments", amount: 120 });
+  if (n.payments) lines.push({ label: "Payments / checkout", amount: 250 });
+  if (n.membership) lines.push({ label: "Membership / gated content", amount: 400 });
+
+  // Blog: paid only for <= 1–3 pages; included ($0) for 4–6+
+  if (n.blog) {
+    if (n.pages === "1" || n.pages === "1-3") {
+      lines.push({ label: "Blog / articles", amount: 120 });
+    } else {
+      lines.push({ label: "Light blog (included at 4–6+)", amount: 0 });
+    }
+  }
+
+  // Automations
+  const wantsAuto = n.wantsAutomation === "yes";
+  const freeChosen = n.automationTypes.filter((x) => FREE_AUTOMATIONS.has(x));
+  const paidAutoTypes = n.automationTypes.filter((x) => !FREE_AUTOMATIONS.has(x));
+
+  if (wantsAuto) {
+    // Email confirmations free (and does not trigger paid automation fees)
+    if (freeChosen.length > 0 && paidAutoTypes.length === 0) {
+      lines.push({ label: "Email confirmations (included)", amount: 0 });
+    }
+
+    // Paid automations only if they selected something besides confirmations
+    if (paidAutoTypes.length > 0) {
+      lines.push({ label: "Automations setup", amount: 200 });
+      lines.push({ label: `Automation types (${paidAutoTypes.length})`, amount: paidAutoTypes.length * 40 });
+    }
+  }
+
+  // Integrations
+  // If they picked Stripe/PayPal in integrations, treat it as Payments (so estimate matches intent)
+  const integrations = [...n.integrations];
+  const hasStripe = integrations.includes("Stripe payments");
+  const hasPayPal = integrations.includes("PayPal payments");
+  const hasCalendly = integrations.includes("Calendly / scheduling");
+
+  const inferredPayments = (hasStripe || hasPayPal) && !n.payments;
+  const inferredBooking = hasCalendly && !n.booking;
+
+  // Prevent double counting if inferred
+  const filteredIntegrations = integrations.filter(
+    (x) => x !== "Stripe payments" && x !== "PayPal payments" && x !== "Calendly / scheduling"
+  );
+
+  if (inferredPayments) lines.push({ label: "Payments (from selected integration)", amount: 250 });
+  if (inferredBooking) lines.push({ label: "Booking (from selected integration)", amount: 120 });
+
+  // Integration fees (simple ones free)
+  let paidIntegrationCount = 0;
+  let integrationTotal = 0;
+
+  for (const i of filteredIntegrations) {
+    if (FREE_INTEGRATIONS.has(i)) {
+      // free
+      continue;
+    }
+    paidIntegrationCount += 1;
+    // light setup vs heavier setup
+    const amt =
+      i === "Mailchimp / email list" ? 60 :
+      i === "Live chat" ? 40 :
+      40; // default small setup
+    integrationTotal += amt;
+  }
+
+  if (paidIntegrationCount > 0) {
+    lines.push({ label: `Integrations (${paidIntegrationCount})`, amount: integrationTotal });
+  }
+
+  // Readiness (keep “soft” for conversion)
+  if (n.contentReady === "some") lines.push({ label: "Partial content readiness", amount: 60 });
+  if (n.contentReady === "not_ready") lines.push({ label: "Content not ready (help needed)", amount: 160 });
+
+  if (n.domainHosting === "no") lines.push({ label: "Domain/hosting guidance", amount: 60 });
+  if (n.domainHosting === "yes") lines.push({ label: "Domain/hosting handled by client", amount: 0 });
+
+  // Total
+  const total = lines.reduce((sum, l) => sum + l.amount, 0);
+
+  // Typical range (tight)
+  const low = Math.max(0, Math.round(total * 0.90));
+  const high = Math.max(low + 1, Math.round(total * 1.15));
+
+  // Paid add-ons detector (for messaging)
+  const hasPaidAutomation = paidAutoTypes.length > 0;
+  const hasPaidBlog = n.blog && (n.pages === "1" || n.pages === "1-3");
+  const hasPaidIntegrations = paidIntegrationCount > 0;
+
+  const hasPaidAddons =
+    n.booking ||
+    n.payments ||
+    n.membership ||
+    hasPaidAutomation ||
+    hasPaidBlog ||
+    hasPaidIntegrations ||
+    inferredPayments ||
+    inferredBooking ||
+    n.contentReady !== "ready" ||
+    n.domainHosting !== "yes";
+
+  // Tier recommendation
+  const pagesMax =
+    n.pages === "1" ? 1 :
+    n.pages === "1-3" ? 3 :
+    n.pages === "4-6" ? 6 :
+    n.pages === "6-8" ? 8 :
+    12;
+
+  let tier: "essential" | "growth" | "premium" = "essential";
+
+  if (pagesMax >= 9 || n.payments || n.membership || hasPaidAutomation) tier = "premium";
+  else if (pagesMax >= 4 || n.booking || hasPaidIntegrations || n.websiteType === "ecommerce") tier = "growth";
+  else tier = total > 850 ? "growth" : "essential";
+
+  return { total, low, high, lines, tier, hasPaidAddons };
+}
+
+export default function EstimateClient() {
+  const sp = useSearchParams();
+
+  const [loadedFromLocalStorage, setLoadedFromLocalStorage] = useState<any>(null);
+
+  // Load localStorage intake
   useEffect(() => {
-    // localStorage
     try {
       const raw = window.localStorage.getItem(LS_KEY);
-      setLs(raw ? JSON.parse(raw) : null);
+      if (!raw) {
+        setLoadedFromLocalStorage(null);
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      setLoadedFromLocalStorage(parsed && typeof parsed === "object" ? parsed : null);
     } catch {
-      setLs(null);
+      setLoadedFromLocalStorage(null);
     }
-
-    // query
-    setQuery(readQuery());
   }, []);
 
-  /** Merge priority: intake (lowest) -> localStorage -> query (highest) */
-  const source = useMemo(() => {
-    const intakeClean = pickDefined(intake);
-    const lsKeep = ls && typeof ls === "object" ? ls : {};
-    const queryClean = pickDefined(query);
+  // Parse query ONLY for keys present (so query can “win” cleanly)
+  const parsedQuery = useMemo(() => {
+    const has = (k: string) => sp.has(k);
+    const get = (k: string) => sp.get(k);
 
-    // IMPORTANT: intake must NOT overwrite LS. Query overrides both.
-    return {
-      ...intakeClean,
-      ...lsKeep,
-      ...queryClean,
-    };
-  }, [intake, ls, query]);
+    const q: any = {};
 
+    if (has("websiteType")) q.websiteType = get("websiteType");
+    if (has("pages")) q.pages = get("pages");
+
+    if (has("booking")) q.booking = get("booking");
+    if (has("payments")) q.payments = get("payments");
+    if (has("blog")) q.blog = get("blog");
+    if (has("membership")) q.membership = get("membership");
+
+    if (has("wantsAutomation")) q.wantsAutomation = get("wantsAutomation");
+    if (has("automationTypes")) q.automationTypes = get("automationTypes");
+
+    if (has("integrations")) q.integrations = get("integrations");
+    if (has("integrationOther")) q.integrationOther = get("integrationOther");
+
+    if (has("contentReady")) q.contentReady = get("contentReady");
+    if (has("domainHosting")) q.domainHosting = get("domainHosting");
+
+    if (has("timeline")) q.timeline = get("timeline");
+    if (has("intent")) q.intent = get("intent");
+
+    if (has("leadEmail")) q.leadEmail = get("leadEmail");
+    if (has("leadPhone")) q.leadPhone = get("leadPhone");
+    if (has("notes")) q.notes = get("notes");
+
+    return q;
+  }, [sp]);
+
+  // Merge order: localStorage -> URL query (query wins)
+  const merged = useMemo(() => {
+    const base = loadedFromLocalStorage && typeof loadedFromLocalStorage === "object" ? loadedFromLocalStorage : {};
+    return { ...base, ...parsedQuery };
+  }, [loadedFromLocalStorage, parsedQuery]);
+
+  // Normalize merged source into what pricing uses
   const normalized: Normalized = useMemo(() => {
-    return {
-      websiteType: normalizeWebsiteType(source?.websiteType),
-      pages: normalizePages(source?.pages),
+    const { max } = parsePagesMax(merged.pages);
+    const pages = bucketPages(max);
 
-      booking: toBool(source?.booking),
-      payments: toBool(source?.payments),
-      blog: toBool(source?.blog),
-      membership: toBool(source?.membership),
-
-      wantsAutomation: normalizeYesNo(source?.wantsAutomation),
-
-      contentReady: normalizeContentReady(source?.contentReady),
-      domainHosting: normalizeYesNo(source?.domainHosting),
-
-      timeline: normalizeTimeline(source?.timeline),
-
-      intent: String(source?.intent ?? "business"),
-      integrations: parseCsv(source?.integrations),
-      automationTypes: parseCsv(source?.automationTypes),
-      integrationOther: String(source?.integrationOther ?? ""),
-
-      notes: String(source?.notes ?? ""),
-      leadEmail: String(leadEmail || source?.leadEmail || "").trim(),
-      leadPhone: String(leadPhone || source?.leadPhone || "").trim(),
-    };
-  }, [source, leadEmail, leadPhone]);
-
-  const pricing = useMemo(() => {
-    const n = normalized;
-
-    // ✅ Your vision: base is truly by pages
-    const baseByPages: Record<Normalized["pages"], number> = {
-      "1": 225,
-      "1-3": 400,
-      "4-6": 550,
-      "6-8": 800,
-      "9+": 1100, // adjust later if you want
-    };
-
-    const breakdown: { label: string; amt: number }[] = [];
-    let total = baseByPages[n.pages];
-
-    if (n.pages === "1") breakdown.push({ label: "One-page starter base", amt: baseByPages["1"] });
-    else if (n.pages === "1-3") breakdown.push({ label: "Starter base (1–3 pages)", amt: baseByPages["1-3"] });
-    else if (n.pages === "4-6") breakdown.push({ label: "Growth base (4–6 pages)", amt: baseByPages["4-6"] });
-    else if (n.pages === "6-8") breakdown.push({ label: "Larger scope base (6–8 pages)", amt: baseByPages["6-8"] });
-    else breakdown.push({ label: "Large scope base (9+ pages)", amt: baseByPages["9+"] });
-
-    const add = (label: string, amt: number) => {
-      if (!amt) return;
-      breakdown.push({ label, amt });
-      total += amt;
-    };
-
-    // Features
-    if (n.booking) add("Booking / appointments", 150);
-    if (n.payments) add("Payments / checkout", 250);
-    if (n.blog) add("Blog / articles", 120);
-    if (n.membership) add("Membership / gated content", 400);
-
-    // Automations
-    if (n.wantsAutomation === "yes") {
-      add("Automations setup", 200);
-      if (n.automationTypes.length) add(`Automation types (${n.automationTypes.length})`, n.automationTypes.length * 40);
-    }
-
-    // Integrations
-    const integrations = n.integrations || [];
-    const heavy = integrations.filter((x) => HEAVY_INTEGRATIONS.has(x));
-    const light = integrations.filter((x) => LIGHT_INTEGRATIONS.has(x));
-    const unknown = integrations.filter((x) => !HEAVY_INTEGRATIONS.has(x) && !LIGHT_INTEGRATIONS.has(x));
-
-    if (light.length) breakdown.push({ label: `Light embeds included (${light.length})`, amt: 0 });
-    if (unknown.length) breakdown.push({ label: `Integrations noted (${unknown.length})`, amt: 0 });
-
-    // Heavy integrations are paid
-    if (heavy.length) add(`Heavy integrations (${heavy.length})`, heavy.length * 60);
-    if (n.integrationOther.trim()) add("Custom integration (other)", 60);
-
-    // Readiness (soft)
-    if (n.contentReady === "some") add("Partial content readiness", 60);
-    if (n.contentReady === "not_ready") add("Content not ready (assist/setup)", 180);
-    if (n.domainHosting === "no") add("Domain/hosting guidance", 60);
-
-    // Rush
-    if (n.timeline === "under14") add("Rush timeline (under 14 days)", 250);
-
-    // Starter cap rules
-    const hasPaidAddons =
-      n.booking ||
-      n.payments ||
-      n.blog ||
-      n.membership ||
-      n.wantsAutomation === "yes" ||
-      heavy.length > 0 ||
-      Boolean(n.integrationOther.trim());
-
-    const qualifiesStarterCap =
-      (n.pages === "1" || n.pages === "1-3") &&
-      !hasPaidAddons &&
-      n.contentReady === "ready" &&
-      n.domainHosting === "yes" &&
-      n.timeline !== "under14";
-
-    if (qualifiesStarterCap) {
-      total = baseByPages[n.pages];
-      const baseLine = breakdown[0];
-      breakdown.length = 0;
-      breakdown.push(baseLine);
-      breakdown.push({ label: "Starter cap applied (ready + domain/hosting handled + no paid add-ons)", amt: 0 });
-    } else {
-      breakdown.push({
-        label: "Starter caps apply only when: no paid add-ons, content ready, and domain/hosting handled.",
-        amt: 0,
-      });
-    }
-
-    const rangeLow = Math.round(total * 0.9);
-    const rangeHigh = Math.round(total * 1.15);
-
-    // Tier recommendation
-    let tier: "essential" | "growth" | "premium" = "essential";
-    if (n.pages === "4-6" || n.pages === "6-8") tier = "growth";
-    if (n.pages === "9+" || n.payments || n.membership || n.wantsAutomation === "yes") tier = "premium";
-    if (total >= 1700) tier = "premium";
+    const integrations = splitList(merged.integrations);
 
     return {
-      total,
-      rangeLow,
-      rangeHigh,
-      tier,
-      breakdown,
-      qualifiesStarterCap,
-      hasPaidAddons,
-    };
-  }, [normalized]);
+      websiteType: normWebsiteType(merged.websiteType),
+      pages,
 
-  const headline = `Based on your selections (type: ${normalized.websiteType}, pages: ${normalized.pages}).`;
+      booking: toBool(merged.booking),
+      payments: toBool(merged.payments),
+      blog: toBool(merged.blog),
+      membership: toBool(merged.membership),
+
+      wantsAutomation: normYesNo(merged.wantsAutomation, "no"),
+      automationTypes: splitList(merged.automationTypes),
+
+      integrations,
+      integrationOther: String(merged.integrationOther ?? "").trim(),
+
+      contentReady: normContentReady(merged.contentReady),
+      domainHosting: normYesNo(merged.domainHosting, "no"),
+
+      timeline: String(merged.timeline ?? "").trim() || "2-3w",
+      intent: String(merged.intent ?? "").trim() || "business",
+
+      leadEmail: String(merged.leadEmail ?? "").trim(),
+      leadPhone: String(merged.leadPhone ?? "").trim(),
+      notes: String(merged.notes ?? "").trim(),
+    };
+  }, [merged]);
+
+  const estimate = useMemo(() => computeEstimate(normalized), [normalized]);
+
+  const headerMessage =
+    "One-page starter from $225 (no paid add-ons). 1–3 pages from $400 (no paid add-ons). 4–6 pages start at $550 + add-ons. We’ll confirm final scope together before you pay a deposit.";
 
   return (
-    <main className="container" style={{ padding: "42px 0 80px" }}>
+    <main className="container" style={{ padding: "48px 0 80px" }}>
       <div className="kicker">
         <span className="kickerDot" aria-hidden="true" />
         CrecyStudio • Instant Estimate
@@ -315,95 +389,178 @@ export default function EstimateClient({ intake = {}, leadEmail = "", leadPhone 
       <div style={{ height: 12 }} />
 
       <h1 className="h1">Your estimate</h1>
-      <p className="p" style={{ maxWidth: 860, marginTop: 10 }}>
-        One-page starter from <strong>$225</strong> (no paid add-ons).{" "}
-        <strong>1–3 pages from $400</strong> (no paid add-ons).{" "}
-        <strong>4–6 pages start at $550</strong> + add-ons. We’ll confirm final scope together before you pay a deposit.
+      <p className="p" style={{ maxWidth: 900, marginTop: 10 }}>
+        {headerMessage}
       </p>
 
       <div style={{ height: 18 }} />
 
       <section className="panel">
         <div className="panelHeader">
-          <h2 className="h2">Estimated total</h2>
-          <p className="pDark" style={{ marginTop: 8 }}>
-            {headline}
-          </p>
+          <div className="pDark">
+            Based on your selections (type: <strong>{normalized.websiteType}</strong>, pages:{" "}
+            <strong>{normalized.pages}</strong>).
+          </div>
+
+          <div style={{ height: 10 }} />
+
+          <div style={{ display: "flex", gap: 14, alignItems: "baseline", flexWrap: "wrap" }}>
+            <div style={{ fontWeight: 950, fontSize: 34, letterSpacing: "-0.8px" }}>
+              {money(estimate.total)}
+            </div>
+            <div className="pDark">
+              Typical range: {money(estimate.low)} – {money(estimate.high)}
+            </div>
+          </div>
         </div>
 
         <div className="panelBody">
+          <div style={{ fontWeight: 950, marginBottom: 10 }}>Breakdown</div>
+
           <div style={{ display: "grid", gap: 10 }}>
-            <div style={{ fontSize: 40, fontWeight: 950, letterSpacing: -0.6 }}>
-              ${pricing.total.toLocaleString()}
-            </div>
-            <div style={{ color: "rgba(255,255,255,0.72)", fontWeight: 900 }}>
-              Typical range: ${pricing.rangeLow.toLocaleString()} – ${pricing.rangeHigh.toLocaleString()}
-            </div>
-
-            <div style={{ height: 10 }} />
-
-            <div style={{ fontWeight: 950 }}>Breakdown</div>
-            <div style={{ display: "grid", gap: 10 }}>
-              {pricing.breakdown.map((b) => (
-                <div key={b.label} className="checkRow" style={{ justifyContent: "space-between" }}>
-                  <div className="checkLeft">
-                    <div className="checkLabel">{b.label}</div>
-                  </div>
-                  <div style={{ fontWeight: 950, color: "rgba(255,255,255,0.85)" }}>
-                    {b.amt === 0 ? "$0" : `+ $${b.amt.toLocaleString()}`}
-                  </div>
+            {estimate.lines.map((l) => (
+              <div
+                key={l.label}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "rgba(255,255,255,0.03)",
+                  borderRadius: 14,
+                  padding: "12px 12px",
+                }}
+              >
+                <div style={{ color: "rgba(255,255,255,0.86)", fontWeight: 850 }}>
+                  {l.label}
                 </div>
-              ))}
-            </div>
-
-            <div style={{ height: 14 }} />
-
-            <div className="grid2">
-              <div>
-                <div className="fieldLabel">Email</div>
-                <input className="input" value={normalized.leadEmail} readOnly placeholder="you@domain.com" />
+                <div style={{ color: "rgba(255,255,255,0.86)", fontWeight: 950 }}>
+                  {l.amount === 0 ? "$0" : `+ ${money(l.amount)}`}
+                </div>
               </div>
+            ))}
+          </div>
 
-              <div>
-                <div className="fieldLabel">Phone (optional)</div>
-                <input className="input" value={normalized.leadPhone} readOnly placeholder="(555) 555-5555" />
-              </div>
-            </div>
+          <div className="smallNote" style={{ marginTop: 14 }}>
+            Note: if budget is tight, we can do scope trade-offs or admin-only discounts (10–25%) without changing public tier pricing.
+          </div>
 
-            <div style={{ height: 14 }} />
-
-            <div className="row">
-              <Link className="btn btnPrimary" href="/build">
-                Get a Quote <span className="btnArrow">→</span>
-              </Link>
-              <Link className="btn btnGhost" href="/">
-                Back home
-              </Link>
-            </div>
+          <div className="smallNote" style={{ marginTop: 8, fontWeight: 900 }}>
+            Next: add Scope Snapshot preview
           </div>
         </div>
       </section>
 
       <div style={{ height: 18 }} />
 
+      {/* Recommended tier cards */}
+      <section className="sectionSm">
+        <div className="kicker">
+          <span className="kickerDot" aria-hidden="true" />
+          Recommended tier
+        </div>
+        <div style={{ height: 10 }} />
+        <div className="pDark">Best fit based on scope.</div>
+
+        <div style={{ height: 14 }} />
+
+        <div className="tierGrid">
+          <TierCard
+            title="Essential Launch"
+            sub="Best for simple launches"
+            price="$225–$850"
+            best={estimate.tier === "essential"}
+            bullets={[
+              "1 page starter available (no paid add-ons)",
+              "1–3 pages for small businesses",
+              "Mobile responsive + contact form",
+              "1 revision round (structured)",
+            ]}
+          />
+          <TierCard
+            title="Growth Build"
+            sub="Most chosen"
+            price="$550–$1,500"
+            best={estimate.tier === "growth"}
+            bullets={[
+              "4–6 pages/sections + stronger UX",
+              "Booking + lead capture improvements",
+              "Better SEO structure + analytics",
+              "2 revision rounds (structured)",
+            ]}
+          />
+          <TierCard
+            title="Premium Platform"
+            sub="Best for scale"
+            price="$1,700–$3,500+"
+            best={estimate.tier === "premium"}
+            bullets={[
+              "7+ pages or advanced features",
+              "Payments/membership/automation options",
+              "Integrations + custom workflows",
+              "2–3 revision rounds (by scope)",
+            ]}
+          />
+        </div>
+      </section>
+
+      <div style={{ height: 18 }} />
+
+      {/* Actions */}
       <section className="panel">
         <div className="panelHeader">
-          <h2 className="h2">Debug</h2>
-          <p className="pDark" style={{ marginTop: 8 }}>
-            This shows the real merge order: intake → localStorage → URL query.
-          </p>
+          <div style={{ fontWeight: 950 }}>Next step</div>
+          <div className="smallNote">If you want, send this estimate and we’ll lock scope together.</div>
+        </div>
+        <div className="panelBody" style={{ display: "grid", gap: 12 }}>
+          <div>
+            <div className="fieldLabel">Email</div>
+            <input className="input" value={normalized.leadEmail} readOnly placeholder="you@company.com" />
+          </div>
+          <div>
+            <div className="fieldLabel">Phone (optional)</div>
+            <input className="input" value={normalized.leadPhone} readOnly placeholder="(555) 555-5555" />
+          </div>
+
+          <div className="row" style={{ justifyContent: "space-between" }}>
+            <Link className="btn btnGhost" href="/">
+              Back home
+            </Link>
+
+            <Link className="btn btnPrimary" href="/build">
+              Get a Quote <span className="btnArrow">→</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <div style={{ height: 18 }} />
+
+      {/* Debug */}
+      <section className="panel">
+        <div className="panelHeader">
+          <div style={{ fontWeight: 950 }}>Debug</div>
+          <div className="smallNote">
+            Merge order: localStorage → URL query (query wins). Email confirmations are free.
+          </div>
         </div>
         <div className="panelBody">
-          <pre className="textarea" style={{ whiteSpace: "pre-wrap", margin: 0, background: "rgba(10,12,18,0.55)" }}>
+          <pre
+            style={{
+              margin: 0,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              fontSize: 12,
+              color: "rgba(255,255,255,0.80)",
+            }}
+          >
 {JSON.stringify(
   {
-    locationSearch: typeof window !== "undefined" ? window.location.search : "",
-    intake,
-    loadedFromLocalStorage: ls,
-    parsedQuery: query,
-    mergedSource: source,
+    loadedFromLocalStorage: loadedFromLocalStorage ?? null,
+    parsedQuery,
     normalized,
-    total: pricing.total,
+    tier: estimate.tier,
+    total: estimate.total,
   },
   null,
   2
@@ -411,6 +568,63 @@ export default function EstimateClient({ intake = {}, leadEmail = "", leadPhone 
           </pre>
         </div>
       </section>
+
+      <div className="footer">
+        © {new Date().getFullYear()} CrecyStudio. Built to convert. Clear scope. Clean builds.
+        <div className="footerLinks">
+          <Link href="/">Home</Link>
+          <Link href="/estimate">Estimate</Link>
+          <a href="mailto:hello@crecystudio.com">hello@crecystudio.com</a>
+        </div>
+      </div>
     </main>
+  );
+}
+
+function TierCard({
+  title,
+  sub,
+  price,
+  bullets,
+  best,
+}: {
+  title: string;
+  sub: string;
+  price: string;
+  bullets: string[];
+  best?: boolean;
+}) {
+  return (
+    <div className="card cardHover">
+      <div className="cardInner">
+        <div className="tierHead">
+          <div>
+            <div className="tierName">{title}</div>
+            <div className="tierSub">{sub}</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div className="tierPrice">{price}</div>
+            <div className={`badge ${best ? "badgeHot" : ""}`} style={{ marginTop: 10 }}>
+              {best ? "Best fit" : "Tier"}
+            </div>
+          </div>
+        </div>
+
+        <ul className="tierList">
+          {bullets.map((b) => (
+            <li key={b}>{b}</li>
+          ))}
+        </ul>
+
+        <div className="tierCTA">
+          <Link className="btn btnPrimary" href="/build">
+            Get a Quote <span className="btnArrow">→</span>
+          </Link>
+          <Link className="btn btnGhost" href="/">
+            Back home
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }
