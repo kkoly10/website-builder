@@ -53,7 +53,7 @@ type FormState = {
   assetsSource: AssetsSource;
   referenceWebsite: string;
 
-  domainHosting: YesNo; // ✅ NEW: ask it
+  domainHosting: YesNo;
 
   decisionMaker: YesNo;
   stakeholdersCount: "1" | "2-3" | "4+";
@@ -105,7 +105,6 @@ const LS_KEY = "crecystudio:intake";
 export default function BuildPage() {
   const router = useRouter();
 
-  // steps: 0 chooser, 1..6 intake, 7 contact, 8 review
   const [step, setStep] = useState<number>(0);
 
   const [form, setForm] = useState<FormState>({
@@ -134,7 +133,7 @@ export default function BuildPage() {
     assetsSource: "Client provides",
     referenceWebsite: "",
 
-    domainHosting: "Yes", // default: help more people qualify for starter if they're ready
+    domainHosting: "Yes",
 
     decisionMaker: "Yes",
     stakeholdersCount: "1",
@@ -148,7 +147,6 @@ export default function BuildPage() {
     leadPhone: "",
   });
 
-  // load prior draft (optional)
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(LS_KEY);
@@ -160,7 +158,6 @@ export default function BuildPage() {
     } catch {}
   }, []);
 
-  // persist draft
   useEffect(() => {
     try {
       window.localStorage.setItem(LS_KEY, JSON.stringify(form));
@@ -239,7 +236,7 @@ export default function BuildPage() {
       wantsAutomation: form.wantsAutomation,
 
       contentReady: form.contentReady,
-      domainHosting: form.domainHosting, // ✅ ensure estimate can qualify starter caps
+      domainHosting: form.domainHosting,
 
       design: form.design,
       timeline: form.timeline,
@@ -291,7 +288,6 @@ export default function BuildPage() {
 
       <div style={{ height: 22 }} />
 
-      {/* STEP 0 */}
       {step === 0 && (
         <section className="grid2">
           <div className="panel" style={{ cursor: "pointer" }} onClick={() => goMode("guided")}>
@@ -302,7 +298,14 @@ export default function BuildPage() {
               </p>
             </div>
             <div className="panelBody">
-              <Link className="btn btnPrimary" href="#" onClick={(e) => { e.preventDefault(); goMode("guided"); }}>
+              <Link
+                className="btn btnPrimary"
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goMode("guided");
+                }}
+              >
                 Start guided intake <span className="btnArrow">→</span>
               </Link>
             </div>
@@ -316,7 +319,14 @@ export default function BuildPage() {
               </p>
             </div>
             <div className="panelBody">
-              <Link className="btn btnGhost" href="#" onClick={(e) => { e.preventDefault(); goMode("known"); }}>
+              <Link
+                className="btn btnGhost"
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goMode("known");
+                }}
+              >
                 Start scope intake <span className="btnArrow">→</span>
               </Link>
             </div>
@@ -324,11 +334,14 @@ export default function BuildPage() {
         </section>
       )}
 
-      {/* STEP 1 */}
       {step === 1 && (
         <section className="panel">
           <div className="panelHeader">
-            <h2 className="h2">{form.mode === "guided" ? "What are you trying to achieve?" : "What type of website do you need?"}</h2>
+            <h2 className="h2">
+              {form.mode === "guided"
+                ? "What are you trying to achieve?"
+                : "What type of website do you need?"}
+            </h2>
             <p className="pDark" style={{ marginTop: 8 }}>
               This helps us recommend the best setup.
             </p>
@@ -341,7 +354,9 @@ export default function BuildPage() {
                   <select
                     className="select"
                     value={form.intent}
-                    onChange={(e) => setForm((f) => ({ ...f, intent: e.target.value as Intent }))}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, intent: e.target.value as Intent }))
+                    }
                   >
                     {INTENTS.map((i) => (
                       <option key={i} value={i}>
@@ -357,7 +372,9 @@ export default function BuildPage() {
                     <input
                       className="input"
                       value={form.intentOther}
-                      onChange={(e) => setForm((f) => ({ ...f, intentOther: e.target.value }))}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, intentOther: e.target.value }))
+                      }
                       placeholder="e.g., recruiting, investor credibility, event promotion…"
                     />
                   </div>
@@ -373,7 +390,12 @@ export default function BuildPage() {
                 <select
                   className="select"
                   value={form.websiteType}
-                  onChange={(e) => setForm((f) => ({ ...f, websiteType: e.target.value as WebsiteType }))}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      websiteType: e.target.value as WebsiteType,
+                    }))
+                  }
                 >
                   {WEBSITE_TYPES.map((t) => (
                     <option key={t} value={t}>
@@ -387,7 +409,6 @@ export default function BuildPage() {
         </section>
       )}
 
-      {/* STEP 2 */}
       {step === 2 && (
         <section className="panel">
           <div className="panelHeader">
@@ -406,7 +427,8 @@ export default function BuildPage() {
 
                 <ul className="tierList" style={{ marginTop: 0 }}>
                   <li>
-                    <strong>Website type:</strong> {suggested.websiteType ?? form.websiteType}
+                    <strong>Website type:</strong>{" "}
+                    {suggested.websiteType ?? form.websiteType}
                   </li>
                   {suggested.booking && <li>Booking enabled</li>}
                   {suggested.payments && <li>Payments enabled</li>}
@@ -425,7 +447,9 @@ export default function BuildPage() {
               <select
                 className="select"
                 value={form.pages}
-                onChange={(e) => setForm((f) => ({ ...f, pages: e.target.value as Pages }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, pages: e.target.value as Pages }))
+                }
               >
                 {PAGES.map((p) => (
                   <option key={p} value={p}>
@@ -438,7 +462,6 @@ export default function BuildPage() {
         </section>
       )}
 
-      {/* STEP 3 */}
       {step === 3 && (
         <section className="panel">
           <div className="panelHeader">
@@ -449,21 +472,42 @@ export default function BuildPage() {
           </div>
 
           <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-            <CheckRow label="Booking / appointments" checked={form.booking} onChange={(v) => setForm((f) => ({ ...f, booking: v }))} />
-            <CheckRow label="Payments / checkout" checked={form.payments} onChange={(v) => setForm((f) => ({ ...f, payments: v }))} />
-            <CheckRow label="Blog / articles" checked={form.blog} onChange={(v) => setForm((f) => ({ ...f, blog: v }))} />
-            <CheckRow label="Membership / gated content" checked={form.membership} onChange={(v) => setForm((f) => ({ ...f, membership: v }))} />
+            <CheckRow
+              label="Booking / appointments"
+              checked={form.booking}
+              onChange={(v) => setForm((f) => ({ ...f, booking: v }))}
+            />
+            <CheckRow
+              label="Payments / checkout"
+              checked={form.payments}
+              onChange={(v) => setForm((f) => ({ ...f, payments: v }))}
+            />
+            <CheckRow
+              label="Blog / articles"
+              checked={form.blog}
+              onChange={(v) => setForm((f) => ({ ...f, blog: v }))}
+            />
+            <CheckRow
+              label="Membership / gated content"
+              checked={form.membership}
+              onChange={(v) => setForm((f) => ({ ...f, membership: v }))}
+            />
 
             <div style={{ marginTop: 10 }}>
               <div className="fieldLabel">Do you want automations? (advanced)</div>
               <select
                 className="select"
                 value={form.wantsAutomation}
-                onChange={(e) => setForm((f) => ({ ...f, wantsAutomation: e.target.value as YesNo }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, wantsAutomation: e.target.value as YesNo }))
+                }
               >
                 <option value="No">No</option>
                 <option value="Yes">Yes</option>
               </select>
+              <div className="smallNote" style={{ marginTop: 8 }}>
+                Email confirmations are included/free.
+              </div>
             </div>
 
             {form.wantsAutomation === "Yes" && (
@@ -505,7 +549,9 @@ export default function BuildPage() {
                   <input
                     className="input"
                     value={form.integrationOther}
-                    onChange={(e) => setForm((f) => ({ ...f, integrationOther: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, integrationOther: e.target.value }))
+                    }
                     placeholder="e.g., a specific CRM, booking platform, inventory tool…"
                   />
                 </div>
@@ -515,7 +561,6 @@ export default function BuildPage() {
         </section>
       )}
 
-      {/* STEP 4 */}
       {step === 4 && (
         <section className="panel">
           <div className="panelHeader">
@@ -532,7 +577,9 @@ export default function BuildPage() {
                 className="input"
                 placeholder="https://example.com"
                 value={form.referenceWebsite}
-                onChange={(e) => setForm((f) => ({ ...f, referenceWebsite: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, referenceWebsite: e.target.value }))
+                }
               />
             </div>
 
@@ -542,7 +589,9 @@ export default function BuildPage() {
                 <select
                   className="select"
                   value={form.hasLogo}
-                  onChange={(e) => setForm((f) => ({ ...f, hasLogo: e.target.value as YesNo }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, hasLogo: e.target.value as YesNo }))
+                  }
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
@@ -554,7 +603,12 @@ export default function BuildPage() {
                 <select
                   className="select"
                   value={form.hasBrandGuide}
-                  onChange={(e) => setForm((f) => ({ ...f, hasBrandGuide: e.target.value as YesNo }))}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      hasBrandGuide: e.target.value as YesNo,
+                    }))
+                  }
                 >
                   <option value="No">No</option>
                   <option value="Yes">Yes</option>
@@ -568,7 +622,12 @@ export default function BuildPage() {
                 <select
                   className="select"
                   value={form.contentReady}
-                  onChange={(e) => setForm((f) => ({ ...f, contentReady: e.target.value as ContentReady }))}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      contentReady: e.target.value as ContentReady,
+                    }))
+                  }
                 >
                   <option value="Ready">Ready</option>
                   <option value="Some">Some</option>
@@ -581,7 +640,12 @@ export default function BuildPage() {
                 <select
                   className="select"
                   value={form.assetsSource}
-                  onChange={(e) => setForm((f) => ({ ...f, assetsSource: e.target.value as AssetsSource }))}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      assetsSource: e.target.value as AssetsSource,
+                    }))
+                  }
                 >
                   <option value="Client provides">Client provides</option>
                   <option value="Stock">Stock</option>
@@ -590,26 +654,26 @@ export default function BuildPage() {
               </div>
             </div>
 
-            {/* ✅ NEW: domain/hosting question */}
             <div style={{ marginBottom: 14 }}>
               <div className="fieldLabel">Do you already have domain + hosting handled?</div>
               <select
                 className="select"
                 value={form.domainHosting}
-                onChange={(e) => setForm((f) => ({ ...f, domainHosting: e.target.value as YesNo }))}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    domainHosting: e.target.value as YesNo,
+                  }))
+                }
               >
                 <option value="Yes">Yes</option>
                 <option value="No">No (I need guidance/help)</option>
               </select>
-              <div className="smallNote" style={{ marginTop: 8 }}>
-                Starter caps ($225/$400) apply only when domain/hosting is already handled.
-              </div>
             </div>
           </div>
         </section>
       )}
 
-      {/* STEP 5 */}
       {step === 5 && (
         <section className="panel">
           <div className="panelHeader">
@@ -626,7 +690,12 @@ export default function BuildPage() {
                 <select
                   className="select"
                   value={form.decisionMaker}
-                  onChange={(e) => setForm((f) => ({ ...f, decisionMaker: e.target.value as YesNo }))}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      decisionMaker: e.target.value as YesNo,
+                    }))
+                  }
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
@@ -638,7 +707,12 @@ export default function BuildPage() {
                 <select
                   className="select"
                   value={form.stakeholdersCount}
-                  onChange={(e) => setForm((f) => ({ ...f, stakeholdersCount: e.target.value as any }))}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      stakeholdersCount: e.target.value as any,
+                    }))
+                  }
                 >
                   <option value="1">1</option>
                   <option value="2-3">2–3</option>
@@ -653,7 +727,9 @@ export default function BuildPage() {
                 <select
                   className="select"
                   value={form.design}
-                  onChange={(e) => setForm((f) => ({ ...f, design: e.target.value as Design }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, design: e.target.value as Design }))
+                  }
                 >
                   {DESIGNS.map((d) => (
                     <option key={d} value={d}>
@@ -668,7 +744,12 @@ export default function BuildPage() {
                 <select
                   className="select"
                   value={form.timeline}
-                  onChange={(e) => setForm((f) => ({ ...f, timeline: e.target.value as Timeline }))}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      timeline: e.target.value as Timeline,
+                    }))
+                  }
                 >
                   {TIMELINES.map((t) => (
                     <option key={t} value={t}>
@@ -693,7 +774,6 @@ export default function BuildPage() {
         </section>
       )}
 
-      {/* STEP 6 */}
       {step === 6 && (
         <section className="panel">
           <div className="panelHeader">
@@ -709,7 +789,8 @@ export default function BuildPage() {
             </div>
             <ul className="tierList" style={{ marginTop: 0 }}>
               <li>
-                Mode: <strong>{form.mode === "guided" ? "Help me decide" : "I know what I need"}</strong>
+                Mode:{" "}
+                <strong>{form.mode === "guided" ? "Help me decide" : "I know what I need"}</strong>
               </li>
               <li>
                 Website type: <strong>{form.websiteType}</strong>
@@ -748,7 +829,6 @@ export default function BuildPage() {
         </section>
       )}
 
-      {/* STEP 7 */}
       {step === 7 && (
         <section className="panel">
           <div className="panelHeader">
@@ -786,7 +866,6 @@ export default function BuildPage() {
         </section>
       )}
 
-      {/* STEP 8 */}
       {step === 8 && (
         <section className="panel">
           <div className="panelHeader">
@@ -806,7 +885,6 @@ export default function BuildPage() {
         </section>
       )}
 
-      {/* NAV */}
       {step > 0 && (
         <div className="row" style={{ marginTop: 18, justifyContent: "space-between" }}>
           <button className="btn btnGhost" onClick={back}>
