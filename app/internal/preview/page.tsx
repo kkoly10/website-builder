@@ -11,6 +11,12 @@ function pick(sp: SearchParams, key: string) {
   return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
 }
 
+function firstLead(leads: any) {
+  // Supabase can return related rows as an array even for “one lead per quote”
+  if (!leads) return null;
+  return Array.isArray(leads) ? leads[0] ?? null : leads;
+}
+
 export default async function InternalPreviewPage({
   searchParams,
 }: {
@@ -44,12 +50,12 @@ export default async function InternalPreviewPage({
       .eq("id", quoteId)
       .single();
 
-    if (error) {
+    if (error || !data) {
       return (
         <main style={{ padding: 32, fontFamily: "ui-sans-serif, system-ui" }}>
           <h1 style={{ fontSize: 22, marginBottom: 10 }}>Internal Preview</h1>
           <p style={{ color: "#b00" }}>
-            Could not load quote <code>{quoteId}</code>: {error.message}
+            Could not load quote <code>{quoteId}</code>: {error?.message ?? "Not found"}
           </p>
           <p style={{ marginTop: 18 }}>
             Tip: open <code>/internal/preview</code> to see recent quote IDs.
@@ -57,6 +63,8 @@ export default async function InternalPreviewPage({
         </main>
       );
     }
+
+    const lead = firstLead((data as any).leads);
 
     return (
       <main style={{ padding: 32, fontFamily: "ui-sans-serif, system-ui" }}>
@@ -78,28 +86,31 @@ export default async function InternalPreviewPage({
         >
           <div style={{ fontWeight: 800, marginBottom: 6 }}>Quote</div>
           <div>
-            <strong>ID:</strong> <code>{data.id}</code>
+            <strong>ID:</strong> <code>{(data as any).id}</code>
           </div>
           <div>
-            <strong>Created:</strong> {new Date(data.created_at).toLocaleString()}
+            <strong>Created:</strong>{" "}
+            {new Date((data as any).created_at).toLocaleString()}
           </div>
           <div>
-            <strong>Status:</strong> {data.status}
+            <strong>Status:</strong> {(data as any).status}
           </div>
           <div>
-            <strong>Tier:</strong> {data.tier_recommended ?? "(none)"}
+            <strong>Tier:</strong> {(data as any).tier_recommended ?? "(none)"}
           </div>
           <div>
-            <strong>Total:</strong> ${data.estimate_total}{" "}
+            <strong>Total:</strong> ${(data as any).estimate_total}{" "}
             <span style={{ opacity: 0.7 }}>
-              (range ${data.estimate_low} – ${data.estimate_high})
+              (range ${(data as any).estimate_low} – ${(data as any).estimate_high})
             </span>
           </div>
+
           <div style={{ marginTop: 10 }}>
             <strong>Lead:</strong>{" "}
             <span>
-              {data.leads?.email ?? "(missing)"}{" "}
-              {data.leads?.phone ? `• ${data.leads.phone}` : ""}
+              {lead?.email ?? "(missing)"}
+              {lead?.phone ? ` • ${lead.phone}` : ""}
+              {lead?.name ? ` • ${lead.name}` : ""}
             </span>
           </div>
         </div>
@@ -109,7 +120,7 @@ export default async function InternalPreviewPage({
             intake_normalized
           </summary>
           <pre style={{ whiteSpace: "pre-wrap" }}>
-            {JSON.stringify(data.intake_normalized ?? {}, null, 2)}
+            {JSON.stringify((data as any).intake_normalized ?? {}, null, 2)}
           </pre>
         </details>
 
@@ -118,14 +129,14 @@ export default async function InternalPreviewPage({
             scope_snapshot
           </summary>
           <pre style={{ whiteSpace: "pre-wrap" }}>
-            {JSON.stringify(data.scope_snapshot ?? {}, null, 2)}
+            {JSON.stringify((data as any).scope_snapshot ?? {}, null, 2)}
           </pre>
         </details>
 
         <details>
           <summary style={{ cursor: "pointer", fontWeight: 800 }}>debug</summary>
           <pre style={{ whiteSpace: "pre-wrap" }}>
-            {JSON.stringify(data.debug ?? {}, null, 2)}
+            {JSON.stringify((data as any).debug ?? {}, null, 2)}
           </pre>
         </details>
       </main>
@@ -161,35 +172,44 @@ export default async function InternalPreviewPage({
         <p style={{ color: "#b00" }}>Error loading quotes: {error.message}</p>
       ) : (
         <div style={{ display: "grid", gap: 10 }}>
-          {(quotes ?? []).map((q: any) => (
-            <a
-              key={q.id}
-              href={`/internal/preview?quoteId=${q.id}`}
-              style={{
-                display: "block",
-                border: "1px solid rgba(0,0,0,0.12)",
-                borderRadius: 14,
-                padding: 14,
-                textDecoration: "none",
-                color: "inherit",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                <div style={{ fontWeight: 800 }}>
-                  ${q.estimate_total}{" "}
-                  <span style={{ opacity: 0.7 }}>
-                    • {q.tier_recommended ?? "—"} • {q.status}
-                  </span>
+          {(quotes ?? []).map((q: any) => {
+            const lead = firstLead(q.leads);
+            return (
+              <a
+                key={q.id}
+                href={`/internal/preview?quoteId=${q.id}`}
+                style={{
+                  display: "block",
+                  border: "1px solid rgba(0,0,0,0.12)",
+                  borderRadius: 14,
+                  padding: 14,
+                  textDecoration: "none",
+                  color: "inherit",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ fontWeight: 800 }}>
+                    ${q.estimate_total}{" "}
+                    <span style={{ opacity: 0.7 }}>
+                      • {q.tier_recommended ?? "—"} • {q.status}
+                    </span>
+                  </div>
+                  <div style={{ opacity: 0.7 }}>
+                    {new Date(q.created_at).toLocaleString()}
+                  </div>
                 </div>
-                <div style={{ opacity: 0.7 }}>
-                  {new Date(q.created_at).toLocaleString()}
+                <div style={{ marginTop: 6, opacity: 0.8 }}>
+                  {lead?.email ?? "(no lead email)"} • <code>{q.id}</code>
                 </div>
-              </div>
-              <div style={{ marginTop: 6, opacity: 0.8 }}>
-                {q.leads?.email ?? "(no lead email)"} • <code>{q.id}</code>
-              </div>
-            </a>
-          ))}
+              </a>
+            );
+          })}
         </div>
       )}
     </main>
