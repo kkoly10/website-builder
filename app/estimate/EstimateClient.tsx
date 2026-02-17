@@ -26,30 +26,35 @@ type Normalized = {
 };
 
 type Props = {
-  intake: IntakeLike;
+  intake?: IntakeLike;
   leadEmail?: string;
   leadPhone?: string;
 };
 
 const LS_KEY = "crecystudio:intake";
 
-/**
- * Light integrations = simple embeds (do NOT break starter caps).
- * Heavy integrations = require setup/testing/custom work (DO break caps).
- */
-const LIGHT_INTEGRATIONS = new Set([
-  "Mailchimp / email list",
-  "Analytics (GA4 / Pixel)",
-  "Google Maps / location",
-]);
+/** Only allow real values to override (prevents undefined from clobbering LS) */
+function pickDefined(obj: any) {
+  const out: Record<string, any> = {};
+  if (!obj || typeof obj !== "object") return out;
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined || v === null) continue;
+    out[k] = v;
+  }
+  return out;
+}
 
-const HEAVY_INTEGRATIONS = new Set([
-  "Calendly / scheduling",
-  "Stripe payments",
-  "PayPal payments",
-  "CRM integration",
-  "Live chat",
-]);
+function readQuery() {
+  if (typeof window === "undefined") return {};
+  const qs = new URLSearchParams(window.location.search);
+  const out: Record<string, string> = {};
+  for (const [k, v] of qs.entries()) {
+    if (!v) continue;
+    // join duplicates
+    out[k] = out[k] ? `${out[k]},${v}` : v;
+  }
+  return out;
+}
 
 function toBool(v: any) {
   const s = String(v ?? "").toLowerCase().trim();
@@ -59,14 +64,14 @@ function toBool(v: any) {
 function normalizePages(raw: any): Normalized["pages"] {
   const v = String(raw ?? "").trim();
 
-  // Values from /build
+  // values from /build
   if (v === "1") return "1";
   if (v === "1-3") return "1-3";
   if (v === "4-5" || v === "4-6") return "4-6";
   if (v === "6-8") return "6-8";
   if (v === "9+") return "9+";
 
-  // Older possible values
+  // legacy values
   if (v === "7-10" || v === "10+") return "9+";
 
   return "1-3";
@@ -112,65 +117,53 @@ function parseCsv(raw: any): string[] {
 }
 
 /**
- * ✅ Detect if the URL *actually* has query params that should override localStorage.
- * This prevents “default intake props” (pages=1-3) from overwriting the real saved choice (pages=1).
+ * Light integrations = simple embeds (do NOT break starter caps).
+ * Heavy integrations = require setup/testing/custom work (DO break caps).
  */
-function hasMeaningfulQuery(): boolean {
-  if (typeof window === "undefined") return false;
-  const qs = new URLSearchParams(window.location.search);
-  if ([...qs.keys()].length === 0) return false;
+const LIGHT_INTEGRATIONS = new Set([
+  "Mailchimp / email list",
+  "Analytics (GA4 / Pixel)",
+  "Google Maps / location",
+]);
 
-  // If any of these keys exist, we treat the query as intentional.
-  const meaningfulKeys = new Set([
-    "pages",
-    "websiteType",
-    "booking",
-    "payments",
-    "blog",
-    "membership",
-    "wantsAutomation",
-    "contentReady",
-    "domainHosting",
-    "timeline",
-    "intent",
-    "integrations",
-    "automationTypes",
-    "integrationOther",
-    "leadEmail",
-    "leadPhone",
-    "notes",
-  ]);
+const HEAVY_INTEGRATIONS = new Set([
+  "Calendly / scheduling",
+  "Stripe payments",
+  "PayPal payments",
+  "CRM integration",
+  "Live chat",
+]);
 
-  for (const k of qs.keys()) {
-    if (meaningfulKeys.has(k)) return true;
-  }
-  return false;
-}
-
-export default function EstimateClient({ intake, leadEmail = "", leadPhone = "" }: Props) {
+export default function EstimateClient({ intake = {}, leadEmail = "", leadPhone = "" }: Props) {
   const [ls, setLs] = useState<any>(null);
-  const [queryWins, setQueryWins] = useState(false);
+  const [query, setQuery] = useState<Record<string, string>>({});
 
   useEffect(() => {
     // localStorage
     try {
       const raw = window.localStorage.getItem(LS_KEY);
-      if (raw) setLs(JSON.parse(raw));
-      else setLs(null);
+      setLs(raw ? JSON.parse(raw) : null);
     } catch {
       setLs(null);
     }
 
-    // query detection
-    setQueryWins(hasMeaningfulQuery());
+    // query
+    setQuery(readQuery());
   }, []);
 
+  /** Merge priority: intake (lowest) -> localStorage -> query (highest) */
   const source = useMemo(() => {
-    // ✅ If URL has real query params: merge (LS as fallback, query props override)
-    // ✅ If URL has no query params: trust localStorage (real user choices)
-    if (queryWins) return { ...(ls ?? {}), ...(intake ?? {}) };
-    return ls ?? intake ?? {};
-  }, [queryWins, ls, intake]);
+    const intakeClean = pickDefined(intake);
+    const lsKeep = ls && typeof ls === "object" ? ls : {};
+    const queryClean = pickDefined(query);
+
+    // IMPORTANT: intake must NOT overwrite LS. Query overrides both.
+    return {
+      ...intakeClean,
+      ...lsKeep,
+      ...queryClean,
+    };
+  }, [intake, ls, query]);
 
   const normalized: Normalized = useMemo(() => {
     return {
@@ -203,13 +196,13 @@ export default function EstimateClient({ intake, leadEmail = "", leadPhone = "" 
   const pricing = useMemo(() => {
     const n = normalized;
 
-    // ✅ Your vision: true base by pages (1 page NEVER becomes 400)
+    // ✅ Your vision: base is truly by pages
     const baseByPages: Record<Normalized["pages"], number> = {
       "1": 225,
       "1-3": 400,
       "4-6": 550,
       "6-8": 800,
-      "9+": 1100,
+      "9+": 1100, // adjust later if you want
     };
 
     const breakdown: { label: string; amt: number }[] = [];
@@ -222,7 +215,7 @@ export default function EstimateClient({ intake, leadEmail = "", leadPhone = "" 
     else breakdown.push({ label: "Large scope base (9+ pages)", amt: baseByPages["9+"] });
 
     const add = (label: string, amt: number) => {
-      if (amt === 0) return;
+      if (!amt) return;
       breakdown.push({ label, amt });
       total += amt;
     };
@@ -260,7 +253,7 @@ export default function EstimateClient({ intake, leadEmail = "", leadPhone = "" 
     // Rush
     if (n.timeline === "under14") add("Rush timeline (under 14 days)", 250);
 
-    // Starter cap rules (same as before)
+    // Starter cap rules
     const hasPaidAddons =
       n.booking ||
       n.payments ||
@@ -278,7 +271,6 @@ export default function EstimateClient({ intake, leadEmail = "", leadPhone = "" 
       n.timeline !== "under14";
 
     if (qualifiesStarterCap) {
-      // Cap keeps the correct base: 1 page stays 225, 1–3 stays 400
       total = baseByPages[n.pages];
       const baseLine = breakdown[0];
       breakdown.length = 0;
@@ -364,12 +356,6 @@ export default function EstimateClient({ intake, leadEmail = "", leadPhone = "" 
               ))}
             </div>
 
-            <div className="smallNote" style={{ marginTop: 10 }}>
-              Note: if budget is tight, we can do scope trade-offs or admin-only discounts (10–25%) without changing public tier pricing.
-              <br />
-              <strong>Next: add Scope Snapshot preview</strong>
-            </div>
-
             <div style={{ height: 14 }} />
 
             <div className="grid2">
@@ -402,79 +388,22 @@ export default function EstimateClient({ intake, leadEmail = "", leadPhone = "" 
 
       <section className="panel">
         <div className="panelHeader">
-          <h2 className="h2">Recommended tier</h2>
-          <p className="pDark" style={{ marginTop: 8 }}>
-            Best fit based on scope.
-          </p>
-        </div>
-
-        <div className="panelBody">
-          <div className="tierGrid">
-            <TierCard
-              name="Essential Launch"
-              price="$225–$850"
-              badge={pricing.tier === "essential" ? "Best fit" : "Tier"}
-              hot={pricing.tier === "essential"}
-              bullets={[
-                "1 page starter available (no paid add-ons)",
-                "1–3 pages for small businesses",
-                "Mobile responsive + contact form",
-                "1 revision round (structured)",
-              ]}
-            />
-
-            <TierCard
-              name="Growth Build"
-              price="$550–$1,500"
-              badge={pricing.tier === "growth" ? "Best fit" : "Tier"}
-              hot={pricing.tier === "growth"}
-              bullets={[
-                "4–6 pages/sections + stronger UX",
-                "Booking + lead capture improvements",
-                "Better SEO structure + analytics",
-                "2 revision rounds (structured)",
-              ]}
-            />
-
-            <TierCard
-              name="Premium Platform"
-              price="$1,700–$3,500+"
-              badge={pricing.tier === "premium" ? "Best fit" : "Tier"}
-              hot={pricing.tier === "premium"}
-              bullets={[
-                "7+ pages or advanced features",
-                "Payments/membership/automation options",
-                "Integrations + custom workflows",
-                "2–3 revision rounds (by scope)",
-              ]}
-            />
-          </div>
-        </div>
-      </section>
-
-      <div style={{ height: 18 }} />
-
-      <section className="panel">
-        <div className="panelHeader">
           <h2 className="h2">Debug</h2>
           <p className="pDark" style={{ marginTop: 8 }}>
-            This is exactly what we loaded from localStorage (if present) + what we normalized.
+            This shows the real merge order: intake → localStorage → URL query.
           </p>
         </div>
         <div className="panelBody">
-          <pre
-            className="textarea"
-            style={{ whiteSpace: "pre-wrap", margin: 0, background: "rgba(10,12,18,0.55)" }}
-          >
+          <pre className="textarea" style={{ whiteSpace: "pre-wrap", margin: 0, background: "rgba(10,12,18,0.55)" }}>
 {JSON.stringify(
   {
-    queryWins,
+    locationSearch: typeof window !== "undefined" ? window.location.search : "",
+    intake,
     loadedFromLocalStorage: ls,
+    parsedQuery: query,
+    mergedSource: source,
     normalized,
-    tier: pricing.tier,
     total: pricing.total,
-    qualifiesStarterCap: pricing.qualifiesStarterCap,
-    hasPaidAddons: pricing.hasPaidAddons,
   },
   null,
   2
@@ -483,54 +412,5 @@ export default function EstimateClient({ intake, leadEmail = "", leadPhone = "" 
         </div>
       </section>
     </main>
-  );
-}
-
-function TierCard({
-  name,
-  price,
-  bullets,
-  badge,
-  hot,
-}: {
-  name: string;
-  price: string;
-  bullets: string[];
-  badge: string;
-  hot?: boolean;
-}) {
-  return (
-    <div className="card cardHover">
-      <div className="cardInner">
-        <div className="tierHead">
-          <div>
-            <div className="tierName">{name}</div>
-            <div className="tierSub">{hot ? "Best fit based on scope." : "Tier"}</div>
-          </div>
-
-          <div style={{ textAlign: "right" }}>
-            <div className="tierPrice">{price}</div>
-            <div className={`badge ${hot ? "badgeHot" : ""}`} style={{ marginTop: 10 }}>
-              {badge}
-            </div>
-          </div>
-        </div>
-
-        <ul className="tierList">
-          {bullets.map((b) => (
-            <li key={b}>{b}</li>
-          ))}
-        </ul>
-
-        <div className="tierCTA">
-          <Link className="btn btnPrimary" href="/build">
-            Get a Quote <span className="btnArrow">→</span>
-          </Link>
-          <Link className="btn btnGhost" href="/">
-            Back home
-          </Link>
-        </div>
-      </div>
-    </div>
   );
 }
