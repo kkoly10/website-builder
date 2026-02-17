@@ -12,8 +12,8 @@ type Intake = {
   intent?: string;
   intentOther?: string;
 
-  websiteType?: string; // business/ecommerce/portfolio/landing (or Title Case from build form)
-  pages?: string;       // 1-3, 4-6, 7-10, 9+, 10+ (or build values 4-5, 6-8, 9+)
+  websiteType?: string; // business/ecommerce/portfolio/landing (or Title Case)
+  pages?: string;       // 1, 1-3, 4-6, 7-10, 9+, 10+ (or build values 4-5, 6-8, 9+)
 
   booking?: boolean;
   payments?: boolean;
@@ -22,16 +22,15 @@ type Intake = {
 
   wantsAutomation?: string; // yes/no or Yes/No
   contentReady?: string;    // ready/some/not ready OR Ready/Some/Not ready
-  hasBrand?: string;        // yes/no (if present from estimate query)
-  domainHosting?: string;   // yes/no OR Yes/No OR handled states
-  timeline?: string;        // 2-4w / rush OR build values
+  hasBrand?: string;        // yes/no (optional)
+  domainHosting?: string;   // yes/no OR Yes/No
+  timeline?: string;        // 2-4w / rush OR "2-3 weeks" etc
 
   leadEmail?: string;
   leadPhone?: string;
 
   notes?: string;
 
-  // optional arrays from build/page.tsx
   integrations?: string[] | string;
 };
 
@@ -53,46 +52,41 @@ function asBool(v: any) {
 function normYesNo(v: any, fallback: "yes" | "no" = "no") {
   const s = String(v ?? "").trim().toLowerCase();
   if (!s) return fallback;
-  if (s === "y" || s === "yes" || s === "true" || s === "1") return "yes";
-  if (s === "n" || s === "no" || s === "false" || s === "0") return "no";
+  if (["y", "yes", "true", "1", "on"].includes(s)) return "yes";
+  if (["n", "no", "false", "0", "off"].includes(s)) return "no";
   return fallback;
 }
 
 function normContentReady(v: any): "ready" | "some" | "not" {
   const s = String(v ?? "").toLowerCase();
-  if (s.includes("ready") && !s.includes("not")) return "ready";
   if (s.includes("not")) return "not";
+  if (s.includes("ready")) return "ready";
   if (s.includes("some")) return "some";
-  // your estimate defaults:
   return "some";
 }
 
 /**
- * IMPORTANT: preserve 9+ as 9+ (don’t map it to 7–10).
  * Build form uses: 1-3, 4-5, 6-8, 9+
- * Estimate page/query might use: 1-3, 4-6, 7-10, 10+
+ * Estimate can use: 1, 1-3, 4-6, 7-10, 9+, 10+
  */
-function normPages(v: any): "1-3" | "4-6" | "7-10" | "9+" | "10+" {
+function normPages(v: any): "1" | "1-3" | "4-6" | "7-10" | "9+" | "10+" {
   const s = String(v ?? "").trim();
   if (!s) return "1-3";
-
   const low = s.toLowerCase();
 
-  // preserve explicit 9+ and 10+
-  if (low.includes("9+") || (low.includes("9") && low.includes("+"))) return "9+";
-  if (low.includes("10+") || (low.includes("10") && low.includes("+"))) return "10+";
-
-  // normalize common ranges
+  if (low === "1" || low.startsWith("1 page") || low === "one") return "1";
   if (low.includes("1-3")) return "1-3";
+
   if (low.includes("4-6") || low.includes("4-5")) return "4-6";
 
-  // build’s 6-8 => treat as 7-10 (closer to premium effort)
-  if (low.includes("6-8")) return "7-10";
-  if (low.includes("7-10")) return "7-10";
+  // map 6-8 into 7-10 bucket
+  if (low.includes("6-8") || low.includes("7-10")) return "7-10";
 
-  // if someone typed 9+ without plus formatting
-  if (low === "9" || low.startsWith("9")) return "9+";
+  // preserve 9+ and 10+
+  if (low.includes("10+") || (low.includes("10") && low.includes("+"))) return "10+";
+  if (low.includes("9+") || (low.includes("9") && low.includes("+"))) return "9+";
 
+  // fallback
   return "1-3";
 }
 
@@ -105,12 +99,10 @@ function normWebsiteType(v: any): "business" | "ecommerce" | "portfolio" | "land
   return "business";
 }
 
-function normTimeline(v: any): "2-4w" | "4+w" | "rush" {
+function normTimeline(v: any): "2-4w" | "rush" {
   const s = String(v ?? "").toLowerCase();
   if (!s) return "2-4w";
   if (s.includes("under") || s.includes("14") || s.includes("rush")) return "rush";
-  if (s.includes("4+") || s.includes("4+w")) return "4+w";
-  if (s.includes("2-4w") || s.includes("2-3") || s.includes("weeks")) return "2-4w";
   return "2-4w";
 }
 
@@ -120,7 +112,6 @@ function parseIntegrations(v: any): string[] {
   if (typeof v === "string") {
     const s = v.trim();
     if (!s) return [];
-    // could be "a,b,c"
     if (s.includes(",")) return s.split(",").map((x) => x.trim()).filter(Boolean);
     return [s];
   }
@@ -129,7 +120,6 @@ function parseIntegrations(v: any): string[] {
 
 function readLocalStorageIntake(): any | null {
   if (typeof window === "undefined") return null;
-
   const keysToTry = [
     "crecystudio_intake_v1",
     "crecystudio:intake",
@@ -138,23 +128,20 @@ function readLocalStorageIntake(): any | null {
     "intake",
     "buildForm",
   ];
-
   for (const k of keysToTry) {
     const raw = window.localStorage.getItem(k);
     if (!raw) continue;
     try {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === "object") return parsed;
-    } catch {
-      // ignore
-    }
+    } catch {}
   }
   return null;
 }
 
 type Normalized = {
   websiteType: "business" | "ecommerce" | "portfolio" | "landing";
-  pages: "1-3" | "4-6" | "7-10" | "9+" | "10+";
+  pages: "1" | "1-3" | "4-6" | "7-10" | "9+" | "10+";
   booking: boolean;
   payments: boolean;
   blog: boolean;
@@ -163,7 +150,7 @@ type Normalized = {
   contentReady: "ready" | "some" | "not";
   hasBrand: "yes" | "no";
   domainHosting: "yes" | "no";
-  timeline: "2-4w" | "4+w" | "rush";
+  timeline: "2-4w" | "rush";
   intent: string;
   leadEmail: string;
   leadPhone: string;
@@ -172,7 +159,6 @@ type Normalized = {
 };
 
 function normalizeAny(raw: any, sp?: SearchParams): Normalized {
-  // base from raw object
   const websiteType = normWebsiteType(raw?.websiteType ?? pick(sp || {}, "websiteType"));
   const pages = normPages(raw?.pages ?? pick(sp || {}, "pages"));
 
@@ -183,14 +169,12 @@ function normalizeAny(raw: any, sp?: SearchParams): Normalized {
 
   const wantsAutomation = normYesNo(raw?.wantsAutomation ?? pick(sp || {}, "wantsAutomation"), "no");
 
-  // content readiness can come as: Ready/Some/Not ready
   const contentReady = normContentReady(raw?.contentReady ?? pick(sp || {}, "contentReady"));
 
-  // hasBrand: from estimate query param OR inferred from build form fields (hasBrandGuide/hasLogo)
   const explicitHasBrand = pick(sp || {}, "hasBrand") || raw?.hasBrand;
   let hasBrand = normYesNo(explicitHasBrand, "no");
 
-  // if build form hasBrandGuide/hasLogo exist and explicitHasBrand not provided, infer
+  // infer from build fields if present
   if (!explicitHasBrand) {
     const hasBrandGuide = raw?.hasBrandGuide;
     const hasLogo = raw?.hasLogo;
@@ -199,7 +183,6 @@ function normalizeAny(raw: any, sp?: SearchParams): Normalized {
     }
   }
 
-  // domainHosting: from estimate query param OR build form domainHosting (Yes/No)
   const domainHosting = normYesNo(raw?.domainHosting ?? pick(sp || {}, "domainHosting"), "no");
 
   const timeline = normTimeline(raw?.timeline ?? pick(sp || {}, "timeline"));
@@ -252,12 +235,10 @@ export default function EstimateClient(props: Props) {
   }, []);
 
   const normalized = useMemo<Normalized>(() => {
-    // priority: server-provided intake > localStorage intake > query params
     const raw = props.intake ?? lsIntake ?? null;
     return normalizeAny(raw, props.searchParams || {});
   }, [props.intake, lsIntake, props.searchParams]);
 
-  // keep email/phone synced if we loaded from localStorage later
   useEffect(() => {
     if (!email && normalized.leadEmail) setEmail(normalized.leadEmail);
     if (!phone && normalized.leadPhone) setPhone(normalized.leadPhone);
@@ -265,69 +246,89 @@ export default function EstimateClient(props: Props) {
   }, [normalized.leadEmail, normalized.leadPhone]);
 
   const pricing = useMemo(() => {
-    // --- System 2 base ---
-    const BASE = 550;
+    // “No add-ons” = no features, no automation, no integrations, not rush
+    const noFeatureAddOns =
+      !normalized.booking &&
+      !normalized.payments &&
+      !normalized.blog &&
+      !normalized.membership &&
+      normalized.wantsAutomation === "no" &&
+      (normalized.integrations?.length ?? 0) === 0 &&
+      normalized.timeline !== "rush";
 
-    // Website type baseline (small, because tiers already communicate the big story)
+    // Qualifies for the capped starter packages only when they’re truly ready
+    const readyForStarter =
+      normalized.contentReady === "ready" &&
+      normalized.domainHosting === "yes" &&
+      normalized.websiteType !== "ecommerce";
+
+    const starterEligible = noFeatureAddOns && readyForStarter;
+
+    // Base by pages (your ladder)
+    let base = 400;
+    let baseLabel = "Starter base (1–3 pages)";
+
+    if (normalized.pages === "1" && starterEligible) {
+      base = 225;
+      baseLabel = "One-page starter (no add-ons)";
+    } else if ((normalized.pages === "1" || normalized.pages === "1-3") && starterEligible) {
+      base = 400;
+      baseLabel = "Starter base (1–3 pages, no add-ons)";
+    } else if (normalized.pages === "4-6") {
+      base = 550;
+      baseLabel = "Base (4–6 pages)";
+    } else if (normalized.pages === "7-10") {
+      base = 900;
+      baseLabel = "Base (7–10 pages)";
+    } else if (normalized.pages === "9+") {
+      base = 1100;
+      baseLabel = "Base (9+ pages)";
+    } else if (normalized.pages === "10+") {
+      base = 1400;
+      baseLabel = "Base (10+ pages)";
+    } else {
+      // pages = 1 or 1-3 but not eligible for starter
+      base = 400;
+      baseLabel = "Starter base (1–3 pages)";
+    }
+
+    // Website type add (small nudge)
     const typeAdd =
-      normalized.websiteType === "ecommerce" ? 150 :
+      normalized.websiteType === "ecommerce" ? 180 :
       normalized.websiteType === "portfolio" ? 60 :
-      normalized.websiteType === "landing" ? 0 :
       0;
 
-    // Scope add-ons (IMPORTANT: 9+ is its own bucket now)
-    const scopeAdd =
-      normalized.pages === "4-6" ? 220 :
-      normalized.pages === "7-10" ? 550 :
-      normalized.pages === "9+" ? 650 :
-      normalized.pages === "10+" ? 900 :
-      0;
-
-    // Features
+    // Feature add-ons
     const bookingAdd = normalized.booking ? 150 : 0;
     const paymentsAdd = normalized.payments ? 250 : 0;
     const blogAdd = normalized.blog ? 120 : 0;
     const membershipAdd = normalized.membership ? 400 : 0;
-
-    // Automation (only when explicitly yes)
     const automationAdd = normalized.wantsAutomation === "yes" ? 200 : 0;
 
-    // Readiness (softened for conversion)
+    // Readiness add-ons (these are what should push starter above the caps)
     const contentAdd =
       normalized.contentReady === "ready" ? 0 :
       normalized.contentReady === "some" ? 60 :
-      140; // not ready
+      140;
 
-    /**
-     * BRAND: don’t penalize "no brand"
-     * - Basic brand direction is INCLUDED in the build.
-     * - Brand kit / logo creation is a separate paid add-on later (upsell on call).
-     */
-    const brandAdd = 0;
-
-    // Domain/hosting guidance (soft)
     const domainAdd = normalized.domainHosting === "no" ? 60 : 0;
 
-    // Rush timeline
     const rushAdd = normalized.timeline === "rush" ? 200 : 0;
 
-    const lines: { label: string; amount: number; kind?: "base" }[] = [
-      { label: "Essential base (System 2: 1–3 pages + core UX)", amount: BASE, kind: "base" },
-      { label: normalized.websiteType === "business" ? "Business site baseline" :
-               normalized.websiteType === "ecommerce" ? "E-commerce baseline" :
-               normalized.websiteType === "portfolio" ? "Portfolio baseline" :
-               "Landing page baseline",
-        amount: typeAdd
-      },
+    // BRAND: don’t penalize “no brand”
+    const brandAdd = 0;
+
+    const lines: { label: string; amount: number }[] = [
+      { label: baseLabel, amount: base },
       {
         label:
-          normalized.pages === "1-3" ? "Small scope (1–3)" :
-          normalized.pages === "4-6" ? "Medium scope (4–6)" :
-          normalized.pages === "7-10" ? "Large scope (7–10)" :
-          normalized.pages === "9+" ? "Extra-large scope (9+)" :
-          "Enterprise scope (10+)",
-        amount: scopeAdd,
+          normalized.websiteType === "business" ? "Business site baseline" :
+          normalized.websiteType === "ecommerce" ? "E-commerce baseline" :
+          normalized.websiteType === "portfolio" ? "Portfolio baseline" :
+          "Landing baseline",
+        amount: typeAdd,
       },
+
       { label: "Booking / appointments", amount: bookingAdd },
       { label: "Payments / checkout", amount: paymentsAdd },
       { label: "Blog / articles", amount: blogAdd },
@@ -344,12 +345,11 @@ export default function EstimateClient(props: Props) {
         amount: contentAdd,
       },
 
-      // brand line as info but $0
       {
         label:
           normalized.hasBrand === "yes"
             ? "Brand assets provided"
-            : "Basic brand direction included (no brand kit needed)",
+            : "Basic brand direction included",
         amount: brandAdd,
       },
 
@@ -364,22 +364,30 @@ export default function EstimateClient(props: Props) {
       { label: "Rush timeline", amount: rushAdd },
     ];
 
-    // sum
     const total = lines.reduce((sum, x) => sum + (x.amount || 0), 0);
-
-    // range
     const rangeLow = Math.round(total * 0.9);
     const rangeHigh = Math.round(total * 1.15);
 
-    // tier logic (best-fit)
+    // Tier recommendation
     const tier =
-      normalized.pages === "1-3" && total <= 900 && !normalized.payments && !normalized.membership
-        ? "essential"
-        : (normalized.pages === "4-6" && total <= 1600)
-        ? "growth"
+      (normalized.pages === "1" || normalized.pages === "1-3" || normalized.pages === "4-6")
+        ? (normalized.pages === "4-6" ? "growth" : "essential")
         : "premium";
 
-    return { total, rangeLow, rangeHigh, lines, tier };
+    // If they select payments or membership, nudge to premium earlier
+    const premiumForce = normalized.payments || normalized.membership || normalized.websiteType === "ecommerce";
+    const finalTier = premiumForce && (normalized.pages !== "1" && normalized.pages !== "1-3") ? "premium" : tier;
+
+    return {
+      total,
+      rangeLow,
+      rangeHigh,
+      lines,
+      tier: finalTier as "essential" | "growth" | "premium",
+      starterEligible,
+      noFeatureAddOns,
+      readyForStarter,
+    };
   }, [normalized]);
 
   return (
@@ -393,9 +401,11 @@ export default function EstimateClient(props: Props) {
 
       <h1 className="h1">Your estimate</h1>
 
-      <p className="p" style={{ maxWidth: 860, marginTop: 10 }}>
-        <strong>Starts at $550.</strong> Most projects land <strong>$800–$1,200</strong> depending on readiness
-        (content, brand direction, and domain/hosting help). We’ll confirm final scope together before you pay a deposit.
+      <p className="p" style={{ maxWidth: 900, marginTop: 10 }}>
+        <strong>One-page starter from $225</strong> (no add-ons).{" "}
+        <strong>1–3 pages from $400</strong> (no add-ons).{" "}
+        <strong>4–6 pages start at $550</strong> + add-ons.{" "}
+        We’ll confirm final scope together before you pay a deposit.
       </p>
 
       <div style={{ height: 22 }} />
@@ -422,9 +432,10 @@ export default function EstimateClient(props: Props) {
             <div style={{ height: 12 }} />
 
             <div style={{ fontWeight: 950, marginBottom: 6 }}>Breakdown</div>
+
             <div style={{ display: "grid", gap: 10 }}>
               {pricing.lines
-                .filter((x) => x.amount !== 0 || x.kind === "base")
+                .filter((x) => x.amount !== 0)
                 .map((x) => (
                   <div
                     key={x.label}
@@ -441,15 +452,19 @@ export default function EstimateClient(props: Props) {
                     <div style={{ color: "rgba(255,255,255,0.86)", fontWeight: 850 }}>
                       {x.label}
                     </div>
-                    <div style={{ fontWeight: 950 }}>
-                      {x.kind === "base" ? money(x.amount) : `+ ${money(x.amount)}`}
-                    </div>
+                    <div style={{ fontWeight: 950 }}>{`+ ${money(x.amount)}`}</div>
                   </div>
                 ))}
 
               <div className="smallNote" style={{ marginTop: 8 }}>
                 Note: if budget is tight, we can do scope trade-offs or admin-only discounts (10–25%) without changing public tier pricing.
               </div>
+
+              {(normalized.pages === "1" || normalized.pages === "1-3") && (
+                <div className="smallNote" style={{ marginTop: 6 }}>
+                  Starter caps apply only when: <strong>no add-ons</strong>, <strong>content ready</strong>, and <strong>domain/hosting handled</strong>.
+                </div>
+              )}
 
               <div className="smallNote" style={{ marginTop: 6, fontWeight: 900 }}>
                 Next: add Scope Snapshot preview
@@ -512,24 +527,24 @@ export default function EstimateClient(props: Props) {
         <div className="tierGrid">
           <TierCard
             name="Essential Launch"
-            price="$550–$850"
+            price="$225–$850"
             badge="Best for simple launches"
             best={pricing.tier === "essential"}
             bullets={[
-              "Up to ~5 sections / pages",
-              "Clean layout + mobile responsive",
-              "Contact form + basic SEO",
+              "1 page starter available (no add-ons)",
+              "1–3 pages for small businesses",
+              "Mobile responsive + contact form",
               "1 revision round (structured)",
             ]}
           />
 
           <TierCard
             name="Growth Build"
-            price="$900–$1,500"
+            price="$550–$1,500"
             badge="Most chosen"
             best={pricing.tier === "growth"}
             bullets={[
-              "5–8 pages/sections + stronger UX",
+              "4–6 pages/sections + stronger UX",
               "Booking + lead capture improvements",
               "Better SEO structure + analytics",
               "2 revision rounds (structured)",
@@ -542,9 +557,9 @@ export default function EstimateClient(props: Props) {
             badge="Best for scale"
             best={pricing.tier === "premium"}
             bullets={[
-              "Custom features + integrations",
-              "Advanced UI + performance focus",
+              "7+ pages or advanced features",
               "Payments/membership/automation options",
+              "Integrations + custom workflows",
               "2–3 revision rounds (by scope)",
             ]}
           />
