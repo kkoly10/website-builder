@@ -29,6 +29,16 @@ function firstLead(leads: any) {
   return Array.isArray(leads) ? leads[0] ?? null : leads;
 }
 
+function safeObj(v: any) {
+  return v && typeof v === "object" && !Array.isArray(v) ? v : {};
+}
+
+function roundMoney(n: any) {
+  const x = Number(n);
+  if (!Number.isFinite(x)) return 0;
+  return Math.max(0, Math.round(x));
+}
+
 export default function InternalDashboardClient({
   initialToken,
   initialWarning,
@@ -59,6 +69,11 @@ export default function InternalDashboardClient({
   const [adminNotes, setAdminNotes] = useState<string>("");
   const [callScheduledAt, setCallScheduledAt] = useState<string>("");
 
+  // NEW: scope lock + deposit
+  const [finalPrice, setFinalPrice] = useState<string>("");
+  const [depositAmount, setDepositAmount] = useState<string>("");
+  const [depositUrl, setDepositUrl] = useState<string>("");
+
   const filteredQuotes = useMemo(() => {
     if (filter === "all") return quotes;
     return (quotes || []).filter((q: any) => String(q.status) === filter);
@@ -86,6 +101,7 @@ export default function InternalDashboardClient({
     setSelected(null);
     setSaveMsg("");
     setError("");
+    setDepositUrl("");
 
     if (!quoteId) return;
 
@@ -102,12 +118,21 @@ export default function InternalDashboardClient({
       const q = json?.quote;
       setSelected(q || null);
 
-      const dbg = (q?.debug && typeof q.debug === "object") ? q.debug : {};
-      const internal = (dbg?.internal && typeof dbg.internal === "object") ? dbg.internal : {};
+      const dbg = safeObj(q?.debug);
+      const internal = safeObj(dbg?.internal);
 
       setStatus(String(q?.status ?? "new"));
       setAdminNotes(String(internal?.admin_notes ?? ""));
       setCallScheduledAt(String(internal?.call_scheduled_at ?? ""));
+
+      const fp = internal?.final_price ?? q?.estimate_total ?? 0;
+      const dp = internal?.deposit_amount ?? Math.max(100, Math.round(Number(fp) * 0.3));
+
+      setFinalPrice(String(roundMoney(fp) || ""));
+      setDepositAmount(String(roundMoney(dp) || ""));
+
+      const existingDepositUrl = internal?.deposit?.url ?? "";
+      setDepositUrl(String(existingDepositUrl || ""));
     } catch (e: any) {
       setError(e?.message || "Unknown error");
     } finally {
@@ -138,8 +163,6 @@ export default function InternalDashboardClient({
       if (!res.ok) throw new Error(json?.error || "Failed to update quote");
 
       setSaveMsg("Saved ✅");
-
-      // refresh both list + detail to stay consistent
       await refreshList(filter);
       await loadQuote(selectedId);
     } catch (e: any) {
@@ -149,10 +172,85 @@ export default function InternalDashboardClient({
     }
   }
 
+  async function lockScope() {
+    if (!selectedId) return;
+    setSaving(true);
+    setSaveMsg("");
+    setError("");
+
+    try {
+      const res = await fetch("/api/internal/lock-scope", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          token,
+          quoteId: selectedId,
+          finalPrice: roundMoney(finalPrice),
+          depositAmount: roundMoney(depositAmount),
+        }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || "Failed to lock scope");
+
+      setSaveMsg("Scope locked ✅");
+      await refreshList(filter);
+      await loadQuote(selectedId);
+    } catch (e: any) {
+      setError(e?.message || "Unknown error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function createDepositLink() {
+    if (!selectedId) return;
+    setSaving(true);
+    setSaveMsg("");
+    setError("");
+
+    try {
+      const res = await fetch("/api/internal/create-deposit-link", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          token,
+          quoteId: selectedId,
+          depositAmount: roundMoney(depositAmount),
+        }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || "Failed to create deposit link");
+
+      setDepositUrl(String(json?.depositUrl ?? ""));
+      setSaveMsg("Deposit link created ✅");
+      await refreshList(filter);
+      await loadQuote(selectedId);
+    } catch (e: any) {
+      setError(e?.message || "Unknown error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function copy(text: string) {
+    try {
+      navigator.clipboard.writeText(text);
+      setSaveMsg("Copied ✅");
+    } catch {}
+  }
+
   const lead = firstLead(selected?.leads);
+
   const previewLink = selectedId
     ? `/internal/preview?quoteId=${encodeURIComponent(selectedId)}${token ? `&token=${encodeURIComponent(token)}` : ""}`
     : "";
+
+  const dbg = safeObj(selected?.debug);
+  const internal = safeObj(dbg?.internal);
+  const isLocked = Boolean(selected?.scope_snapshot?.locked || internal?.locked);
+  const hasDeposit = Boolean(internal?.deposit?.url);
 
   return (
     <main className="container" style={{ padding: "48px 0 80px" }}>
@@ -165,7 +263,7 @@ export default function InternalDashboardClient({
 
       <h1 className="h1">Quotes</h1>
       <p className="p" style={{ maxWidth: 900, marginTop: 8 }}>
-        Review estimates, lock scope, and move clients to the call → deposit flow.
+        Review estimates, lock scope on the call, then send a deposit link after the call.
       </p>
 
       {warning ? (
@@ -224,9 +322,9 @@ export default function InternalDashboardClient({
         <div className="panelBody" style={{ display: "grid", gap: 10 }}>
           {(filteredQuotes || []).map((q: any) => {
             const l = firstLead(q.leads);
-            const dbg = (q?.debug && typeof q.debug === "object") ? q.debug : {};
-            const internal = (dbg?.internal && typeof dbg.internal === "object") ? dbg.internal : {};
-            const note = String(internal?.admin_notes ?? "").trim();
+            const dbgRow = safeObj(q?.debug);
+            const internalRow = safeObj(dbgRow?.internal);
+            const note = String(internalRow?.admin_notes ?? "").trim();
 
             return (
               <button
@@ -289,7 +387,7 @@ export default function InternalDashboardClient({
         <div className="panelHeader">
           <div style={{ fontWeight: 950 }}>Quote details</div>
           <div className="smallNote">
-            Update status + notes here. Keep payment after the call.
+            Call flow: (1) call scheduled → (2) call done → (3) lock scope → (4) send deposit link.
           </div>
         </div>
 
@@ -375,15 +473,89 @@ export default function InternalDashboardClient({
                   rows={5}
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
-                  placeholder="What to confirm on the call, risks, suggested trade-offs, pricing defense, etc."
+                  placeholder="What to confirm on the call, trade-offs, objections, pricing defense…"
                 />
               </div>
 
               <div className="row" style={{ justifyContent: "space-between" }}>
                 <div className="smallNote">{saveMsg ? <strong>{saveMsg}</strong> : null}</div>
-                <button className="btn btnPrimary" onClick={saveUpdates} disabled={saving}>
-                  {saving ? "Saving…" : "Save updates"} <span className="btnArrow">→</span>
+                <button className="btn btnGhost" onClick={saveUpdates} disabled={saving}>
+                  {saving ? "Saving…" : "Save notes/status"}
                 </button>
+              </div>
+
+              {/* LOCK SCOPE + DEPOSIT */}
+              <div
+                style={{
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  background: "rgba(255,255,255,0.03)",
+                  borderRadius: 14,
+                  padding: 14,
+                }}
+              >
+                <div style={{ fontWeight: 950, marginBottom: 6 }}>
+                  Lock scope + deposit (after call)
+                </div>
+                <div className="smallNote" style={{ marginBottom: 12 }}>
+                  Lock scope on the video call. After the call, generate a Stripe deposit link and send it.
+                </div>
+
+                <div className="grid2" style={{ marginBottom: 12 }}>
+                  <div>
+                    <div className="fieldLabel">Final price (USD)</div>
+                    <input
+                      className="input"
+                      value={finalPrice}
+                      onChange={(e) => setFinalPrice(e.target.value)}
+                      placeholder="e.g. 1200"
+                    />
+                  </div>
+                  <div>
+                    <div className="fieldLabel">Deposit amount (USD)</div>
+                    <input
+                      className="input"
+                      value={depositAmount}
+                      onChange={(e) => setDepositAmount(e.target.value)}
+                      placeholder="e.g. 360"
+                    />
+                    <div className="smallNote" style={{ marginTop: 6 }}>
+                      Tip: 30% is common for deposits.
+                    </div>
+                  </div>
+                </div>
+
+                <div className="row" style={{ justifyContent: "space-between" }}>
+                  <div className="smallNote">
+                    {isLocked ? <strong>Locked ✅</strong> : "Not locked yet"}
+                    {hasDeposit ? <span> • Deposit link ready ✅</span> : null}
+                  </div>
+
+                  <div className="row">
+                    <button className="btn btnGhost" onClick={lockScope} disabled={saving}>
+                      Lock scope
+                    </button>
+                    <button className="btn btnPrimary" onClick={createDepositLink} disabled={saving}>
+                      Create deposit link <span className="btnArrow">→</span>
+                    </button>
+                  </div>
+                </div>
+
+                {depositUrl ? (
+                  <div style={{ marginTop: 12 }}>
+                    <div className="fieldLabel">Deposit link</div>
+                    <div className="row" style={{ justifyContent: "space-between" }}>
+                      <a href={depositUrl} target="_blank" rel="noreferrer" style={{ textDecoration: "underline" }}>
+                        Open Stripe checkout
+                      </a>
+                      <button className="btn btnGhost" onClick={() => copy(depositUrl)}>
+                        Copy link
+                      </button>
+                    </div>
+                    <div className="smallNote" style={{ marginTop: 6 }}>
+                      Send this link after the call (email/SMS).
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               <details>
