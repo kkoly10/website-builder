@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 type YesNo = "yes" | "no";
 type PagesBucket = "1" | "1-3" | "4-6" | "6-8" | "9+";
@@ -80,10 +80,7 @@ function splitList(v: any): string[] {
   if (Array.isArray(v)) return v.map(String).map((x) => x.trim()).filter(Boolean);
   const s = String(v ?? "").trim();
   if (!s) return [];
-  return s
-    .split(",")
-    .map((x) => x.trim())
-    .filter(Boolean);
+  return s.split(",").map((x) => x.trim()).filter(Boolean);
 }
 
 function parsePagesMax(raw: any): { max: number; raw: string } {
@@ -110,10 +107,21 @@ function bucketPages(max: number): PagesBucket {
   return "9+";
 }
 
+/**
+ * Price model (your vision):
+ * - pages=1 => base 225 always (add-ons stack)
+ * - pages=1–3 => base 400 always (add-ons stack)
+ * - pages=4–6 => base 550 + add-ons
+ * - pages=6–8 => base 550 + scope bump + add-ons
+ * - pages=9+ => base 550 + bigger scope bump + add-ons
+ *
+ * Included rules:
+ * - Email confirmations is free
+ * - Blog is $0 when pages >= 4–6 (light blog)
+ */
 function computeEstimate(n: Normalized) {
   const lines: BreakdownLine[] = [];
 
-  // Base + scope
   let base = 0;
   let scopeBump = 0;
 
@@ -137,7 +145,7 @@ function computeEstimate(n: Normalized) {
     }
   }
 
-  // Website type adjustments
+  // Website type adjustments (small)
   if (n.websiteType === "ecommerce") {
     lines.push({ label: "Ecommerce baseline", amount: 150 });
   } else if (n.websiteType === "portfolio") {
@@ -177,7 +185,7 @@ function computeEstimate(n: Normalized) {
     }
   }
 
-  // Integrations
+  // Integrations (Stripe/PayPal/Calendly infer features)
   const integrations = [...n.integrations];
   const hasStripe = integrations.includes("Stripe payments");
   const hasPayPal = integrations.includes("PayPal payments");
@@ -218,12 +226,8 @@ function computeEstimate(n: Normalized) {
   if (n.domainHosting === "yes") lines.push({ label: "Domain/hosting handled by client", amount: 0 });
 
   const total = lines.reduce((sum, l) => sum + l.amount, 0);
-
   const low = Math.max(0, Math.round(total * 0.90));
   const high = Math.max(low + 1, Math.round(total * 1.15));
-
-  const hasPaidAutomation = paidAutoTypes.length > 0;
-  const hasPaidIntegrations = paidIntegrationCount > 0;
 
   const pagesMax =
     n.pages === "1" ? 1 :
@@ -233,8 +237,10 @@ function computeEstimate(n: Normalized) {
     12;
 
   let tier: "essential" | "growth" | "premium" = "essential";
+  const hasPaidAutomation = paidAutoTypes.length > 0;
+
   if (pagesMax >= 9 || n.payments || n.membership || hasPaidAutomation) tier = "premium";
-  else if (pagesMax >= 4 || n.booking || hasPaidIntegrations || n.websiteType === "ecommerce") tier = "growth";
+  else if (pagesMax >= 4 || n.booking || paidIntegrationCount > 0 || n.websiteType === "ecommerce") tier = "growth";
   else tier = total > 850 ? "growth" : "essential";
 
   return { total, low, high, lines, tier };
@@ -242,22 +248,18 @@ function computeEstimate(n: Normalized) {
 
 export default function EstimateClient() {
   const sp = useSearchParams();
+  const router = useRouter();
 
   const [loadedFromLocalStorage, setLoadedFromLocalStorage] = useState<any>(null);
 
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [saved, setSaved] = useState<{ quoteId: string; publicToken: string } | null>(null);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [saved, setSaved] = useState<{ quoteId: string; publicToken?: string } | null>(null);
 
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(LS_KEY);
-      if (!raw) {
-        setLoadedFromLocalStorage(null);
-        return;
-      }
-      const parsed = JSON.parse(raw);
-      setLoadedFromLocalStorage(parsed && typeof parsed === "object" ? parsed : null);
+      setLoadedFromLocalStorage(raw ? JSON.parse(raw) : null);
     } catch {
       setLoadedFromLocalStorage(null);
     }
@@ -268,7 +270,6 @@ export default function EstimateClient() {
     const get = (k: string) => sp.get(k);
 
     const q: any = {};
-
     if (has("websiteType")) q.websiteType = get("websiteType");
     if (has("pages")) q.pages = get("pages");
 
@@ -304,7 +305,6 @@ export default function EstimateClient() {
   const normalized: Normalized = useMemo(() => {
     const { max } = parsePagesMax(merged.pages);
     const pages = bucketPages(max);
-    const integrations = splitList(merged.integrations);
 
     return {
       websiteType: normWebsiteType(merged.websiteType),
@@ -318,7 +318,7 @@ export default function EstimateClient() {
       wantsAutomation: normYesNo(merged.wantsAutomation, "no"),
       automationTypes: splitList(merged.automationTypes),
 
-      integrations,
+      integrations: splitList(merged.integrations),
       integrationOther: String(merged.integrationOther ?? "").trim(),
 
       contentReady: normContentReady(merged.contentReady),
@@ -338,44 +338,27 @@ export default function EstimateClient() {
   const headerMessage =
     "One-page starter from $225 (no paid add-ons). 1–3 pages from $400 (no paid add-ons). 4–6 pages start at $550 + add-ons. We’ll confirm final scope together before you pay a deposit.";
 
-  async function saveQuote() {
-    setSaveError(null);
+  async function sendEstimate() {
+    setSendError(null);
+    setSaved(null);
 
-    if (!normalized.leadEmail || !normalized.leadEmail.includes("@")) {
-      setSaveError("Missing a valid email. Please go back and enter your email.");
+    const email = normalized.leadEmail.trim();
+    if (!email || !email.includes("@")) {
+      setSendError("Please go back and enter a valid email first.");
       return;
     }
 
-    setSaving(true);
+    setSending(true);
     try {
-      const scopeSnapshot = {
-        websiteType: normalized.websiteType,
-        pages: normalized.pages,
-        features: [
-          normalized.booking && "Booking",
-          normalized.payments && "Payments",
-          normalized.blog && "Blog",
-          normalized.membership && "Membership",
-        ].filter(Boolean),
-        contentReady: normalized.contentReady,
-        domainHosting: normalized.domainHosting,
-        timeline: normalized.timeline,
-        intent: normalized.intent,
-        notes: normalized.notes,
-      };
-
       const res = await fetch("/api/submit-estimate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           source: "estimate",
-          lead: {
-            email: normalized.leadEmail,
-            phone: normalized.leadPhone || undefined,
-          },
-          intakeRaw: merged,
+          lead: { email, phone: normalized.leadPhone || undefined },
+          intakeRaw: merged ?? {},
           intakeNormalized: normalized,
-          scopeSnapshot,
+          scopeSnapshot: {}, // placeholder for next step
           estimate: {
             total: estimate.total,
             low: estimate.low,
@@ -383,21 +366,26 @@ export default function EstimateClient() {
             tierRecommended: estimate.tier,
           },
           debug: {
+            merged,
             parsedQuery,
-            savedFrom: "EstimateClient",
-            note: "Email confirmations are free.",
           },
         }),
       });
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || "Failed to save quote.");
+      if (!res.ok) throw new Error(json?.error || "Failed to save estimate.");
 
-      setSaved({ quoteId: json.quoteId, publicToken: json.publicToken });
+      const quoteId = String(json.quoteId);
+      const publicToken = json.publicToken ? String(json.publicToken) : undefined;
+
+      setSaved({ quoteId, publicToken });
+
+      // send them to book-first flow immediately
+      router.push(`/book?quoteId=${encodeURIComponent(quoteId)}`);
     } catch (e: any) {
-      setSaveError(e?.message || "Something went wrong.");
+      setSendError(e?.message || "Failed to save estimate.");
     } finally {
-      setSaving(false);
+      setSending(false);
     }
   }
 
@@ -409,7 +397,6 @@ export default function EstimateClient() {
       </div>
 
       <div style={{ height: 12 }} />
-
       <h1 className="h1">Your estimate</h1>
       <p className="p" style={{ maxWidth: 900, marginTop: 10 }}>
         {headerMessage}
@@ -468,7 +455,7 @@ export default function EstimateClient() {
           </div>
 
           <div className="smallNote" style={{ marginTop: 8, fontWeight: 900 }}>
-            Next: add Scope Snapshot preview
+            Next: book a quick scope call (payment after)
           </div>
         </div>
       </section>
@@ -484,40 +471,64 @@ export default function EstimateClient() {
         </div>
 
         <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-          {saveError ? <div style={{ color: "#ff6b6b", fontWeight: 900 }}>{saveError}</div> : null}
-
-          {saved ? (
-            <div className="smallNote">
-              ✅ Saved. Your reference ID is <code>{saved.quoteId}</code>.
-            </div>
-          ) : (
-            <div className="smallNote">
-              Click “Send estimate” to save your reference and request a call.
+          {sendError && (
+            <div className="smallNote" style={{ color: "#ffb4b4", fontWeight: 900 }}>
+              {sendError}
             </div>
           )}
 
-          <div className="row" style={{ justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+          {saved && (
+            <div className="smallNote" style={{ fontWeight: 900 }}>
+              Saved ✅ Reference: <code>{saved.publicToken ?? saved.quoteId}</code>
+            </div>
+          )}
+
+          <div className="row" style={{ justifyContent: "space-between" }}>
             <Link className="btn btnGhost" href="/build">
               Edit answers
             </Link>
 
-            {!saved ? (
-              <button className="btn btnPrimary" onClick={saveQuote} disabled={saving}>
-                {saving ? "Saving…" : "Send estimate"} <span className="btnArrow">→</span>
-              </button>
-            ) : (
-              <Link
-                className="btn btnPrimary"
-                href={`/book?quoteId=${encodeURIComponent(saved.quoteId)}&t=${encodeURIComponent(
-                  saved.publicToken
-                )}&email=${encodeURIComponent(normalized.leadEmail)}&phone=${encodeURIComponent(normalized.leadPhone || "")}`}
-              >
-                Request a call <span className="btnArrow">→</span>
-              </Link>
-            )}
+            <button className="btn btnPrimary" onClick={sendEstimate} disabled={sending}>
+              {sending ? "Sending..." : "Send estimate"} <span className="btnArrow">→</span>
+            </button>
           </div>
         </div>
       </section>
+
+      <div style={{ height: 18 }} />
+
+      <section className="panel">
+        <div className="panelHeader">
+          <div style={{ fontWeight: 950 }}>Debug</div>
+          <div className="smallNote">Merge order: localStorage → URL query (query wins). Email confirmations are free.</div>
+        </div>
+        <div className="panelBody">
+          <pre
+            style={{
+              margin: 0,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              fontSize: 12,
+              color: "rgba(255,255,255,0.80)",
+            }}
+          >
+{JSON.stringify(
+  { merged, parsedQuery, normalized, tier: estimate.tier, total: estimate.total },
+  null,
+  2
+)}
+          </pre>
+        </div>
+      </section>
+
+      <div className="footer">
+        © {new Date().getFullYear()} CrecyStudio. Built to convert. Clear scope. Clean builds.
+        <div className="footerLinks">
+          <Link href="/">Home</Link>
+          <Link href="/estimate">Estimate</Link>
+          <a href="mailto:hello@crecystudio.com">hello@crecystudio.com</a>
+        </div>
+      </div>
     </main>
   );
 }
