@@ -37,6 +37,7 @@ type Normalized = {
 type BreakdownLine = { label: string; amount: number };
 
 const LS_KEY = "crecystudio:intake";
+const LAST_QUOTE_KEY = "crecystudio:lastQuoteId";
 
 /** FREE automations (never counted as paid add-ons) */
 const FREE_AUTOMATIONS = new Set(["Email confirmations", "Email confirmation"]);
@@ -80,7 +81,10 @@ function splitList(v: any): string[] {
   if (Array.isArray(v)) return v.map(String).map((x) => x.trim()).filter(Boolean);
   const s = String(v ?? "").trim();
   if (!s) return [];
-  return s.split(",").map((x) => x.trim()).filter(Boolean);
+  return s
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
 }
 
 function parsePagesMax(raw: any): { max: number; raw: string } {
@@ -108,7 +112,7 @@ function bucketPages(max: number): PagesBucket {
 }
 
 /**
- * Price model (your vision):
+ * Price model:
  * - pages=1 => base 225 always (add-ons stack)
  * - pages=1–3 => base 400 always (add-ons stack)
  * - pages=4–6 => base 550 + add-ons
@@ -122,6 +126,7 @@ function bucketPages(max: number): PagesBucket {
 function computeEstimate(n: Normalized) {
   const lines: BreakdownLine[] = [];
 
+  // Base + scope
   let base = 0;
   let scopeBump = 0;
 
@@ -145,7 +150,7 @@ function computeEstimate(n: Normalized) {
     }
   }
 
-  // Website type adjustments (small)
+  // Website type adjustments
   if (n.websiteType === "ecommerce") {
     lines.push({ label: "Ecommerce baseline", amount: 150 });
   } else if (n.websiteType === "portfolio") {
@@ -161,7 +166,7 @@ function computeEstimate(n: Normalized) {
   if (n.payments) lines.push({ label: "Payments / checkout", amount: 250 });
   if (n.membership) lines.push({ label: "Membership / gated content", amount: 400 });
 
-  // Blog: paid only for <= 1–3 pages; included ($0) for 4–6+
+  // Blog
   if (n.blog) {
     if (n.pages === "1" || n.pages === "1-3") {
       lines.push({ label: "Blog / articles", amount: 120 });
@@ -185,7 +190,7 @@ function computeEstimate(n: Normalized) {
     }
   }
 
-  // Integrations (Stripe/PayPal/Calendly infer features)
+  // Integrations (infer booking/payments from certain integrations to match intent)
   const integrations = [...n.integrations];
   const hasStripe = integrations.includes("Stripe payments");
   const hasPayPal = integrations.includes("PayPal payments");
@@ -206,6 +211,7 @@ function computeEstimate(n: Normalized) {
 
   for (const i of filteredIntegrations) {
     if (FREE_INTEGRATIONS.has(i)) continue;
+
     paidIntegrationCount += 1;
     const amt =
       i === "Mailchimp / email list" ? 60 :
@@ -229,6 +235,10 @@ function computeEstimate(n: Normalized) {
   const low = Math.max(0, Math.round(total * 0.90));
   const high = Math.max(low + 1, Math.round(total * 1.15));
 
+  const hasPaidAutomation = paidAutoTypes.length > 0;
+  const hasPaidBlog = n.blog && (n.pages === "1" || n.pages === "1-3");
+  const hasPaidIntegrations = paidIntegrationCount > 0;
+
   const pagesMax =
     n.pages === "1" ? 1 :
     n.pages === "1-3" ? 3 :
@@ -237,10 +247,8 @@ function computeEstimate(n: Normalized) {
     12;
 
   let tier: "essential" | "growth" | "premium" = "essential";
-  const hasPaidAutomation = paidAutoTypes.length > 0;
-
   if (pagesMax >= 9 || n.payments || n.membership || hasPaidAutomation) tier = "premium";
-  else if (pagesMax >= 4 || n.booking || paidIntegrationCount > 0 || n.websiteType === "ecommerce") tier = "growth";
+  else if (pagesMax >= 4 || n.booking || hasPaidIntegrations || n.websiteType === "ecommerce") tier = "growth";
   else tier = total > 850 ? "growth" : "essential";
 
   return { total, low, high, lines, tier };
@@ -253,18 +261,24 @@ export default function EstimateClient() {
   const [loadedFromLocalStorage, setLoadedFromLocalStorage] = useState<any>(null);
 
   const [sending, setSending] = useState(false);
-  const [sendError, setSendError] = useState<string | null>(null);
-  const [saved, setSaved] = useState<{ quoteId: string; publicToken?: string } | null>(null);
+  const [sendError, setSendError] = useState<string>("");
+  const [savedQuoteId, setSavedQuoteId] = useState<string>("");
 
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(LS_KEY);
-      setLoadedFromLocalStorage(raw ? JSON.parse(raw) : null);
+      if (!raw) {
+        setLoadedFromLocalStorage(null);
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      setLoadedFromLocalStorage(parsed && typeof parsed === "object" ? parsed : null);
     } catch {
       setLoadedFromLocalStorage(null);
     }
   }, []);
 
+  // Parse query ONLY for keys present
   const parsedQuery = useMemo(() => {
     const has = (k: string) => sp.has(k);
     const get = (k: string) => sp.get(k);
@@ -297,6 +311,7 @@ export default function EstimateClient() {
     return q;
   }, [sp]);
 
+  // Merge order: localStorage -> URL query (query wins)
   const merged = useMemo(() => {
     const base = loadedFromLocalStorage && typeof loadedFromLocalStorage === "object" ? loadedFromLocalStorage : {};
     return { ...base, ...parsedQuery };
@@ -305,6 +320,7 @@ export default function EstimateClient() {
   const normalized: Normalized = useMemo(() => {
     const { max } = parsePagesMax(merged.pages);
     const pages = bucketPages(max);
+    const integrations = splitList(merged.integrations);
 
     return {
       websiteType: normWebsiteType(merged.websiteType),
@@ -318,7 +334,7 @@ export default function EstimateClient() {
       wantsAutomation: normYesNo(merged.wantsAutomation, "no"),
       automationTypes: splitList(merged.automationTypes),
 
-      integrations: splitList(merged.integrations),
+      integrations,
       integrationOther: String(merged.integrationOther ?? "").trim(),
 
       contentReady: normContentReady(merged.contentReady),
@@ -338,49 +354,64 @@ export default function EstimateClient() {
   const headerMessage =
     "One-page starter from $225 (no paid add-ons). 1–3 pages from $400 (no paid add-ons). 4–6 pages start at $550 + add-ons. We’ll confirm final scope together before you pay a deposit.";
 
-  async function sendEstimate() {
-    setSendError(null);
-    setSaved(null);
+  async function onSendEstimate() {
+    setSendError("");
+    setSavedQuoteId("");
 
     const email = normalized.leadEmail.trim();
     if (!email || !email.includes("@")) {
-      setSendError("Please go back and enter a valid email first.");
+      setSendError("Missing a valid email. Click “Edit answers” and enter your email first.");
       return;
     }
 
     setSending(true);
     try {
+      const payload = {
+        source: "estimate",
+        lead: {
+          email,
+          phone: normalized.leadPhone || undefined,
+        },
+        intakeRaw: merged,
+        intakeNormalized: normalized,
+        scopeSnapshot: {}, // v1 placeholder (we’ll build real snapshot next)
+        estimate: {
+          total: estimate.total,
+          low: estimate.low,
+          high: estimate.high,
+          tierRecommended: estimate.tier,
+        },
+        debug: {
+          merged,
+          parsedQuery,
+        },
+      };
+
       const res = await fetch("/api/submit-estimate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          source: "estimate",
-          lead: { email, phone: normalized.leadPhone || undefined },
-          intakeRaw: merged ?? {},
-          intakeNormalized: normalized,
-          scopeSnapshot: {}, // placeholder for next step
-          estimate: {
-            total: estimate.total,
-            low: estimate.low,
-            high: estimate.high,
-            tierRecommended: estimate.tier,
-          },
-          debug: {
-            merged,
-            parsedQuery,
-          },
-        }),
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || "Failed to save estimate.");
 
-      const quoteId = String(json.quoteId);
-      const publicToken = json.publicToken ? String(json.publicToken) : undefined;
+      if (!res.ok) {
+        throw new Error(json?.error || "Failed to save estimate.");
+      }
 
-      setSaved({ quoteId, publicToken });
+      const quoteId = String(json?.quoteId || "").trim();
+      if (!quoteId) {
+        throw new Error("Saved, but missing quoteId in API response.");
+      }
 
-      // send them to book-first flow immediately
+      // store fallback for refresh
+      try {
+        window.localStorage.setItem(LAST_QUOTE_KEY, quoteId);
+      } catch {}
+
+      setSavedQuoteId(quoteId);
+
+      // go to booking step (payment after call)
       router.push(`/book?quoteId=${encodeURIComponent(quoteId)}`);
     } catch (e: any) {
       setSendError(e?.message || "Failed to save estimate.");
@@ -397,6 +428,7 @@ export default function EstimateClient() {
       </div>
 
       <div style={{ height: 12 }} />
+
       <h1 className="h1">Your estimate</h1>
       <p className="p" style={{ maxWidth: 900, marginTop: 10 }}>
         {headerMessage}
@@ -462,6 +494,60 @@ export default function EstimateClient() {
 
       <div style={{ height: 18 }} />
 
+      {/* Recommended tier cards */}
+      <section className="sectionSm">
+        <div className="kicker">
+          <span className="kickerDot" aria-hidden="true" />
+          Recommended tier
+        </div>
+        <div style={{ height: 10 }} />
+        <div className="pDark">Best fit based on scope.</div>
+
+        <div style={{ height: 14 }} />
+
+        <div className="tierGrid">
+          <TierCard
+            title="Essential Launch"
+            sub="Best for simple launches"
+            price="$225–$850"
+            best={estimate.tier === "essential"}
+            bullets={[
+              "1 page starter available (no paid add-ons)",
+              "1–3 pages for small businesses",
+              "Mobile responsive + contact form",
+              "1 revision round (structured)",
+            ]}
+          />
+          <TierCard
+            title="Growth Build"
+            sub="Most chosen"
+            price="$550–$1,500"
+            best={estimate.tier === "growth"}
+            bullets={[
+              "4–6 pages/sections + stronger UX",
+              "Booking + lead capture improvements",
+              "Better SEO structure + analytics",
+              "2 revision rounds (structured)",
+            ]}
+          />
+          <TierCard
+            title="Premium Platform"
+            sub="Best for scale"
+            price="$1,700–$3,500+"
+            best={estimate.tier === "premium"}
+            bullets={[
+              "7+ pages or advanced features",
+              "Payments/membership/automation options",
+              "Integrations + custom workflows",
+              "2–3 revision rounds (by scope)",
+            ]}
+          />
+        </div>
+      </section>
+
+      <div style={{ height: 18 }} />
+
+      {/* Next step */}
       <section className="panel">
         <div className="panelHeader">
           <div style={{ fontWeight: 950 }}>Next step</div>
@@ -472,14 +558,32 @@ export default function EstimateClient() {
 
         <div className="panelBody" style={{ display: "grid", gap: 12 }}>
           {sendError && (
-            <div className="smallNote" style={{ color: "#ffb4b4", fontWeight: 900 }}>
+            <div
+              style={{
+                border: "1px solid rgba(255,0,0,0.35)",
+                background: "rgba(255,0,0,0.08)",
+                borderRadius: 12,
+                padding: 12,
+                color: "rgba(255,255,255,0.92)",
+                fontWeight: 700,
+              }}
+            >
               {sendError}
             </div>
           )}
 
-          {saved && (
-            <div className="smallNote" style={{ fontWeight: 900 }}>
-              Saved ✅ Reference: <code>{saved.publicToken ?? saved.quoteId}</code>
+          {savedQuoteId && (
+            <div
+              style={{
+                border: "1px solid rgba(34,197,94,0.35)",
+                background: "rgba(34,197,94,0.08)",
+                borderRadius: 12,
+                padding: 12,
+                color: "rgba(255,255,255,0.92)",
+                fontWeight: 800,
+              }}
+            >
+              Saved! Quote ID: <code>{savedQuoteId}</code>
             </div>
           )}
 
@@ -488,7 +592,12 @@ export default function EstimateClient() {
               Edit answers
             </Link>
 
-            <button className="btn btnPrimary" onClick={sendEstimate} disabled={sending}>
+            <button
+              className="btn btnPrimary"
+              type="button"
+              onClick={onSendEstimate}
+              disabled={sending}
+            >
               {sending ? "Sending..." : "Send estimate"} <span className="btnArrow">→</span>
             </button>
           </div>
@@ -497,10 +606,13 @@ export default function EstimateClient() {
 
       <div style={{ height: 18 }} />
 
+      {/* Debug */}
       <section className="panel">
         <div className="panelHeader">
           <div style={{ fontWeight: 950 }}>Debug</div>
-          <div className="smallNote">Merge order: localStorage → URL query (query wins). Email confirmations are free.</div>
+          <div className="smallNote">
+            Merge order: localStorage → URL query (query wins). Email confirmations are free.
+          </div>
         </div>
         <div className="panelBody">
           <pre
@@ -513,22 +625,68 @@ export default function EstimateClient() {
             }}
           >
 {JSON.stringify(
-  { merged, parsedQuery, normalized, tier: estimate.tier, total: estimate.total },
+  {
+    merged,
+    parsedQuery,
+    normalized,
+    tier: estimate.tier,
+    total: estimate.total,
+    savedQuoteId: savedQuoteId || null,
+  },
   null,
   2
 )}
           </pre>
         </div>
       </section>
+    </main>
+  );
+}
 
-      <div className="footer">
-        © {new Date().getFullYear()} CrecyStudio. Built to convert. Clear scope. Clean builds.
-        <div className="footerLinks">
-          <Link href="/">Home</Link>
-          <Link href="/estimate">Estimate</Link>
-          <a href="mailto:hello@crecystudio.com">hello@crecystudio.com</a>
+function TierCard({
+  title,
+  sub,
+  price,
+  bullets,
+  best,
+}: {
+  title: string;
+  sub: string;
+  price: string;
+  bullets: string[];
+  best?: boolean;
+}) {
+  return (
+    <div className="card cardHover">
+      <div className="cardInner">
+        <div className="tierHead">
+          <div>
+            <div className="tierName">{title}</div>
+            <div className="tierSub">{sub}</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div className="tierPrice">{price}</div>
+            <div className={`badge ${best ? "badgeHot" : ""}`} style={{ marginTop: 10 }}>
+              {best ? "Best fit" : "Tier"}
+            </div>
+          </div>
+        </div>
+
+        <ul className="tierList">
+          {bullets.map((b) => (
+            <li key={b}>{b}</li>
+          ))}
+        </ul>
+
+        <div className="tierCTA">
+          <Link className="btn btnPrimary" href="/build">
+            Edit answers <span className="btnArrow">→</span>
+          </Link>
+          <Link className="btn btnGhost" href="/">
+            Back home
+          </Link>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
