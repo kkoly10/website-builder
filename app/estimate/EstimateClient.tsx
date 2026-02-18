@@ -79,7 +79,10 @@ function splitList(v: any): string[] {
   if (Array.isArray(v)) return v.map(String).map((x) => x.trim()).filter(Boolean);
   const s = String(v ?? "").trim();
   if (!s) return [];
-  return s.split(",").map((x) => x.trim()).filter(Boolean);
+  return s
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
 }
 
 function parsePagesMax(raw: any): { max: number; raw: string } {
@@ -107,7 +110,7 @@ function bucketPages(max: number): PagesBucket {
 }
 
 /**
- * Price model (your vision):
+ * Price model (your new vision):
  * - pages=1 => base 225 always (add-ons stack)
  * - pages=1–3 => base 400 always (add-ons stack)
  * - pages=4–6 => base 550 + add-ons
@@ -122,22 +125,39 @@ function computeEstimate(n: Normalized) {
   const lines: BreakdownLine[] = [];
 
   // Base + scope
+  let base = 0;
+  let scopeBump = 0;
+
   if (n.pages === "1") {
+    base = 225;
     lines.push({ label: "One-page starter base", amount: 225 });
   } else if (n.pages === "1-3") {
+    base = 400;
     lines.push({ label: "Starter base (1–3 pages)", amount: 400 });
   } else {
+    base = 550;
     lines.push({ label: "Base (4–6 pages starts here)", amount: 550 });
 
-    if (n.pages === "6-8") lines.push({ label: "Larger scope (6–8)", amount: 250 });
-    if (n.pages === "9+") lines.push({ label: "Large scope (9+)", amount: 500 });
+    if (n.pages === "6-8") {
+      scopeBump = 250;
+      lines.push({ label: "Larger scope (6–8)", amount: scopeBump });
+    }
+    if (n.pages === "9+") {
+      scopeBump = 500;
+      lines.push({ label: "Large scope (9+)", amount: scopeBump });
+    }
   }
 
-  // Website type adjustments (small)
-  if (n.websiteType === "ecommerce") lines.push({ label: "Ecommerce baseline", amount: 150 });
-  else if (n.websiteType === "portfolio") lines.push({ label: "Portfolio baseline", amount: 0 });
-  else if (n.websiteType === "landing") lines.push({ label: "Landing focus", amount: 0 });
-  else lines.push({ label: "Business site baseline", amount: 0 });
+  // Website type adjustments (small, not aggressive)
+  if (n.websiteType === "ecommerce") {
+    lines.push({ label: "Ecommerce baseline", amount: 150 });
+  } else if (n.websiteType === "portfolio") {
+    lines.push({ label: "Portfolio baseline", amount: 0 });
+  } else if (n.websiteType === "landing") {
+    lines.push({ label: "Landing focus", amount: 0 });
+  } else {
+    lines.push({ label: "Business site baseline", amount: 0 });
+  }
 
   // FEATURES (paid)
   if (n.booking) lines.push({ label: "Booking / appointments", amount: 120 });
@@ -146,26 +166,33 @@ function computeEstimate(n: Normalized) {
 
   // Blog: paid only for <= 1–3 pages; included ($0) for 4–6+
   if (n.blog) {
-    if (n.pages === "1" || n.pages === "1-3") lines.push({ label: "Blog / articles", amount: 120 });
-    else lines.push({ label: "Light blog (included at 4–6+)", amount: 0 });
+    if (n.pages === "1" || n.pages === "1-3") {
+      lines.push({ label: "Blog / articles", amount: 120 });
+    } else {
+      lines.push({ label: "Light blog (included at 4–6+)", amount: 0 });
+    }
   }
 
   // Automations
   const wantsAuto = n.wantsAutomation === "yes";
+  const freeChosen = n.automationTypes.filter((x) => FREE_AUTOMATIONS.has(x));
   const paidAutoTypes = n.automationTypes.filter((x) => !FREE_AUTOMATIONS.has(x));
-  const freeAutoChosen = n.automationTypes.filter((x) => FREE_AUTOMATIONS.has(x));
 
   if (wantsAuto) {
-    if (freeAutoChosen.length > 0 && paidAutoTypes.length === 0) {
+    if (freeChosen.length > 0 && paidAutoTypes.length === 0) {
       lines.push({ label: "Email confirmations (included)", amount: 0 });
     }
     if (paidAutoTypes.length > 0) {
       lines.push({ label: "Automations setup", amount: 200 });
-      lines.push({ label: `Automation types (${paidAutoTypes.length})`, amount: paidAutoTypes.length * 40 });
+      lines.push({
+        label: `Automation types (${paidAutoTypes.length})`,
+        amount: paidAutoTypes.length * 40,
+      });
     }
   }
 
   // Integrations
+  // If they picked Stripe/PayPal in integrations, treat it as Payments (so estimate matches intent)
   const integrations = [...n.integrations];
   const hasStripe = integrations.includes("Stripe payments");
   const hasPayPal = integrations.includes("PayPal payments");
@@ -186,6 +213,7 @@ function computeEstimate(n: Normalized) {
 
   for (const i of filteredIntegrations) {
     if (FREE_INTEGRATIONS.has(i)) continue;
+
     paidIntegrationCount += 1;
     const amt =
       i === "Mailchimp / email list" ? 60 :
@@ -206,9 +234,11 @@ function computeEstimate(n: Normalized) {
   if (n.domainHosting === "yes") lines.push({ label: "Domain/hosting handled by client", amount: 0 });
 
   const total = lines.reduce((sum, l) => sum + l.amount, 0);
+
   const low = Math.max(0, Math.round(total * 0.90));
   const high = Math.max(low + 1, Math.round(total * 1.15));
 
+  // Tier recommendation
   const pagesMax =
     n.pages === "1" ? 1 :
     n.pages === "1-3" ? 3 :
@@ -216,47 +246,50 @@ function computeEstimate(n: Normalized) {
     n.pages === "6-8" ? 8 :
     12;
 
-  let tier: "essential" | "growth" | "premium" = "essential";
   const hasPaidAutomation = paidAutoTypes.length > 0;
+  const hasPaidIntegrations = paidIntegrationCount > 0;
 
+  let tier: "essential" | "growth" | "premium" = "essential";
   if (pagesMax >= 9 || n.payments || n.membership || hasPaidAutomation) tier = "premium";
-  else if (pagesMax >= 4 || n.booking || paidIntegrationCount > 0 || n.websiteType === "ecommerce") tier = "growth";
+  else if (pagesMax >= 4 || n.booking || hasPaidIntegrations || n.websiteType === "ecommerce") tier = "growth";
   else tier = total > 850 ? "growth" : "essential";
 
-  return { total, low, high, lines, tier };
+  const hasPaidAddons =
+    n.booking ||
+    n.payments ||
+    n.membership ||
+    hasPaidAutomation ||
+    (n.blog && (n.pages === "1" || n.pages === "1-3")) ||
+    hasPaidIntegrations ||
+    inferredPayments ||
+    inferredBooking ||
+    n.contentReady !== "ready" ||
+    n.domainHosting !== "yes";
+
+  return { total, low, high, lines, tier, hasPaidAddons };
 }
 
-function cleanEmail(email: string) {
-  return String(email ?? "").trim().toLowerCase();
-}
-
-function buildScopeSnapshot(n: Normalized, tier: string) {
+function buildScopeSnapshot(n: Normalized) {
   const features = [
     n.booking && "Booking",
     n.payments && "Payments",
     n.blog && "Blog",
     n.membership && "Membership",
-    n.wantsAutomation === "yes" && "Automations",
-  ].filter(Boolean) as string[];
+  ].filter(Boolean);
 
   return {
-    pages: n.pages,
     websiteType: n.websiteType,
-    intent: n.intent,
-    timeline: n.timeline,
-    readiness: {
-      content: n.contentReady,
-      domainHosting: n.domainHosting,
-    },
+    pages: n.pages,
     features,
+    wantsAutomation: n.wantsAutomation,
+    automationTypes: n.automationTypes,
     integrations: n.integrations,
-    recommendedTier: tier,
-    revisions: tier === "essential" ? "1 structured revision round" : tier === "growth" ? "2 structured revision rounds" : "2–3 rounds (by scope)",
-    exclusions: [
-      "Copywriting not included unless agreed",
-      "Logo design not included unless agreed",
-      "Paid plugins/services billed separately (if needed)",
-    ],
+    integrationOther: n.integrationOther,
+    contentReady: n.contentReady,
+    domainHosting: n.domainHosting,
+    timeline: n.timeline,
+    intent: n.intent,
+    notes: n.notes,
   };
 }
 
@@ -265,14 +298,13 @@ export default function EstimateClient() {
 
   const [loadedFromLocalStorage, setLoadedFromLocalStorage] = useState<any>(null);
 
-  // submit state
-  const [submitting, setSubmitting] = useState(false);
+  // editable fields for submit (so estimate page can work even if missing email/phone)
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+
+  const [submitState, setSubmitState] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [submitError, setSubmitError] = useState<string>("");
   const [quoteId, setQuoteId] = useState<string>("");
-
-  // editable contact fields (so user can submit from this page)
-  const [emailInput, setEmailInput] = useState("");
-  const [phoneInput, setPhoneInput] = useState("");
 
   // Load localStorage intake
   useEffect(() => {
@@ -289,18 +321,13 @@ export default function EstimateClient() {
     }
   }, []);
 
-  // read quoteId if already in URL
-  useEffect(() => {
-    const qid = sp.get("quoteId");
-    if (qid && !quoteId) setQuoteId(qid);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sp]);
-
+  // Parse query ONLY for keys present (so query can “win” cleanly)
   const parsedQuery = useMemo(() => {
     const has = (k: string) => sp.has(k);
     const get = (k: string) => sp.get(k);
 
     const q: any = {};
+
     if (has("websiteType")) q.websiteType = get("websiteType");
     if (has("pages")) q.pages = get("pages");
 
@@ -334,10 +361,10 @@ export default function EstimateClient() {
     return { ...base, ...parsedQuery };
   }, [loadedFromLocalStorage, parsedQuery]);
 
+  // Normalize merged source into what pricing uses
   const normalized: Normalized = useMemo(() => {
     const { max } = parsePagesMax(merged.pages);
     const pages = bucketPages(max);
-
     const integrations = splitList(merged.integrations);
 
     return {
@@ -367,44 +394,40 @@ export default function EstimateClient() {
     };
   }, [merged]);
 
-  // keep inputs synced on first load
-  useEffect(() => {
-    if (!emailInput) setEmailInput(normalized.leadEmail || "");
-    if (!phoneInput) setPhoneInput(normalized.leadPhone || "");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [normalized.leadEmail, normalized.leadPhone]);
-
   const estimate = useMemo(() => computeEstimate(normalized), [normalized]);
+
+  // initialize email/phone inputs from normalized
+  useEffect(() => {
+    setEmail((prev) => (prev ? prev : normalized.leadEmail));
+    setPhone((prev) => (prev ? prev : normalized.leadPhone));
+  }, [normalized.leadEmail, normalized.leadPhone]);
 
   const headerMessage =
     "One-page starter from $225 (no paid add-ons). 1–3 pages from $400 (no paid add-ons). 4–6 pages start at $550 + add-ons. We’ll confirm final scope together before you pay a deposit.";
 
-  const bookingUrl =
-    process.env.NEXT_PUBLIC_CALL_BOOKING_URL ||
-    "mailto:hello@crecystudio.com?subject=Scope%20Call%20Request";
+  async function submitEstimate() {
+    const cleanEmail = String(email ?? "").trim().toLowerCase();
+    const cleanPhone = String(phone ?? "").trim();
 
-  async function submitToSupabase() {
-    setSubmitError("");
-
-    const email = cleanEmail(emailInput);
-    if (!email || !email.includes("@")) {
-      setSubmitError("Please enter a valid email so we can send your estimate and schedule your call.");
+    if (!cleanEmail || !cleanEmail.includes("@")) {
+      setSubmitState("error");
+      setSubmitError("Please enter a valid email before sending your estimate.");
       return;
     }
 
-    setSubmitting(true);
-    try {
-      const scopeSnapshot = buildScopeSnapshot(normalized, estimate.tier);
+    setSubmitState("submitting");
+    setSubmitError("");
 
+    try {
       const payload = {
         source: "estimate",
         lead: {
-          email,
-          phone: String(phoneInput ?? "").trim() || undefined,
+          email: cleanEmail,
+          phone: cleanPhone || undefined,
         },
-        intakeRaw: merged,
+        intakeRaw: merged ?? {},
         intakeNormalized: normalized,
-        scopeSnapshot,
+        scopeSnapshot: buildScopeSnapshot(normalized),
         estimate: {
           total: estimate.total,
           low: estimate.low,
@@ -412,12 +435,8 @@ export default function EstimateClient() {
           tierRecommended: estimate.tier,
         },
         debug: {
-          loadedFromLocalStorage: loadedFromLocalStorage ?? null,
-          parsedQuery,
-          merged,
-          normalized,
-          computed: estimate,
-          submittedAt: new Date().toISOString(),
+          note: "Submitted from /estimate",
+          mergedSourceKeys: Object.keys(merged ?? {}),
         },
       };
 
@@ -427,30 +446,25 @@ export default function EstimateClient() {
         body: JSON.stringify(payload),
       });
 
-      const json = await res.json().catch(() => ({}));
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        throw new Error(json?.error || "Failed to submit estimate.");
+        throw new Error(data?.error || "Failed to submit estimate.");
       }
 
-      const newQuoteId = String(json?.quoteId ?? "").trim();
-      if (!newQuoteId) throw new Error("Submitted, but no quoteId returned.");
-
+      const newQuoteId = String(data?.quoteId ?? "").trim();
       setQuoteId(newQuoteId);
-
-      // persist quoteId in URL (so refresh still shows it)
-      const url = new URL(window.location.href);
-      url.searchParams.set("quoteId", newQuoteId);
-      window.history.replaceState({}, "", url.toString());
-
-      // optional local storage
-      try {
-        window.localStorage.setItem("crecystudio:last_quoteId", newQuoteId);
-      } catch {}
+      setSubmitState("success");
     } catch (e: any) {
-      setSubmitError(e?.message || "Unknown error");
-    } finally {
-      setSubmitting(false);
+      setSubmitState("error");
+      setSubmitError(e?.message || "Failed to submit estimate.");
     }
+  }
+
+  function copy(text: string) {
+    try {
+      navigator.clipboard.writeText(text);
+    } catch {}
   }
 
   return (
@@ -519,8 +533,8 @@ export default function EstimateClient() {
             Note: if budget is tight, we can do scope trade-offs or admin-only discounts (10–25%) without changing public tier pricing.
           </div>
 
-          <div className="smallNote" style={{ marginTop: 10, fontWeight: 900 }}>
-            No payment required until after we speak on the video call.
+          <div className="smallNote" style={{ marginTop: 8, fontWeight: 900 }}>
+            Next: we’ll confirm scope on a short video call, then send your deposit link.
           </div>
         </div>
       </section>
@@ -580,42 +594,23 @@ export default function EstimateClient() {
 
       <div style={{ height: 18 }} />
 
-      {/* Next step (creates quote + shows quoteId) */}
+      {/* Next step / Submit */}
       <section className="panel">
         <div className="panelHeader">
           <div style={{ fontWeight: 950 }}>Next step</div>
           <div className="smallNote">
-            Save this estimate so we can lock scope together — then book a quick call.
+            Send this estimate so we can lock scope together. Payment happens after the video call.
           </div>
         </div>
 
         <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-          {quoteId ? (
-            <div
-              style={{
-                border: "1px solid rgba(255,255,255,0.12)",
-                background: "rgba(255,255,255,0.04)",
-                borderRadius: 14,
-                padding: 14,
-              }}
-            >
-              <div style={{ fontWeight: 950, marginBottom: 6 }}>Saved ✅</div>
-              <div className="smallNote">
-                Reference / Quote ID:
-                <div style={{ marginTop: 6, fontWeight: 900 }}>
-                  <code>{quoteId}</code>
-                </div>
-              </div>
-            </div>
-          ) : null}
-
           <div className="grid2">
             <div>
               <div className="fieldLabel">Email (required)</div>
               <input
                 className="input"
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@company.com"
               />
             </div>
@@ -623,47 +618,93 @@ export default function EstimateClient() {
               <div className="fieldLabel">Phone (optional)</div>
               <input
                 className="input"
-                value={phoneInput}
-                onChange={(e) => setPhoneInput(e.target.value)}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 placeholder="(555) 555-5555"
               />
             </div>
           </div>
 
-          {submitError ? (
-            <div style={{ color: "#ffb4b4", fontWeight: 800 }}>
+          {submitState === "error" && (
+            <div
+              style={{
+                border: "1px solid rgba(255,120,120,0.35)",
+                background: "rgba(255,120,120,0.10)",
+                borderRadius: 14,
+                padding: 12,
+                color: "rgba(255,220,220,0.95)",
+                fontWeight: 800,
+              }}
+            >
               {submitError}
             </div>
-          ) : null}
+          )}
+
+          {submitState === "success" && (
+            <div
+              style={{
+                border: "1px solid rgba(140,255,190,0.35)",
+                background: "rgba(140,255,190,0.10)",
+                borderRadius: 14,
+                padding: 12,
+                color: "rgba(210,255,230,0.95)",
+              }}
+            >
+              <div style={{ fontWeight: 950, marginBottom: 6 }}>Saved ✅</div>
+              <div className="smallNote" style={{ marginTop: 6 }}>
+                Reference ID:{" "}
+                <code style={{ fontWeight: 900 }}>{quoteId || "(missing)"}</code>{" "}
+                {quoteId ? (
+                  <button
+                    type="button"
+                    className="btn btnGhost"
+                    style={{ padding: "8px 10px", marginLeft: 8 }}
+                    onClick={() => copy(quoteId)}
+                  >
+                    Copy
+                  </button>
+                ) : null}
+              </div>
+              <div className="smallNote" style={{ marginTop: 8 }}>
+                Next: book your scope call. After the call, we lock scope and send your deposit link.
+              </div>
+            </div>
+          )}
 
           <div className="row" style={{ justifyContent: "space-between" }}>
-            <Link className="btn btnGhost" href="/">
-              Back home
+            <Link className="btn btnGhost" href="/build">
+              Edit answers
             </Link>
 
-            <div className="row" style={{ justifyContent: "flex-end" }}>
-              <Link className="btn btnGhost" href="/build">
-                Get exact quote
-              </Link>
-
+            {submitState !== "success" ? (
               <button
+                type="button"
                 className="btn btnPrimary"
-                onClick={submitToSupabase}
-                disabled={submitting}
+                onClick={submitEstimate}
+                disabled={submitState === "submitting"}
               >
-                {submitting ? "Saving…" : quoteId ? "Saved (re-save)" : "Save estimate"}{" "}
+                {submitState === "submitting" ? "Sending..." : "Send estimate"}{" "}
                 <span className="btnArrow">→</span>
               </button>
-
-              <a className="btn btnPrimary" href={bookingUrl} target="_blank" rel="noreferrer">
+            ) : (
+              <Link className="btn btnPrimary" href={`/book${quoteId ? `?quoteId=${encodeURIComponent(quoteId)}` : ""}`}>
                 Book video call <span className="btnArrow">→</span>
+              </Link>
+            )}
+          </div>
+
+          {/* Optional internal link for you (admin). Keep subtle. */}
+          {submitState === "success" && quoteId ? (
+            <div className="smallNote" style={{ opacity: 0.75 }}>
+              Admin:{" "}
+              <a
+                href={`/internal/preview?quoteId=${encodeURIComponent(quoteId)}`}
+                style={{ textDecoration: "underline" }}
+              >
+                view saved quote
               </a>
             </div>
-          </div>
-
-          <div className="smallNote">
-            We’ll confirm final scope on the call, then send your deposit link afterward (no pay-before-call).
-          </div>
+          ) : null}
         </div>
       </section>
 
@@ -689,12 +730,12 @@ export default function EstimateClient() {
           >
 {JSON.stringify(
   {
-    quoteId: quoteId || null,
     loadedFromLocalStorage: loadedFromLocalStorage ?? null,
     parsedQuery,
     normalized,
     tier: estimate.tier,
     total: estimate.total,
+    submit: { state: submitState, quoteId: quoteId || null },
   },
   null,
   2
@@ -752,7 +793,7 @@ function TierCard({
 
         <div className="tierCTA">
           <Link className="btn btnPrimary" href="/build">
-            Get exact quote <span className="btnArrow">→</span>
+            Update answers <span className="btnArrow">→</span>
           </Link>
           <Link className="btn btnGhost" href="/">
             Back home
