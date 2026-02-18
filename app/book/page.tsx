@@ -3,13 +3,14 @@ import BookClient from "./BookClient";
 
 export const dynamic = "force-dynamic";
 
-export default function BookPage({
-  searchParams,
-}: {
-  searchParams: Record<string, string | string[] | undefined>;
-}) {
-  const raw = searchParams?.quoteId;
-  const quoteId = Array.isArray(raw) ? (raw[0] ?? "") : (raw ?? "");
+type SearchParams = Record<string, string | string[] | undefined>;
 
-  return <BookClient quoteId={quoteId.trim()} />;
+function pick(sp: SearchParams, key: string) {
+  const v = sp?.[key];
+  return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
+}
+
+export default function BookPage({ searchParams }: { searchParams: SearchParams }) {
+  const quoteId = pick(searchParams, "quoteId").trim();
+  return <BookClient quoteId={quoteId} />;
 }
