@@ -25,6 +25,15 @@ type Normalized = {
   contentReady: "ready" | "some" | "not_ready";
   domainHosting: YesNo;
 
+  // extra fields (from /build)
+  hasLogo: YesNo;
+  hasBrandGuide: YesNo;
+  assetsSource: string;
+  referenceWebsite: string;
+  decisionMaker: YesNo;
+  stakeholdersCount: string;
+  design: string;
+
   timeline: string;
   intent: string;
 
@@ -89,7 +98,6 @@ function parsePagesMax(raw: any): { max: number; raw: string } {
   const s = String(raw ?? "").trim();
   if (!s) return { max: 3, raw: "" };
   if (s.includes("+")) {
-    // treat "9+" as 9+ (big bucket)
     const n = parseInt(s.replace("+", ""), 10);
     return { max: Number.isFinite(n) ? n : 9, raw: s };
   }
@@ -180,20 +188,19 @@ function computeEstimate(n: Normalized) {
   const paidAutoTypes = n.automationTypes.filter((x) => !FREE_AUTOMATIONS.has(x));
 
   if (wantsAuto) {
-    // Email confirmations free (and does not trigger paid automation fees)
     if (freeChosen.length > 0 && paidAutoTypes.length === 0) {
       lines.push({ label: "Email confirmations (included)", amount: 0 });
     }
-
-    // Paid automations only if they selected something besides confirmations
     if (paidAutoTypes.length > 0) {
       lines.push({ label: "Automations setup", amount: 200 });
-      lines.push({ label: `Automation types (${paidAutoTypes.length})`, amount: paidAutoTypes.length * 40 });
+      lines.push({
+        label: `Automation types (${paidAutoTypes.length})`,
+        amount: paidAutoTypes.length * 40,
+      });
     }
   }
 
-  // Integrations
-  // If they picked Stripe/PayPal in integrations, treat it as Payments (so estimate matches intent)
+  // Integrations (Stripe/PayPal/Calendly can infer paid feature so estimate matches intent)
   const integrations = [...n.integrations];
   const hasStripe = integrations.includes("Stripe payments");
   const hasPayPal = integrations.includes("PayPal payments");
@@ -202,7 +209,6 @@ function computeEstimate(n: Normalized) {
   const inferredPayments = (hasStripe || hasPayPal) && !n.payments;
   const inferredBooking = hasCalendly && !n.booking;
 
-  // Prevent double counting if inferred
   const filteredIntegrations = integrations.filter(
     (x) => x !== "Stripe payments" && x !== "PayPal payments" && x !== "Calendly / scheduling"
   );
@@ -210,21 +216,17 @@ function computeEstimate(n: Normalized) {
   if (inferredPayments) lines.push({ label: "Payments (from selected integration)", amount: 250 });
   if (inferredBooking) lines.push({ label: "Booking (from selected integration)", amount: 120 });
 
-  // Integration fees (simple ones free)
   let paidIntegrationCount = 0;
   let integrationTotal = 0;
 
   for (const i of filteredIntegrations) {
-    if (FREE_INTEGRATIONS.has(i)) {
-      // free
-      continue;
-    }
+    if (FREE_INTEGRATIONS.has(i)) continue;
+
     paidIntegrationCount += 1;
-    // light setup vs heavier setup
     const amt =
       i === "Mailchimp / email list" ? 60 :
       i === "Live chat" ? 40 :
-      40; // default small setup
+      40;
     integrationTotal += amt;
   }
 
@@ -232,17 +234,15 @@ function computeEstimate(n: Normalized) {
     lines.push({ label: `Integrations (${paidIntegrationCount})`, amount: integrationTotal });
   }
 
-  // Readiness (keep “soft” for conversion)
+  // Readiness
   if (n.contentReady === "some") lines.push({ label: "Partial content readiness", amount: 60 });
   if (n.contentReady === "not_ready") lines.push({ label: "Content not ready (help needed)", amount: 160 });
 
   if (n.domainHosting === "no") lines.push({ label: "Domain/hosting guidance", amount: 60 });
   if (n.domainHosting === "yes") lines.push({ label: "Domain/hosting handled by client", amount: 0 });
 
-  // Total
+  // Total + range
   const total = lines.reduce((sum, l) => sum + l.amount, 0);
-
-  // Typical range (tight)
   const low = Math.max(0, Math.round(total * 0.90));
   const high = Math.max(low + 1, Math.round(total * 1.15));
 
@@ -272,7 +272,6 @@ function computeEstimate(n: Normalized) {
     12;
 
   let tier: "essential" | "growth" | "premium" = "essential";
-
   if (pagesMax >= 9 || n.payments || n.membership || hasPaidAutomation) tier = "premium";
   else if (pagesMax >= 4 || n.booking || hasPaidIntegrations || n.websiteType === "ecommerce") tier = "growth";
   else tier = total > 850 ? "growth" : "essential";
@@ -280,26 +279,144 @@ function computeEstimate(n: Normalized) {
   return { total, low, high, lines, tier, hasPaidAddons };
 }
 
-function buildScopeSnapshot(n: Normalized) {
-  const features = [
-    n.booking && "Booking",
-    n.payments && "Payments",
-    n.blog && "Blog",
-    n.membership && "Membership",
-    (n.automationTypes?.length ? `Automation (${n.automationTypes.length})` : false),
-    (n.integrations?.length ? `Integrations (${n.integrations.length})` : false),
-  ].filter(Boolean);
+function recommendPlatform(n: Normalized) {
+  // lightweight heuristic — final platform decided on call
+  const advanced =
+    n.payments ||
+    n.membership ||
+    (n.wantsAutomation === "yes" && n.automationTypes.some((t) => !FREE_AUTOMATIONS.has(t))) ||
+    n.pages === "9+";
 
+  if (advanced) return "Custom (Next.js) — recommended";
+  if (n.websiteType === "ecommerce") return "Custom (Next.js) or Squarespace (depends on checkout)";
+  return "Wix or Squarespace — recommended";
+}
+
+function revisionPolicyByTier(tier: "essential" | "growth" | "premium") {
+  if (tier === "essential") return "1 structured revision round";
+  if (tier === "growth") return "2 structured revision rounds";
+  return "2–3 revision rounds (by scope)";
+}
+
+function listFeatures(n: Normalized) {
+  const list: string[] = [];
+  if (n.booking) list.push("Booking / appointments");
+  if (n.payments) list.push("Payments / checkout");
+  if (n.blog) list.push("Blog / articles");
+  if (n.membership) list.push("Membership / gated content");
+
+  const paidAutoTypes = n.automationTypes.filter((x) => !FREE_AUTOMATIONS.has(x));
+  if (n.wantsAutomation === "yes") {
+    if (paidAutoTypes.length) list.push(`Automations (${paidAutoTypes.length} paid types)`);
+    else if (n.automationTypes.length) list.push("Email confirmations (included)");
+  }
+
+  if (n.integrations?.length) list.push(`Integrations (${n.integrations.length})`);
+  if (n.integrationOther) list.push(`Other integration: ${n.integrationOther}`);
+
+  return list.length ? list : ["None selected"];
+}
+
+function buildScopeSnapshotStructured(
+  n: Normalized,
+  estimate: { total: number; low: number; high: number; tier: "essential" | "growth" | "premium" }
+) {
   return {
-    websiteType: n.websiteType,
-    pages: n.pages,
-    features,
-    contentReady: n.contentReady,
-    domainHosting: n.domainHosting,
-    timeline: n.timeline,
-    intent: n.intent,
-    notes: n.notes ?? "",
+    project: {
+      websiteType: n.websiteType,
+      pages: n.pages,
+      intent: n.intent,
+      timeline: n.timeline,
+      design: n.design || "(not specified)",
+      platformRecommendation: recommendPlatform(n),
+    },
+    features: listFeatures(n),
+    readiness: {
+      contentReady: n.contentReady,
+      domainHostingHandled: n.domainHosting,
+      assetsSource: n.assetsSource || "(not specified)",
+      hasLogo: n.hasLogo,
+      hasBrandGuide: n.hasBrandGuide,
+      referenceWebsite: n.referenceWebsite || "",
+    },
+    reviews: {
+      decisionMaker: n.decisionMaker,
+      stakeholdersCount: n.stakeholdersCount || "1",
+      revisions: revisionPolicyByTier(estimate.tier),
+    },
+    estimate: {
+      total: estimate.total,
+      low: estimate.low,
+      high: estimate.high,
+      tierRecommended: estimate.tier,
+      depositPolicy: "No payment before the video call. Deposit collected after scope is confirmed.",
+    },
+    notes: n.notes || "",
+    exclusions: [
+      "Copywriting beyond light edits",
+      "Photography / video production",
+      "Paid ads management",
+      "Ongoing SEO retainers",
+      "Third-party subscription fees (hosting, domains, apps)",
+    ],
   };
+}
+
+function buildScopeSnapshotText(structured: any) {
+  const p = structured?.project ?? {};
+  const r = structured?.readiness ?? {};
+  const rev = structured?.reviews ?? {};
+  const est = structured?.estimate ?? {};
+  const features: string[] = structured?.features ?? [];
+  const exclusions: string[] = structured?.exclusions ?? [];
+
+  const lines: string[] = [];
+
+  lines.push("SCOPE SNAPSHOT (Draft)");
+  lines.push("");
+  lines.push(`Website type: ${p.websiteType ?? "-"}`);
+  lines.push(`Pages: ${p.pages ?? "-"}`);
+  lines.push(`Primary goal: ${p.intent ?? "-"}`);
+  lines.push(`Timeline: ${p.timeline ?? "-"}`);
+  lines.push(`Design direction: ${p.design ?? "-"}`);
+  lines.push(`Recommended platform: ${p.platformRecommendation ?? "-"}`);
+  lines.push("");
+
+  lines.push("Features included:");
+  for (const f of features.length ? features : ["None selected"]) lines.push(`- ${f}`);
+  lines.push("");
+
+  lines.push("Assets & readiness:");
+  lines.push(`- Content readiness: ${r.contentReady ?? "-"}`);
+  lines.push(`- Domain/hosting handled: ${r.domainHostingHandled ?? "-"}`);
+  lines.push(`- Assets source: ${r.assetsSource ?? "-"}`);
+  lines.push(`- Logo available: ${r.hasLogo ?? "-"}`);
+  lines.push(`- Brand guide/colors: ${r.hasBrandGuide ?? "-"}`);
+  if (r.referenceWebsite) lines.push(`- Reference: ${r.referenceWebsite}`);
+  lines.push("");
+
+  lines.push("Review & revisions:");
+  lines.push(`- Decision maker: ${rev.decisionMaker ?? "-"}`);
+  lines.push(`- Stakeholders: ${rev.stakeholdersCount ?? "-"}`);
+  lines.push(`- Revisions: ${rev.revisions ?? "-"}`);
+  lines.push("");
+
+  lines.push("Estimate:");
+  lines.push(`- Estimated range: $${est.low ?? "-"} – $${est.high ?? "-"}`);
+  lines.push(`- Recommended tier: ${est.tierRecommended ?? "-"}`);
+  lines.push(`- Deposit: ${est.depositPolicy ?? "-"}`);
+  lines.push("");
+
+  if (structured?.notes) {
+    lines.push("Notes:");
+    lines.push(structured.notes);
+    lines.push("");
+  }
+
+  lines.push("Exclusions (not included unless added later):");
+  for (const e of exclusions) lines.push(`- ${e}`);
+
+  return lines.join("\n");
 }
 
 export default function EstimateClient() {
@@ -317,6 +434,9 @@ export default function EstimateClient() {
     leadId?: string;
     error?: string;
   }>({ status: "idle" });
+
+  const [snapshotText, setSnapshotText] = useState("");
+  const [copied, setCopied] = useState(false);
 
   // Load localStorage intake
   useEffect(() => {
@@ -356,6 +476,15 @@ export default function EstimateClient() {
 
     if (has("contentReady")) q.contentReady = get("contentReady");
     if (has("domainHosting")) q.domainHosting = get("domainHosting");
+
+    // extra fields from /build
+    if (has("hasLogo")) q.hasLogo = get("hasLogo");
+    if (has("hasBrandGuide")) q.hasBrandGuide = get("hasBrandGuide");
+    if (has("assetsSource")) q.assetsSource = get("assetsSource");
+    if (has("referenceWebsite")) q.referenceWebsite = get("referenceWebsite");
+    if (has("decisionMaker")) q.decisionMaker = get("decisionMaker");
+    if (has("stakeholdersCount")) q.stakeholdersCount = get("stakeholdersCount");
+    if (has("design")) q.design = get("design");
 
     if (has("timeline")) q.timeline = get("timeline");
     if (has("intent")) q.intent = get("intent");
@@ -398,6 +527,14 @@ export default function EstimateClient() {
       contentReady: normContentReady(merged.contentReady),
       domainHosting: normYesNo(merged.domainHosting, "no"),
 
+      hasLogo: normYesNo(merged.hasLogo, "no"),
+      hasBrandGuide: normYesNo(merged.hasBrandGuide, "no"),
+      assetsSource: String(merged.assetsSource ?? "").trim(),
+      referenceWebsite: String(merged.referenceWebsite ?? "").trim(),
+      decisionMaker: normYesNo(merged.decisionMaker, "yes"),
+      stakeholdersCount: String(merged.stakeholdersCount ?? "").trim() || "1",
+      design: String(merged.design ?? "").trim(),
+
       timeline: String(merged.timeline ?? "").trim() || "2-3w",
       intent: String(merged.intent ?? "").trim() || "business",
 
@@ -415,8 +552,32 @@ export default function EstimateClient() {
 
   const estimate = useMemo(() => computeEstimate(normalized), [normalized]);
 
+  // Scope snapshot (structured + text)
+  const snapshotStructured = useMemo(() => {
+    return buildScopeSnapshotStructured(normalized, {
+      total: estimate.total,
+      low: estimate.low,
+      high: estimate.high,
+      tier: estimate.tier,
+    });
+  }, [normalized, estimate.total, estimate.low, estimate.high, estimate.tier]);
+
+  // set default snapshot text once / whenever it is empty
+  useEffect(() => {
+    setSnapshotText((prev) => prev || buildScopeSnapshotText(snapshotStructured));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snapshotStructured]);
+
   const headerMessage =
     "One-page starter from $225 (no paid add-ons). 1–3 pages from $400 (no paid add-ons). 4–6 pages start at $550 + add-ons. We’ll confirm final scope together before you pay a deposit.";
+
+  async function copySnapshot() {
+    try {
+      await navigator.clipboard.writeText(snapshotText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    } catch {}
+  }
 
   async function submitEstimate() {
     const email = String(leadEmail || "").trim().toLowerCase();
@@ -448,7 +609,10 @@ export default function EstimateClient() {
           merged,
         },
         intakeNormalized,
-        scopeSnapshot: buildScopeSnapshot(intakeNormalized),
+        scopeSnapshot: {
+          structured: snapshotStructured,
+          text: snapshotText,
+        },
         estimate: {
           total: Number(estimate.total ?? 0),
           low: Number(estimate.low ?? 0),
@@ -558,9 +722,45 @@ export default function EstimateClient() {
           <div className="smallNote" style={{ marginTop: 14 }}>
             Note: if budget is tight, we can do scope trade-offs or admin-only discounts (10–25%) without changing public tier pricing.
           </div>
+        </div>
+      </section>
 
-          <div className="smallNote" style={{ marginTop: 8, fontWeight: 900 }}>
-            Next: add Scope Snapshot preview
+      <div style={{ height: 18 }} />
+
+      {/* ✅ Scope Snapshot Preview */}
+      <section className="panel">
+        <div className="panelHeader">
+          <div style={{ fontWeight: 950 }}>Scope Snapshot preview</div>
+          <div className="smallNote">
+            This is the draft scope we’ll review together on the video call (you can edit it).
+          </div>
+        </div>
+
+        <div className="panelBody" style={{ display: "grid", gap: 12 }}>
+          <textarea
+            className="textarea"
+            rows={16}
+            value={snapshotText}
+            onChange={(e) => setSnapshotText(e.target.value)}
+            placeholder="Scope Snapshot will appear here…"
+          />
+
+          <div className="row" style={{ justifyContent: "space-between" }}>
+            <button type="button" className="btn btnGhost" onClick={copySnapshot}>
+              {copied ? "Copied ✅" : "Copy snapshot"}
+            </button>
+
+            <button
+              type="button"
+              className="btn btnGhost"
+              onClick={() => setSnapshotText(buildScopeSnapshotText(snapshotStructured))}
+            >
+              Reset to auto-draft
+            </button>
+          </div>
+
+          <div className="smallNote">
+            Next: click <strong>Send estimate</strong> — we’ll save this scope snapshot + estimate to your quote record.
           </div>
         </div>
       </section>
@@ -620,7 +820,7 @@ export default function EstimateClient() {
 
       <div style={{ height: 18 }} />
 
-      {/* Next step (now actually saves + shows quoteId) */}
+      {/* Next step (saves + shows quoteId) */}
       <section className="panel">
         <div className="panelHeader">
           <div style={{ fontWeight: 950 }}>Next step</div>
@@ -745,6 +945,10 @@ export default function EstimateClient() {
     low: estimate.low,
     high: estimate.high,
     submitState,
+    scopeSnapshotPreview: {
+      structured: snapshotStructured,
+      text: snapshotText,
+    },
   },
   null,
   2
