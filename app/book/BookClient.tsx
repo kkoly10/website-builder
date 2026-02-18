@@ -2,50 +2,39 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState } from "react";
 
-function clean(s: string | null) {
-  return String(s ?? "").trim();
-}
-
-export default function BookClient() {
-  const sp = useSearchParams();
-
-  const quoteId = useMemo(() => clean(sp.get("quoteId")), [sp]);
-  const email = useMemo(() => clean(sp.get("leadEmail")), [sp]);
-
-  const [availability, setAvailability] = useState("");
+export default function BookClient({ quoteId }: { quoteId: string }) {
   const [notes, setNotes] = useState("");
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [sending, setSending] = useState(false);
+  const [ok, setOk] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   async function requestCall() {
-    setStatus("saving");
-    setErrorMsg("");
+    setErr(null);
+    setOk(false);
 
+    if (!quoteId) {
+      setErr("Missing quoteId. Please go back and click “Send estimate” first.");
+      return;
+    }
+
+    setSending(true);
     try {
       const res = await fetch("/api/request-call", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          quoteId,
-          leadEmail: email,
-          callRequest: {
-            availability,
-            notes,
-            requestedFrom: "book_page",
-          },
-        }),
+        body: JSON.stringify({ quoteId, notes }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Request failed");
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Failed to request call.");
 
-      setStatus("saved");
+      setOk(true);
     } catch (e: any) {
-      setStatus("error");
-      setErrorMsg(e?.message || "Unknown error");
+      setErr(e?.message || "Failed to request call.");
+    } finally {
+      setSending(false);
     }
   }
 
@@ -53,105 +42,58 @@ export default function BookClient() {
     <main className="container" style={{ padding: "48px 0 80px" }}>
       <div className="kicker">
         <span className="kickerDot" aria-hidden="true" />
-        CrecyStudio • Book your call
+        CrecyStudio • Book a Scope Call
       </div>
 
       <div style={{ height: 12 }} />
-
-      <h1 className="h1">Free scope lock call</h1>
-      <p className="p" style={{ maxWidth: 920, marginTop: 10 }}>
-        You’re not paying yet. We’ll review your estimate, lock the scope together, then send a deposit
-        link after the call.
+      <h1 className="h1">Confirm scope first</h1>
+      <p className="p" style={{ maxWidth: 900, marginTop: 10 }}>
+        We’ll confirm scope on a quick call first. Payment happens after the call if you want to move forward.
       </p>
 
       <div style={{ height: 18 }} />
 
       <section className="panel">
         <div className="panelHeader">
-          <div style={{ fontWeight: 950 }}>Your quote</div>
-          <div className="smallNote">
-            This helps us pull up the exact estimate you just generated.
-          </div>
+          <div style={{ fontWeight: 950 }}>Your reference</div>
+          <div className="smallNote">Save this ID for support.</div>
         </div>
-
-        <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-          <div>
-            <div className="fieldLabel">Quote ID</div>
-            <input className="input" value={quoteId || "(missing)"} readOnly />
-            {!quoteId && (
-              <div className="smallNote" style={{ marginTop: 8 }}>
-                Missing <code>quoteId</code> in the URL. Your estimate page should send you here like:
-                <code> /book?quoteId=...</code>
-              </div>
-            )}
+        <div className="panelBody">
+          <div className="pDark">
+            Quote ID: <code>{quoteId || "(missing)"}</code>
           </div>
 
-          <div>
-            <div className="fieldLabel">Email</div>
-            <input className="input" value={email || "(not provided)"} readOnly />
-          </div>
-        </div>
-      </section>
+          <div style={{ height: 12 }} />
 
-      <div style={{ height: 18 }} />
+          <div className="fieldLabel">Anything we should know before the call? (optional)</div>
+          <textarea
+            className="textarea"
+            rows={4}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Example: I already have a logo, I want a pricing page, I need it in 10 days..."
+          />
 
-      <section className="panel">
-        <div className="panelHeader">
-          <div style={{ fontWeight: 950 }}>Request the call</div>
-          <div className="smallNote">
-            Calendly can come later — for now we’ll collect availability and follow up.
-          </div>
-        </div>
-
-        <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-          <div>
-            <div className="fieldLabel">Availability</div>
-            <textarea
-              className="textarea"
-              value={availability}
-              onChange={(e) => setAvailability(e.target.value)}
-              placeholder="Example: Tue–Thu after 6pm, Sat 10am–2pm (ET)"
-            />
-          </div>
-
-          <div>
-            <div className="fieldLabel">Notes (optional)</div>
-            <textarea
-              className="textarea"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Anything you want us to prioritize (pages, features, examples)…"
-            />
-          </div>
-
-          {status === "error" && (
-            <div className="smallNote" style={{ color: "rgba(255,120,120,0.95)" }}>
-              Error: {errorMsg}
+          {err && (
+            <div className="smallNote" style={{ marginTop: 12, color: "#ffb4b4", fontWeight: 900 }}>
+              {err}
             </div>
           )}
 
-          {status === "saved" ? (
-            <div className="smallNote" style={{ fontWeight: 900 }}>
-              ✅ Call request saved. We’ll reach out to schedule.
+          {ok && (
+            <div className="smallNote" style={{ marginTop: 12, fontWeight: 900 }}>
+              Request sent ✅ We’ll reach out to schedule the call.
             </div>
-          ) : (
-            <button
-              className="btn btnPrimary"
-              onClick={requestCall}
-              disabled={!quoteId || status === "saving"}
-            >
-              {status === "saving" ? "Saving…" : "Request call"}{" "}
-              <span className="btnArrow">→</span>
-            </button>
           )}
 
-          <div className="row" style={{ justifyContent: "space-between" }}>
+          <div className="row" style={{ justifyContent: "space-between", marginTop: 14 }}>
             <Link className="btn btnGhost" href="/estimate">
               Back to estimate
             </Link>
-            <Link className="btn btnGhost" href="/">
-              Back home
-            </Link>
+
+            <button className="btn btnPrimary" onClick={requestCall} disabled={sending}>
+              {sending ? "Sending..." : "Request call"} <span className="btnArrow">→</span>
+            </button>
           </div>
         </div>
       </section>
