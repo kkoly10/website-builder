@@ -1,3 +1,4 @@
+// app/estimate/EstimateClient.tsx
 "use client";
 
 import Link from "next/link";
@@ -109,18 +110,6 @@ function bucketPages(max: number): PagesBucket {
   return "9+";
 }
 
-/**
- * Price model (your new vision):
- * - pages=1 => base 225 always (add-ons stack)
- * - pages=1–3 => base 400 always (add-ons stack)
- * - pages=4–6 => base 550 + add-ons
- * - pages=6–8 => base 550 + scope bump + add-ons
- * - pages=9+ => base 550 + bigger scope bump + add-ons
- *
- * Included rules:
- * - Email confirmations is free
- * - Blog is $0 when pages >= 4–6 (light blog)
- */
 function computeEstimate(n: Normalized) {
   const lines: BreakdownLine[] = [];
 
@@ -148,7 +137,7 @@ function computeEstimate(n: Normalized) {
     }
   }
 
-  // Website type adjustments (small, not aggressive)
+  // Website type adjustments
   if (n.websiteType === "ecommerce") {
     lines.push({ label: "Ecommerce baseline", amount: 150 });
   } else if (n.websiteType === "portfolio") {
@@ -184,15 +173,11 @@ function computeEstimate(n: Normalized) {
     }
     if (paidAutoTypes.length > 0) {
       lines.push({ label: "Automations setup", amount: 200 });
-      lines.push({
-        label: `Automation types (${paidAutoTypes.length})`,
-        amount: paidAutoTypes.length * 40,
-      });
+      lines.push({ label: `Automation types (${paidAutoTypes.length})`, amount: paidAutoTypes.length * 40 });
     }
   }
 
   // Integrations
-  // If they picked Stripe/PayPal in integrations, treat it as Payments (so estimate matches intent)
   const integrations = [...n.integrations];
   const hasStripe = integrations.includes("Stripe payments");
   const hasPayPal = integrations.includes("PayPal payments");
@@ -213,7 +198,6 @@ function computeEstimate(n: Normalized) {
 
   for (const i of filteredIntegrations) {
     if (FREE_INTEGRATIONS.has(i)) continue;
-
     paidIntegrationCount += 1;
     const amt =
       i === "Mailchimp / email list" ? 60 :
@@ -226,7 +210,7 @@ function computeEstimate(n: Normalized) {
     lines.push({ label: `Integrations (${paidIntegrationCount})`, amount: integrationTotal });
   }
 
-  // Readiness (soft)
+  // Readiness
   if (n.contentReady === "some") lines.push({ label: "Partial content readiness", amount: 60 });
   if (n.contentReady === "not_ready") lines.push({ label: "Content not ready (help needed)", amount: 160 });
 
@@ -238,7 +222,9 @@ function computeEstimate(n: Normalized) {
   const low = Math.max(0, Math.round(total * 0.90));
   const high = Math.max(low + 1, Math.round(total * 1.15));
 
-  // Tier recommendation
+  const hasPaidAutomation = paidAutoTypes.length > 0;
+  const hasPaidIntegrations = paidIntegrationCount > 0;
+
   const pagesMax =
     n.pages === "1" ? 1 :
     n.pages === "1-3" ? 3 :
@@ -246,51 +232,12 @@ function computeEstimate(n: Normalized) {
     n.pages === "6-8" ? 8 :
     12;
 
-  const hasPaidAutomation = paidAutoTypes.length > 0;
-  const hasPaidIntegrations = paidIntegrationCount > 0;
-
   let tier: "essential" | "growth" | "premium" = "essential";
   if (pagesMax >= 9 || n.payments || n.membership || hasPaidAutomation) tier = "premium";
   else if (pagesMax >= 4 || n.booking || hasPaidIntegrations || n.websiteType === "ecommerce") tier = "growth";
   else tier = total > 850 ? "growth" : "essential";
 
-  const hasPaidAddons =
-    n.booking ||
-    n.payments ||
-    n.membership ||
-    hasPaidAutomation ||
-    (n.blog && (n.pages === "1" || n.pages === "1-3")) ||
-    hasPaidIntegrations ||
-    inferredPayments ||
-    inferredBooking ||
-    n.contentReady !== "ready" ||
-    n.domainHosting !== "yes";
-
-  return { total, low, high, lines, tier, hasPaidAddons };
-}
-
-function buildScopeSnapshot(n: Normalized) {
-  const features = [
-    n.booking && "Booking",
-    n.payments && "Payments",
-    n.blog && "Blog",
-    n.membership && "Membership",
-  ].filter(Boolean);
-
-  return {
-    websiteType: n.websiteType,
-    pages: n.pages,
-    features,
-    wantsAutomation: n.wantsAutomation,
-    automationTypes: n.automationTypes,
-    integrations: n.integrations,
-    integrationOther: n.integrationOther,
-    contentReady: n.contentReady,
-    domainHosting: n.domainHosting,
-    timeline: n.timeline,
-    intent: n.intent,
-    notes: n.notes,
-  };
+  return { total, low, high, lines, tier };
 }
 
 export default function EstimateClient() {
@@ -298,15 +245,10 @@ export default function EstimateClient() {
 
   const [loadedFromLocalStorage, setLoadedFromLocalStorage] = useState<any>(null);
 
-  // editable fields for submit (so estimate page can work even if missing email/phone)
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saved, setSaved] = useState<{ quoteId: string; publicToken: string } | null>(null);
 
-  const [submitState, setSubmitState] = useState<"idle" | "submitting" | "success" | "error">("idle");
-  const [submitError, setSubmitError] = useState<string>("");
-  const [quoteId, setQuoteId] = useState<string>("");
-
-  // Load localStorage intake
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(LS_KEY);
@@ -321,7 +263,6 @@ export default function EstimateClient() {
     }
   }, []);
 
-  // Parse query ONLY for keys present (so query can “win” cleanly)
   const parsedQuery = useMemo(() => {
     const has = (k: string) => sp.has(k);
     const get = (k: string) => sp.get(k);
@@ -355,13 +296,11 @@ export default function EstimateClient() {
     return q;
   }, [sp]);
 
-  // Merge order: localStorage -> URL query (query wins)
   const merged = useMemo(() => {
     const base = loadedFromLocalStorage && typeof loadedFromLocalStorage === "object" ? loadedFromLocalStorage : {};
     return { ...base, ...parsedQuery };
   }, [loadedFromLocalStorage, parsedQuery]);
 
-  // Normalize merged source into what pricing uses
   const normalized: Normalized = useMemo(() => {
     const { max } = parsePagesMax(merged.pages);
     const pages = bucketPages(max);
@@ -396,75 +335,70 @@ export default function EstimateClient() {
 
   const estimate = useMemo(() => computeEstimate(normalized), [normalized]);
 
-  // initialize email/phone inputs from normalized
-  useEffect(() => {
-    setEmail((prev) => (prev ? prev : normalized.leadEmail));
-    setPhone((prev) => (prev ? prev : normalized.leadPhone));
-  }, [normalized.leadEmail, normalized.leadPhone]);
-
   const headerMessage =
     "One-page starter from $225 (no paid add-ons). 1–3 pages from $400 (no paid add-ons). 4–6 pages start at $550 + add-ons. We’ll confirm final scope together before you pay a deposit.";
 
-  async function submitEstimate() {
-    const cleanEmail = String(email ?? "").trim().toLowerCase();
-    const cleanPhone = String(phone ?? "").trim();
+  async function saveQuote() {
+    setSaveError(null);
 
-    if (!cleanEmail || !cleanEmail.includes("@")) {
-      setSubmitState("error");
-      setSubmitError("Please enter a valid email before sending your estimate.");
+    if (!normalized.leadEmail || !normalized.leadEmail.includes("@")) {
+      setSaveError("Missing a valid email. Please go back and enter your email.");
       return;
     }
 
-    setSubmitState("submitting");
-    setSubmitError("");
-
+    setSaving(true);
     try {
-      const payload = {
-        source: "estimate",
-        lead: {
-          email: cleanEmail,
-          phone: cleanPhone || undefined,
-        },
-        intakeRaw: merged ?? {},
-        intakeNormalized: normalized,
-        scopeSnapshot: buildScopeSnapshot(normalized),
-        estimate: {
-          total: estimate.total,
-          low: estimate.low,
-          high: estimate.high,
-          tierRecommended: estimate.tier,
-        },
-        debug: {
-          note: "Submitted from /estimate",
-          mergedSourceKeys: Object.keys(merged ?? {}),
-        },
+      const scopeSnapshot = {
+        websiteType: normalized.websiteType,
+        pages: normalized.pages,
+        features: [
+          normalized.booking && "Booking",
+          normalized.payments && "Payments",
+          normalized.blog && "Blog",
+          normalized.membership && "Membership",
+        ].filter(Boolean),
+        contentReady: normalized.contentReady,
+        domainHosting: normalized.domainHosting,
+        timeline: normalized.timeline,
+        intent: normalized.intent,
+        notes: normalized.notes,
       };
 
       const res = await fetch("/api/submit-estimate", {
         method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: "estimate",
+          lead: {
+            email: normalized.leadEmail,
+            phone: normalized.leadPhone || undefined,
+          },
+          intakeRaw: merged,
+          intakeNormalized: normalized,
+          scopeSnapshot,
+          estimate: {
+            total: estimate.total,
+            low: estimate.low,
+            high: estimate.high,
+            tierRecommended: estimate.tier,
+          },
+          debug: {
+            parsedQuery,
+            savedFrom: "EstimateClient",
+            note: "Email confirmations are free.",
+          },
+        }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Failed to save quote.");
 
-      if (!res.ok) {
-        throw new Error(data?.error || "Failed to submit estimate.");
-      }
-
-      const newQuoteId = String(data?.quoteId ?? "").trim();
-      setQuoteId(newQuoteId);
-      setSubmitState("success");
+      setSaved({ quoteId: json.quoteId, publicToken: json.publicToken });
     } catch (e: any) {
-      setSubmitState("error");
-      setSubmitError(e?.message || "Failed to submit estimate.");
+      setSaveError(e?.message || "Something went wrong.");
+    } finally {
+      setSaving(false);
     }
-  }
-
-  function copy(text: string) {
-    try {
-      navigator.clipboard.writeText(text);
-    } catch {}
   }
 
   return (
@@ -534,272 +468,56 @@ export default function EstimateClient() {
           </div>
 
           <div className="smallNote" style={{ marginTop: 8, fontWeight: 900 }}>
-            Next: we’ll confirm scope on a short video call, then send your deposit link.
+            Next: add Scope Snapshot preview
           </div>
         </div>
       </section>
 
       <div style={{ height: 18 }} />
 
-      {/* Recommended tier cards */}
-      <section className="sectionSm">
-        <div className="kicker">
-          <span className="kickerDot" aria-hidden="true" />
-          Recommended tier
-        </div>
-        <div style={{ height: 10 }} />
-        <div className="pDark">Best fit based on scope.</div>
-
-        <div style={{ height: 14 }} />
-
-        <div className="tierGrid">
-          <TierCard
-            title="Essential Launch"
-            sub="Best for simple launches"
-            price="$225–$850"
-            best={estimate.tier === "essential"}
-            bullets={[
-              "1 page starter available (no paid add-ons)",
-              "1–3 pages for small businesses",
-              "Mobile responsive + contact form",
-              "1 revision round (structured)",
-            ]}
-          />
-          <TierCard
-            title="Growth Build"
-            sub="Most chosen"
-            price="$550–$1,500"
-            best={estimate.tier === "growth"}
-            bullets={[
-              "4–6 pages/sections + stronger UX",
-              "Booking + lead capture improvements",
-              "Better SEO structure + analytics",
-              "2 revision rounds (structured)",
-            ]}
-          />
-          <TierCard
-            title="Premium Platform"
-            sub="Best for scale"
-            price="$1,700–$3,500+"
-            best={estimate.tier === "premium"}
-            bullets={[
-              "7+ pages or advanced features",
-              "Payments/membership/automation options",
-              "Integrations + custom workflows",
-              "2–3 revision rounds (by scope)",
-            ]}
-          />
-        </div>
-      </section>
-
-      <div style={{ height: 18 }} />
-
-      {/* Next step / Submit */}
       <section className="panel">
         <div className="panelHeader">
           <div style={{ fontWeight: 950 }}>Next step</div>
           <div className="smallNote">
-            Send this estimate so we can lock scope together. Payment happens after the video call.
+            We’ll confirm scope on a quick call first. Payment happens after the call if you want to move forward.
           </div>
         </div>
 
         <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-          <div className="grid2">
-            <div>
-              <div className="fieldLabel">Email (required)</div>
-              <input
-                className="input"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@company.com"
-              />
-            </div>
-            <div>
-              <div className="fieldLabel">Phone (optional)</div>
-              <input
-                className="input"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="(555) 555-5555"
-              />
-            </div>
-          </div>
+          {saveError ? <div style={{ color: "#ff6b6b", fontWeight: 900 }}>{saveError}</div> : null}
 
-          {submitState === "error" && (
-            <div
-              style={{
-                border: "1px solid rgba(255,120,120,0.35)",
-                background: "rgba(255,120,120,0.10)",
-                borderRadius: 14,
-                padding: 12,
-                color: "rgba(255,220,220,0.95)",
-                fontWeight: 800,
-              }}
-            >
-              {submitError}
+          {saved ? (
+            <div className="smallNote">
+              ✅ Saved. Your reference ID is <code>{saved.quoteId}</code>.
+            </div>
+          ) : (
+            <div className="smallNote">
+              Click “Send estimate” to save your reference and request a call.
             </div>
           )}
 
-          {submitState === "success" && (
-            <div
-              style={{
-                border: "1px solid rgba(140,255,190,0.35)",
-                background: "rgba(140,255,190,0.10)",
-                borderRadius: 14,
-                padding: 12,
-                color: "rgba(210,255,230,0.95)",
-              }}
-            >
-              <div style={{ fontWeight: 950, marginBottom: 6 }}>Saved ✅</div>
-              <div className="smallNote" style={{ marginTop: 6 }}>
-                Reference ID:{" "}
-                <code style={{ fontWeight: 900 }}>{quoteId || "(missing)"}</code>{" "}
-                {quoteId ? (
-                  <button
-                    type="button"
-                    className="btn btnGhost"
-                    style={{ padding: "8px 10px", marginLeft: 8 }}
-                    onClick={() => copy(quoteId)}
-                  >
-                    Copy
-                  </button>
-                ) : null}
-              </div>
-              <div className="smallNote" style={{ marginTop: 8 }}>
-                Next: book your scope call. After the call, we lock scope and send your deposit link.
-              </div>
-            </div>
-          )}
-
-          <div className="row" style={{ justifyContent: "space-between" }}>
+          <div className="row" style={{ justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
             <Link className="btn btnGhost" href="/build">
               Edit answers
             </Link>
 
-            {submitState !== "success" ? (
-              <button
-                type="button"
-                className="btn btnPrimary"
-                onClick={submitEstimate}
-                disabled={submitState === "submitting"}
-              >
-                {submitState === "submitting" ? "Sending..." : "Send estimate"}{" "}
-                <span className="btnArrow">→</span>
+            {!saved ? (
+              <button className="btn btnPrimary" onClick={saveQuote} disabled={saving}>
+                {saving ? "Saving…" : "Send estimate"} <span className="btnArrow">→</span>
               </button>
             ) : (
-              <Link className="btn btnPrimary" href={`/book${quoteId ? `?quoteId=${encodeURIComponent(quoteId)}` : ""}`}>
-                Book video call <span className="btnArrow">→</span>
+              <Link
+                className="btn btnPrimary"
+                href={`/book?quoteId=${encodeURIComponent(saved.quoteId)}&t=${encodeURIComponent(
+                  saved.publicToken
+                )}&email=${encodeURIComponent(normalized.leadEmail)}&phone=${encodeURIComponent(normalized.leadPhone || "")}`}
+              >
+                Request a call <span className="btnArrow">→</span>
               </Link>
             )}
           </div>
-
-          {/* Optional internal link for you (admin). Keep subtle. */}
-          {submitState === "success" && quoteId ? (
-            <div className="smallNote" style={{ opacity: 0.75 }}>
-              Admin:{" "}
-              <a
-                href={`/internal/preview?quoteId=${encodeURIComponent(quoteId)}`}
-                style={{ textDecoration: "underline" }}
-              >
-                view saved quote
-              </a>
-            </div>
-          ) : null}
         </div>
       </section>
-
-      <div style={{ height: 18 }} />
-
-      {/* Debug */}
-      <section className="panel">
-        <div className="panelHeader">
-          <div style={{ fontWeight: 950 }}>Debug</div>
-          <div className="smallNote">
-            Merge order: localStorage → URL query (query wins). Email confirmations are free.
-          </div>
-        </div>
-        <div className="panelBody">
-          <pre
-            style={{
-              margin: 0,
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-              fontSize: 12,
-              color: "rgba(255,255,255,0.80)",
-            }}
-          >
-{JSON.stringify(
-  {
-    loadedFromLocalStorage: loadedFromLocalStorage ?? null,
-    parsedQuery,
-    normalized,
-    tier: estimate.tier,
-    total: estimate.total,
-    submit: { state: submitState, quoteId: quoteId || null },
-  },
-  null,
-  2
-)}
-          </pre>
-        </div>
-      </section>
-
-      <div className="footer">
-        © {new Date().getFullYear()} CrecyStudio. Built to convert. Clear scope. Clean builds.
-        <div className="footerLinks">
-          <Link href="/">Home</Link>
-          <Link href="/estimate">Estimate</Link>
-          <a href="mailto:hello@crecystudio.com">hello@crecystudio.com</a>
-        </div>
-      </div>
     </main>
-  );
-}
-
-function TierCard({
-  title,
-  sub,
-  price,
-  bullets,
-  best,
-}: {
-  title: string;
-  sub: string;
-  price: string;
-  bullets: string[];
-  best?: boolean;
-}) {
-  return (
-    <div className="card cardHover">
-      <div className="cardInner">
-        <div className="tierHead">
-          <div>
-            <div className="tierName">{title}</div>
-            <div className="tierSub">{sub}</div>
-          </div>
-          <div style={{ textAlign: "right" }}>
-            <div className="tierPrice">{price}</div>
-            <div className={`badge ${best ? "badgeHot" : ""}`} style={{ marginTop: 10 }}>
-              {best ? "Best fit" : "Tier"}
-            </div>
-          </div>
-        </div>
-
-        <ul className="tierList">
-          {bullets.map((b) => (
-            <li key={b}>{b}</li>
-          ))}
-        </ul>
-
-        <div className="tierCTA">
-          <Link className="btn btnPrimary" href="/build">
-            Update answers <span className="btnArrow">→</span>
-          </Link>
-          <Link className="btn btnGhost" href="/">
-            Back home
-          </Link>
-        </div>
-      </div>
-    </div>
   );
 }
