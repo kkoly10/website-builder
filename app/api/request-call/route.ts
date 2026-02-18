@@ -1,87 +1,156 @@
 // app/api/request-call/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { Resend } from "resend";
 
 export const runtime = "nodejs";
 
-function cleanEmail(email: unknown) {
-  return String(email ?? "").trim().toLowerCase();
+function baseUrl() {
+  const raw = process.env.APP_BASE_URL || "";
+  // IMPORTANT: your APP_BASE_URL is currently "crecystudio.com" (no https)
+  // This normalizes it to "https://crecystudio.com"
+  if (!raw) return "http://localhost:3000";
+  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+  return `https://${raw}`;
 }
+
+type Body = {
+  quoteId?: string;
+  publicToken?: string;
+  notes?: string;
+};
 
 export async function POST(req: Request) {
   try {
-    const form = await req.formData();
+    const url = new URL(req.url);
+    const qsQuoteId = (url.searchParams.get("quoteId") || "").trim();
+    const qsToken = (url.searchParams.get("publicToken") || "").trim();
 
-    const quoteId = String(form.get("quoteId") ?? "").trim();
-    const token = String(form.get("token") ?? "").trim();
-
-    const email = cleanEmail(form.get("email"));
-    const phone = String(form.get("phone") ?? "").trim() || null;
-    const preferredTimes = String(form.get("preferred_times") ?? "").trim();
-    const timezone = String(form.get("timezone") ?? "").trim() || "America/New_York";
-    const notes = String(form.get("notes") ?? "").trim() || null;
-
-    if (!email || !email.includes("@")) {
-      return NextResponse.json({ error: "Valid email is required." }, { status: 400 });
-    }
-    if (!preferredTimes) {
-      return NextResponse.json({ error: "Preferred times are required." }, { status: 400 });
+    let body: Body = {};
+    try {
+      body = (await req.json()) as Body;
+    } catch {
+      // allow empty body if using querystring
+      body = {};
     }
 
-    // Load quote either by id or token
-    let quote: any = null;
+    const quoteId = String(body.quoteId || qsQuoteId || "").trim();
+    const publicToken = String(body.publicToken || qsToken || "").trim();
+    const notes = String(body.notes || "").trim();
 
-    if (quoteId) {
-      const q = await supabaseAdmin
-        .from("quotes")
-        .select("id, lead_id, public_token")
-        .eq("id", quoteId)
-        .single();
-      if (q.error) return NextResponse.json({ error: q.error.message }, { status: 400 });
-      quote = q.data;
-    } else if (token) {
-      const q = await supabaseAdmin
-        .from("quotes")
-        .select("id, lead_id, public_token")
-        .eq("public_token", token)
-        .single();
-      if (q.error) return NextResponse.json({ error: q.error.message }, { status: 400 });
-      quote = q.data;
-    } else {
+    if (!quoteId && !publicToken) {
       return NextResponse.json({ error: "Missing quote reference." }, { status: 400 });
     }
 
-    // Save call request
-    const ins = await supabaseAdmin
-      .from("call_requests")
-      .insert({
-        quote_id: quote.id,
-        lead_id: quote.lead_id ?? null,
-        preferred_times: preferredTimes,
-        timezone,
-        notes,
-        status: "new",
-      })
-      .select("id")
-      .single();
+    // Load quote + lead (supports either quoteId or publicToken)
+    const q = supabaseAdmin
+      .from("quotes")
+      .select(
+        `
+        id,
+        created_at,
+        status,
+        tier_recommended,
+        estimate_total,
+        estimate_low,
+        estimate_high,
+        leads (
+          email,
+          phone,
+          name
+        )
+      `
+      )
+      .limit(1);
 
-    if (ins.error) {
-      return NextResponse.json({ error: ins.error.message }, { status: 400 });
+    const { data, error } = quoteId
+      ? await q.eq("id", quoteId).single()
+      : await q.eq("public_token", publicToken).single();
+
+    if (error || !data) {
+      return NextResponse.json(
+        { error: error?.message || "Quote not found." },
+        { status: 404 }
+      );
     }
+
+    const lead = Array.isArray((data as any).leads) ? (data as any).leads[0] : (data as any).leads;
 
     // Update quote status
     await supabaseAdmin
       .from("quotes")
-      .update({ status: "call_requested" })
-      .eq("id", quote.id);
+      .update({
+        status: "call_requested",
+        last_seen_at: new Date().toISOString(),
+      })
+      .eq("id", data.id);
 
-    // Redirect back
-    const url = new URL(req.url);
-    const redirectTo = `/book?quoteId=${encodeURIComponent(quote.id)}&sent=1`;
-    url.pathname = redirectTo;
-    url.search = "";
-    return NextResponse.redirect(url, 303);
+    // Email alerts (Resend)
+    const resendKey = process.env.RESEND_API_KEY;
+    const from = process.env.RESEND_FROM_EMAIL;
+    const alertTo = process.env.ALERT_TO_EMAIL;
+
+    const app = baseUrl();
+    const internalLink = `${app}/internal/preview?quoteId=${encodeURIComponent(data.id)}`;
+    const bookLink = `${app}/book?quoteId=${encodeURIComponent(data.id)}`;
+
+    // Always return ok even if email is not configured (so UX doesn’t break)
+    if (resendKey && from && alertTo) {
+      const resend = new Resend(resendKey);
+
+      const subject = `New Call Request • ${lead?.email || "(no email)"} • Quote ${data.id}`;
+      const html = `
+        <div style="font-family: ui-sans-serif, system-ui; line-height: 1.45">
+          <h2 style="margin:0 0 10px">New Call Request</h2>
+          <p style="margin:0 0 10px">
+            <strong>Lead:</strong> ${lead?.email || "(missing)"} ${lead?.phone ? ` • ${lead.phone}` : ""} ${lead?.name ? ` • ${lead.name}` : ""}
+          </p>
+          <p style="margin:0 0 10px">
+            <strong>Quote:</strong> ${data.id}<br/>
+            <strong>Total:</strong> $${data.estimate_total} (range $${data.estimate_low}–$${data.estimate_high})<br/>
+            <strong>Tier:</strong> ${data.tier_recommended || "—"}<br/>
+            <strong>Status:</strong> ${data.status || "—"}
+          </p>
+          ${notes ? `<p><strong>Notes:</strong><br/>${notes.replaceAll("\n", "<br/>")}</p>` : ""}
+          <p style="margin:14px 0 0">
+            <a href="${internalLink}">Open internal preview</a><br/>
+            <a href="${bookLink}">Open booking page</a>
+          </p>
+        </div>
+      `;
+
+      await resend.emails.send({
+        from,
+        to: alertTo,
+        subject,
+        html,
+      });
+
+      // Optional: confirmation to lead (safe, short)
+      if (lead?.email) {
+        await resend.emails.send({
+          from,
+          to: lead.email,
+          subject: "Request received — we’ll confirm scope on a quick call",
+          html: `
+            <div style="font-family: ui-sans-serif, system-ui; line-height: 1.45">
+              <p>Thanks — we received your request.</p>
+              <p>Next step: a quick scope call to confirm the plan. Payment happens after the call if you want to move forward.</p>
+              <p>Your reference: <strong>${data.id}</strong></p>
+            </div>
+          `,
+        });
+      }
+    }
+
+    return NextResponse.json({
+      ok: true,
+      quoteId: data.id,
+    });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "Unknown error" }, { status: 500 });
+    return NextResponse.json(
+      { error: err?.message || "Unknown error" },
+      { status: 500 }
+    );
   }
 }
