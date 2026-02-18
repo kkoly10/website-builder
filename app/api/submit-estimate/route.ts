@@ -1,7 +1,7 @@
 // app/api/submit-estimate/route.ts
 import { NextResponse } from "next/server";
-import { randomBytes } from "crypto";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { randomUUID } from "crypto";
 
 export const runtime = "nodejs";
 
@@ -28,8 +28,10 @@ function cleanEmail(email: unknown) {
   return String(email ?? "").trim().toLowerCase();
 }
 
-function genPublicToken() {
-  return randomBytes(16).toString("hex"); // 32 chars
+function num(n: any) {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return 0;
+  return Math.max(0, Math.round(v));
 }
 
 export async function POST(req: Request) {
@@ -68,24 +70,21 @@ export async function POST(req: Request) {
 
     const leadId = upsertLead.data.id;
 
-    // 2) insert quote
-    const total = Math.max(0, Math.round(Number(body?.estimate?.total ?? 0)));
-    const low = Math.max(0, Math.round(Number(body?.estimate?.low ?? 0)));
-    const high = Math.max(0, Math.round(Number(body?.estimate?.high ?? 0)));
-
-    // create a public token so customer can book without exposing internal auth
-    const publicToken = genPublicToken();
+    // 2) insert quote (with public token for safe sharing)
+    const total = num(body?.estimate?.total);
+    const low = num(body?.estimate?.low);
+    const high = num(body?.estimate?.high);
 
     const insertQuote = await supabaseAdmin
       .from("quotes")
       .insert({
         lead_id: leadId,
         status: "new",
-        public_token: publicToken,
         tier_recommended: body?.estimate?.tierRecommended ?? null,
         estimate_total: total,
         estimate_low: low,
         estimate_high: high,
+        public_token: randomUUID(), // requires quotes.public_token (uuid)
         intake_raw: body?.intakeRaw ?? {},
         intake_normalized: body?.intakeNormalized ?? {},
         scope_snapshot: body?.scopeSnapshot ?? {},
@@ -105,6 +104,9 @@ export async function POST(req: Request) {
       publicToken: insertQuote.data.public_token,
     });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "Unknown error" }, { status: 500 });
+    return NextResponse.json(
+      { error: err?.message || "Unknown error" },
+      { status: 500 }
+    );
   }
 }
