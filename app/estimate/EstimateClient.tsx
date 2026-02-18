@@ -280,10 +280,43 @@ function computeEstimate(n: Normalized) {
   return { total, low, high, lines, tier, hasPaidAddons };
 }
 
+function buildScopeSnapshot(n: Normalized) {
+  const features = [
+    n.booking && "Booking",
+    n.payments && "Payments",
+    n.blog && "Blog",
+    n.membership && "Membership",
+    (n.automationTypes?.length ? `Automation (${n.automationTypes.length})` : false),
+    (n.integrations?.length ? `Integrations (${n.integrations.length})` : false),
+  ].filter(Boolean);
+
+  return {
+    websiteType: n.websiteType,
+    pages: n.pages,
+    features,
+    contentReady: n.contentReady,
+    domainHosting: n.domainHosting,
+    timeline: n.timeline,
+    intent: n.intent,
+    notes: n.notes ?? "",
+  };
+}
+
 export default function EstimateClient() {
   const sp = useSearchParams();
 
   const [loadedFromLocalStorage, setLoadedFromLocalStorage] = useState<any>(null);
+
+  // submit state
+  const [leadEmail, setLeadEmail] = useState("");
+  const [leadPhone, setLeadPhone] = useState("");
+
+  const [submitState, setSubmitState] = useState<{
+    status: "idle" | "submitting" | "ok" | "error";
+    quoteId?: string;
+    leadId?: string;
+    error?: string;
+  }>({ status: "idle" });
 
   // Load localStorage intake
   useEffect(() => {
@@ -374,10 +407,91 @@ export default function EstimateClient() {
     };
   }, [merged]);
 
+  // initialize editable contact fields ONCE when present
+  useEffect(() => {
+    setLeadEmail((prev) => prev || normalized.leadEmail || "");
+    setLeadPhone((prev) => prev || normalized.leadPhone || "");
+  }, [normalized.leadEmail, normalized.leadPhone]);
+
   const estimate = useMemo(() => computeEstimate(normalized), [normalized]);
 
   const headerMessage =
     "One-page starter from $225 (no paid add-ons). 1–3 pages from $400 (no paid add-ons). 4–6 pages start at $550 + add-ons. We’ll confirm final scope together before you pay a deposit.";
+
+  async function submitEstimate() {
+    const email = String(leadEmail || "").trim().toLowerCase();
+    const phone = String(leadPhone || "").trim();
+
+    if (!email || !email.includes("@")) {
+      setSubmitState({ status: "error", error: "Please enter a valid email." });
+      return;
+    }
+
+    setSubmitState({ status: "submitting" });
+
+    try {
+      const intakeNormalized: Normalized = {
+        ...normalized,
+        leadEmail: email,
+        leadPhone: phone,
+      };
+
+      const payload = {
+        source: "estimate",
+        lead: {
+          email,
+          phone: phone || undefined,
+        },
+        intakeRaw: {
+          loadedFromLocalStorage: loadedFromLocalStorage ?? null,
+          parsedQuery,
+          merged,
+        },
+        intakeNormalized,
+        scopeSnapshot: buildScopeSnapshot(intakeNormalized),
+        estimate: {
+          total: Number(estimate.total ?? 0),
+          low: Number(estimate.low ?? 0),
+          high: Number(estimate.high ?? 0),
+          tierRecommended: estimate.tier,
+        },
+        debug: {
+          mergeOrder: "localStorage → URL query (query wins)",
+          queryString: sp.toString(),
+          normalized: intakeNormalized,
+          tier: estimate.tier,
+          total: estimate.total,
+          low: estimate.low,
+          high: estimate.high,
+          hasPaidAddons: estimate.hasPaidAddons,
+          lines: estimate.lines,
+          freeAutomations: Array.from(FREE_AUTOMATIONS),
+          freeIntegrations: Array.from(FREE_INTEGRATIONS),
+        },
+      };
+
+      const res = await fetch("/api/submit-estimate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Failed to save estimate.");
+
+      setSubmitState({
+        status: "ok",
+        quoteId: json?.quoteId,
+        leadId: json?.leadId,
+      });
+
+      try {
+        if (json?.quoteId) localStorage.setItem("crecystudio:lastQuoteId", String(json.quoteId));
+      } catch {}
+    } catch (e: any) {
+      setSubmitState({ status: "error", error: e?.message || "Something went wrong." });
+    }
+  }
 
   return (
     <main className="container" style={{ padding: "48px 0 80px" }}>
@@ -506,20 +620,36 @@ export default function EstimateClient() {
 
       <div style={{ height: 18 }} />
 
-      {/* Actions */}
+      {/* Next step (now actually saves + shows quoteId) */}
       <section className="panel">
         <div className="panelHeader">
           <div style={{ fontWeight: 950 }}>Next step</div>
-          <div className="smallNote">If you want, send this estimate and we’ll lock scope together.</div>
-        </div>
-        <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-          <div>
-            <div className="fieldLabel">Email</div>
-            <input className="input" value={normalized.leadEmail} readOnly placeholder="you@company.com" />
+          <div className="smallNote">
+            Send this estimate so we can follow up and lock scope on a quick video call. No payment yet.
           </div>
-          <div>
-            <div className="fieldLabel">Phone (optional)</div>
-            <input className="input" value={normalized.leadPhone} readOnly placeholder="(555) 555-5555" />
+        </div>
+
+        <div className="panelBody" style={{ display: "grid", gap: 12 }}>
+          <div className="grid2">
+            <div>
+              <div className="fieldLabel">Email (required)</div>
+              <input
+                className="input"
+                value={leadEmail}
+                onChange={(e) => setLeadEmail(e.target.value)}
+                placeholder="you@company.com"
+              />
+            </div>
+
+            <div>
+              <div className="fieldLabel">Phone (optional)</div>
+              <input
+                className="input"
+                value={leadPhone}
+                onChange={(e) => setLeadPhone(e.target.value)}
+                placeholder="(555) 555-5555"
+              />
+            </div>
           </div>
 
           <div className="row" style={{ justifyContent: "space-between" }}>
@@ -527,10 +657,61 @@ export default function EstimateClient() {
               Back home
             </Link>
 
-            <Link className="btn btnPrimary" href="/build">
-              Get a Quote <span className="btnArrow">→</span>
-            </Link>
+            <div className="row" style={{ justifyContent: "flex-end" }}>
+              <Link className="btn btnGhost" href="/build">
+                Adjust answers
+              </Link>
+
+              <button
+                type="button"
+                className="btn btnPrimary"
+                onClick={submitEstimate}
+                disabled={submitState.status === "submitting"}
+              >
+                {submitState.status === "submitting" ? "Sending..." : "Send estimate"}{" "}
+                <span className="btnArrow">→</span>
+              </button>
+            </div>
           </div>
+
+          {submitState.status === "error" && (
+            <p className="pDark" style={{ margin: 0, color: "rgba(255,120,120,0.95)" }}>
+              {submitState.error}
+            </p>
+          )}
+
+          {submitState.status === "ok" && (
+            <div style={{ marginTop: 4 }}>
+              <div className="badge badgeHot">Saved ✅</div>
+
+              <div className="smallNote" style={{ marginTop: 10 }}>
+                <strong>Quote ID:</strong>{" "}
+                <code>{submitState.quoteId ?? "(missing)"}</code>
+                {submitState.leadId ? (
+                  <>
+                    {" "}
+                    • <strong>Lead ID:</strong> <code>{submitState.leadId}</code>
+                  </>
+                ) : null}
+              </div>
+
+              {submitState.quoteId && (
+                <div className="smallNote" style={{ marginTop: 8 }}>
+                  Internal preview:{" "}
+                  <a
+                    style={{ textDecoration: "underline" }}
+                    href={`/internal/preview?quoteId=${encodeURIComponent(submitState.quoteId)}`}
+                  >
+                    open quote
+                  </a>
+                </div>
+              )}
+
+              <div className="smallNote" style={{ marginTop: 10 }}>
+                Next: we schedule a video call, confirm scope, then send payment/deposit after the call.
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -561,6 +742,9 @@ export default function EstimateClient() {
     normalized,
     tier: estimate.tier,
     total: estimate.total,
+    low: estimate.low,
+    high: estimate.high,
+    submitState,
   },
   null,
   2
