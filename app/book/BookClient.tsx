@@ -1,58 +1,45 @@
-// app/book/BookClient.tsx
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-
-const LAST_QUOTE_KEY = "crecystudio:lastQuoteId";
+import { useMemo, useState } from "react";
 
 export default function BookClient({ quoteId }: { quoteId: string }) {
-  const [effectiveQuoteId, setEffectiveQuoteId] = useState<string>(quoteId || "");
-  const [notes, setNotes] = useState<string>("");
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
-  const [errorMsg, setErrorMsg] = useState<string>("");
+  const [notes, setNotes] = useState("");
+  const [bestTime, setBestTime] = useState("");
+  const [state, setState] = useState<
+    | { status: "idle" }
+    | { status: "sending" }
+    | { status: "sent" }
+    | { status: "error"; message: string }
+  >({ status: "idle" });
 
-  // Fallback: if someone lands on /book without query, try last saved ID
-  useEffect(() => {
-    if (quoteId) {
-      setEffectiveQuoteId(quoteId);
-      try {
-        window.localStorage.setItem(LAST_QUOTE_KEY, quoteId);
-      } catch {}
-      return;
-    }
-
-    try {
-      const last = window.localStorage.getItem(LAST_QUOTE_KEY);
-      if (last) setEffectiveQuoteId(last);
-    } catch {}
-  }, [quoteId]);
-
-  const missing = useMemo(() => !effectiveQuoteId, [effectiveQuoteId]);
+  const cleaned = useMemo(() => String(quoteId || "").trim(), [quoteId]);
 
   async function requestCall() {
-    setErrorMsg("");
-    if (!effectiveQuoteId) {
-      setStatus("error");
-      setErrorMsg('Missing quoteId. Please go back and click “Send estimate” first.');
+    if (!cleaned) {
+      setState({ status: "error", message: "Missing quoteId. Please go back and click “Send estimate” first." });
       return;
     }
 
-    setStatus("sending");
+    setState({ status: "sending" });
+
     try {
       const res = await fetch("/api/request-call", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quoteId: effectiveQuoteId, notes }),
+        body: JSON.stringify({
+          quoteId: cleaned,
+          notes,
+          bestTimeToCall: bestTime,
+        }),
       });
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || "Failed to request call.");
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Could not request call.");
 
-      setStatus("sent");
+      setState({ status: "sent" });
     } catch (e: any) {
-      setStatus("error");
-      setErrorMsg(e?.message || "Failed to request call.");
+      setState({ status: "error", message: e?.message || "Failed to request call." });
     }
   }
 
@@ -80,50 +67,39 @@ export default function BookClient({ quoteId }: { quoteId: string }) {
 
         <div className="panelBody" style={{ display: "grid", gap: 12 }}>
           <div className="pDark">
-            Quote ID:{" "}
-            <strong>
-              {effectiveQuoteId ? <code>{effectiveQuoteId}</code> : "(missing)"}
-            </strong>
+            Quote ID: <strong>{cleaned || "(missing)"}</strong>
+          </div>
+
+          <div>
+            <div className="fieldLabel">Best time to call (optional)</div>
+            <input
+              className="input"
+              value={bestTime}
+              onChange={(e) => setBestTime(e.target.value)}
+              placeholder='Example: "Mon–Wed after 6pm ET"'
+            />
           </div>
 
           <div>
             <div className="fieldLabel">Anything we should know before the call? (optional)</div>
             <textarea
-              className="textarea"
-              rows={5}
+              className="input"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g., examples you like, must-have pages, deadline, special features..."
+              placeholder="Goals, examples you like, important details…"
+              style={{ minHeight: 110 }}
             />
           </div>
 
-          {status === "sent" && (
-            <div
-              style={{
-                border: "1px solid rgba(34,197,94,0.35)",
-                background: "rgba(34,197,94,0.08)",
-                borderRadius: 12,
-                padding: 12,
-                color: "rgba(255,255,255,0.92)",
-                fontWeight: 800,
-              }}
-            >
-              Request sent! We’ll reach out to schedule the scope call.
+          {state.status === "sent" && (
+            <div style={{ padding: 12, borderRadius: 12, background: "rgba(0,255,170,0.10)" }}>
+              <strong>Request sent!</strong> We’ll reach out to schedule the scope call.
             </div>
           )}
 
-          {status === "error" && (
-            <div
-              style={{
-                border: "1px solid rgba(255,0,0,0.35)",
-                background: "rgba(255,0,0,0.08)",
-                borderRadius: 12,
-                padding: 12,
-                color: "rgba(255,255,255,0.92)",
-                fontWeight: 700,
-              }}
-            >
-              {errorMsg || "Something went wrong."}
+          {state.status === "error" && (
+            <div style={{ padding: 12, borderRadius: 12, background: "rgba(255,0,0,0.12)" }}>
+              {state.message}
             </div>
           )}
 
@@ -133,24 +109,26 @@ export default function BookClient({ quoteId }: { quoteId: string }) {
             </Link>
 
             <button
-              type="button"
               className="btn btnPrimary"
               onClick={requestCall}
-              disabled={status === "sending" || missing}
-              title={missing ? 'Missing quoteId. Go back and click “Send estimate”.' : ""}
+              disabled={state.status === "sending" || state.status === "sent"}
+              style={{ opacity: state.status === "sending" ? 0.8 : 1 }}
             >
-              {status === "sending" ? "Requesting..." : "Request call"}{" "}
+              {state.status === "sending" ? "Requesting…" : "Request call"}{" "}
               <span className="btnArrow">→</span>
             </button>
           </div>
-
-          {missing && (
-            <div className="smallNote">
-              Missing quoteId. Please go back and click “Send estimate” first.
-            </div>
-          )}
         </div>
       </section>
+
+      <div className="footer">
+        © {new Date().getFullYear()} CrecyStudio. Built to convert. Clear scope. Clean builds.
+        <div className="footerLinks">
+          <Link href="/">Home</Link>
+          <Link href="/estimate">Estimate</Link>
+          <a href="mailto:hello@crecystudio.com">hello@crecystudio.com</a>
+        </div>
+      </div>
     </main>
   );
 }
