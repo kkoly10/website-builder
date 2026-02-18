@@ -1,92 +1,49 @@
 // app/api/internal/update-quote/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { checkInternalAccess } from "@/lib/internalAuth";
 
 export const runtime = "nodejs";
 
-type Body = {
-  token?: string;
-  quoteId?: string;
-  status?: string;
-  adminNotes?: string;
-  callScheduledAt?: string;
-};
-
-function safeObj(v: any) {
-  return v && typeof v === "object" && !Array.isArray(v) ? v : {};
+function requireInternalKey(req: Request) {
+  const key = req.headers.get("x-internal-key") || "";
+  const expected = process.env.INTERNAL_DASH_KEY || "";
+  if (!expected) return { ok: false, error: "Missing INTERNAL_DASH_KEY env var." };
+  if (key !== expected) return { ok: false, error: "Unauthorized." };
+  return { ok: true };
 }
 
 export async function POST(req: Request) {
+  const auth = requireInternalKey(req);
+  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: 401 });
+
   try {
-    const body = (await req.json()) as Body;
-
-    const access = checkInternalAccess(body?.token ?? null);
-    if (!access.ok) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    const body = await req.json();
     const quoteId = String(body?.quoteId ?? "").trim();
+    const patch = body?.patch ?? {};
+
     if (!quoteId) {
       return NextResponse.json({ error: "quoteId is required" }, { status: 400 });
     }
 
-    // Read existing debug so we can merge (Supabase JSON update overwrites)
-    const existing = await supabaseAdmin
+    // Only allow a safe set of fields to be updated
+    const allowed: any = {};
+    if ("status" in patch) allowed.status = patch.status;
+    if ("deposit_link_url" in patch) allowed.deposit_link_url = patch.deposit_link_url;
+    if ("deposit_amount" in patch) allowed.deposit_amount = patch.deposit_amount;
+    if ("scope_snapshot" in patch) allowed.scope_snapshot = patch.scope_snapshot;
+    if ("scope_locked_at" in patch) allowed.scope_locked_at = patch.scope_locked_at;
+
+    const { data, error } = await supabaseAdmin
       .from("quotes")
-      .select("id,status,debug")
+      .update(allowed)
       .eq("id", quoteId)
+      .select("id,status,deposit_link_url,deposit_amount,scope_locked_at")
       .single();
 
-    if (existing.error || !existing.data) {
-      return NextResponse.json(
-        { error: existing.error?.message || "Quote not found" },
-        { status: 404 }
-      );
-    }
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-    const prevDebug = safeObj(existing.data.debug);
-    const prevInternal = safeObj((prevDebug as any).internal);
-
-    const nextInternal = {
-      ...prevInternal,
-      admin_notes: String(body?.adminNotes ?? ""),
-      call_scheduled_at: String(body?.callScheduledAt ?? ""),
-      updated_at: new Date().toISOString(),
-    };
-
-    const history = Array.isArray(nextInternal.history) ? nextInternal.history : [];
-    history.push({
-      at: new Date().toISOString(),
-      action: "update",
-      status: String(body?.status ?? existing.data.status ?? ""),
-    });
-
-    nextInternal.history = history;
-
-    const nextDebug = {
-      ...prevDebug,
-      internal: nextInternal,
-    };
-
-    const nextStatus = String(body?.status ?? "").trim() || String(existing.data.status ?? "new");
-
-    const updated = await supabaseAdmin
-      .from("quotes")
-      .update({
-        status: nextStatus,
-        debug: nextDebug,
-      })
-      .eq("id", quoteId)
-      .select("id,status,debug")
-      .single();
-
-    if (updated.error) {
-      return NextResponse.json({ error: updated.error.message }, { status: 400 });
-    }
-
-    return NextResponse.json({ ok: true, quote: updated.data });
+    return NextResponse.json({ ok: true, data });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || "Unknown error" }, { status: 500 });
+    return NextResponse.json({ error: e.message || "Unknown error" }, { status: 500 });
   }
 }
