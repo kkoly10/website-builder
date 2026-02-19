@@ -1,4 +1,5 @@
 // app/internal/preview/page.tsx
+import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import RunPieButton from "./RunPieButton";
 
@@ -17,14 +18,23 @@ function firstLead(leads: any) {
   return Array.isArray(leads) ? leads[0] ?? null : leads;
 }
 
+function safeBaseUrl() {
+  const raw = String(process.env.APP_BASE_URL ?? "").trim();
+  if (!raw) return "";
+  const noSlash = raw.replace(/\/+$/, "");
+  if (noSlash.startsWith("http://") || noSlash.startsWith("https://")) return noSlash;
+  return `https://${noSlash}`;
+}
+
 export default async function InternalPreviewPage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
   const quoteId = pick(searchParams, "quoteId").trim();
+  const baseUrl = safeBaseUrl();
 
-  // ✅ If a quoteId is provided, show the single quote + lead + call request + pie
+  // ✅ If quoteId provided, show full details
   if (quoteId) {
     const { data, error } = await supabaseAdmin
       .from("quotes")
@@ -59,16 +69,18 @@ export default async function InternalPreviewPage({
           <p style={{ color: "#b00" }}>
             Could not load quote <code>{quoteId}</code>: {error?.message ?? "Not found"}
           </p>
-          <p style={{ marginTop: 18 }}>
-            Tip: open <code>/internal/preview</code> to see recent quote IDs.
-          </p>
+
+          <div style={{ marginTop: 16 }}>
+            <Link href="/internal/preview" style={{ textDecoration: "underline" }}>
+              ← Back to recent quotes
+            </Link>
+          </div>
         </main>
       );
     }
 
     const lead = firstLead((data as any).leads);
 
-    // Latest call request (if any)
     const { data: calls } = await supabaseAdmin
       .from("call_requests")
       .select("id, created_at, status, preferred_times, timezone, notes")
@@ -78,7 +90,6 @@ export default async function InternalPreviewPage({
 
     const call = (calls ?? [])[0] ?? null;
 
-    // Latest PIE report (if any)
     const { data: pies } = await supabaseAdmin
       .from("pie_reports")
       .select("id, created_at, score, tier, confidence, summary, report")
@@ -93,9 +104,9 @@ export default async function InternalPreviewPage({
         <h1 style={{ fontSize: 22, marginBottom: 10 }}>Internal Preview</h1>
 
         <div style={{ marginBottom: 12 }}>
-          <a href="/internal/preview" style={{ textDecoration: "underline" }}>
+          <Link href="/internal/preview" style={{ textDecoration: "underline" }}>
             ← Back to recent quotes
-          </a>
+          </Link>
         </div>
 
         <div
@@ -276,26 +287,25 @@ export default async function InternalPreviewPage({
     <main style={{ padding: 32, fontFamily: "ui-sans-serif, system-ui" }}>
       <h1 style={{ fontSize: 22, marginBottom: 10 }}>Internal Preview</h1>
       <p style={{ opacity: 0.75, marginBottom: 18 }}>
-        Recent quotes (click to view full details)
+        Recent quotes (tap “View details”)
       </p>
 
       {error ? (
         <p style={{ color: "#b00" }}>Error loading quotes: {error.message}</p>
       ) : (
-        <div style={{ display: "grid", gap: 10 }}>
+        <div style={{ display: "grid", gap: 12 }}>
           {(quotes ?? []).map((q: any) => {
             const lead = firstLead(q.leads);
+            const href = `/internal/preview?quoteId=${encodeURIComponent(q.id)}`;
+            const full = baseUrl ? `${baseUrl}${href}` : href;
+
             return (
-              <a
+              <div
                 key={q.id}
-                href={`/internal/preview?quoteId=${q.id}`}
                 style={{
-                  display: "block",
                   border: "1px solid rgba(0,0,0,0.12)",
                   borderRadius: 14,
                   padding: 14,
-                  textDecoration: "none",
-                  color: "inherit",
                 }}
               >
                 <div
@@ -303,6 +313,7 @@ export default async function InternalPreviewPage({
                     display: "flex",
                     justifyContent: "space-between",
                     gap: 12,
+                    flexWrap: "wrap",
                   }}
                 >
                   <div style={{ fontWeight: 800 }}>
@@ -316,10 +327,39 @@ export default async function InternalPreviewPage({
                     {new Date(q.created_at).toLocaleString()}
                   </div>
                 </div>
-                <div style={{ marginTop: 6, opacity: 0.8 }}>
+
+                <div style={{ marginTop: 6, opacity: 0.85 }}>
                   {lead?.email ?? "(no lead email)"} • <code>{q.id}</code>
                 </div>
-              </a>
+
+                <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  {/* Button-style link (usually fixes iOS “tap does nothing”) */}
+                  <Link
+                    href={href}
+                    prefetch={false}
+                    className="btn btnPrimary"
+                    style={{ pointerEvents: "auto" }}
+                  >
+                    View details <span className="btnArrow">→</span>
+                  </Link>
+
+                  {/* Plain URL fallback */}
+                  <a
+                    href={href}
+                    style={{ textDecoration: "underline", pointerEvents: "auto" }}
+                  >
+                    Open link
+                  </a>
+
+                  <span style={{ opacity: 0.65, fontSize: 12 }}>
+                    If taps still do nothing, an overlay/CSS is blocking clicks.
+                  </span>
+                </div>
+
+                <div style={{ marginTop: 8, fontSize: 12, opacity: 0.75 }}>
+                  Link: <code>{full}</code>
+                </div>
+              </div>
             );
           })}
         </div>
