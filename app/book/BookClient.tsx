@@ -6,8 +6,29 @@ import { useEffect, useMemo, useState } from "react";
 
 const LAST_QUOTE_KEY = "crecystudio:lastQuoteId";
 
+const BEST_TIME_OPTIONS = [
+  "Weekday morning (9am–12pm)",
+  "Weekday afternoon (12pm–4pm)",
+  "Weekday evening (4pm–7pm)",
+  "Weekend",
+  "Anytime",
+];
+
+function detectTimezone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York";
+  } catch {
+    return "America/New_York";
+  }
+}
+
 export default function BookClient({ quoteId }: { quoteId: string }) {
   const [effectiveQuoteId, setEffectiveQuoteId] = useState<string>(quoteId || "");
+
+  const [bestTimeToCall, setBestTimeToCall] = useState<string>(BEST_TIME_OPTIONS[0]);
+  const [preferredTimes, setPreferredTimes] = useState<string>(""); // e.g. "Mon/Wed after 5pm"
+  const [timezone, setTimezone] = useState<string>(detectTimezone());
+
   const [notes, setNotes] = useState<string>("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string>("");
@@ -28,10 +49,16 @@ export default function BookClient({ quoteId }: { quoteId: string }) {
     } catch {}
   }, [quoteId]);
 
+  // keep timezone fresh (some browsers change after permission / settings)
+  useEffect(() => {
+    setTimezone(detectTimezone());
+  }, []);
+
   const missing = useMemo(() => !effectiveQuoteId, [effectiveQuoteId]);
 
   async function requestCall() {
     setErrorMsg("");
+
     if (!effectiveQuoteId) {
       setStatus("error");
       setErrorMsg('Missing quoteId. Please go back and click “Send estimate” first.');
@@ -43,7 +70,13 @@ export default function BookClient({ quoteId }: { quoteId: string }) {
       const res = await fetch("/api/request-call", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quoteId: effectiveQuoteId, notes }),
+        body: JSON.stringify({
+          quoteId: effectiveQuoteId,
+          bestTimeToCall,
+          preferredTimes,
+          timezone,
+          notes,
+        }),
       });
 
       const json = await res.json();
@@ -81,20 +114,48 @@ export default function BookClient({ quoteId }: { quoteId: string }) {
         <div className="panelBody" style={{ display: "grid", gap: 12 }}>
           <div className="pDark">
             Quote ID:{" "}
-            <strong>
-              {effectiveQuoteId ? <code>{effectiveQuoteId}</code> : "(missing)"}
-            </strong>
+            <strong>{effectiveQuoteId ? <code>{effectiveQuoteId}</code> : "(missing)"}</strong>
           </div>
 
-          <div>
-            <div className="fieldLabel">Anything we should know before the call? (optional)</div>
-            <textarea
-              className="textarea"
-              rows={5}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g., examples you like, must-have pages, deadline, special features..."
-            />
+          <div style={{ display: "grid", gap: 12 }}>
+            <div>
+              <div className="fieldLabel">Best time to call</div>
+              <select
+                className="input"
+                value={bestTimeToCall}
+                onChange={(e) => setBestTimeToCall(e.target.value)}
+              >
+                {BEST_TIME_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <div className="fieldLabel">Preferred times (optional)</div>
+              <input
+                className="input"
+                value={preferredTimes}
+                onChange={(e) => setPreferredTimes(e.target.value)}
+                placeholder='e.g., "Mon/Wed after 5pm"'
+              />
+              <div className="smallNote" style={{ marginTop: 6 }}>
+                Timezone detected: <strong>{timezone}</strong>
+              </div>
+            </div>
+
+            <div>
+              <div className="fieldLabel">Anything we should know before the call? (optional)</div>
+              <textarea
+                className="textarea"
+                rows={5}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="e.g., examples you like, must-have pages, deadline, special features..."
+              />
+            </div>
           </div>
 
           {status === "sent" && (
@@ -144,11 +205,7 @@ export default function BookClient({ quoteId }: { quoteId: string }) {
             </button>
           </div>
 
-          {missing && (
-            <div className="smallNote">
-              Missing quoteId. Please go back and click “Send estimate” first.
-            </div>
-          )}
+          {missing && <div className="smallNote">Missing quoteId. Please go back and click “Send estimate” first.</div>}
         </div>
       </section>
     </main>
