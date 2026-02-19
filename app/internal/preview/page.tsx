@@ -1,10 +1,9 @@
 // app/internal/preview/page.tsx
 import Link from "next/link";
+import GeneratePieButton from "./GeneratePieButton";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import RunPieButton from "./RunPieButton";
 
 export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -13,17 +12,32 @@ function pick(sp: SearchParams, key: string) {
   return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
 }
 
-function firstLead(leads: any) {
-  if (!leads) return null;
-  return Array.isArray(leads) ? leads[0] ?? null : leads;
+function money(n: number) {
+  return `$${Math.round(n).toLocaleString()}`;
 }
 
-function safeBaseUrl() {
-  const raw = String(process.env.APP_BASE_URL ?? "").trim();
-  if (!raw) return "";
-  const noSlash = raw.replace(/\/+$/, "");
-  if (noSlash.startsWith("http://") || noSlash.startsWith("https://")) return noSlash;
-  return `https://${noSlash}`;
+function extractTotalUSD(q: any): number {
+  // Try a few shapes safely
+  const direct =
+    typeof q?.total === "number" ? q.total :
+    typeof q?.total_usd === "number" ? q.total_usd :
+    typeof q?.total_cents === "number" ? q.total_cents / 100 :
+    typeof q?.estimate_total === "number" ? q.estimate_total :
+    typeof q?.estimate?.total === "number" ? q.estimate.total :
+    typeof q?.estimate?.totalUsd === "number" ? q.estimate.totalUsd :
+    0;
+
+  return Number.isFinite(direct) ? direct : 0;
+}
+
+function extractTier(q: any): string {
+  const t =
+    q?.tier ||
+    q?.tier_recommended ||
+    q?.estimate?.tierRecommended ||
+    q?.estimate?.tier_recommended ||
+    "";
+  return String(t || "—");
 }
 
 export default async function InternalPreviewPage({
@@ -32,338 +46,300 @@ export default async function InternalPreviewPage({
   searchParams: SearchParams;
 }) {
   const quoteId = pick(searchParams, "quoteId").trim();
-  const baseUrl = safeBaseUrl();
 
-  // ✅ If quoteId provided, show full details
+  // ============================
+  // DETAILS MODE
+  // ============================
   if (quoteId) {
-    const { data, error } = await supabaseAdmin
+    const { data: quote, error: qErr } = await supabaseAdmin
       .from("quotes")
-      .select(
-        `
-        id,
-        created_at,
-        status,
-        tier_recommended,
-        estimate_total,
-        estimate_low,
-        estimate_high,
-        intake_raw,
-        intake_normalized,
-        scope_snapshot,
-        debug,
-        latest_pie_report_id,
-        leads (
-          email,
-          phone,
-          name
-        )
-      `
-      )
+      .select("*, leads(*)")
       .eq("id", quoteId)
       .single();
 
-    if (error || !data) {
+    if (qErr || !quote) {
       return (
-        <main style={{ padding: 32, fontFamily: "ui-sans-serif, system-ui" }}>
-          <h1 style={{ fontSize: 22, marginBottom: 10 }}>Internal Preview</h1>
-          <p style={{ color: "#b00" }}>
-            Could not load quote <code>{quoteId}</code>: {error?.message ?? "Not found"}
-          </p>
-
-          <div style={{ marginTop: 16 }}>
-            <Link href="/internal/preview" style={{ textDecoration: "underline" }}>
-              ← Back to recent quotes
-            </Link>
+        <main className="container" style={{ padding: "48px 0 80px" }}>
+          <div className="kicker">
+            <span className="kickerDot" aria-hidden="true" />
+            Internal Preview • Quote details
           </div>
+
+          <div style={{ height: 12 }} />
+          <h1 className="h1">Not found</h1>
+          <p className="p">Couldn’t load quote: <code>{quoteId}</code></p>
+
+          <div style={{ height: 18 }} />
+          <Link className="btn btnGhost" href="/internal/preview">
+            ← Back to list
+          </Link>
         </main>
       );
     }
 
-    const lead = firstLead((data as any).leads);
-
-    const { data: calls } = await supabaseAdmin
+    const { data: callRequests } = await supabaseAdmin
       .from("call_requests")
-      .select("id, created_at, status, preferred_times, timezone, notes")
+      .select("*")
       .eq("quote_id", quoteId)
       .order("created_at", { ascending: false })
-      .limit(1);
+      .limit(10);
 
-    const call = (calls ?? [])[0] ?? null;
+    // Latest PIE: prefer quotes.latest_pie_report_id; fallback to newest by quote_id
+    let pieReport: any = null;
 
-    const { data: pies } = await supabaseAdmin
-      .from("pie_reports")
-      .select("id, created_at, score, tier, confidence, summary, report")
-      .eq("quote_id", quoteId)
-      .order("created_at", { ascending: false })
-      .limit(1);
+    const latestId = String(quote?.latest_pie_report_id || "").trim();
+    if (latestId) {
+      const { data } = await supabaseAdmin
+        .from("pie_reports")
+        .select("*")
+        .eq("id", latestId)
+        .single();
+      pieReport = data ?? null;
+    }
 
-    const pie = (pies ?? [])[0] ?? null;
+    if (!pieReport) {
+      const { data } = await supabaseAdmin
+        .from("pie_reports")
+        .select("*")
+        .eq("quote_id", quoteId)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      pieReport = data?.[0] ?? null;
+    }
+
+    const totalUSD = extractTotalUSD(quote);
+    const tier = extractTier(quote);
+    const status = String(quote?.status || "—");
+    const email =
+      quote?.leads?.email ||
+      quote?.lead_email ||
+      quote?.lead?.email ||
+      "—";
+
+    const intakeRaw = quote?.intake_raw ?? quote?.intakeRaw ?? null;
+    const intakeNorm = quote?.intake_normalized ?? quote?.intakeNormalized ?? null;
+    const estimate = quote?.estimate ?? null;
 
     return (
-      <main style={{ padding: 32, fontFamily: "ui-sans-serif, system-ui" }}>
-        <h1 style={{ fontSize: 22, marginBottom: 10 }}>Internal Preview</h1>
+      <main className="container" style={{ padding: "48px 0 80px" }}>
+        <div className="kicker">
+          <span className="kickerDot" aria-hidden="true" />
+          Internal Preview • Quote details
+        </div>
 
-        <div style={{ marginBottom: 12 }}>
-          <Link href="/internal/preview" style={{ textDecoration: "underline" }}>
-            ← Back to recent quotes
+        <div style={{ height: 12 }} />
+
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+          <h1 className="h1" style={{ margin: 0 }}>Quote</h1>
+          <Link className="btn btnGhost" href="/internal/preview">
+            ← Back to list
           </Link>
         </div>
 
-        <div
-          style={{
-            border: "1px solid rgba(0,0,0,0.12)",
-            borderRadius: 14,
-            padding: 16,
-            marginBottom: 16,
-          }}
-        >
-          <div style={{ fontWeight: 800, marginBottom: 6 }}>Quote</div>
-          <div>
-            <strong>ID:</strong> <code>{(data as any).id}</code>
+        <div style={{ height: 14 }} />
+
+        <section className="panel">
+          <div className="panelHeader">
+            <div style={{ fontWeight: 950 }}>Summary</div>
+            <div className="smallNote">Internal view — do not share</div>
           </div>
-          <div>
-            <strong>Created:</strong>{" "}
-            {new Date((data as any).created_at).toLocaleString()}
+          <div className="panelBody" style={{ display: "grid", gap: 10 }}>
+            <div className="pDark">
+              Quote ID: <strong><code>{quoteId}</code></strong>
+            </div>
+            <div className="pDark">
+              Lead: <strong>{email}</strong>
+            </div>
+            <div className="pDark">
+              Total: <strong>{money(totalUSD)}</strong> • Tier: <strong>{tier}</strong> • Status: <strong>{status}</strong>
+            </div>
+
+            <div className="row" style={{ marginTop: 6 }}>
+              <GeneratePieButton quoteId={quoteId} hasPie={!!pieReport} />
+              <Link className="btn btnGhost" href={`/internal/preview?quoteId=${encodeURIComponent(quoteId)}`}>
+                Refresh
+              </Link>
+            </div>
+
+            {!pieReport && (
+              <div className="smallNote">
+                PIE is currently <strong>missing</strong> for this quote. Click “Generate PIE report”.
+              </div>
+            )}
           </div>
-          <div>
-            <strong>Status:</strong> {(data as any).status}
+        </section>
+
+        <div style={{ height: 16 }} />
+
+        <section className="panel">
+          <div className="panelHeader">
+            <div style={{ fontWeight: 950 }}>Call requests</div>
+            <div className="smallNote">Most recent first</div>
           </div>
-          <div>
-            <strong>Tier:</strong> {(data as any).tier_recommended ?? "(none)"}
+          <div className="panelBody" style={{ display: "grid", gap: 10 }}>
+            {callRequests?.length ? (
+              callRequests.map((r: any) => (
+                <div
+                  key={r.id}
+                  style={{
+                    border: "1px solid rgba(255,255,255,0.10)",
+                    borderRadius: 14,
+                    padding: 12,
+                    background: "rgba(255,255,255,0.03)",
+                  }}
+                >
+                  <div style={{ fontWeight: 900 }}>
+                    {String(r.status || "—")} • {new Date(r.created_at).toLocaleString()}
+                  </div>
+                  <div className="smallNote" style={{ marginTop: 6 }}>
+                    best_time_to_call: <code>{String(r.best_time_to_call ?? "—")}</code> • preferred_times:{" "}
+                    <code>{String(r.preferred_times ?? "—")}</code> • timezone:{" "}
+                    <code>{String(r.timezone ?? "—")}</code>
+                  </div>
+                  {r.notes ? (
+                    <div className="smallNote" style={{ marginTop: 6 }}>
+                      notes: {String(r.notes)}
+                    </div>
+                  ) : null}
+                </div>
+              ))
+            ) : (
+              <div className="smallNote">No call requests found for this quote.</div>
+            )}
           </div>
-          <div>
-            <strong>Total:</strong> ${(data as any).estimate_total}{" "}
-            <span style={{ opacity: 0.7 }}>
-              (range ${(data as any).estimate_low} – ${(data as any).estimate_high})
-            </span>
+        </section>
+
+        <div style={{ height: 16 }} />
+
+        <section className="panel">
+          <div className="panelHeader">
+            <div style={{ fontWeight: 950 }}>PIE report</div>
+            <div className="smallNote">Stored in <code>pie_reports.raw</code></div>
           </div>
-
-          <div style={{ marginTop: 10 }}>
-            <strong>Lead:</strong>{" "}
-            <span>
-              {lead?.email ?? "(missing)"}
-              {lead?.phone ? ` • ${lead.phone}` : ""}
-              {lead?.name ? ` • ${lead.name}` : ""}
-            </span>
+          <div className="panelBody">
+            <pre style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 12 }}>
+              {JSON.stringify(pieReport?.raw ?? pieReport ?? null, null, 2)}
+            </pre>
           </div>
-        </div>
+        </section>
 
-        {/* Call Request */}
-        <div
-          style={{
-            border: "1px solid rgba(0,0,0,0.12)",
-            borderRadius: 14,
-            padding: 16,
-            marginBottom: 16,
-          }}
-        >
-          <div style={{ fontWeight: 800, marginBottom: 6 }}>Scope Call Request</div>
-          {call ? (
-            <>
-              <div>
-                <strong>Status:</strong> {call.status}
-              </div>
-              <div>
-                <strong>Preferred times:</strong> {call.preferred_times || "(none)"}
-              </div>
-              <div>
-                <strong>Timezone:</strong> {call.timezone || "(none)"}
-              </div>
-              <div style={{ marginTop: 10 }}>
-                <strong>Notes:</strong>
-                <pre style={{ whiteSpace: "pre-wrap" }}>{call.notes || ""}</pre>
-              </div>
-            </>
-          ) : (
-            <div style={{ opacity: 0.75 }}>No call request yet.</div>
-          )}
-        </div>
+        <div style={{ height: 16 }} />
 
-        {/* PIE */}
-        <div
-          style={{
-            border: "1px solid rgba(0,0,0,0.12)",
-            borderRadius: 14,
-            padding: 16,
-            marginBottom: 16,
-          }}
-        >
-          <div style={{ fontWeight: 800, marginBottom: 6 }}>PIE Report</div>
+        <section className="panel">
+          <div className="panelHeader">
+            <div style={{ fontWeight: 950 }}>Estimate</div>
+            <div className="smallNote">What was computed at submit time</div>
+          </div>
+          <div className="panelBody">
+            <pre style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 12 }}>
+              {JSON.stringify(estimate ?? null, null, 2)}
+            </pre>
+          </div>
+        </section>
 
-          {pie ? (
-            <>
-              <div>
-                <strong>PIE ID:</strong> <code>{pie.id}</code>
-              </div>
-              <div>
-                <strong>Generated:</strong>{" "}
-                {new Date(pie.created_at).toLocaleString()}
-              </div>
-              <div>
-                <strong>Score:</strong> {pie.score ?? "—"} / 100
-              </div>
-              <div>
-                <strong>Tier:</strong> {pie.tier ?? "—"}{" "}
-                <span style={{ opacity: 0.7 }}>({pie.confidence ?? "—"})</span>
-              </div>
-              <div style={{ marginTop: 10 }}>
-                <strong>Summary:</strong> {pie.summary ?? ""}
-              </div>
+        <div style={{ height: 16 }} />
 
-              <details style={{ marginTop: 12 }}>
-                <summary style={{ cursor: "pointer", fontWeight: 800 }}>Raw PIE JSON</summary>
-                <pre style={{ whiteSpace: "pre-wrap" }}>
-                  {JSON.stringify(pie.report ?? {}, null, 2)}
-                </pre>
-              </details>
-            </>
-          ) : (
-            <>
-              <div style={{ opacity: 0.75, marginBottom: 10 }}>
-                No PIE report stored yet for this quote.
-              </div>
-              <RunPieButton quoteId={quoteId} />
-            </>
-          )}
-        </div>
+        <section className="panel">
+          <div className="panelHeader">
+            <div style={{ fontWeight: 950 }}>Intake (normalized)</div>
+          </div>
+          <div className="panelBody">
+            <pre style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 12 }}>
+              {JSON.stringify(intakeNorm ?? null, null, 2)}
+            </pre>
+          </div>
+        </section>
 
-        <details open style={{ marginBottom: 14 }}>
-          <summary style={{ cursor: "pointer", fontWeight: 800 }}>
-            intake_normalized
-          </summary>
-          <pre style={{ whiteSpace: "pre-wrap" }}>
-            {JSON.stringify((data as any).intake_normalized ?? {}, null, 2)}
-          </pre>
-        </details>
+        <div style={{ height: 16 }} />
 
-        <details style={{ marginBottom: 14 }}>
-          <summary style={{ cursor: "pointer", fontWeight: 800 }}>
-            intake_raw
-          </summary>
-          <pre style={{ whiteSpace: "pre-wrap" }}>
-            {JSON.stringify((data as any).intake_raw ?? {}, null, 2)}
-          </pre>
-        </details>
-
-        <details open style={{ marginBottom: 14 }}>
-          <summary style={{ cursor: "pointer", fontWeight: 800 }}>
-            scope_snapshot
-          </summary>
-          <pre style={{ whiteSpace: "pre-wrap" }}>
-            {JSON.stringify((data as any).scope_snapshot ?? {}, null, 2)}
-          </pre>
-        </details>
-
-        <details>
-          <summary style={{ cursor: "pointer", fontWeight: 800 }}>debug</summary>
-          <pre style={{ whiteSpace: "pre-wrap" }}>
-            {JSON.stringify((data as any).debug ?? {}, null, 2)}
-          </pre>
-        </details>
+        <section className="panel">
+          <div className="panelHeader">
+            <div style={{ fontWeight: 950 }}>Intake (raw)</div>
+          </div>
+          <div className="panelBody">
+            <pre style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 12 }}>
+              {JSON.stringify(intakeRaw ?? null, null, 2)}
+            </pre>
+          </div>
+        </section>
       </main>
     );
   }
 
-  // ✅ No quoteId: show recent quotes list
+  // ============================
+  // LIST MODE
+  // ============================
   const { data: quotes, error } = await supabaseAdmin
     .from("quotes")
-    .select(
-      `
-      id,
-      created_at,
-      status,
-      tier_recommended,
-      estimate_total,
-      latest_pie_report_id,
-      leads (
-        email
-      )
-    `
-    )
+    .select("*, leads(email)")
     .order("created_at", { ascending: false })
     .limit(25);
 
   return (
-    <main style={{ padding: 32, fontFamily: "ui-sans-serif, system-ui" }}>
-      <h1 style={{ fontSize: 22, marginBottom: 10 }}>Internal Preview</h1>
-      <p style={{ opacity: 0.75, marginBottom: 18 }}>
-        Recent quotes (tap “View details”)
-      </p>
+    <main className="container" style={{ padding: "48px 0 80px" }}>
+      <div className="kicker">
+        <span className="kickerDot" aria-hidden="true" />
+        Internal Preview
+      </div>
 
-      {error ? (
-        <p style={{ color: "#b00" }}>Error loading quotes: {error.message}</p>
-      ) : (
-        <div style={{ display: "grid", gap: 12 }}>
-          {(quotes ?? []).map((q: any) => {
-            const lead = firstLead(q.leads);
-            const href = `/internal/preview?quoteId=${encodeURIComponent(q.id)}`;
-            const full = baseUrl ? `${baseUrl}${href}` : href;
+      <div style={{ height: 12 }} />
 
-            return (
-              <div
-                key={q.id}
-                style={{
-                  border: "1px solid rgba(0,0,0,0.12)",
-                  borderRadius: 14,
-                  padding: 14,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 12,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div style={{ fontWeight: 800 }}>
-                    ${q.estimate_total}{" "}
-                    <span style={{ opacity: 0.7 }}>
-                      • {q.tier_recommended ?? "—"} • {q.status}
-                      {q.latest_pie_report_id ? " • PIE ✅" : " • PIE —"}
-                    </span>
-                  </div>
-                  <div style={{ opacity: 0.7 }}>
-                    {new Date(q.created_at).toLocaleString()}
-                  </div>
+      <h1 className="h1">Recent quotes (tap “View details”)</h1>
+
+      <div style={{ height: 16 }} />
+
+      {error && (
+        <div className="panel" style={{ marginBottom: 14 }}>
+          <div className="panelBody" style={{ color: "rgba(255,255,255,0.9)", fontWeight: 800 }}>
+            Error loading quotes: {error.message}
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: "grid", gap: 12 }}>
+        {(quotes || []).map((q: any) => {
+          const total = extractTotalUSD(q);
+          const tier = extractTier(q);
+          const status = String(q?.status || "—");
+          const hasPie = !!q?.latest_pie_report_id;
+          const email = q?.leads?.email || q?.lead_email || "—";
+          const created = q?.created_at ? new Date(q.created_at).toLocaleString() : "—";
+          const href = `/internal/preview?quoteId=${encodeURIComponent(q.id)}`;
+
+          return (
+            <div key={q.id} className="panel">
+              <div className="panelBody" style={{ display: "grid", gap: 10 }}>
+                <div style={{ fontWeight: 950 }}>
+                  {money(total)} • {tier} • {status} • PIE {hasPie ? "✓" : "—"}
                 </div>
 
-                <div style={{ marginTop: 6, opacity: 0.85 }}>
-                  {lead?.email ?? "(no lead email)"} • <code>{q.id}</code>
+                <div className="smallNote">
+                  {created}
+                  <br />
+                  {email} • <code>{q.id}</code>
                 </div>
 
-                <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  {/* Button-style link (usually fixes iOS “tap does nothing”) */}
-                  <Link
-                    href={href}
-                    prefetch={false}
-                    className="btn btnPrimary"
-                    style={{ pointerEvents: "auto" }}
-                  >
+                <div className="row" style={{ justifyContent: "space-between" }}>
+                  <Link className="btn btnPrimary" href={href}>
                     View details <span className="btnArrow">→</span>
                   </Link>
 
-                  {/* Plain URL fallback */}
-                  <a
-                    href={href}
-                    style={{ textDecoration: "underline", pointerEvents: "auto" }}
-                  >
+                  <Link className="btn btnGhost" href={href}>
                     Open link
-                  </a>
-
-                  <span style={{ opacity: 0.65, fontSize: 12 }}>
-                    If taps still do nothing, an overlay/CSS is blocking clicks.
-                  </span>
+                  </Link>
                 </div>
 
-                <div style={{ marginTop: 8, fontSize: 12, opacity: 0.75 }}>
-                  Link: <code>{full}</code>
+                <div className="smallNote">
+                  Link:{" "}
+                  <code>
+                    https://crecystudio.com{href}
+                  </code>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
+            </div>
+          );
+        })}
+      </div>
     </main>
   );
 }
