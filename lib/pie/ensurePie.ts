@@ -1,344 +1,260 @@
-// lib/pieEngine.ts
+// lib/pie/ensurePie.ts
+import "server-only";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-type Json = Record<string, any>;
+type QuoteRow = {
+  id: string;
+  created_at?: string | null;
+  status?: string | null;
+  tier_recommended?: string | null;
+  estimate_total?: number | string | null;
+  estimate_low?: number | string | null;
+  estimate_high?: number | string | null;
+  intake_raw?: any;
+  intake_normalized?: any;
+  latest_pie_report_id?: string | null;
+};
 
-function sb() {
-  // Your supabaseAdmin supports both callable + direct; this keeps it safe.
-  return typeof supabaseAdmin === "function" ? supabaseAdmin() : supabaseAdmin;
+type PieGenerateResult = {
+  created: boolean;
+  pie: any;
+};
+
+function toNum(v: any): number | null {
+  if (v === null || v === undefined || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
 }
 
-function asObj(v: any): Json {
-  return v && typeof v === "object" && !Array.isArray(v) ? v : {};
-}
-
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
-}
-
-function mapTier(tierRecommended: string | null | undefined, total: number): string {
-  const t = String(tierRecommended || "").toLowerCase();
-  if (t.includes("premium")) return "Premium";
-  if (t.includes("growth")) return "Growth";
-  if (t.includes("essential")) return "Essential";
-
-  if (total >= 1700) return "Premium";
-  if (total >= 900) return "Growth";
-  return "Essential";
-}
-
-function scoreFromQuote(quote: any) {
-  const intake = asObj(quote?.intake_normalized);
-  const estimateTotal = Number(quote?.estimate_total || 0);
-
-  const pagesRaw = String(intake?.pages || "1-3");
-  let pagesMax = 3;
-  if (pagesRaw.includes("+")) {
-    pagesMax = parseInt(pagesRaw.replace("+", ""), 10) || 9;
-  } else if (pagesRaw.includes("-")) {
-    const parts = pagesRaw.split("-");
-    pagesMax = parseInt(parts[1] || parts[0], 10) || 3;
-  } else {
-    pagesMax = parseInt(pagesRaw, 10) || 3;
+function boolish(v: any): boolean {
+  if (typeof v === "boolean") return v;
+  if (typeof v === "string") {
+    const s = v.trim().toLowerCase();
+    return s === "true" || s === "yes" || s === "1";
   }
+  return false;
+}
 
-  const featureCount =
-    (intake?.booking ? 1 : 0) +
-    (intake?.payments ? 1 : 0) +
-    (intake?.blog ? 1 : 0) +
-    (intake?.membership ? 1 : 0) +
-    (Array.isArray(intake?.automationTypes) ? intake.automationTypes.length : 0) +
-    (Array.isArray(intake?.integrations) ? intake.integrations.length : 0);
+function capitalize(s?: string | null) {
+  if (!s) return "Standard";
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
 
-  // Subscores (0-25 each)
-  const scopeScore = clamp(Math.round(pagesMax * 2 + featureCount * 2), 4, 25);
+function safeObj(v: any): Record<string, any> {
+  if (!v) return {};
+  if (typeof v === "object") return v;
+  try {
+    return JSON.parse(v);
+  } catch {
+    return {};
+  }
+}
 
-  const budgetScore =
-    estimateTotal >= 1700 ? 22 :
-    estimateTotal >= 900 ? 18 :
-    estimateTotal >= 550 ? 14 :
-    estimateTotal >= 400 ? 10 : 8;
+function buildReportFromQuote(quote: QuoteRow) {
+  const normalized = safeObj(quote.intake_normalized);
+  const raw = safeObj(quote.intake_raw);
+  const intake = Object.keys(normalized).length ? normalized : raw;
 
-  const timelineRaw = String(intake?.timeline || "").toLowerCase();
-  const timelineScore =
-    timelineRaw.includes("rush") || timelineRaw.includes("1 week") ? 22 :
-    timelineRaw.includes("1-2") ? 18 :
-    timelineRaw.includes("2-3") ? 14 :
-    timelineRaw.includes("month") ? 10 : 12;
+  const pages = String(intake.pages ?? "").toLowerCase();
+  const websiteType = String(intake.websiteType ?? "").toLowerCase();
+  const contentReady = String(intake.contentReady ?? "").toLowerCase();
+  const timeline = String(intake.timeline ?? "").toLowerCase();
+  const integrations = Array.isArray(intake.integrations)
+    ? intake.integrations
+    : typeof intake.integrations === "string" && intake.integrations
+    ? [intake.integrations]
+    : [];
 
-  const contentReady = String(intake?.contentReady || "").toLowerCase();
-  const readinessScore =
-    contentReady.includes("not") ? 20 :
-    contentReady.includes("some") ? 12 :
-    contentReady.includes("ready") ? 8 : 12;
+  let score = 10;
 
-  const total = clamp(scopeScore + budgetScore + timelineScore + readinessScore, 0, 100);
+  // Page complexity
+  if (pages.includes("1-3")) score += 6;
+  else if (pages.includes("4-6")) score += 14;
+  else if (pages.includes("7-10")) score += 22;
+  else if (pages.includes("10+")) score += 30;
+  else score += 10;
+
+  // Feature complexity
+  if (boolish(intake.booking)) score += 10;
+  if (boolish(intake.payments)) score += 15;
+  if (boolish(intake.membership)) score += 18;
+  if (boolish(intake.blog)) score += 6;
+
+  // Integrations
+  score += Math.min(integrations.length * 5, 15);
+
+  // Content readiness affects risk/effort
+  if (contentReady.includes("none")) score += 10;
+  else if (contentReady.includes("some")) score += 5;
+  else if (contentReady.includes("ready")) score += 1;
+
+  // Timeline urgency
+  if (timeline.includes("1 week")) score += 10;
+  else if (timeline.includes("2-3")) score += 4;
+  else if (timeline.includes("month")) score += 2;
+
+  // Website type
+  if (websiteType.includes("ecommerce")) score += 18;
+  else if (websiteType.includes("business")) score += 5;
+  else if (websiteType.includes("portfolio")) score += 3;
+
+  score = Math.max(1, Math.min(100, score));
+
+  const estimateLow = toNum(quote.estimate_low);
+  const estimateHigh = toNum(quote.estimate_high);
+  const estimateTotal = toNum(quote.estimate_total);
+
+  const target = estimateTotal ?? Math.round((estimateLow ?? 450 + (estimateHigh ?? 650)) / 2);
+  const minimum = estimateLow ?? Math.round(target * 0.9);
+
+  const tier = capitalize(quote.tier_recommended) || (score >= 70 ? "Premium" : score >= 40 ? "Growth" : "Essential");
 
   const risks: string[] = [];
-  if (contentReady.includes("not")) risks.push("Content not ready");
-  if (timelineRaw.includes("rush") || timelineRaw.includes("1 week")) risks.push("Tight timeline");
-  if (intake?.membership) risks.push("Membership scope");
-  if (intake?.payments) risks.push("Payments integration");
-  if (Array.isArray(intake?.automationTypes) && intake.automationTypes.length >= 2) {
-    risks.push("Multiple automations");
+  if (!contentReady || contentReady.includes("none") || contentReady.includes("some")) {
+    risks.push("Content readiness may affect timeline.");
+  }
+  if (integrations.length > 0) {
+    risks.push("3rd-party integration setup/testing may add revisions.");
+  }
+  if (boolish(intake.membership) || boolish(intake.payments)) {
+    risks.push("Auth/payments introduce extra QA scope.");
   }
 
-  return {
-    total,
-    scopeScore,
-    budgetScore,
-    timelineScore,
-    readinessScore,
-    risks,
-  };
-}
-
-function buildPieObjects(quote: any, lead: any) {
-  const intake = asObj(quote?.intake_normalized);
-  const estimateTotal = Number(quote?.estimate_total || 0);
-  const estimateLow = Number(quote?.estimate_low || 0);
-  const estimateHigh = Number(quote?.estimate_high || 0);
-  const tier = mapTier(quote?.tier_recommended, estimateTotal);
-
-  const scores = scoreFromQuote(quote);
-
-  const confidence =
-    lead?.email && Object.keys(intake).length > 0 ? "High" :
-    Object.keys(intake).length > 0 ? "Medium" :
-    "Low";
-
-  const target = estimateTotal || 550;
-  const minimum = estimateLow || Math.round(target * 0.9);
-
-  const emphasize: string[] = ["Clear scope", "Fast handoff", "Upgrade flexibility"];
-  if (intake?.payments) emphasize.push("Payments setup");
-  if (intake?.booking) emphasize.push("Booking flow");
-  if (String(intake?.contentReady || "").toLowerCase().includes("ready")) {
-    emphasize.push("Faster launch path");
-  }
-
-  const objections: string[] = ["Can we start cheaper?", "Can we phase features later?"];
-  if (target >= 900) objections.push("Can we split into phases?");
-  if (intake?.payments) objections.push("Do we need payments at launch?");
-
-  const summary = `Estimated complexity ${scores.total}/100 with ${tier} scope. ${
-    lead?.email ? `Lead: ${lead.email}. ` : ""
-  }Quote total ${target}.`;
+  const emphasize = ["Clear scope", "Fast launch path", "Upgrade flexibility"];
+  if (boolish(intake.payments)) emphasize.push("Payments-ready build");
+  if (integrations.length) emphasize.push("Integration support");
 
   const report = {
     tier,
-    pitch: {
-      emphasize,
-      recommend: `Recommend ${tier} scope based on complexity, timeline, and readiness.`,
-      objections,
-    },
-    risks: scores.risks,
-    score: scores.total,
+    score,
+    confidence: "High",
+    summary: `Estimated complexity ${score}/100 with ${tier} scope.`,
     pricing: {
       target,
       minimum,
-      buffers: [],
-      rangeLow: estimateLow || null,
-      rangeHigh: estimateHigh || null,
+      buffers: estimateHigh && target < estimateHigh ? [{ label: "Upper estimate", amount: estimateHigh }] : [],
     },
-    summary,
-    confidence,
-    // extra fields (safe to keep inside JSON)
-    subscores: {
-      scope: scores.scopeScore,
-      budget: scores.budgetScore,
-      timeline: scores.timelineScore,
-      readiness: scores.readinessScore,
+    risks,
+    pitch: {
+      recommend: `Recommend ${tier} based on complexity, timeline, and requested features.`,
+      emphasize,
+      objections: [
+        "Can we start smaller and phase features?",
+        "Can we reduce price by simplifying scope?",
+        "What’s included vs excluded?",
+      ],
     },
   };
 
-  const payload = {
-    quoteId: quote.id,
-    leadId: quote.lead_id || null,
-    status: quote.status || null,
-    tierRecommended: quote.tier_recommended || null,
-    estimate: {
-      total: estimateTotal,
-      low: estimateLow || null,
-      high: estimateHigh || null,
-    },
-    intakeNormalized: intake,
-    scopeSnapshot: asObj(quote?.scope_snapshot),
-    pricingSnapshot: asObj(quote?.pricing_snapshot),
-  };
-
-  const input = {
-    quoteId: quote.id,
-    lead: {
-      id: lead?.id || quote?.lead_id || null,
-      email: lead?.email || null,
-      phone: lead?.phone || null,
-    },
-    intakeNormalized: intake,
-  };
-
-  return {
-    tier,
-    score: scores.total,
-    confidence,
-    report,
-    payload,
-    input,
-  };
+  return { report, intake };
 }
 
-async function tryFindProjectIdForQuote(quote: any): Promise<string | null> {
-  const client = sb();
-
-  // Try common patterns safely (schema may vary)
-  const lookupAttempts: Array<{ column: string; value: string | null }> = [
-    { column: "quote_id", value: quote?.id || null },
-    { column: "source_quote_id", value: quote?.id || null },
-    { column: "latest_quote_id", value: quote?.id || null },
-    { column: "lead_id", value: quote?.lead_id || null },
-  ];
-
-  for (const attempt of lookupAttempts) {
-    if (!attempt.value) continue;
-
-    const res = await client
-      .from("projects")
-      .select("id")
-      .eq(attempt.column, attempt.value)
-      .limit(1);
-
-    if (!res.error && Array.isArray(res.data) && res.data[0]?.id) {
-      return String(res.data[0].id);
-    }
-    // if column doesn't exist, just continue to next attempt
-  }
-
-  return null;
-}
-
-async function tryCreateProjectForQuote(quote: any, lead: any): Promise<string> {
-  const client = sb();
-
-  const projectName = `CrecyStudio Project ${String(quote?.id || "").slice(0, 8)}`;
-
-  // Try several payload shapes because your projects schema may not match earlier assumptions.
-  const payloads: Array<Record<string, any>> = [
-    { quote_id: quote.id, lead_id: quote.lead_id || null, status: "new", name: projectName },
-    { quote_id: quote.id, lead_id: quote.lead_id || null, status: "new" },
-    { quote_id: quote.id, lead_id: quote.lead_id || null },
-    { lead_id: quote.lead_id || null, status: "new", name: projectName },
-    { lead_id: quote.lead_id || null, status: "new" },
-    { lead_id: quote.lead_id || null },
-    { name: projectName, status: "new" },
-    { name: projectName },
-    {},
-  ];
-
-  let lastError = "Unable to create project";
-  for (const payload of payloads) {
-    const res = await client.from("projects").insert(payload).select("id").limit(1);
-    if (!res.error && Array.isArray(res.data) && res.data[0]?.id) {
-      return String(res.data[0].id);
-    }
-    if (res.error?.message) lastError = res.error.message;
-  }
-
-  // Last attempt: if another process created it meanwhile, re-check lookups.
-  const found = await tryFindProjectIdForQuote(quote);
-  if (found) return found;
-
-  throw new Error(lastError);
-}
-
-async function ensureProjectIdForQuote(quote: any, lead: any): Promise<string> {
-  const existing = await tryFindProjectIdForQuote(quote);
-  if (existing) return existing;
-  return tryCreateProjectForQuote(quote, lead);
-}
-
-export async function generatePieForQuoteId(quoteId: string) {
-  const client = sb();
-
-  // Load quote
-  const quoteRes = await client
+async function getQuoteById(quoteId: string): Promise<QuoteRow> {
+  const { data, error } = await supabaseAdmin
     .from("quotes")
-    .select("*")
+    .select(
+      "id, created_at, status, tier_recommended, estimate_total, estimate_low, estimate_high, intake_raw, intake_normalized, latest_pie_report_id"
+    )
     .eq("id", quoteId)
-    .limit(1);
+    .single();
 
-  if (quoteRes.error) throw new Error(quoteRes.error.message);
-  const quote = quoteRes.data?.[0];
-  if (!quote) throw new Error("Quote not found.");
+  if (error || !data) {
+    throw new Error(error?.message || `Quote not found: ${quoteId}`);
+  }
+  return data as QuoteRow;
+}
 
-  // If quote already has latest PIE, return it (idempotent behavior)
-  if (quote.latest_pie_report_id) {
-    const existingPieRes = await client
-      .from("pie_reports")
-      .select("*")
-      .eq("id", quote.latest_pie_report_id)
-      .limit(1);
+async function getLatestPieByQuoteId(quoteId: string) {
+  const { data, error } = await supabaseAdmin
+    .from("pie_reports")
+    .select("id, quote_id, created_at, report, score, tier, confidence")
+    .eq("quote_id", quoteId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-    if (!existingPieRes.error && existingPieRes.data?.[0]) {
-      return {
-        created: false,
-        pie: existingPieRes.data[0],
-        quote,
-      };
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function generatePieForQuoteId(
+  quoteId: string,
+  opts?: { force?: boolean }
+): Promise<PieGenerateResult> {
+  const force = !!opts?.force;
+
+  if (!force) {
+    const existing = await getLatestPieByQuoteId(quoteId);
+    if (existing) {
+      return { created: false, pie: existing };
     }
   }
 
-  // Load lead (if available)
-  let lead: any = null;
-  if (quote.lead_id) {
-    const leadRes = await client.from("leads").select("*").eq("id", quote.lead_id).limit(1);
-    if (!leadRes.error) lead = leadRes.data?.[0] ?? null;
-  }
+  const quote = await getQuoteById(quoteId);
+  const { report, intake } = buildReportFromQuote(quote);
 
-  // Ensure project exists FIRST (fixes your foreign key error)
-  const projectId = await ensureProjectIdForQuote(quote, lead);
-
-  const pie = buildPieObjects(quote, lead);
-  const token = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  // Insert using your ACTUAL pie_reports schema
-  const insertRes = await client
+  // IMPORTANT:
+  // quote-based PIE does NOT have a project row; project_id is intentionally null.
+  const insertRow = {
+    token: crypto.randomUUID(),
+    project_id: null,
+    quote_id: quote.id,
+    report,
+    payload: { source: "quote", quoteId: quote.id },
+    input: intake,
+    score: report.score,
+    tier: report.tier,
+    confidence: report.confidence,
+    expires_at: expiresAt,
+  };
+
+  const { data: inserted, error: insertError } = await supabaseAdmin
     .from("pie_reports")
-    .insert({
-      token,
-      project_id: projectId,
-      quote_id: quote.id,
-      expires_at: expiresAt,
-      report: pie.report,
-      payload: pie.payload,
-      input: pie.input,
-      score: pie.score,
-      tier: pie.tier,
-      confidence: pie.confidence,
-    })
-    .select("*")
-    .limit(1);
+    .insert(insertRow)
+    .select("id, quote_id, created_at, report, score, tier, confidence")
+    .single();
 
-  if (insertRes.error) throw new Error(insertRes.error.message);
-
-  const pieRow = insertRes.data?.[0];
-  if (!pieRow?.id) throw new Error("PIE insert succeeded but no row returned.");
-
-  // Save latest PIE pointer on quote (ignore if column temporarily missing in another env)
-  const quoteUpdate = await client
-    .from("quotes")
-    .update({ latest_pie_report_id: pieRow.id })
-    .eq("id", quote.id);
-
-  if (quoteUpdate.error) {
-    // non-fatal: PIE is already created; surface warning only in API response via caller if needed
-    console.warn("Could not update quotes.latest_pie_report_id:", quoteUpdate.error.message);
+  if (insertError || !inserted) {
+    throw new Error(insertError?.message || "Failed to insert PIE report");
   }
 
-  return {
-    created: true,
-    pie: pieRow,
-    quote,
-    projectId,
-  };
+  const { error: quoteUpdateError } = await supabaseAdmin
+    .from("quotes")
+    .update({ latest_pie_report_id: inserted.id })
+    .eq("id", quote.id);
+
+  if (quoteUpdateError) {
+    throw new Error(quoteUpdateError.message);
+  }
+
+  return { created: true, pie: inserted };
 }
+
+/**
+ * Backward-compatible alias for older imports
+ */
+export const ensurePieForQuoteId = generatePieForQuoteId;
+
+/**
+ * Small helper API used by some older backfill routes/pages.
+ * This keeps old imports from breaking while the codebase is in transition.
+ */
+export const pieDb = {
+  async listQuotesMissingPie(limit = 200) {
+    const { data, error } = await supabaseAdmin
+      .from("quotes")
+      .select("id, latest_pie_report_id")
+      .is("latest_pie_report_id", null)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+
+  async latestPieByQuoteId(quoteId: string) {
+    return getLatestPieByQuoteId(quoteId);
+  },
+};
