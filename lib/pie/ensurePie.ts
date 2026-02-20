@@ -1,224 +1,344 @@
-// lib/pie/ensurePie.ts
-import { createClient } from "@supabase/supabase-js";
+// lib/pieEngine.ts
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+type Json = Record<string, any>;
 
-if (!url) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL");
-if (!serviceKey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
+function sb() {
+  // Your supabaseAdmin supports both callable + direct; this keeps it safe.
+  return typeof supabaseAdmin === "function" ? supabaseAdmin() : supabaseAdmin;
+}
 
-export const pieDb = createClient(url, serviceKey, {
-  auth: { persistSession: false },
-});
+function asObj(v: any): Json {
+  return v && typeof v === "object" && !Array.isArray(v) ? v : {};
+}
 
-function asObj(v: any): Record<string, any> {
-  if (!v) return {};
-  if (typeof v === "object") return v;
-  try {
-    return JSON.parse(v);
-  } catch {
-    return {};
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
+}
+
+function mapTier(tierRecommended: string | null | undefined, total: number): string {
+  const t = String(tierRecommended || "").toLowerCase();
+  if (t.includes("premium")) return "Premium";
+  if (t.includes("growth")) return "Growth";
+  if (t.includes("essential")) return "Essential";
+
+  if (total >= 1700) return "Premium";
+  if (total >= 900) return "Growth";
+  return "Essential";
+}
+
+function scoreFromQuote(quote: any) {
+  const intake = asObj(quote?.intake_normalized);
+  const estimateTotal = Number(quote?.estimate_total || 0);
+
+  const pagesRaw = String(intake?.pages || "1-3");
+  let pagesMax = 3;
+  if (pagesRaw.includes("+")) {
+    pagesMax = parseInt(pagesRaw.replace("+", ""), 10) || 9;
+  } else if (pagesRaw.includes("-")) {
+    const parts = pagesRaw.split("-");
+    pagesMax = parseInt(parts[1] || parts[0], 10) || 3;
+  } else {
+    pagesMax = parseInt(pagesRaw, 10) || 3;
   }
-}
 
-function num(v: any, fallback = 0) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : fallback;
-}
+  const featureCount =
+    (intake?.booking ? 1 : 0) +
+    (intake?.payments ? 1 : 0) +
+    (intake?.blog ? 1 : 0) +
+    (intake?.membership ? 1 : 0) +
+    (Array.isArray(intake?.automationTypes) ? intake.automationTypes.length : 0) +
+    (Array.isArray(intake?.integrations) ? intake.integrations.length : 0);
 
-function buildDeterministicPie(quote: any) {
-  const intake = asObj(quote.intake_normalized);
-  const raw = asObj(quote.intake_raw);
+  // Subscores (0-25 each)
+  const scopeScore = clamp(Math.round(pagesMax * 2 + featureCount * 2), 4, 25);
 
-  const websiteType = String(intake.websiteType || "business");
-  const pages = String(intake.pages || "1-3");
-  const tier = String(quote.tier_recommended || "essential");
-  const total = num(quote.estimate_total, 0);
-  const low = num(quote.estimate_low, Math.round(total * 0.9));
-  const high = num(quote.estimate_high, Math.round(total * 1.15));
+  const budgetScore =
+    estimateTotal >= 1700 ? 22 :
+    estimateTotal >= 900 ? 18 :
+    estimateTotal >= 550 ? 14 :
+    estimateTotal >= 400 ? 10 : 8;
 
-  // Lead score (0-100) simple deterministic
-  let score = 40;
+  const timelineRaw = String(intake?.timeline || "").toLowerCase();
+  const timelineScore =
+    timelineRaw.includes("rush") || timelineRaw.includes("1 week") ? 22 :
+    timelineRaw.includes("1-2") ? 18 :
+    timelineRaw.includes("2-3") ? 14 :
+    timelineRaw.includes("month") ? 10 : 12;
 
-  // Budget/complexity signal
-  if (total >= 1700) score += 18;
-  else if (total >= 900) score += 12;
-  else if (total >= 550) score += 8;
-  else score += 4;
+  const contentReady = String(intake?.contentReady || "").toLowerCase();
+  const readinessScore =
+    contentReady.includes("not") ? 20 :
+    contentReady.includes("some") ? 12 :
+    contentReady.includes("ready") ? 8 : 12;
 
-  // Content readiness
-  const contentReady = String(intake.contentReady || "").toLowerCase();
-  if (contentReady === "ready") score += 14;
-  else if (contentReady === "some") score += 6;
-  else if (contentReady === "not_ready") score -= 8;
-
-  // Decision maker
-  const dm = String(raw.decisionMaker || "").toLowerCase();
-  if (dm === "yes") score += 12;
-  else if (dm === "no") score -= 8;
-
-  // Timeline urgency
-  const timeline = String(intake.timeline || "").toLowerCase();
-  if (timeline.includes("1-2") || timeline.includes("urgent")) score += 8;
-  if (timeline.includes("2-3")) score += 6;
-
-  // Features
-  if (intake.payments) score += 8;
-  if (intake.membership) score += 10;
-  if (intake.booking) score += 5;
-  if (intake.wantsAutomation === "yes") score += 5;
-
-  // Contact completeness
-  if (String(intake.leadEmail || "").includes("@")) score += 6;
-  if (String(intake.leadPhone || "").trim()) score += 4;
-
-  score = Math.max(0, Math.min(100, score));
+  const total = clamp(scopeScore + budgetScore + timelineScore + readinessScore, 0, 100);
 
   const risks: string[] = [];
-  const strengths: string[] = [];
-  const nextSteps: string[] = [];
-
-  if (contentReady === "not_ready") risks.push("Content is not ready yet (can slow delivery and increase revisions).");
-  if (contentReady === "some") risks.push("Partial content readiness may require content cleanup/formatting.");
-  if (String(intake.domainHosting || "").toLowerCase() !== "yes") risks.push("Domain/hosting setup still needs support or coordination.");
-  if (!String(intake.leadPhone || "").trim()) risks.push("No phone number provided (slower scheduling unless email replies quickly).");
-
-  strengths.push(`${tier} fit based on current scope and pricing.`);
-  strengths.push(`Estimated project range is $${low}–$${high} (current estimate: $${total}).`);
-  strengths.push(`Website type: ${websiteType}; page scope: ${pages}.`);
-
-  if (String(raw.decisionMaker || "").toLowerCase() === "yes") {
-    strengths.push("Decision-maker confirmed.");
+  if (contentReady.includes("not")) risks.push("Content not ready");
+  if (timelineRaw.includes("rush") || timelineRaw.includes("1 week")) risks.push("Tight timeline");
+  if (intake?.membership) risks.push("Membership scope");
+  if (intake?.payments) risks.push("Payments integration");
+  if (Array.isArray(intake?.automationTypes) && intake.automationTypes.length >= 2) {
+    risks.push("Multiple automations");
   }
 
-  if (intake.booking) strengths.push("Booking feature adds clear business utility.");
-  if (intake.payments) strengths.push("Payments/checkout indicates higher commercial intent.");
-  if (intake.wantsAutomation === "yes") strengths.push("Automation interest suggests good upsell potential.");
+  return {
+    total,
+    scopeScore,
+    budgetScore,
+    timelineScore,
+    readinessScore,
+    risks,
+  };
+}
 
-  nextSteps.push("Confirm pages/sections and exact deliverables on scope call.");
-  nextSteps.push("Confirm content/assets readiness and identify missing items.");
-  nextSteps.push("After scope confirmation, send deposit link and lock scope.");
-  nextSteps.push("Move project to production queue after deposit is received.");
+function buildPieObjects(quote: any, lead: any) {
+  const intake = asObj(quote?.intake_normalized);
+  const estimateTotal = Number(quote?.estimate_total || 0);
+  const estimateLow = Number(quote?.estimate_low || 0);
+  const estimateHigh = Number(quote?.estimate_high || 0);
+  const tier = mapTier(quote?.tier_recommended, estimateTotal);
 
-  const negotiation: string[] = [];
-  if (total <= 550) {
-    negotiation.push("If price pressure: reduce pages or defer add-ons while preserving launch quality.");
-    negotiation.push("Use admin-only discount only if needed (10–25%) after scope is confirmed.");
-  } else {
-    negotiation.push("Keep public tier pricing; offer scope trade-offs before discount.");
-    negotiation.push("Anchor on business outcome + clean build + post-launch clarity.");
+  const scores = scoreFromQuote(quote);
+
+  const confidence =
+    lead?.email && Object.keys(intake).length > 0 ? "High" :
+    Object.keys(intake).length > 0 ? "Medium" :
+    "Low";
+
+  const target = estimateTotal || 550;
+  const minimum = estimateLow || Math.round(target * 0.9);
+
+  const emphasize: string[] = ["Clear scope", "Fast handoff", "Upgrade flexibility"];
+  if (intake?.payments) emphasize.push("Payments setup");
+  if (intake?.booking) emphasize.push("Booking flow");
+  if (String(intake?.contentReady || "").toLowerCase().includes("ready")) {
+    emphasize.push("Faster launch path");
   }
 
-  const pitch = `This lead looks like a ${tier} opportunity with a current estimate of $${total}. Focus the call on confirming scope, content readiness, and timeline. If budget concerns come up, use scope trade-offs first, then admin-only discount if needed.`;
+  const objections: string[] = ["Can we start cheaper?", "Can we phase features later?"];
+  if (target >= 900) objections.push("Can we split into phases?");
+  if (intake?.payments) objections.push("Do we need payments at launch?");
+
+  const summary = `Estimated complexity ${scores.total}/100 with ${tier} scope. ${
+    lead?.email ? `Lead: ${lead.email}. ` : ""
+  }Quote total ${target}.`;
 
   const report = {
-    version: "pie_v1_deterministic",
-    generatedAt: new Date().toISOString(),
-    summary: {
-      score,
-      tierRecommended: tier,
-      confidence: score >= 75 ? "high" : score >= 55 ? "medium" : "low",
-      quoteEstimate: { total, low, high },
-      status: quote.status || "new",
+    tier,
+    pitch: {
+      emphasize,
+      recommend: `Recommend ${tier} scope based on complexity, timeline, and readiness.`,
+      objections,
     },
+    risks: scores.risks,
+    score: scores.total,
+    pricing: {
+      target,
+      minimum,
+      buffers: [],
+      rangeLow: estimateLow || null,
+      rangeHigh: estimateHigh || null,
+    },
+    summary,
+    confidence,
+    // extra fields (safe to keep inside JSON)
+    subscores: {
+      scope: scores.scopeScore,
+      budget: scores.budgetScore,
+      timeline: scores.timelineScore,
+      readiness: scores.readinessScore,
+    },
+  };
+
+  const payload = {
+    quoteId: quote.id,
+    leadId: quote.lead_id || null,
+    status: quote.status || null,
+    tierRecommended: quote.tier_recommended || null,
+    estimate: {
+      total: estimateTotal,
+      low: estimateLow || null,
+      high: estimateHigh || null,
+    },
+    intakeNormalized: intake,
+    scopeSnapshot: asObj(quote?.scope_snapshot),
+    pricingSnapshot: asObj(quote?.pricing_snapshot),
+  };
+
+  const input = {
+    quoteId: quote.id,
     lead: {
-      email: quote.lead_email || intake.leadEmail || "",
-      phone: intake.leadPhone || "",
-      websiteType,
-      pages,
-      timeline: intake.timeline || "",
-      intent: intake.intent || "",
+      id: lead?.id || quote?.lead_id || null,
+      email: lead?.email || null,
+      phone: lead?.phone || null,
     },
-    strengths,
-    risks,
-    nextSteps,
-    negotiation,
-    pitch,
-    rawSignals: {
-      intakeNormalized: intake,
-      intakeRaw: raw,
-    },
+    intakeNormalized: intake,
   };
 
   return {
-    score,
     tier,
-    confidence: report.summary.confidence,
+    score: scores.total,
+    confidence,
     report,
+    payload,
+    input,
   };
 }
 
-export async function ensurePieForQuoteId(quoteId: string) {
+async function tryFindProjectIdForQuote(quote: any): Promise<string | null> {
+  const client = sb();
+
+  // Try common patterns safely (schema may vary)
+  const lookupAttempts: Array<{ column: string; value: string | null }> = [
+    { column: "quote_id", value: quote?.id || null },
+    { column: "source_quote_id", value: quote?.id || null },
+    { column: "latest_quote_id", value: quote?.id || null },
+    { column: "lead_id", value: quote?.lead_id || null },
+  ];
+
+  for (const attempt of lookupAttempts) {
+    if (!attempt.value) continue;
+
+    const res = await client
+      .from("projects")
+      .select("id")
+      .eq(attempt.column, attempt.value)
+      .limit(1);
+
+    if (!res.error && Array.isArray(res.data) && res.data[0]?.id) {
+      return String(res.data[0].id);
+    }
+    // if column doesn't exist, just continue to next attempt
+  }
+
+  return null;
+}
+
+async function tryCreateProjectForQuote(quote: any, lead: any): Promise<string> {
+  const client = sb();
+
+  const projectName = `CrecyStudio Project ${String(quote?.id || "").slice(0, 8)}`;
+
+  // Try several payload shapes because your projects schema may not match earlier assumptions.
+  const payloads: Array<Record<string, any>> = [
+    { quote_id: quote.id, lead_id: quote.lead_id || null, status: "new", name: projectName },
+    { quote_id: quote.id, lead_id: quote.lead_id || null, status: "new" },
+    { quote_id: quote.id, lead_id: quote.lead_id || null },
+    { lead_id: quote.lead_id || null, status: "new", name: projectName },
+    { lead_id: quote.lead_id || null, status: "new" },
+    { lead_id: quote.lead_id || null },
+    { name: projectName, status: "new" },
+    { name: projectName },
+    {},
+  ];
+
+  let lastError = "Unable to create project";
+  for (const payload of payloads) {
+    const res = await client.from("projects").insert(payload).select("id").limit(1);
+    if (!res.error && Array.isArray(res.data) && res.data[0]?.id) {
+      return String(res.data[0].id);
+    }
+    if (res.error?.message) lastError = res.error.message;
+  }
+
+  // Last attempt: if another process created it meanwhile, re-check lookups.
+  const found = await tryFindProjectIdForQuote(quote);
+  if (found) return found;
+
+  throw new Error(lastError);
+}
+
+async function ensureProjectIdForQuote(quote: any, lead: any): Promise<string> {
+  const existing = await tryFindProjectIdForQuote(quote);
+  if (existing) return existing;
+  return tryCreateProjectForQuote(quote, lead);
+}
+
+export async function generatePieForQuoteId(quoteId: string) {
+  const client = sb();
+
   // Load quote
-  const { data: quote, error: quoteErr } = await pieDb
+  const quoteRes = await client
     .from("quotes")
     .select("*")
     .eq("id", quoteId)
-    .single();
+    .limit(1);
 
-  if (quoteErr || !quote) {
-    throw new Error(quoteErr?.message || "Quote not found.");
-  }
+  if (quoteRes.error) throw new Error(quoteRes.error.message);
+  const quote = quoteRes.data?.[0];
+  if (!quote) throw new Error("Quote not found.");
 
-  // If already linked, fetch and return it
+  // If quote already has latest PIE, return it (idempotent behavior)
   if (quote.latest_pie_report_id) {
-    const { data: existing } = await pieDb
+    const existingPieRes = await client
       .from("pie_reports")
       .select("*")
       .eq("id", quote.latest_pie_report_id)
-      .single();
+      .limit(1);
 
-    if (existing) return { created: false, pie: existing };
+    if (!existingPieRes.error && existingPieRes.data?.[0]) {
+      return {
+        created: false,
+        pie: existingPieRes.data[0],
+        quote,
+      };
+    }
   }
 
-  // Build deterministic PIE
-  const built = buildDeterministicPie(quote);
+  // Load lead (if available)
+  let lead: any = null;
+  if (quote.lead_id) {
+    const leadRes = await client.from("leads").select("*").eq("id", quote.lead_id).limit(1);
+    if (!leadRes.error) lead = leadRes.data?.[0] ?? null;
+  }
 
-  const pieId = crypto.randomUUID();
+  // Ensure project exists FIRST (fixes your foreign key error)
+  const projectId = await ensureProjectIdForQuote(quote, lead);
+
+  const pie = buildPieObjects(quote, lead);
   const token = crypto.randomUUID();
-  const projectId = crypto.randomUUID();
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 30);
-
-  const insertPayload = {
-    id: pieId,
-    quote_id: quote.id,                  // IMPORTANT: link back to quote
-    token,                               // keeps compatibility with your existing table shape
-    project_id: projectId,               // placeholder internal project id
-    expires_at: expiresAt.toISOString(),
-    score: built.score,
-    tier: built.tier,
-    confidence: built.confidence,
-    report: built.report,                // main PIE JSON
-    payload: { source: "deterministic_backfill_v1" }, // compatibility JSON
-    input: {
-      quote_id: quote.id,
-      estimate_total: quote.estimate_total,
-      estimate_low: quote.estimate_low,
-      estimate_high: quote.estimate_high,
-      tier_recommended: quote.tier_recommended,
-    },
-  };
-
-  const { data: pie, error: pieErr } = await pieDb
+  // Insert using your ACTUAL pie_reports schema
+  const insertRes = await client
     .from("pie_reports")
-    .insert(insertPayload)
+    .insert({
+      token,
+      project_id: projectId,
+      quote_id: quote.id,
+      expires_at: expiresAt,
+      report: pie.report,
+      payload: pie.payload,
+      input: pie.input,
+      score: pie.score,
+      tier: pie.tier,
+      confidence: pie.confidence,
+    })
     .select("*")
-    .single();
+    .limit(1);
 
-  if (pieErr) {
-    throw new Error(pieErr.message || "Failed to insert PIE report.");
-  }
+  if (insertRes.error) throw new Error(insertRes.error.message);
 
-  const { error: linkErr } = await pieDb
+  const pieRow = insertRes.data?.[0];
+  if (!pieRow?.id) throw new Error("PIE insert succeeded but no row returned.");
+
+  // Save latest PIE pointer on quote (ignore if column temporarily missing in another env)
+  const quoteUpdate = await client
     .from("quotes")
-    .update({ latest_pie_report_id: pie.id })
+    .update({ latest_pie_report_id: pieRow.id })
     .eq("id", quote.id);
 
-  if (linkErr) {
-    throw new Error(linkErr.message || "PIE inserted but failed to link to quote.");
+  if (quoteUpdate.error) {
+    // non-fatal: PIE is already created; surface warning only in API response via caller if needed
+    console.warn("Could not update quotes.latest_pie_report_id:", quoteUpdate.error.message);
   }
 
-  return { created: true, pie };
+  return {
+    created: true,
+    pie: pieRow,
+    quote,
+    projectId,
+  };
 }
