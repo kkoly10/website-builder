@@ -1,345 +1,165 @@
-// app/internal/preview/page.tsx
 import Link from "next/link";
-import GeneratePieButton from "./GeneratePieButton";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import GeneratePieButton from "./GeneratePieButton";
 
-export const dynamic = "force-dynamic";
-
-type SearchParams = Record<string, string | string[] | undefined>;
-
-function pick(sp: SearchParams, key: string) {
-  const v = sp?.[key];
-  return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
+function fmt(ts?: string | null) {
+  if (!ts) return "—";
+  const d = new Date(ts);
+  return d.toLocaleString();
 }
 
-function money(n: number) {
-  return `$${Math.round(n).toLocaleString()}`;
-}
-
-function extractTotalUSD(q: any): number {
-  // Try a few shapes safely
-  const direct =
-    typeof q?.total === "number" ? q.total :
-    typeof q?.total_usd === "number" ? q.total_usd :
-    typeof q?.total_cents === "number" ? q.total_cents / 100 :
-    typeof q?.estimate_total === "number" ? q.estimate_total :
-    typeof q?.estimate?.total === "number" ? q.estimate.total :
-    typeof q?.estimate?.totalUsd === "number" ? q.estimate.totalUsd :
-    0;
-
-  return Number.isFinite(direct) ? direct : 0;
-}
-
-function extractTier(q: any): string {
-  const t =
-    q?.tier ||
-    q?.tier_recommended ||
-    q?.estimate?.tierRecommended ||
-    q?.estimate?.tier_recommended ||
-    "";
-  return String(t || "—");
-}
-
-export default async function InternalPreviewPage({
+export default async function InternalPreview({
   searchParams,
 }: {
-  searchParams: SearchParams;
+  searchParams?: { quoteId?: string };
 }) {
-  const quoteId = pick(searchParams, "quoteId").trim();
+  const quoteId = searchParams?.quoteId;
 
-  // ============================
-  // DETAILS MODE
-  // ============================
+  // If quoteId exists → render details view
   if (quoteId) {
-    const { data: quote, error: qErr } = await supabaseAdmin
+    const { data: quote } = await supabaseAdmin
       .from("quotes")
-      .select("*, leads(*)")
+      .select("*")
       .eq("id", quoteId)
-      .single();
+      .maybeSingle();
 
-    if (qErr || !quote) {
+    if (!quote) {
       return (
-        <main className="container" style={{ padding: "48px 0 80px" }}>
-          <div className="kicker">
-            <span className="kickerDot" aria-hidden="true" />
-            Internal Preview • Quote details
+        <div className="container section">
+          <div className="card">
+            <div className="cardInner">
+              <h2 className="h2">Quote not found</h2>
+              <p className="p">That quoteId doesn’t exist.</p>
+              <Link className="btn btnGhost" href="/internal/preview">
+                ← Back to list
+              </Link>
+            </div>
           </div>
-
-          <div style={{ height: 12 }} />
-          <h1 className="h1">Not found</h1>
-          <p className="p">Couldn’t load quote: <code>{quoteId}</code></p>
-
-          <div style={{ height: 18 }} />
-          <Link className="btn btnGhost" href="/internal/preview">
-            ← Back to list
-          </Link>
-        </main>
+        </div>
       );
     }
 
-    const { data: callRequests } = await supabaseAdmin
-      .from("call_requests")
-      .select("*")
-      .eq("quote_id", quoteId)
-      .order("created_at", { ascending: false })
-      .limit(10);
+    const pieId = quote.latest_pie_report_id as string | null;
 
-    // Latest PIE: prefer quotes.latest_pie_report_id; fallback to newest by quote_id
-    let pieReport: any = null;
-
-    const latestId = String(quote?.latest_pie_report_id || "").trim();
-    if (latestId) {
-      const { data } = await supabaseAdmin
-        .from("pie_reports")
-        .select("*")
-        .eq("id", latestId)
-        .single();
-      pieReport = data ?? null;
-    }
-
-    if (!pieReport) {
-      const { data } = await supabaseAdmin
-        .from("pie_reports")
-        .select("*")
-        .eq("quote_id", quoteId)
-        .order("created_at", { ascending: false })
-        .limit(1);
-      pieReport = data?.[0] ?? null;
-    }
-
-    const totalUSD = extractTotalUSD(quote);
-    const tier = extractTier(quote);
-    const status = String(quote?.status || "—");
-    const email =
-      quote?.leads?.email ||
-      quote?.lead_email ||
-      quote?.lead?.email ||
-      "—";
-
-    const intakeRaw = quote?.intake_raw ?? quote?.intakeRaw ?? null;
-    const intakeNorm = quote?.intake_normalized ?? quote?.intakeNormalized ?? null;
-    const estimate = quote?.estimate ?? null;
+    const { data: pie } = pieId
+      ? await supabaseAdmin.from("pie_reports").select("*").eq("id", pieId).maybeSingle()
+      : await supabaseAdmin
+          .from("pie_reports")
+          .select("*")
+          .eq("quote_id", quoteId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
     return (
-      <main className="container" style={{ padding: "48px 0 80px" }}>
-        <div className="kicker">
-          <span className="kickerDot" aria-hidden="true" />
-          Internal Preview • Quote details
-        </div>
-
-        <div style={{ height: 12 }} />
-
-        <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
-          <h1 className="h1" style={{ margin: 0 }}>Quote</h1>
+      <div className="container section">
+        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 14 }}>
           <Link className="btn btnGhost" href="/internal/preview">
-            ← Back to list
+            ← Back to quotes
           </Link>
+          <span className="badge badgeHot">Details</span>
+          <span className="badge">quoteId: {quoteId}</span>
         </div>
 
-        <div style={{ height: 14 }} />
+        <div className="card">
+          <div className="cardInner">
+            <h2 className="h2">Quote</h2>
+            <p className="p">
+              <b>Status:</b> {quote.status} &nbsp;•&nbsp; <b>Tier:</b> {quote.tier_recommended ?? "—"} &nbsp;•&nbsp;{" "}
+              <b>Total:</b> ${quote.estimate_total ?? "—"}
+            </p>
+            <p className="pDark">
+              <b>Created:</b> {fmt(quote.created_at)} &nbsp;•&nbsp; <b>Lead:</b> {quote.lead_id ?? "—"}
+            </p>
 
-        <section className="panel">
-          <div className="panelHeader">
-            <div style={{ fontWeight: 950 }}>Summary</div>
-            <div className="smallNote">Internal view — do not share</div>
-          </div>
-          <div className="panelBody" style={{ display: "grid", gap: 10 }}>
-            <div className="pDark">
-              Quote ID: <strong><code>{quoteId}</code></strong>
-            </div>
-            <div className="pDark">
-              Lead: <strong>{email}</strong>
-            </div>
-            <div className="pDark">
-              Total: <strong>{money(totalUSD)}</strong> • Tier: <strong>{tier}</strong> • Status: <strong>{status}</strong>
-            </div>
-
-            <div className="row" style={{ marginTop: 6 }}>
-              <GeneratePieButton quoteId={quoteId} hasPie={!!pieReport} />
-              <Link className="btn btnGhost" href={`/internal/preview?quoteId=${encodeURIComponent(quoteId)}`}>
-                Refresh
-              </Link>
-            </div>
-
-            {!pieReport && (
-              <div className="smallNote">
-                PIE is currently <strong>missing</strong> for this quote. Click “Generate PIE report”.
-              </div>
-            )}
-          </div>
-        </section>
-
-        <div style={{ height: 16 }} />
-
-        <section className="panel">
-          <div className="panelHeader">
-            <div style={{ fontWeight: 950 }}>Call requests</div>
-            <div className="smallNote">Most recent first</div>
-          </div>
-          <div className="panelBody" style={{ display: "grid", gap: 10 }}>
-            {callRequests?.length ? (
-              callRequests.map((r: any) => (
-                <div
-                  key={r.id}
-                  style={{
-                    border: "1px solid rgba(255,255,255,0.10)",
-                    borderRadius: 14,
-                    padding: 12,
-                    background: "rgba(255,255,255,0.03)",
-                  }}
-                >
-                  <div style={{ fontWeight: 900 }}>
-                    {String(r.status || "—")} • {new Date(r.created_at).toLocaleString()}
+            <div style={{ marginTop: 14 }}>
+              {!pie ? (
+                <>
+                  <div className="hint">
+                    No PIE report is linked to this quote yet. Click “Generate PIE” to create + store one.
                   </div>
-                  <div className="smallNote" style={{ marginTop: 6 }}>
-                    best_time_to_call: <code>{String(r.best_time_to_call ?? "—")}</code> • preferred_times:{" "}
-                    <code>{String(r.preferred_times ?? "—")}</code> • timezone:{" "}
-                    <code>{String(r.timezone ?? "—")}</code>
+                  <div style={{ marginTop: 12 }}>
+                    <GeneratePieButton quoteId={quoteId} />
                   </div>
-                  {r.notes ? (
-                    <div className="smallNote" style={{ marginTop: 6 }}>
-                      notes: {String(r.notes)}
+                </>
+              ) : (
+                <>
+                  <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                    <span className="badge badgeHot">PIE ✅</span>
+                    <span className="badge">pieId: {pie.id}</span>
+                    <span className="badge">created: {fmt(pie.created_at)}</span>
+                  </div>
+
+                  <div style={{ marginTop: 12 }}>
+                    <GeneratePieButton quoteId={quoteId} />
+                  </div>
+
+                  <div className="panel" style={{ marginTop: 14 }}>
+                    <div className="panelHeader">
+                      <div style={{ fontWeight: 950 }}>PIE Report (stored)</div>
                     </div>
-                  ) : null}
-                </div>
-              ))
-            ) : (
-              <div className="smallNote">No call requests found for this quote.</div>
-            )}
-          </div>
-        </section>
+                    <div className="panelBody">
+                      <pre style={{ whiteSpace: "pre-wrap", margin: 0, fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" }}>
+                        {pie.report ?? "(no report text)"}
+                      </pre>
+                    </div>
+                  </div>
 
-        <div style={{ height: 16 }} />
-
-        <section className="panel">
-          <div className="panelHeader">
-            <div style={{ fontWeight: 950 }}>PIE report</div>
-            <div className="smallNote">Stored in <code>pie_reports.raw</code></div>
+                  <div className="panel" style={{ marginTop: 14 }}>
+                    <div className="panelHeader">
+                      <div style={{ fontWeight: 950 }}>PIE Payload (JSON)</div>
+                    </div>
+                    <div className="panelBody">
+                      <pre style={{ whiteSpace: "pre-wrap", margin: 0, fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" }}>
+                        {typeof pie.payload === "string" ? pie.payload : JSON.stringify(pie.payload, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-          <div className="panelBody">
-            <pre style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 12 }}>
-              {JSON.stringify(pieReport?.raw ?? pieReport ?? null, null, 2)}
-            </pre>
-          </div>
-        </section>
-
-        <div style={{ height: 16 }} />
-
-        <section className="panel">
-          <div className="panelHeader">
-            <div style={{ fontWeight: 950 }}>Estimate</div>
-            <div className="smallNote">What was computed at submit time</div>
-          </div>
-          <div className="panelBody">
-            <pre style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 12 }}>
-              {JSON.stringify(estimate ?? null, null, 2)}
-            </pre>
-          </div>
-        </section>
-
-        <div style={{ height: 16 }} />
-
-        <section className="panel">
-          <div className="panelHeader">
-            <div style={{ fontWeight: 950 }}>Intake (normalized)</div>
-          </div>
-          <div className="panelBody">
-            <pre style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 12 }}>
-              {JSON.stringify(intakeNorm ?? null, null, 2)}
-            </pre>
-          </div>
-        </section>
-
-        <div style={{ height: 16 }} />
-
-        <section className="panel">
-          <div className="panelHeader">
-            <div style={{ fontWeight: 950 }}>Intake (raw)</div>
-          </div>
-          <div className="panelBody">
-            <pre style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 12 }}>
-              {JSON.stringify(intakeRaw ?? null, null, 2)}
-            </pre>
-          </div>
-        </section>
-      </main>
+        </div>
+      </div>
     );
   }
 
-  // ============================
-  // LIST MODE
-  // ============================
-  const { data: quotes, error } = await supabaseAdmin
+  // Otherwise → list view
+  const { data: quotes } = await supabaseAdmin
     .from("quotes")
-    .select("*, leads(email)")
+    .select("id, created_at, status, tier_recommended, estimate_total, latest_pie_report_id")
     .order("created_at", { ascending: false })
-    .limit(25);
+    .limit(50);
 
   return (
-    <main className="container" style={{ padding: "48px 0 80px" }}>
-      <div className="kicker">
-        <span className="kickerDot" aria-hidden="true" />
-        Internal Preview
-      </div>
+    <div className="container section">
+      <h1 className="h1">Internal Preview</h1>
+      <p className="p">Recent quotes (tap “View details”).</p>
 
-      <div style={{ height: 12 }} />
-
-      <h1 className="h1">Recent quotes (tap “View details”)</h1>
-
-      <div style={{ height: 16 }} />
-
-      {error && (
-        <div className="panel" style={{ marginBottom: 14 }}>
-          <div className="panelBody" style={{ color: "rgba(255,255,255,0.9)", fontWeight: 800 }}>
-            Error loading quotes: {error.message}
-          </div>
-        </div>
-      )}
-
-      <div style={{ display: "grid", gap: 12 }}>
-        {(quotes || []).map((q: any) => {
-          const total = extractTotalUSD(q);
-          const tier = extractTier(q);
-          const status = String(q?.status || "—");
-          const hasPie = !!q?.latest_pie_report_id;
-          const email = q?.leads?.email || q?.lead_email || "—";
-          const created = q?.created_at ? new Date(q.created_at).toLocaleString() : "—";
-          const href = `/internal/preview?quoteId=${encodeURIComponent(q.id)}`;
-
-          return (
-            <div key={q.id} className="panel">
-              <div className="panelBody" style={{ display: "grid", gap: 10 }}>
+      <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
+        {(quotes ?? []).map((q) => (
+          <div key={q.id} className="panel">
+            <div className="panelBody" style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ minWidth: 260 }}>
                 <div style={{ fontWeight: 950 }}>
-                  {money(total)} • {tier} • {status} • PIE {hasPie ? "✓" : "—"}
+                  ${q.estimate_total ?? "—"} • {q.tier_recommended ?? "—"} • {q.status ?? "—"} •{" "}
+                  {q.latest_pie_report_id ? <span className="badge badgeHot">PIE ✅</span> : <span className="badge">PIE —</span>}
                 </div>
-
-                <div className="smallNote">
-                  {created}
-                  <br />
-                  {email} • <code>{q.id}</code>
-                </div>
-
-                <div className="row" style={{ justifyContent: "space-between" }}>
-                  <Link className="btn btnPrimary" href={href}>
-                    View details <span className="btnArrow">→</span>
-                  </Link>
-
-                  <Link className="btn btnGhost" href={href}>
-                    Open link
-                  </Link>
-                </div>
-
-                <div className="smallNote">
-                  Link:{" "}
-                  <code>
-                    https://crecystudio.com{href}
-                  </code>
+                <div className="pDark">{fmt(q.created_at)}</div>
+                <div className="pDark" style={{ opacity: 0.85 }}>
+                  {q.id}
                 </div>
               </div>
+
+              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <Link className="btn btnPrimary" href={`/internal/preview?quoteId=${q.id}`}>
+                  View details →
+                </Link>
+              </div>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
-    </main>
+    </div>
   );
 }
