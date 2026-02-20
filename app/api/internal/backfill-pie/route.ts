@@ -1,44 +1,32 @@
 // app/api/internal/backfill-pie/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { pieDb, ensurePieForQuoteId } from "@/lib/pie/ensurePie";
+import { NextResponse } from "next/server";
+import { generatePieForQuoteId, pieDb } from "@/lib/pie/ensurePie";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const url = new URL(req.url);
-    const oneQuoteId = url.searchParams.get("quoteId")?.trim();
+    const body = await req.json().catch(() => ({}));
+    const mode = body?.mode ?? "all_missing";
+    const limit = Number(body?.limit ?? 500);
 
-    if (oneQuoteId) {
-      const result = await ensurePieForQuoteId(oneQuoteId);
-      return NextResponse.json({
-        ok: true,
-        mode: "single",
-        quoteId: oneQuoteId,
-        created: result.created,
-        pieId: result.pie?.id ?? null,
-      });
+    if (mode !== "all_missing") {
+      return NextResponse.json(
+        { ok: false, error: "Only mode 'all_missing' is supported" },
+        { status: 400 }
+      );
     }
 
-    const { data: quotes, error } = await pieDb
-      .from("quotes")
-      .select("id, latest_pie_report_id")
-      .is("latest_pie_report_id", null)
-      .order("created_at", { ascending: false })
-      .limit(500);
-
-    if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
-    }
+    const quotes = await pieDb.listQuotesMissingPie(limit);
 
     let created = 0;
     let skipped = 0;
-    const errors: { quoteId: string; error: string }[] = [];
+    const errors: Array<{ quoteId: string; error: string }> = [];
 
-    for (const q of quotes || []) {
+    for (const q of quotes) {
       try {
-        const res = await ensurePieForQuoteId(q.id);
+        const res = await generatePieForQuoteId(q.id, { force: false });
         if (res.created) created += 1;
         else skipped += 1;
       } catch (e: any) {
@@ -48,15 +36,15 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      mode: "all_missing",
-      processed: (quotes || []).length,
+      mode,
+      processed: quotes.length,
       created,
       skipped,
       errors,
     });
-  } catch (e: any) {
+  } catch (err: any) {
     return NextResponse.json(
-      { ok: false, error: e?.message || "Unexpected error" },
+      { ok: false, error: err?.message || "Backfill failed" },
       { status: 500 }
     );
   }
