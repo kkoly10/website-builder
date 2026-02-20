@@ -1,51 +1,64 @@
 // app/api/internal/pie/generate/route.ts
 import { NextResponse } from "next/server";
-import { generatePieForQuoteId } from "@/lib/pieEngine";
+import { generatePieForQuoteId } from "@/lib/pie/ensurePie";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 function getQuoteIdFromUrl(req: Request) {
-  const { searchParams } = new URL(req.url);
-  return (searchParams.get("quoteId") || "").trim();
+  const url = new URL(req.url);
+  return url.searchParams.get("quoteId");
 }
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
   try {
-    let body: any = {};
-    try {
-      body = await req.json();
-    } catch {
-      body = {};
-    }
+    const quoteId = getQuoteIdFromUrl(req);
+    const force = new URL(req.url).searchParams.get("force") === "1";
 
-    const quoteId = String(body?.quoteId || getQuoteIdFromUrl(req) || "").trim();
     if (!quoteId) {
-      return NextResponse.json({ ok: false, error: "Missing quoteId." }, { status: 400 });
+      return NextResponse.json({ ok: false, error: "Missing quoteId" }, { status: 400 });
     }
 
-    const result = await generatePieForQuoteId(quoteId);
+    const result = await generatePieForQuoteId(quoteId, { force });
 
     return NextResponse.json({
       ok: true,
       created: result.created,
       quoteId,
-      pieId: result.pie?.id || null,
-      projectId: result.projectId || result.pie?.project_id || null,
-      tier: result.pie?.tier || null,
-      score: result.pie?.score ?? null,
-      confidence: result.pie?.confidence || null,
-      message: result.created ? "PIE generated." : "PIE already exists.",
+      pieReportId: result.pie?.id ?? null,
+      pie: result.pie ?? null,
     });
-  } catch (e: any) {
+  } catch (err: any) {
     return NextResponse.json(
-      { ok: false, error: e?.message || "Failed to generate PIE." },
+      { ok: false, error: err?.message || "Failed to generate PIE" },
       { status: 500 }
     );
   }
 }
 
-// Optional convenience for browser testing:
-// /api/internal/pie/generate?quoteId=...
-export async function GET(req: Request) {
-  return POST(req);
+export async function POST(req: Request) {
+  try {
+    const body = await req.json().catch(() => ({}));
+    const quoteId = body?.quoteId;
+    const force = !!body?.force;
+
+    if (!quoteId) {
+      return NextResponse.json({ ok: false, error: "Missing quoteId" }, { status: 400 });
+    }
+
+    const result = await generatePieForQuoteId(quoteId, { force });
+
+    return NextResponse.json({
+      ok: true,
+      created: result.created,
+      quoteId,
+      pieReportId: result.pie?.id ?? null,
+      pie: result.pie ?? null,
+    });
+  } catch (err: any) {
+    return NextResponse.json(
+      { ok: false, error: err?.message || "Failed to generate PIE" },
+      { status: 500 }
+    );
+  }
 }
