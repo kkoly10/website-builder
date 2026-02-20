@@ -1,87 +1,51 @@
 // app/api/internal/pie/backfill/route.ts
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { generatePieForQuoteId } from "@/lib/pieEngine";
+import { generatePieForQuoteId, pieDb } from "@/lib/pie/ensurePie";
 
 export const runtime = "nodejs";
-
-function sb() {
-  return typeof supabaseAdmin === "function" ? supabaseAdmin() : supabaseAdmin;
-}
-
-function getMode(req: Request) {
-  const { searchParams } = new URL(req.url);
-  return (searchParams.get("mode") || "all_missing").trim();
-}
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    let body: any = {};
-    try {
-      body = await req.json();
-    } catch {
-      body = {};
-    }
+    const body = await req.json().catch(() => ({}));
+    const mode = body?.mode ?? "all_missing";
+    const limit = Number(body?.limit ?? 500);
 
-    const mode = String(body?.mode || getMode(req) || "all_missing").trim();
-    const limit = Math.min(Number(body?.limit || 200), 500);
-
-    // Pull quotes
-    const client = sb();
-    const quotesRes = await client
-      .from("quotes")
-      .select("id, latest_pie_report_id, created_at")
-      .order("created_at", { ascending: true })
-      .limit(limit);
-
-    if (quotesRes.error) {
+    if (mode !== "all_missing") {
       return NextResponse.json(
-        { ok: false, error: quotesRes.error.message },
-        { status: 500 }
+        { ok: false, error: "Only mode 'all_missing' is supported" },
+        { status: 400 }
       );
     }
 
-    const allQuotes = quotesRes.data || [];
-    const targets =
-      mode === "all"
-        ? allQuotes
-        : allQuotes.filter((q: any) => !q.latest_pie_report_id);
+    const quotes = await pieDb.listQuotesMissingPie(limit);
 
     let created = 0;
     let skipped = 0;
     const errors: Array<{ quoteId: string; error: string }> = [];
 
-    for (const q of targets) {
+    for (const q of quotes) {
       try {
-        const res = await generatePieForQuoteId(String(q.id));
+        const res = await generatePieForQuoteId(q.id, { force: false });
         if (res.created) created += 1;
         else skipped += 1;
       } catch (e: any) {
-        errors.push({
-          quoteId: String(q.id),
-          error: e?.message || "Unknown error",
-        });
+        errors.push({ quoteId: q.id, error: e?.message || "Unknown error" });
       }
     }
 
     return NextResponse.json({
       ok: true,
       mode,
-      processed: targets.length,
+      processed: quotes.length,
       created,
       skipped,
       errors,
     });
-  } catch (e: any) {
+  } catch (err: any) {
     return NextResponse.json(
-      { ok: false, error: e?.message || "Backfill failed." },
+      { ok: false, error: err?.message || "Backfill failed" },
       { status: 500 }
     );
   }
-}
-
-// Optional convenience for browser testing:
-// /api/internal/pie/backfill?mode=all_missing
-export async function GET(req: Request) {
-  return POST(req);
 }
