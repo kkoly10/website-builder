@@ -1,165 +1,273 @@
-import Link from "next/link";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import GeneratePieButton from "./GeneratePieButton";
+// app/internal/preview/page.tsx
+import { createClient } from "@supabase/supabase-js";
+import { ensurePieForQuoteId } from "@/lib/pie/ensurePie";
 
-function fmt(ts?: string | null) {
-  if (!ts) return "—";
-  const d = new Date(ts);
-  return d.toLocaleString();
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+function db() {
+  return createClient(url, serviceKey, { auth: { persistSession: false } });
 }
 
-export default async function InternalPreview({
+function first(sp: Record<string, string | string[] | undefined>, key: string) {
+  const v = sp?.[key];
+  return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
+}
+
+function money(n: any) {
+  const val = Number(n || 0);
+  return `$${Math.round(val).toLocaleString()}`;
+}
+
+async function resolveSearchParams(
+  sp:
+    | Record<string, string | string[] | undefined>
+    | Promise<Record<string, string | string[] | undefined>>
+    | undefined
+) {
+  if (!sp) return {};
+  if (typeof (sp as any).then === "function") return await (sp as any);
+  return sp as Record<string, string | string[] | undefined>;
+}
+
+export default async function InternalPreviewPage({
   searchParams,
 }: {
-  searchParams?: { quoteId?: string };
+  searchParams?:
+    | Record<string, string | string[] | undefined>
+    | Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const quoteId = searchParams?.quoteId;
+  const sp = await resolveSearchParams(searchParams);
+  const quoteId = first(sp, "quoteId").trim();
 
-  // If quoteId exists → render details view
+  const supabase = db();
+
+  // If a quoteId is present, show detail view
   if (quoteId) {
-    const { data: quote } = await supabaseAdmin
+    const { data: quote, error: quoteErr } = await supabase
       .from("quotes")
       .select("*")
       .eq("id", quoteId)
-      .maybeSingle();
+      .single();
 
-    if (!quote) {
+    if (quoteErr || !quote) {
       return (
-        <div className="container section">
-          <div className="card">
-            <div className="cardInner">
-              <h2 className="h2">Quote not found</h2>
-              <p className="p">That quoteId doesn’t exist.</p>
-              <Link className="btn btnGhost" href="/internal/preview">
-                ← Back to list
-              </Link>
-            </div>
-          </div>
-        </div>
+        <main className="container" style={{ padding: "48px 0 80px" }}>
+          <div className="kicker"><span className="kickerDot" /> Internal Preview</div>
+          <div style={{ height: 12 }} />
+          <h1 className="h1">Quote not found</h1>
+          <p className="p">{quoteErr?.message || "No quote found for this ID."}</p>
+          <a className="btn btnGhost" href="/internal/preview">← Back to list</a>
+        </main>
       );
     }
 
-    const pieId = quote.latest_pie_report_id as string | null;
+    // Try to auto-generate PIE if missing (deterministic, no AI)
+    if (!quote.latest_pie_report_id) {
+      try {
+        await ensurePieForQuoteId(quoteId);
+        // reload quote after linking
+        const refreshed = await supabase.from("quotes").select("*").eq("id", quoteId).single();
+        if (refreshed.data) Object.assign(quote, refreshed.data);
+      } catch (e) {
+        // don't crash page; we'll show a button/failure note below
+      }
+    }
 
-    const { data: pie } = pieId
-      ? await supabaseAdmin.from("pie_reports").select("*").eq("id", pieId).maybeSingle()
-      : await supabaseAdmin
-          .from("pie_reports")
-          .select("*")
-          .eq("quote_id", quoteId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+    const { data: lead } = quote.lead_id
+      ? await supabase.from("leads").select("*").eq("id", quote.lead_id).single()
+      : { data: null as any };
+
+    const { data: callReq } = await supabase
+      .from("call_requests")
+      .select("*")
+      .eq("quote_id", quoteId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    let pie: any = null;
+
+    if (quote.latest_pie_report_id) {
+      const pieRes = await supabase
+        .from("pie_reports")
+        .select("*")
+        .eq("id", quote.latest_pie_report_id)
+        .single();
+      pie = pieRes.data || null;
+    } else {
+      // fallback if linked id missing but row exists by quote_id
+      const pieRes = await supabase
+        .from("pie_reports")
+        .select("*")
+        .eq("quote_id", quoteId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      pie = pieRes.data || null;
+    }
 
     return (
-      <div className="container section">
-        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 14 }}>
-          <Link className="btn btnGhost" href="/internal/preview">
-            ← Back to quotes
-          </Link>
-          <span className="badge badgeHot">Details</span>
-          <span className="badge">quoteId: {quoteId}</span>
-        </div>
+      <main className="container" style={{ padding: "48px 0 80px" }}>
+        <div className="kicker"><span className="kickerDot" /> Internal Preview • Quote Detail</div>
+        <div style={{ height: 12 }} />
+        <h1 className="h2">Quote detail</h1>
 
-        <div className="card">
-          <div className="cardInner">
-            <h2 className="h2">Quote</h2>
-            <p className="p">
-              <b>Status:</b> {quote.status} &nbsp;•&nbsp; <b>Tier:</b> {quote.tier_recommended ?? "—"} &nbsp;•&nbsp;{" "}
-              <b>Total:</b> ${quote.estimate_total ?? "—"}
-            </p>
-            <p className="pDark">
-              <b>Created:</b> {fmt(quote.created_at)} &nbsp;•&nbsp; <b>Lead:</b> {quote.lead_id ?? "—"}
-            </p>
+        <div style={{ height: 14 }} />
 
-            <div style={{ marginTop: 14 }}>
-              {!pie ? (
-                <>
-                  <div className="hint">
-                    No PIE report is linked to this quote yet. Click “Generate PIE” to create + store one.
-                  </div>
-                  <div style={{ marginTop: 12 }}>
-                    <GeneratePieButton quoteId={quoteId} />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                    <span className="badge badgeHot">PIE ✅</span>
-                    <span className="badge">pieId: {pie.id}</span>
-                    <span className="badge">created: {fmt(pie.created_at)}</span>
-                  </div>
-
-                  <div style={{ marginTop: 12 }}>
-                    <GeneratePieButton quoteId={quoteId} />
-                  </div>
-
-                  <div className="panel" style={{ marginTop: 14 }}>
-                    <div className="panelHeader">
-                      <div style={{ fontWeight: 950 }}>PIE Report (stored)</div>
-                    </div>
-                    <div className="panelBody">
-                      <pre style={{ whiteSpace: "pre-wrap", margin: 0, fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" }}>
-                        {pie.report ?? "(no report text)"}
-                      </pre>
-                    </div>
-                  </div>
-
-                  <div className="panel" style={{ marginTop: 14 }}>
-                    <div className="panelHeader">
-                      <div style={{ fontWeight: 950 }}>PIE Payload (JSON)</div>
-                    </div>
-                    <div className="panelBody">
-                      <pre style={{ whiteSpace: "pre-wrap", margin: 0, fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" }}>
-                        {typeof pie.payload === "string" ? pie.payload : JSON.stringify(pie.payload, null, 2)}
-                      </pre>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
+        <section className="panel">
+          <div className="panelHeader">
+            <div style={{ fontWeight: 950 }}>Summary</div>
           </div>
+          <div className="panelBody" style={{ display: "grid", gap: 8 }}>
+            <div className="pDark"><strong>Quote ID:</strong> <code>{quote.id}</code></div>
+            <div className="pDark"><strong>Status:</strong> {quote.status || "new"}</div>
+            <div className="pDark"><strong>Tier:</strong> {quote.tier_recommended || "—"}</div>
+            <div className="pDark"><strong>Estimate:</strong> {money(quote.estimate_total)} ({money(quote.estimate_low)}–{money(quote.estimate_high)})</div>
+            <div className="pDark"><strong>Created:</strong> {quote.created_at ? new Date(quote.created_at).toLocaleString() : "—"}</div>
+            <div className="pDark"><strong>Lead:</strong> {lead?.email || "—"} {lead?.phone ? `• ${lead.phone}` : ""}</div>
+          </div>
+        </section>
+
+        <div style={{ height: 14 }} />
+
+        <section className="panel">
+          <div className="panelHeader">
+            <div style={{ fontWeight: 950 }}>Call request</div>
+          </div>
+          <div className="panelBody" style={{ display: "grid", gap: 8 }}>
+            {callReq ? (
+              <>
+                <div className="pDark"><strong>Status:</strong> {callReq.status || "—"}</div>
+                <div className="pDark"><strong>Best time:</strong> {callReq.best_time_to_call || callReq.preferred_times || "—"}</div>
+                <div className="pDark"><strong>Timezone:</strong> {callReq.timezone || "—"}</div>
+                <div className="pDark"><strong>Notes:</strong> {callReq.notes || "—"}</div>
+              </>
+            ) : (
+              <div className="pDark">No call request yet.</div>
+            )}
+          </div>
+        </section>
+
+        <div style={{ height: 14 }} />
+
+        <section className="panel">
+          <div className="panelHeader">
+            <div style={{ fontWeight: 950 }}>PIE report</div>
+          </div>
+          <div className="panelBody" style={{ display: "grid", gap: 10 }}>
+            {!pie ? (
+              <>
+                <div className="pDark">No PIE report found for this quote yet.</div>
+                <a
+                  className="btn btnPrimary"
+                  href={`/api/internal/backfill-pie?quoteId=${encodeURIComponent(quote.id)}`}
+                  style={{ width: "fit-content" }}
+                >
+                  Generate PIE now →
+                </a>
+                <div className="smallNote">
+                  This uses deterministic PIE v1 (no AI) and links it to this quote.
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="pDark">
+                  <strong>PIE ID:</strong> <code>{pie.id}</code> • <strong>Score:</strong> {pie.score ?? "—"} • <strong>Tier:</strong> {pie.tier ?? "—"} • <strong>Confidence:</strong> {pie.confidence ?? "—"}
+                </div>
+                <pre
+                  style={{
+                    margin: 0,
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                    fontSize: 12,
+                    color: "rgba(255,255,255,0.82)",
+                    border: "1px solid rgba(255,255,255,0.10)",
+                    borderRadius: 12,
+                    padding: 12,
+                    background: "rgba(255,255,255,0.03)",
+                  }}
+                >
+{JSON.stringify(pie.report || pie.payload || {}, null, 2)}
+                </pre>
+              </>
+            )}
+          </div>
+        </section>
+
+        <div style={{ height: 14 }} />
+        <div className="row">
+          <a className="btn btnGhost" href="/internal/preview">← Back to list</a>
         </div>
-      </div>
+      </main>
     );
   }
 
-  // Otherwise → list view
-  const { data: quotes } = await supabaseAdmin
+  // LIST VIEW (no quoteId)
+  const { data: quotes = [] } = await supabase
     .from("quotes")
-    .select("id, created_at, status, tier_recommended, estimate_total, latest_pie_report_id")
+    .select("id, created_at, status, tier_recommended, estimate_total, lead_id, latest_pie_report_id")
     .order("created_at", { ascending: false })
     .limit(50);
 
+  const leadIds = Array.from(new Set((quotes || []).map((q: any) => q.lead_id).filter(Boolean)));
+
+  let leadMap = new Map<string, any>();
+  if (leadIds.length > 0) {
+    const { data: leads = [] } = await supabase
+      .from("leads")
+      .select("id, email, phone")
+      .in("id", leadIds);
+
+    leadMap = new Map((leads || []).map((l: any) => [l.id, l]));
+  }
+
   return (
-    <div className="container section">
-      <h1 className="h1">Internal Preview</h1>
-      <p className="p">Recent quotes (tap “View details”).</p>
+    <main className="container" style={{ padding: "48px 0 80px" }}>
+      <div className="kicker"><span className="kickerDot" /> Internal Preview</div>
+      <div style={{ height: 12 }} />
+      <h1 className="h1">Recent quotes</h1>
+      <p className="p">Tap “View details” to open the full quote, call request, and PIE report.</p>
 
-      <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
-        {(quotes ?? []).map((q) => (
-          <div key={q.id} className="panel">
-            <div className="panelBody" style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-              <div style={{ minWidth: 260 }}>
-                <div style={{ fontWeight: 950 }}>
-                  ${q.estimate_total ?? "—"} • {q.tier_recommended ?? "—"} • {q.status ?? "—"} •{" "}
-                  {q.latest_pie_report_id ? <span className="badge badgeHot">PIE ✅</span> : <span className="badge">PIE —</span>}
-                </div>
-                <div className="pDark">{fmt(q.created_at)}</div>
-                <div className="pDark" style={{ opacity: 0.85 }}>
-                  {q.id}
-                </div>
-              </div>
-
-              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <Link className="btn btnPrimary" href={`/internal/preview?quoteId=${q.id}`}>
-                  View details →
-                </Link>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="row" style={{ marginTop: 12 }}>
+        <a className="btn btnPrimary" href="/api/internal/backfill-pie">
+          Backfill missing PIE (all) →
+        </a>
       </div>
-    </div>
+
+      <div style={{ height: 14 }} />
+
+      <div style={{ display: "grid", gap: 12 }}>
+        {quotes.map((q: any) => {
+          const lead = leadMap.get(q.lead_id);
+          return (
+            <section className="panel" key={q.id}>
+              <div className="panelBody" style={{ display: "grid", gap: 8 }}>
+                <div className="pDark" style={{ fontWeight: 900 }}>
+                  {money(q.estimate_total)} • {q.tier_recommended || "—"} • {q.status || "new"} • PIE {q.latest_pie_report_id ? "✓" : "—"}
+                </div>
+                <div className="smallNote">{q.created_at ? new Date(q.created_at).toLocaleString() : "—"}</div>
+                <div className="pDark">
+                  {(lead?.email || "No email")} • <code>{q.id}</code>
+                </div>
+
+                <div className="row">
+                  {/* native anchor avoids iOS/client-link weirdness */}
+                  <a className="btn btnPrimary" href={`/internal/preview?quoteId=${encodeURIComponent(q.id)}`}>
+                    View details →
+                  </a>
+                  <a className="btn btnGhost" href={`/internal/preview?quoteId=${encodeURIComponent(q.id)}`}>
+                    Open link
+                  </a>
+                </div>
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    </main>
   );
 }
