@@ -1,40 +1,63 @@
+// app/internal/preview/GeneratePieButton.tsx
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 
 export default function GeneratePieButton({ quoteId }: { quoteId: string }) {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string>("");
+  const [pending, startTransition] = useTransition();
 
-  async function run() {
-    setErr(null);
-    setLoading(true);
-    try {
-      const res = await fetch("/api/pie/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quoteId }),
-      });
+  const run = (mode: "generate" | "regenerate" = "generate") => {
+    setMsg("");
 
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json?.details || json?.error || "Failed to generate PIE");
+    startTransition(async () => {
+      try {
+        const res = await fetch("/api/internal/pie/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quoteId, mode }),
+        });
 
-      router.refresh();
-    } catch (e: any) {
-      setErr(e?.message ?? "Failed");
-    } finally {
-      setLoading(false);
-    }
-  }
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || data?.ok === false) {
+          setMsg(data?.error || `Request failed (${res.status})`);
+          return;
+        }
+
+        setMsg("PIE generated. Refreshing...");
+        setTimeout(() => window.location.reload(), 600);
+      } catch (e: any) {
+        setMsg(e?.message || "Failed to generate PIE");
+      }
+    });
+  };
 
   return (
-    <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-      <button className="btn btnPrimary" onClick={run} disabled={loading}>
-        {loading ? "Generating PIE..." : "Generate PIE →"}
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+      <button
+        type="button"
+        className="btn btnPrimary"
+        onClick={() => run("generate")}
+        disabled={pending}
+      >
+        {pending ? "Generating..." : "Generate PIE now"}
       </button>
-      {err ? <span style={{ color: "rgba(255,120,120,0.95)", fontWeight: 800 }}>{err}</span> : null}
+
+      <button
+        type="button"
+        className="btn btnGhost"
+        onClick={() => run("regenerate")}
+        disabled={pending}
+      >
+        Regenerate
+      </button>
+
+      {msg ? (
+        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 700 }}>
+          {msg}
+        </span>
+      ) : null}
     </div>
   );
 }
