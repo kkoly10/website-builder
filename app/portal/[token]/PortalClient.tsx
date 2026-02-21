@@ -2,40 +2,563 @@
 
 import { useMemo, useState } from "react";
 
-type AnyObj = Record<string, any>;
+type AnyRow = Record<string, any>;
 
-type PortalClientProps = {
-  // Keep this flexible so it works with different server wrappers
-  token?: string;
-  params?: { token?: string };
-  data?: AnyObj;
-  portal?: AnyObj;
-  initialData?: AnyObj;
-
-  quote?: AnyObj;
-  lead?: AnyObj;
-  callRequest?: AnyObj;
-  pie?: AnyObj;
-  milestones?: AnyObj[];
+type PortalBundle = {
+  quote: AnyRow | null;
+  lead: AnyRow | null;
+  callRequest: AnyRow | null;
+  pieReport: AnyRow | null;
+  milestones: AnyRow[];
 };
 
-function asObj(v: unknown): AnyObj {
-  return v && typeof v === "object" && !Array.isArray(v) ? (v as AnyObj) : {};
+export default function PortalClient({
+  token,
+  quoteId,
+  bundle,
+}: {
+  token: string;
+  quoteId: string;
+  bundle: PortalBundle;
+}) {
+  const [showRevisionBox, setShowRevisionBox] = useState(false);
+  const [revisionText, setRevisionText] = useState("");
+
+  const quote = bundle.quote ?? {};
+  const lead = bundle.lead ?? {};
+  const call = bundle.callRequest ?? {};
+  const pie = bundle.pieReport ?? {};
+  const milestones = Array.isArray(bundle.milestones) ? bundle.milestones : [];
+
+  const piePayload = useMemo(() => {
+    const raw =
+      pie?.report_json ??
+      pie?.report ??
+      pie?.payload ??
+      pie?.data ??
+      null;
+
+    if (!raw) return null;
+    if (typeof raw === "object") return raw;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }, [pie]);
+
+  const pricing = piePayload?.pricing ?? {};
+  const targetPrice =
+    num(pricing?.target) ??
+    num(quote?.recommended_price) ??
+    num(quote?.estimate) ??
+    centsToDollarsMaybe(quote?.total_cents) ??
+    centsToDollarsMaybe(quote?.estimate_cents);
+
+  const minPrice =
+    num(pricing?.minimum) ??
+    num(quote?.floor_price) ??
+    centsToDollarsMaybe(quote?.min_cents);
+
+  const maxPrice =
+    num(pricing?.maximum) ??
+    num(quote?.premium_price) ??
+    num(pricing?.buffers?.find?.((b: any) => /upper/i.test(b?.label || ""))?.amount) ??
+    centsToDollarsMaybe(quote?.max_cents);
+
+  const complexityScore = num(piePayload?.score) ?? num(pie?.score);
+  const confidence = piePayload?.confidence ?? pie?.confidence ?? "—";
+  const tierLabel =
+    piePayload?.tier ??
+    quote?.tier ??
+    "—";
+
+  // PIE upgrades you asked for (hours + labor estimate)
+  const estimatedHours =
+    num(piePayload?.execution?.hours_estimate) ??
+    num(piePayload?.timeline?.hours_estimate) ??
+    num(piePayload?.hours_estimate) ??
+    estimateHoursFallback({ quote, piePayload });
+
+  const hourlyRate =
+    num(piePayload?.execution?.hourly_rate) ??
+    num(piePayload?.hourly_rate) ??
+    40;
+
+  const laborEstimate =
+    estimatedHours != null ? round2(estimatedHours * hourlyRate) : null;
+
+  const timelineDays =
+    num(piePayload?.timeline?.days_estimate) ??
+    num(piePayload?.timeline_days) ??
+    estimateTimelineDaysFallback(estimatedHours);
+
+  const buildSummary =
+    piePayload?.summary ??
+    "We’ve reviewed your request and prepared a recommended scope and next steps.";
+
+  const scopeSnapshot = buildScopeSnapshot(quote, piePayload);
+  const clientChecklist = buildClientChecklist(quote, piePayload);
+
+  const depositAmount =
+    num(quote?.deposit_amount) ??
+    centsToDollarsMaybe(quote?.deposit_cents) ??
+    (targetPrice ? round2(targetPrice * 0.5) : null);
+
+  const depositUrl =
+    quote?.deposit_url ||
+    quote?.checkout_url ||
+    quote?.stripe_checkout_url ||
+    "";
+
+  const projectStatus =
+    quote?.admin_status ||
+    quote?.status ||
+    "new";
+
+  const contactEmail =
+    "hello@crecystudio.com";
+
+  return (
+    <div className="section">
+      <div className="container">
+        <div className="panel" style={{ marginBottom: 14 }}>
+          <div className="panelHeader">
+            <div className="row" style={{ alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div className="kicker" style={{ marginBottom: 10 }}>
+                  <span className="kickerDot" />
+                  Client Portal
+                </div>
+                <h1 className="h2" style={{ margin: 0 }}>
+                  Project dashboard
+                </h1>
+                <p className="p" style={{ margin: "8px 0 0" }}>
+                  Welcome{lead?.full_name ? `, ${lead.full_name}` : ""}. This page shows your scope, next steps, and project progress.
+                </p>
+              </div>
+
+              <div className="badge badgeHot" title="Portal token">
+                {shortToken(token)}
+              </div>
+            </div>
+          </div>
+
+          <div className="panelBody">
+            <div className="grid2">
+              <InfoBlock
+                title="Project"
+                rows={[
+                  ["Quote ID", quoteId],
+                  ["Status", pretty(projectStatus)],
+                  ["Tier", pretty(tierLabel)],
+                  ["Created", fmtDate(quote?.created_at)],
+                ]}
+              />
+              <InfoBlock
+                title="Contact"
+                rows={[
+                  ["Email", lead?.email || lead?.contact_email || "—"],
+                  ["Phone", lead?.phone || "—"],
+                  ["Best call time", call?.best_time_to_call || call?.preferred_times || "—"],
+                  ["Timezone", call?.timezone || "—"],
+                ]}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid2" style={{ alignItems: "start" }}>
+          {/* Scope Snapshot */}
+          <div className="panel">
+            <div className="panelHeader">
+              <h2 className="h2" style={{ margin: 0, fontSize: 22 }}>
+                Scope Snapshot
+              </h2>
+              <p className="pDark" style={{ margin: "8px 0 0" }}>
+                Your current requested scope and what we’ll build first.
+              </p>
+            </div>
+            <div className="panelBody">
+              <ul style={ulStyle}>
+                {scopeSnapshot.map((item, idx) => (
+                  <li key={idx} style={liStyle}>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="hint" style={{ marginTop: 12 }}>
+                <strong>Build summary:</strong> {buildSummary}
+              </div>
+            </div>
+          </div>
+
+          {/* Pricing + Deposit */}
+          <div className="panel">
+            <div className="panelHeader">
+              <h2 className="h2" style={{ margin: 0, fontSize: 22 }}>
+                Pricing & Deposit
+              </h2>
+              <p className="pDark" style={{ margin: "8px 0 0" }}>
+                Recommended pricing and deposit to start.
+              </p>
+            </div>
+            <div className="panelBody">
+              <div className="grid2" style={{ gap: 10 }}>
+                <MiniStat label="Recommended" value={money(targetPrice)} />
+                <MiniStat label="Deposit" value={money(depositAmount)} />
+                <MiniStat label="Range" value={priceRange(minPrice, maxPrice)} />
+                <MiniStat label="Confidence" value={String(confidence)} />
+              </div>
+
+              <div className="hint" style={{ marginTop: 12 }}>
+                <strong>Next step:</strong>{" "}
+                {depositUrl
+                  ? "Use the button below to pay your deposit and lock in your project slot."
+                  : "Deposit checkout link will appear here once your proposal is approved."}
+              </div>
+
+              <div className="row" style={{ marginTop: 12 }}>
+                {depositUrl ? (
+                  <a
+                    className="btn btnPrimary"
+                    href={depositUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Pay deposit <span className="btnArrow">→</span>
+                  </a>
+                ) : (
+                  <button className="btn btnGhost" disabled title="Deposit link not generated yet">
+                    Deposit link pending
+                  </button>
+                )}
+                <a
+                  className="btn btnGhost"
+                  href={`mailto:${contactEmail}?subject=${encodeURIComponent(
+                    "CrecyStudio proposal question"
+                  )}&body=${encodeURIComponent(
+                    `Hi, I have a question about my proposal.\n\nQuote ID: ${quoteId}\n`
+                  )}`}
+                >
+                  Ask a question
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Timeline / Milestones + Build Intelligence */}
+        <div className="grid2" style={{ marginTop: 14, alignItems: "start" }}>
+          <div className="panel">
+            <div className="panelHeader">
+              <h2 className="h2" style={{ margin: 0, fontSize: 22 }}>
+                Project Timeline
+              </h2>
+              <p className="pDark" style={{ margin: "8px 0 0" }}>
+                Estimated delivery pace and milestones.
+              </p>
+            </div>
+            <div className="panelBody">
+              <div className="grid2" style={{ gap: 10 }}>
+                <MiniStat label="Complexity" value={complexityScore != null ? `${complexityScore}/100` : "—"} />
+                <MiniStat label="Timeline" value={timelineDays != null ? `${timelineDays} days` : "—"} />
+                <MiniStat label="Est. Hours" value={estimatedHours != null ? `${estimatedHours} hrs` : "—"} />
+                <MiniStat label="Labor @ $40/hr" value={money(laborEstimate)} />
+              </div>
+
+              <div className="hint" style={{ marginTop: 12 }}>
+                These estimates help us keep pricing fair and avoid under-scoping your build.
+              </div>
+
+              {milestones.length > 0 ? (
+                <div style={{ marginTop: 12 }}>
+                  {milestones.map((m, idx) => {
+                    const done = Boolean(m?.is_done ?? m?.done ?? m?.completed);
+                    return (
+                      <div key={m?.id ?? idx} className="checkRow" style={{ marginBottom: 8 }}>
+                        <div className="checkLeft">
+                          <input type="checkbox" checked={done} readOnly />
+                          <div>
+                            <div className="checkLabel">
+                              {m?.title || `Milestone ${idx + 1}`}
+                            </div>
+                            <div className="checkHint">
+                              {m?.description || (done ? "Completed" : "In progress")}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="checkHint">
+                          {m?.due_date ? fmtDate(m.due_date) : ""}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="hint" style={{ marginTop: 12 }}>
+                  Milestones will appear here after kickoff (e.g., content review, first draft, revisions, launch).
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="panel">
+            <div className="panelHeader">
+              <h2 className="h2" style={{ margin: 0, fontSize: 22 }}>
+                What We Need From You
+              </h2>
+              <p className="pDark" style={{ margin: "8px 0 0" }}>
+                Sending these early helps us build faster.
+              </p>
+            </div>
+            <div className="panelBody">
+              <ul style={ulStyle}>
+                {clientChecklist.map((item, idx) => (
+                  <li key={idx} style={liStyle}>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="row" style={{ marginTop: 12 }}>
+                <a
+                  className="btn btnGhost"
+                  href={`mailto:${contactEmail}?subject=${encodeURIComponent(
+                    "CrecyStudio assets for project"
+                  )}&body=${encodeURIComponent(
+                    `Hi, I’m sending project assets.\n\nQuote ID: ${quoteId}\nPortal token: ${token}\n\nAssets included:\n- \n`
+                  )}`}
+                >
+                  Send assets by email
+                </a>
+                <button
+                  className="btn btnGhost"
+                  onClick={() => {
+                    navigator.clipboard.writeText(quoteId).catch(() => {});
+                  }}
+                >
+                  Copy Quote ID
+                </button>
+              </div>
+
+              <div className="hint" style={{ marginTop: 12 }}>
+                Next step (we’ll wire this after): a direct upload area for logos, photos, and text files.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Revisions */}
+        <div className="panel" style={{ marginTop: 14 }}>
+          <div className="panelHeader">
+            <h2 className="h2" style={{ margin: 0, fontSize: 22 }}>
+              Revisions & Requests
+            </h2>
+            <p className="pDark" style={{ margin: "8px 0 0" }}>
+              Need a change? Send a revision note clearly so we can track it.
+            </p>
+          </div>
+          <div className="panelBody">
+            {!showRevisionBox ? (
+              <div className="row">
+                <button className="btn btnPrimary" onClick={() => setShowRevisionBox(true)}>
+                  Request a revision <span className="btnArrow">→</span>
+                </button>
+                <a
+                  className="btn btnGhost"
+                  href={`mailto:${contactEmail}?subject=${encodeURIComponent(
+                    "CrecyStudio revision request"
+                  )}&body=${encodeURIComponent(
+                    `Hi, I’d like to request a revision.\n\nQuote ID: ${quoteId}\n\nRequested changes:\n1)\n2)\n3)\n`
+                  )}`}
+                >
+                  Email revision instead
+                </a>
+              </div>
+            ) : (
+              <>
+                <label className="fieldLabel">Revision request details</label>
+                <textarea
+                  className="textarea"
+                  value={revisionText}
+                  onChange={(e) => setRevisionText(e.target.value)}
+                  placeholder="Example: Please replace the hero image, update the About section text, and move the contact button above the fold."
+                />
+
+                <div className="row" style={{ marginTop: 12 }}>
+                  <a
+                    className="btn btnPrimary"
+                    href={`mailto:${contactEmail}?subject=${encodeURIComponent(
+                      "CrecyStudio revision request"
+                    )}&body=${encodeURIComponent(
+                      `Hi, I’d like to request a revision.\n\nQuote ID: ${quoteId}\n\nRequested changes:\n${revisionText || "(Please add details)"}\n`
+                    )}`}
+                  >
+                    Send revision request <span className="btnArrow">→</span>
+                  </a>
+                  <button className="btn btnGhost" onClick={() => setShowRevisionBox(false)}>
+                    Cancel
+                  </button>
+                </div>
+
+                <p className="smallNote" style={{ marginTop: 10 }}>
+                  Next step (we’ll wire this after): save revisions directly to your dashboard instead of email.
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-function asArr<T = any>(v: unknown): T[] {
-  return Array.isArray(v) ? (v as T[]) : [];
+/* ---------- UI helpers ---------- */
+
+function InfoBlock({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: [string, string][];
+}) {
+  return (
+    <div className="panel" style={{ background: "rgba(255,255,255,0.03)" }}>
+      <div className="panelBody">
+        <div className="badge" style={{ marginBottom: 10 }}>
+          {title}
+        </div>
+        <div style={{ display: "grid", gap: 8 }}>
+          {rows.map(([k, v]) => (
+            <div
+              key={k}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "120px 1fr",
+                gap: 10,
+                alignItems: "start",
+              }}
+            >
+              <div className="checkHint">{k}</div>
+              <div style={{ color: "rgba(255,255,255,0.9)", wordBreak: "break-word" }}>{v}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
-function pick(obj: AnyObj, keys: string[], fallback: any = null) {
-  for (const k of keys) {
-    if (obj && obj[k] !== undefined && obj[k] !== null) return obj[k];
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      style={{
+        border: "1px solid rgba(255,255,255,0.10)",
+        borderRadius: 14,
+        padding: 10,
+        background: "rgba(255,255,255,0.03)",
+      }}
+    >
+      <div className="checkHint">{label}</div>
+      <div style={{ marginTop: 4, fontWeight: 900 }}>{value || "—"}</div>
+    </div>
+  );
+}
+
+/* ---------- Data shaping ---------- */
+
+function buildScopeSnapshot(quote: AnyRow, piePayload: AnyRow | null): string[] {
+  const out: string[] = [];
+
+  const pages =
+    quote?.pages ||
+    quote?.page_count ||
+    piePayload?.scope?.pages ||
+    piePayload?.pages ||
+    null;
+
+  const features =
+    piePayload?.scope?.features ||
+    quote?.features ||
+    quote?.selected_features ||
+    [];
+
+  const platform =
+    piePayload?.scope?.platform ||
+    quote?.platform ||
+    quote?.platform_preference ||
+    "Best-fit platform";
+
+  const timeline =
+    piePayload?.timeline?.summary ||
+    quote?.timeline ||
+    null;
+
+  out.push(`Platform: ${String(platform)}`);
+  if (pages) out.push(`Pages/sections: ${String(pages)}`);
+
+  if (Array.isArray(features) && features.length) {
+    out.push(`Core features: ${features.slice(0, 5).join(", ")}`);
+  } else {
+    out.push("Core features: Standard marketing site setup + contact conversion flow");
   }
-  return fallback;
+
+  if (timeline) out.push(`Timeline target: ${String(timeline)}`);
+
+  out.push("Includes: responsive design, structured layout, and launch-ready setup");
+  out.push("Excludes (unless added): advanced custom app logic, heavy integrations, or large migrations");
+
+  return out;
 }
 
-function money(v: unknown) {
-  const n = typeof v === "number" ? v : Number(v);
+function buildClientChecklist(quote: AnyRow, piePayload: AnyRow | null): string[] {
+  const items: string[] = [];
+
+  items.push("Logo files (PNG/SVG) and brand colors (if available)");
+  items.push("Business description + services/products list");
+  items.push("Preferred contact info (phone, email, location, hours)");
+
+  const hasGalleryIntent =
+    includesAny(quote, ["gallery", "portfolio", "photos"]) ||
+    includesAny(piePayload, ["gallery", "portfolio", "photos"]);
+
+  if (hasGalleryIntent) {
+    items.push("High-quality photos for gallery/portfolio sections");
+  } else {
+    items.push("Any hero images or photos you want on the homepage");
+  }
+
+  const hasBookingIntent =
+    includesAny(quote, ["booking", "appointment", "schedule"]) ||
+    includesAny(piePayload, ["booking", "appointment", "schedule"]);
+
+  if (hasBookingIntent) {
+    items.push("Booking preferences (calendar tool, time slots, confirmation rules)");
+  }
+
+  items.push("Any examples of websites you like (2–3 links)");
+  items.push("Final text/content or permission for us to draft placeholder copy");
+
+  return dedupe(items);
+}
+
+/* ---------- utils ---------- */
+
+function num(v: any): number | null {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function centsToDollarsMaybe(v: any): number | null {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return null;
+  return round2(n / 100);
+}
+
+function money(v: any): string {
+  const n = Number(v);
   if (!Number.isFinite(n)) return "—";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -44,645 +567,88 @@ function money(v: unknown) {
   }).format(n);
 }
 
-function dateTime(v: unknown) {
+function priceRange(min: any, max: any) {
+  const a = Number(min);
+  const b = Number(max);
+  if (Number.isFinite(a) && Number.isFinite(b)) return `${money(a)}–${money(b)}`;
+  if (Number.isFinite(a)) return `From ${money(a)}`;
+  if (Number.isFinite(b)) return `Up to ${money(b)}`;
+  return "—";
+}
+
+function fmtDate(v: any): string {
   if (!v) return "—";
-  const d = new Date(String(v));
-  if (Number.isNaN(d.getTime())) return String(v);
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleString();
 }
 
-function titleCase(s: unknown) {
-  const raw = String(s ?? "").trim();
-  if (!raw) return "—";
-  return raw
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
+function pretty(v: any): string {
+  if (!v) return "—";
+  return String(v)
+    .replace(/_/g, " ")
     .replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
-function normalizePortalData(props: PortalClientProps) {
-  const root =
-    asObj(props.portal).quote || asObj(props.portal).lead || asObj(props.portal).pie
-      ? asObj(props.portal)
-      : asObj(props.data).quote || asObj(props.data).lead || asObj(props.data).pie
-      ? asObj(props.data)
-      : asObj(props.initialData).quote || asObj(props.initialData).lead || asObj(props.initialData).pie
-      ? asObj(props.initialData)
-      : {};
-
-  const quote = asObj(props.quote).id ? asObj(props.quote) : asObj(root.quote);
-  const lead = asObj(props.lead).id ? asObj(props.lead) : asObj(root.lead);
-  const callRequest = asObj(props.callRequest).id ? asObj(props.callRequest) : asObj(root.callRequest);
-  const pie = asObj(props.pie).id ? asObj(props.pie) : asObj(root.pie);
-
-  const token =
-    props.token ||
-    props.params?.token ||
-    pick(root, ["token", "portal_token", "client_token"], "");
-
-  const quoteData = asObj(pick(quote, ["quote_data", "payload", "details", "form_data"], {}));
-  const scopeSnapshot =
-    asObj(pick(quote, ["scope_snapshot", "scopeSnapshot"], {})) ||
-    asObj(pick(quoteData, ["scope_snapshot", "scopeSnapshot"], {})) ||
-    asObj(pick(asObj(pie), ["scope_snapshot", "scopeSnapshot"], {})) ||
-    {};
-
-  const pieReport =
-    asObj(pick(pie, ["report_json", "report", "data"], {})) ||
-    asObj(pick(root, ["pieReport", "pie_report"], {})) ||
-    {};
-
-  const pricing = asObj(pick(pieReport, ["pricing"], {}));
-  const labor = asObj(pick(pieReport, ["labor"], {}));
-  const timeline = asObj(pick(pieReport, ["timeline"], {}));
-  const deliverables = asObj(pick(pieReport, ["deliverables"], {}));
-  const nextQuestions = asArr<string>(pick(pieReport, ["nextQuestions", "next_questions"], []));
-
-  const estimateTarget =
-    pick(quote, ["estimated_price", "estimate", "total_estimate"], null) ??
-    pick(quote, ["estimate_total"], null) ??
-    (typeof quote.total_cents === "number" ? quote.total_cents / 100 : null) ??
-    pick(pricing, ["target"], null);
-
-  const estimateMin =
-    pick(quote, ["estimate_min"], null) ??
-    (typeof quote.min_cents === "number" ? quote.min_cents / 100 : null) ??
-    pick(pricing, ["minimum"], null);
-
-  const estimateMax =
-    pick(quote, ["estimate_max"], null) ??
-    (typeof quote.max_cents === "number" ? quote.max_cents / 100 : null) ??
-    pick(pricing, ["maximum"], null) ??
-    (Array.isArray(pricing.buffers)
-      ? pricing.buffers.find((b: any) => /upper|max/i.test(String(b?.label ?? "")))?.amount
-      : null);
-
-  const hourlyRate = Number(pick(labor, ["hourlyRate"], 40)) || 40;
-  const hoursLow = Number(pick(labor, ["hoursLow"], null));
-  const hoursHigh = Number(pick(labor, ["hoursHigh"], null));
-  const hoursTarget = Number(pick(labor, ["hoursTarget"], null));
-
-  const timelineDays =
-    Number(
-      pick(timeline, ["daysTarget"], null) ??
-        pick(pieReport, ["timeline_days"], null) ??
-        pick(quote, ["timeline_days"], null)
-    ) || 0;
-
-  const tier =
-    titleCase(pick(quote, ["tier", "package_tier"], null) ?? pick(pieReport, ["tier"], null));
-
-  const status = titleCase(pick(quote, ["status"], null));
-
-  const recommendedDepositPct =
-    Number(
-      pick(pieReport, ["depositPercent", "deposit_percent"], null) ??
-        pick(quote, ["deposit_percent"], null)
-    ) || 50;
-
-  const depositAmount =
-    Number(
-      pick(pieReport, ["depositAmount", "deposit_amount"], null) ??
-        (estimateTarget && Number.isFinite(Number(estimateTarget))
-          ? (Number(estimateTarget) * recommendedDepositPct) / 100
-          : 0)
-    ) || 0;
-
-  const milestonesFromData = asArr<any>(
-    props.milestones?.length ? props.milestones : pick(root, ["milestones"], [])
-  );
-
-  const milestoneDefaults = [
-    { title: "Kickoff & scope confirmation", status: "upcoming", eta: "Day 1" },
-    { title: "Content/assets collection", status: "upcoming", eta: "Day 1–3" },
-    { title: "First build draft", status: "upcoming", eta: "Day 3–7" },
-    { title: "Review & revisions", status: "upcoming", eta: "Day 7–10" },
-    { title: "Launch prep & handoff", status: "upcoming", eta: "Day 10–14" },
-  ];
-
-  const milestones =
-    milestonesFromData.length > 0
-      ? milestonesFromData.map((m) => ({
-          title: pick(asObj(m), ["title", "name"], "Milestone"),
-          status: titleCase(pick(asObj(m), ["status"], "upcoming")).toLowerCase(),
-          eta: pick(asObj(m), ["eta", "due_label", "due"], "—"),
-          notes: pick(asObj(m), ["notes"], ""),
-        }))
-      : milestoneDefaults;
-
-  const pages =
-    asArr<string>(pick(scopeSnapshot, ["pages", "sections"], [])) ||
-    asArr<string>(pick(quoteData, ["pages", "sections"], [])) ||
-    [];
-
-  const features =
-    asArr<string>(pick(scopeSnapshot, ["features", "requested_features"], [])) ||
-    asArr<string>(pick(quoteData, ["features", "requested_features"], [])) ||
-    [];
-
-  const assetsNeeded =
-    asArr<string>(pick(scopeSnapshot, ["assets_needed", "assetsNeeded"], [])) ||
-    asArr<string>(pick(deliverables, ["assetsNeeded"], [])) ||
-    [
-      "Logo (PNG/SVG)",
-      "Brand colors/fonts (if you have them)",
-      "Website text/content",
-      "Photos/images",
-      "Contact info + social links",
-    ];
-
-  const platform =
-    titleCase(
-      pick(scopeSnapshot, ["platform"], null) ??
-        pick(quoteData, ["platform"], null) ??
-        pick(pieReport, ["platformRecommendation", "platform_recommendation"], null)
-    ) || "To be confirmed";
-
-  const businessName =
-    pick(lead, ["name", "full_name"], null) ??
-    pick(quoteData, ["business_name", "businessName"], null) ??
-    "Your project";
-
-  const clientEmail =
-    pick(lead, ["email"], null) ?? pick(quote, ["email"], null) ?? pick(quoteData, ["email"], null);
-
-  const contentReadiness =
-    titleCase(
-      pick(scopeSnapshot, ["content_readiness", "contentReadiness"], null) ??
-        pick(quoteData, ["content_readiness", "contentReadiness"], null) ??
-        "Unknown"
-    );
-
-  const quoteId = pick(quote, ["id"], "—");
-  const createdAt = pick(quote, ["created_at", "createdAt"], null);
-
-  const paymentUrl =
-    pick(root, ["paymentUrl", "payment_url"], null) ??
-    pick(quote, ["payment_url", "deposit_payment_url"], null) ??
-    null;
-
-  const uploadUrl =
-    pick(root, ["uploadUrl", "upload_url"], null) ??
-    pick(quote, ["upload_url"], null) ??
-    null;
-
-  const trackerUrl =
-    pick(root, ["trackerUrl", "tracker_url"], null) ??
-    pick(quote, ["tracker_url"], null) ??
-    null;
-
-  return {
-    token,
-    quote,
-    lead,
-    callRequest,
-    pie,
-    pieReport,
-    tier,
-    status,
-    quoteId,
-    createdAt,
-    businessName,
-    clientEmail,
-    platform,
-    contentReadiness,
-    pages,
-    features,
-    assetsNeeded,
-    nextQuestions,
-    estimateTarget,
-    estimateMin,
-    estimateMax,
-    hourlyRate,
-    hoursLow,
-    hoursHigh,
-    hoursTarget,
-    timelineDays,
-    recommendedDepositPct,
-    depositAmount,
-    milestones,
-    paymentUrl,
-    uploadUrl,
-    trackerUrl,
-  };
+function round2(n: number) {
+  return Math.round(n * 100) / 100;
 }
 
-function statusPill(status: string) {
-  const s = status.toLowerCase();
-  if (s.includes("active")) return "badge badgeHot";
-  if (s.includes("deposit")) return "badge badgeHot";
-  return "badge";
+function shortToken(token: string) {
+  if (!token) return "portal";
+  if (token.length <= 12) return token;
+  return `${token.slice(0, 6)}…${token.slice(-4)}`;
 }
 
-export default function PortalClient(props: PortalClientProps) {
-  const model = useMemo(() => normalizePortalData(props), [props]);
+function estimateHoursFallback({
+  quote,
+  piePayload,
+}: {
+  quote: AnyRow;
+  piePayload: AnyRow | null;
+}) {
+  const complexity = num(piePayload?.score) ?? 30;
+  const tier = String(piePayload?.tier || quote?.tier || "").toLowerCase();
 
-  const [revisionText, setRevisionText] = useState("");
-  const [localRevisionRequests, setLocalRevisionRequests] = useState<string[]>([]);
-  const [assetNote, setAssetNote] = useState("");
-  const [copied, setCopied] = useState(false);
+  // Basic baseline:
+  // essential ~10-18h, growth ~18-35h, premium ~35-80h
+  let base = 12;
+  if (tier.includes("growth")) base = 24;
+  if (tier.includes("premium")) base = 42;
 
-  const remainingBalance =
-    Number.isFinite(Number(model.estimateTarget)) && Number.isFinite(Number(model.depositAmount))
-      ? Math.max(0, Number(model.estimateTarget) - Number(model.depositAmount))
-      : null;
+  // Complexity adjustment
+  const adjusted = base + (complexity - 30) * 0.35;
 
-  const canShowPortal = model.quoteId !== "—" || !!model.clientEmail || !!model.businessName;
+  return Math.max(8, Math.round(adjusted));
+}
 
-  const handleCopyRevision = async () => {
-    const text = revisionText.trim();
-    if (!text) return;
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1400);
-    } catch {
-      // no-op
-    }
-  };
+function estimateTimelineDaysFallback(hours: number | null) {
+  if (hours == null) return null;
+  // assuming 2-4 focused build hours/day on active projects
+  return Math.max(4, Math.ceil(hours / 3));
+}
 
-  const addLocalRevision = () => {
-    const text = revisionText.trim();
-    if (!text) return;
-    setLocalRevisionRequests((prev) => [text, ...prev]);
-    setRevisionText("");
-  };
-
-  if (!canShowPortal) {
-    return (
-      <main className="section">
-        <div className="container">
-          <div className="card">
-            <div className="cardInner">
-              <h1 className="h2">Client Portal</h1>
-              <p className="p" style={{ marginTop: 10 }}>
-                We couldn’t load this portal yet. The token may be invalid, expired, or the server page
-                is not passing data into <code>PortalClient</code>.
-              </p>
-              <div className="row" style={{ marginTop: 14 }}>
-                <a className="btn btnGhost" href="/estimate">
-                  Get a new quote
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-    );
+function includesAny(obj: any, words: string[]) {
+  try {
+    const text = JSON.stringify(obj || {}).toLowerCase();
+    return words.some((w) => text.includes(w));
+  } catch {
+    return false;
   }
-
-  return (
-    <main className="section">
-      <div className="container">
-        {/* Header */}
-        <div className="card" style={{ marginBottom: 14 }}>
-          <div className="cardInner">
-            <div
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                justifyContent: "space-between",
-                gap: 12,
-                flexWrap: "wrap",
-              }}
-            >
-              <div>
-                <div className="kicker">
-                  <span className="kickerDot" />
-                  Client Portal
-                </div>
-                <h1 className="h2" style={{ marginTop: 10 }}>
-                  {model.businessName}
-                </h1>
-                <p className="p" style={{ marginTop: 6 }}>
-                  Quote #{String(model.quoteId).slice(0, 8)} • {model.tier} • {model.clientEmail || "—"}
-                </p>
-              </div>
-
-              <div style={{ textAlign: "right" }}>
-                <div className={statusPill(model.status)}>{model.status}</div>
-                <div className="pDark" style={{ marginTop: 8 }}>
-                  Created: {dateTime(model.createdAt)}
-                </div>
-              </div>
-            </div>
-
-            <div className="row" style={{ marginTop: 14 }}>
-              {model.paymentUrl ? (
-                <a className="btn btnPrimary" href={model.paymentUrl}>
-                  Pay deposit
-                </a>
-              ) : (
-                <button className="btn btnPrimary" type="button" disabled title="Deposit link not connected yet">
-                  Pay deposit (coming soon)
-                </button>
-              )}
-
-              {model.uploadUrl ? (
-                <a className="btn btnGhost" href={model.uploadUrl}>
-                  Upload assets
-                </a>
-              ) : (
-                <button className="btn btnGhost" type="button" disabled title="Upload flow not connected yet">
-                  Upload assets (coming soon)
-                </button>
-              )}
-
-              {model.trackerUrl ? (
-                <a className="btn btnGhost" href={model.trackerUrl}>
-                  Track progress
-                </a>
-              ) : (
-                <button className="btn btnGhost" type="button" disabled title="Tracker not connected yet">
-                  Track progress (coming soon)
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Top grid */}
-        <div className="grid2" style={{ alignItems: "start" }}>
-          {/* Scope Snapshot */}
-          <div className="panel">
-            <div className="panelHeader">
-              <div className="h2" style={{ fontSize: 20 }}>
-                Scope Snapshot
-              </div>
-            </div>
-            <div className="panelBody">
-              <div className="grid2">
-                <div>
-                  <div className="fieldLabel">Platform</div>
-                  <div className="pDark">{model.platform}</div>
-                </div>
-                <div>
-                  <div className="fieldLabel">Content readiness</div>
-                  <div className="pDark">{model.contentReadiness}</div>
-                </div>
-              </div>
-
-              <div style={{ marginTop: 14 }}>
-                <div className="fieldLabel">Pages / Sections</div>
-                {model.pages.length ? (
-                  <div className="row">
-                    {model.pages.map((p, idx) => (
-                      <span key={`${p}-${idx}`} className="badge">
-                        {titleCase(p)}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="pDark">Will be confirmed during kickoff.</div>
-                )}
-              </div>
-
-              <div style={{ marginTop: 14 }}>
-                <div className="fieldLabel">Requested features</div>
-                {model.features.length ? (
-                  <ul className="pDark" style={{ margin: "6px 0 0", paddingLeft: 18 }}>
-                    {model.features.map((f, idx) => (
-                      <li key={`${f}-${idx}`}>{titleCase(f)}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="pDark">No feature list captured yet.</div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Budget / Timeline */}
-          <div className="panel">
-            <div className="panelHeader">
-              <div className="h2" style={{ fontSize: 20 }}>
-                Pricing & Timeline
-              </div>
-            </div>
-            <div className="panelBody">
-              <div className="grid2">
-                <div>
-                  <div className="fieldLabel">Estimated total</div>
-                  <div style={{ fontWeight: 950, fontSize: 22 }}>
-                    {money(model.estimateTarget)}
-                  </div>
-                  {(model.estimateMin || model.estimateMax) && (
-                    <div className="pDark" style={{ marginTop: 4 }}>
-                      Range: {money(model.estimateMin)} – {money(model.estimateMax)}
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <div className="fieldLabel">Recommended deposit</div>
-                  <div style={{ fontWeight: 950, fontSize: 22 }}>
-                    {money(model.depositAmount)}
-                  </div>
-                  <div className="pDark" style={{ marginTop: 4 }}>
-                    {model.recommendedDepositPct}% to start
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid2" style={{ marginTop: 14 }}>
-                <div>
-                  <div className="fieldLabel">Timeline estimate</div>
-                  <div className="pDark">
-                    {model.timelineDays > 0 ? `${model.timelineDays} days` : "To be confirmed"}
-                  </div>
-                </div>
-                <div>
-                  <div className="fieldLabel">Remaining balance</div>
-                  <div className="pDark">
-                    {remainingBalance !== null ? money(remainingBalance) : "—"}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ marginTop: 14 }}>
-                <div className="fieldLabel">Labor estimate (for transparency)</div>
-                <div className="pDark">
-                  {Number.isFinite(model.hoursTarget)
-                    ? `${model.hoursTarget} hrs @ ${money(model.hourlyRate)}/hr`
-                    : Number.isFinite(model.hoursLow) && Number.isFinite(model.hoursHigh)
-                    ? `${model.hoursLow}–${model.hoursHigh} hrs @ ${money(model.hourlyRate)}/hr`
-                    : `Based on project complexity and scope`}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Milestones */}
-        <div className="panel" style={{ marginTop: 14 }}>
-          <div className="panelHeader">
-            <div className="h2" style={{ fontSize: 20 }}>Progress & Milestones</div>
-          </div>
-          <div className="panelBody">
-            <div style={{ display: "grid", gap: 10 }}>
-              {model.milestones.map((m, idx) => {
-                const s = String(m.status || "").toLowerCase();
-                const isDone = s.includes("done") || s.includes("complete");
-                const isActive = s.includes("active") || s.includes("progress");
-                return (
-                  <div
-                    key={`${m.title}-${idx}`}
-                    className="checkRow"
-                    style={{
-                      borderColor: isDone
-                        ? "rgba(255,122,24,0.35)"
-                        : isActive
-                        ? "rgba(255,255,255,0.18)"
-                        : "rgba(255,255,255,0.10)",
-                    }}
-                  >
-                    <div className="checkLeft">
-                      <span
-                        style={{
-                          width: 10,
-                          height: 10,
-                          borderRadius: 999,
-                          display: "inline-block",
-                          background: isDone
-                            ? "var(--accent)"
-                            : isActive
-                            ? "rgba(255,255,255,0.85)"
-                            : "rgba(255,255,255,0.28)",
-                          boxShadow: isDone
-                            ? "0 0 0 4px rgba(255,122,24,0.12)"
-                            : "none",
-                        }}
-                      />
-                      <div style={{ minWidth: 0 }}>
-                        <div className="checkLabel" style={{ whiteSpace: "normal" }}>
-                          {m.title}
-                        </div>
-                        {m.notes ? <div className="checkHint">{m.notes}</div> : null}
-                      </div>
-                    </div>
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <div className="checkHint">{titleCase(m.status)}</div>
-                      <div className="checkHint">{m.eta || "—"}</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Assets + Revisions */}
-        <div className="grid2" style={{ marginTop: 14, alignItems: "start" }}>
-          <div className="panel">
-            <div className="panelHeader">
-              <div className="h2" style={{ fontSize: 20 }}>Upload Content & Assets</div>
-            </div>
-            <div className="panelBody">
-              <div className="fieldLabel">Requested assets</div>
-              <ul className="pDark" style={{ margin: "0 0 12px", paddingLeft: 18 }}>
-                {model.assetsNeeded.map((item, idx) => (
-                  <li key={`${item}-${idx}`}>{titleCase(item)}</li>
-                ))}
-              </ul>
-
-              <div className="fieldLabel">Notes for your upload</div>
-              <textarea
-                className="textarea"
-                placeholder="Example: Logo is attached. Photos are in Google Drive. Use the same colors as Instagram."
-                value={assetNote}
-                onChange={(e) => setAssetNote(e.target.value)}
-              />
-
-              <div className="smallNote" style={{ marginTop: 10 }}>
-                Upload storage can be wired next (Supabase Storage / Drive link intake). This UI is ready for it.
-              </div>
-
-              <div className="row" style={{ marginTop: 12 }}>
-                <button type="button" className="btn btnGhost" disabled>
-                  Choose files (next step)
-                </button>
-                {model.uploadUrl ? (
-                  <a className="btn btnPrimary" href={model.uploadUrl}>
-                    Open upload page
-                  </a>
-                ) : null}
-              </div>
-            </div>
-          </div>
-
-          <div className="panel">
-            <div className="panelHeader">
-              <div className="h2" style={{ fontSize: 20 }}>Request Revisions</div>
-            </div>
-            <div className="panelBody">
-              <div className="fieldLabel">What would you like changed?</div>
-              <textarea
-                className="textarea"
-                placeholder="Example: Please move the contact form above the footer and make the CTA button orange."
-                value={revisionText}
-                onChange={(e) => setRevisionText(e.target.value)}
-              />
-
-              <div className="row" style={{ marginTop: 12 }}>
-                <button type="button" className="btn btnPrimary" onClick={addLocalRevision}>
-                  Add request
-                </button>
-                <button type="button" className="btn btnGhost" onClick={handleCopyRevision}>
-                  {copied ? "Copied" : "Copy text"}
-                </button>
-              </div>
-
-              {localRevisionRequests.length > 0 && (
-                <div style={{ marginTop: 14 }}>
-                  <div className="fieldLabel">Saved requests (local preview)</div>
-                  <div style={{ display: "grid", gap: 8 }}>
-                    {localRevisionRequests.map((r, i) => (
-                      <div key={`${r}-${i}`} className="checkRow">
-                        <div className="checkLeft">
-                          <div className="checkLabel" style={{ whiteSpace: "normal" }}>
-                            {r}
-                          </div>
-                        </div>
-                        <div className="checkHint">Draft</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="smallNote" style={{ marginTop: 8 }}>
-                    Next step: connect this to a real <code>portal_revisions</code> table.
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Questions / Communication */}
-        <div className="panel" style={{ marginTop: 14 }}>
-          <div className="panelHeader">
-            <div className="h2" style={{ fontSize: 20 }}>Questions to Finalize Your Build</div>
-          </div>
-          <div className="panelBody">
-            {model.nextQuestions.length > 0 ? (
-              <ul className="pDark" style={{ margin: 0, paddingLeft: 18 }}>
-                {model.nextQuestions.map((q, idx) => (
-                  <li key={`${q}-${idx}`}>{q}</li>
-                ))}
-              </ul>
-            ) : (
-              <ul className="pDark" style={{ margin: 0, paddingLeft: 18 }}>
-                <li>Do you already have your final website text/content ready?</li>
-                <li>Do you have a logo and brand colors?</li>
-                <li>What websites do you like as references?</li>
-                <li>What is your ideal launch date?</li>
-              </ul>
-            )}
-
-            <div className="smallNote" style={{ marginTop: 10 }}>
-              Portal token: <code>{model.token || "—"}</code>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  );
 }
+
+function dedupe(arr: string[]) {
+  return Array.from(new Set(arr));
+}
+
+const ulStyle: React.CSSProperties = {
+  margin: 0,
+  paddingLeft: 18,
+  display: "grid",
+  gap: 8,
+};
+
+const liStyle: React.CSSProperties = {
+  color: "rgba(255,255,255,0.88)",
+  lineHeight: 1.55,
+};
