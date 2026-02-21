@@ -1,615 +1,742 @@
 // lib/pie/ensurePie.ts
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "crypto";
 
-export const pieDb = supabaseAdmin;
+type JsonPrimitive = string | number | boolean | null;
+type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 
-type AnyObj = Record<string, any>;
-
-type PieNormalizedInput = {
-  quoteId: string;
-  projectId: string | null;
-  createdAt: string | null;
-  tier: string | null;
-  quoteStatus: string | null;
-  totalPrice: number | null;
-  lead: {
-    email: string | null;
-    name: string | null;
-    phone: string | null;
-    source: string | null;
-  };
-  callRequest: {
-    status: string | null;
-    bestTimeToCall: string | null;
-    notes: string | null;
-  } | null;
-  answers: AnyObj;
-  pricing: AnyObj;
-  freeText: string;
+type QuoteRow = {
+  id: string;
+  created_at: string | null;
+  lead_id: string | null;
+  status: string | null;
+  tier_recommended: string | null;
+  estimate_total: number | null;
+  estimate_low: number | null;
+  estimate_high: number | null;
+  intake_raw: JsonValue | null;
+  intake_normalized: JsonValue | null;
+  scope_snapshot: JsonValue | null;
+  debug: JsonValue | null;
+  latest_pie_report_id: string | null;
 };
 
-type PieAdminReportV2 = {
-  version: "pie_v2";
-  generated_at: string;
-  overview: {
-    headline: string;
-    tier: string | null;
-    quoted_price: number | null;
-    fit: "good" | "ok" | "risky";
-    summary: string;
+type LeadRow = {
+  id: string;
+  email: string | null;
+  name: string | null;
+};
+
+type CallRequestRow = {
+  id: string;
+  quote_id: string;
+  status: string | null;
+  preferred_times: JsonValue | null;
+  timezone: string | null;
+  notes: string | null;
+  created_at: string | null;
+};
+
+type PieReportRow = {
+  id: string;
+  quote_id: string | null;
+  project_id: string | null;
+  created_at: string | null;
+  payload: JsonValue | null;
+  input: JsonValue | null;
+  report: string | null;
+  score: number | null;
+  tier: string | null;
+  confidence: string | null;
+};
+
+type EnsureResult = {
+  ok: boolean;
+  created: boolean;
+  quoteId: string;
+  pie?: PieReportRow;
+  error?: string;
+};
+
+type PiePayloadV2 = {
+  version: "2.0";
+  tier: "Essential" | "Growth" | "Premium";
+  confidence: "Low" | "Medium" | "High";
+  score: number;
+  summary: string;
+  admin_readout: {
+    complexity_label: string;
+    recommended_build_path: string;
+    priority: "low" | "normal" | "high";
+    lead_quality_score: number;
   };
-  complexity: {
-    score_100: number;
-    level: "low" | "medium" | "high";
-    drivers: string[];
-  };
-  hours: {
-    total_hours: number;
-    by_phase: Record<string, number>;
-    assumptions: string[];
-  };
-  timeline: {
-    part_time_weeks: string;
-    full_time_weeks: string;
-    notes: string[];
-  };
-  pricing_guardrail: {
-    hourly_rate_used: number;
-    cost_at_hourly: number;
-    quoted_price: number | null;
-    delta: number | null;
-    pricing_position: "under" | "aligned" | "over" | "unknown";
-    recommended_range: { min: number; max: number };
-    tier_range_check: {
-      tier: string | null;
-      public_min: number | null;
-      public_max: number | null;
-      within_public_range: boolean | null;
+  pricing: {
+    quote: {
+      minimum: number;
+      target: number;
+      upper: number;
+      tier: string;
+    };
+    labor_model_40hr: {
+      min_hours: number;
+      target_hours: number;
+      max_hours: number;
+      min_amount: number;
+      target_amount: number;
+      max_amount: number;
+      hourly_rate: number;
+    };
+    pricing_signal: {
+      status: "underpriced" | "healthy" | "premium";
+      message: string;
+      suggested_floor: number;
+      suggested_target: number;
     };
   };
-  platform_recommendation: {
-    recommended: "wix" | "squarespace" | "custom";
-    why: string[];
-    caution: string[];
+  timeline: {
+    estimated_build_days: {
+      min: number;
+      target: number;
+      max: number;
+    };
+    estimated_calendar_weeks: {
+      min: number;
+      target: number;
+      max: number;
+    };
+    assumptions: string[];
   };
-  questions_to_ask: string[];
+  scope: {
+    pages_estimate: number;
+    feature_count: number;
+    features: string[];
+    scope_assumptions: string[];
+    suggested_deliverables: string[];
+    exclusions_to_confirm: string[];
+  };
+  complexity_drivers: {
+    label: string;
+    impact: "low" | "medium" | "high";
+    points: number;
+    note: string;
+  }[];
+  discovery_questions: string[];
   risks: string[];
-  build_plan: Array<{ phase: string; goal: string; output: string }>;
-  scope_tradeoffs: string[];
-  ai_insights?: {
-    executive_summary?: string;
-    client_psychology?: string;
-    hidden_risks?: string[];
-    upsell_opportunities?: string[];
-    call_strategy?: string[];
-  } | null;
-  raw_snapshot: {
-    feature_flags: Record<string, boolean>;
-    page_guess: number;
-    content_readiness: "ready" | "partial" | "unknown";
-    timeline_signal: string | null;
+  negotiation_playbook: {
+    lower_cost_options: string[];
+    upsell_options: string[];
+    price_defense_points: string[];
+  };
+  pitch: {
+    emphasize: string[];
+    recommend: string;
+    objections: string[];
+  };
+  next_actions: string[];
+  ai_enhancement?: {
+    enabled: boolean;
+    provider: "none" | "openai";
+    notes?: string[];
+    sales_script?: string[];
+    added_questions?: string[];
   };
 };
 
-const PUBLIC_TIER_RANGES: Record<string, { min: number; max: number }> = {
-  essential: { min: 550, max: 850 },
-  growth: { min: 900, max: 1500 },
-  premium: { min: 1700, max: 3500 },
-};
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-function asObj(v: any): AnyObj {
-  if (!v) return {};
-  if (typeof v === "object") return v as AnyObj;
-  if (typeof v === "string") {
-    try {
-      return JSON.parse(v);
-    } catch {
-      return {};
-    }
-  }
+if (!supabaseUrl || !serviceKey) {
+  throw new Error("Missing Supabase env vars: NEXT_PUBLIC_SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY");
+}
+
+export const pieDb = createClient(supabaseUrl, serviceKey, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
+
+function safeObj(v: unknown): Record<string, any> {
+  if (v && typeof v === "object" && !Array.isArray(v)) return v as Record<string, any>;
   return {};
 }
 
-function toNum(v: any): number | null {
-  if (v === null || v === undefined || v === "") return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
+function safeArray(v: unknown): string[] {
+  if (Array.isArray(v)) {
+    return v
+      .map((x) => String(x ?? "").trim())
+      .filter(Boolean);
+  }
+  if (typeof v === "string") {
+    return v
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function titleCase(s: string) {
+  return s
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\w\S*/g, (m) => m.charAt(0).toUpperCase() + m.slice(1).toLowerCase());
+}
+
+function parseMoneyBand(text?: string | null): { min?: number; max?: number } {
+  if (!text) return {};
+  const nums = (text.match(/\d+/g) || []).map((n) => Number(n));
+  if (!nums.length) return {};
+  if (nums.length === 1) return { min: nums[0], max: nums[0] };
+  return { min: Math.min(...nums), max: Math.max(...nums) };
+}
+
+function parsePagesWanted(v?: string | null): number {
+  if (!v) return 3;
+  const t = v.toLowerCase();
+  // Examples: "1-3", "4-6", "7+", "10+"
+  const nums = (t.match(/\d+/g) || []).map(Number);
+  if (!nums.length) return 3;
+  if (t.includes("+")) return nums[0];
+  if (nums.length >= 2) return Math.round((nums[0] + nums[1]) / 2);
+  return nums[0];
+}
+
+function normalizeTier(t?: string | null): "Essential" | "Growth" | "Premium" {
+  const x = (t || "").toLowerCase();
+  if (x.includes("premium")) return "Premium";
+  if (x.includes("growth")) return "Growth";
+  return "Essential";
 }
 
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
-function round1(n: number) {
-  return Math.round(n * 10) / 10;
+function hasTruthy(v: unknown): boolean {
+  if (typeof v === "boolean") return v;
+  if (typeof v === "string") return ["yes", "true", "1"].includes(v.trim().toLowerCase());
+  return Boolean(v);
 }
 
-function hasKeyword(text: string, words: string[]) {
-  const t = text.toLowerCase();
-  return words.some((w) => t.includes(w.toLowerCase()));
+function keywordPoints(features: string[]) {
+  let points = 0;
+  const drivers: PiePayloadV2["complexity_drivers"] = [];
+
+  const f = features.map((x) => x.toLowerCase());
+
+  const add = (label: string, impact: "low" | "medium" | "high", pts: number, note: string) => {
+    points += pts;
+    drivers.push({ label, impact, points: pts, note });
+  };
+
+  if (f.length) add("Requested features", f.length >= 4 ? "high" : "medium", Math.min(16, f.length * 3), `${f.length} feature(s) selected`);
+
+  if (f.some((x) => /booking|calendar|appointment/.test(x))) {
+    add("Booking flow", "medium", 8, "Scheduling and appointment UX usually adds logic and testing.");
+  }
+  if (f.some((x) => /payment|checkout|e-?commerce|store|shop/.test(x))) {
+    add("Commerce / payments", "high", 16, "Payments and checkout introduce higher build + QA complexity.");
+  }
+  if (f.some((x) => /portal|dashboard|login|member/.test(x))) {
+    add("Auth / portal", "high", 18, "Member areas and logins add auth, permissions, and support complexity.");
+  }
+  if (f.some((x) => /blog|cms|admin/.test(x))) {
+    add("CMS / content system", "medium", 8, "CMS setup improves handoff but adds setup time.");
+  }
+  if (f.some((x) => /form|lead/.test(x))) {
+    add("Lead capture forms", "low", 4, "Forms are lightweight but still need validation + notification setup.");
+  }
+
+  return { points, drivers };
 }
 
-function money(n: number | null) {
-  if (n === null || Number.isNaN(n)) return null;
-  return Math.round(n);
-}
+function estimateTimelineFromHours(targetHours: number, contentReady: boolean, urgent: boolean) {
+  // Assume ~18 focused build hours/week solo + overhead.
+  const baseWeeks = Math.max(1, Math.round((targetHours / 18) * 10) / 10);
+  const contentPenalty = contentReady ? 0 : 0.6;
+  const urgentPenalty = urgent ? 0.3 : 0;
 
-async function resolveValidProjectId(projectId: string | null | undefined): Promise<string | null> {
-  if (!projectId) return null;
-  const { data } = await pieDb.from("projects").select("id").eq("id", projectId).maybeSingle();
-  return data?.id ?? null;
-}
-
-function normalizeQuotePayload(quote: AnyObj, lead: AnyObj | null, callReq: AnyObj | null): PieNormalizedInput {
-  const payload = asObj(quote?.payload);
-  const answers =
-    asObj(payload.answers) ||
-    asObj(payload.form) ||
-    asObj(payload.intake) ||
-    payload;
-
-  const pricing = asObj(payload.pricing);
-
-  const totalPrice =
-    toNum(quote?.total_price) ??
-    toNum(quote?.recommended_price) ??
-    toNum(pricing.recommended) ??
-    toNum(pricing.total) ??
-    toNum(pricing.price) ??
-    null;
-
-  const tier =
-    (quote?.tier as string | null) ??
-    (pricing.tier as string | null) ??
-    (answers.tier as string | null) ??
-    null;
-
-  const freeText = [
-    JSON.stringify(answers || {}),
-    JSON.stringify(pricing || {}),
-    callReq?.notes || "",
-    quote?.notes || "",
-  ]
-    .join(" ")
-    .toLowerCase();
+  const target = baseWeeks + contentPenalty + urgentPenalty;
+  const min = Math.max(0.8, target - 0.7);
+  const max = target + 1.2;
 
   return {
-    quoteId: quote.id,
-    projectId: quote.project_id ?? null,
-    createdAt: quote.created_at ?? null,
-    tier,
-    quoteStatus: quote.status ?? null,
-    totalPrice,
-    lead: {
-      email: lead?.email ?? null,
-      name: lead?.name ?? null,
-      phone: lead?.phone ?? null,
-      source: lead?.source ?? null,
+    weeks: {
+      min: Math.ceil(min),
+      target: Math.ceil(target),
+      max: Math.ceil(max),
     },
-    callRequest: callReq
-      ? {
-          status: callReq.status ?? null,
-          bestTimeToCall: callReq.best_time_to_call ?? null,
-          notes: callReq.notes ?? null,
-        }
-      : null,
-    answers,
-    pricing,
-    freeText,
+    days: {
+      min: Math.max(4, Math.round(min * 5)),
+      target: Math.round(target * 5),
+      max: Math.round(max * 5),
+    },
   };
 }
 
-function deriveFeatureFlags(input: PieNormalizedInput) {
-  const txt = input.freeText;
-  const answers = input.answers;
-
-  const pagesExplicit =
-    toNum(answers.pageCount) ??
-    toNum(answers.pages) ??
-    toNum(answers.numberOfPages) ??
-    null;
-
-  const pageGuess =
-    pagesExplicit ??
-    (hasKeyword(txt, ["landing page", "one page", "single page"]) ? 1 : 5);
-
-  const flags = {
-    ecommerce: hasKeyword(txt, ["ecommerce", "e-commerce", "shop", "cart", "checkout", "product", "store"]),
-    booking: hasKeyword(txt, ["booking", "appointment", "calendar", "schedule"]),
-    blog: hasKeyword(txt, ["blog", "articles", "posts", "cms"]),
-    customForms: hasKeyword(txt, ["form", "lead form", "intake", "multi-step"]),
-    payments: hasKeyword(txt, ["payment", "deposit", "stripe", "checkout"]),
-    auth: hasKeyword(txt, ["login", "account", "portal", "dashboard", "member"]),
-    automations: hasKeyword(txt, ["automation", "email", "crm", "zapier", "n8n"]),
-    integrations: hasKeyword(txt, ["integration", "api", "webhook", "calendar", "maps"]),
-    seoHeavy: hasKeyword(txt, ["seo", "search ranking", "metadata"]),
-    multilingual: hasKeyword(txt, ["multilingual", "translation", "french", "spanish"]),
-    copyNeeded: hasKeyword(txt, ["need copy", "help writing", "content help", "content needed"]),
-    brandingNeeded: hasKeyword(txt, ["logo", "branding", "brand guide"]),
-    urgent: hasKeyword(txt, ["urgent", "asap", "rush", "this week"]),
-    customCodeLikely: hasKeyword(txt, ["custom", "next.js", "react", "web app", "portal"]),
-  };
-
-  let contentReadiness: "ready" | "partial" | "unknown" = "unknown";
-  if (hasKeyword(txt, ["content ready", "have content", "all content ready"])) contentReadiness = "ready";
-  else if (hasKeyword(txt, ["some content", "partial content", "need content"])) contentReadiness = "partial";
-
-  let platformPref: "wix" | "squarespace" | "custom" | null = null;
-  if (hasKeyword(txt, ["wix"])) platformPref = "wix";
-  else if (hasKeyword(txt, ["squarespace"])) platformPref = "squarespace";
-  else if (hasKeyword(txt, ["next.js", "custom", "react", "code"])) platformPref = "custom";
-
-  const timelineSignal =
-    (input.answers?.timeline as string) ||
-    (input.answers?.deadline as string) ||
-    (input.answers?.urgency as string) ||
-    null;
-
-  return { flags, pageGuess, contentReadiness, platformPref, timelineSignal };
+function complexityLabel(score: number) {
+  if (score < 30) return "Low";
+  if (score < 55) return "Moderate";
+  if (score < 75) return "High";
+  return "Very High";
 }
 
-function buildDeterministicPie(input: PieNormalizedInput): PieAdminReportV2 {
-  const { flags, pageGuess, contentReadiness, platformPref, timelineSignal } = deriveFeatureFlags(input);
-  const tier = (input.tier || "").toLowerCase() || null;
-  const quotedPrice = input.totalPrice;
+function buildMarkdownSummary(payload: PiePayloadV2): string {
+  return [
+    `# PIE Report (${payload.tier})`,
+    ``,
+    `**Summary:** ${payload.summary}`,
+    `**Complexity:** ${payload.score}/100 (${payload.admin_readout.complexity_label})`,
+    `**Confidence:** ${payload.confidence}`,
+    ``,
+    `## Pricing`,
+    `- Quote target: $${payload.pricing.quote.target}`,
+    `- 40/hr labor target: $${payload.pricing.labor_model_40hr.target_amount} (${payload.pricing.labor_model_40hr.target_hours}h)`,
+    `- Signal: ${payload.pricing.pricing_signal.status} — ${payload.pricing.pricing_signal.message}`,
+    ``,
+    `## Timeline`,
+    `- Build time: ${payload.timeline.estimated_build_days.target} days (~${payload.timeline.estimated_calendar_weeks.target} weeks)`,
+    ``,
+    `## Risks`,
+    ...payload.risks.map((r) => `- ${r}`),
+    ``,
+    `## Discovery Questions`,
+    ...payload.discovery_questions.slice(0, 8).map((q) => `- ${q}`),
+  ].join("\n");
+}
+
+function scoreLead(intake: Record<string, any>) {
+  let score = 45;
+  const contentReady = String(intake.contentReadiness || "").toLowerCase();
+  const budgetRange = String(intake.budgetRange || "");
+  const timeline = String(intake.timeline || "").toLowerCase();
+
+  if (contentReady.includes("ready")) score += 12;
+  if (contentReady.includes("some")) score += 6;
+  if (contentReady.includes("none") || contentReady.includes("not")) score -= 8;
+
+  const budget = parseMoneyBand(budgetRange);
+  if ((budget.max ?? 0) >= 1200) score += 10;
+  else if ((budget.max ?? 0) >= 700) score += 6;
+  else if ((budget.max ?? 0) > 0) score -= 4;
+
+  if (timeline.includes("asap") || timeline.includes("urgent")) score += 3; // urgency can be good but risky
+  if (timeline.includes("no rush") || timeline.includes("flex")) score += 4;
+
+  if (safeArray(intake.neededFeatures).length >= 4) score += 4;
+  if (String(intake.businessName || "").trim()) score += 4;
+
+  return clamp(score, 0, 100);
+}
+
+function buildPiePayload(args: {
+  quote: QuoteRow;
+  lead?: LeadRow | null;
+  call?: CallRequestRow | null;
+}): PiePayloadV2 {
+  const { quote, lead, call } = args;
+
+  const intake = safeObj(quote.intake_normalized);
+  const features = safeArray(intake.neededFeatures).map(titleCase);
+  const pagesEstimate = parsePagesWanted(String(intake.pagesWanted || "") || null);
+  const tier = normalizeTier(quote.tier_recommended);
+
+  const contentReadyText = String(intake.contentReadiness || "");
+  const contentReady = /ready|mostly ready|have content/i.test(contentReadyText) && !/none|not/i.test(contentReadyText);
+  const timelineText = String(intake.timeline || "");
+  const urgent = /asap|urgent|1 week|few days|this week/i.test(timelineText);
+
+  const budgetRange = String(intake.budgetRange || "");
+  const budget = parseMoneyBand(budgetRange);
+
+  const kw = keywordPoints(features);
+
+  let score = 12;
+  const drivers: PiePayloadV2["complexity_drivers"] = [...kw.drivers];
+
+  const pagePoints = clamp((pagesEstimate - 1) * 3, 0, 24);
+  score += pagePoints;
+  drivers.push({
+    label: "Page count",
+    impact: pagesEstimate >= 6 ? "high" : pagesEstimate >= 4 ? "medium" : "low",
+    points: pagePoints,
+    note: `${pagesEstimate} page(s) estimated from intake.`,
+  });
+
+  score += kw.points;
+
+  if (hasTruthy(intake.needCopywriting)) {
+    score += 8;
+    drivers.push({
+      label: "Copywriting support",
+      impact: "medium",
+      points: 8,
+      note: "Writing/rewriting content adds strategy and revision time.",
+    });
+  }
+
+  if (hasTruthy(intake.needLogoBranding)) {
+    score += 8;
+    drivers.push({
+      label: "Logo / branding help",
+      impact: "medium",
+      points: 8,
+      note: "Brand work can expand scope beyond web build.",
+    });
+  }
+
+  if (hasTruthy(intake.domainHosting) || /need|don't have|none/i.test(String(intake.domainHosting || ""))) {
+    score += 4;
+    drivers.push({
+      label: "Domain/hosting setup",
+      impact: "low",
+      points: 4,
+      note: "Technical setup and DNS launch support required.",
+    });
+  }
+
+  if (!contentReady) {
+    score += 10;
+    drivers.push({
+      label: "Content readiness",
+      impact: "high",
+      points: 10,
+      note: "Missing or incomplete content usually delays launch.",
+    });
+  }
+
+  if (urgent) {
+    score += 10;
+    drivers.push({
+      label: "Timeline pressure",
+      impact: "medium",
+      points: 10,
+      note: "Rush requests increase coordination and revision overhead.",
+    });
+  }
+
+  if (call?.status === "new" || quote.status === "call_requested") {
+    score += 2;
+    drivers.push({
+      label: "Call requested",
+      impact: "low",
+      points: 2,
+      note: "Good buying signal, but requires discovery time.",
+    });
+  }
+
+  score = clamp(score, 10, 98);
+
+  // Hours model
+  const baseMin = 6 + pagesEstimate * 2 + features.length * 1.5;
+  const baseTarget = 10 + pagesEstimate * 3 + features.length * 2.5 + score * 0.35;
+  const baseMax = 14 + pagesEstimate * 4 + features.length * 3 + score * 0.45;
+
+  const hours = {
+    min: Math.round(clamp(baseMin, 6, 120)),
+    target: Math.round(clamp(baseTarget, 10, 180)),
+    max: Math.round(clamp(baseMax, 14, 260)),
+  };
+
   const hourlyRate = 40;
-
-  // Base hours
-  let hrsDiscovery = 2.5;
-  let hrsPlanning = 2;
-  let hrsDesign = 5;
-  let hrsBuild = 8;
-  let hrsContent = 3;
-  let hrsQA = 2;
-  let hrsLaunch = 1.5;
-  let hrsPM = 2;
-
-  // Pages
-  if (pageGuess <= 1) {
-    hrsDesign += 1;
-    hrsBuild += 2;
-  } else {
-    hrsDesign += Math.max(0, pageGuess - 1) * 1.2;
-    hrsBuild += Math.max(0, pageGuess - 1) * 1.6;
-    hrsQA += Math.max(0, pageGuess - 1) * 0.35;
-  }
-
-  // Features
-  if (flags.blog) { hrsBuild += 3; hrsQA += 1; }
-  if (flags.booking) { hrsBuild += 4; hrsQA += 1.5; }
-  if (flags.customForms) { hrsBuild += 3; hrsQA += 1; }
-  if (flags.payments) { hrsBuild += 4; hrsQA += 1.5; }
-  if (flags.integrations) { hrsBuild += 4; hrsQA += 1.5; }
-  if (flags.automations) { hrsBuild += 3; hrsQA += 1; }
-  if (flags.auth) { hrsBuild += 6; hrsQA += 2; }
-  if (flags.ecommerce) { hrsBuild += 10; hrsDesign += 2; hrsQA += 3; }
-  if (flags.multilingual) { hrsBuild += 4; hrsQA += 1.5; }
-  if (flags.seoHeavy) { hrsPlanning += 1; hrsBuild += 2; }
-  if (flags.brandingNeeded) { hrsDesign += 3; }
-  if (flags.copyNeeded || contentReadiness !== "ready") { hrsContent += 4; }
-  if (flags.urgent) { hrsPM += 1; hrsQA += 0.5; }
-
-  // Tier nudges
-  if (tier === "essential") {
-    hrsDesign *= 0.9;
-    hrsPM *= 0.9;
-  } else if (tier === "premium") {
-    hrsDesign *= 1.2;
-    hrsPM *= 1.2;
-    hrsQA *= 1.15;
-  }
-
-  // Complexity score
-  let complexityScore = 18;
-  complexityScore += clamp((pageGuess - 1) * 4, 0, 28);
-  complexityScore += flags.ecommerce ? 22 : 0;
-  complexityScore += flags.auth ? 12 : 0;
-  complexityScore += flags.integrations ? 10 : 0;
-  complexityScore += flags.booking ? 8 : 0;
-  complexityScore += flags.customForms ? 6 : 0;
-  complexityScore += flags.payments ? 8 : 0;
-  complexityScore += flags.multilingual ? 8 : 0;
-  complexityScore += flags.urgent ? 5 : 0;
-  complexityScore += contentReadiness !== "ready" ? 6 : 0;
-  complexityScore = clamp(complexityScore, 0, 100);
-
-  const complexityLevel =
-    complexityScore < 35 ? "low" :
-    complexityScore < 70 ? "medium" : "high";
-
-  const byPhase = {
-    discovery: round1(hrsDiscovery),
-    planning: round1(hrsPlanning),
-    design: round1(hrsDesign),
-    build: round1(hrsBuild),
-    content: round1(hrsContent),
-    qa: round1(hrsQA),
-    launch: round1(hrsLaunch),
-    project_management: round1(hrsPM),
+  const labor = {
+    min_amount: hours.min * hourlyRate,
+    target_amount: hours.target * hourlyRate,
+    max_amount: hours.max * hourlyRate,
   };
 
-  const totalHours = round1(Object.values(byPhase).reduce((a, b) => a + b, 0));
-  const hourlyCost = money(totalHours * hourlyRate) ?? 0;
+  const quotePricing = {
+    minimum: Math.round(quote.estimate_low ?? quote.estimate_total ?? 0),
+    target: Math.round(quote.estimate_total ?? quote.estimate_low ?? 0),
+    upper: Math.round(quote.estimate_high ?? quote.estimate_total ?? 0),
+    tier: tier,
+  };
 
-  // Your real-world mode: part-time solo (because you work a full-time job) vs focused build mode
-  const partTimeWeeksMin = Math.max(1, Math.ceil(totalHours / 20));
-  const partTimeWeeksMax = Math.max(partTimeWeeksMin, Math.ceil(totalHours / 12));
-  const fullTimeWeeksMin = Math.max(1, Math.ceil(totalHours / 35));
-  const fullTimeWeeksMax = Math.max(fullTimeWeeksMin, Math.ceil(totalHours / 25));
+  // Pricing signal
+  let pricingStatus: "underpriced" | "healthy" | "premium" = "healthy";
+  let pricingMessage = "Quote is in a workable range for the estimated complexity.";
+  const suggestedFloor = Math.round(Math.max(quotePricing.minimum || 0, labor.min_amount * 0.55));
+  const suggestedTarget = Math.round(Math.max(quotePricing.target || 0, labor.target_amount * 0.65));
 
-  // Public tier check (CrecyStudio pricing system)
-  const tierRange = tier ? PUBLIC_TIER_RANGES[tier] : undefined;
-  const publicMin = tierRange?.min ?? null;
-  const publicMax = tierRange?.max ?? null;
-  const withinPublicRange =
-    tierRange && quotedPrice !== null ? (quotedPrice >= tierRange.min && quotedPrice <= tierRange.max) : null;
-
-  // Guardrail pricing range
-  const recommendedMin = money(hourlyCost * 0.9) ?? 0;
-  const recommendedMax = money(hourlyCost * 1.2) ?? 0;
-
-  let pricingPosition: "under" | "aligned" | "over" | "unknown" = "unknown";
-  let delta: number | null = null;
-  if (quotedPrice !== null) {
-    delta = quotedPrice - hourlyCost;
-    if (quotedPrice < recommendedMin) pricingPosition = "under";
-    else if (quotedPrice > recommendedMax) pricingPosition = "over";
-    else pricingPosition = "aligned";
+  if (quotePricing.target < labor.target_amount * 0.45) {
+    pricingStatus = "underpriced";
+    pricingMessage = "Current quote is significantly below the $40/hr effort model. Use scope control or phase delivery.";
+  } else if (quotePricing.target > labor.target_amount * 0.95) {
+    pricingStatus = "premium";
+    pricingMessage = "Quote is close to or above the $40/hr effort model. Defend value with process and deliverables.";
   }
 
-  // Platform recommendation
-  let platform: "wix" | "squarespace" | "custom" = "wix";
-  const platformWhy: string[] = [];
-  const platformCaution: string[] = [];
+  // Timeline
+  const timelineEst = estimateTimelineFromHours(hours.target, contentReady, urgent);
 
-  if (flags.auth || flags.ecommerce || flags.integrations || flags.customCodeLikely || complexityScore >= 70) {
-    platform = "custom";
-    platformWhy.push("Custom features / integrations suggest a coded build will be more reliable.");
-    platformWhy.push("Higher complexity scope benefits from flexible architecture and cleaner scaling.");
-    platformCaution.push("Custom builds need tighter scope control and stronger content readiness.");
-  } else if (flags.booking || flags.blog || pageGuess >= 5 || tier === "growth") {
-    platform = "squarespace";
-    platformWhy.push("Good balance of speed + polish for service-business websites.");
-    platformWhy.push("CMS and content updates are manageable for clients.");
-    platformCaution.push("Watch feature creep if the client asks for portal/dashboard behavior.");
-  } else {
-    platform = "wix";
-    platformWhy.push("Fast to launch for simple service sites and starter budgets.");
-    platformWhy.push("Best fit when scope is mostly pages + forms + basic contact flow.");
-    platformCaution.push("Can feel limiting if the scope grows into custom workflows.");
+  const risks: string[] = [];
+  if (!contentReady) risks.push("Content readiness may delay timeline and expand revision rounds.");
+  if (hasTruthy(intake.needCopywriting)) risks.push("Copywriting scope can drift unless page-by-page deliverables are defined.");
+  if (hasTruthy(intake.needLogoBranding)) risks.push("Branding requests can turn into a separate project if not scoped.");
+  if (features.some((f) => /Payment|E Commerce|Checkout|Store/i.test(f))) risks.push("Commerce/payment setup requires extra QA and policy confirmations.");
+  if (features.some((f) => /Portal|Dashboard|Login|Member/i.test(f))) risks.push("Portal/login features require tighter scope and likely phased delivery.");
+  if (urgent) risks.push("Rush timeline increases revision pressure and communication overhead.");
+
+  const scopeAssumptions: string[] = [
+    `${pagesEstimate} page(s) estimated from intake selection (${String(intake.pagesWanted || "unspecified")}).`,
+    `Estimate assumes up to 2 revision rounds unless otherwise agreed.`,
+    `Estimate assumes the client provides account access for domain/hosting or requests setup assistance.`,
+  ];
+
+  if (!contentReady) {
+    scopeAssumptions.push("Timeline assumes staged content delivery and placeholder copy during build.");
+  }
+  if (hasTruthy(intake.needCopywriting)) {
+    scopeAssumptions.push("Copywriting includes polishing core pages, not full brand messaging strategy.");
   }
 
-  if (platformPref && platformPref !== platform) {
-    platformCaution.push(`Client appears to prefer ${platformPref.toUpperCase()} — align on tradeoffs before scoping.`);
+  const exclusions: string[] = [
+    "Custom web app logic / internal portal unless explicitly scoped",
+    "Advanced SEO campaign / backlink work",
+    "Ongoing maintenance plan (if not added separately)",
+  ];
+  if (!features.some((f) => /Payment|E Commerce|Checkout|Store/i.test(f))) {
+    exclusions.push("Payment processing and ecommerce setup");
   }
 
-  const drivers = [
-    pageGuess > 4 ? `${pageGuess} page scope` : null,
-    flags.ecommerce ? "e-commerce / cart flow" : null,
-    flags.booking ? "booking / scheduling workflow" : null,
-    flags.customForms ? "custom forms / intake logic" : null,
-    flags.integrations ? "third-party integrations" : null,
-    flags.auth ? "accounts / portal features" : null,
-    contentReadiness !== "ready" ? "content not fully ready" : null,
-    flags.urgent ? "rush timeline pressure" : null,
-  ].filter(Boolean) as string[];
+  const deliverables: string[] = [
+    "Project kickoff + scope confirmation",
+    `Site build (${pagesEstimate} page target)`,
+    "Mobile responsiveness pass",
+    "Basic forms / CTA setup (if in scope)",
+    "Launch support + handoff",
+  ];
 
-  const questions = buildQuestions(input, { flags, pageGuess, contentReadiness, platform, complexityScore });
-  const risks = buildRisks({ flags, pageGuess, contentReadiness, quotedPrice, hourlyCost, pricingPosition });
-  const tradeoffs = buildTradeoffs({ flags, pageGuess, platform, pricingPosition });
+  if (features.length) {
+    deliverables.push(...features.slice(0, 4).map((f) => `${f} implementation`));
+  }
+  if (hasTruthy(intake.needCopywriting)) deliverables.push("Copy polishing / content formatting");
+  if (hasTruthy(intake.domainHosting)) deliverables.push("Domain + hosting connection support");
 
-  const fit: "good" | "ok" | "risky" =
-    pricingPosition === "under" && complexityScore >= 60 ? "risky" :
-    complexityScore >= 75 ? "ok" :
-    "good";
+  // Discovery questions
+  const discoveryQuestions: string[] = [];
+  const ask = (q: string) => {
+    if (!discoveryQuestions.includes(q)) discoveryQuestions.push(q);
+  };
 
-  const summary = [
-    `Estimated ${totalHours} hours total (${complexityLevel} complexity).`,
-    quotedPrice !== null ? `Quote is ${pricingPosition === "aligned" ? "within" : pricingPosition === "under" ? "below" : "above"} the $40/hr guardrail.` : "No quoted price found.",
-    `Best platform fit: ${platform.toUpperCase()}.`,
-  ].join(" ");
+  ask("What are the top 1–2 goals for the site launch (book calls, get leads, sell products, showcase work)?");
+  ask("How many final pages do you want at launch, and what are their names?");
+  ask("Do you already have logo, brand colors, and photos, or should I help create/choose them?");
+  ask("Who will provide the website copy, and when can it be delivered?");
+  ask("What examples of websites do you like (design/style and functionality)?");
 
-  return {
-    version: "pie_v2",
-    generated_at: new Date().toISOString(),
-    overview: {
-      headline: `PIE v2 • ${complexityLevel.toUpperCase()} complexity • ${totalHours}h estimate`,
-      tier: input.tier,
-      quoted_price: quotedPrice,
-      fit,
-      summary,
+  if (!budget.min && !budget.max) ask("What budget range are you comfortable with for phase 1?");
+  if (!timelineText) ask("What launch date are you targeting?");
+  if (features.some((f) => /Booking|Appointment/i.test(f))) {
+    ask("Do you need booking to connect to an existing calendar/tool (Calendly, Google Calendar, etc.)?");
+  }
+  if (features.some((f) => /Payment|E Commerce|Checkout|Store/i.test(f))) {
+    ask("How many products/services will be sold at launch, and do you need shipping, pickup, or digital delivery?");
+    ask("Which payment provider do you prefer (Stripe, Square, PayPal)?");
+  }
+  if (features.some((f) => /Portal|Dashboard|Login|Member/i.test(f))) {
+    ask("How many user roles are needed (admin, staff, customer), and what should each role be able to do?");
+  }
+  if (hasTruthy(intake.domainHosting) || /none|don't have|need/i.test(String(intake.domainHosting || ""))) {
+    ask("Do you already own a domain name, and which registrar is it with?");
+  }
+
+  // Negotiation / price defense
+  const lowerCostOptions: string[] = [
+    `Phase 1 launch with ${Math.min(3, pagesEstimate)} pages, then add the remaining pages after launch.`,
+    "Use a simpler template/layout system now and reserve custom design polish for phase 2.",
+    "Client provides finalized copy and images to reduce build and revision time.",
+  ];
+
+  if (features.length >= 3) {
+    lowerCostOptions.push("Launch without one or two advanced features, then add them after MVP is live.");
+  }
+
+  const upsellOptions: string[] = [
+    "Add monthly maintenance / update plan",
+    "Add SEO setup + Google Business Profile optimization",
+    "Add analytics/dashboard and conversion tracking",
+  ];
+
+  if (hasTruthy(intake.needLogoBranding)) {
+    upsellOptions.push("Brand kit package (logo refinements, colors, typography, usage)");
+  }
+
+  const priceDefensePoints: string[] = [
+    "Pricing includes scoping, build time, testing, revisions, and launch support — not just page design.",
+    "A clean launch-ready build reduces rework and protects your timeline.",
+    "We can phase features to fit budget without breaking the project foundation.",
+  ];
+
+  // Pitch recommendations
+  const tierPitch =
+    tier === "Premium"
+      ? "Recommend Premium because requested scope/complexity suggests stronger build planning and delivery structure."
+      : tier === "Growth"
+      ? "Recommend Growth for a balanced launch with room for better features and polish."
+      : "Recommend Essential for a fast launch path with clear scope and upgrade flexibility.";
+
+  // Lead quality / priority
+  const leadQuality = scoreLead(intake);
+  const priority: "low" | "normal" | "high" =
+    leadQuality >= 70 || (call?.status === "new" && quote.status === "call_requested")
+      ? "high"
+      : leadQuality >= 45
+      ? "normal"
+      : "low";
+
+  const confidence: "Low" | "Medium" | "High" =
+    score < 45 && features.length <= 2 && pagesEstimate <= 4
+      ? "High"
+      : score < 70
+      ? "Medium"
+      : "Medium";
+
+  const payload: PiePayloadV2 = {
+    version: "2.0",
+    tier,
+    confidence,
+    score,
+    summary: `Estimated complexity ${score}/100 (${complexityLabel(score)}). ${quotePricing.target ? `Quote target is $${quotePricing.target}. ` : ""}PIE suggests ${hours.target}h build effort (~$${labor.target_amount} at $40/hr).`,
+    admin_readout: {
+      complexity_label: complexityLabel(score),
+      recommended_build_path:
+        score >= 70
+          ? "Use a phased build (MVP + phase 2), tight scope checklist, and milestone approvals."
+          : score >= 40
+          ? "Proceed with a structured scope snapshot and page-by-page deliverables."
+          : "Fast-launch workflow is appropriate. Keep scope tight and move quickly to deposit.",
+      priority,
+      lead_quality_score: leadQuality,
     },
-    complexity: {
-      score_100: complexityScore,
-      level: complexityLevel,
-      drivers: drivers.length ? drivers : ["No major complexity signals detected from intake"],
-    },
-    hours: {
-      total_hours: totalHours,
-      by_phase: byPhase,
-      assumptions: [
-        "Solo builder workflow",
-        "Normal revision cycle (not unlimited)",
-        contentReadiness === "ready" ? "Content appears mostly ready" : "Some content/copy support likely needed",
-        "Includes basic QA + launch handoff",
-      ],
-    },
-    timeline: {
-      part_time_weeks: `${partTimeWeeksMin}-${partTimeWeeksMax} weeks`,
-      full_time_weeks: `${fullTimeWeeksMin}-${fullTimeWeeksMax} weeks`,
-      notes: [
-        "Part-time range assumes ~12–20 build hours/week",
-        "Full-time range assumes ~25–35 build hours/week",
-        timelineSignal ? `Client timeline signal: ${timelineSignal}` : "No clear client deadline found",
-      ],
-    },
-    pricing_guardrail: {
-      hourly_rate_used: hourlyRate,
-      cost_at_hourly: hourlyCost,
-      quoted_price: quotedPrice,
-      delta,
-      pricing_position: pricingPosition,
-      recommended_range: { min: recommendedMin, max: recommendedMax },
-      tier_range_check: {
-        tier: input.tier,
-        public_min: publicMin,
-        public_max: publicMax,
-        within_public_range: withinPublicRange,
+    pricing: {
+      quote: quotePricing,
+      labor_model_40hr: {
+        min_hours: hours.min,
+        target_hours: hours.target,
+        max_hours: hours.max,
+        min_amount: labor.min_amount,
+        target_amount: labor.target_amount,
+        max_amount: labor.max_amount,
+        hourly_rate: hourlyRate,
+      },
+      pricing_signal: {
+        status: pricingStatus,
+        message: pricingMessage,
+        suggested_floor: suggestedFloor,
+        suggested_target: suggestedTarget,
       },
     },
-    platform_recommendation: {
-      recommended: platform,
-      why: platformWhy,
-      caution: platformCaution,
+    timeline: {
+      estimated_build_days: timelineEst.days,
+      estimated_calendar_weeks: timelineEst.weeks,
+      assumptions: [
+        "Calendar estimate assumes one-person build and normal feedback turnaround.",
+        contentReady
+          ? "Client content appears at least partially ready."
+          : "Content is not fully ready, so timeline includes buffer for content delays.",
+        urgent ? "Rush timeline requested — extra coordination may be needed." : "No rush flag detected.",
+      ],
     },
-    questions_to_ask: questions,
+    scope: {
+      pages_estimate: pagesEstimate,
+      feature_count: features.length,
+      features,
+      scope_assumptions: scopeAssumptions,
+      suggested_deliverables: deliverables,
+      exclusions_to_confirm: exclusions,
+    },
+    complexity_drivers: drivers.sort((a, b) => b.points - a.points),
+    discovery_questions: discoveryQuestions,
     risks,
-    build_plan: [
-      { phase: "Discovery", goal: "Lock scope and constraints", output: "Scope snapshot + feature checklist" },
-      { phase: "Structure", goal: "Map pages and content", output: "Sitemap + page-by-page content list" },
-      { phase: "Build", goal: "Implement design and features", output: "Functional site draft" },
-      { phase: "QA & Revisions", goal: "Test and polish", output: "Approved launch candidate" },
-      { phase: "Launch", goal: "Go live + handoff", output: "Published site + admin notes" },
+    negotiation_playbook: {
+      lower_cost_options: lowerCostOptions,
+      upsell_options: upsellOptions,
+      price_defense_points: priceDefensePoints,
+    },
+    pitch: {
+      emphasize: ["Clear scope", "Timeline clarity", "Upgrade flexibility", "Launch-ready handoff"],
+      recommend: tierPitch,
+      objections: [
+        "Can we start smaller and phase features?",
+        "Can we reduce price by simplifying scope?",
+        "What is included vs excluded in this estimate?",
+      ],
+    },
+    next_actions: [
+      "Confirm page list and feature priorities",
+      "Confirm content ownership and delivery date",
+      "Lock scope snapshot and revision count",
+      "Send proposal/deposit link",
+      "Start build after deposit + assets",
     ],
-    scope_tradeoffs: tradeoffs,
-    ai_insights: null,
-    raw_snapshot: {
-      feature_flags: flags,
-      page_guess: pageGuess,
-      content_readiness: contentReadiness,
-      timeline_signal: timelineSignal,
-    },
   };
+
+  // Optional AI enhancement (safe fallback if no key)
+  // This adds more nuanced notes if you later set OPENAI_API_KEY.
+  // Works fine without it.
+  return payload;
 }
 
-function buildQuestions(
-  input: PieNormalizedInput,
-  ctx: {
-    flags: Record<string, boolean>;
-    pageGuess: number;
-    contentReadiness: "ready" | "partial" | "unknown";
-    platform: "wix" | "squarespace" | "custom";
-    complexityScore: number;
-  }
-): string[] {
-  const q: string[] = [];
-
-  q.push("What is the exact goal of the website (book calls, collect leads, sell products, portfolio, etc.)?");
-  q.push(`How many pages do you actually need at launch (PIE guessed ~${ctx.pageGuess})?`);
-  q.push("Do you already have final text, images, and logo, or do you need help creating them?");
-  q.push("What is your ideal launch date, and is it flexible?");
-  q.push("Who will approve revisions and how many revision rounds do you expect?");
-
-  if (ctx.flags.booking) q.push("What booking/calendar system do you want to use, and do you need reminders or deposits?");
-  if (ctx.flags.ecommerce) q.push("How many products at launch, and do you need shipping/tax setup?");
-  if (ctx.flags.integrations || ctx.flags.automations) q.push("Which tools must connect (CRM, email, calendar, payments, forms, automation)?");
-  if (ctx.flags.auth) q.push("What should users be able to do after login (dashboard, uploads, progress tracking, invoices)?");
-  if (ctx.complexityScore >= 60) q.push("What features are 'must-have now' vs 'phase 2 later'?");
-  if (ctx.contentReadiness !== "ready") q.push("Can we launch with placeholder content for some pages to reduce timeline and cost?");
-
-  q.push(`Are you open to ${ctx.platform.toUpperCase()} if it helps us launch faster within budget?`);
-
-  return Array.from(new Set(q));
+function extractText(obj: any): string {
+  if (!obj) return "";
+  if (typeof obj === "string") return obj;
+  if (Array.isArray(obj)) return obj.map(extractText).join(" ");
+  if (typeof obj === "object") return Object.values(obj).map(extractText).join(" ");
+  return String(obj);
 }
 
-function buildRisks(ctx: {
-  flags: Record<string, boolean>;
-  pageGuess: number;
-  contentReadiness: "ready" | "partial" | "unknown";
-  quotedPrice: number | null;
-  hourlyCost: number;
-  pricingPosition: "under" | "aligned" | "over" | "unknown";
-}) {
-  const risks: string[] = [];
-
-  if (ctx.contentReadiness !== "ready") risks.push("Content delays can push timeline and add revision hours.");
-  if (ctx.flags.integrations) risks.push("Third-party integrations often create hidden testing/debugging time.");
-  if (ctx.flags.ecommerce) risks.push("E-commerce scope can expand fast (products, shipping, tax, policies, QA).");
-  if (ctx.flags.auth) risks.push("Portal/account features add complexity beyond a standard marketing website.");
-  if (ctx.pageGuess >= 8) risks.push("Large page counts increase QA and content formatting workload.");
-  if (ctx.pricingPosition === "under") risks.push("Quote appears under the $40/hr guardrail; margin risk is high unless scope is tightened.");
-
-  if (risks.length === 0) risks.push("No major risks detected from intake, but confirm scope boundaries on the call.");
-  return risks;
-}
-
-function buildTradeoffs(ctx: {
-  flags: Record<string, boolean>;
-  pageGuess: number;
-  platform: "wix" | "squarespace" | "custom";
-  pricingPosition: "under" | "aligned" | "over" | "unknown";
-}) {
-  const items: string[] = [];
-
-  if (ctx.pricingPosition === "under") {
-    items.push("Reduce launch scope to core pages only (phase 2 for secondary pages).");
-    items.push("Client provides final copy/images to cut content-prep hours.");
-    items.push("Limit revisions to 1–2 rounds with clearly defined scope.");
-  }
-
-  if (ctx.flags.integrations) items.push("Defer non-essential integrations to phase 2.");
-  if (ctx.flags.ecommerce) items.push("Launch with a smaller product catalog first.");
-  if (ctx.flags.auth) items.push("Replace portal features with simpler forms/email workflow for v1.");
-  if (ctx.platform === "custom") items.push("Use a template-based front-end and custom features only where needed.");
-
-  if (items.length === 0) items.push("No tradeoffs needed right now; scope appears manageable.");
-  return Array.from(new Set(items));
-}
-
-async function maybeEnhanceWithAI(input: PieNormalizedInput, deterministic: PieAdminReportV2) {
+async function maybeEnhanceWithOpenAI(
+  payload: PiePayloadV2,
+  quote: QuoteRow,
+  lead: LeadRow | null,
+  call: CallRequestRow | null
+): Promise<PiePayloadV2> {
   const apiKey = process.env.OPENAI_API_KEY;
-  const model = process.env.PIE_AI_MODEL || "gpt-4o-mini";
-  const enabled = process.env.PIE_AI_ENABLED === "true";
-
-  if (!enabled || !apiKey) return null;
-
-  const prompt = {
-    quote: {
-      id: input.quoteId,
-      tier: input.tier,
-      totalPrice: input.totalPrice,
-      status: input.quoteStatus,
-      lead: input.lead,
-      callRequest: input.callRequest,
-      answers: input.answers,
-      pricing: input.pricing,
-    },
-    deterministic_summary: {
-      complexity: deterministic.complexity,
-      hours: deterministic.hours,
-      timeline: deterministic.timeline,
-      pricing_guardrail: deterministic.pricing_guardrail,
-      platform_recommendation: deterministic.platform_recommendation,
-      current_questions: deterministic.questions_to_ask,
-      current_risks: deterministic.risks,
-    },
-    task: "Return JSON only. Improve this internal project estimate report for a solo web builder. Focus on executive summary, hidden risks, client psychology, upsell opportunities, and call strategy. Do NOT change numeric hours or pricing numbers; only add insight.",
-    required_json_shape: {
-      executive_summary: "string",
-      client_psychology: "string",
-      hidden_risks: ["string"],
-      upsell_opportunities: ["string"],
-      call_strategy: ["string"],
-    },
-  };
+  if (!apiKey) {
+    return {
+      ...payload,
+      ai_enhancement: { enabled: false, provider: "none" },
+    };
+  }
 
   try {
-    // Simple JSON-mode call via REST (no SDK dependency)
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    const intake = safeObj(quote.intake_normalized);
+    const prompt = {
+      quote: {
+        id: quote.id,
+        tier: quote.tier_recommended,
+        estimate_total: quote.estimate_total,
+        estimate_low: quote.estimate_low,
+        estimate_high: quote.estimate_high,
+        status: quote.status,
+      },
+      lead: lead ? { email: lead.email, name: lead.name } : null,
+      call_request: call
+        ? {
+            status: call.status,
+            preferred_times: call.preferred_times,
+            timezone: call.timezone,
+            notes: call.notes,
+          }
+        : null,
+      intake_normalized: intake,
+      pie_base: payload,
+    };
+
+    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model,
-        temperature: 0.3,
+        model: process.env.PIE_OPENAI_MODEL || "gpt-5-mini",
         response_format: { type: "json_object" },
         messages: [
           {
             role: "system",
             content:
-              "You are PIE, an internal project estimator assistant for a web agency owner. Be concise, practical, and risk-aware. Return strict JSON only.",
+              "You improve an internal website project estimate report for a solo web studio owner. Return strict JSON only with keys: notes (string[]), sales_script (string[]), added_questions (string[]). Keep it practical, short, and admin-focused.",
           },
           {
             role: "user",
@@ -619,105 +746,206 @@ async function maybeEnhanceWithAI(input: PieNormalizedInput, deterministic: PieA
       }),
     });
 
-    if (!res.ok) {
-      return { _error: `AI HTTP ${res.status}` };
+    if (!resp.ok) {
+      return {
+        ...payload,
+        ai_enhancement: { enabled: false, provider: "none" },
+      };
     }
 
-    const json = await res.json();
-    const content = json?.choices?.[0]?.message?.content;
-    if (!content || typeof content !== "string") return { _error: "No AI content" };
+    const data = await resp.json();
+    const raw = data?.choices?.[0]?.message?.content;
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : {};
+    const notes = Array.isArray(parsed?.notes) ? parsed.notes.map(String) : [];
+    const salesScript = Array.isArray(parsed?.sales_script) ? parsed.sales_script.map(String) : [];
+    const addedQuestions = Array.isArray(parsed?.added_questions) ? parsed.added_questions.map(String) : [];
 
-    const parsed = JSON.parse(content);
-    return parsed;
-  } catch (e: any) {
-    return { _error: e?.message || "AI error" };
+    const mergedQuestions = [...payload.discovery_questions];
+    for (const q of addedQuestions) {
+      if (q && !mergedQuestions.includes(q)) mergedQuestions.push(q);
+    }
+
+    return {
+      ...payload,
+      discovery_questions: mergedQuestions,
+      ai_enhancement: {
+        enabled: true,
+        provider: "openai",
+        notes: notes.slice(0, 6),
+        sales_script: salesScript.slice(0, 6),
+        added_questions: addedQuestions.slice(0, 6),
+      },
+    };
+  } catch {
+    return {
+      ...payload,
+      ai_enhancement: { enabled: false, provider: "none" },
+    };
   }
 }
 
-function mergeAI(report: PieAdminReportV2, ai: any): PieAdminReportV2 {
-  if (!ai || ai._error) return report;
-
-  return {
-    ...report,
-    ai_insights: {
-      executive_summary: typeof ai.executive_summary === "string" ? ai.executive_summary : undefined,
-      client_psychology: typeof ai.client_psychology === "string" ? ai.client_psychology : undefined,
-      hidden_risks: Array.isArray(ai.hidden_risks) ? ai.hidden_risks : undefined,
-      upsell_opportunities: Array.isArray(ai.upsell_opportunities) ? ai.upsell_opportunities : undefined,
-      call_strategy: Array.isArray(ai.call_strategy) ? ai.call_strategy : undefined,
-    },
-  };
-}
-
-export async function generatePieForQuoteId(quoteId: string, opts?: { force?: boolean }) {
-  const force = !!opts?.force;
-
-  if (!force) {
-    const { data: existing } = await pieDb
-      .from("pie_reports")
-      .select("*")
-      .eq("quote_id", quoteId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (existing) return existing;
-  }
-
-  const { data: quote, error: quoteErr } = await pieDb
+async function loadQuoteBundle(quoteId: string) {
+  const quoteRes = await pieDb
     .from("quotes")
-    .select("*")
+    .select(
+      "id,created_at,lead_id,status,tier_recommended,estimate_total,estimate_low,estimate_high,intake_raw,intake_normalized,scope_snapshot,debug,latest_pie_report_id"
+    )
     .eq("id", quoteId)
     .single();
 
-  if (quoteErr || !quote) {
-    throw new Error(`Quote not found: ${quoteErr?.message || quoteId}`);
+  if (quoteRes.error || !quoteRes.data) {
+    throw new Error(quoteRes.error?.message || "Quote not found");
   }
 
-  const leadPromise = quote.lead_id
-    ? pieDb.from("leads").select("*").eq("id", quote.lead_id).maybeSingle()
-    : Promise.resolve({ data: null, error: null } as any);
+  const quote = quoteRes.data as QuoteRow;
 
-  const callPromise = pieDb
+  let lead: LeadRow | null = null;
+  if (quote.lead_id) {
+    const leadRes = await pieDb.from("leads").select("id,email,name").eq("id", quote.lead_id).single();
+    if (!leadRes.error && leadRes.data) lead = leadRes.data as LeadRow;
+  }
+
+  const callRes = await pieDb
     .from("call_requests")
-    .select("*")
+    .select("id,quote_id,status,preferred_times,timezone,notes,created_at")
     .eq("quote_id", quoteId)
     .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(1);
 
-  const [{ data: lead }, { data: callReq }] = await Promise.all([leadPromise, callPromise]);
+  const call = (callRes.data?.[0] as CallRequestRow | undefined) || null;
 
-  const normalized = normalizeQuotePayload(quote, lead, callReq);
-  const deterministic = buildDeterministicPie(normalized);
-  const ai = await maybeEnhanceWithAI(normalized, deterministic);
-  const report = mergeAI(deterministic, ai);
-
-  const validProjectId = await resolveValidProjectId(quote.project_id);
-
-  const insertRow = {
-    quote_id: quote.id,
-    project_id: validProjectId, // prevents bad FK values
-    summary: report.overview.headline,
-    input: normalized,
-    report,
-    payload: {
-      ai_enabled: process.env.PIE_AI_ENABLED === "true",
-      ai_result: ai,
-      generated_by: "pie_v2",
-    },
-  };
-
-  const { data: inserted, error: insertErr } = await pieDb
-    .from("pie_reports")
-    .insert(insertRow)
-    .select("*")
-    .single();
-
-  if (insertErr) throw new Error(insertErr.message);
-
-  return inserted;
+  return { quote, lead, call };
 }
 
-// Backward-compat exports so old imports don't break
-export const ensurePieForQuoteId = generatePieForQuoteId;
+async function getExistingPieByLatestId(latestPieId: string | null): Promise<PieReportRow | null> {
+  if (!latestPieId) return null;
+  const res = await pieDb
+    .from("pie_reports")
+    .select("id,quote_id,project_id,created_at,payload,input,report,score,tier,confidence")
+    .eq("id", latestPieId)
+    .single();
+
+  if (res.error || !res.data) return null;
+  return res.data as PieReportRow;
+}
+
+async function getLatestPieByQuoteId(quoteId: string): Promise<PieReportRow | null> {
+  const res = await pieDb
+    .from("pie_reports")
+    .select("id,quote_id,project_id,created_at,payload,input,report,score,tier,confidence")
+    .eq("quote_id", quoteId)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (res.error || !res.data?.length) return null;
+  return res.data[0] as PieReportRow;
+}
+
+export async function ensurePieForQuoteId(
+  quoteId: string,
+  opts?: { force?: boolean }
+): Promise<EnsureResult> {
+  try {
+    const { quote, lead, call } = await loadQuoteBundle(quoteId);
+
+    if (!opts?.force) {
+      const existing =
+        (await getExistingPieByLatestId(quote.latest_pie_report_id)) || (await getLatestPieByQuoteId(quoteId));
+      if (existing) {
+        // ensure quotes.latest_pie_report_id is synced
+        if (!quote.latest_pie_report_id || quote.latest_pie_report_id !== existing.id) {
+          await pieDb.from("quotes").update({ latest_pie_report_id: existing.id }).eq("id", quoteId);
+        }
+        return { ok: true, created: false, quoteId, pie: existing };
+      }
+    }
+
+    let payload = buildPiePayload({ quote, lead, call });
+    payload = await maybeEnhanceWithOpenAI(payload, quote, lead, call);
+
+    const inputSnapshot = {
+      quote: {
+        id: quote.id,
+        created_at: quote.created_at,
+        status: quote.status,
+        tier_recommended: quote.tier_recommended,
+        estimate_total: quote.estimate_total,
+        estimate_low: quote.estimate_low,
+        estimate_high: quote.estimate_high,
+      },
+      lead: lead ? { id: lead.id, email: lead.email, name: lead.name } : null,
+      call_request: call
+        ? {
+            id: call.id,
+            status: call.status,
+            preferred_times: call.preferred_times,
+            timezone: call.timezone,
+            notes: call.notes,
+            created_at: call.created_at,
+          }
+        : null,
+      intake_normalized: quote.intake_normalized,
+      intake_raw: quote.intake_raw,
+      scope_snapshot: quote.scope_snapshot,
+      debug: quote.debug,
+      raw_text_for_ai: extractText(quote.intake_normalized),
+    };
+
+    const insertPayload: Record<string, any> = {
+      token: randomUUID(),
+      project_id: null, // Keep null-safe. If your schema later requires project_id, wire it to real projects.id only.
+      created_at: new Date().toISOString(),
+      report: buildMarkdownSummary(payload),
+      expires_at: null,
+      quote_id: quote.id,
+      payload,
+      score: payload.score,
+      tier: payload.tier,
+      confidence: payload.confidence,
+      input: inputSnapshot,
+    };
+
+    let insertRes = await pieDb
+      .from("pie_reports")
+      .insert(insertPayload)
+      .select("id,quote_id,project_id,created_at,payload,input,report,score,tier,confidence")
+      .single();
+
+    // Fallback if project_id null handling differs
+    if (insertRes.error) {
+      const fallbackPayload = { ...insertPayload };
+      delete fallbackPayload.project_id;
+
+      insertRes = await pieDb
+        .from("pie_reports")
+        .insert(fallbackPayload)
+        .select("id,quote_id,project_id,created_at,payload,input,report,score,tier,confidence")
+        .single();
+    }
+
+    if (insertRes.error || !insertRes.data) {
+      throw new Error(insertRes.error?.message || "Failed to insert PIE report");
+    }
+
+    const pie = insertRes.data as PieReportRow;
+
+    await pieDb.from("quotes").update({ latest_pie_report_id: pie.id }).eq("id", quote.id);
+
+    return { ok: true, created: true, quoteId, pie };
+  } catch (err: any) {
+    return {
+      ok: false,
+      created: false,
+      quoteId,
+      error: err?.message || "Unknown PIE generation error",
+    };
+  }
+}
+
+// Compatibility export used by older files/routes
+export async function generatePieForQuoteId(
+  quoteId: string,
+  opts?: { force?: boolean }
+): Promise<EnsureResult> {
+  return ensurePieForQuoteId(quoteId, { force: opts?.force ?? true });
+}
