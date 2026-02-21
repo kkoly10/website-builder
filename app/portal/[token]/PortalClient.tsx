@@ -1,33 +1,42 @@
 "use client";
 
-import Link from "next/link";
+import { useMemo, useState } from "react";
 
 type AnyObj = Record<string, any>;
 
 type PortalClientProps = {
-  token: string;
-  data?: AnyObj | null;
-  error?: string | null;
+  // Keep this flexible so it works with different server wrappers
+  token?: string;
+  params?: { token?: string };
+  data?: AnyObj;
+  portal?: AnyObj;
+  initialData?: AnyObj;
+
+  quote?: AnyObj;
+  lead?: AnyObj;
+  callRequest?: AnyObj;
+  pie?: AnyObj;
+  milestones?: AnyObj[];
 };
 
-function asArray(value: unknown): any[] {
-  if (Array.isArray(value)) return value;
-  if (value == null) return [];
-  return [value];
+function asObj(v: unknown): AnyObj {
+  return v && typeof v === "object" && !Array.isArray(v) ? (v as AnyObj) : {};
 }
 
-function toNum(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string") {
-    const n = Number(value);
-    return Number.isFinite(n) ? n : null;
+function asArr<T = any>(v: unknown): T[] {
+  return Array.isArray(v) ? (v as T[]) : [];
+}
+
+function pick(obj: AnyObj, keys: string[], fallback: any = null) {
+  for (const k of keys) {
+    if (obj && obj[k] !== undefined && obj[k] !== null) return obj[k];
   }
-  return null;
+  return fallback;
 }
 
-function formatMoney(value: unknown): string {
-  const n = toNum(value);
-  if (n == null) return "—";
+function money(v: unknown) {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return "—";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -35,959 +44,645 @@ function formatMoney(value: unknown): string {
   }).format(n);
 }
 
-function formatDate(value: unknown): string {
-  if (!value || typeof value !== "string") return "—";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
+function dateTime(v: unknown) {
+  if (!v) return "—";
+  const d = new Date(String(v));
+  if (Number.isNaN(d.getTime())) return String(v);
   return d.toLocaleString();
 }
 
-function prettyStatus(value: unknown): string {
-  if (!value || typeof value !== "string") return "—";
-  return value
-    .replace(/_/g, " ")
+function titleCase(s: unknown) {
+  const raw = String(s ?? "").trim();
+  if (!raw) return "—";
+  return raw
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
     .replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
-function statusBadgeStyles(statusRaw: unknown): React.CSSProperties {
-  const s = String(statusRaw || "").toLowerCase();
+function normalizePortalData(props: PortalClientProps) {
+  const root =
+    asObj(props.portal).quote || asObj(props.portal).lead || asObj(props.portal).pie
+      ? asObj(props.portal)
+      : asObj(props.data).quote || asObj(props.data).lead || asObj(props.data).pie
+      ? asObj(props.data)
+      : asObj(props.initialData).quote || asObj(props.initialData).lead || asObj(props.initialData).pie
+      ? asObj(props.initialData)
+      : {};
 
-  if (["done", "completed", "live", "paid", "active"].includes(s)) {
-    return {
-      border: "1px solid rgba(34,197,94,0.35)",
-      background: "rgba(34,197,94,0.12)",
-      color: "rgba(220,255,235,0.95)",
-    };
-  }
+  const quote = asObj(props.quote).id ? asObj(props.quote) : asObj(root.quote);
+  const lead = asObj(props.lead).id ? asObj(props.lead) : asObj(root.lead);
+  const callRequest = asObj(props.callRequest).id ? asObj(props.callRequest) : asObj(root.callRequest);
+  const pie = asObj(props.pie).id ? asObj(props.pie) : asObj(root.pie);
 
-  if (["new", "pending", "needs_review", "awaiting_content"].includes(s)) {
-    return {
-      border: "1px solid rgba(255,255,255,0.14)",
-      background: "rgba(255,255,255,0.04)",
-      color: "rgba(255,255,255,0.86)",
-    };
-  }
+  const token =
+    props.token ||
+    props.params?.token ||
+    pick(root, ["token", "portal_token", "client_token"], "");
 
-  if (["blocked", "overdue", "issue"].includes(s)) {
-    return {
-      border: "1px solid rgba(239,68,68,0.35)",
-      background: "rgba(239,68,68,0.12)",
-      color: "rgba(255,220,220,0.95)",
-    };
-  }
+  const quoteData = asObj(pick(quote, ["quote_data", "payload", "details", "form_data"], {}));
+  const scopeSnapshot =
+    asObj(pick(quote, ["scope_snapshot", "scopeSnapshot"], {})) ||
+    asObj(pick(quoteData, ["scope_snapshot", "scopeSnapshot"], {})) ||
+    asObj(pick(asObj(pie), ["scope_snapshot", "scopeSnapshot"], {})) ||
+    {};
+
+  const pieReport =
+    asObj(pick(pie, ["report_json", "report", "data"], {})) ||
+    asObj(pick(root, ["pieReport", "pie_report"], {})) ||
+    {};
+
+  const pricing = asObj(pick(pieReport, ["pricing"], {}));
+  const labor = asObj(pick(pieReport, ["labor"], {}));
+  const timeline = asObj(pick(pieReport, ["timeline"], {}));
+  const deliverables = asObj(pick(pieReport, ["deliverables"], {}));
+  const nextQuestions = asArr<string>(pick(pieReport, ["nextQuestions", "next_questions"], []));
+
+  const estimateTarget =
+    pick(quote, ["estimated_price", "estimate", "total_estimate"], null) ??
+    pick(quote, ["estimate_total"], null) ??
+    (typeof quote.total_cents === "number" ? quote.total_cents / 100 : null) ??
+    pick(pricing, ["target"], null);
+
+  const estimateMin =
+    pick(quote, ["estimate_min"], null) ??
+    (typeof quote.min_cents === "number" ? quote.min_cents / 100 : null) ??
+    pick(pricing, ["minimum"], null);
+
+  const estimateMax =
+    pick(quote, ["estimate_max"], null) ??
+    (typeof quote.max_cents === "number" ? quote.max_cents / 100 : null) ??
+    pick(pricing, ["maximum"], null) ??
+    (Array.isArray(pricing.buffers)
+      ? pricing.buffers.find((b: any) => /upper|max/i.test(String(b?.label ?? "")))?.amount
+      : null);
+
+  const hourlyRate = Number(pick(labor, ["hourlyRate"], 40)) || 40;
+  const hoursLow = Number(pick(labor, ["hoursLow"], null));
+  const hoursHigh = Number(pick(labor, ["hoursHigh"], null));
+  const hoursTarget = Number(pick(labor, ["hoursTarget"], null));
+
+  const timelineDays =
+    Number(
+      pick(timeline, ["daysTarget"], null) ??
+        pick(pieReport, ["timeline_days"], null) ??
+        pick(quote, ["timeline_days"], null)
+    ) || 0;
+
+  const tier =
+    titleCase(pick(quote, ["tier", "package_tier"], null) ?? pick(pieReport, ["tier"], null));
+
+  const status = titleCase(pick(quote, ["status"], null));
+
+  const recommendedDepositPct =
+    Number(
+      pick(pieReport, ["depositPercent", "deposit_percent"], null) ??
+        pick(quote, ["deposit_percent"], null)
+    ) || 50;
+
+  const depositAmount =
+    Number(
+      pick(pieReport, ["depositAmount", "deposit_amount"], null) ??
+        (estimateTarget && Number.isFinite(Number(estimateTarget))
+          ? (Number(estimateTarget) * recommendedDepositPct) / 100
+          : 0)
+    ) || 0;
+
+  const milestonesFromData = asArr<any>(
+    props.milestones?.length ? props.milestones : pick(root, ["milestones"], [])
+  );
+
+  const milestoneDefaults = [
+    { title: "Kickoff & scope confirmation", status: "upcoming", eta: "Day 1" },
+    { title: "Content/assets collection", status: "upcoming", eta: "Day 1–3" },
+    { title: "First build draft", status: "upcoming", eta: "Day 3–7" },
+    { title: "Review & revisions", status: "upcoming", eta: "Day 7–10" },
+    { title: "Launch prep & handoff", status: "upcoming", eta: "Day 10–14" },
+  ];
+
+  const milestones =
+    milestonesFromData.length > 0
+      ? milestonesFromData.map((m) => ({
+          title: pick(asObj(m), ["title", "name"], "Milestone"),
+          status: titleCase(pick(asObj(m), ["status"], "upcoming")).toLowerCase(),
+          eta: pick(asObj(m), ["eta", "due_label", "due"], "—"),
+          notes: pick(asObj(m), ["notes"], ""),
+        }))
+      : milestoneDefaults;
+
+  const pages =
+    asArr<string>(pick(scopeSnapshot, ["pages", "sections"], [])) ||
+    asArr<string>(pick(quoteData, ["pages", "sections"], [])) ||
+    [];
+
+  const features =
+    asArr<string>(pick(scopeSnapshot, ["features", "requested_features"], [])) ||
+    asArr<string>(pick(quoteData, ["features", "requested_features"], [])) ||
+    [];
+
+  const assetsNeeded =
+    asArr<string>(pick(scopeSnapshot, ["assets_needed", "assetsNeeded"], [])) ||
+    asArr<string>(pick(deliverables, ["assetsNeeded"], [])) ||
+    [
+      "Logo (PNG/SVG)",
+      "Brand colors/fonts (if you have them)",
+      "Website text/content",
+      "Photos/images",
+      "Contact info + social links",
+    ];
+
+  const platform =
+    titleCase(
+      pick(scopeSnapshot, ["platform"], null) ??
+        pick(quoteData, ["platform"], null) ??
+        pick(pieReport, ["platformRecommendation", "platform_recommendation"], null)
+    ) || "To be confirmed";
+
+  const businessName =
+    pick(lead, ["name", "full_name"], null) ??
+    pick(quoteData, ["business_name", "businessName"], null) ??
+    "Your project";
+
+  const clientEmail =
+    pick(lead, ["email"], null) ?? pick(quote, ["email"], null) ?? pick(quoteData, ["email"], null);
+
+  const contentReadiness =
+    titleCase(
+      pick(scopeSnapshot, ["content_readiness", "contentReadiness"], null) ??
+        pick(quoteData, ["content_readiness", "contentReadiness"], null) ??
+        "Unknown"
+    );
+
+  const quoteId = pick(quote, ["id"], "—");
+  const createdAt = pick(quote, ["created_at", "createdAt"], null);
+
+  const paymentUrl =
+    pick(root, ["paymentUrl", "payment_url"], null) ??
+    pick(quote, ["payment_url", "deposit_payment_url"], null) ??
+    null;
+
+  const uploadUrl =
+    pick(root, ["uploadUrl", "upload_url"], null) ??
+    pick(quote, ["upload_url"], null) ??
+    null;
+
+  const trackerUrl =
+    pick(root, ["trackerUrl", "tracker_url"], null) ??
+    pick(quote, ["tracker_url"], null) ??
+    null;
 
   return {
-    border: "1px solid rgba(255,122,24,0.35)",
-    background: "rgba(255,122,24,0.12)",
-    color: "rgba(255,230,210,0.95)",
+    token,
+    quote,
+    lead,
+    callRequest,
+    pie,
+    pieReport,
+    tier,
+    status,
+    quoteId,
+    createdAt,
+    businessName,
+    clientEmail,
+    platform,
+    contentReadiness,
+    pages,
+    features,
+    assetsNeeded,
+    nextQuestions,
+    estimateTarget,
+    estimateMin,
+    estimateMax,
+    hourlyRate,
+    hoursLow,
+    hoursHigh,
+    hoursTarget,
+    timelineDays,
+    recommendedDepositPct,
+    depositAmount,
+    milestones,
+    paymentUrl,
+    uploadUrl,
+    trackerUrl,
   };
 }
 
-function getLead(data: AnyObj) {
-  return data?.lead ?? data?.quote?.lead ?? null;
+function statusPill(status: string) {
+  const s = status.toLowerCase();
+  if (s.includes("active")) return "badge badgeHot";
+  if (s.includes("deposit")) return "badge badgeHot";
+  return "badge";
 }
 
-function getQuote(data: AnyObj) {
-  return data?.quote ?? null;
-}
+export default function PortalClient(props: PortalClientProps) {
+  const model = useMemo(() => normalizePortalData(props), [props]);
 
-function getPie(data: AnyObj) {
-  const pie =
-    data?.pie ??
-    data?.pieReport ??
-    data?.latestPie ??
-    (Array.isArray(data?.pieReports) ? data.pieReports[0] : null);
+  const [revisionText, setRevisionText] = useState("");
+  const [localRevisionRequests, setLocalRevisionRequests] = useState<string[]>([]);
+  const [assetNote, setAssetNote] = useState("");
+  const [copied, setCopied] = useState(false);
 
-  if (!pie) return null;
-
-  // Some rows store analysis in `report_json`, `report`, or `data`
-  const payload =
-    pie?.report_json ??
-    pie?.report ??
-    pie?.data ??
-    pie?.payload ??
-    pie;
-
-  return { row: pie, payload };
-}
-
-function getScopeSnapshot(data: AnyObj) {
-  return (
-    data?.scopeSnapshot ??
-    data?.scope_snapshot ??
-    data?.project?.scopeSnapshot ??
-    data?.project?.scope_snapshot ??
-    null
-  );
-}
-
-function shortToken(token: string) {
-  if (!token) return "—";
-  if (token.length <= 10) return token;
-  return `${token.slice(0, 6)}…${token.slice(-4)}`;
-}
-
-function pickArrayStrings(...values: unknown[]): string[] {
-  for (const v of values) {
-    if (Array.isArray(v)) {
-      const arr = v
-        .map((x) => (typeof x === "string" ? x.trim() : ""))
-        .filter(Boolean);
-      if (arr.length) return arr;
-    }
-  }
-  return [];
-}
-
-function pickString(...values: unknown[]): string | null {
-  for (const v of values) {
-    if (typeof v === "string" && v.trim()) return v.trim();
-  }
-  return null;
-}
-
-function getMilestones(data: AnyObj): AnyObj[] {
-  return asArray(
-    data?.milestones ??
-      data?.project_milestones ??
-      data?.project?.milestones ??
-      data?.timeline?.milestones
-  );
-}
-
-function getRevisions(data: AnyObj): AnyObj[] {
-  return asArray(
-    data?.revisions ??
-      data?.revision_requests ??
-      data?.project?.revisions ??
-      data?.requests?.revisions
-  );
-}
-
-function getAssets(data: AnyObj): AnyObj[] {
-  return asArray(
-    data?.assets ??
-      data?.uploads ??
-      data?.project_assets ??
-      data?.project?.assets ??
-      data?.files
-  );
-}
-
-function getDeposit(data: AnyObj) {
-  return (
-    data?.deposit ??
-    data?.payment ??
-    data?.payments?.deposit ??
-    data?.project?.deposit ??
-    null
-  );
-}
-
-function getPortalTitle(data: AnyObj) {
-  return (
-    pickString(
-      data?.project?.name,
-      data?.project_name,
-      data?.scopeSnapshot?.businessName,
-      data?.scopeSnapshot?.projectName,
-      data?.quote?.business_name,
-      data?.quote?.project_name,
-      data?.quote?.website_name
-    ) ?? "Customer Portal"
-  );
-}
-
-function getProgressFromMilestones(milestones: AnyObj[]): number {
-  if (!milestones.length) return 0;
-  const done = milestones.filter((m) => {
-    const s = String(m?.status || "").toLowerCase();
-    return ["done", "completed", "live"].includes(s);
-  }).length;
-  return Math.round((done / milestones.length) * 100);
-}
-
-export default function PortalClient({
-  token,
-  data = null,
-  error = null,
-}: PortalClientProps) {
-  if (error) {
-    return (
-      <div className="section">
-        <div className="container">
-          <div className="panel">
-            <div className="panelHeader">
-              <div className="h2">Customer Portal</div>
-            </div>
-            <div className="panelBody">
-              <div
-                style={{
-                  border: "1px solid rgba(239,68,68,0.25)",
-                  background: "rgba(239,68,68,0.08)",
-                  borderRadius: 14,
-                  padding: 12,
-                  color: "rgba(255,230,230,0.95)",
-                }}
-              >
-                {error}
-              </div>
-              <div className="smallNote" style={{ marginTop: 10 }}>
-                Token: {shortToken(token)}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="section">
-        <div className="container">
-          <div className="panel">
-            <div className="panelHeader">
-              <div className="h2">Customer Portal</div>
-            </div>
-            <div className="panelBody">
-              <div className="p">Portal data not found for this link.</div>
-              <div className="smallNote" style={{ marginTop: 8 }}>
-                Token: {shortToken(token)}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const quote = getQuote(data);
-  const lead = getLead(data);
-  const pie = getPie(data);
-  const scope = getScopeSnapshot(data);
-  const milestones = getMilestones(data);
-  const revisions = getRevisions(data);
-  const assets = getAssets(data);
-  const deposit = getDeposit(data);
-
-  const piePayload: AnyObj = (pie?.payload ?? {}) as AnyObj;
-  const pieRow: AnyObj = (pie?.row ?? {}) as AnyObj;
-
-  const quoteStatus = quote?.status ?? data?.status ?? "new";
-  const projectStatus = data?.project?.status ?? data?.project_status ?? quoteStatus;
-  const progressPct =
-    toNum(data?.project?.progress_percent) ??
-    toNum(data?.progress_percent) ??
-    getProgressFromMilestones(milestones);
-
-  const tier =
-    pickString(
-      piePayload?.tier,
-      pieRow?.tier,
-      quote?.tier,
-      data?.tier
-    ) ?? "—";
-
-  const complexityScore =
-    toNum(piePayload?.score) ??
-    toNum(pieRow?.score) ??
-    toNum(data?.complexity_score) ??
-    null;
-
-  const confidence =
-    pickString(piePayload?.confidence, pieRow?.confidence) ?? "—";
-
-  const pricing = piePayload?.pricing ?? {};
-  const targetPrice =
-    toNum(pricing?.target) ?? toNum(quote?.estimated_price) ?? toNum(quote?.total) ?? null;
-  const minPrice =
-    toNum(pricing?.minimum) ?? toNum(quote?.minimum_estimate) ?? toNum(quote?.floor_price) ?? null;
-
-  const upperBuffer = Array.isArray(pricing?.buffers)
-    ? pricing.buffers.find((b: AnyObj) =>
-        String(b?.label || "").toLowerCase().includes("upper")
-      )
-    : null;
-  const maxPrice =
-    toNum(upperBuffer?.amount) ??
-    toNum(quote?.maximum_estimate) ??
-    toNum(quote?.ceiling_price) ??
-    null;
-
-  // PIE hours (newer upgraded shape), with fallbacks
-  const hours = piePayload?.hours ?? {};
-  const hourlyRate =
-    toNum(hours?.hourlyRate) ??
-    toNum(hours?.rate) ??
-    40;
-
-  const hoursLow = toNum(hours?.low);
-  const hoursTarget = toNum(hours?.recommended ?? hours?.target);
-  const hoursHigh = toNum(hours?.high);
-
-  const buildCostTarget =
-    hoursTarget != null && hourlyRate != null ? Math.round(hoursTarget * hourlyRate) : null;
-
-  const buildCostLow =
-    hoursLow != null && hourlyRate != null ? Math.round(hoursLow * hourlyRate) : null;
-
-  const buildCostHigh =
-    hoursHigh != null && hourlyRate != null ? Math.round(hoursHigh * hourlyRate) : null;
-
-  const timeline = piePayload?.timeline ?? {};
-  const timelineText =
-    pickString(
-      timeline?.recommended,
-      timeline?.label,
-      scope?.timeline,
-      quote?.timeline,
-      data?.timeline
-    ) ?? "TBD";
-
-  const pages = pickArrayStrings(
-    scope?.pages,
-    scope?.pageList,
-    quote?.pages,
-    quote?.page_list
-  );
-
-  const features = pickArrayStrings(
-    scope?.features,
-    scope?.featureList,
-    quote?.features,
-    quote?.feature_list
-  );
-
-  const deliverables = pickArrayStrings(
-    scope?.deliverables,
-    piePayload?.deliverables
-  );
-
-  const exclusions = pickArrayStrings(
-    scope?.exclusions,
-    piePayload?.exclusions
-  );
-
-  const followUpQuestions = pickArrayStrings(
-    piePayload?.followUpQuestions,
-    piePayload?.questions,
-    piePayload?.discovery_questions
-  );
-
-  const assumptions = pickArrayStrings(
-    piePayload?.assumptions,
-    scope?.assumptions
-  );
-
-  const contentReadiness =
-    pickString(
-      scope?.contentReadiness,
-      piePayload?.contentReadiness,
-      quote?.content_ready
-    ) ?? "Unknown";
-
-  const platform =
-    pickString(
-      scope?.platform,
-      piePayload?.platformRecommendation,
-      quote?.platform
-    ) ?? "To be confirmed";
-
-  const depositAmount =
-    toNum(deposit?.amount) ??
-    toNum(deposit?.amount_cents) != null
-      ? Math.round((toNum(deposit?.amount_cents) || 0) / 100)
+  const remainingBalance =
+    Number.isFinite(Number(model.estimateTarget)) && Number.isFinite(Number(model.depositAmount))
+      ? Math.max(0, Number(model.estimateTarget) - Number(model.depositAmount))
       : null;
 
-  const depositStatus =
-    pickString(deposit?.status, data?.deposit_status) ?? "not_started";
+  const canShowPortal = model.quoteId !== "—" || !!model.clientEmail || !!model.businessName;
 
-  const depositUrl =
-    pickString(
-      deposit?.checkout_url,
-      deposit?.url,
-      data?.deposit_checkout_url
-    ) ?? null;
+  const handleCopyRevision = async () => {
+    const text = revisionText.trim();
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1400);
+    } catch {
+      // no-op
+    }
+  };
 
-  const projectName = getPortalTitle(data);
-  const leadEmail =
-    pickString(
-      lead?.email,
-      quote?.email,
-      data?.email
-    ) ?? "—";
+  const addLocalRevision = () => {
+    const text = revisionText.trim();
+    if (!text) return;
+    setLocalRevisionRequests((prev) => [text, ...prev]);
+    setRevisionText("");
+  };
 
-  const leadName =
-    pickString(
-      lead?.name,
-      quote?.name,
-      data?.name
-    ) ?? null;
+  if (!canShowPortal) {
+    return (
+      <main className="section">
+        <div className="container">
+          <div className="card">
+            <div className="cardInner">
+              <h1 className="h2">Client Portal</h1>
+              <p className="p" style={{ marginTop: 10 }}>
+                We couldn’t load this portal yet. The token may be invalid, expired, or the server page
+                is not passing data into <code>PortalClient</code>.
+              </p>
+              <div className="row" style={{ marginTop: 14 }}>
+                <a className="btn btnGhost" href="/estimate">
+                  Get a new quote
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <div className="section">
+    <main className="section">
       <div className="container">
         {/* Header */}
-        <div className="panel" style={{ marginBottom: 14 }}>
-          <div className="panelHeader">
+        <div className="card" style={{ marginBottom: 14 }}>
+          <div className="cardInner">
             <div
-              className="row"
-              style={{ justifyContent: "space-between", alignItems: "center" }}
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                gap: 12,
+                flexWrap: "wrap",
+              }}
             >
               <div>
-                <div className="h2">{projectName}</div>
-                <div className="smallNote" style={{ marginTop: 6 }}>
-                  Client Portal • Token {shortToken(token)}
+                <div className="kicker">
+                  <span className="kickerDot" />
+                  Client Portal
                 </div>
+                <h1 className="h2" style={{ marginTop: 10 }}>
+                  {model.businessName}
+                </h1>
+                <p className="p" style={{ marginTop: 6 }}>
+                  Quote #{String(model.quoteId).slice(0, 8)} • {model.tier} • {model.clientEmail || "—"}
+                </p>
               </div>
 
-              <div className="row">
-                <span className="badge" style={statusBadgeStyles(projectStatus)}>
-                  {prettyStatus(projectStatus)}
-                </span>
-                <span className="badge" style={statusBadgeStyles(depositStatus)}>
-                  Deposit: {prettyStatus(depositStatus)}
-                </span>
+              <div style={{ textAlign: "right" }}>
+                <div className={statusPill(model.status)}>{model.status}</div>
+                <div className="pDark" style={{ marginTop: 8 }}>
+                  Created: {dateTime(model.createdAt)}
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="panelBody">
-            <div className="grid2">
-              <div className="card">
-                <div className="cardInner">
-                  <div className="smallNote">Client</div>
-                  <div style={{ fontWeight: 900, marginTop: 6 }}>
-                    {leadName || "Client"}
-                  </div>
-                  <div className="pDark" style={{ marginTop: 4 }}>
-                    {leadEmail}
-                  </div>
-                  <div className="pDark" style={{ marginTop: 6 }}>
-                    Tier: <strong>{prettyStatus(tier)}</strong>
-                  </div>
-                  <div className="pDark" style={{ marginTop: 4 }}>
-                    Portal status: <strong>{prettyStatus(projectStatus)}</strong>
-                  </div>
-                </div>
-              </div>
+            <div className="row" style={{ marginTop: 14 }}>
+              {model.paymentUrl ? (
+                <a className="btn btnPrimary" href={model.paymentUrl}>
+                  Pay deposit
+                </a>
+              ) : (
+                <button className="btn btnPrimary" type="button" disabled title="Deposit link not connected yet">
+                  Pay deposit (coming soon)
+                </button>
+              )}
 
-              <div className="card">
-                <div className="cardInner">
-                  <div className="smallNote">Project Progress</div>
-                  <div style={{ fontWeight: 950, fontSize: 26, marginTop: 6 }}>
-                    {progressPct}%
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 10,
-                      height: 10,
-                      borderRadius: 999,
-                      background: "rgba(255,255,255,0.08)",
-                      overflow: "hidden",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: `${Math.max(0, Math.min(100, progressPct))}%`,
-                        height: "100%",
-                        background:
-                          "linear-gradient(90deg, rgba(255,122,24,0.95), rgba(255,154,77,0.9))",
-                      }}
-                    />
-                  </div>
-                  <div className="smallNote" style={{ marginTop: 8 }}>
-                    Timeline target: {timelineText}
-                  </div>
-                </div>
-              </div>
+              {model.uploadUrl ? (
+                <a className="btn btnGhost" href={model.uploadUrl}>
+                  Upload assets
+                </a>
+              ) : (
+                <button className="btn btnGhost" type="button" disabled title="Upload flow not connected yet">
+                  Upload assets (coming soon)
+                </button>
+              )}
+
+              {model.trackerUrl ? (
+                <a className="btn btnGhost" href={model.trackerUrl}>
+                  Track progress
+                </a>
+              ) : (
+                <button className="btn btnGhost" type="button" disabled title="Tracker not connected yet">
+                  Track progress (coming soon)
+                </button>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Scope Snapshot */}
-        <div className="panel" style={{ marginBottom: 14 }}>
-          <div className="panelHeader">
-            <div className="h2">Scope Snapshot</div>
-            <div className="smallNote" style={{ marginTop: 6 }}>
-              Client-facing summary of what will be built
-            </div>
-          </div>
-          <div className="panelBody">
-            <div className="grid2">
-              <div>
-                <div className="fieldLabel">Platform</div>
-                <div className="pDark">{platform}</div>
-
-                <div className="fieldLabel" style={{ marginTop: 14 }}>
-                  Content readiness
-                </div>
-                <div className="pDark">{prettyStatus(contentReadiness)}</div>
-
-                <div className="fieldLabel" style={{ marginTop: 14 }}>
-                  Timeline
-                </div>
-                <div className="pDark">{timelineText}</div>
-              </div>
-
-              <div>
-                <div className="fieldLabel">Budget range</div>
-                <div className="pDark">
-                  {formatMoney(minPrice)} – {formatMoney(maxPrice || targetPrice)}
-                  {targetPrice != null ? (
-                    <>
-                      {" "}
-                      <span style={{ opacity: 0.7 }}>
-                        (target {formatMoney(targetPrice)})
-                      </span>
-                    </>
-                  ) : null}
-                </div>
-
-                {complexityScore != null ? (
-                  <>
-                    <div className="fieldLabel" style={{ marginTop: 14 }}>
-                      Complexity (PIE)
-                    </div>
-                    <div className="pDark">
-                      {complexityScore}/100 • Confidence {confidence}
-                    </div>
-                  </>
-                ) : null}
-
-                {hoursTarget != null ? (
-                  <>
-                    <div className="fieldLabel" style={{ marginTop: 14 }}>
-                      Estimated build effort
-                    </div>
-                    <div className="pDark">
-                      {hoursLow != null ? `${hoursLow}–` : ""}
-                      {hoursTarget}
-                      {hoursHigh != null ? `–${hoursHigh}` : ""} hours
-                    </div>
-                    <div className="smallNote" style={{ marginTop: 4 }}>
-                      At ${hourlyRate}/hr:{" "}
-                      {buildCostLow != null ? `${formatMoney(buildCostLow)} – ` : ""}
-                      {formatMoney(buildCostTarget)}
-                      {buildCostHigh != null ? ` – ${formatMoney(buildCostHigh)}` : ""}
-                    </div>
-                  </>
-                ) : null}
+        {/* Top grid */}
+        <div className="grid2" style={{ alignItems: "start" }}>
+          {/* Scope Snapshot */}
+          <div className="panel">
+            <div className="panelHeader">
+              <div className="h2" style={{ fontSize: 20 }}>
+                Scope Snapshot
               </div>
             </div>
+            <div className="panelBody">
+              <div className="grid2">
+                <div>
+                  <div className="fieldLabel">Platform</div>
+                  <div className="pDark">{model.platform}</div>
+                </div>
+                <div>
+                  <div className="fieldLabel">Content readiness</div>
+                  <div className="pDark">{model.contentReadiness}</div>
+                </div>
+              </div>
 
-            {pages.length > 0 && (
-              <div style={{ marginTop: 16 }}>
+              <div style={{ marginTop: 14 }}>
                 <div className="fieldLabel">Pages / Sections</div>
-                <div className="row">
-                  {pages.map((p, i) => (
-                    <span key={`${p}-${i}`} className="badge">
-                      {p}
-                    </span>
-                  ))}
-                </div>
+                {model.pages.length ? (
+                  <div className="row">
+                    {model.pages.map((p, idx) => (
+                      <span key={`${p}-${idx}`} className="badge">
+                        {titleCase(p)}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="pDark">Will be confirmed during kickoff.</div>
+                )}
               </div>
-            )}
 
-            {features.length > 0 && (
-              <div style={{ marginTop: 16 }}>
-                <div className="fieldLabel">Features</div>
-                <div className="row">
-                  {features.map((f, i) => (
-                    <span key={`${f}-${i}`} className="badge">
-                      {f}
-                    </span>
-                  ))}
-                </div>
+              <div style={{ marginTop: 14 }}>
+                <div className="fieldLabel">Requested features</div>
+                {model.features.length ? (
+                  <ul className="pDark" style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+                    {model.features.map((f, idx) => (
+                      <li key={`${f}-${idx}`}>{titleCase(f)}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="pDark">No feature list captured yet.</div>
+                )}
               </div>
-            )}
-
-            {deliverables.length > 0 && (
-              <div style={{ marginTop: 16 }}>
-                <div className="fieldLabel">Deliverables</div>
-                <ul className="pDark" style={{ marginTop: 6, paddingLeft: 18 }}>
-                  {deliverables.map((d, i) => (
-                    <li key={`${d}-${i}`}>{d}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {assumptions.length > 0 && (
-              <div style={{ marginTop: 16 }}>
-                <div className="fieldLabel">Assumptions</div>
-                <ul className="pDark" style={{ marginTop: 6, paddingLeft: 18 }}>
-                  {assumptions.map((a, i) => (
-                    <li key={`${a}-${i}`}>{a}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {exclusions.length > 0 && (
-              <div style={{ marginTop: 16 }}>
-                <div className="fieldLabel">Exclusions</div>
-                <ul className="pDark" style={{ marginTop: 6, paddingLeft: 18 }}>
-                  {exclusions.map((e, i) => (
-                    <li key={`${e}-${i}`}>{e}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Deposit + Payments */}
-        <div className="panel" style={{ marginBottom: 14 }}>
-          <div className="panelHeader">
-            <div className="h2">Deposit</div>
-            <div className="smallNote" style={{ marginTop: 6 }}>
-              Secure your build slot by paying the deposit
             </div>
           </div>
-          <div className="panelBody">
-            <div className="grid2">
-              <div>
-                <div className="fieldLabel">Deposit status</div>
-                <span className="badge" style={statusBadgeStyles(depositStatus)}>
-                  {prettyStatus(depositStatus)}
-                </span>
 
-                <div className="fieldLabel" style={{ marginTop: 14 }}>
-                  Deposit amount
-                </div>
-                <div className="pDark">{formatMoney(depositAmount)}</div>
+          {/* Budget / Timeline */}
+          <div className="panel">
+            <div className="panelHeader">
+              <div className="h2" style={{ fontSize: 20 }}>
+                Pricing & Timeline
               </div>
-
-              <div>
-                <div className="fieldLabel">Actions</div>
-                <div className="row">
-                  {depositUrl ? (
-                    <a
-                      href={depositUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="btn btnPrimary"
-                    >
-                      Pay Deposit <span className="btnArrow">↗</span>
-                    </a>
-                  ) : (
-                    <button
-                      type="button"
-                      className="btn btnGhost"
-                      disabled
-                      style={{ opacity: 0.65, cursor: "not-allowed" }}
-                    >
-                      Deposit link coming soon
-                    </button>
+            </div>
+            <div className="panelBody">
+              <div className="grid2">
+                <div>
+                  <div className="fieldLabel">Estimated total</div>
+                  <div style={{ fontWeight: 950, fontSize: 22 }}>
+                    {money(model.estimateTarget)}
+                  </div>
+                  {(model.estimateMin || model.estimateMax) && (
+                    <div className="pDark" style={{ marginTop: 4 }}>
+                      Range: {money(model.estimateMin)} – {money(model.estimateMax)}
+                    </div>
                   )}
                 </div>
-                <div className="smallNote" style={{ marginTop: 8 }}>
-                  If you need an invoice instead of checkout, reply to the project email.
+
+                <div>
+                  <div className="fieldLabel">Recommended deposit</div>
+                  <div style={{ fontWeight: 950, fontSize: 22 }}>
+                    {money(model.depositAmount)}
+                  </div>
+                  <div className="pDark" style={{ marginTop: 4 }}>
+                    {model.recommendedDepositPct}% to start
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid2" style={{ marginTop: 14 }}>
+                <div>
+                  <div className="fieldLabel">Timeline estimate</div>
+                  <div className="pDark">
+                    {model.timelineDays > 0 ? `${model.timelineDays} days` : "To be confirmed"}
+                  </div>
+                </div>
+                <div>
+                  <div className="fieldLabel">Remaining balance</div>
+                  <div className="pDark">
+                    {remainingBalance !== null ? money(remainingBalance) : "—"}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 14 }}>
+                <div className="fieldLabel">Labor estimate (for transparency)</div>
+                <div className="pDark">
+                  {Number.isFinite(model.hoursTarget)
+                    ? `${model.hoursTarget} hrs @ ${money(model.hourlyRate)}/hr`
+                    : Number.isFinite(model.hoursLow) && Number.isFinite(model.hoursHigh)
+                    ? `${model.hoursLow}–${model.hoursHigh} hrs @ ${money(model.hourlyRate)}/hr`
+                    : `Based on project complexity and scope`}
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Uploads / Assets */}
-        <div className="panel" style={{ marginBottom: 14 }}>
-          <div className="panelHeader">
-            <div className="h2">Uploads & Assets</div>
-            <div className="smallNote" style={{ marginTop: 6 }}>
-              Logos, copy, images, brand guide, and access credentials
-            </div>
-          </div>
-          <div className="panelBody">
-            {assets.length === 0 ? (
-              <div className="pDark">
-                No files uploaded yet.
-                <div className="smallNote" style={{ marginTop: 6 }}>
-                  Upload flow can be wired next (Supabase Storage or UploadThing).
-                </div>
-              </div>
-            ) : (
-              <div
-                style={{
-                  display: "grid",
-                  gap: 10,
-                }}
-              >
-                {assets.map((asset, i) => {
-                  const name =
-                    pickString(asset?.name, asset?.file_name, asset?.filename, asset?.title) ??
-                    `Asset ${i + 1}`;
-                  const url = pickString(asset?.url, asset?.public_url);
-                  const kind = pickString(asset?.kind, asset?.type) ?? "file";
-                  const uploadedAt = pickString(asset?.uploaded_at, asset?.created_at);
-
-                  return (
-                    <div
-                      key={asset?.id ?? `${name}-${i}`}
-                      className="card"
-                      style={{ borderRadius: 16 }}
-                    >
-                      <div
-                        className="cardInner"
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          gap: 12,
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontWeight: 900 }}>{name}</div>
-                          <div className="pDark" style={{ marginTop: 4 }}>
-                            {prettyStatus(kind)}
-                            {uploadedAt ? ` • ${formatDate(uploadedAt)}` : ""}
-                          </div>
-                        </div>
-
-                        {url ? (
-                          <a
-                            href={url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="btn btnGhost"
-                          >
-                            Open <span className="btnArrow">↗</span>
-                          </a>
-                        ) : (
-                          <span className="smallNote">No link</span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </div>
         </div>
 
         {/* Milestones */}
-        <div className="panel" style={{ marginBottom: 14 }}>
+        <div className="panel" style={{ marginTop: 14 }}>
           <div className="panelHeader">
-            <div className="h2">Milestones</div>
-            <div className="smallNote" style={{ marginTop: 6 }}>
-              Track what’s done and what’s next
-            </div>
+            <div className="h2" style={{ fontSize: 20 }}>Progress & Milestones</div>
           </div>
           <div className="panelBody">
-            {milestones.length === 0 ? (
-              <div className="pDark">No milestones added yet.</div>
-            ) : (
-              <div style={{ display: "grid", gap: 10 }}>
-                {milestones.map((m, i) => {
-                  const title =
-                    pickString(m?.title, m?.name, m?.label) ?? `Milestone ${i + 1}`;
-                  const status = pickString(m?.status) ?? "pending";
-                  const dueDate = pickString(m?.due_date, m?.dueDate);
-                  const notes = pickString(m?.notes, m?.description);
-
-                  return (
-                    <div
-                      key={m?.id ?? `${title}-${i}`}
-                      className="card"
-                      style={{ borderRadius: 16 }}
-                    >
-                      <div className="cardInner">
-                        <div
-                          className="row"
-                          style={{
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <div style={{ fontWeight: 900 }}>{title}</div>
-                          <span className="badge" style={statusBadgeStyles(status)}>
-                            {prettyStatus(status)}
-                          </span>
+            <div style={{ display: "grid", gap: 10 }}>
+              {model.milestones.map((m, idx) => {
+                const s = String(m.status || "").toLowerCase();
+                const isDone = s.includes("done") || s.includes("complete");
+                const isActive = s.includes("active") || s.includes("progress");
+                return (
+                  <div
+                    key={`${m.title}-${idx}`}
+                    className="checkRow"
+                    style={{
+                      borderColor: isDone
+                        ? "rgba(255,122,24,0.35)"
+                        : isActive
+                        ? "rgba(255,255,255,0.18)"
+                        : "rgba(255,255,255,0.10)",
+                    }}
+                  >
+                    <div className="checkLeft">
+                      <span
+                        style={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: 999,
+                          display: "inline-block",
+                          background: isDone
+                            ? "var(--accent)"
+                            : isActive
+                            ? "rgba(255,255,255,0.85)"
+                            : "rgba(255,255,255,0.28)",
+                          boxShadow: isDone
+                            ? "0 0 0 4px rgba(255,122,24,0.12)"
+                            : "none",
+                        }}
+                      />
+                      <div style={{ minWidth: 0 }}>
+                        <div className="checkLabel" style={{ whiteSpace: "normal" }}>
+                          {m.title}
                         </div>
-
-                        {(dueDate || notes) && (
-                          <div className="pDark" style={{ marginTop: 8 }}>
-                            {dueDate ? `Due: ${formatDate(dueDate)}` : ""}
-                            {dueDate && notes ? " • " : ""}
-                            {notes ?? ""}
-                          </div>
-                        )}
+                        {m.notes ? <div className="checkHint">{m.notes}</div> : null}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Revisions */}
-        <div className="panel" style={{ marginBottom: 14 }}>
-          <div className="panelHeader">
-            <div className="h2">Revisions</div>
-            <div className="smallNote" style={{ marginTop: 6 }}>
-              Revision requests and responses
-            </div>
-          </div>
-          <div className="panelBody">
-            {revisions.length === 0 ? (
-              <div className="pDark">No revision requests yet.</div>
-            ) : (
-              <div style={{ display: "grid", gap: 10 }}>
-                {revisions.map((r, i) => {
-                  const status = pickString(r?.status) ?? "new";
-                  const requestText =
-                    pickString(r?.request, r?.request_text, r?.notes, r?.message) ?? "";
-                  const responseText =
-                    pickString(r?.response, r?.response_text, r?.admin_response) ?? "";
-                  const createdAt = pickString(r?.created_at, r?.createdAt);
-
-                  return (
-                    <div
-                      key={r?.id ?? `rev-${i}`}
-                      className="card"
-                      style={{ borderRadius: 16 }}
-                    >
-                      <div className="cardInner">
-                        <div
-                          className="row"
-                          style={{
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <div style={{ fontWeight: 900 }}>
-                            Revision #{i + 1}
-                          </div>
-                          <span className="badge" style={statusBadgeStyles(status)}>
-                            {prettyStatus(status)}
-                          </span>
-                        </div>
-
-                        {createdAt && (
-                          <div className="smallNote" style={{ marginTop: 6 }}>
-                            {formatDate(createdAt)}
-                          </div>
-                        )}
-
-                        {requestText && (
-                          <div style={{ marginTop: 10 }}>
-                            <div className="fieldLabel">Request</div>
-                            <div className="pDark">{requestText}</div>
-                          </div>
-                        )}
-
-                        {responseText && (
-                          <div style={{ marginTop: 10 }}>
-                            <div className="fieldLabel">Response</div>
-                            <div className="pDark">{responseText}</div>
-                          </div>
-                        )}
-                      </div>
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <div className="checkHint">{titleCase(m.status)}</div>
+                      <div className="checkHint">{m.eta || "—"}</div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-
-            <div className="smallNote" style={{ marginTop: 12 }}>
-              Next step: wire a “Request Revision” form post to an API route.
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        {/* PIE-powered guidance (client-facing version) */}
-        <div className="panel" style={{ marginBottom: 14 }}>
-          <div className="panelHeader">
-            <div className="h2">Project Guidance</div>
-            <div className="smallNote" style={{ marginTop: 6 }}>
-              Smart notes based on the intake and project scope
+        {/* Assets + Revisions */}
+        <div className="grid2" style={{ marginTop: 14, alignItems: "start" }}>
+          <div className="panel">
+            <div className="panelHeader">
+              <div className="h2" style={{ fontSize: 20 }}>Upload Content & Assets</div>
+            </div>
+            <div className="panelBody">
+              <div className="fieldLabel">Requested assets</div>
+              <ul className="pDark" style={{ margin: "0 0 12px", paddingLeft: 18 }}>
+                {model.assetsNeeded.map((item, idx) => (
+                  <li key={`${item}-${idx}`}>{titleCase(item)}</li>
+                ))}
+              </ul>
+
+              <div className="fieldLabel">Notes for your upload</div>
+              <textarea
+                className="textarea"
+                placeholder="Example: Logo is attached. Photos are in Google Drive. Use the same colors as Instagram."
+                value={assetNote}
+                onChange={(e) => setAssetNote(e.target.value)}
+              />
+
+              <div className="smallNote" style={{ marginTop: 10 }}>
+                Upload storage can be wired next (Supabase Storage / Drive link intake). This UI is ready for it.
+              </div>
+
+              <div className="row" style={{ marginTop: 12 }}>
+                <button type="button" className="btn btnGhost" disabled>
+                  Choose files (next step)
+                </button>
+                {model.uploadUrl ? (
+                  <a className="btn btnPrimary" href={model.uploadUrl}>
+                    Open upload page
+                  </a>
+                ) : null}
+              </div>
             </div>
           </div>
-          <div className="panelBody">
-            {pickString(piePayload?.summary, pieRow?.summary) && (
-              <div className="pDark" style={{ marginBottom: 12 }}>
-                {pickString(piePayload?.summary, pieRow?.summary)}
-              </div>
-            )}
 
-            {followUpQuestions.length > 0 ? (
-              <>
-                <div className="fieldLabel">Questions we may need from you</div>
-                <ul className="pDark" style={{ marginTop: 6, paddingLeft: 18 }}>
-                  {followUpQuestions.map((q, i) => (
-                    <li key={`${q}-${i}`}>{q}</li>
-                  ))}
-                </ul>
-              </>
+          <div className="panel">
+            <div className="panelHeader">
+              <div className="h2" style={{ fontSize: 20 }}>Request Revisions</div>
+            </div>
+            <div className="panelBody">
+              <div className="fieldLabel">What would you like changed?</div>
+              <textarea
+                className="textarea"
+                placeholder="Example: Please move the contact form above the footer and make the CTA button orange."
+                value={revisionText}
+                onChange={(e) => setRevisionText(e.target.value)}
+              />
+
+              <div className="row" style={{ marginTop: 12 }}>
+                <button type="button" className="btn btnPrimary" onClick={addLocalRevision}>
+                  Add request
+                </button>
+                <button type="button" className="btn btnGhost" onClick={handleCopyRevision}>
+                  {copied ? "Copied" : "Copy text"}
+                </button>
+              </div>
+
+              {localRevisionRequests.length > 0 && (
+                <div style={{ marginTop: 14 }}>
+                  <div className="fieldLabel">Saved requests (local preview)</div>
+                  <div style={{ display: "grid", gap: 8 }}>
+                    {localRevisionRequests.map((r, i) => (
+                      <div key={`${r}-${i}`} className="checkRow">
+                        <div className="checkLeft">
+                          <div className="checkLabel" style={{ whiteSpace: "normal" }}>
+                            {r}
+                          </div>
+                        </div>
+                        <div className="checkHint">Draft</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="smallNote" style={{ marginTop: 8 }}>
+                    Next step: connect this to a real <code>portal_revisions</code> table.
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Questions / Communication */}
+        <div className="panel" style={{ marginTop: 14 }}>
+          <div className="panelHeader">
+            <div className="h2" style={{ fontSize: 20 }}>Questions to Finalize Your Build</div>
+          </div>
+          <div className="panelBody">
+            {model.nextQuestions.length > 0 ? (
+              <ul className="pDark" style={{ margin: 0, paddingLeft: 18 }}>
+                {model.nextQuestions.map((q, idx) => (
+                  <li key={`${q}-${idx}`}>{q}</li>
+                ))}
+              </ul>
             ) : (
-              <div className="pDark">
-                No outstanding discovery questions listed yet.
-              </div>
+              <ul className="pDark" style={{ margin: 0, paddingLeft: 18 }}>
+                <li>Do you already have your final website text/content ready?</li>
+                <li>Do you have a logo and brand colors?</li>
+                <li>What websites do you like as references?</li>
+                <li>What is your ideal launch date?</li>
+              </ul>
             )}
-          </div>
-        </div>
 
-        {/* Support */}
-        <div className="panel">
-          <div className="panelHeader">
-            <div className="h2">Support</div>
-          </div>
-          <div className="panelBody">
-            <div className="pDark">
-              Need help or need to send access details? Reply to your project email thread.
+            <div className="smallNote" style={{ marginTop: 10 }}>
+              Portal token: <code>{model.token || "—"}</code>
             </div>
-            <div className="row" style={{ marginTop: 10 }}>
-              <Link href="/" className="btn btnGhost">
-                Back to Home
-              </Link>
-              <Link href="/estimate" className="btn btnGhost">
-                New Estimate
-              </Link>
-            </div>
-
-            {/* Optional debug (collapsed) */}
-            <details style={{ marginTop: 14 }}>
-              <summary
-                style={{
-                  cursor: "pointer",
-                  color: "rgba(255,255,255,0.75)",
-                  fontWeight: 800,
-                }}
-              >
-                Debug (collapsed)
-              </summary>
-              <pre
-                style={{
-                  marginTop: 10,
-                  padding: 12,
-                  borderRadius: 12,
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  color: "rgba(255,255,255,0.75)",
-                  overflowX: "auto",
-                  fontSize: 12,
-                  lineHeight: 1.45,
-                }}
-              >
-                {JSON.stringify(
-                  {
-                    quoteId: quote?.id ?? null,
-                    projectStatus,
-                    milestoneCount: milestones.length,
-                    revisionCount: revisions.length,
-                    assetCount: assets.length,
-                  },
-                  null,
-                  2
-                )}
-              </pre>
-            </details>
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
