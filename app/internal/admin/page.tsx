@@ -1,12 +1,54 @@
 // app/internal/admin/page.tsx
 import Link from "next/link";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import AdminPipelineClient from "./AdminPipelineClient";
+import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+export const runtime = "nodejs";
 
-function currency(n?: number | null) {
+type QuoteRow = {
+  id: string;
+  created_at: string | null;
+  lead_id: string | null;
+  status: string | null;
+  estimate_total: number | null;
+  estimate_low: number | null;
+  estimate_high: number | null;
+  tier_recommended: string | null; // ✅ correct column on quotes
+  pie_latest_report_id: string | null;
+  scope_snapshot: any;
+};
+
+type LeadRow = {
+  id: string;
+  created_at: string | null;
+  email: string | null;
+  full_name: string | null;
+  business_name: string | null;
+};
+
+type CallRequestRow = {
+  id: string;
+  created_at: string | null;
+  quote_id: string | null;
+  status: string | null;
+  preferred_times: string | null;
+  timezone: string | null;
+  notes: string | null;
+  best_time_to_call: string | null;
+};
+
+type PieRow = {
+  id: string;
+  quote_id: string | null;
+  created_at: string | null;
+  score: number | null;
+  tier: string | null; // ✅ tier belongs to pie_reports
+  confidence: string | null;
+  payload: any;
+};
+
+function fmtCurrency(n?: number | null) {
   if (typeof n !== "number" || Number.isNaN(n)) return "—";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -15,295 +57,419 @@ function currency(n?: number | null) {
   }).format(n);
 }
 
-function safeObj(v: any) {
-  if (!v) return {};
-  if (typeof v === "object") return v;
+function fmtDate(s?: string | null) {
+  if (!s) return "—";
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString();
+}
+
+function safeObj(v: any): Record<string, any> | null {
+  if (!v) return null;
+  if (typeof v === "object") return v as Record<string, any>;
   if (typeof v === "string") {
     try {
-      return JSON.parse(v);
+      const parsed = JSON.parse(v);
+      return typeof parsed === "object" && parsed ? parsed : null;
     } catch {
-      return {};
+      return null;
     }
   }
-  return {};
+  return null;
 }
 
-function estimateHoursFromPie(score: number, tier: string) {
-  // Fallback estimation if PIE JSON doesn't yet include hours
-  const t = (tier || "").toLowerCase();
-  let min = 8;
-  let max = 14;
-
-  if (t === "growth") {
-    min = 16;
-    max = 30;
-  } else if (t === "premium") {
-    min = 30;
-    max = 60;
-  }
-
-  if (score > 0) {
-    min = Math.max(min, Math.round(score * 0.25));
-    max = Math.max(max, Math.round(score * 0.5));
-    if (max <= min) max = min + 4;
-  }
-
-  return { min, max };
+function getPieSummary(payload: any): string | null {
+  const p = safeObj(payload);
+  if (!p) return null;
+  if (typeof p.summary === "string" && p.summary.trim()) return p.summary.trim();
+  if (typeof p.executiveSummary === "string" && p.executiveSummary.trim())
+    return p.executiveSummary.trim();
+  if (typeof p.overview === "string" && p.overview.trim()) return p.overview.trim();
+  return null;
 }
 
-function extractPieView(pieRow: any, quoteRow: any) {
-  if (!pieRow) {
-    return {
-      exists: false,
-      id: null,
-      score: null,
-      tier: null,
-      confidence: null,
-      summary: "No PIE report yet.",
-      pricingTarget: null,
-      pricingMin: null,
-      pricingMax: null,
-      risks: [] as string[],
-      pitch: null as any,
-      hoursMin: null as number | null,
-      hoursMax: null as number | null,
-      timelineText: null as string | null,
-    };
+function getEffortHours(payload: any): { min?: number; max?: number; exact?: number } | null {
+  const p = safeObj(payload);
+  if (!p) return null;
+
+  // Flexible parsing to support your evolving PIE payload shape
+  const candidates = [
+    p?.effort?.hours,
+    p?.effort?.estimatedHours,
+    p?.timeline?.estimatedHours,
+    p?.hours,
+    p?.estimatedHours,
+    p?.buildHours,
+  ];
+
+  for (const c of candidates) {
+    if (typeof c === "number" && Number.isFinite(c)) {
+      return { exact: c };
+    }
   }
 
-  const report = safeObj(pieRow.report);
-  const payload = safeObj(pieRow.payload);
-  const root = Object.keys(report).length ? report : payload;
+  const rangeCandidates = [
+    p?.effort?.hoursRange,
+    p?.timeline?.hoursRange,
+    p?.hoursRange,
+  ];
 
-  const pricing = safeObj(root.pricing);
-  const score = Number(pieRow.score ?? root.score ?? 0) || 0;
-  const tier = pieRow.tier ?? root.tier ?? quoteRow?.tier ?? null;
-  const confidence = pieRow.confidence ?? root.confidence ?? null;
-
-  const hours =
-    safeObj(root.timeline)?.hours ??
-    safeObj(root.hours) ??
-    safeObj(root.estimateHours);
-
-  let hoursMin: number | null = null;
-  let hoursMax: number | null = null;
-  let timelineText: string | null = null;
-
-  if (hours && typeof hours === "object") {
-    if (typeof hours.min === "number") hoursMin = hours.min;
-    if (typeof hours.max === "number") hoursMax = hours.max;
-    if (typeof hours.label === "string") timelineText = hours.label;
+  for (const r of rangeCandidates) {
+    if (!r) continue;
+    const min = typeof r.min === "number" ? r.min : undefined;
+    const max = typeof r.max === "number" ? r.max : undefined;
+    if (min !== undefined || max !== undefined) {
+      return { min, max };
+    }
   }
 
-  if (hoursMin == null || hoursMax == null) {
-    const fb = estimateHoursFromPie(score, tier || "");
-    hoursMin = fb.min;
-    hoursMax = fb.max;
-  }
-
-  if (!timelineText) {
-    const weeksMin = Math.max(1, Math.round((hoursMin || 0) / 15));
-    const weeksMax = Math.max(1, Math.round((hoursMax || 0) / 15));
-    timelineText =
-      weeksMin === weeksMax
-        ? `${weeksMin} week${weeksMin > 1 ? "s" : ""}`
-        : `${weeksMin}–${weeksMax} weeks`;
-  }
-
-  const buffers = Array.isArray(pricing.buffers) ? pricing.buffers : [];
-  const upperBuffer = buffers.find((b: any) =>
-    String(b?.label || "").toLowerCase().includes("upper")
-  );
-
-  return {
-    exists: true,
-    id: pieRow.id,
-    score,
-    tier,
-    confidence,
-    summary: root.summary || "PIE summary available.",
-    pricingTarget:
-      typeof pricing.target === "number"
-        ? pricing.target
-        : Math.round((quoteRow?.total_cents || 0) / 100),
-    pricingMin:
-      typeof pricing.minimum === "number"
-        ? pricing.minimum
-        : Math.round((quoteRow?.min_total_cents || 0) / 100),
-    pricingMax:
-      typeof upperBuffer?.amount === "number"
-        ? upperBuffer.amount
-        : Math.round((quoteRow?.max_total_cents || 0) / 100),
-    risks: Array.isArray(root.risks) ? root.risks : [],
-    pitch: safeObj(root.pitch),
-    hoursMin,
-    hoursMax,
-    timelineText,
-  };
+  return null;
 }
 
-export default async function InternalAdminPage() {
-  const { data: quotes, error: quotesError } = await supabaseAdmin
+function getScopeMini(scopeSnapshot: any): { pages?: number; features?: number; timeline?: string } {
+  const s = safeObj(scopeSnapshot) ?? {};
+  const pages =
+    typeof s?.pagesCount === "number"
+      ? s.pagesCount
+      : Array.isArray(s?.pages)
+      ? s.pages.length
+      : typeof s?.siteMap?.pagesCount === "number"
+      ? s.siteMap.pagesCount
+      : undefined;
+
+  const features =
+    Array.isArray(s?.features)
+      ? s.features.length
+      : Array.isArray(s?.selectedFeatures)
+      ? s.selectedFeatures.length
+      : Array.isArray(s?.scope?.features)
+      ? s.scope.features.length
+      : undefined;
+
+  const timeline =
+    typeof s?.timeline === "string"
+      ? s.timeline
+      : typeof s?.timelineTarget === "string"
+      ? s.timelineTarget
+      : typeof s?.deliveryTimeline === "string"
+      ? s.deliveryTimeline
+      : undefined;
+
+  return { pages, features, timeline };
+}
+
+async function loadAdminData() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !serviceKey) {
+    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+  }
+
+  const supabase = createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  // ✅ NOTE: tier_recommended is the correct column on quotes
+  const { data: quotes, error: quotesError } = await supabase
     .from("quotes")
     .select(
-      "id, created_at, status, tier, total_cents, min_total_cents, max_total_cents, breakdown, debug, lead_id"
+      "id, created_at, lead_id, status, estimate_total, estimate_low, estimate_high, tier_recommended, pie_latest_report_id, scope_snapshot"
     )
     .order("created_at", { ascending: false })
     .limit(100);
 
   if (quotesError) {
+    throw new Error(quotesError.message);
+  }
+
+  const quoteRows = (quotes ?? []) as QuoteRow[];
+  const leadIds = Array.from(
+    new Set(quoteRows.map((q) => q.lead_id).filter(Boolean) as string[])
+  );
+  const quoteIds = quoteRows.map((q) => q.id);
+
+  const leadsMap = new Map<string, LeadRow>();
+  if (leadIds.length) {
+    const { data: leads, error } = await supabase
+      .from("leads")
+      .select("id, created_at, email, full_name, business_name")
+      .in("id", leadIds);
+
+    if (error) throw new Error(error.message);
+    for (const l of (leads ?? []) as LeadRow[]) leadsMap.set(l.id, l);
+  }
+
+  const callMap = new Map<string, CallRequestRow>();
+  if (quoteIds.length) {
+    const { data: calls, error } = await supabase
+      .from("call_requests")
+      .select(
+        "id, created_at, quote_id, status, preferred_times, timezone, notes, best_time_to_call"
+      )
+      .in("quote_id", quoteIds)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+
+    for (const c of (calls ?? []) as CallRequestRow[]) {
+      if (!c.quote_id) continue;
+      // Keep newest only
+      if (!callMap.has(c.quote_id)) callMap.set(c.quote_id, c);
+    }
+  }
+
+  const pieMap = new Map<string, PieRow>();
+  if (quoteIds.length) {
+    const { data: pies, error } = await supabase
+      .from("pie_reports")
+      .select("id, quote_id, created_at, score, tier, confidence, payload")
+      .in("quote_id", quoteIds)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+
+    for (const p of (pies ?? []) as PieRow[]) {
+      if (!p.quote_id) continue;
+      // Keep newest only
+      if (!pieMap.has(p.quote_id)) pieMap.set(p.quote_id, p);
+    }
+  }
+
+  return quoteRows.map((q) => ({
+    quote: q,
+    lead: q.lead_id ? leadsMap.get(q.lead_id) ?? null : null,
+    call: callMap.get(q.id) ?? null,
+    pie: pieMap.get(q.id) ?? null,
+  }));
+}
+
+function statusBadgeClass(status: string | null | undefined) {
+  const s = (status || "").toLowerCase();
+  if (s.includes("call")) return "badge badgeHot";
+  return "badge";
+}
+
+export default async function InternalAdminPage() {
+  try {
+    const rows = await loadAdminData();
+
+    const counts = rows.reduce<Record<string, number>>((acc, r) => {
+      const key = (r.quote.status || "unknown").toLowerCase();
+      acc[key] = (acc[key] ?? 0) + 1;
+      return acc;
+    }, {});
+
     return (
-      <main className="section">
-        <div className="container">
-          <div className="card">
-            <div className="cardInner">
-              <h1 className="h2">Internal Admin</h1>
-              <p className="p">
-                Could not load quotes: {quotesError.message}
-              </p>
-              <div className="row" style={{ marginTop: 12 }}>
-                <Link className="btn btnGhost" href="/internal/preview">
-                  Back to Preview
-                </Link>
+      <main className="container section">
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <h1 className="h2" style={{ marginBottom: 8 }}>
+              Internal Admin
+            </h1>
+            <p className="pDark" style={{ margin: 0 }}>
+              Pipeline view with quick PIE summaries (admin-friendly, no raw JSON).
+            </p>
+          </div>
+
+          <div className="row">
+            <Link className="btn btnGhost" href="/internal/preview">
+              Preview List
+            </Link>
+            <Link className="btn btnPrimary" href="/estimate">
+              New Quote
+            </Link>
+          </div>
+        </div>
+
+        <div className="row" style={{ marginTop: 14 }}>
+          <span className="badge">Total: {rows.length}</span>
+          {Object.entries(counts).map(([k, v]) => (
+            <span key={k} className="badge">
+              {k}: {v}
+            </span>
+          ))}
+        </div>
+
+        <div style={{ marginTop: 16, display: "grid", gap: 12 }}>
+          {rows.map(({ quote, lead, call, pie }) => {
+            const piePayload = safeObj(pie?.payload);
+            const pieSummary = getPieSummary(pie?.payload);
+            const effort = getEffortHours(pie?.payload);
+            const scopeMini = getScopeMini(quote.scope_snapshot);
+
+            return (
+              <div key={quote.id} className="card">
+                <div className="cardInner">
+                  <div
+                    className="row"
+                    style={{ justifyContent: "space-between", alignItems: "flex-start" }}
+                  >
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 900, fontSize: 16 }}>
+                        {lead?.email || lead?.full_name || "Unknown lead"}
+                      </div>
+                      <div className="pDark" style={{ marginTop: 4 }}>
+                        Quote ID: {quote.id}
+                      </div>
+                      <div className="pDark" style={{ marginTop: 4 }}>
+                        Created: {fmtDate(quote.created_at)}
+                      </div>
+                    </div>
+
+                    <div className="row">
+                      <Link
+                        className="btn btnGhost"
+                        href={`/internal/preview?quoteId=${quote.id}`}
+                      >
+                        View details
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="row" style={{ marginTop: 10 }}>
+                    <span className={statusBadgeClass(quote.status)}>{quote.status || "—"}</span>
+                    <span className="badge">
+                      Tier: {quote.tier_recommended || "—"}
+                    </span>
+                    <span className="badge">
+                      Est: {fmtCurrency(quote.estimate_total)}
+                    </span>
+                    <span className="badge">
+                      Range: {fmtCurrency(quote.estimate_low)}–{fmtCurrency(quote.estimate_high)}
+                    </span>
+                    {call?.status ? <span className="badge">Call: {call.status}</span> : null}
+                  </div>
+
+                  <div className="row" style={{ marginTop: 10 }}>
+                    {scopeMini.pages !== undefined ? (
+                      <span className="badge">Pages: {scopeMini.pages}</span>
+                    ) : null}
+                    {scopeMini.features !== undefined ? (
+                      <span className="badge">Features: {scopeMini.features}</span>
+                    ) : null}
+                    {scopeMini.timeline ? (
+                      <span className="badge">Timeline: {scopeMini.timeline}</span>
+                    ) : null}
+                  </div>
+
+                  <div
+                    className="panel"
+                    style={{ marginTop: 12, borderRadius: 14, overflow: "hidden" }}
+                  >
+                    <div className="panelHeader" style={{ padding: "10px 12px" }}>
+                      <div
+                        className="row"
+                        style={{
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: 10,
+                        }}
+                      >
+                        <div style={{ fontWeight: 900 }}>PIE Summary</div>
+                        {pie ? (
+                          <div className="row">
+                            <span className="badge">Score: {pie.score ?? "—"}</span>
+                            <span className="badge">PIE Tier: {pie.tier || "—"}</span>
+                            <span className="badge">Confidence: {pie.confidence || "—"}</span>
+                          </div>
+                        ) : (
+                          <span className="badge">No PIE yet</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="panelBody" style={{ padding: 12 }}>
+                      {pie ? (
+                        <>
+                          <p className="pDark" style={{ margin: 0 }}>
+                            {pieSummary || "PIE exists, but no summary text was found."}
+                          </p>
+
+                          <div className="row" style={{ marginTop: 10 }}>
+                            {effort?.exact !== undefined ? (
+                              <>
+                                <span className="badge">Build hours: ~{effort.exact}h</span>
+                                <span className="badge">
+                                  @ $40/hr: {fmtCurrency(effort.exact * 40)}
+                                </span>
+                              </>
+                            ) : effort?.min !== undefined || effort?.max !== undefined ? (
+                              <>
+                                <span className="badge">
+                                  Build hours:{" "}
+                                  {effort.min !== undefined ? effort.min : "?"}–{effort.max !== undefined ? effort.max : "?"}h
+                                </span>
+                                {effort.min !== undefined && effort.max !== undefined ? (
+                                  <span className="badge">
+                                    @ $40/hr: {fmtCurrency(effort.min * 40)}–{fmtCurrency(effort.max * 40)}
+                                  </span>
+                                ) : null}
+                              </>
+                            ) : (
+                              <span className="badge">
+                                Add hours estimation to PIE payload for labor-cost view
+                              </span>
+                            )}
+                          </div>
+
+                          {piePayload?.nextQuestions && Array.isArray(piePayload.nextQuestions) ? (
+                            <div style={{ marginTop: 10 }}>
+                              <div className="pDark" style={{ fontWeight: 800, marginBottom: 4 }}>
+                                Suggested follow-up questions
+                              </div>
+                              <ul style={{ margin: 0, paddingLeft: 18 }}>
+                                {piePayload.nextQuestions.slice(0, 4).map((q: any, i: number) => (
+                                  <li key={i} className="pDark">
+                                    {String(q)}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : null}
+                        </>
+                      ) : (
+                        <p className="pDark" style={{ margin: 0 }}>
+                          No PIE report found yet for this quote.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {!rows.length ? (
+            <div className="card">
+              <div className="cardInner">
+                <p className="pDark" style={{ margin: 0 }}>
+                  No quotes found.
+                </p>
               </div>
             </div>
+          ) : null}
+        </div>
+      </main>
+    );
+  } catch (err: any) {
+    return (
+      <main className="container section">
+        <div className="card">
+          <div className="cardInner">
+            <h1 className="h2" style={{ marginBottom: 8 }}>
+              Internal Admin
+            </h1>
+            <p className="pDark" style={{ margin: 0 }}>
+              Could not load quotes: {err?.message || "Unknown error"}
+            </p>
+            <p className="pDark" style={{ marginTop: 8 }}>
+              Most likely cause was a schema mismatch (using <code>quotes.tier</code> instead of{" "}
+              <code>quotes.tier_recommended</code>).
+            </p>
           </div>
         </div>
       </main>
     );
   }
-
-  const quoteRows = quotes || [];
-  const quoteIds = quoteRows.map((q: any) => q.id).filter(Boolean);
-  const leadIds = quoteRows.map((q: any) => q.lead_id).filter(Boolean);
-
-  const [leadsRes, callsRes, piesRes] = await Promise.all([
-    leadIds.length
-      ? supabaseAdmin.from("leads").select("id, email, name").in("id", leadIds)
-      : Promise.resolve({ data: [], error: null } as any),
-    quoteIds.length
-      ? supabaseAdmin
-          .from("call_requests")
-          .select(
-            "id, quote_id, status, best_time_to_call, preferred_times, timezone, notes, created_at"
-          )
-          .in("quote_id", quoteIds)
-          .order("created_at", { ascending: false })
-      : Promise.resolve({ data: [], error: null } as any),
-    quoteIds.length
-      ? supabaseAdmin
-          .from("pie_reports")
-          .select(
-            "id, quote_id, created_at, score, tier, confidence, report, payload"
-          )
-          .in("quote_id", quoteIds)
-          .order("created_at", { ascending: false })
-      : Promise.resolve({ data: [], error: null } as any),
-  ]);
-
-  const leads = leadsRes.data || [];
-  const calls = callsRes.data || [];
-  const pies = piesRes.data || [];
-
-  const leadById = new Map<string, any>();
-  for (const l of leads) leadById.set(l.id, l);
-
-  const callByQuoteId = new Map<string, any>();
-  for (const c of calls) {
-    if (!callByQuoteId.has(c.quote_id)) callByQuoteId.set(c.quote_id, c);
-  }
-
-  const pieByQuoteId = new Map<string, any>();
-  for (const p of pies) {
-    if (!pieByQuoteId.has(p.quote_id)) pieByQuoteId.set(p.quote_id, p);
-  }
-
-  const rows = quoteRows.map((q: any) => {
-    const lead = leadById.get(q.lead_id) || null;
-    const call = callByQuoteId.get(q.id) || null;
-    const pieRow = pieByQuoteId.get(q.id) || null;
-    const pie = extractPieView(pieRow, q);
-    const debug = safeObj(q.debug);
-    const adminPricing = safeObj(debug.adminPricing);
-
-    return {
-      quoteId: q.id,
-      createdAt: q.created_at,
-      status: q.status || "new",
-      tier: q.tier || "essential",
-      leadEmail: lead?.email || "—",
-      leadName: lead?.name || null,
-      estimate: {
-        target: Math.round((q.total_cents || 0) / 100),
-        min: Math.round((q.min_total_cents || 0) / 100),
-        max: Math.round((q.max_total_cents || 0) / 100),
-      },
-      estimateFormatted: {
-        target: currency(Math.round((q.total_cents || 0) / 100)),
-        min: currency(Math.round((q.min_total_cents || 0) / 100)),
-        max: currency(Math.round((q.max_total_cents || 0) / 100)),
-      },
-      callRequest: call
-        ? {
-            status: call.status || "new",
-            bestTime: call.best_time_to_call || null,
-            preferredTimes: call.preferred_times || null,
-            timezone: call.timezone || null,
-            notes: call.notes || null,
-          }
-        : null,
-      pie,
-      adminPricing: {
-        discountPercent:
-          typeof adminPricing.discountPercent === "number"
-            ? adminPricing.discountPercent
-            : 0,
-        flatAdjustment:
-          typeof adminPricing.flatAdjustment === "number"
-            ? adminPricing.flatAdjustment
-            : 0,
-        hourlyRate:
-          typeof adminPricing.hourlyRate === "number" ? adminPricing.hourlyRate : 40,
-        notes: typeof adminPricing.notes === "string" ? adminPricing.notes : "",
-      },
-      proposalText:
-        typeof debug.generatedProposal === "string" ? debug.generatedProposal : "",
-      links: {
-        detail: `/internal/preview?quoteId=${q.id}`,
-      },
-    };
-  });
-
-  return (
-    <main className="section">
-      <div className="container">
-        <div className="card" style={{ marginBottom: 14 }}>
-          <div className="cardInner">
-            <div className="row" style={{ justifyContent: "space-between" }}>
-              <div>
-                <div className="kicker">
-                  <span className="kickerDot" />
-                  Admin Dashboard v1
-                </div>
-                <h1 className="h2" style={{ marginTop: 10 }}>
-                  PIE-powered lead pipeline
-                </h1>
-                <p className="p" style={{ marginTop: 8 }}>
-                  Review quotes, read PIE summaries quickly, update status, apply
-                  admin pricing adjustments, and generate proposal text.
-                </p>
-              </div>
-              <div className="row" style={{ alignItems: "center" }}>
-                <Link className="btn btnGhost" href="/internal/preview">
-                  Internal Preview
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <AdminPipelineClient initialRows={rows} />
-      </div>
-    </main>
-  );
 }
