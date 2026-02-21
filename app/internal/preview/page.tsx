@@ -1,64 +1,53 @@
 // app/internal/preview/page.tsx
-import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import GeneratePieButton from "./GeneratePieButton";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-type AnyRow = Record<string, any>;
+type QuoteRow = {
+  id: string;
+  created_at: string | null;
+  lead_id: string | null;
+  status: string | null;
+  recommended_tier: string | null;
+  estimated_price_cents: number | null;
+  low_estimate_cents: number | null;
+  high_estimate_cents: number | null;
+  answers: any;
+};
 
-function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+type LeadRow = {
+  id: string;
+  email: string | null;
+  name: string | null;
+};
 
-  if (!url || !key) {
-    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-  }
+type CallRequestRow = {
+  id: string;
+  quote_id: string | null;
+  status: string | null;
+  best_time_to_call: string | null;
+  preferred_times: string | null;
+  timezone: string | null;
+  notes: string | null;
+  created_at: string | null;
+};
 
-  return createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
-
-function asArray<T = any>(v: any): T[] {
-  return Array.isArray(v) ? v : [];
-}
-
-function tryParseJson(v: any): any {
-  if (v == null) return null;
-  if (typeof v === "object") return v;
-  if (typeof v !== "string") return v;
-
-  const s = v.trim();
-  if (!s) return null;
-  if (!(s.startsWith("{") || s.startsWith("["))) return v;
-
-  try {
-    return JSON.parse(s);
-  } catch {
-    return v;
-  }
-}
-
-function pickFirst(...vals: any[]) {
-  for (const v of vals) {
-    if (v !== undefined && v !== null && v !== "") return v;
-  }
-  return null;
-}
-
-function fmtDate(v?: string | null) {
-  if (!v) return "—";
-  try {
-    return new Date(v).toLocaleString();
-  } catch {
-    return String(v);
-  }
-}
+type PieReportRow = {
+  id: string;
+  quote_id: string | null;
+  created_at: string | null;
+  score: number | null;
+  tier: string | null;
+  confidence: string | null;
+  payload: any;
+  report: any;
+};
 
 function moneyFromCents(cents?: number | null) {
-  if (typeof cents !== "number" || Number.isNaN(cents)) return "—";
+  if (cents == null) return "—";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -66,836 +55,653 @@ function moneyFromCents(cents?: number | null) {
   }).format(cents / 100);
 }
 
-function money(n?: number | null) {
-  if (typeof n !== "number" || Number.isNaN(n)) return "—";
+function money(value?: number | null) {
+  if (value == null || Number.isNaN(Number(value))) return "—";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
-  }).format(n);
+  }).format(Number(value));
 }
 
-function flattenText(input: any, out: string[] = []): string[] {
-  if (input == null) return out;
-  if (typeof input === "string") {
-    out.push(input.toLowerCase());
-    return out;
-  }
-  if (typeof input === "number" || typeof input === "boolean") {
-    out.push(String(input).toLowerCase());
-    return out;
-  }
-  if (Array.isArray(input)) {
-    for (const item of input) flattenText(item, out);
-    return out;
-  }
-  if (typeof input === "object") {
-    for (const [k, v] of Object.entries(input)) {
-      out.push(String(k).toLowerCase());
-      flattenText(v, out);
-    }
-  }
-  return out;
+function fmtDate(v?: string | null) {
+  if (!v) return "—";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString();
 }
 
-function findNumberByKey(obj: any, keyHints: string[]): number | null {
-  if (!obj || typeof obj !== "object") return null;
-
-  const stack: any[] = [obj];
-  while (stack.length) {
-    const cur = stack.pop();
-    if (!cur || typeof cur !== "object") continue;
-
-    for (const [k, v] of Object.entries(cur)) {
-      const key = String(k).toLowerCase();
-
-      if (keyHints.some((h) => key.includes(h))) {
-        if (typeof v === "number" && Number.isFinite(v)) return v;
-        if (typeof v === "string") {
-          const m = v.match(/\d+/);
-          if (m) return Number(m[0]);
-        }
-      }
-
-      if (v && typeof v === "object") stack.push(v);
+function safeJson(value: any): any {
+  if (value == null) return null;
+  if (typeof value === "object") return value;
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
     }
   }
+  return value;
+}
 
+function asArray(value: any): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.map((v) => String(v));
+  return [String(value)];
+}
+
+function pickNumber(...values: any[]): number | null {
+  for (const v of values) {
+    if (v == null) continue;
+    const n = Number(v);
+    if (!Number.isNaN(n)) return n;
+  }
   return null;
 }
 
-function hasAny(textBag: string[], keywords: string[]) {
-  return keywords.some((kw) => textBag.some((t) => t.includes(kw)));
-}
-
-function extractPriceCents(quote: AnyRow) {
-  const candidates = [
-    quote.total_cents,
-    quote.quoted_total_cents,
-    quote.estimate_total_cents,
-    quote.price_cents,
-    quote.recommended_total_cents,
-    quote.amount_cents,
-  ];
-
-  for (const c of candidates) {
-    if (typeof c === "number") return c;
-    if (typeof c === "string" && /^\d+$/.test(c)) return Number(c);
+function pickString(...values: any[]): string | null {
+  for (const v of values) {
+    if (v == null) continue;
+    const s = String(v).trim();
+    if (s) return s;
   }
-
-  // Try nested JSON blobs
-  const nested = [
-    tryParseJson(quote.quote_json),
-    tryParseJson(quote.summary_json),
-    tryParseJson(quote.payload),
-    tryParseJson(quote.answers),
-  ];
-
-  for (const n of nested) {
-    if (!n || typeof n !== "object") continue;
-    const x = pickFirst(
-      n.total_cents,
-      n.price_cents,
-      n.quoted_total_cents,
-      n.recommended_total_cents,
-      n.total
-    );
-    if (typeof x === "number") return x;
-    if (typeof x === "string" && /^\d+$/.test(x)) return Number(x);
-  }
-
   return null;
 }
 
-function extractTier(quote: AnyRow) {
-  return (
-    pickFirst(
-      quote.tier,
-      quote.recommended_tier,
-      quote.package_tier,
-      tryParseJson(quote.summary_json)?.tier,
-      tryParseJson(quote.quote_json)?.tier
-    ) ?? "—"
+function estimateHoursFallback(score: number | null, tier: string | null) {
+  const s = score ?? 30;
+  const t = (tier || "").toLowerCase();
+
+  // Basic fallback until PIE generator is upgraded
+  let base = 8;
+  if (t.includes("premium")) base = 24;
+  else if (t.includes("growth")) base = 16;
+  else if (t.includes("essential")) base = 10;
+
+  const complexityLift = Math.round(s * 0.35); // 30 => +11h
+  return Math.max(6, base + complexityLift);
+}
+
+function extractPieView(pie: PieReportRow | null, quote: QuoteRow) {
+  const raw = safeJson(pie?.payload) ?? safeJson(pie?.report) ?? {};
+  const pricing = raw?.pricing ?? {};
+  const pitch = raw?.pitch ?? {};
+  const timeline = raw?.timeline ?? {};
+  const effort = raw?.effort ?? raw?.hours ?? {};
+
+  const score = pickNumber(raw?.score, pie?.score);
+  const tier = pickString(raw?.tier, pie?.tier, quote.recommended_tier);
+  const confidence = pickString(raw?.confidence, pie?.confidence);
+  const summary = pickString(raw?.summary);
+
+  const targetPrice = pickNumber(
+    pricing?.target,
+    raw?.recommended_price,
+    quote.estimated_price_cents != null ? quote.estimated_price_cents / 100 : null
   );
-}
-
-function extractEmail(quote: AnyRow, lead?: AnyRow | null) {
-  const fromLead = pickFirst(
-    lead?.email,
-    lead?.customer_email,
-    lead?.contact_email
+  const minimumPrice = pickNumber(
+    pricing?.minimum,
+    pricing?.floor,
+    quote.low_estimate_cents != null ? quote.low_estimate_cents / 100 : null
   );
-  const fromQuote = pickFirst(
-    quote.email,
-    quote.customer_email,
-    quote.contact_email,
-    tryParseJson(quote.summary_json)?.email,
-    tryParseJson(quote.quote_json)?.email
+  const upperFromBuffer =
+    Array.isArray(pricing?.buffers) && pricing.buffers.length
+      ? pickNumber(pricing.buffers[0]?.amount)
+      : null;
+  const maximumPrice = pickNumber(
+    pricing?.maximum,
+    pricing?.premium,
+    upperFromBuffer,
+    quote.high_estimate_cents != null ? quote.high_estimate_cents / 100 : null
   );
-  return fromLead ?? fromQuote ?? "—";
-}
 
-function extractQuoteInputs(quote: AnyRow, lead?: AnyRow | null) {
-  const blobs = [
-    tryParseJson(quote.answers),
-    tryParseJson(quote.quote_json),
-    tryParseJson(quote.summary_json),
-    tryParseJson(quote.payload),
-    tryParseJson(quote.intake),
-    tryParseJson(quote.intake_json),
-    tryParseJson(quote.scope_snapshot),
-    tryParseJson(lead?.payload),
-    tryParseJson(lead?.lead_json),
-  ].filter(Boolean);
+  const hourlyRate = pickNumber(
+    raw?.hourly?.rate,
+    raw?.hourlyRate,
+    raw?.pricingModel?.hourlyRate,
+    40
+  );
 
-  // Merge shallowly, keep all sources under _sources for debugging
-  const merged: AnyRow = {};
-  for (const b of blobs) {
-    if (b && typeof b === "object" && !Array.isArray(b)) {
-      Object.assign(merged, b);
-    }
-  }
-  merged._sources = blobs;
-  return merged;
-}
+  const hoursTotal = pickNumber(
+    effort?.total,
+    effort?.hours_total,
+    raw?.estimated_hours,
+    raw?.hours_total
+  );
 
-function extractPiePayload(pieRow?: AnyRow | null) {
-  if (!pieRow) return null;
+  const fallbackHours = estimateHoursFallback(score, tier || quote.recommended_tier);
+  const totalHours = hoursTotal ?? fallbackHours;
 
-  const directCandidates = [
-    pieRow.report_json,
-    pieRow.pie_json,
-    pieRow.output_json,
-    pieRow.result_json,
-    pieRow.analysis_json,
-    pieRow.payload,
-    pieRow.content,
-    pieRow.report,
-    pieRow.output,
-    pieRow.data,
-  ];
+  const hoursLow = pickNumber(
+    effort?.low,
+    raw?.hours_low,
+    Math.max(4, Math.round(totalHours * 0.8))
+  );
+  const hoursHigh = pickNumber(
+    effort?.high,
+    raw?.hours_high,
+    Math.round(totalHours * 1.25)
+  );
 
-  for (const c of directCandidates) {
-    const parsed = tryParseJson(c);
-    if (parsed && (typeof parsed === "object" || Array.isArray(parsed))) return parsed;
-  }
+  const hourlyEquivalent = hourlyRate != null && totalHours != null ? hourlyRate * totalHours : null;
 
-  // Last fallback: entire row
-  return pieRow;
-}
+  const timelineText = pickString(
+    timeline?.estimate,
+    raw?.timeline_estimate,
+    raw?.eta,
+    `${Math.max(2, Math.ceil(totalHours / 6))}–${Math.max(3, Math.ceil(totalHours / 4))} working days`
+  );
 
-type AssistantReport = {
-  complexityScore: number;
-  complexityBand: string;
-  pageEstimate: number;
-  hoursLow: number;
-  hoursHigh: number;
-  buildDaysLow: number;
-  buildDaysHigh: number;
-  hourlyRate: number;
-  costLow: number;
-  costHigh: number;
-  quotePrice?: number | null;
-  priceGapNote: string;
-  signals: string[];
-  risks: string[];
-  questions: string[];
-  phases: { name: string; hours: number; note: string }[];
-};
+  const risks = asArray(raw?.risks);
+  const questions = asArray(raw?.questions_for_call ?? raw?.questions ?? raw?.discovery_questions);
+  const assumptions = asArray(raw?.assumptions);
+  const drivers = asArray(raw?.complexity_drivers ?? raw?.drivers);
 
-function buildAssistantReport(quote: AnyRow, lead: AnyRow | null, latestPieRow: AnyRow | null): AssistantReport {
-  const inputs = extractQuoteInputs(quote, lead);
-  const pie = extractPiePayload(latestPieRow);
-  const textBag = flattenText([inputs, pie]);
-
-  const quotePriceCents = extractPriceCents(quote);
-  const quotePrice = typeof quotePriceCents === "number" ? quotePriceCents / 100 : null;
-
-  const pageEstimateRaw =
-    findNumberByKey(inputs, ["page", "pages", "page_count", "num_pages"]) ??
-    findNumberByKey(pie, ["page", "pages", "page_count"]) ??
-    null;
-
-  let pageEstimate = pageEstimateRaw && pageEstimateRaw > 0 ? pageEstimateRaw : 5;
-
-  // Feature detection (keyword-based, very tolerant)
-  const features = {
-    ecommerce: hasAny(textBag, ["ecommerce", "e-commerce", "shop", "cart", "checkout", "product"]),
-    booking: hasAny(textBag, ["booking", "appointment", "schedule", "calendar"]),
-    blog: hasAny(textBag, ["blog", "articles", "posts", "news"]),
-    cms: hasAny(textBag, ["cms", "content management", "editable", "admin", "dashboard"]),
-    customCode: hasAny(textBag, ["custom", "next.js", "react", "supabase", "web app", "portal", "app"]),
-    forms: hasAny(textBag, ["form", "intake", "lead form", "contact form", "quote form"]),
-    payments: hasAny(textBag, ["stripe", "payment", "deposit", "checkout"]),
-    auth: hasAny(textBag, ["login", "sign in", "account", "auth", "member"]),
-    integrations: hasAny(textBag, ["integration", "api", "zapier", "mailchimp", "crm", "google"]),
-    seo: hasAny(textBag, ["seo", "search engine", "keywords", "metadata"]),
-    copywriting: hasAny(textBag, ["copywriting", "write content", "content creation", "need content"]),
-    branding: hasAny(textBag, ["logo", "branding", "brand", "style guide"]),
-    fastTimeline: hasAny(textBag, ["rush", "urgent", "asap", "this week", "48 hours"]),
-    multiLocation: hasAny(textBag, ["multiple locations", "location pages", "service areas"]),
-    multilingual: hasAny(textBag, ["multilingual", "bilingual", "translation", "spanish", "french"]),
-  };
-
-  const signals: string[] = [];
-
-  // Complexity score
-  let score = 18; // base
-  score += Math.max(0, pageEstimate - 3) * 4;
-
-  const add = (cond: boolean, pts: number, label: string) => {
-    if (cond) {
-      score += pts;
-      signals.push(label);
-    }
-  };
-
-  add(features.ecommerce, 22, "E-commerce / product checkout");
-  add(features.booking, 12, "Booking / scheduling flow");
-  add(features.blog, 7, "Blog/content section");
-  add(features.cms, 10, "Editable CMS/admin needs");
-  add(features.customCode, 12, "Custom build / app-style requirements");
-  add(features.forms, 5, "Lead/quote/contact forms");
-  add(features.payments, 8, "Payment or deposit handling");
-  add(features.auth, 10, "Login/accounts/auth");
-  add(features.integrations, 10, "3rd-party integrations/API");
-  add(features.seo, 4, "SEO setup expectations");
-  add(features.copywriting, 6, "Needs copy/content help");
-  add(features.branding, 6, "Branding/logo/design direction needed");
-  add(features.fastTimeline, 7, "Rush/urgent timeline");
-  add(features.multiLocation, 5, "Multiple service/location pages");
-  add(features.multilingual, 8, "Multilingual content");
-
-  score = Math.max(10, Math.min(100, score));
-
-  let complexityBand = "Low";
-  if (score >= 75) complexityBand = "Advanced";
-  else if (score >= 55) complexityBand = "High";
-  else if (score >= 35) complexityBand = "Medium";
-
-  // Hours model (solo builder)
-  let baseHours = 6;
-  baseHours += pageEstimate * 2.5;
-  if (features.ecommerce) baseHours += 18;
-  if (features.booking) baseHours += 8;
-  if (features.blog) baseHours += 4;
-  if (features.cms) baseHours += 6;
-  if (features.customCode) baseHours += 10;
-  if (features.forms) baseHours += 3;
-  if (features.payments) baseHours += 5;
-  if (features.auth) baseHours += 8;
-  if (features.integrations) baseHours += 8;
-  if (features.seo) baseHours += 3;
-  if (features.copywriting) baseHours += 6;
-  if (features.branding) baseHours += 5;
-  if (features.multilingual) baseHours += 8;
-
-  const uncertainty = score >= 70 ? 0.3 : score >= 45 ? 0.2 : 0.15;
-  const hoursLow = Math.max(8, Math.round(baseHours * (1 - uncertainty)));
-  const hoursHigh = Math.round(baseHours * (1 + uncertainty));
-
-  // "Build days" assuming ~5 focused production hours/day after admin/comms
-  const buildDaysLow = Math.max(2, Math.round(hoursLow / 5));
-  const buildDaysHigh = Math.max(buildDaysLow, Math.round(hoursHigh / 5));
-
-  const hourlyRate = 40;
-  const costLow = hoursLow * hourlyRate;
-  const costHigh = hoursHigh * hourlyRate;
-
-  let priceGapNote = "No quote price found yet.";
-  if (quotePrice != null) {
-    if (quotePrice < costLow) {
-      priceGapNote = `Quoted price looks LOW vs your $40/hr baseline (about ${money(costLow - quotePrice)} under the low estimate).`;
-    } else if (quotePrice > costHigh) {
-      priceGapNote = `Quoted price is above the $40/hr baseline range (about ${money(quotePrice - costHigh)} over the high estimate). This may be fine if you’re pricing strategy/risk/value in.`;
-    } else {
-      priceGapNote = `Quoted price sits inside your $40/hr baseline range.`;
-    }
-  }
-
-  const risks: string[] = [];
-  if (features.fastTimeline) risks.push("Rush timeline can compress QA and revision time.");
-  if (features.copywriting) risks.push("If client content is not ready, timeline can slip.");
-  if (features.integrations) risks.push("Integrations/APIs can add hidden debugging time.");
-  if (features.ecommerce) risks.push("Product/checkout setups need extra testing and policy pages.");
-  if (features.auth) risks.push("Account/login flows increase complexity and support needs.");
-  if (pageEstimate >= 8) risks.push("Higher page count increases content coordination overhead.");
-
-  const questions: string[] = [
-    "How many final pages/sections do you want in v1?",
-    "Do you already have your content (text, photos, logo), or do you need help creating it?",
-    "Do you want this on Wix/Squarespace, or a custom Next.js build?",
-    "Do you need booking, payments, or client login in phase 1?",
-    "What is your ideal launch date (hard deadline vs flexible)?",
-    "Who will handle domain/hosting access (or should I handle setup)?",
-    "How many revision rounds do you expect?",
-  ];
-
-  if (features.ecommerce) {
-    questions.push("How many products and product variants are needed at launch?");
-    questions.push("What payment/shipping/tax setup do you want?");
-  }
-  if (features.integrations) {
-    questions.push("Which tools must be integrated (CRM, email, forms, calendar, etc.)?");
-  }
-  if (features.booking) {
-    questions.push("Do you already use a calendar/booking system or should I set one up?");
-  }
-
-  const phases = [
-    { name: "Discovery & Scope Lock", hours: Math.max(3, Math.round(hoursLow * 0.12)), note: "Requirements review, sitemap, platform decision, missing assets list." },
-    { name: "Design & Content Prep", hours: Math.max(4, Math.round(hoursLow * 0.22)), note: "Layout direction, visual system, content placement, brand styling." },
-    { name: "Build Implementation", hours: Math.max(6, Math.round(hoursLow * 0.42)), note: "Pages, forms, features, mobile responsiveness, integrations." },
-    { name: "QA, Revisions & Launch", hours: Math.max(3, Math.round(hoursLow * 0.18)), note: "Testing, fixes, launch checks, handoff notes." },
-    { name: "Buffer", hours: Math.max(2, Math.round(hoursLow * 0.06)), note: "Unexpected edits, client delays, final polish." },
-  ];
+  const emphasize = asArray(pitch?.emphasize);
+  const objections = asArray(pitch?.objections);
+  const recommendation = pickString(pitch?.recommend, raw?.recommendation);
 
   return {
-    complexityScore: score,
-    complexityBand,
-    pageEstimate,
+    raw,
+    score,
+    tier,
+    confidence,
+    summary,
+    targetPrice,
+    minimumPrice,
+    maximumPrice,
+    hourlyRate,
+    totalHours,
     hoursLow,
     hoursHigh,
-    buildDaysLow,
-    buildDaysHigh,
-    hourlyRate,
-    costLow,
-    costHigh,
-    quotePrice,
-    priceGapNote,
-    signals,
+    hourlyEquivalent,
+    timelineText,
     risks,
     questions,
-    phases,
+    assumptions,
+    drivers,
+    emphasize,
+    objections,
+    recommendation,
   };
 }
 
-function JsonBlock({ title, value }: { title: string; value: any }) {
-  return (
-    <details className="card" style={{ marginTop: 12 }}>
-      <summary
-        className="cardInner"
-        style={{ cursor: "pointer", fontWeight: 900 }}
-      >
-        {title}
-      </summary>
-      <div style={{ padding: "0 22px 22px 22px" }}>
-        <pre
-          style={{
-            margin: 0,
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-            fontSize: 12,
-            lineHeight: 1.5,
-            color: "rgba(255,255,255,0.9)",
-            background: "rgba(0,0,0,0.28)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 12,
-            padding: 12,
-          }}
-        >
-          {JSON.stringify(value, null, 2)}
-        </pre>
-      </div>
-    </details>
-  );
+async function loadListData() {
+  const { data: quotesData, error: quotesErr } = await supabaseAdmin
+    .from("quotes")
+    .select(
+      "id, created_at, lead_id, status, recommended_tier, estimated_price_cents, low_estimate_cents, high_estimate_cents, answers"
+    )
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (quotesErr) throw new Error(quotesErr.message);
+
+  const quotes = (quotesData ?? []) as QuoteRow[];
+  const leadIds = Array.from(new Set(quotes.map((q) => q.lead_id).filter(Boolean))) as string[];
+  const quoteIds = quotes.map((q) => q.id);
+
+  let leads: LeadRow[] = [];
+  let calls: CallRequestRow[] = [];
+  let pies: PieReportRow[] = [];
+
+  if (leadIds.length) {
+    const { data, error } = await supabaseAdmin
+      .from("leads")
+      .select("id, email, name")
+      .in("id", leadIds);
+    if (error) throw new Error(error.message);
+    leads = (data ?? []) as LeadRow[];
+  }
+
+  if (quoteIds.length) {
+    const { data, error } = await supabaseAdmin
+      .from("call_requests")
+      .select("id, quote_id, status, best_time_to_call, preferred_times, timezone, notes, created_at")
+      .in("quote_id", quoteIds)
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    calls = (data ?? []) as CallRequestRow[];
+
+    const { data: pieData, error: pieErr } = await supabaseAdmin
+      .from("pie_reports")
+      .select("id, quote_id, created_at, score, tier, confidence, payload, report")
+      .in("quote_id", quoteIds)
+      .order("created_at", { ascending: false });
+    if (pieErr) throw new Error(pieErr.message);
+    pies = (pieData ?? []) as PieReportRow[];
+  }
+
+  const leadById = new Map(leads.map((l) => [l.id, l]));
+  const latestCallByQuoteId = new Map<string, CallRequestRow>();
+  for (const c of calls) {
+    if (!c.quote_id) continue;
+    if (!latestCallByQuoteId.has(c.quote_id)) latestCallByQuoteId.set(c.quote_id, c);
+  }
+
+  const latestPieByQuoteId = new Map<string, PieReportRow>();
+  for (const p of pies) {
+    if (!p.quote_id) continue;
+    if (!latestPieByQuoteId.has(p.quote_id)) latestPieByQuoteId.set(p.quote_id, p);
+  }
+
+  return { quotes, leadById, latestCallByQuoteId, latestPieByQuoteId };
 }
 
-function StatPill({ label, value }: { label: string; value: string }) {
+async function loadDetailData(quoteId: string) {
+  const { data: quote, error: qErr } = await supabaseAdmin
+    .from("quotes")
+    .select(
+      "id, created_at, lead_id, status, recommended_tier, estimated_price_cents, low_estimate_cents, high_estimate_cents, answers"
+    )
+    .eq("id", quoteId)
+    .single();
+
+  if (qErr) throw new Error(qErr.message);
+
+  const quoteRow = quote as QuoteRow;
+
+  let lead: LeadRow | null = null;
+  if (quoteRow.lead_id) {
+    const { data, error } = await supabaseAdmin
+      .from("leads")
+      .select("id, email, name")
+      .eq("id", quoteRow.lead_id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    lead = (data as LeadRow | null) ?? null;
+  }
+
+  const { data: callReq } = await supabaseAdmin
+    .from("call_requests")
+    .select("id, quote_id, status, best_time_to_call, preferred_times, timezone, notes, created_at")
+    .eq("quote_id", quoteId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const { data: pie } = await supabaseAdmin
+    .from("pie_reports")
+    .select("id, quote_id, created_at, score, tier, confidence, payload, report")
+    .eq("quote_id", quoteId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return {
+    quote: quoteRow,
+    lead,
+    callRequest: (callReq as CallRequestRow | null) ?? null,
+    pie: (pie as PieReportRow | null) ?? null,
+  };
+}
+
+function KeyVal({ label, value }: { label: string; value: string }) {
   return (
     <div
       style={{
-        border: "1px solid rgba(255,255,255,0.12)",
-        background: "rgba(255,255,255,0.03)",
+        border: "1px solid rgba(255,255,255,0.10)",
         borderRadius: 12,
-        padding: "10px 12px",
+        padding: 12,
+        background: "rgba(255,255,255,0.03)",
       }}
     >
-      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.62)", fontWeight: 700 }}>
-        {label}
-      </div>
-      <div style={{ fontWeight: 900, marginTop: 4 }}>{value}</div>
+      <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 6 }}>{label}</div>
+      <div style={{ fontWeight: 700 }}>{value}</div>
     </div>
   );
 }
 
-async function renderListPage() {
-  const supabase = getAdminClient();
-
-  const { data: quotes, error } = await supabase
-    .from("quotes")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(50);
-
+function SectionCard({
+  title,
+  children,
+  right,
+}: {
+  title: string;
+  children: React.ReactNode;
+  right?: React.ReactNode;
+}) {
   return (
-    <main className="container" style={{ padding: "20px 0 40px" }}>
-      <div className="card">
-        <div className="cardInner">
-          <div className="kicker">
-            <span className="kickerDot" />
-            Internal Preview
-          </div>
-          <h1 className="h2" style={{ marginTop: 12 }}>
-            Recent quotes (tap “View details”)
-          </h1>
-          <p className="p" style={{ marginTop: 8 }}>
-            Professional admin view + PIE assistant (hours, pricing check, questions, risks).
-          </p>
-
-          {error && (
-            <p style={{ color: "#ffb4b4", fontWeight: 700 }}>
-              Failed to load quotes: {error.message}
-            </p>
-          )}
-
-          <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-            {asArray(quotes).map((q: AnyRow) => {
-              const email = extractEmail(q, null);
-              const tier = extractTier(q);
-              const status = pickFirst(q.status, "new");
-              const total = moneyFromCents(extractPriceCents(q));
-
-              return (
-                <div
-                  key={q.id}
-                  className="card"
-                  style={{ borderRadius: 16, background: "rgba(255,255,255,0.035)" }}
-                >
-                  <div className="cardInner" style={{ padding: 14 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 900 }}>
-                          {total} • {String(tier)} • {String(status)}
-                        </div>
-                        <div className="smallNote" style={{ marginTop: 4 }}>
-                          {fmtDate(q.created_at)}
-                        </div>
-                        <div className="smallNote" style={{ marginTop: 4 }}>
-                          {String(email)} • {String(q.id)}
-                        </div>
-                      </div>
-
-                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                        <Link className="btn btnGhost" href={`/internal/preview?quoteId=${q.id}`}>
-                          View details <span className="btnArrow">→</span>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-
-            {!asArray(quotes).length && !error && (
-              <div className="smallNote">No quotes found yet.</div>
-            )}
-          </div>
-        </div>
+    <section
+      style={{
+        border: "1px solid rgba(255,255,255,0.10)",
+        borderRadius: 16,
+        background: "rgba(255,255,255,0.03)",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          padding: "14px 16px",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 12,
+          alignItems: "center",
+        }}
+      >
+        <h2 style={{ margin: 0, fontSize: 16 }}>{title}</h2>
+        {right}
       </div>
-    </main>
+      <div style={{ padding: 16 }}>{children}</div>
+    </section>
   );
 }
 
-async function renderDetailsPage(quoteId: string) {
-  const supabase = getAdminClient();
-
-  const [{ data: quote, error: quoteErr }, { data: callRows }, { data: pieRows }] =
-    await Promise.all([
-      supabase.from("quotes").select("*").eq("id", quoteId).maybeSingle(),
-      supabase.from("call_requests").select("*").eq("quote_id", quoteId).order("created_at", { ascending: false }),
-      supabase.from("pie_reports").select("*").eq("quote_id", quoteId).order("created_at", { ascending: false }),
-    ]);
-
-  let lead: AnyRow | null = null;
-  const leadId = quote?.lead_id;
-  if (leadId) {
-    const { data: leadRow } = await supabase.from("leads").select("*").eq("id", leadId).maybeSingle();
-    lead = leadRow ?? null;
-  }
-
-  const latestPie = asArray(pieRows)[0] ?? null;
-  const assistant = quote ? buildAssistantReport(quote, lead, latestPie) : null;
-  const piePayload = extractPiePayload(latestPie);
-
+function Bullets({ items }: { items: string[] }) {
+  if (!items.length) return <div style={{ opacity: 0.75 }}>—</div>;
   return (
-    <main className="container" style={{ padding: "20px 0 40px" }}>
-      <div style={{ marginBottom: 12 }}>
-        <Link className="btn btnGhost" href="/internal/preview">
-          ← Back to quotes
-        </Link>
-      </div>
+    <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7 }}>
+      {items.map((item, i) => (
+        <li key={`${item}-${i}`}>{item}</li>
+      ))}
+    </ul>
+  );
+}
 
-      {quoteErr && (
-        <div className="card">
-          <div className="cardInner">
-            <p style={{ color: "#ffb4b4", fontWeight: 700 }}>
-              Error loading quote: {quoteErr.message}
-            </p>
-          </div>
+export default async function InternalPreviewPage(props: any) {
+  const resolvedSearchParams = props?.searchParams
+    ? typeof props.searchParams.then === "function"
+      ? await props.searchParams
+      : props.searchParams
+    : {};
+
+  const quoteIdParam = resolvedSearchParams?.quoteId;
+  const quoteId = Array.isArray(quoteIdParam) ? quoteIdParam[0] : quoteIdParam;
+
+  // Detail view
+  if (quoteId) {
+    const { quote, lead, callRequest, pie } = await loadDetailData(quoteId);
+    const pieView = extractPieView(pie, quote);
+
+    return (
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 16px 40px" }}>
+        <div style={{ marginBottom: 16 }}>
+          <Link
+            href="/internal/preview"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 12px",
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(255,255,255,0.03)",
+            }}
+          >
+            ← Back to quotes
+          </Link>
         </div>
-      )}
 
-      {!quote && !quoteErr && (
-        <div className="card">
-          <div className="cardInner">
-            <p className="p">Quote not found.</p>
-          </div>
-        </div>
-      )}
+        <h1 style={{ margin: "0 0 14px", fontSize: 28 }}>Quote detail</h1>
 
-      {quote && (
-        <>
-          {/* Header */}
-          <div className="card">
-            <div className="cardInner">
-              <div className="kicker">
-                <span className="kickerDot" />
-                Quote Details
-              </div>
-              <h1 className="h2" style={{ marginTop: 12 }}>
-                {moneyFromCents(extractPriceCents(quote))} • {String(extractTier(quote))} •{" "}
-                {String(pickFirst(quote.status, "new"))}
-              </h1>
-              <p className="p" style={{ marginTop: 8 }}>
-                {extractEmail(quote, lead)} • {String(quote.id)}
-              </p>
-              <div className="smallNote" style={{ marginTop: 6 }}>
-                Created: {fmtDate(quote.created_at)}
-              </div>
+        <div style={{ display: "grid", gap: 14 }}>
+          <SectionCard title="Summary">
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: 10,
+              }}
+            >
+              <KeyVal label="Quote ID" value={quote.id} />
+              <KeyVal label="Status" value={quote.status || "—"} />
+              <KeyVal label="Tier" value={quote.recommended_tier || "—"} />
+              <KeyVal label="Estimate" value={moneyFromCents(quote.estimated_price_cents)} />
+              <KeyVal
+                label="Range"
+                value={`${moneyFromCents(quote.low_estimate_cents)} – ${moneyFromCents(
+                  quote.high_estimate_cents
+                )}`}
+              />
+              <KeyVal label="Created" value={fmtDate(quote.created_at)} />
+              <KeyVal label="Lead" value={lead?.email || lead?.name || "—"} />
             </div>
-          </div>
+          </SectionCard>
 
-          {/* PIE Assistant */}
-          {assistant && (
-            <div className="card" style={{ marginTop: 12 }}>
-              <div className="cardInner">
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                  <div>
-                    <div className="kicker" style={{ background: "rgba(255,122,24,0.12)", borderColor: "rgba(255,122,24,0.28)" }}>
-                      <span className="kickerDot" />
-                      PIE Assistant
+          <SectionCard title="Call request">
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: 10,
+              }}
+            >
+              <KeyVal label="Status" value={callRequest?.status || "—"} />
+              <KeyVal
+                label="Best time"
+                value={callRequest?.best_time_to_call || callRequest?.preferred_times || "—"}
+              />
+              <KeyVal label="Timezone" value={callRequest?.timezone || "—"} />
+              <KeyVal label="Notes" value={callRequest?.notes || "—"} />
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            title="PIE report"
+            right={
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <span style={{ fontSize: 12, opacity: 0.7 }}>
+                  {pie?.created_at ? `Updated ${fmtDate(pie.created_at)}` : "No report yet"}
+                </span>
+                <GeneratePieButton quoteId={quote.id} />
+              </div>
+            }
+          >
+            {pie ? (
+              <div style={{ display: "grid", gap: 14 }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                    gap: 10,
+                  }}
+                >
+                  <KeyVal label="PIE ID" value={pie.id} />
+                  <KeyVal label="Score" value={pieView.score != null ? String(pieView.score) : "—"} />
+                  <KeyVal label="Tier" value={pieView.tier || "—"} />
+                  <KeyVal label="Confidence" value={pieView.confidence || "—"} />
+                </div>
+
+                <SectionCard title="Executive summary">
+                  <div style={{ lineHeight: 1.7 }}>
+                    {pieView.summary || "No summary generated yet."}
+                  </div>
+                </SectionCard>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                    gap: 12,
+                  }}
+                >
+                  <SectionCard title="Pricing guidance">
+                    <div style={{ display: "grid", gap: 10 }}>
+                      <KeyVal label="Target" value={money(pieView.targetPrice)} />
+                      <KeyVal label="Minimum" value={money(pieView.minimumPrice)} />
+                      <KeyVal label="Upper / Premium" value={money(pieView.maximumPrice)} />
+                      <KeyVal label="Hourly rate check" value={`${money(pieView.hourlyRate)}/hr`} />
+                      <KeyVal
+                        label="Hours × rate equivalent"
+                        value={money(pieView.hourlyEquivalent)}
+                      />
                     </div>
-                    <h2 className="h2" style={{ marginTop: 10 }}>
-                      Admin-ready project readout
-                    </h2>
-                    <p className="p" style={{ marginTop: 8 }}>
-                      This is a professional interpretation of the quote + PIE data so you can scope, price, and lead the client conversation fast.
-                    </p>
-                  </div>
+                  </SectionCard>
 
-                  <div style={{ display: "flex", alignItems: "start", gap: 8, flexWrap: "wrap" }}>
-                    <GeneratePieButton quoteId={String(quote.id)} />
-                  </div>
-                </div>
-
-                <div className="grid2" style={{ marginTop: 12 }}>
-                  <div style={{ display: "grid", gap: 10 }}>
-                    <StatPill label="Complexity" value={`${assistant.complexityBand} (${assistant.complexityScore}/100)`} />
-                    <StatPill label="Estimated pages" value={`${assistant.pageEstimate}`} />
-                    <StatPill label="Build hours (solo)" value={`${assistant.hoursLow}–${assistant.hoursHigh} hrs`} />
-                    <StatPill label="Timeline (realistic)" value={`${assistant.buildDaysLow}–${assistant.buildDaysHigh} build days`} />
-                  </div>
-
-                  <div style={{ display: "grid", gap: 10 }}>
-                    <StatPill label="$40/hr baseline range" value={`${money(assistant.costLow)} – ${money(assistant.costHigh)}`} />
-                    <StatPill label="Quoted price" value={assistant.quotePrice != null ? money(assistant.quotePrice) : "—"} />
-                    <div
-                      style={{
-                        border: "1px solid rgba(255,122,24,0.22)",
-                        background: "rgba(255,122,24,0.08)",
-                        borderRadius: 12,
-                        padding: 12,
-                      }}
-                    >
-                      <div style={{ fontWeight: 900, marginBottom: 4 }}>Pricing check</div>
-                      <div className="smallNote" style={{ color: "rgba(255,255,255,0.82)" }}>
-                        {assistant.priceGapNote}
-                      </div>
+                  <SectionCard title="Effort & timeline">
+                    <div style={{ display: "grid", gap: 10 }}>
+                      <KeyVal
+                        label="Estimated hours"
+                        value={`${pieView.totalHours ?? "—"} hrs`}
+                      />
+                      <KeyVal
+                        label="Hour range"
+                        value={`${pieView.hoursLow ?? "—"} – ${pieView.hoursHigh ?? "—"} hrs`}
+                      />
+                      <KeyVal label="Timeline" value={pieView.timelineText} />
                     </div>
-                  </div>
-                </div>
-
-                {/* Signals */}
-                <div style={{ marginTop: 14 }}>
-                  <div style={{ fontWeight: 900, marginBottom: 8 }}>Complexity signals detected</div>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {assistant.signals.length ? (
-                      assistant.signals.map((s, i) => (
-                        <span
-                          key={i}
-                          style={{
-                            border: "1px solid rgba(255,255,255,0.12)",
-                            background: "rgba(255,255,255,0.04)",
-                            borderRadius: 999,
-                            padding: "6px 10px",
-                            fontSize: 12,
-                            fontWeight: 800,
-                          }}
-                        >
-                          {s}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="smallNote">No special features detected from the saved data yet.</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Risks + Questions */}
-                <div className="grid2" style={{ marginTop: 14 }}>
-                  <div
-                    style={{
-                      border: "1px solid rgba(255,255,255,0.10)",
-                      borderRadius: 14,
-                      padding: 12,
-                      background: "rgba(255,255,255,0.03)",
-                    }}
-                  >
-                    <div style={{ fontWeight: 900, marginBottom: 8 }}>Risk flags</div>
-                    {assistant.risks.length ? (
-                      <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7 }}>
-                        {assistant.risks.map((r, i) => (
-                          <li key={i}>{r}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <div className="smallNote">No major risk flags detected from current intake.</div>
-                    )}
-                  </div>
-
-                  <div
-                    style={{
-                      border: "1px solid rgba(255,255,255,0.10)",
-                      borderRadius: 14,
-                      padding: 12,
-                      background: "rgba(255,255,255,0.03)",
-                    }}
-                  >
-                    <div style={{ fontWeight: 900, marginBottom: 8 }}>Questions to ask client</div>
-                    <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7 }}>
-                      {assistant.questions.slice(0, 8).map((q, i) => (
-                        <li key={i}>{q}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                {/* Build plan */}
-                <div style={{ marginTop: 14 }}>
-                  <div style={{ fontWeight: 900, marginBottom: 8 }}>Suggested build phases</div>
-                  <div style={{ display: "grid", gap: 8 }}>
-                    {assistant.phases.map((p, i) => (
-                      <div
-                        key={i}
-                        style={{
-                          border: "1px solid rgba(255,255,255,0.10)",
-                          borderRadius: 12,
-                          padding: 10,
-                          background: "rgba(255,255,255,0.03)",
-                          display: "grid",
-                          gridTemplateColumns: "1.3fr auto",
-                          gap: 10,
-                          alignItems: "start",
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontWeight: 900 }}>{p.name}</div>
-                          <div className="smallNote" style={{ marginTop: 4 }}>
-                            {p.note}
-                          </div>
-                        </div>
-                        <div
-                          style={{
-                            border: "1px solid rgba(255,255,255,0.12)",
-                            borderRadius: 999,
-                            padding: "4px 8px",
-                            fontWeight: 800,
-                            fontSize: 12,
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          ~{p.hours}h
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  </SectionCard>
                 </div>
 
                 <div
                   style={{
-                    marginTop: 14,
-                    border: "1px solid rgba(255,255,255,0.10)",
-                    borderRadius: 12,
-                    padding: 10,
-                    background: "rgba(255,255,255,0.03)",
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                    gap: 12,
                   }}
                 >
-                  <div style={{ fontWeight: 900, marginBottom: 6 }}>How to use this</div>
-                  <div className="smallNote" style={{ color: "rgba(255,255,255,0.82)" }}>
-                    Use the hours and pricing range as your internal floor check, then adjust up for strategy, revisions, urgency, and business value.
-                    The raw JSON is still below if you want to inspect the original PIE payload.
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+                  <SectionCard title="Complexity drivers">
+                    <Bullets items={pieView.drivers} />
+                  </SectionCard>
 
-          {/* Call Request */}
-          <div className="card" style={{ marginTop: 12 }}>
-            <div className="cardInner">
-              <h2 className="h2">Call request</h2>
-              {asArray(callRows).length ? (
-                <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-                  {asArray(callRows).map((c: AnyRow) => (
-                    <div
-                      key={c.id}
-                      style={{
-                        border: "1px solid rgba(255,255,255,0.10)",
-                        borderRadius: 12,
-                        padding: 10,
-                        background: "rgba(255,255,255,0.03)",
-                      }}
-                    >
-                      <div style={{ fontWeight: 800 }}>
-                        {pickFirst(c.status, "—")} • {fmtDate(c.created_at)}
-                      </div>
-                      <div className="smallNote" style={{ marginTop: 4 }}>
-                        preferred_times: {pickFirst(c.preferred_times, "—")} • best_time_to_call:{" "}
-                        {pickFirst(c.best_time_to_call, "—")} • timezone: {pickFirst(c.timezone, "—")}
-                      </div>
-                      {c.notes ? (
-                        <div className="smallNote" style={{ marginTop: 4, color: "rgba(255,255,255,0.85)" }}>
-                          Notes: {String(c.notes)}
-                        </div>
-                      ) : null}
+                  <SectionCard title="Risks">
+                    <Bullets items={pieView.risks} />
+                  </SectionCard>
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                    gap: 12,
+                  }}
+                >
+                  <SectionCard title="Questions to ask on the call">
+                    <Bullets items={pieView.questions} />
+                  </SectionCard>
+
+                  <SectionCard title="Assumptions">
+                    <Bullets items={pieView.assumptions} />
+                  </SectionCard>
+                </div>
+
+                <SectionCard title="Sales guidance">
+                  <div style={{ display: "grid", gap: 12 }}>
+                    <div>
+                      <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 6 }}>Recommendation</div>
+                      <div>{pieView.recommendation || "—"}</div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="p" style={{ marginTop: 8 }}>No call request found for this quote.</p>
-              )}
-            </div>
-          </div>
-
-          {/* PIE Reports */}
-          <div className="card" style={{ marginTop: 12 }}>
-            <div className="cardInner">
-              <h2 className="h2">PIE report</h2>
-              {!asArray(pieRows).length ? (
-                <div style={{ marginTop: 10 }}>
-                  <p className="p">No PIE report saved yet for this quote.</p>
-                  <GeneratePieButton quoteId={String(quote.id)} />
-                </div>
-              ) : (
-                <>
-                  <div className="smallNote" style={{ marginTop: 8 }}>
-                    Latest saved PIE: {fmtDate(asArray(pieRows)[0]?.created_at)}
-                  </div>
-
-                  <JsonBlock title="Latest PIE (raw JSON)" value={piePayload} />
-
-                  {asArray(pieRows).length > 1 && (
-                    <details className="card" style={{ marginTop: 12 }}>
-                      <summary className="cardInner" style={{ cursor: "pointer", fontWeight: 900 }}>
-                        Older PIE reports ({asArray(pieRows).length - 1})
-                      </summary>
-                      <div style={{ padding: "0 22px 22px 22px", display: "grid", gap: 8 }}>
-                        {asArray(pieRows).slice(1).map((r: AnyRow, idx: number) => (
-                          <JsonBlock
-                            key={r.id ?? idx}
-                            title={`PIE #${idx + 2} — ${fmtDate(r.created_at)}`}
-                            value={extractPiePayload(r)}
-                          />
-                        ))}
+                    <div>
+                      <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 6 }}>What to emphasize</div>
+                      <Bullets items={pieView.emphasize} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 6 }}>
+                        Likely objections to prepare for
                       </div>
-                    </details>
-                  )}
-                </>
-              )}
+                      <Bullets items={pieView.objections} />
+                    </div>
+                  </div>
+                </SectionCard>
+
+                <details
+                  style={{
+                    border: "1px solid rgba(255,255,255,0.10)",
+                    borderRadius: 12,
+                    padding: 12,
+                    background: "rgba(255,255,255,0.02)",
+                  }}
+                >
+                  <summary style={{ cursor: "pointer", fontWeight: 700 }}>
+                    Raw PIE JSON (debug)
+                  </summary>
+                  <pre
+                    style={{
+                      marginTop: 12,
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                      fontSize: 12,
+                      lineHeight: 1.5,
+                      background: "rgba(0,0,0,0.35)",
+                      padding: 12,
+                      borderRadius: 10,
+                      overflowX: "auto",
+                    }}
+                  >
+                    {JSON.stringify(pieView.raw, null, 2)}
+                  </pre>
+                </details>
+              </div>
+            ) : (
+              <div style={{ opacity: 0.85 }}>
+                No PIE report yet for this quote. Click <strong>Generate PIE now</strong>.
+              </div>
+            )}
+          </SectionCard>
+        </div>
+      </div>
+    );
+  }
+
+  // List view
+  const { quotes, leadById, latestCallByQuoteId, latestPieByQuoteId } = await loadListData();
+
+  return (
+    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 16px 40px" }}>
+      <h1 style={{ margin: "0 0 8px", fontSize: 28 }}>Internal Preview</h1>
+      <p style={{ marginTop: 0, opacity: 0.75 }}>Recent quotes (tap “View details”)</p>
+
+      <div style={{ display: "grid", gap: 12 }}>
+        {quotes.map((q) => {
+          const lead = q.lead_id ? leadById.get(q.lead_id) : undefined;
+          const callReq = latestCallByQuoteId.get(q.id);
+          const pie = latestPieByQuoteId.get(q.id);
+
+          return (
+            <div
+              key={q.id}
+              style={{
+                border: "1px solid rgba(255,255,255,0.10)",
+                borderRadius: 14,
+                background: "rgba(255,255,255,0.03)",
+                padding: 14,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
+                <div style={{ fontWeight: 700 }}>
+                  {moneyFromCents(q.estimated_price_cents)} • {q.recommended_tier || "—"} •{" "}
+                  {q.status || "—"} • {pie ? "PIE ✓" : "PIE —"}
+                </div>
+                <Link
+                  href={`/internal/preview?quoteId=${q.id}`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "8px 12px",
+                    borderRadius: 10,
+                    border: "1px solid rgba(255,255,255,0.14)",
+                    background: "rgba(255,255,255,0.04)",
+                    fontWeight: 700,
+                  }}
+                >
+                  View details →
+                </Link>
+              </div>
+
+              <div style={{ marginTop: 8, opacity: 0.75, fontSize: 13 }}>{fmtDate(q.created_at)}</div>
+              <div style={{ marginTop: 4, fontSize: 13, opacity: 0.85 }}>
+                {lead?.email || lead?.name || "No lead email"} • {q.id}
+              </div>
+              {callReq ? (
+                <div style={{ marginTop: 4, fontSize: 12, opacity: 0.7 }}>
+                  Call request: {callReq.status || "—"} •{" "}
+                  {callReq.best_time_to_call || callReq.preferred_times || "—"}
+                </div>
+              ) : null}
             </div>
-          </div>
-
-          {/* Raw records for debugging */}
-          <JsonBlock title="Raw quote row" value={quote} />
-          {lead ? <JsonBlock title="Raw lead row" value={lead} /> : null}
-          {asArray(callRows).length ? <JsonBlock title="Raw call request rows" value={callRows} /> : null}
-          {asArray(pieRows).length ? <JsonBlock title="Raw pie_reports rows" value={pieRows} /> : null}
-        </>
-      )}
-    </main>
+          );
+        })}
+      </div>
+    </div>
   );
-}
-
-export default async function InternalPreviewPage({
-  searchParams,
-}: {
-  searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
-}) {
-  const sp = (await Promise.resolve(searchParams)) ?? {};
-  const quoteIdParam = sp.quoteId;
-  const quoteId = Array.isArray(quoteIdParam) ? quoteIdParam[0] : quoteIdParam;
-
-  if (!quoteId) return renderListPage();
-  return renderDetailsPage(String(quoteId));
 }
