@@ -1,64 +1,37 @@
 // app/portal/[token]/page.tsx
-import { notFound } from "next/navigation";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { resolvePortalAccess } from "@/lib/portalAccess";
+import { getPortalBundleByToken } from "@/lib/portal/server";
 import PortalClient from "./PortalClient";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-type PageProps = {
+export default async function PortalPage({
+  params,
+}: {
   params: Promise<{ token: string }> | { token: string };
-};
+}) {
+  const resolved = await Promise.resolve(params);
+  const token = resolved.token;
 
-export default async function PortalPage({ params }: PageProps) {
-  const resolvedParams = await Promise.resolve(params as any);
-  const token = resolvedParams?.token;
+  const result = await getPortalBundleByToken(token);
 
-  if (!token) notFound();
-
-  const access = await resolvePortalAccess(token);
-  if (!access) notFound();
-
-  const quoteId = access.quoteId;
-
-  const { data: quote, error: quoteErr } = await supabaseAdmin
-    .from("quotes")
-    .select("*")
-    .eq("id", quoteId)
-    .single();
-
-  if (quoteErr || !quote) {
-    notFound();
+  if (!result.ok) {
+    return (
+      <main className="container section">
+        <div className="card">
+          <div className="cardInner">
+            <div className="h2" style={{ marginBottom: 8 }}>
+              Client Portal
+            </div>
+            <p className="p" style={{ marginTop: 0 }}>
+              {result.error || "Portal link could not be loaded."}
+            </p>
+          </div>
+        </div>
+      </main>
+    );
   }
 
-  let lead: any = null;
-  const leadId = (quote as any)?.lead_id;
-  if (leadId) {
-    const leadRes = await supabaseAdmin
-      .from("leads")
-      .select("*")
-      .eq("id", leadId)
-      .maybeSingle();
-    lead = leadRes.data ?? null;
-  }
-
-  const callReqRes = await supabaseAdmin
-    .from("call_requests")
-    .select("*")
-    .eq("quote_id", quoteId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const callRequest = callReqRes.data ?? null;
-
-  return (
-    <PortalClient
-      token={token}
-      quote={quote}
-      lead={lead}
-      callRequest={callRequest}
-    />
-  );
+  return <PortalClient initial={result.data} />;
 }
