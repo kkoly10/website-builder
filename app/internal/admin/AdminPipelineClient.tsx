@@ -37,6 +37,13 @@ type PipelineRow = {
     notes: string | null;
   };
   pie: PieView;
+  portal: {
+    clientStatus: string | null;
+    clientUpdatedAt: string | null;
+    latestClientNote: string | null;
+    assetCount: number;
+    revisionCount: number;
+  };
   adminPricing: {
     discountPercent: number;
     flatAdjustment: number;
@@ -56,7 +63,7 @@ function fmtCurrency(n?: number | null) {
   }).format(n);
 }
 
-function fmtDate(iso?: string) {
+function fmtDate(iso?: string | null) {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
@@ -67,6 +74,19 @@ function statusBadge(status: string) {
   const s = (status || "").toLowerCase();
   if (s === "deposit" || s === "active") return "badge badgeHot";
   return "badge";
+}
+
+function clientStatusBadge(status?: string | null) {
+  const s = (status || "").toLowerCase();
+  if (["content_submitted", "deposit_sent"].includes(s)) return "badge badgeHot";
+  return "badge";
+}
+
+function truncate(text?: string | null, max = 140) {
+  if (!text) return "—";
+  const t = text.trim();
+  if (t.length <= max) return t;
+  return `${t.slice(0, max)}…`;
 }
 
 export default function AdminPipelineClient({
@@ -185,7 +205,7 @@ export default function AdminPipelineClient({
     <div>
       <div className="card" style={{ marginBottom: 14 }}>
         <div className="cardInner">
-          <div className="row" style={{ gap: 8 }}>
+          <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
             <span className="badge">Total: {rows.length}</span>
             {Object.entries(summaryCounts).map(([k, v]) => (
               <span key={k} className="badge">
@@ -208,10 +228,8 @@ export default function AdminPipelineClient({
 
           const hoursMin = row.pie.hoursMin ?? null;
           const hoursMax = row.pie.hoursMax ?? null;
-          const laborMin =
-            hoursMin != null ? Math.round(hoursMin * hourlyRate) : null;
-          const laborMax =
-            hoursMax != null ? Math.round(hoursMax * hourlyRate) : null;
+          const laborMin = hoursMin != null ? Math.round(hoursMin * hourlyRate) : null;
+          const laborMax = hoursMax != null ? Math.round(hoursMax * hourlyRate) : null;
 
           const isBusy = !!busyByQuote[row.quoteId];
           const isExpanded = !!expanded[row.quoteId];
@@ -228,42 +246,54 @@ export default function AdminPipelineClient({
                   }}
                 >
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <div className="row" style={{ gap: 8, marginBottom: 8 }}>
+                    <div className="row" style={{ gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
                       <span className={statusBadge(row.status)}>{row.status}</span>
-                      <span className="badge">
-                        {row.pie.tier || row.tier || "—"}
-                      </span>
+                      <span className="badge">{row.pie.tier || row.tier || "—"}</span>
                       {row.pie.score != null ? (
                         <span className="badge">Score: {row.pie.score}</span>
                       ) : null}
                       {row.pie.confidence ? (
                         <span className="badge">{row.pie.confidence}</span>
                       ) : null}
+                      <span className={clientStatusBadge(row.portal.clientStatus)}>
+                        Client: {row.portal.clientStatus || "—"}
+                      </span>
+                      <span className="badge">Assets: {row.portal.assetCount}</span>
+                      <span className="badge">Revisions: {row.portal.revisionCount}</span>
                     </div>
 
-                    <div style={{ fontWeight: 900, marginBottom: 6 }}>
-                      {row.leadEmail}
-                    </div>
-                    <div style={{ opacity: 0.78, fontSize: 13 }}>
-                      Quote: {row.quoteId}
-                    </div>
+                    <div style={{ fontWeight: 900, marginBottom: 6 }}>{row.leadEmail}</div>
+                    {row.leadName ? (
+                      <div style={{ opacity: 0.85, fontSize: 13, marginBottom: 4 }}>
+                        {row.leadName}
+                      </div>
+                    ) : null}
+
+                    <div style={{ opacity: 0.78, fontSize: 13 }}>Quote: {row.quoteId}</div>
                     <div style={{ opacity: 0.78, fontSize: 13 }}>
                       Created: {fmtDate(row.createdAt)}
                     </div>
+
                     {row.callRequest ? (
                       <div style={{ opacity: 0.85, fontSize: 13, marginTop: 6 }}>
                         Call request: {row.callRequest.status || "new"} •{" "}
-                        {row.callRequest.bestTime ||
-                          row.callRequest.preferredTimes ||
-                          "—"}
+                        {row.callRequest.bestTime || row.callRequest.preferredTimes || "—"}
                       </div>
                     ) : null}
+
+                    <div style={{ opacity: 0.9, fontSize: 13, marginTop: 6, lineHeight: 1.4 }}>
+                      <strong>Client note:</strong> {truncate(row.portal.latestClientNote)}
+                      {row.portal.clientUpdatedAt ? (
+                        <span style={{ opacity: 0.75 }}>
+                          {" "}
+                          • {fmtDate(row.portal.clientUpdatedAt)}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
 
                   <div style={{ minWidth: 220 }}>
-                    <div style={{ fontWeight: 900, fontSize: 18 }}>
-                      {fmtCurrency(adjustedTarget)}
-                    </div>
+                    <div style={{ fontWeight: 900, fontSize: 18 }}>{fmtCurrency(adjustedTarget)}</div>
                     <div style={{ fontSize: 13, opacity: 0.82, marginTop: 4 }}>
                       Base quote: {row.estimateFormatted.target} ({row.estimateFormatted.min}–
                       {row.estimateFormatted.max})
@@ -285,7 +315,7 @@ export default function AdminPipelineClient({
                   </div>
                 </div>
 
-                {/* PIE summary card */}
+                {/* PIE + client portal summary */}
                 <div
                   className="card"
                   style={{
@@ -295,32 +325,51 @@ export default function AdminPipelineClient({
                   }}
                 >
                   <div className="cardInner">
-                    <div style={{ fontWeight: 900, marginBottom: 8 }}>
-                      PIE summary
-                    </div>
-                    <div style={{ lineHeight: 1.6, opacity: 0.92 }}>
-                      {row.pie.summary}
-                    </div>
+                    <div style={{ fontWeight: 900, marginBottom: 8 }}>PIE summary</div>
+                    <div style={{ lineHeight: 1.6, opacity: 0.92 }}>{row.pie.summary}</div>
 
-                    {row.pie.risks?.length ? (
-                      <div style={{ marginTop: 10 }}>
-                        <div style={{ fontWeight: 800, marginBottom: 6 }}>
-                          Risks / blockers
-                        </div>
-                        <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
-                          {row.pie.risks.map((r, i) => (
-                            <li key={i}>{r}</li>
-                          ))}
-                        </ul>
+                    <div className="grid2" style={{ marginTop: 10 }}>
+                      <div>
+                        {row.pie.risks?.length ? (
+                          <div>
+                            <div style={{ fontWeight: 800, marginBottom: 6 }}>Risks / blockers</div>
+                            <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
+                              {row.pie.risks.map((r, i) => (
+                                <li key={i}>{r}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : (
+                          <div className="smallNote">No major blockers flagged in PIE.</div>
+                        )}
                       </div>
-                    ) : null}
+
+                      <div>
+                        <div style={{ fontWeight: 800, marginBottom: 6 }}>Client portal activity</div>
+                        <div style={{ fontSize: 13, lineHeight: 1.7, opacity: 0.92 }}>
+                          <div>
+                            <strong>Status:</strong> {row.portal.clientStatus || "—"}
+                          </div>
+                          <div>
+                            <strong>Assets submitted:</strong> {row.portal.assetCount}
+                          </div>
+                          <div>
+                            <strong>Revision requests:</strong> {row.portal.revisionCount}
+                          </div>
+                          <div>
+                            <strong>Last client update:</strong>{" "}
+                            {row.portal.clientUpdatedAt ? fmtDate(row.portal.clientUpdatedAt) : "—"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
                     {row.pie.pitch?.emphasize?.length ? (
                       <div style={{ marginTop: 10 }}>
                         <div style={{ fontWeight: 800, marginBottom: 6 }}>
                           What to emphasize on the call
                         </div>
-                        <div className="row" style={{ gap: 8 }}>
+                        <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
                           {row.pie.pitch.emphasize.map((item: string, i: number) => (
                             <span key={i} className="badge">
                               {item}
@@ -382,9 +431,7 @@ export default function AdminPipelineClient({
                         </div>
 
                         <div>
-                          <label className="fieldLabel">
-                            Flat adjustment ($)
-                          </label>
+                          <label className="fieldLabel">Flat adjustment ($)</label>
                           <input
                             className="input"
                             type="number"
