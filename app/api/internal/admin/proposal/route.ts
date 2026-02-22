@@ -5,12 +5,15 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function safeObj(v: any) {
+type AnyObj = Record<string, any>;
+
+function toObj(v: any): AnyObj {
   if (!v) return {};
   if (typeof v === "object") return v;
   if (typeof v === "string") {
     try {
-      return JSON.parse(v);
+      const parsed = JSON.parse(v);
+      return parsed && typeof parsed === "object" ? parsed : {};
     } catch {
       return {};
     }
@@ -18,369 +21,288 @@ function safeObj(v: any) {
   return {};
 }
 
-function estimateHours(score: number, tier: string) {
-  const t = (tier || "").toLowerCase();
-  let min = 8;
-  let max = 14;
-
-  if (t === "growth") {
-    min = 16;
-    max = 30;
-  } else if (t === "premium") {
-    min = 30;
-    max = 60;
-  }
-
-  if (score > 0) {
-    min = Math.max(min, Math.round(score * 0.25));
-    max = Math.max(max, Math.round(score * 0.5));
-    if (max <= min) max = min + 4;
-  }
-
-  const weeksMin = Math.max(1, Math.round(min / 15));
-  const weeksMax = Math.max(1, Math.round(max / 15));
-
-  return {
-    min,
-    max,
-    weeksLabel:
-      weeksMin === weeksMax
-        ? `${weeksMin} week${weeksMin > 1 ? "s" : ""}`
-        : `${weeksMin}–${weeksMax} weeks`,
-  };
+function asList(v: any): string[] {
+  return Array.isArray(v) ? v.map((x) => String(x)).filter(Boolean) : [];
 }
 
-function money(n?: number | null) {
-  if (typeof n !== "number" || Number.isNaN(n)) return "—";
+function money(n: any) {
+  const x = Number(n);
+  if (!Number.isFinite(x)) return "—";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
-  }).format(n);
+  }).format(x);
 }
 
-function buildRuleBasedProposal(args: {
-  leadEmail: string;
-  tier: string;
-  quoteStatus: string;
-  pie: any;
-  quote: any;
-  callRequest: any;
-  hourlyRate: number;
+function safeNum(v: any): number | null {
+  if (v === null || v === undefined || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function computeAdjustedTarget(baseTarget: number | null, adjustments: AnyObj) {
+  const customTarget = safeNum(adjustments?.customTarget);
+  if (customTarget !== null) return Math.round(customTarget);
+
+  if (baseTarget === null) return null;
+  let result = baseTarget;
+
+  const discountPct = safeNum(adjustments?.discountPct);
+  const discountAmount = safeNum(adjustments?.discountAmount);
+  const increaseAmount = safeNum(adjustments?.increaseAmount);
+
+  if (discountPct !== null) result -= result * (discountPct / 100);
+  if (discountAmount !== null) result -= discountAmount;
+  if (increaseAmount !== null) result += increaseAmount;
+
+  return Math.max(0, Math.round(result));
+}
+
+function buildProposalText(params: {
+  quote: AnyObj;
+  lead: AnyObj | null;
+  callRequest: AnyObj | null;
+  pieRow: AnyObj | null;
 }) {
-  const { leadEmail, tier, pie, quote, callRequest, hourlyRate } = args;
+  const { quote, lead, callRequest, pieRow } = params;
 
-  const score = Number(pie.score ?? 0) || 0;
-  const confidence = pie.confidence || "Medium";
-  const summary = pie.summary || "Scope reviewed and aligned to project needs.";
-  const pricing = safeObj(pie.pricing);
-  const pitch = safeObj(pie.pitch);
+  const pie = toObj(pieRow?.report);
+  const debug = toObj(quote.debug);
+  const admin = toObj(debug.admin_v15);
+  const adjustments = toObj(admin.pricingAdjustments);
 
-  const target =
-    typeof pricing.target === "number"
-      ? pricing.target
-      : Math.round((quote.total_cents || 0) / 100);
+  const tier =
+    pie?.tier ||
+    quote?.tier_recommended ||
+    quote?.scope_snapshot?.tier ||
+    "Essential";
 
-  const minPrice =
-    typeof pricing.minimum === "number"
-      ? pricing.minimum
-      : Math.round((quote.min_total_cents || 0) / 100);
+  const piePricing = toObj(pie?.pricing);
+  const baseTarget =
+    safeNum(piePricing.target) ??
+    safeNum(piePricing.recommended) ??
+    safeNum(quote.estimated_total);
 
-  const upperBuffer = Array.isArray(pricing.buffers)
-    ? pricing.buffers.find((b: any) =>
-        String(b?.label || "").toLowerCase().includes("upper")
-      )
-    : null;
+  const baseFloor =
+    safeNum(piePricing.minimum) ??
+    safeNum(piePricing.floor) ??
+    safeNum(quote.estimated_low);
 
-  const maxPrice =
-    typeof upperBuffer?.amount === "number"
-      ? upperBuffer.amount
-      : Math.round((quote.max_total_cents || 0) / 100);
+  const baseCeiling =
+    safeNum(piePricing.maximum) ??
+    safeNum(piePricing.ceiling) ??
+    safeNum(quote.estimated_high);
 
-  const hours = estimateHours(score, tier || pie.tier || "");
-  const laborMin = Math.round(hours.min * hourlyRate);
-  const laborMax = Math.round(hours.max * hourlyRate);
+  const adjustedTarget = computeAdjustedTarget(baseTarget, adjustments);
 
-  const risks = Array.isArray(pie.risks) ? pie.risks : [];
-  const emphasize = Array.isArray(pitch.emphasize) ? pitch.emphasize : [];
-  const objections = Array.isArray(pitch.objections) ? pitch.objections : [];
+  const effort = toObj(pie.effort);
+  const timeline = toObj(pie.timeline);
+  const buildPlan = toObj(pie.build_plan);
 
-  const lines: string[] = [];
+  const hours =
+    safeNum(effort.estimated_hours) ??
+    safeNum(effort.hours) ??
+    safeNum(buildPlan.total_hours_estimate);
 
-  lines.push(`Proposal Draft — ${leadEmail}`);
-  lines.push("");
-  lines.push(`Recommended tier: ${pie.tier || tier || "Essential"}`);
-  lines.push(`PIE complexity score: ${score}/100 (${confidence} confidence)`);
-  lines.push(`Estimated build time: ${hours.min}–${hours.max} hours (${hours.weeksLabel})`);
-  lines.push(`Labor check @ $${hourlyRate}/hr: ${money(laborMin)}–${money(laborMax)}`);
-  lines.push("");
-  lines.push("Pricing recommendation");
-  lines.push(`- Floor: ${money(minPrice)}`);
-  lines.push(`- Target: ${money(target)}`);
-  lines.push(`- Upper / buffer: ${money(maxPrice)}`);
-  lines.push("");
-  lines.push("Scope summary");
-  lines.push(summary);
+  const hourlyRate =
+    safeNum(effort.hourly_rate) ??
+    safeNum(effort.rate_per_hour) ??
+    safeNum(buildPlan.hourly_rate) ??
+    40;
 
-  if (emphasize.length) {
-    lines.push("");
-    lines.push("What to emphasize on the call");
-    for (const item of emphasize) lines.push(`- ${item}`);
-  }
+  const laborAtRate =
+    safeNum(effort.labor_at_hourly_rate) ??
+    (hours !== null ? Math.round(hours * hourlyRate) : null);
 
-  if (risks.length) {
-    lines.push("");
-    lines.push("Risks / blockers to confirm");
-    for (const r of risks) lines.push(`- ${r}`);
-  }
+  const days =
+    safeNum(timeline.estimated_days) ??
+    safeNum(timeline.days) ??
+    safeNum(buildPlan.estimated_days);
 
-  lines.push("");
-  lines.push("Discovery questions to ask next");
-  lines.push("- Do they already have all website content (text, images, branding)?");
-  lines.push("- Do they need booking/forms/payments or just lead capture?");
-  lines.push("- Who is providing domain/hosting and do they already own the domain?");
-  lines.push("- What is the real launch deadline and what is flexible?");
-  lines.push("- What pages/features can be phase 2 if budget is tight?");
+  const weeks =
+    safeNum(timeline.estimated_weeks) ??
+    safeNum(timeline.weeks) ??
+    safeNum(buildPlan.estimated_weeks);
 
-  if (callRequest) {
-    lines.push("");
-    lines.push("Call request context");
-    lines.push(`- Status: ${callRequest.status || "new"}`);
-    lines.push(
-      `- Best time: ${
-        callRequest.best_time_to_call ||
-        callRequest.preferred_times ||
-        "—"
-      }`
+  const summary =
+    String(
+      pie.summary ||
+        pie.executive_summary ||
+        "This project appears to be a good fit for a phased website build with a clear scope and launch path."
     );
-    lines.push(`- Timezone: ${callRequest.timezone || "—"}`);
-    lines.push(`- Notes: ${callRequest.notes || "—"}`);
+
+  const drivers = asList(pie.complexity_drivers || pie.drivers || pie.factors);
+  const risks = asList(pie.risks);
+  const questions = asList(pie.discovery_questions || pie.questions_to_ask || pie.questions);
+
+  const leadEmail =
+    lead?.email ||
+    quote?.scope_snapshot?.contact?.email ||
+    "client@email.com";
+
+  const leadName =
+    lead?.name ||
+    lead?.full_name ||
+    quote?.scope_snapshot?.contact?.name ||
+    quote?.business_name ||
+    "Client";
+
+  const projectType =
+    quote?.project_kind ||
+    quote?.scope_snapshot?.projectType ||
+    quote?.scope_snapshot?.project_kind ||
+    "Website project";
+
+  const platform =
+    quote?.selected_platform ||
+    quote?.scope_snapshot?.platform ||
+    "Platform TBD";
+
+  const timelineWanted =
+    quote?.timeline ||
+    quote?.scope_snapshot?.timeline ||
+    callRequest?.best_time_to_call ||
+    "TBD";
+
+  const bullets = (arr: string[]) =>
+    arr.length ? arr.map((x) => `- ${x}`).join("\n") : "- To be confirmed during kickoff";
+
+  const adjustmentNote =
+    typeof adjustments.note === "string" && adjustments.note.trim()
+      ? adjustments.note.trim()
+      : null;
+
+  return `Proposal Draft — ${leadName}
+
+Client: ${leadName}
+Email: ${leadEmail}
+Quote ID: ${quote.id}
+
+Recommended Tier: ${tier}
+Project Type: ${projectType}
+Preferred Platform: ${platform}
+Requested Timeline: ${timelineWanted}
+
+Overview
+${summary}
+
+Scope & Complexity Notes
+${bullets(drivers)}
+
+Estimated Build Effort
+- Estimated hours: ${hours ?? "TBD"} hour(s)
+- Planning rate check: ${money(hourlyRate)}/hr
+- Labor at rate: ${laborAtRate !== null ? money(laborAtRate) : "TBD"}
+- Estimated timeline: ${
+    weeks !== null
+      ? `${weeks} week(s)`
+      : days !== null
+      ? `${days} day(s)`
+      : "TBD (depends on content readiness and revisions)"
   }
 
-  if (objections.length) {
-    lines.push("");
-    lines.push("Likely objections");
-    for (const o of objections) lines.push(`- ${o}`);
-  }
-
-  lines.push("");
-  lines.push("Suggested close");
-  lines.push(
-    `Recommend starting at ${money(target)} with a phased scope option if needed.`
-  );
-  lines.push(
-    "Next step: confirm scope, finalize proposal, collect deposit, and request content/assets."
-  );
-
-  return lines.join("\n");
+Pricing Guidance
+- Base target: ${baseTarget !== null ? money(baseTarget) : "TBD"}
+- Floor: ${baseFloor !== null ? money(baseFloor) : "TBD"}
+- Ceiling / upper range: ${baseCeiling !== null ? money(baseCeiling) : "TBD"}
+- Admin adjusted target: ${adjustedTarget !== null ? money(adjustedTarget) : "TBD"}
+${
+  adjustmentNote
+    ? `- Admin pricing note: ${adjustmentNote}`
+    : ""
 }
 
-async function maybeGenerateWithAI(input: {
-  leadEmail: string;
-  tier: string;
-  quote: any;
-  pie: any;
-  callRequest: any;
-  hourlyRate: number;
-}) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return null;
+Risks / Dependencies
+${bullets(risks)}
 
-  const model = process.env.PIE_OPENAI_MODEL || "gpt-5-mini";
+Questions to Confirm Before Final Proposal
+${bullets(questions)}
 
-  const system = [
-    "You are an internal proposal assistant for a web design studio.",
-    "Write a clean, admin-facing proposal planning note (not customer-facing marketing fluff).",
-    "Be specific and practical.",
-    "Include: complexity, time estimate, pricing guidance, risks, discovery questions, and call strategy.",
-    "Use concise headings and bullets.",
-  ].join(" ");
+Suggested Next Step
+- 15–20 minute scope confirmation call
+- Confirm pages/features/content readiness
+- Finalize platform and timeline
+- Send final proposal + deposit invoice
 
-  const user = JSON.stringify(
-    {
-      leadEmail: input.leadEmail,
-      tier: input.tier,
-      hourlyRate: input.hourlyRate,
-      quote: input.quote,
-      pie: input.pie,
-      callRequest: input.callRequest,
-    },
-    null,
-    2
-  );
-
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0.2,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-    }),
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`OpenAI API error: ${res.status} ${text}`);
-  }
-
-  const data = await res.json();
-  const content = data?.choices?.[0]?.message?.content;
-
-  if (!content || typeof content !== "string") {
-    throw new Error("OpenAI did not return proposal text");
-  }
-
-  return { text: content, model };
+Notes for internal use
+- This draft was generated from the quote + PIE report and should be reviewed before sending.
+`;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const quoteId = String(body?.quoteId || "").trim();
-    const hourlyRate = Number(body?.hourlyRate || 40) || 40;
+    const body = (await req.json()) as { quoteId?: string };
+    const quoteId = String(body.quoteId || "").trim();
 
     if (!quoteId) {
-      return NextResponse.json(
-        { ok: false, error: "quoteId is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ ok: false, error: "quoteId is required" }, { status: 400 });
     }
 
-    const { data: quote, error: quoteError } = await supabaseAdmin
+    const { data: quote, error: qErr } = await supabaseAdmin
       .from("quotes")
-      .select(
-        "id, created_at, status, tier, total_cents, min_total_cents, max_total_cents, breakdown, debug, lead_id"
-      )
+      .select("*")
       .eq("id", quoteId)
-      .maybeSingle();
+      .single();
 
-    if (quoteError) {
+    if (qErr || !quote) {
       return NextResponse.json(
-        { ok: false, error: quoteError.message },
-        { status: 500 }
-      );
-    }
-    if (!quote) {
-      return NextResponse.json(
-        { ok: false, error: "Quote not found" },
+        { ok: false, error: qErr?.message || "Quote not found" },
         { status: 404 }
       );
     }
 
-    const [{ data: lead }, { data: callRows }, { data: pieRows }] = await Promise.all([
+    const [{ data: lead }, { data: callRow }, { data: pieRow }] = await Promise.all([
       quote.lead_id
-        ? supabaseAdmin
-            .from("leads")
-            .select("id, email, name")
-            .eq("id", quote.lead_id)
-            .maybeSingle()
-        : Promise.resolve({ data: null } as any),
+        ? supabaseAdmin.from("leads").select("*").eq("id", quote.lead_id).single()
+        : Promise.resolve({ data: null as any }),
       supabaseAdmin
         .from("call_requests")
-        .select(
-          "id, quote_id, status, best_time_to_call, preferred_times, timezone, notes, created_at"
-        )
+        .select("*")
         .eq("quote_id", quoteId)
         .order("created_at", { ascending: false })
-        .limit(1),
+        .limit(1)
+        .maybeSingle(),
       supabaseAdmin
         .from("pie_reports")
-        .select("id, quote_id, created_at, score, tier, confidence, report, payload")
+        .select("id, quote_id, created_at, score, tier, confidence, report")
         .eq("quote_id", quoteId)
         .order("created_at", { ascending: false })
-        .limit(1),
+        .limit(1)
+        .maybeSingle(),
     ]);
 
-    const callRequest = Array.isArray(callRows) ? callRows[0] : null;
-    const latestPie = Array.isArray(pieRows) ? pieRows[0] : null;
+    const proposalText = buildProposalText({
+      quote,
+      lead: lead ?? null,
+      callRequest: callRow ?? null,
+      pieRow: pieRow ?? null,
+    });
 
-    if (!latestPie) {
-      return NextResponse.json(
-        { ok: false, error: "No PIE report found for this quote yet." },
-        { status: 400 }
-      );
-    }
+    const debug = toObj(quote.debug);
+    const admin = toObj(debug.admin_v15);
 
-    const pieReport = safeObj(latestPie.report);
-    const piePayload = safeObj(latestPie.payload);
-    const pie = Object.keys(pieReport).length ? pieReport : piePayload;
+    admin.proposalDraft = proposalText;
+    admin.proposalGeneratedAt = new Date().toISOString();
+    debug.admin_v15 = admin;
 
-    // Ensure core fields exist for proposal generation
-    pie.score = Number(latestPie.score ?? pie.score ?? 0) || 0;
-    pie.tier = latestPie.tier ?? pie.tier ?? quote.tier ?? "Essential";
-    pie.confidence = latestPie.confidence ?? pie.confidence ?? "Medium";
-
-    const leadEmail = lead?.email || "lead@example.com";
-
-    let proposalText = "";
-    let mode: "rule" | "ai" = "rule";
-    let aiModel: string | null = null;
-
-    try {
-      const ai = await maybeGenerateWithAI({
-        leadEmail,
-        tier: quote.tier || pie.tier || "Essential",
-        quote,
-        pie,
-        callRequest,
-        hourlyRate,
-      });
-
-      if (ai?.text) {
-        proposalText = ai.text;
-        mode = "ai";
-        aiModel = ai.model;
-      } else {
-        proposalText = buildRuleBasedProposal({
-          leadEmail,
-          tier: quote.tier || pie.tier || "Essential",
-          quoteStatus: quote.status || "new",
-          pie,
-          quote,
-          callRequest,
-          hourlyRate,
-        });
-      }
-    } catch {
-      // If AI fails, gracefully fall back
-      proposalText = buildRuleBasedProposal({
-        leadEmail,
-        tier: quote.tier || pie.tier || "Essential",
-        quoteStatus: quote.status || "new",
-        pie,
-        quote,
-        callRequest,
-        hourlyRate,
-      });
-      mode = "rule";
-    }
-
-    // Persist to quotes.debug so it shows up in admin tools
-    const debug = safeObj(quote.debug);
-    debug.generatedProposal = proposalText;
-    debug.generatedProposalUpdatedAt = new Date().toISOString();
-
-    await supabaseAdmin
+    const { error: updErr } = await supabaseAdmin
       .from("quotes")
       .update({ debug })
       .eq("id", quoteId);
 
+    if (updErr) {
+      return NextResponse.json({ ok: false, error: updErr.message }, { status: 500 });
+    }
+
     return NextResponse.json({
       ok: true,
-      mode,
-      model: aiModel,
       proposalText,
+      pieReportId: pieRow?.id ?? null,
     });
-  } catch (err: any) {
+  } catch (e: any) {
     return NextResponse.json(
-      { ok: false, error: err?.message || "Unknown error" },
+      { ok: false, error: e?.message || "Unexpected error" },
       { status: 500 }
     );
   }
