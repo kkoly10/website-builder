@@ -20,6 +20,15 @@ type PieView = {
   timelineText: string | null;
 };
 
+type ClientPortalView = {
+  status: string;
+  latestClientNote: string | null;
+  assetCount: number;
+  revisionCount: number;
+  depositStatus: string | null;
+  portalToken?: string | null;
+};
+
 type PipelineRow = {
   quoteId: string;
   createdAt: string;
@@ -37,13 +46,6 @@ type PipelineRow = {
     notes: string | null;
   };
   pie: PieView;
-  portal: {
-    clientStatus: string | null;
-    clientUpdatedAt: string | null;
-    latestClientNote: string | null;
-    assetCount: number;
-    revisionCount: number;
-  };
   adminPricing: {
     discountPercent: number;
     flatAdjustment: number;
@@ -51,7 +53,8 @@ type PipelineRow = {
     notes: string;
   };
   proposalText: string;
-  links: { detail: string };
+  clientPortal?: ClientPortalView;
+  links: { detail: string; portal?: string | null };
 };
 
 function fmtCurrency(n?: number | null) {
@@ -63,7 +66,7 @@ function fmtCurrency(n?: number | null) {
   }).format(n);
 }
 
-function fmtDate(iso?: string | null) {
+function fmtDate(iso?: string) {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
@@ -72,21 +75,14 @@ function fmtDate(iso?: string | null) {
 
 function statusBadge(status: string) {
   const s = (status || "").toLowerCase();
-  if (s === "deposit" || s === "active") return "badge badgeHot";
+  if (s === "deposit" || s === "active" || s === "closed_won") return "badge badgeHot";
   return "badge";
 }
 
 function clientStatusBadge(status?: string | null) {
-  const s = (status || "").toLowerCase();
-  if (["content_submitted", "deposit_sent"].includes(s)) return "badge badgeHot";
+  const s = String(status || "not_started").toLowerCase();
+  if (s.includes("active") || s.includes("in_progress")) return "badge badgeHot";
   return "badge";
-}
-
-function truncate(text?: string | null, max = 140) {
-  if (!text) return "—";
-  const t = text.trim();
-  if (t.length <= max) return t;
-  return `${t.slice(0, max)}…`;
 }
 
 export default function AdminPipelineClient({
@@ -103,6 +99,15 @@ export default function AdminPipelineClient({
     const counts: Record<string, number> = {};
     for (const r of rows) {
       const key = r.status || "new";
+      counts[key] = (counts[key] || 0) + 1;
+    }
+    return counts;
+  }, [rows]);
+
+  const portalSummaryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const r of rows) {
+      const key = r.clientPortal?.status || "not_started";
       counts[key] = (counts[key] || 0) + 1;
     }
     return counts;
@@ -205,11 +210,19 @@ export default function AdminPipelineClient({
     <div>
       <div className="card" style={{ marginBottom: 14 }}>
         <div className="cardInner">
-          <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+          <div className="row" style={{ gap: 8, marginBottom: 8 }}>
             <span className="badge">Total: {rows.length}</span>
             {Object.entries(summaryCounts).map(([k, v]) => (
-              <span key={k} className="badge">
-                {k}: {v}
+              <span key={`q-${k}`} className="badge">
+                Pipeline {k}: {v}
+              </span>
+            ))}
+          </div>
+
+          <div className="row" style={{ gap: 8 }}>
+            {Object.entries(portalSummaryCounts).map(([k, v]) => (
+              <span key={`p-${k}`} className="badge">
+                Client {k}: {v}
               </span>
             ))}
           </div>
@@ -228,8 +241,10 @@ export default function AdminPipelineClient({
 
           const hoursMin = row.pie.hoursMin ?? null;
           const hoursMax = row.pie.hoursMax ?? null;
-          const laborMin = hoursMin != null ? Math.round(hoursMin * hourlyRate) : null;
-          const laborMax = hoursMax != null ? Math.round(hoursMax * hourlyRate) : null;
+          const laborMin =
+            hoursMin != null ? Math.round(hoursMin * hourlyRate) : null;
+          const laborMax =
+            hoursMax != null ? Math.round(hoursMax * hourlyRate) : null;
 
           const isBusy = !!busyByQuote[row.quoteId];
           const isExpanded = !!expanded[row.quoteId];
@@ -246,7 +261,7 @@ export default function AdminPipelineClient({
                   }}
                 >
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <div className="row" style={{ gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+                    <div className="row" style={{ gap: 8, marginBottom: 8 }}>
                       <span className={statusBadge(row.status)}>{row.status}</span>
                       <span className="badge">{row.pie.tier || row.tier || "—"}</span>
                       {row.pie.score != null ? (
@@ -255,20 +270,9 @@ export default function AdminPipelineClient({
                       {row.pie.confidence ? (
                         <span className="badge">{row.pie.confidence}</span>
                       ) : null}
-                      <span className={clientStatusBadge(row.portal.clientStatus)}>
-                        Client: {row.portal.clientStatus || "—"}
-                      </span>
-                      <span className="badge">Assets: {row.portal.assetCount}</span>
-                      <span className="badge">Revisions: {row.portal.revisionCount}</span>
                     </div>
 
                     <div style={{ fontWeight: 900, marginBottom: 6 }}>{row.leadEmail}</div>
-                    {row.leadName ? (
-                      <div style={{ opacity: 0.85, fontSize: 13, marginBottom: 4 }}>
-                        {row.leadName}
-                      </div>
-                    ) : null}
-
                     <div style={{ opacity: 0.78, fontSize: 13 }}>Quote: {row.quoteId}</div>
                     <div style={{ opacity: 0.78, fontSize: 13 }}>
                       Created: {fmtDate(row.createdAt)}
@@ -277,23 +281,17 @@ export default function AdminPipelineClient({
                     {row.callRequest ? (
                       <div style={{ opacity: 0.85, fontSize: 13, marginTop: 6 }}>
                         Call request: {row.callRequest.status || "new"} •{" "}
-                        {row.callRequest.bestTime || row.callRequest.preferredTimes || "—"}
+                        {row.callRequest.bestTime ||
+                          row.callRequest.preferredTimes ||
+                          "—"}
                       </div>
                     ) : null}
-
-                    <div style={{ opacity: 0.9, fontSize: 13, marginTop: 6, lineHeight: 1.4 }}>
-                      <strong>Client note:</strong> {truncate(row.portal.latestClientNote)}
-                      {row.portal.clientUpdatedAt ? (
-                        <span style={{ opacity: 0.75 }}>
-                          {" "}
-                          • {fmtDate(row.portal.clientUpdatedAt)}
-                        </span>
-                      ) : null}
-                    </div>
                   </div>
 
                   <div style={{ minWidth: 220 }}>
-                    <div style={{ fontWeight: 900, fontSize: 18 }}>{fmtCurrency(adjustedTarget)}</div>
+                    <div style={{ fontWeight: 900, fontSize: 18 }}>
+                      {fmtCurrency(adjustedTarget)}
+                    </div>
                     <div style={{ fontSize: 13, opacity: 0.82, marginTop: 4 }}>
                       Base quote: {row.estimateFormatted.target} ({row.estimateFormatted.min}–
                       {row.estimateFormatted.max})
@@ -308,14 +306,13 @@ export default function AdminPipelineClient({
                     ) : null}
                     {laborMin != null && laborMax != null ? (
                       <div style={{ fontSize: 13, opacity: 0.9 }}>
-                        Labor @ ${hourlyRate}/hr: {fmtCurrency(laborMin)}–
-                        {fmtCurrency(laborMax)}
+                        Labor @ ${hourlyRate}/hr: {fmtCurrency(laborMin)}–{fmtCurrency(laborMax)}
                       </div>
                     ) : null}
                   </div>
                 </div>
 
-                {/* PIE + client portal summary */}
+                {/* PIE summary */}
                 <div
                   className="card"
                   style={{
@@ -328,48 +325,23 @@ export default function AdminPipelineClient({
                     <div style={{ fontWeight: 900, marginBottom: 8 }}>PIE summary</div>
                     <div style={{ lineHeight: 1.6, opacity: 0.92 }}>{row.pie.summary}</div>
 
-                    <div className="grid2" style={{ marginTop: 10 }}>
-                      <div>
-                        {row.pie.risks?.length ? (
-                          <div>
-                            <div style={{ fontWeight: 800, marginBottom: 6 }}>Risks / blockers</div>
-                            <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
-                              {row.pie.risks.map((r, i) => (
-                                <li key={i}>{r}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        ) : (
-                          <div className="smallNote">No major blockers flagged in PIE.</div>
-                        )}
+                    {row.pie.risks?.length ? (
+                      <div style={{ marginTop: 10 }}>
+                        <div style={{ fontWeight: 800, marginBottom: 6 }}>Risks / blockers</div>
+                        <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
+                          {row.pie.risks.map((r, i) => (
+                            <li key={i}>{r}</li>
+                          ))}
+                        </ul>
                       </div>
-
-                      <div>
-                        <div style={{ fontWeight: 800, marginBottom: 6 }}>Client portal activity</div>
-                        <div style={{ fontSize: 13, lineHeight: 1.7, opacity: 0.92 }}>
-                          <div>
-                            <strong>Status:</strong> {row.portal.clientStatus || "—"}
-                          </div>
-                          <div>
-                            <strong>Assets submitted:</strong> {row.portal.assetCount}
-                          </div>
-                          <div>
-                            <strong>Revision requests:</strong> {row.portal.revisionCount}
-                          </div>
-                          <div>
-                            <strong>Last client update:</strong>{" "}
-                            {row.portal.clientUpdatedAt ? fmtDate(row.portal.clientUpdatedAt) : "—"}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    ) : null}
 
                     {row.pie.pitch?.emphasize?.length ? (
                       <div style={{ marginTop: 10 }}>
                         <div style={{ fontWeight: 800, marginBottom: 6 }}>
                           What to emphasize on the call
                         </div>
-                        <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+                        <div className="row" style={{ gap: 8 }}>
                           {row.pie.pitch.emphasize.map((item: string, i: number) => (
                             <span key={i} className="badge">
                               {item}
@@ -378,6 +350,66 @@ export default function AdminPipelineClient({
                         </div>
                       </div>
                     ) : null}
+                  </div>
+                </div>
+
+                {/* Client portal sync card */}
+                <div
+                  className="card"
+                  style={{
+                    marginTop: 14,
+                    borderColor: "rgba(255,255,255,0.10)",
+                    background: "rgba(255,255,255,0.03)",
+                  }}
+                >
+                  <div className="cardInner">
+                    <div
+                      className="row"
+                      style={{ justifyContent: "space-between", alignItems: "center", gap: 10 }}
+                    >
+                      <div style={{ fontWeight: 900 }}>Client portal sync</div>
+                      <div className="row" style={{ gap: 8 }}>
+                        <span className={clientStatusBadge(row.clientPortal?.status)}>
+                          Client: {row.clientPortal?.status || "not_started"}
+                        </span>
+                        <span className="badge">
+                          Deposit: {row.clientPortal?.depositStatus || "unpaid"}
+                        </span>
+                        <span className="badge">
+                          Assets: {row.clientPortal?.assetCount ?? 0}
+                        </span>
+                        <span className="badge">
+                          Revisions: {row.clientPortal?.revisionCount ?? 0}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: 10, fontSize: 13, opacity: 0.92, lineHeight: 1.6 }}>
+                      <strong>Latest client note:</strong>{" "}
+                      {row.clientPortal?.latestClientNote || "—"}
+                    </div>
+
+                    <div className="row" style={{ gap: 10, marginTop: 10 }}>
+                      <a
+                        className="btn btnGhost"
+                        href={row.links.detail}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Open quote detail
+                      </a>
+
+                      {row.links.portal ? (
+                        <a
+                          className="btn btnGhost"
+                          href={row.links.portal}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open client portal
+                        </a>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
 
@@ -501,15 +533,6 @@ export default function AdminPipelineClient({
                         >
                           Save status + pricing
                         </button>
-
-                        <a
-                          className="btn btnGhost"
-                          href={row.links.detail}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Open quote detail
-                        </a>
                       </div>
                     </div>
                   </div>
@@ -537,11 +560,13 @@ export default function AdminPipelineClient({
                           className="btn btnGhost"
                           disabled={isBusy || !row.proposalText}
                           onClick={() => {
-                            navigator.clipboard.writeText(row.proposalText || "");
-                            setMessageByQuote((m) => ({
-                              ...m,
-                              [row.quoteId]: "Proposal copied.",
-                            }));
+                            if (typeof navigator !== "undefined" && navigator.clipboard) {
+                              navigator.clipboard.writeText(row.proposalText || "");
+                              setMessageByQuote((m) => ({
+                                ...m,
+                                [row.quoteId]: "Proposal copied.",
+                              }));
+                            }
                           }}
                         >
                           Copy
