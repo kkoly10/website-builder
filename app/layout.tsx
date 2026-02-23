@@ -4,171 +4,82 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "CrecyStudio",
-  description: "CrecyStudio — AI-assisted website quotes and project portal",
+  description: "Website design quotes, planning, and project portal.",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
+  const year = new Date().getFullYear();
+
   return (
     <html lang="en">
       <body>
-        <header
-          style={{
-            position: "sticky",
-            top: 0,
-            zIndex: 40,
-            backdropFilter: "blur(10px)",
-            background: "rgba(10,10,12,0.75)",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-          }}
-        >
-          <div
-            style={{
-              maxWidth: 1180,
-              margin: "0 auto",
-              padding: "12px 16px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-              flexWrap: "wrap",
-            }}
-          >
-            <Link
-              href="/"
-              style={{
-                fontWeight: 900,
-                letterSpacing: 0.2,
-                textDecoration: "none",
-                color: "inherit",
-                whiteSpace: "nowrap",
-              }}
-            >
-              CrecyStudio
-            </Link>
+        <div className="siteShell">
+          <header className="topNav">
+            <div className="navLeft">
+              <Link href="/" className="brandMark" aria-label="CrecyStudio home">
+                C
+              </Link>
+              <div className="brandText">
+                <div style={{ fontWeight: 900, lineHeight: 1 }}>CrecyStudio</div>
+                <div style={{ opacity: 0.75, fontSize: 12 }}>
+                  Websites • Quotes • Client Portal
+                </div>
+              </div>
+            </div>
 
-            <nav
+            <div
+              className="navRight"
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: 10,
                 flexWrap: "wrap",
+                justifyContent: "flex-end",
               }}
             >
-              <Link href="/" style={navLink}>
+              <Link href="/" className="topLink">
                 Home
               </Link>
-              <Link href="/estimate" style={navLink}>
+              <Link href="/build" className="topLink">
+                Build
+              </Link>
+              <Link href="/estimate" className="topLink">
                 Estimate
               </Link>
-              <Link href="/dashboard" style={navLink}>
-                Dashboard
+
+              {/* Auth buttons (visible on homepage now) */}
+              <Link href="/login" className="btn btnGhost">
+                Login
               </Link>
-              <Link href="/internal/admin" style={navLink}>
+              <Link href="/signup" className="btn btnPrimary">
+                Create account
+              </Link>
+            </div>
+          </header>
+
+          <main>{children}</main>
+
+          <footer className="footer">
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+              <span>© {year} CrecyStudio</span>
+              <span style={{ opacity: 0.5 }}>•</span>
+              <Link href="/login" className="topLink">
+                Login
+              </Link>
+              <Link href="/signup" className="topLink">
+                Create account
+              </Link>
+              <Link href="/internal/admin" className="topLink">
                 Internal Admin
               </Link>
-            </nav>
-
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                flexWrap: "wrap",
-              }}
-            >
-              <Link href="/login" style={ghostBtn}>
-                Login
-              </Link>
-              <Link href="/signup" style={ghostBtn}>
-                Create Account
-              </Link>
-              <Link href="/build" style={primaryBtn}>
-                Get a Quote →
-              </Link>
             </div>
-          </div>
-        </header>
-
-        <main>{children}</main>
-
-        <footer
-          style={{
-            borderTop: "1px solid rgba(255,255,255,0.08)",
-            marginTop: 32,
-          }}
-        >
-          <div
-            style={{
-              maxWidth: 1180,
-              margin: "0 auto",
-              padding: "18px 16px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 12,
-              flexWrap: "wrap",
-              fontSize: 13,
-              opacity: 0.85,
-            }}
-          >
-            <div>© {new Date().getFullYear()} CrecyStudio</div>
-
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <Link href="/login" style={footerLink}>
-                Login
-              </Link>
-              <Link href="/signup" style={footerLink}>
-                Create Account
-              </Link>
-              <Link href="/dashboard" style={footerLink}>
-                Dashboard
-              </Link>
-            </div>
-          </div>
-        </footer>
+          </footer>
+        </div>
       </body>
     </html>
   );
 }
-
-const navLink: React.CSSProperties = {
-  textDecoration: "none",
-  color: "inherit",
-  padding: "6px 8px",
-  borderRadius: 8,
-  opacity: 0.95,
-  fontSize: 14,
-};
-
-const footerLink: React.CSSProperties = {
-  textDecoration: "none",
-  color: "inherit",
-  opacity: 0.9,
-};
-
-const ghostBtn: React.CSSProperties = {
-  textDecoration: "none",
-  color: "inherit",
-  border: "1px solid rgba(255,255,255,0.14)",
-  background: "rgba(255,255,255,0.03)",
-  padding: "8px 10px",
-  borderRadius: 10,
-  fontSize: 13,
-  fontWeight: 600,
-  whiteSpace: "nowrap",
-};
-
-const primaryBtn: React.CSSProperties = {
-  textDecoration: "none",
-  color: "#111",
-  background: "linear-gradient(135deg, #ffb347, #ff7a18)",
-  padding: "8px 12px",
-  borderRadius: 10,
-  fontSize: 13,
-  fontWeight: 700,
-  whiteSpace: "nowrap",
-};
