@@ -23,6 +23,7 @@ function LoginLoadingCard() {
           <span className="kickerDot" aria-hidden="true" />
           Loading login…
         </div>
+
         <div style={{ height: 10 }} />
         <h1 className="h2">Preparing sign-in page</h1>
         <p className="p" style={{ marginTop: 8 }}>
