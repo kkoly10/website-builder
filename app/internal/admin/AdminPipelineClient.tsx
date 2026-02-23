@@ -1,1019 +1,618 @@
-// app/internal/admin/AdminPipelineClient.tsx
-"use client";
+// app/internal/admin/page.tsx
+import { createClient } from "@supabase/supabase-js";
+import AdminPipelineClient from "./AdminPipelineClient";
 
-import { useMemo, useState } from "react";
+type AnyRow = Record<string, any>;
 
-type PieView = {
-  exists: boolean;
-  id: string | null;
-  score: number | null;
-  tier: string | null;
-  confidence: string | null;
-  summary: string;
-  pricingTarget: number | null;
-  pricingMin: number | null;
-  pricingMax: number | null;
-  risks: string[];
-  pitch: any;
-  hoursMin: number | null;
-  hoursMax: number | null;
-  timelineText: string | null;
-};
-
-type PipelineRow = {
-  quoteId: string;
-  createdAt: string;
-  status: string; // internal/admin pipeline status (project/quote status)
-  tier: string;
-  leadEmail: string;
-  leadName: string | null;
-
-  // NEW / optional sync fields for Admin v2
-  clientStatus?: string | null;
-  assetCount?: number | null;
-  revisionCount?: number | null;
-  latestClientNote?: string | { body?: string; createdAt?: string } | null;
-
-  estimate: { target: number; min: number; max: number };
-  estimateFormatted: { target: string; min: string; max: string };
-
-  callRequest: null | {
-    status: string;
-    bestTime: string | null;
-    preferredTimes: string | null;
-    timezone: string | null;
-    notes: string | null;
-  };
-
-  pie: PieView;
-
-  adminPricing: {
-    discountPercent: number;
-    flatAdjustment: number;
-    hourlyRate: number;
-    notes: string;
-  };
-
-  proposalText: string;
-  links: { detail: string };
-};
-
-function fmtCurrency(n?: number | null) {
-  if (typeof n !== "number" || Number.isNaN(n)) return "—";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(n);
+function asObj(value: any): Record<string, any> {
+  if (!value) return {};
+  if (typeof value === "object") return value;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
 }
 
-function fmtDate(iso?: string) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString();
+function asArray(value: any): any[] {
+  if (Array.isArray(value)) return value;
+  return [];
 }
 
-function toNum(v: unknown, fallback = 0) {
+function str(v: any, fallback = ""): string {
+  if (v == null) return fallback;
+  return String(v);
+}
+
+function num(v: any, fallback = 0): number {
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
 }
 
-function statusBadge(status: string) {
-  const s = (status || "").toLowerCase();
-  if (s === "deposit" || s === "active" || s === "closed_won") return "badge badgeHot";
-  return "badge";
+function maybeNum(v: any): number | null {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
 }
 
-function normalize(s: unknown) {
-  return String(s ?? "").toLowerCase().trim();
+function lower(v: any): string {
+  return String(v ?? "").toLowerCase();
 }
 
-function latestNoteText(row: PipelineRow) {
-  const note = row.latestClientNote;
-  if (!note) return "";
-  if (typeof note === "string") return note;
-  return note.body || "";
+function ts(v: any): number {
+  const d = new Date(v ?? 0).getTime();
+  return Number.isFinite(d) ? d : 0;
 }
 
-function latestNoteDate(row: PipelineRow) {
-  const note = row.latestClientNote;
-  if (!note || typeof note === "string") return null;
-  return note.createdAt || null;
+function money(n: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(Number.isFinite(n) ? n : 0);
 }
 
-function clientStatusLabel(row: PipelineRow) {
-  return row.clientStatus || "new";
-}
-
-function hasPie(row: PipelineRow) {
-  return !!(row.pie?.exists || row.pie?.id);
-}
-
-function assetCount(row: PipelineRow) {
-  return toNum(row.assetCount, 0);
-}
-
-function revisionCount(row: PipelineRow) {
-  return toNum(row.revisionCount, 0);
-}
-
-export default function AdminPipelineClient({
-  initialRows,
-}: {
-  initialRows: PipelineRow[];
-}) {
-  const [rows, setRows] = useState<PipelineRow[]>(initialRows);
-  const [busyByQuote, setBusyByQuote] = useState<Record<string, boolean>>({});
-  const [messageByQuote, setMessageByQuote] = useState<Record<string, string>>({});
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-
-  // Admin v2 filters
-  const [search, setSearch] = useState("");
-  const [projectStatusFilter, setProjectStatusFilter] = useState("all");
-  const [clientStatusFilter, setClientStatusFilter] = useState("all");
-  const [pieFilter, setPieFilter] = useState<"all" | "has_pie" | "missing_pie">("all");
-  const [assetFilter, setAssetFilter] = useState<"all" | "has_assets" | "no_assets">("all");
-  const [revisionFilter, setRevisionFilter] = useState<
-    "all" | "has_revisions" | "no_revisions"
-  >("all");
-  const [sortBy, setSortBy] = useState<
-    "newest" | "oldest" | "price_high" | "price_low" | "score_high" | "score_low"
-  >("newest");
-
-  const summaryCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const r of rows) {
-      const key = r.status || "new";
-      counts[key] = (counts[key] || 0) + 1;
-    }
-    return counts;
-  }, [rows]);
-
-  const filteredRows = useMemo(() => {
-    let next = [...rows];
-
-    const q = normalize(search);
-    if (q) {
-      next = next.filter((r) => {
-        const hay = [
-          r.quoteId,
-          r.leadEmail,
-          r.leadName,
-          r.status,
-          r.clientStatus,
-          r.tier,
-          r.callRequest?.bestTime,
-          r.callRequest?.preferredTimes,
-          r.callRequest?.notes,
-          r.pie?.summary,
-          latestNoteText(r),
-        ]
-          .map((x) => normalize(x))
-          .join(" ");
-        return hay.includes(q);
-      });
-    }
-
-    if (projectStatusFilter !== "all") {
-      next = next.filter((r) => normalize(r.status) === normalize(projectStatusFilter));
-    }
-
-    if (clientStatusFilter !== "all") {
-      next = next.filter(
-        (r) => normalize(clientStatusLabel(r)) === normalize(clientStatusFilter)
-      );
-    }
-
-    if (pieFilter === "has_pie") {
-      next = next.filter((r) => hasPie(r));
-    } else if (pieFilter === "missing_pie") {
-      next = next.filter((r) => !hasPie(r));
-    }
-
-    if (assetFilter === "has_assets") {
-      next = next.filter((r) => assetCount(r) > 0);
-    } else if (assetFilter === "no_assets") {
-      next = next.filter((r) => assetCount(r) === 0);
-    }
-
-    if (revisionFilter === "has_revisions") {
-      next = next.filter((r) => revisionCount(r) > 0);
-    } else if (revisionFilter === "no_revisions") {
-      next = next.filter((r) => revisionCount(r) === 0);
-    }
-
-    next.sort((a, b) => {
-      const aDate = new Date(a.createdAt || 0).getTime();
-      const bDate = new Date(b.createdAt || 0).getTime();
-
-      const aBase = a.pie?.pricingTarget ?? a.estimate?.target ?? 0;
-      const bBase = b.pie?.pricingTarget ?? b.estimate?.target ?? 0;
-
-      const aScore = a.pie?.score ?? -1;
-      const bScore = b.pie?.score ?? -1;
-
-      switch (sortBy) {
-        case "oldest":
-          return aDate - bDate;
-        case "price_high":
-          return bBase - aBase;
-        case "price_low":
-          return aBase - bBase;
-        case "score_high":
-          return bScore - aScore;
-        case "score_low":
-          return aScore - bScore;
-        case "newest":
-        default:
-          return bDate - aDate;
+function pickFirst(row: AnyRow | null | undefined, keys: string[]): any {
+  if (!row) return undefined;
+  for (const key of keys) {
+    if (key.includes(".")) {
+      const parts = key.split(".");
+      let cur: any = row;
+      let ok = true;
+      for (const p of parts) {
+        if (cur && typeof cur === "object" && p in cur) {
+          cur = cur[p];
+        } else {
+          ok = false;
+          break;
+        }
       }
-    });
-
-    return next;
-  }, [
-    rows,
-    search,
-    projectStatusFilter,
-    clientStatusFilter,
-    pieFilter,
-    assetFilter,
-    revisionFilter,
-    sortBy,
-  ]);
-
-  const filteredSummary = useMemo(() => {
-    const counts: Record<string, number> = {};
-    let missingPie = 0;
-    let noAssets = 0;
-    let withRevisions = 0;
-
-    for (const r of filteredRows) {
-      const k = r.status || "new";
-      counts[k] = (counts[k] || 0) + 1;
-      if (!hasPie(r)) missingPie += 1;
-      if (assetCount(r) === 0) noAssets += 1;
-      if (revisionCount(r) > 0) withRevisions += 1;
+      if (ok && cur != null) return cur;
+    } else if (row[key] != null) {
+      return row[key];
     }
+  }
+  return undefined;
+}
 
-    return { counts, missingPie, noAssets, withRevisions };
-  }, [filteredRows]);
-
-  async function saveQuoteAdmin(
-    quoteId: string,
-    payload: {
-      status?: string;
-      adminPricing?: PipelineRow["adminPricing"];
-      proposalText?: string;
-    }
-  ) {
-    setBusyByQuote((m) => ({ ...m, [quoteId]: true }));
-    setMessageByQuote((m) => ({ ...m, [quoteId]: "" }));
-
+async function safeTableSelect(
+  supabase: any,
+  tableNames: string[],
+  opts?: {
+    orderBy?: string;
+    ascending?: boolean;
+    limit?: number;
+  }
+): Promise<{ table: string | null; rows: AnyRow[] }> {
+  for (const table of tableNames) {
     try {
-      const res = await fetch("/api/internal/admin/quote-admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quoteId, ...payload }),
-      });
-      const data = await res.json();
-
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || "Failed to save");
+      let q = supabase.from(table).select("*");
+      if (opts?.orderBy) q = q.order(opts.orderBy, { ascending: !!opts.ascending });
+      if (opts?.limit) q = q.limit(opts.limit);
+      const { data, error } = await q;
+      if (!error) {
+        return { table, rows: (data || []) as AnyRow[] };
       }
-
-      setRows((prev) =>
-        prev.map((r) =>
-          r.quoteId === quoteId
-            ? {
-                ...r,
-                status: payload.status ?? r.status,
-                adminPricing: payload.adminPricing ?? r.adminPricing,
-                proposalText: payload.proposalText ?? r.proposalText,
-              }
-            : r
-        )
-      );
-
-      setMessageByQuote((m) => ({ ...m, [quoteId]: "Saved." }));
-    } catch (err: any) {
-      setMessageByQuote((m) => ({
-        ...m,
-        [quoteId]: err?.message || "Save failed",
-      }));
-    } finally {
-      setBusyByQuote((m) => ({ ...m, [quoteId]: false }));
+    } catch {
+      // try next table
     }
   }
+  return { table: null, rows: [] };
+}
 
-  async function quickSetStatus(row: PipelineRow, nextStatus: string) {
-    await saveQuoteAdmin(row.quoteId, { status: nextStatus });
+function latestBy<T extends AnyRow>(rows: T[], dateKeys = ["created_at", "updated_at"]): T | null {
+  if (!rows.length) return null;
+  return [...rows].sort((a, b) => {
+    const aTs = ts(pickFirst(a, dateKeys));
+    const bTs = ts(pickFirst(b, dateKeys));
+    return bTs - aTs;
+  })[0];
+}
+
+function groupBy<T extends AnyRow>(rows: T[], key: string): Record<string, T[]> {
+  const map: Record<string, T[]> = {};
+  for (const r of rows) {
+    const k = r?.[key];
+    if (!k) continue;
+    const id = String(k);
+    if (!map[id]) map[id] = [];
+    map[id].push(r);
+  }
+  return map;
+}
+
+function parsePieFromRow(pieRow: AnyRow | null) {
+  if (!pieRow) {
+    return {
+      exists: false,
+      id: null,
+      score: null,
+      tier: null,
+      confidence: null,
+      summary: "",
+      pricingTarget: null,
+      pricingMin: null,
+      pricingMax: null,
+      risks: [] as string[],
+      pitch: null,
+      hoursMin: null,
+      hoursMax: null,
+      timelineText: null,
+    };
   }
 
-  async function generateProposal(row: PipelineRow) {
-    setBusyByQuote((m) => ({ ...m, [row.quoteId]: true }));
-    setMessageByQuote((m) => ({ ...m, [row.quoteId]: "Generating proposal..." }));
+  const rawReport =
+    pickFirst(pieRow, ["report_json", "report", "pie_json", "pie_report", "payload", "data"]) ?? {};
+  const report = asObj(rawReport);
 
-    try {
-      const res = await fetch("/api/internal/admin/proposal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          quoteId: row.quoteId,
-          hourlyRate: row.adminPricing.hourlyRate || 40,
-        }),
-      });
+  const pricing = asObj(
+    pickFirst(report, ["pricing"]) ??
+      pickFirst(pieRow, ["pricing", "pricing_json", "pricing_data"]) ??
+      {}
+  );
 
-      const data = await res.json();
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || "Failed to generate proposal");
-      }
+  const hoursObj = asObj(
+    pickFirst(report, ["hours", "effort", "timeline.hours"]) ??
+      pickFirst(pieRow, ["hours", "effort_json"]) ??
+      {}
+  );
 
-      setRows((prev) =>
-        prev.map((r) =>
-          r.quoteId === row.quoteId
-            ? { ...r, proposalText: data.proposalText || r.proposalText }
-            : r
-        )
-      );
+  const timelineObj = asObj(
+    pickFirst(report, ["timeline", "delivery"]) ??
+      pickFirst(pieRow, ["timeline", "timeline_json"]) ??
+      {}
+  );
 
-      setExpanded((m) => ({ ...m, [row.quoteId]: true }));
-      setMessageByQuote((m) => ({
-        ...m,
-        [row.quoteId]:
-          data.mode === "ai" ? "AI proposal generated." : "Proposal generated.",
-      }));
-    } catch (err: any) {
-      setMessageByQuote((m) => ({
-        ...m,
-        [row.quoteId]: err?.message || "Proposal generation failed",
-      }));
-    } finally {
-      setBusyByQuote((m) => ({ ...m, [row.quoteId]: false }));
-    }
-  }
+  const pitchObj = asObj(
+    pickFirst(report, ["pitch", "sales_pitch"]) ??
+      pickFirst(pieRow, ["pitch", "pitch_json"]) ??
+      {}
+  );
 
-  function updateRowLocal(quoteId: string, updater: (row: PipelineRow) => PipelineRow) {
-    setRows((prev) => prev.map((r) => (r.quoteId === quoteId ? updater(r) : r)));
-  }
+  const risksRaw =
+    pickFirst(report, ["risks", "risk_flags", "blockers"]) ??
+    pickFirst(pieRow, ["risks", "risk_flags"]) ??
+    [];
+  const risks = asArray(risksRaw).map((x) => String(x)).filter(Boolean);
 
-  const projectStatusOptions = [
-    "all",
-    "new",
-    "call_requested",
-    "call",
-    "proposal",
-    "deposit",
-    "active",
-    "closed_won",
-    "closed_lost",
-  ];
+  const hoursMin =
+    maybeNum(pickFirst(hoursObj, ["min", "hours_min"])) ??
+    maybeNum(pickFirst(report, ["hoursMin", "hours_min"])) ??
+    maybeNum(pickFirst(pieRow, ["hours_min"]));
 
-  const clientStatusOptions = [
-    "all",
-    "new",
-    "awaiting_content",
-    "content_received",
-    "in_progress",
-    "in_review",
-    "revision_requested",
-    "completed",
-  ];
+  const hoursMax =
+    maybeNum(pickFirst(hoursObj, ["max", "hours_max"])) ??
+    maybeNum(pickFirst(report, ["hoursMax", "hours_max"])) ??
+    maybeNum(pickFirst(pieRow, ["hours_max"]));
+
+  const timelineText =
+    pickFirst(timelineObj, ["text", "label", "summary"]) ??
+    pickFirst(report, ["timelineText", "timeline_text"]) ??
+    pickFirst(pieRow, ["timeline_text"]);
+
+  return {
+    exists: true,
+    id: str(pieRow.id, null as any),
+    score:
+      maybeNum(pickFirst(report, ["score"])) ??
+      maybeNum(pickFirst(pieRow, ["score", "complexity_score"])),
+    tier:
+      pickFirst(report, ["tier"]) ??
+      pickFirst(pieRow, ["tier", "recommended_tier"]) ??
+      null,
+    confidence:
+      pickFirst(report, ["confidence"]) ??
+      pickFirst(pieRow, ["confidence"]) ??
+      null,
+    summary:
+      pickFirst(report, ["summary"]) ??
+      pickFirst(pieRow, ["summary"]) ??
+      "PIE report available.",
+    pricingTarget:
+      maybeNum(pickFirst(pricing, ["target", "recommended"])) ??
+      maybeNum(pickFirst(report, ["pricingTarget", "pricing_target"])) ??
+      maybeNum(pickFirst(pieRow, ["pricing_target", "target_price"])),
+    pricingMin:
+      maybeNum(pickFirst(pricing, ["minimum", "min"])) ??
+      maybeNum(pickFirst(report, ["pricingMin", "pricing_min"])) ??
+      maybeNum(pickFirst(pieRow, ["pricing_min"])),
+    pricingMax:
+      maybeNum(pickFirst(pricing, ["maximum", "max"])) ??
+      // fallback to upper buffer in report.pricing.buffers
+      (() => {
+        const buffers = asArray(pricing.buffers);
+        const upper =
+          buffers.find((b) => lower(b?.label).includes("upper")) ||
+          buffers.find((b) => b?.amount != null);
+        return maybeNum(upper?.amount);
+      })() ??
+      maybeNum(pickFirst(report, ["pricingMax", "pricing_max"])) ??
+      maybeNum(pickFirst(pieRow, ["pricing_max"])),
+    risks,
+    pitch: pitchObj,
+    hoursMin,
+    hoursMax,
+    timelineText: timelineText ? String(timelineText) : null,
+  };
+}
+
+function parseEstimateFromQuote(quote: AnyRow | null, pie: ReturnType<typeof parsePieFromRow>) {
+  const q = quote || {};
+  const quoteJson = asObj(
+    pickFirst(q, ["quote_json", "quote", "summary_json", "estimate_json", "payload", "data"])
+  );
+  const estimateObj = asObj(
+    pickFirst(quoteJson, ["estimate", "pricing"]) ??
+      pickFirst(q, ["estimate", "pricing"]) ??
+      {}
+  );
+
+  const target =
+    maybeNum(
+      pickFirst(q, [
+        "estimate_target",
+        "target",
+        "price_target",
+        "recommended_price",
+        "quoted_price",
+      ])
+    ) ??
+    maybeNum(pickFirst(estimateObj, ["target", "recommended", "price"])) ??
+    pie.pricingTarget ??
+    0;
+
+  const min =
+    maybeNum(pickFirst(q, ["estimate_min", "min_price", "price_min"])) ??
+    maybeNum(pickFirst(estimateObj, ["min", "minimum"])) ??
+    pie.pricingMin ??
+    Math.round(target * 0.9);
+
+  const max =
+    maybeNum(pickFirst(q, ["estimate_max", "max_price", "price_max"])) ??
+    maybeNum(pickFirst(estimateObj, ["max", "maximum"])) ??
+    pie.pricingMax ??
+    Math.round(target * 1.15);
+
+  return {
+    target: Math.round(target || 0),
+    min: Math.round(min || 0),
+    max: Math.round(max || 0),
+  };
+}
+
+function parseTierFromQuote(quote: AnyRow | null, pie: ReturnType<typeof parsePieFromRow>) {
+  const q = quote || {};
+  const quoteJson = asObj(
+    pickFirst(q, ["quote_json", "quote", "summary_json", "payload", "data"])
+  );
+  return (
+    pickFirst(q, ["tier", "selected_tier", "recommended_tier"]) ??
+    pickFirst(quoteJson, ["tier", "selectedTier", "recommendedTier"]) ??
+    pie.tier ??
+    "Essential"
+  );
+}
+
+function parseLeadEmail(quote: AnyRow | null, project: AnyRow | null) {
+  const q = quote || {};
+  const p = project || {};
+  const quoteJson = asObj(
+    pickFirst(q, ["quote_json", "quote", "summary_json", "payload", "data"])
+  );
 
   return (
-    <div>
-      {/* Top summary */}
-      <div className="card" style={{ marginBottom: 14 }}>
-        <div className="cardInner">
-          <div
-            className="row"
-            style={{ gap: 8, flexWrap: "wrap", justifyContent: "space-between" }}
-          >
-            <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-              <span className="badge">Total: {rows.length}</span>
-              <span className="badge">Showing: {filteredRows.length}</span>
-              <span className="badge">Missing PIE: {filteredSummary.missingPie}</span>
-              <span className="badge">No assets: {filteredSummary.noAssets}</span>
-              <span className="badge">
-                Revisions: {filteredSummary.withRevisions}
-              </span>
-            </div>
+    pickFirst(p, ["lead_email", "email"]) ??
+    pickFirst(q, ["lead_email", "email", "contact_email"]) ??
+    pickFirst(quoteJson, ["lead.email", "leadEmail", "email"]) ??
+    "unknown@email.com"
+  );
+}
 
-            <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-              {Object.entries(summaryCounts).map(([k, v]) => (
-                <span key={k} className="badge">
-                  {k}: {v}
-                </span>
-              ))}
-            </div>
-          </div>
+function parseLeadName(quote: AnyRow | null, project: AnyRow | null) {
+  const q = quote || {};
+  const p = project || {};
+  const quoteJson = asObj(
+    pickFirst(q, ["quote_json", "quote", "summary_json", "payload", "data"])
+  );
+
+  return (
+    pickFirst(p, ["lead_name", "name"]) ??
+    pickFirst(q, ["lead_name", "name", "contact_name"]) ??
+    pickFirst(quoteJson, ["lead.name", "leadName", "name"]) ??
+    null
+  );
+}
+
+function parseAdminPricing(project: AnyRow | null, quote: AnyRow | null) {
+  const p = project || {};
+  const q = quote || {};
+  const pricingObj = asObj(
+    pickFirst(p, ["admin_pricing", "admin_pricing_json"]) ??
+      pickFirst(q, ["admin_pricing", "admin_pricing_json"])
+  );
+
+  return {
+    discountPercent: num(
+      pickFirst(p, ["discount_percent"]) ??
+        pickFirst(pricingObj, ["discountPercent", "discount_percent"]),
+      0
+    ),
+    flatAdjustment: num(
+      pickFirst(p, ["flat_adjustment"]) ??
+        pickFirst(pricingObj, ["flatAdjustment", "flat_adjustment"]),
+      0
+    ),
+    hourlyRate: num(
+      pickFirst(p, ["hourly_rate"]) ??
+        pickFirst(pricingObj, ["hourlyRate", "hourly_rate"]),
+      40
+    ),
+    notes: str(
+      pickFirst(p, ["admin_notes"]) ?? pickFirst(pricingObj, ["notes"]) ?? "",
+      ""
+    ),
+  };
+}
+
+function parseProposalText(project: AnyRow | null, quote: AnyRow | null) {
+  return str(
+    pickFirst(project || {}, ["proposal_text"]) ??
+      pickFirst(quote || {}, ["proposal_text", "proposal"]) ??
+      "",
+    ""
+  );
+}
+
+function parseCallRequest(call: AnyRow | null) {
+  if (!call) return null;
+  return {
+    status: str(pickFirst(call, ["status"]), "new"),
+    bestTime:
+      pickFirst(call, ["best_time", "bestTime"]) ??
+      pickFirst(call, ["preferred_times", "preferredTimes"]) ??
+      null,
+    preferredTimes: pickFirst(call, ["preferred_times", "preferredTimes"]) ?? null,
+    timezone: pickFirst(call, ["timezone", "time_zone"]) ?? null,
+    notes: pickFirst(call, ["notes", "note"]) ?? null,
+  };
+}
+
+function buildDetailLink(quoteId: string) {
+  // If your detail route is different, this is the only line to adjust.
+  return `/internal/preview/${quoteId}`;
+}
+
+export default async function InternalAdminPage() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceKey) {
+    return (
+      <main style={{ padding: 24 }}>
+        <h1>Internal Admin</h1>
+        <p>Missing Supabase env vars (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY).</p>
+      </main>
+    );
+  }
+
+  const supabase = createClient(supabaseUrl, serviceKey, {
+    auth: { persistSession: false },
+  });
+
+  // Pull everything safely (tries common table names)
+  const [quotesRes, projectsRes, piesRes, callsRes, assetsRes, revisionsRes, notesRes] =
+    await Promise.all([
+      safeTableSelect(supabase, ["quotes"], { orderBy: "created_at", ascending: false, limit: 300 }),
+      safeTableSelect(supabase, ["projects"], { orderBy: "created_at", ascending: false, limit: 300 }),
+      safeTableSelect(supabase, ["pie_reports"], { orderBy: "created_at", ascending: false, limit: 1000 }),
+      safeTableSelect(supabase, ["call_requests", "quote_call_requests"], {
+        orderBy: "created_at",
+        ascending: false,
+        limit: 1000,
+      }),
+      safeTableSelect(supabase, ["project_assets", "portal_assets"], {
+        orderBy: "created_at",
+        ascending: false,
+        limit: 2000,
+      }),
+      safeTableSelect(supabase, ["project_revisions", "revisions"], {
+        orderBy: "created_at",
+        ascending: false,
+        limit: 2000,
+      }),
+      safeTableSelect(supabase, ["project_notes", "portal_notes", "client_notes"], {
+        orderBy: "created_at",
+        ascending: false,
+        limit: 2000,
+      }),
+    ]);
+
+  const quotes = quotesRes.rows || [];
+  const projects = projectsRes.rows || [];
+  const pieReports = piesRes.rows || [];
+  const callRequests = callsRes.rows || [];
+  const assets = assetsRes.rows || [];
+  const revisions = revisionsRes.rows || [];
+  const notes = notesRes.rows || [];
+
+  const quoteById: Record<string, AnyRow> = {};
+  for (const q of quotes) {
+    if (!q?.id) continue;
+    quoteById[String(q.id)] = q;
+  }
+
+  // Use latest project per quote_id (if duplicates exist)
+  const projectsByQuoteIdGrouped = groupBy(
+    projects.filter((p) => p?.quote_id),
+    "quote_id"
+  );
+  const projectByQuoteId: Record<string, AnyRow> = {};
+  for (const [qid, rows] of Object.entries(projectsByQuoteIdGrouped)) {
+    const latest = latestBy(rows);
+    if (latest) projectByQuoteId[qid] = latest;
+  }
+
+  const projectById: Record<string, AnyRow> = {};
+  for (const p of projects) {
+    if (!p?.id) continue;
+    projectById[String(p.id)] = p;
+  }
+
+  // Calls can attach by quote_id
+  const callsByQuoteIdGrouped = groupBy(
+    callRequests.filter((c) => c?.quote_id),
+    "quote_id"
+  );
+  const callByQuoteId: Record<string, AnyRow> = {};
+  for (const [qid, rows] of Object.entries(callsByQuoteIdGrouped)) {
+    const latest = latestBy(rows);
+    if (latest) callByQuoteId[qid] = latest;
+  }
+
+  // PIE can attach by quote_id or project_id
+  const piesByQuoteId = groupBy(
+    pieReports.filter((r) => r?.quote_id),
+    "quote_id"
+  );
+  const piesByProjectId = groupBy(
+    pieReports.filter((r) => r?.project_id),
+    "project_id"
+  );
+
+  // Counts/maps for portal sync
+  const assetCountByProjectId: Record<string, number> = {};
+  for (const a of assets) {
+    const pid = a?.project_id ? String(a.project_id) : null;
+    if (!pid) continue;
+    assetCountByProjectId[pid] = (assetCountByProjectId[pid] || 0) + 1;
+  }
+
+  const revisionCountByProjectId: Record<string, number> = {};
+  for (const r of revisions) {
+    const pid = r?.project_id ? String(r.project_id) : null;
+    if (!pid) continue;
+    revisionCountByProjectId[pid] = (revisionCountByProjectId[pid] || 0) + 1;
+  }
+
+  const notesByProjectIdGrouped = groupBy(
+    notes.filter((n) => n?.project_id),
+    "project_id"
+  );
+  const latestNoteByProjectId: Record<string, { body: string; createdAt: string | null }> = {};
+  for (const [pid, rows] of Object.entries(notesByProjectIdGrouped)) {
+    const latest = latestBy(rows);
+    if (!latest) continue;
+    const body =
+      pickFirst(latest, ["body", "message", "note", "content", "text"]) ?? "";
+    const createdAt = pickFirst(latest, ["created_at", "updated_at"]) ?? null;
+    latestNoteByProjectId[pid] = {
+      body: String(body || ""),
+      createdAt: createdAt ? String(createdAt) : null,
+    };
+  }
+
+  // Union quote IDs from quotes + projects
+  const quoteIds = new Set<string>();
+  for (const q of quotes) if (q?.id) quoteIds.add(String(q.id));
+  for (const p of projects) if (p?.quote_id) quoteIds.add(String(p.quote_id));
+
+  const rows = [...quoteIds].map((quoteId) => {
+    const quote = quoteById[quoteId] || null;
+    const project = projectByQuoteId[quoteId] || null;
+
+    const projectId = project?.id ? String(project.id) : null;
+
+    // pick latest PIE (prefer project.latest_pie_report_id if present)
+    let pieRow: AnyRow | null = null;
+    const latestPieId =
+      pickFirst(project, ["latest_pie_report_id"]) ??
+      pickFirst(quote, ["latest_pie_report_id"]);
+
+    if (latestPieId) {
+      pieRow =
+        pieReports.find((r) => String(r.id) === String(latestPieId)) || null;
+    }
+
+    if (!pieRow && projectId && piesByProjectId[projectId]?.length) {
+      pieRow = latestBy(piesByProjectId[projectId]);
+    }
+
+    if (!pieRow && piesByQuoteId[quoteId]?.length) {
+      pieRow = latestBy(piesByQuoteId[quoteId]);
+    }
+
+    const pie = parsePieFromRow(pieRow);
+    const estimate = parseEstimateFromQuote(quote, pie);
+
+    // Keep project status in sync with visible quote status if available
+    const quoteStatus = pickFirst(quote, ["status"]);
+    const projectStatus = pickFirst(project, ["project_status", "status"]);
+    const finalStatus =
+      (quoteStatus ? String(quoteStatus) : null) ||
+      (projectStatus ? String(projectStatus) : null) ||
+      "new";
+
+    const clientStatus = pickFirst(project, ["client_status"]) ?? "new";
+    const call = parseCallRequest(callByQuoteId[quoteId] || null);
+
+    const latestClientNote =
+      projectId && latestNoteByProjectId[projectId]
+        ? latestNoteByProjectId[projectId]
+        : null;
+
+    return {
+      quoteId,
+      createdAt:
+        String(pickFirst(quote, ["created_at"])) ||
+        String(pickFirst(project, ["created_at"])) ||
+        new Date(0).toISOString(),
+
+      status: finalStatus,
+      tier: String(parseTierFromQuote(quote, pie)),
+
+      leadEmail: String(parseLeadEmail(quote, project)),
+      leadName: parseLeadName(quote, project),
+
+      clientStatus: String(clientStatus),
+      assetCount: projectId ? assetCountByProjectId[projectId] || 0 : 0,
+      revisionCount: projectId ? revisionCountByProjectId[projectId] || 0 : 0,
+      latestClientNote,
+
+      estimate,
+      estimateFormatted: {
+        target: money(estimate.target),
+        min: money(estimate.min),
+        max: money(estimate.max),
+      },
+
+      callRequest: call,
+      pie,
+
+      adminPricing: parseAdminPricing(project, quote),
+      proposalText: parseProposalText(project, quote),
+
+      links: {
+        detail: buildDetailLink(quoteId),
+      },
+    };
+  });
+
+  // Newest first
+  rows.sort((a, b) => ts(b.createdAt) - ts(a.createdAt));
+
+  return (
+    <main style={{ padding: 16 }}>
+      <div style={{ marginBottom: 12 }}>
+        <h1 style={{ margin: 0, fontSize: 22 }}>Internal Admin</h1>
+        <div style={{ opacity: 0.75, marginTop: 4, fontSize: 13 }}>
+          Leads, PIE, pricing controls, and client portal sync
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="card" style={{ marginBottom: 14 }}>
-        <div className="cardInner">
-          <div style={{ fontWeight: 900, marginBottom: 10 }}>Admin v2 filters</div>
-
-          <div className="grid2">
-            <div>
-              <label className="fieldLabel">Search</label>
-              <input
-                className="input"
-                placeholder="Search email, quote ID, PIE summary, client note..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="fieldLabel">Sort</label>
-              <select
-                className="select"
-                value={sortBy}
-                onChange={(e) =>
-                  setSortBy(
-                    e.target.value as
-                      | "newest"
-                      | "oldest"
-                      | "price_high"
-                      | "price_low"
-                      | "score_high"
-                      | "score_low"
-                  )
-                }
-              >
-                <option value="newest">Newest first</option>
-                <option value="oldest">Oldest first</option>
-                <option value="price_high">Price high → low</option>
-                <option value="price_low">Price low → high</option>
-                <option value="score_high">PIE score high → low</option>
-                <option value="score_low">PIE score low → high</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid2" style={{ marginTop: 10 }}>
-            <div>
-              <label className="fieldLabel">Project status</label>
-              <select
-                className="select"
-                value={projectStatusFilter}
-                onChange={(e) => setProjectStatusFilter(e.target.value)}
-              >
-                {projectStatusOptions.map((v) => (
-                  <option key={v} value={v}>
-                    {v}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="fieldLabel">Client status</label>
-              <select
-                className="select"
-                value={clientStatusFilter}
-                onChange={(e) => setClientStatusFilter(e.target.value)}
-              >
-                {clientStatusOptions.map((v) => (
-                  <option key={v} value={v}>
-                    {v}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="row" style={{ gap: 8, flexWrap: "wrap", marginTop: 10 }}>
-            <button
-              className={`btn ${pieFilter === "all" ? "btnPrimary" : "btnGhost"}`}
-              onClick={() => setPieFilter("all")}
-            >
-              PIE: All
-            </button>
-            <button
-              className={`btn ${pieFilter === "missing_pie" ? "btnPrimary" : "btnGhost"}`}
-              onClick={() => setPieFilter("missing_pie")}
-            >
-              PIE Missing
-            </button>
-            <button
-              className={`btn ${pieFilter === "has_pie" ? "btnPrimary" : "btnGhost"}`}
-              onClick={() => setPieFilter("has_pie")}
-            >
-              PIE Ready
-            </button>
-
-            <button
-              className={`btn ${assetFilter === "no_assets" ? "btnPrimary" : "btnGhost"}`}
-              onClick={() => setAssetFilter(assetFilter === "no_assets" ? "all" : "no_assets")}
-            >
-              No Assets
-            </button>
-            <button
-              className={`btn ${assetFilter === "has_assets" ? "btnPrimary" : "btnGhost"}`}
-              onClick={() =>
-                setAssetFilter(assetFilter === "has_assets" ? "all" : "has_assets")
-              }
-            >
-              Has Assets
-            </button>
-
-            <button
-              className={`btn ${
-                revisionFilter === "has_revisions" ? "btnPrimary" : "btnGhost"
-              }`}
-              onClick={() =>
-                setRevisionFilter(
-                  revisionFilter === "has_revisions" ? "all" : "has_revisions"
-                )
-              }
-            >
-              Has Revisions
-            </button>
-
-            <button
-              className="btn btnGhost"
-              onClick={() => {
-                setSearch("");
-                setProjectStatusFilter("all");
-                setClientStatusFilter("all");
-                setPieFilter("all");
-                setAssetFilter("all");
-                setRevisionFilter("all");
-                setSortBy("newest");
-              }}
-            >
-              Reset filters
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Cards */}
-      <div className="row" style={{ flexDirection: "column", gap: 14 }}>
-        {filteredRows.map((row) => {
-          const baseTarget = row.pie.pricingTarget ?? row.estimate.target;
-          const discountPercent = Number(row.adminPricing.discountPercent || 0);
-          const flatAdjustment = Number(row.adminPricing.flatAdjustment || 0);
-          const hourlyRate = Number(row.adminPricing.hourlyRate || 40);
-
-          const discounted = Math.round(baseTarget * (1 - discountPercent / 100));
-          const adjustedTarget = discounted + flatAdjustment;
-
-          const hoursMin = row.pie.hoursMin ?? null;
-          const hoursMax = row.pie.hoursMax ?? null;
-          const laborMin = hoursMin != null ? Math.round(hoursMin * hourlyRate) : null;
-          const laborMax = hoursMax != null ? Math.round(hoursMax * hourlyRate) : null;
-
-          const isBusy = !!busyByQuote[row.quoteId];
-          const isExpanded = !!expanded[row.quoteId];
-
-          const clientState = clientStatusLabel(row);
-          const assets = assetCount(row);
-          const revisions = revisionCount(row);
-          const hasPieReport = hasPie(row);
-
-          const noteText = latestNoteText(row);
-          const noteDate = latestNoteDate(row);
-
-          return (
-            <div key={row.quoteId} className="card">
-              <div className="cardInner">
-                <div
-                  className="row"
-                  style={{
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    gap: 14,
-                  }}
-                >
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div className="row" style={{ gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
-                      <span className={statusBadge(row.status)}>{row.status}</span>
-                      <span className="badge">{row.pie.tier || row.tier || "—"}</span>
-
-                      <span className="badge">Client: {clientState}</span>
-
-                      <span className="badge">Assets: {assets}</span>
-                      <span className="badge">Revisions: {revisions}</span>
-
-                      {!hasPieReport ? (
-                        <span className="badge badgeHot">PIE missing</span>
-                      ) : null}
-
-                      {row.pie.score != null ? (
-                        <span className="badge">Score: {row.pie.score}</span>
-                      ) : null}
-
-                      {row.pie.confidence ? (
-                        <span className="badge">{row.pie.confidence}</span>
-                      ) : null}
-                    </div>
-
-                    <div style={{ fontWeight: 900, marginBottom: 6 }}>
-                      {row.leadEmail}
-                    </div>
-                    <div style={{ opacity: 0.78, fontSize: 13 }}>Quote: {row.quoteId}</div>
-                    <div style={{ opacity: 0.78, fontSize: 13 }}>
-                      Created: {fmtDate(row.createdAt)}
-                    </div>
-
-                    {row.callRequest ? (
-                      <div style={{ opacity: 0.85, fontSize: 13, marginTop: 6 }}>
-                        Call request: {row.callRequest.status || "new"} •{" "}
-                        {row.callRequest.bestTime ||
-                          row.callRequest.preferredTimes ||
-                          "—"}
-                      </div>
-                    ) : null}
-
-                    {noteText ? (
-                      <div
-                        style={{
-                          marginTop: 10,
-                          fontSize: 13,
-                          lineHeight: 1.45,
-                          background: "rgba(255,255,255,0.03)",
-                          border: "1px solid rgba(255,255,255,0.08)",
-                          borderRadius: 10,
-                          padding: "10px 12px",
-                        }}
-                      >
-                        <div style={{ fontWeight: 800, marginBottom: 4 }}>
-                          Latest client note
-                          {noteDate ? (
-                            <span style={{ opacity: 0.7, fontWeight: 500 }}>
-                              {" "}
-                              • {fmtDate(noteDate)}
-                            </span>
-                          ) : null}
-                        </div>
-                        <div style={{ opacity: 0.92 }}>
-                          {noteText.length > 220 ? `${noteText.slice(0, 220)}…` : noteText}
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div style={{ minWidth: 240 }}>
-                    <div style={{ fontWeight: 900, fontSize: 20 }}>
-                      {fmtCurrency(adjustedTarget)}
-                    </div>
-                    <div style={{ fontSize: 13, opacity: 0.82, marginTop: 4 }}>
-                      Base quote: {row.estimateFormatted.target} ({row.estimateFormatted.min}–
-                      {row.estimateFormatted.max})
-                    </div>
-                    <div style={{ fontSize: 13, opacity: 0.82, marginTop: 4 }}>
-                      PIE target: {fmtCurrency(baseTarget)}
-                    </div>
-
-                    {hoursMin != null && hoursMax != null ? (
-                      <div style={{ fontSize: 13, opacity: 0.9, marginTop: 6 }}>
-                        Time: {hoursMin}–{hoursMax} hrs ({row.pie.timelineText || "—"})
-                      </div>
-                    ) : null}
-
-                    {laborMin != null && laborMax != null ? (
-                      <div style={{ fontSize: 13, opacity: 0.9 }}>
-                        Labor @ ${hourlyRate}/hr: {fmtCurrency(laborMin)}–
-                        {fmtCurrency(laborMax)}
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-
-                {/* Quick pipeline buttons */}
-                <div className="row" style={{ gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-                  <button
-                    className="btn btnGhost"
-                    disabled={isBusy}
-                    onClick={() => quickSetStatus(row, "call")}
-                  >
-                    Set: call
-                  </button>
-                  <button
-                    className="btn btnGhost"
-                    disabled={isBusy}
-                    onClick={() => quickSetStatus(row, "proposal")}
-                  >
-                    Set: proposal
-                  </button>
-                  <button
-                    className="btn btnGhost"
-                    disabled={isBusy}
-                    onClick={() => quickSetStatus(row, "deposit")}
-                  >
-                    Set: deposit
-                  </button>
-                  <button
-                    className="btn btnGhost"
-                    disabled={isBusy}
-                    onClick={() => quickSetStatus(row, "active")}
-                  >
-                    Set: active
-                  </button>
-                </div>
-
-                {/* PIE summary card */}
-                <div
-                  className="card"
-                  style={{
-                    marginTop: 14,
-                    borderColor: "rgba(255,255,255,0.10)",
-                    background: "rgba(255,255,255,0.03)",
-                  }}
-                >
-                  <div className="cardInner">
-                    <div style={{ fontWeight: 900, marginBottom: 8 }}>PIE summary</div>
-
-                    {hasPieReport ? (
-                      <>
-                        <div style={{ lineHeight: 1.6, opacity: 0.92 }}>
-                          {row.pie.summary || "PIE summary not available."}
-                        </div>
-
-                        {row.pie.risks?.length ? (
-                          <div style={{ marginTop: 10 }}>
-                            <div style={{ fontWeight: 800, marginBottom: 6 }}>
-                              Risks / blockers
-                            </div>
-                            <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
-                              {row.pie.risks.map((r, i) => (
-                                <li key={i}>{r}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        ) : null}
-
-                        {row.pie.pitch?.emphasize?.length ? (
-                          <div style={{ marginTop: 10 }}>
-                            <div style={{ fontWeight: 800, marginBottom: 6 }}>
-                              What to emphasize on the call
-                            </div>
-                            <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-                              {row.pie.pitch.emphasize.map(
-                                (item: string, i: number) => (
-                                  <span key={i} className="badge">
-                                    {item}
-                                  </span>
-                                )
-                              )}
-                            </div>
-                          </div>
-                        ) : null}
-                      </>
-                    ) : (
-                      <div style={{ opacity: 0.85, lineHeight: 1.6 }}>
-                        No PIE report yet for this quote. Open quote detail and generate PIE, or
-                        run your PIE backfill endpoint after verifying project links.
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Admin controls */}
-                <div className="grid2" style={{ marginTop: 14 }}>
-                  <div className="panel">
-                    <div className="panelHeader">
-                      <div style={{ fontWeight: 900 }}>Pipeline + pricing controls</div>
-                    </div>
-                    <div className="panelBody">
-                      <div style={{ marginBottom: 10 }}>
-                        <label className="fieldLabel">Status</label>
-                        <select
-                          className="select"
-                          value={row.status}
-                          onChange={(e) =>
-                            updateRowLocal(row.quoteId, (r) => ({
-                              ...r,
-                              status: e.target.value,
-                            }))
-                          }
-                        >
-                          <option value="new">new</option>
-                          <option value="call_requested">call_requested</option>
-                          <option value="call">call</option>
-                          <option value="proposal">proposal</option>
-                          <option value="deposit">deposit</option>
-                          <option value="active">active</option>
-                          <option value="closed_won">closed_won</option>
-                          <option value="closed_lost">closed_lost</option>
-                        </select>
-                      </div>
-
-                      <div className="grid2">
-                        <div>
-                          <label className="fieldLabel">Discount %</label>
-                          <input
-                            className="input"
-                            type="number"
-                            value={row.adminPricing.discountPercent}
-                            onChange={(e) =>
-                              updateRowLocal(row.quoteId, (r) => ({
-                                ...r,
-                                adminPricing: {
-                                  ...r.adminPricing,
-                                  discountPercent: Number(e.target.value || 0),
-                                },
-                              }))
-                            }
-                          />
-                        </div>
-
-                        <div>
-                          <label className="fieldLabel">Flat adjustment ($)</label>
-                          <input
-                            className="input"
-                            type="number"
-                            value={row.adminPricing.flatAdjustment}
-                            onChange={(e) =>
-                              updateRowLocal(row.quoteId, (r) => ({
-                                ...r,
-                                adminPricing: {
-                                  ...r.adminPricing,
-                                  flatAdjustment: Number(e.target.value || 0),
-                                },
-                              }))
-                            }
-                          />
-                        </div>
-                      </div>
-
-                      <div style={{ marginTop: 10 }}>
-                        <label className="fieldLabel">Hourly rate ($/hr)</label>
-                        <input
-                          className="input"
-                          type="number"
-                          value={row.adminPricing.hourlyRate}
-                          onChange={(e) =>
-                            updateRowLocal(row.quoteId, (r) => ({
-                              ...r,
-                              adminPricing: {
-                                ...r.adminPricing,
-                                hourlyRate: Number(e.target.value || 40),
-                              },
-                            }))
-                          }
-                        />
-                      </div>
-
-                      <div style={{ marginTop: 10 }}>
-                        <label className="fieldLabel">Admin notes (private)</label>
-                        <textarea
-                          className="textarea"
-                          value={row.adminPricing.notes}
-                          onChange={(e) =>
-                            updateRowLocal(row.quoteId, (r) => ({
-                              ...r,
-                              adminPricing: {
-                                ...r.adminPricing,
-                                notes: e.target.value,
-                              },
-                            }))
-                          }
-                          placeholder="Example: discount only if client supplies content/logo this week."
-                        />
-                      </div>
-
-                      <div
-                        className="row"
-                        style={{ marginTop: 12, alignItems: "center", gap: 10, flexWrap: "wrap" }}
-                      >
-                        <button
-                          className="btn btnPrimary"
-                          disabled={isBusy}
-                          onClick={() =>
-                            saveQuoteAdmin(row.quoteId, {
-                              status: row.status,
-                              adminPricing: row.adminPricing,
-                            })
-                          }
-                        >
-                          Save status + pricing
-                        </button>
-
-                        <a
-                          className="btn btnGhost"
-                          href={row.links.detail}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Open quote detail
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="panel">
-                    <div className="panelHeader">
-                      <div style={{ fontWeight: 900 }}>Proposal generator</div>
-                    </div>
-                    <div className="panelBody">
-                      <div className="smallNote" style={{ marginBottom: 10 }}>
-                        Uses PIE + quote info to draft proposal text. If OpenAI is configured,
-                        it can generate a stronger version automatically.
-                      </div>
-
-                      <div
-                        className="row"
-                        style={{ gap: 10, marginBottom: 10, flexWrap: "wrap" }}
-                      >
-                        <button
-                          className="btn btnPrimary"
-                          disabled={isBusy}
-                          onClick={() => generateProposal(row)}
-                        >
-                          Generate proposal text
-                        </button>
-
-                        <button
-                          className="btn btnGhost"
-                          disabled={isBusy || !row.proposalText}
-                          onClick={async () => {
-                            try {
-                              await navigator.clipboard.writeText(row.proposalText || "");
-                              setMessageByQuote((m) => ({
-                                ...m,
-                                [row.quoteId]: "Proposal copied.",
-                              }));
-                            } catch {
-                              setMessageByQuote((m) => ({
-                                ...m,
-                                [row.quoteId]: "Copy failed",
-                              }));
-                            }
-                          }}
-                        >
-                          Copy
-                        </button>
-
-                        <button
-                          className="btn btnGhost"
-                          onClick={() =>
-                            setExpanded((m) => ({
-                              ...m,
-                              [row.quoteId]: !m[row.quoteId],
-                            }))
-                          }
-                        >
-                          {isExpanded ? "Hide" : "Show"} proposal
-                        </button>
-                      </div>
-
-                      {isExpanded ? (
-                        <textarea
-                          className="textarea"
-                          value={row.proposalText || ""}
-                          onChange={(e) =>
-                            updateRowLocal(row.quoteId, (r) => ({
-                              ...r,
-                              proposalText: e.target.value,
-                            }))
-                          }
-                          placeholder="Generated proposal text will appear here..."
-                          style={{ minHeight: 220 }}
-                        />
-                      ) : null}
-
-                      {isExpanded ? (
-                        <div className="row" style={{ marginTop: 10 }}>
-                          <button
-                            className="btn btnGhost"
-                            disabled={isBusy}
-                            onClick={() =>
-                              saveQuoteAdmin(row.quoteId, {
-                                proposalText: row.proposalText,
-                              })
-                            }
-                          >
-                            Save proposal text
-                          </button>
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-
-                {!!messageByQuote[row.quoteId] && (
-                  <div style={{ marginTop: 10, fontSize: 13, opacity: 0.9 }}>
-                    {messageByQuote[row.quoteId]}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-
-        {filteredRows.length === 0 ? (
-          <div className="card">
-            <div className="cardInner" style={{ opacity: 0.85 }}>
-              No quotes match your current filters.
-            </div>
-          </div>
-        ) : null}
-      </div>
-    </div>
+      <AdminPipelineClient initialRows={rows as any} />
+    </main>
   );
 }
