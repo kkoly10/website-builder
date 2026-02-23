@@ -17,6 +17,8 @@ export default function OpsThankYouPage({
   const opsIntakeId = pick(searchParams, "opsIntakeId");
   const callRequestId = pick(searchParams, "callRequestId");
 
+  const customerNext = "/";
+
   return (
     <main className="container">
       <section className="section">
@@ -42,19 +44,39 @@ export default function OpsThankYouPage({
               ) : null}
             </div>
 
+            <div className="card" style={{ marginTop: 14, background: "rgba(255,255,255,0.03)" }}>
+              <div className="cardInner">
+                <div style={{ fontWeight: 900, marginBottom: 8 }}>Optional: Create your account now</div>
+                <p className="p" style={{ marginTop: 0 }}>
+                  Creating an account lets you sign in later to check your project and next steps.
+                </p>
+
+                <div className="heroActions" style={{ marginTop: 12 }}>
+                  <Link
+                    href={`/signup?next=${encodeURIComponent(customerNext)}`}
+                    className="btn btnPrimary"
+                  >
+                    Create Account <span className="btnArrow">→</span>
+                  </Link>
+
+                  <Link
+                    href={`/login?next=${encodeURIComponent(customerNext)}`}
+                    className="btn btnGhost"
+                  >
+                    Sign In
+                  </Link>
+                </div>
+              </div>
+            </div>
+
             <div className="heroActions" style={{ marginTop: 14 }}>
               <Link href="/systems" className="btn btnGhost">
                 Submit Another Intake
               </Link>
-              <Link href="/internal/ops" className="btn btnPrimary">
+              <Link href="/internal/ops" className="btn btnGhost">
                 Internal Ops Dashboard
               </Link>
             </div>
-
-            <p className="p" style={{ marginTop: 12 }}>
-              If you’re prompting customers to create an account after booking, keep that step here
-              (or from your email link flow) so it stays inside the ops product flow.
-            </p>
           </div>
         </div>
       </section>
