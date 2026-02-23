@@ -2,361 +2,416 @@
 import AdminPipelineClient from "./AdminPipelineClient";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-type AnyObj = Record<string, any>;
+type AnyRow = Record<string, any>;
 
-type PieView = {
-  exists: boolean;
-  id: string | null;
-  score: number | null;
-  tier: string | null;
-  confidence: string | null;
-  summary: string;
-  pricingTarget: number | null;
-  pricingMin: number | null;
-  pricingMax: number | null;
-  risks: string[];
-  pitch: any;
-  hoursMin: number | null;
-  hoursMax: number | null;
-  timelineText: string | null;
-};
-
-type PipelineRow = {
-  quoteId: string;
-  createdAt: string;
-  status: string;
-  tier: string;
-  leadEmail: string;
-  leadName: string | null;
-  estimate: { target: number; min: number; max: number };
-  estimateFormatted: { target: string; min: string; max: string };
-  callRequest: null | {
-    status: string;
-    bestTime: string | null;
-    preferredTimes: string | null;
-    timezone: string | null;
-    notes: string | null;
-  };
-  pie: PieView;
-  portal: {
-    clientStatus: string | null;
-    clientUpdatedAt: string | null;
-    latestClientNote: string | null;
-    assetCount: number;
-    revisionCount: number;
-  };
-  adminPricing: {
-    discountPercent: number;
-    flatAdjustment: number;
-    hourlyRate: number;
-    notes: string;
-  };
-  proposalText: string;
-  links: { detail: string };
-};
-
-function asObj(v: unknown): AnyObj {
-  if (!v) return {};
-  if (typeof v === "object" && !Array.isArray(v)) return v as AnyObj;
-  if (typeof v === "string") {
-    try {
-      const parsed = JSON.parse(v);
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        return parsed as AnyObj;
-      }
-    } catch {}
-  }
-  return {};
+function toNumber(v: any, fallback = 0) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
 }
 
-function asArray<T = any>(v: unknown): T[] {
-  if (Array.isArray(v)) return v as T[];
-  if (typeof v === "string") {
-    try {
-      const parsed = JSON.parse(v);
-      if (Array.isArray(parsed)) return parsed as T[];
-    } catch {}
-  }
-  return [];
-}
-
-function n(v: unknown, fallback = 0): number {
-  if (typeof v === "number" && Number.isFinite(v)) return v;
-  if (typeof v === "string" && v.trim() !== "") {
-    const parsed = Number(v);
-    if (Number.isFinite(parsed)) return parsed;
-  }
-  return fallback;
-}
-
-function nOrNull(v: unknown): number | null {
-  if (typeof v === "number" && Number.isFinite(v)) return v;
-  if (typeof v === "string" && v.trim() !== "") {
-    const parsed = Number(v);
-    if (Number.isFinite(parsed)) return parsed;
-  }
-  return null;
-}
-
-function s(v: unknown): string | null {
-  return typeof v === "string" ? v : null;
-}
-
-function fmtCurrency(v: number) {
+function fmtMoney(n: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
-  }).format(v);
+  }).format(n || 0);
 }
 
-function latestByQuote<T extends { quote_id?: string | null; created_at?: string | null }>(
-  rows: T[] | null | undefined
-) {
-  const map = new Map<string, T>();
-  for (const row of rows || []) {
-    const qid = row?.quote_id ? String(row.quote_id) : "";
-    if (!qid) continue;
-    const prev = map.get(qid);
-    if (!prev) {
-      map.set(qid, row);
-      continue;
+function safeText(v: any): string | null {
+  if (v == null) return null;
+  const s = String(v).trim();
+  return s ? s : null;
+}
+
+function parsePieReport(reportRow: AnyRow | null | undefined) {
+  const fallback = {
+    exists: false,
+    id: null as string | null,
+    score: null as number | null,
+    tier: null as string | null,
+    confidence: null as string | null,
+    summary: "No PIE report yet.",
+    pricingTarget: null as number | null,
+    pricingMin: null as number | null,
+    pricingMax: null as number | null,
+    risks: [] as string[],
+    pitch: null as any,
+    hoursMin: null as number | null,
+    hoursMax: null as number | null,
+    timelineText: null as string | null,
+  };
+
+  if (!reportRow) return fallback;
+
+  let obj: any = null;
+
+  // Newer rows store report JSON in `report`
+  if (reportRow.report && typeof reportRow.report === "object") {
+    obj = reportRow.report;
+  }
+
+  // Older rows may have string payload
+  if (!obj && typeof reportRow.payload === "string") {
+    try {
+      obj = JSON.parse(reportRow.payload);
+    } catch {
+      obj = null;
     }
-    const prevTime = new Date(prev.created_at || 0).getTime();
-    const curTime = new Date(row.created_at || 0).getTime();
-    if (curTime >= prevTime) map.set(qid, row);
+  }
+
+  if (!obj || typeof obj !== "object") {
+    return {
+      ...fallback,
+      exists: true,
+      id: reportRow.id ?? null,
+      summary: "PIE row exists, but report JSON is empty.",
+    };
+  }
+
+  const pricing = obj.pricing || {};
+  const hours = obj.hours || {};
+  const timeline = obj.timeline || {};
+
+  const target =
+    typeof pricing.target === "number"
+      ? pricing.target
+      : typeof obj.priceTarget === "number"
+      ? obj.priceTarget
+      : null;
+
+  const min =
+    typeof pricing.minimum === "number"
+      ? pricing.minimum
+      : typeof pricing.min === "number"
+      ? pricing.min
+      : null;
+
+  let max: number | null = null;
+  if (typeof pricing.maximum === "number") {
+    max = pricing.maximum;
+  } else if (Array.isArray(pricing.buffers)) {
+    const upper = pricing.buffers.find(
+      (b: any) =>
+        String(b?.label || "").toLowerCase().includes("upper") &&
+        typeof b?.amount === "number"
+    );
+    if (upper) max = upper.amount;
+  }
+
+  const hoursMin =
+    typeof hours.min === "number"
+      ? hours.min
+      : typeof obj.hoursMin === "number"
+      ? obj.hoursMin
+      : null;
+
+  const hoursMax =
+    typeof hours.max === "number"
+      ? hours.max
+      : typeof obj.hoursMax === "number"
+      ? obj.hoursMax
+      : null;
+
+  const timelineText =
+    safeText(timeline.text) ??
+    safeText(obj.timelineText) ??
+    (hoursMin != null && hoursMax != null ? `${hoursMin}-${hoursMax} hrs` : null);
+
+  return {
+    exists: true,
+    id: reportRow.id ?? null,
+    score:
+      typeof obj.score === "number"
+        ? obj.score
+        : typeof reportRow.score === "number"
+        ? reportRow.score
+        : null,
+    tier: safeText(obj.tier) ?? safeText(reportRow.tier) ?? null,
+    confidence:
+      safeText(obj.confidence) ?? safeText(reportRow.confidence) ?? null,
+    summary:
+      safeText(obj.summary) ??
+      "PIE generated, but no summary text was provided.",
+    pricingTarget: target,
+    pricingMin: min,
+    pricingMax: max,
+    risks: Array.isArray(obj.risks) ? obj.risks.filter(Boolean) : [],
+    pitch: obj.pitch ?? null,
+    hoursMin,
+    hoursMax,
+    timelineText,
+  };
+}
+
+function latestByKey(rows: AnyRow[], key: string) {
+  const map = new Map<string, AnyRow>();
+  for (const r of rows) {
+    const k = r?.[key];
+    if (!k) continue;
+    if (!map.has(k)) map.set(k, r);
   }
   return map;
 }
 
-function parsePie(latestPieRow: AnyObj | undefined): PieView {
-  if (!latestPieRow) {
-    return {
-      exists: false,
-      id: null,
-      score: null,
-      tier: null,
-      confidence: null,
-      summary: "No PIE report yet.",
-      pricingTarget: null,
-      pricingMin: null,
-      pricingMax: null,
-      risks: [],
-      pitch: {},
-      hoursMin: null,
-      hoursMax: null,
-      timelineText: null,
-    };
+function countByKey(rows: AnyRow[], key: string) {
+  const map = new Map<string, number>();
+  for (const r of rows) {
+    const k = r?.[key];
+    if (!k) continue;
+    map.set(k, (map.get(k) || 0) + 1);
   }
+  return map;
+}
 
-  const report = asObj(latestPieRow.report);
-  const pricing = asObj(report.pricing);
-  const hours = asObj(report.hours);
-  const timeline = asObj(report.timeline);
-  const pitch = asObj(report.pitch);
+function latestMessageByProject(rows: AnyRow[]) {
+  const map = new Map<string, string>();
+  for (const r of rows) {
+    const projectId = r?.project_id;
+    if (!projectId) continue;
 
-  const buffers = asArray<any>(pricing.buffers);
-  const upper = buffers.find((b) =>
-    String(b?.label || "").toLowerCase().includes("upper")
-  );
+    // Try common message/content fields
+    const messageText =
+      safeText(r.message) ??
+      safeText(r.body) ??
+      safeText(r.note) ??
+      safeText(r.content) ??
+      safeText(r.text);
 
-  return {
-    exists: true,
-    id: s(latestPieRow.id),
-    score: nOrNull(latestPieRow.score) ?? nOrNull(report.score),
-    tier: s(latestPieRow.tier) ?? s(report.tier),
-    confidence: s(latestPieRow.confidence) ?? s(report.confidence),
-    summary: s(report.summary) || "PIE report generated.",
-    pricingTarget: nOrNull(pricing.target),
-    pricingMin: nOrNull(pricing.minimum),
-    pricingMax: nOrNull(upper?.amount) ?? nOrNull(pricing.maximum),
-    risks: asArray<string>(report.risks).filter(Boolean),
-    pitch,
-    hoursMin: nOrNull(hours.min),
-    hoursMax: nOrNull(hours.max),
-    timelineText:
-      s(report.timelineText) || s(timeline.text) || s(report.timeline_estimate),
-  };
+    if (!messageText) continue;
+
+    // Prefer client-origin messages if field exists, otherwise keep latest row order
+    const senderRole = String(
+      r.sender_role || r.author_role || r.role || r.source || ""
+    ).toLowerCase();
+
+    const looksClient =
+      senderRole.includes("client") ||
+      senderRole.includes("customer") ||
+      senderRole.includes("lead");
+
+    if (!map.has(projectId)) {
+      map.set(projectId, messageText);
+      continue;
+    }
+
+    // If current row is clearly client and existing wasn't tagged, replace
+    if (looksClient) {
+      map.set(projectId, messageText);
+    }
+  }
+  return map;
+}
+
+async function safeSelectTable(
+  table: string,
+  filters?: (q: any) => any
+): Promise<AnyRow[]> {
+  try {
+    let q = (supabaseAdmin as any).from(table).select("*");
+    if (filters) q = filters(q);
+    const { data, error } = await q;
+    if (error) return [];
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
 }
 
 export default async function InternalAdminPage() {
-  const { data: quotesRaw, error: quotesErr } = await supabaseAdmin
+  const db = supabaseAdmin as any;
+
+  const { data: quotesData, error: quotesError } = await db
     .from("quotes")
     .select("*")
     .order("created_at", { ascending: false })
-    .limit(150);
+    .limit(200);
 
-  if (quotesErr) {
+  if (quotesError) {
     return (
       <main className="container section">
-        <div className="card">
-          <div className="cardInner">
-            <h1 className="h2">Internal Admin</h1>
-            <p className="p">Could not load quotes: {quotesErr.message}</p>
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="h2">Internal Admin</div>
+          </div>
+          <div className="panelBody">
+            <div>Could not load quotes: {quotesError.message}</div>
           </div>
         </div>
       </main>
     );
   }
 
-  const quotes = (quotesRaw || []) as AnyObj[];
-  const quoteIds = quotes.map((q) => String(q.id)).filter(Boolean);
-  const leadIds = Array.from(
-    new Set(quotes.map((q) => q.lead_id).filter(Boolean).map(String))
+  const quotes: AnyRow[] = Array.isArray(quotesData) ? quotesData : [];
+
+  const quoteIds = quotes.map((q) => q.id).filter(Boolean);
+  const leadIds = Array.from(new Set(quotes.map((q) => q.lead_id).filter(Boolean)));
+  const projectIds = Array.from(
+    new Set(quotes.map((q) => q.project_id).filter(Boolean))
   );
 
-  const [
-    leadsRes,
-    callsRes,
-    piesRes,
-    portalRes,
-  ] = await Promise.all([
-    leadIds.length
-      ? supabaseAdmin.from("leads").select("*").in("id", leadIds)
-      : Promise.resolve({ data: [], error: null } as any),
+  const [leads, callRequests, pieReports, projects, projectAssets, projectRevisions, projectMessages] =
+    await Promise.all([
+      leadIds.length
+        ? safeSelectTable("leads", (q) => q.in("id", leadIds))
+        : Promise.resolve([]),
+      quoteIds.length
+        ? safeSelectTable("call_requests", (q) =>
+            q.in("quote_id", quoteIds).order("created_at", { ascending: false })
+          )
+        : Promise.resolve([]),
+      quoteIds.length
+        ? safeSelectTable("pie_reports", (q) =>
+            q.in("quote_id", quoteIds).order("created_at", { ascending: false })
+          )
+        : Promise.resolve([]),
+      projectIds.length
+        ? safeSelectTable("projects", (q) => q.in("id", projectIds))
+        : Promise.resolve([]),
+      projectIds.length
+        ? safeSelectTable("project_assets", (q) =>
+            q.in("project_id", projectIds).order("created_at", { ascending: false })
+          )
+        : Promise.resolve([]),
+      projectIds.length
+        ? safeSelectTable("project_revisions", (q) =>
+            q.in("project_id", projectIds).order("created_at", { ascending: false })
+          )
+        : Promise.resolve([]),
+      // Try project_messages first, then fallback to project_notes if messages table doesn't exist
+      projectIds.length
+        ? (async () => {
+            const messages = await safeSelectTable("project_messages", (q) =>
+              q.in("project_id", projectIds).order("created_at", { ascending: false })
+            );
+            if (messages.length) return messages;
+            return await safeSelectTable("project_notes", (q) =>
+              q.in("project_id", projectIds).order("created_at", { ascending: false })
+            );
+          })()
+        : Promise.resolve([]),
+    ]);
 
-    quoteIds.length
-      ? supabaseAdmin.from("call_requests").select("*").in("quote_id", quoteIds)
-      : Promise.resolve({ data: [], error: null } as any),
+  const leadMap = new Map<string, AnyRow>(leads.map((l) => [l.id, l]));
+  const callMap = latestByKey(callRequests, "quote_id");
+  const pieMap = latestByKey(pieReports, "quote_id");
+  const projectMap = new Map<string, AnyRow>(projects.map((p) => [p.id, p]));
 
-    quoteIds.length
-      ? supabaseAdmin.from("pie_reports").select("*").in("quote_id", quoteIds)
-      : Promise.resolve({ data: [], error: null } as any),
+  const assetCounts = countByKey(projectAssets, "project_id");
+  const revisionCounts = countByKey(projectRevisions, "project_id");
+  const latestClientMessage = latestMessageByProject(projectMessages);
 
-    quoteIds.length
-      ? supabaseAdmin.from("quote_portal_state").select("*").in("quote_id", quoteIds)
-      : Promise.resolve({ data: [], error: null } as any),
-  ]);
-
-  const leadsById = new Map<string, AnyObj>();
-  for (const lead of (leadsRes.data || []) as AnyObj[]) {
-    if (lead?.id) leadsById.set(String(lead.id), lead);
-  }
-
-  const latestCallByQuote = latestByQuote((callsRes.data || []) as AnyObj[]);
-  const latestPieByQuote = latestByQuote((piesRes.data || []) as AnyObj[]);
-
-  const portalByQuote = new Map<string, AnyObj>();
-  // If the portal table doesn't exist yet, don't break the admin page.
-  if (!portalRes.error) {
-    for (const row of (portalRes.data || []) as AnyObj[]) {
-      if (row?.quote_id) portalByQuote.set(String(row.quote_id), row);
-    }
-  }
-
-  const rows: PipelineRow[] = quotes.map((q) => {
-    const quoteId = String(q.id);
-    const intake = asObj(q.intake_normalized);
-    const lead = q.lead_id ? leadsById.get(String(q.lead_id)) : undefined;
-    const call = latestCallByQuote.get(quoteId);
-    const pieRow = latestPieByQuote.get(quoteId);
-    const pie = parsePie(pieRow);
-    const portal = portalByQuote.get(quoteId);
+  const rows = quotes.map((q) => {
+    const lead = q.lead_id ? leadMap.get(q.lead_id) : null;
+    const callReq = callMap.get(q.id) || null;
+    const pieRow = pieMap.get(q.id) || null;
+    const project = q.project_id ? projectMap.get(q.project_id) : null;
 
     const estimateTarget =
-      nOrNull(q.estimate_total) ??
-      nOrNull(asObj(q.estimate).target) ??
-      pie.pricingTarget ??
-      0;
+      toNumber(
+        q.estimate_total ?? q.estimate_amount ?? q.estimate_target ?? q.estimate,
+        0
+      ) || 0;
+
     const estimateMin =
-      nOrNull(q.estimate_low) ??
-      nOrNull(asObj(q.estimate).min) ??
-      pie.pricingMin ??
-      estimateTarget;
+      toNumber(q.estimate_low ?? q.estimate_min, Math.round(estimateTarget * 0.9)) ||
+      0;
+
     const estimateMax =
-      nOrNull(q.estimate_high) ??
-      nOrNull(asObj(q.estimate).max) ??
-      pie.pricingMax ??
-      estimateTarget;
+      toNumber(q.estimate_high ?? q.estimate_max, Math.round(estimateTarget * 1.15)) ||
+      0;
 
-    const adminPricingRaw = asObj(q.admin_pricing);
-    const assets = asArray<any>(portal?.assets);
-    const revisions = asArray<any>(portal?.revision_requests);
+    const pie = parsePieReport(pieRow);
 
-    const leadEmail =
-      s(lead?.email) ||
-      s(q.lead_email) ||
-      s(intake.email) ||
-      s(intake.contactEmail) ||
-      "Unknown lead";
+    const tier =
+      safeText(q.tier_recommended) ??
+      safeText(q.recommended_tier) ??
+      safeText(q.tier) ??
+      safeText(pie.tier) ??
+      "essential";
 
-    const leadName =
-      s(lead?.name) ||
-      s(q.lead_name) ||
-      s(intake.name) ||
-      s(intake.contactName) ||
-      null;
+    const clientStatus =
+      safeText(q.client_status) ??
+      safeText(project?.client_status) ??
+      safeText(project?.status) ??
+      "not_started";
+
+    const latestNote =
+      safeText(q.client_last_note) ??
+      (q.project_id ? latestClientMessage.get(q.project_id) ?? null : null);
+
+    const assetCount = q.project_id ? assetCounts.get(q.project_id) || 0 : 0;
+    const revisionCount = q.project_id ? revisionCounts.get(q.project_id) || 0 : 0;
 
     return {
-      quoteId,
-      createdAt: s(q.created_at) || "",
-      status: s(q.status) || "new",
-      tier:
-        s(q.tier_recommended) ||
-        s(q.tier) ||
-        pie.tier ||
-        "essential",
-      leadEmail,
-      leadName,
+      quoteId: q.id,
+      createdAt: q.created_at || new Date().toISOString(),
+      status: safeText(q.status) || "new",
+      tier,
+      leadEmail:
+        safeText(lead?.email) ??
+        safeText(q.email) ??
+        "unknown@lead.local",
+      leadName: safeText(lead?.name) ?? null,
       estimate: {
-        target: Math.round(estimateTarget),
-        min: Math.round(estimateMin),
-        max: Math.round(estimateMax),
+        target: estimateTarget,
+        min: estimateMin,
+        max: estimateMax,
       },
       estimateFormatted: {
-        target: fmtCurrency(Math.round(estimateTarget)),
-        min: fmtCurrency(Math.round(estimateMin)),
-        max: fmtCurrency(Math.round(estimateMax)),
+        target: fmtMoney(estimateTarget),
+        min: fmtMoney(estimateMin),
+        max: fmtMoney(estimateMax),
       },
-      callRequest: call
+      callRequest: callReq
         ? {
-            status: s(call.status) || "new",
-            bestTime: s(call.best_time_to_call),
-            preferredTimes: s(call.preferred_times),
-            timezone: s(call.timezone),
-            notes: s(call.notes),
+            status: safeText(callReq.status) || "new",
+            bestTime: safeText(callReq.best_time),
+            preferredTimes: safeText(callReq.preferred_times),
+            timezone: safeText(callReq.timezone),
+            notes: safeText(callReq.notes),
           }
         : null,
       pie,
-      portal: {
-        clientStatus: s(portal?.client_status),
-        clientUpdatedAt: s(portal?.client_updated_at),
-        latestClientNote: s(portal?.client_notes),
-        assetCount: assets.length,
-        revisionCount: revisions.length,
-      },
       adminPricing: {
-        discountPercent: n(adminPricingRaw.discountPercent, 0),
-        flatAdjustment: n(adminPricingRaw.flatAdjustment, 0),
-        hourlyRate: n(adminPricingRaw.hourlyRate, 40),
-        notes: s(adminPricingRaw.notes) || "",
+        discountPercent: toNumber(q.admin_discount_percent, 0),
+        flatAdjustment: toNumber(q.admin_flat_adjustment, 0),
+        hourlyRate: toNumber(q.admin_hourly_rate, 40),
+        notes: safeText(q.admin_notes) || "",
       },
-      proposalText: s(q.proposal_text) || "",
+      proposalText: safeText(q.admin_proposal_text) ?? safeText(q.proposal_text) ?? "",
+      clientPortal: {
+        status: clientStatus,
+        latestClientNote: latestNote,
+        assetCount,
+        revisionCount,
+        depositStatus:
+          safeText(q.deposit_status) ??
+          safeText(project?.deposit_status) ??
+          "unpaid",
+        portalToken: safeText(project?.portal_token) ?? null,
+      },
       links: {
-        detail: `/internal/preview/${quoteId}`,
+        detail: `/internal/preview?quoteId=${q.id}`,
+        portal:
+          project?.portal_token ? `/portal/${project.portal_token}` : null,
       },
     };
   });
 
   return (
     <main className="container section">
-      <div style={{ marginBottom: 14 }}>
-        <div className="h2" style={{ marginBottom: 6 }}>
-          Internal Admin
+      <div className="panel" style={{ marginBottom: 14 }}>
+        <div className="panelHeader">
+          <div className="h2">Internal Admin</div>
         </div>
-        <div className="p" style={{ margin: 0 }}>
-          Pipeline, PIE summaries, pricing controls, proposal drafts, and client portal activity.
-        </div>
-        {portalRes.error ? (
-          <div className="hint" style={{ marginTop: 10 }}>
-            Portal activity table not found yet. Run the portal SQL migration to enable client
-            status/assets/revisions in admin.
+        <div className="panelBody">
+          <div className="pDark" style={{ margin: 0 }}>
+            PIE-powered pipeline with pricing controls, proposal generation, and client portal sync signals.
           </div>
-        ) : null}
+        </div>
       </div>
 
       <AdminPipelineClient initialRows={rows} />
