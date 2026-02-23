@@ -1,185 +1,130 @@
 // app/internal/admin/page.tsx
+import { createClient } from "@supabase/supabase-js";
 import AdminPipelineClient from "./AdminPipelineClient";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
-
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 type AnyRow = Record<string, any>;
 
-function toNum(v: any): number | null {
-  if (v === null || v === undefined || v === "") return null;
+function asObj(value: any): Record<string, any> {
+  if (!value) return {};
+  if (typeof value === "object") return value;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
+
+function asArray(value: any): any[] {
+  if (Array.isArray(value)) return value;
+  return [];
+}
+
+function str(v: any, fallback = ""): string {
+  if (v == null) return fallback;
+  return String(v);
+}
+
+function num(v: any, fallback = 0): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function maybeNum(v: any): number | null {
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 }
 
-function toStr(v: any): string | null {
-  if (v === null || v === undefined) return null;
-  const s = String(v).trim();
-  return s.length ? s : null;
+function lower(v: any): string {
+  return String(v ?? "").toLowerCase();
 }
 
-function parseJsonMaybe(v: any): any {
-  if (!v) return null;
-  if (typeof v === "object") return v;
-  if (typeof v === "string") {
-    try {
-      return JSON.parse(v);
-    } catch {
-      return null;
-    }
-  }
-  return null;
+function ts(v: any): number {
+  const d = new Date(v ?? 0).getTime();
+  return Number.isFinite(d) ? d : 0;
 }
 
-function fmtCurrency(n?: number | null) {
-  if (typeof n !== "number" || Number.isNaN(n)) return "—";
+function money(n: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
-  }).format(n);
+  }).format(Number.isFinite(n) ? n : 0);
 }
 
-function getNested(obj: any, path: string[]): any {
-  let cur = obj;
-  for (const p of path) {
-    if (!cur || typeof cur !== "object") return null;
-    cur = cur[p];
-  }
-  return cur ?? null;
-}
-
-function firstNonNull(...vals: any[]) {
-  for (const v of vals) {
-    if (v !== null && v !== undefined) return v;
-  }
-  return null;
-}
-
-function extractEstimate(quote: AnyRow | null) {
-  if (!quote) {
-    return { target: 0, min: 0, max: 0 };
-  }
-
-  // 1) direct column guesses
-  const directTarget =
-    toNum(
-      firstNonNull(
-        quote.estimate_target,
-        quote.target,
-        quote.target_price,
-        quote.estimated_price,
-        quote.quote_total,
-        quote.price
-      )
-    ) ?? null;
-
-  const directMin =
-    toNum(
-      firstNonNull(
-        quote.estimate_min,
-        quote.min,
-        quote.min_price,
-        quote.low,
-        quote.range_min
-      )
-    ) ?? null;
-
-  const directMax =
-    toNum(
-      firstNonNull(
-        quote.estimate_max,
-        quote.max,
-        quote.max_price,
-        quote.high,
-        quote.range_max
-      )
-    ) ?? null;
-
-  if (directTarget !== null || directMin !== null || directMax !== null) {
-    const t = directTarget ?? directMin ?? directMax ?? 0;
-    return {
-      target: Math.round(t),
-      min: Math.round(directMin ?? t),
-      max: Math.round(directMax ?? t),
-    };
-  }
-
-  // 2) nested JSON guesses
-  const jsonCandidates = [
-    quote.estimate,
-    quote.pricing,
-    quote.summary,
-    quote.quote_json,
-    quote.quote_data,
-    quote.payload,
-    quote.result,
-    quote.data,
-    quote.answers,
-  ]
-    .map(parseJsonMaybe)
-    .filter(Boolean);
-
-  for (const j of jsonCandidates) {
-    const target =
-      toNum(
-        firstNonNull(
-          getNested(j, ["pricing", "target"]),
-          getNested(j, ["estimate", "target"]),
-          getNested(j, ["target"]),
-          getNested(j, ["quote", "target"])
-        )
-      ) ?? null;
-
-    const min =
-      toNum(
-        firstNonNull(
-          getNested(j, ["pricing", "minimum"]),
-          getNested(j, ["pricing", "min"]),
-          getNested(j, ["estimate", "min"]),
-          getNested(j, ["min"])
-        )
-      ) ?? null;
-
-    const max =
-      toNum(
-        firstNonNull(
-          getNested(j, ["pricing", "maximum"]),
-          getNested(j, ["pricing", "max"]),
-          getNested(j, ["pricing", "upper"]),
-          getNested(j, ["estimate", "max"]),
-          getNested(j, ["max"])
-        )
-      ) ?? null;
-
-    if (target !== null || min !== null || max !== null) {
-      const t = target ?? min ?? max ?? 0;
-      return {
-        target: Math.round(t),
-        min: Math.round(min ?? t),
-        max: Math.round(max ?? t),
-      };
+function pickFirst(row: AnyRow | null | undefined, keys: string[]): any {
+  if (!row) return undefined;
+  for (const key of keys) {
+    if (key.includes(".")) {
+      const parts = key.split(".");
+      let cur: any = row;
+      let ok = true;
+      for (const p of parts) {
+        if (cur && typeof cur === "object" && p in cur) {
+          cur = cur[p];
+        } else {
+          ok = false;
+          break;
+        }
+      }
+      if (ok && cur != null) return cur;
+    } else if (row[key] != null) {
+      return row[key];
     }
   }
-
-  return { target: 0, min: 0, max: 0 };
+  return undefined;
 }
 
-function extractTier(quote: AnyRow | null, pieRow: AnyRow | null) {
-  const pieJson = pieRow ? parseJsonMaybe(pieRow.report_json ?? pieRow.report ?? pieRow.payload ?? pieRow.data) : null;
-
-  return (
-    toStr(pieRow?.tier) ||
-    toStr(getNested(pieJson, ["tier"])) ||
-    toStr(quote?.tier) ||
-    toStr(quote?.recommended_tier) ||
-    toStr(quote?.package_tier) ||
-    "—"
-  );
+async function safeTableSelect(
+  supabase: any,
+  tableNames: string[],
+  opts?: {
+    orderBy?: string;
+    ascending?: boolean;
+    limit?: number;
+  }
+): Promise<{ table: string | null; rows: AnyRow[] }> {
+  for (const table of tableNames) {
+    try {
+      let q = supabase.from(table).select("*");
+      if (opts?.orderBy) q = q.order(opts.orderBy, { ascending: !!opts.ascending });
+      if (opts?.limit) q = q.limit(opts.limit);
+      const { data, error } = await q;
+      if (!error) {
+        return { table, rows: (data || []) as AnyRow[] };
+      }
+    } catch {
+      // try next table
+    }
+  }
+  return { table: null, rows: [] };
 }
 
-function extractPieView(pieRow: AnyRow | null) {
+function latestBy<T extends AnyRow>(rows: T[], dateKeys = ["created_at", "updated_at"]): T | null {
+  if (!rows.length) return null;
+  return [...rows].sort((a, b) => {
+    const aTs = ts(pickFirst(a, dateKeys));
+    const bTs = ts(pickFirst(b, dateKeys));
+    return bTs - aTs;
+  })[0];
+}
+
+function groupBy<T extends AnyRow>(rows: T[], key: string): Record<string, T[]> {
+  const map: Record<string, T[]> = {};
+  for (const r of rows) {
+    const k = r?.[key];
+    if (!k) continue;
+    const id = String(k);
+    if (!map[id]) map[id] = [];
+    map[id].push(r);
+  }
+  return map;
+}
+
+function parsePieFromRow(pieRow: AnyRow | null) {
   if (!pieRow) {
     return {
       exists: false,
@@ -187,11 +132,11 @@ function extractPieView(pieRow: AnyRow | null) {
       score: null,
       tier: null,
       confidence: null,
-      summary: "No PIE report yet.",
+      summary: "",
       pricingTarget: null,
       pricingMin: null,
       pricingMax: null,
-      risks: [],
+      risks: [] as string[],
       pitch: null,
       hoursMin: null,
       hoursMax: null,
@@ -199,418 +144,475 @@ function extractPieView(pieRow: AnyRow | null) {
     };
   }
 
-  const j = parseJsonMaybe(pieRow.report_json ?? pieRow.report ?? pieRow.payload ?? pieRow.data) ?? {};
+  const rawReport =
+    pickFirst(pieRow, ["report_json", "report", "pie_json", "pie_report", "payload", "data"]) ?? {};
+  const report = asObj(rawReport);
 
-  const score =
-    toNum(firstNonNull(pieRow.score, j.score, getNested(j, ["complexity", "score"]))) ?? null;
+  const pricing = asObj(
+    pickFirst(report, ["pricing"]) ??
+      pickFirst(pieRow, ["pricing", "pricing_json", "pricing_data"]) ??
+      {}
+  );
 
-  const tier = toStr(firstNonNull(pieRow.tier, j.tier, getNested(j, ["recommendation", "tier"])));
-  const confidence = toStr(firstNonNull(pieRow.confidence, j.confidence));
+  const hoursObj = asObj(
+    pickFirst(report, ["hours", "effort", "timeline.hours"]) ??
+      pickFirst(pieRow, ["hours", "effort_json"]) ??
+      {}
+  );
 
-  const summary =
-    toStr(firstNonNull(pieRow.summary, j.summary, getNested(j, ["executiveSummary"]))) ||
-    "PIE report available.";
+  const timelineObj = asObj(
+    pickFirst(report, ["timeline", "delivery"]) ??
+      pickFirst(pieRow, ["timeline", "timeline_json"]) ??
+      {}
+  );
 
-  const pricingTarget =
-    toNum(
-      firstNonNull(
-        pieRow.pricing_target,
-        getNested(j, ["pricing", "target"]),
-        getNested(j, ["pricing", "recommended"]),
-        getNested(j, ["pricingTarget"])
-      )
-    ) ?? null;
+  const pitchObj = asObj(
+    pickFirst(report, ["pitch", "sales_pitch"]) ??
+      pickFirst(pieRow, ["pitch", "pitch_json"]) ??
+      {}
+  );
 
-  const pricingMin =
-    toNum(
-      firstNonNull(
-        pieRow.pricing_min,
-        getNested(j, ["pricing", "minimum"]),
-        getNested(j, ["pricing", "min"])
-      )
-    ) ?? null;
-
-  let pricingMax =
-    toNum(
-      firstNonNull(
-        pieRow.pricing_max,
-        getNested(j, ["pricing", "maximum"]),
-        getNested(j, ["pricing", "max"]),
-        getNested(j, ["pricing", "upper"])
-      )
-    ) ?? null;
-
-  // some PIEs store upper estimate in a buffers array
-  if (pricingMax === null && Array.isArray(getNested(j, ["pricing", "buffers"]))) {
-    const upper = (getNested(j, ["pricing", "buffers"]) as any[]).find((b) =>
-      String(b?.label || "").toLowerCase().includes("upper")
-    );
-    pricingMax = toNum(upper?.amount);
-  }
-
-  const risks = Array.isArray(j.risks) ? j.risks.map((r: any) => String(r)) : [];
-
-  const pitch = j.pitch ?? null;
+  const risksRaw =
+    pickFirst(report, ["risks", "risk_flags", "blockers"]) ??
+    pickFirst(pieRow, ["risks", "risk_flags"]) ??
+    [];
+  const risks = asArray(risksRaw).map((x) => String(x)).filter(Boolean);
 
   const hoursMin =
-    toNum(
-      firstNonNull(
-        pieRow.hours_min,
-        getNested(j, ["effort", "hoursMin"]),
-        getNested(j, ["hours", "min"]),
-        getNested(j, ["hoursMin"])
-      )
-    ) ?? null;
+    maybeNum(pickFirst(hoursObj, ["min", "hours_min"])) ??
+    maybeNum(pickFirst(report, ["hoursMin", "hours_min"])) ??
+    maybeNum(pickFirst(pieRow, ["hours_min"]));
 
   const hoursMax =
-    toNum(
-      firstNonNull(
-        pieRow.hours_max,
-        getNested(j, ["effort", "hoursMax"]),
-        getNested(j, ["hours", "max"]),
-        getNested(j, ["hoursMax"])
-      )
-    ) ?? null;
+    maybeNum(pickFirst(hoursObj, ["max", "hours_max"])) ??
+    maybeNum(pickFirst(report, ["hoursMax", "hours_max"])) ??
+    maybeNum(pickFirst(pieRow, ["hours_max"]));
 
   const timelineText =
-    toStr(
-      firstNonNull(
-        pieRow.timeline_text,
-        getNested(j, ["effort", "timelineText"]),
-        getNested(j, ["timeline", "text"]),
-        getNested(j, ["timelineText"])
-      )
-    ) ?? null;
+    pickFirst(timelineObj, ["text", "label", "summary"]) ??
+    pickFirst(report, ["timelineText", "timeline_text"]) ??
+    pickFirst(pieRow, ["timeline_text"]);
 
   return {
     exists: true,
-    id: toStr(pieRow.id),
-    score,
-    tier,
-    confidence,
-    summary,
-    pricingTarget,
-    pricingMin,
-    pricingMax,
+    id: str(pieRow.id, null as any),
+    score:
+      maybeNum(pickFirst(report, ["score"])) ??
+      maybeNum(pickFirst(pieRow, ["score", "complexity_score"])),
+    tier:
+      pickFirst(report, ["tier"]) ??
+      pickFirst(pieRow, ["tier", "recommended_tier"]) ??
+      null,
+    confidence:
+      pickFirst(report, ["confidence"]) ??
+      pickFirst(pieRow, ["confidence"]) ??
+      null,
+    summary:
+      pickFirst(report, ["summary"]) ??
+      pickFirst(pieRow, ["summary"]) ??
+      "PIE report available.",
+    pricingTarget:
+      maybeNum(pickFirst(pricing, ["target", "recommended"])) ??
+      maybeNum(pickFirst(report, ["pricingTarget", "pricing_target"])) ??
+      maybeNum(pickFirst(pieRow, ["pricing_target", "target_price"])),
+    pricingMin:
+      maybeNum(pickFirst(pricing, ["minimum", "min"])) ??
+      maybeNum(pickFirst(report, ["pricingMin", "pricing_min"])) ??
+      maybeNum(pickFirst(pieRow, ["pricing_min"])),
+    pricingMax:
+      maybeNum(pickFirst(pricing, ["maximum", "max"])) ??
+      // fallback to upper buffer in report.pricing.buffers
+      (() => {
+        const buffers = asArray(pricing.buffers);
+        const upper =
+          buffers.find((b) => lower(b?.label).includes("upper")) ||
+          buffers.find((b) => b?.amount != null);
+        return maybeNum(upper?.amount);
+      })() ??
+      maybeNum(pickFirst(report, ["pricingMax", "pricing_max"])) ??
+      maybeNum(pickFirst(pieRow, ["pricing_max"])),
     risks,
-    pitch,
+    pitch: pitchObj,
     hoursMin,
     hoursMax,
-    timelineText,
+    timelineText: timelineText ? String(timelineText) : null,
   };
 }
 
-async function safeSelectAll(
-  table: string,
-  ids?: { column: string; values: string[] }
-): Promise<AnyRow[]> {
-  try {
-    const sb: any = supabaseAdmin;
-    let q = sb.from(table).select("*");
+function parseEstimateFromQuote(quote: AnyRow | null, pie: ReturnType<typeof parsePieFromRow>) {
+  const q = quote || {};
+  const quoteJson = asObj(
+    pickFirst(q, ["quote_json", "quote", "summary_json", "estimate_json", "payload", "data"])
+  );
+  const estimateObj = asObj(
+    pickFirst(quoteJson, ["estimate", "pricing"]) ??
+      pickFirst(q, ["estimate", "pricing"]) ??
+      {}
+  );
 
-    if (ids && ids.values.length) {
-      q = q.in(ids.column, ids.values);
-    }
+  const target =
+    maybeNum(
+      pickFirst(q, [
+        "estimate_target",
+        "target",
+        "price_target",
+        "recommended_price",
+        "quoted_price",
+      ])
+    ) ??
+    maybeNum(pickFirst(estimateObj, ["target", "recommended", "price"])) ??
+    pie.pricingTarget ??
+    0;
 
-    const { data, error } = await q;
-    if (error) return [];
-    return Array.isArray(data) ? (data as AnyRow[]) : [];
-  } catch {
-    return [];
-  }
+  const min =
+    maybeNum(pickFirst(q, ["estimate_min", "min_price", "price_min"])) ??
+    maybeNum(pickFirst(estimateObj, ["min", "minimum"])) ??
+    pie.pricingMin ??
+    Math.round(target * 0.9);
+
+  const max =
+    maybeNum(pickFirst(q, ["estimate_max", "max_price", "price_max"])) ??
+    maybeNum(pickFirst(estimateObj, ["max", "maximum"])) ??
+    pie.pricingMax ??
+    Math.round(target * 1.15);
+
+  return {
+    target: Math.round(target || 0),
+    min: Math.round(min || 0),
+    max: Math.round(max || 0),
+  };
 }
 
-function buildLatestByKey<T extends AnyRow>(
-  rows: T[],
-  keyField: string,
-  dateField = "created_at"
-) {
-  const map = new Map<string, T>();
-  for (const row of rows) {
-    const key = toStr(row[keyField]);
-    if (!key) continue;
+function parseTierFromQuote(quote: AnyRow | null, pie: ReturnType<typeof parsePieFromRow>) {
+  const q = quote || {};
+  const quoteJson = asObj(
+    pickFirst(q, ["quote_json", "quote", "summary_json", "payload", "data"])
+  );
+  return (
+    pickFirst(q, ["tier", "selected_tier", "recommended_tier"]) ??
+    pickFirst(quoteJson, ["tier", "selectedTier", "recommendedTier"]) ??
+    pie.tier ??
+    "Essential"
+  );
+}
 
-    const prev = map.get(key);
-    if (!prev) {
-      map.set(key, row);
-      continue;
-    }
+function parseLeadEmail(quote: AnyRow | null, project: AnyRow | null) {
+  const q = quote || {};
+  const p = project || {};
+  const quoteJson = asObj(
+    pickFirst(q, ["quote_json", "quote", "summary_json", "payload", "data"])
+  );
 
-    const curDate = new Date(row[dateField] ?? 0).getTime();
-    const prevDate = new Date(prev[dateField] ?? 0).getTime();
-    if (curDate >= prevDate) map.set(key, row);
-  }
-  return map;
+  return (
+    pickFirst(p, ["lead_email", "email"]) ??
+    pickFirst(q, ["lead_email", "email", "contact_email"]) ??
+    pickFirst(quoteJson, ["lead.email", "leadEmail", "email"]) ??
+    "unknown@email.com"
+  );
+}
+
+function parseLeadName(quote: AnyRow | null, project: AnyRow | null) {
+  const q = quote || {};
+  const p = project || {};
+  const quoteJson = asObj(
+    pickFirst(q, ["quote_json", "quote", "summary_json", "payload", "data"])
+  );
+
+  return (
+    pickFirst(p, ["lead_name", "name"]) ??
+    pickFirst(q, ["lead_name", "name", "contact_name"]) ??
+    pickFirst(quoteJson, ["lead.name", "leadName", "name"]) ??
+    null
+  );
+}
+
+function parseAdminPricing(project: AnyRow | null, quote: AnyRow | null) {
+  const p = project || {};
+  const q = quote || {};
+  const pricingObj = asObj(
+    pickFirst(p, ["admin_pricing", "admin_pricing_json"]) ??
+      pickFirst(q, ["admin_pricing", "admin_pricing_json"])
+  );
+
+  return {
+    discountPercent: num(
+      pickFirst(p, ["discount_percent"]) ??
+        pickFirst(pricingObj, ["discountPercent", "discount_percent"]),
+      0
+    ),
+    flatAdjustment: num(
+      pickFirst(p, ["flat_adjustment"]) ??
+        pickFirst(pricingObj, ["flatAdjustment", "flat_adjustment"]),
+      0
+    ),
+    hourlyRate: num(
+      pickFirst(p, ["hourly_rate"]) ??
+        pickFirst(pricingObj, ["hourlyRate", "hourly_rate"]),
+      40
+    ),
+    notes: str(
+      pickFirst(p, ["admin_notes"]) ?? pickFirst(pricingObj, ["notes"]) ?? "",
+      ""
+    ),
+  };
+}
+
+function parseProposalText(project: AnyRow | null, quote: AnyRow | null) {
+  return str(
+    pickFirst(project || {}, ["proposal_text"]) ??
+      pickFirst(quote || {}, ["proposal_text", "proposal"]) ??
+      "",
+    ""
+  );
+}
+
+function parseCallRequest(call: AnyRow | null) {
+  if (!call) return null;
+  return {
+    status: str(pickFirst(call, ["status"]), "new"),
+    bestTime:
+      pickFirst(call, ["best_time", "bestTime"]) ??
+      pickFirst(call, ["preferred_times", "preferredTimes"]) ??
+      null,
+    preferredTimes: pickFirst(call, ["preferred_times", "preferredTimes"]) ?? null,
+    timezone: pickFirst(call, ["timezone", "time_zone"]) ?? null,
+    notes: pickFirst(call, ["notes", "note"]) ?? null,
+  };
+}
+
+function buildDetailLink(quoteId: string) {
+  // If your detail route is different, this is the only line to adjust.
+  return `/internal/preview/${quoteId}`;
 }
 
 export default async function InternalAdminPage() {
-  const sb: any = supabaseAdmin;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  const { data: projectsRaw, error: projectsError } = await sb
-    .from("projects")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(300);
-
-  if (projectsError) {
+  if (!supabaseUrl || !serviceKey) {
     return (
-      <div className="container">
+      <main style={{ padding: 24 }}>
         <h1>Internal Admin</h1>
-        <div className="card">
-          <div className="cardInner">
-            Could not load quotes: {projectsError.message}
-          </div>
-        </div>
-      </div>
+        <p>Missing Supabase env vars (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY).</p>
+      </main>
     );
   }
 
-  const projects = (projectsRaw || []) as AnyRow[];
-
-  const quoteIds = Array.from(
-    new Set(
-      projects
-        .map((p) => toStr(p.quote_id))
-        .filter(Boolean) as string[]
-    )
-  );
-
-  const projectIds = Array.from(
-    new Set(
-      projects
-        .map((p) => toStr(p.id))
-        .filter(Boolean) as string[]
-    )
-  );
-
-  // Pull related tables (all are soft-fail so the page still loads)
-  const [quotes, pieReports, assets, revisions, notesA, notesB, callReqA, callReqB] =
-    await Promise.all([
-      safeSelectAll("quotes", { column: "id", values: quoteIds }),
-      // Your SQL output confirms pie_reports has quote_id
-      safeSelectAll("pie_reports", { column: "quote_id", values: quoteIds }),
-      safeSelectAll("project_assets", { column: "project_id", values: projectIds }),
-      safeSelectAll("project_revisions", { column: "project_id", values: projectIds }),
-      safeSelectAll("project_messages", { column: "project_id", values: projectIds }),
-      safeSelectAll("project_notes", { column: "project_id", values: projectIds }),
-      safeSelectAll("call_requests", { column: "quote_id", values: quoteIds }),
-      safeSelectAll("quote_call_requests", { column: "quote_id", values: quoteIds }),
-    ]);
-
-  const quoteById = new Map<string, AnyRow>();
-  for (const q of quotes) {
-    const id = toStr(q.id);
-    if (id) quoteById.set(id, q);
-  }
-
-  // PIE by quote (latest)
-  const pieRowsByQuote = new Map<string, AnyRow[]>();
-  for (const pr of pieReports) {
-    const qid = toStr(pr.quote_id);
-    if (!qid) continue;
-    const list = pieRowsByQuote.get(qid) || [];
-    list.push(pr);
-    pieRowsByQuote.set(qid, list);
-  }
-
-  function pickLatestPieForQuote(quoteId: string, latestPieId?: string | null) {
-    const list = pieRowsByQuote.get(quoteId) || [];
-    if (!list.length) return null;
-
-    if (latestPieId) {
-      const exact = list.find((r) => String(r.id) === latestPieId);
-      if (exact) return exact;
-    }
-
-    list.sort((a, b) => {
-      const at = new Date(a.created_at ?? 0).getTime();
-      const bt = new Date(b.created_at ?? 0).getTime();
-      return bt - at;
-    });
-    return list[0] ?? null;
-  }
-
-  // Counts
-  const assetCountByProject: Record<string, number> = {};
-  for (const a of assets) {
-    const pid = toStr(a.project_id);
-    if (!pid) continue;
-    assetCountByProject[pid] = (assetCountByProject[pid] || 0) + 1;
-  }
-
-  const revisionCountByProject: Record<string, number> = {};
-  for (const r of revisions) {
-    const pid = toStr(r.project_id);
-    if (!pid) continue;
-    revisionCountByProject[pid] = (revisionCountByProject[pid] || 0) + 1;
-  }
-
-  // Latest client note/message (supports either table shape)
-  const allNoteLikeRows = [...notesA, ...notesB];
-
-  const clientNoteCandidates = allNoteLikeRows.filter((row) => {
-    const role = String(
-      firstNonNull(
-        row.author_type,
-        row.author_role,
-        row.sender_type,
-        row.source,
-        row.role
-      ) ?? ""
-    ).toLowerCase();
-
-    const isInternal = row.is_internal;
-    if (role.includes("client")) return true;
-    if (typeof isInternal === "boolean") return isInternal === false;
-
-    // fallback: include all and let latest show if schema is simple notes table
-    return true;
+  const supabase = createClient(supabaseUrl, serviceKey, {
+    auth: { persistSession: false },
   });
 
-  const latestClientNoteByProject = buildLatestByKey(clientNoteCandidates, "project_id");
+  // Pull everything safely (tries common table names)
+  const [quotesRes, projectsRes, piesRes, callsRes, assetsRes, revisionsRes, notesRes] =
+    await Promise.all([
+      safeTableSelect(supabase, ["quotes"], { orderBy: "created_at", ascending: false, limit: 300 }),
+      safeTableSelect(supabase, ["projects"], { orderBy: "created_at", ascending: false, limit: 300 }),
+      safeTableSelect(supabase, ["pie_reports"], { orderBy: "created_at", ascending: false, limit: 1000 }),
+      safeTableSelect(supabase, ["call_requests", "quote_call_requests"], {
+        orderBy: "created_at",
+        ascending: false,
+        limit: 1000,
+      }),
+      safeTableSelect(supabase, ["project_assets", "portal_assets"], {
+        orderBy: "created_at",
+        ascending: false,
+        limit: 2000,
+      }),
+      safeTableSelect(supabase, ["project_revisions", "revisions"], {
+        orderBy: "created_at",
+        ascending: false,
+        limit: 2000,
+      }),
+      safeTableSelect(supabase, ["project_notes", "portal_notes", "client_notes"], {
+        orderBy: "created_at",
+        ascending: false,
+        limit: 2000,
+      }),
+    ]);
 
-  // Latest call request by quote
-  const allCallRows = [...callReqA, ...callReqB];
-  const latestCallByQuote = new Map<string, AnyRow>();
+  const quotes = quotesRes.rows || [];
+  const projects = projectsRes.rows || [];
+  const pieReports = piesRes.rows || [];
+  const callRequests = callsRes.rows || [];
+  const assets = assetsRes.rows || [];
+  const revisions = revisionsRes.rows || [];
+  const notes = notesRes.rows || [];
 
-  for (const row of allCallRows) {
-    const qid = toStr(row.quote_id);
-    if (!qid) continue;
-
-    const prev = latestCallByQuote.get(qid);
-    if (!prev) {
-      latestCallByQuote.set(qid, row);
-      continue;
-    }
-
-    const curDate = new Date(row.created_at ?? 0).getTime();
-    const prevDate = new Date(prev.created_at ?? 0).getTime();
-    if (curDate >= prevDate) latestCallByQuote.set(qid, row);
+  const quoteById: Record<string, AnyRow> = {};
+  for (const q of quotes) {
+    if (!q?.id) continue;
+    quoteById[String(q.id)] = q;
   }
 
-  const rows = projects
-    .map((project) => {
-      const projectId = toStr(project.id)!;
-      const quoteId = toStr(project.quote_id);
-      const quote = quoteId ? quoteById.get(quoteId) || null : null;
+  // Use latest project per quote_id (if duplicates exist)
+  const projectsByQuoteIdGrouped = groupBy(
+    projects.filter((p) => p?.quote_id),
+    "quote_id"
+  );
+  const projectByQuoteId: Record<string, AnyRow> = {};
+  for (const [qid, rows] of Object.entries(projectsByQuoteIdGrouped)) {
+    const latest = latestBy(rows);
+    if (latest) projectByQuoteId[qid] = latest;
+  }
 
-      const latestPieId = toStr(project.latest_pie_report_id);
-      const pieRow = quoteId ? pickLatestPieForQuote(quoteId, latestPieId) : null;
-      const pie = extractPieView(pieRow);
+  const projectById: Record<string, AnyRow> = {};
+  for (const p of projects) {
+    if (!p?.id) continue;
+    projectById[String(p.id)] = p;
+  }
 
-      const estimate = extractEstimate(quote);
+  // Calls can attach by quote_id
+  const callsByQuoteIdGrouped = groupBy(
+    callRequests.filter((c) => c?.quote_id),
+    "quote_id"
+  );
+  const callByQuoteId: Record<string, AnyRow> = {};
+  for (const [qid, rows] of Object.entries(callsByQuoteIdGrouped)) {
+    const latest = latestBy(rows);
+    if (latest) callByQuoteId[qid] = latest;
+  }
 
-      const adminPricingRaw = parseJsonMaybe(project.admin_pricing) || {};
-      const adminPricing = {
-        discountPercent: toNum(adminPricingRaw.discountPercent) ?? 0,
-        flatAdjustment: toNum(adminPricingRaw.flatAdjustment) ?? 0,
-        hourlyRate: toNum(adminPricingRaw.hourlyRate) ?? 40,
-        notes: toStr(adminPricingRaw.notes) ?? "",
-      };
+  // PIE can attach by quote_id or project_id
+  const piesByQuoteId = groupBy(
+    pieReports.filter((r) => r?.quote_id),
+    "quote_id"
+  );
+  const piesByProjectId = groupBy(
+    pieReports.filter((r) => r?.project_id),
+    "project_id"
+  );
 
-      const callRow = quoteId ? latestCallByQuote.get(quoteId) : null;
+  // Counts/maps for portal sync
+  const assetCountByProjectId: Record<string, number> = {};
+  for (const a of assets) {
+    const pid = a?.project_id ? String(a.project_id) : null;
+    if (!pid) continue;
+    assetCountByProjectId[pid] = (assetCountByProjectId[pid] || 0) + 1;
+  }
 
-      const latestNoteRow = latestClientNoteByProject.get(projectId);
-      const latestClientNote =
-        toStr(
-          firstNonNull(
-            latestNoteRow?.body,
-            latestNoteRow?.message,
-            latestNoteRow?.note,
-            latestNoteRow?.content,
-            latestNoteRow?.text
-          )
-        ) ?? "";
+  const revisionCountByProjectId: Record<string, number> = {};
+  for (const r of revisions) {
+    const pid = r?.project_id ? String(r.project_id) : null;
+    if (!pid) continue;
+    revisionCountByProjectId[pid] = (revisionCountByProjectId[pid] || 0) + 1;
+  }
 
-      const latestClientNoteAt =
-        toStr(firstNonNull(latestNoteRow?.created_at, latestNoteRow?.updated_at)) ?? null;
+  const notesByProjectIdGrouped = groupBy(
+    notes.filter((n) => n?.project_id),
+    "project_id"
+  );
+  const latestNoteByProjectId: Record<string, { body: string; createdAt: string | null }> = {};
+  for (const [pid, rows] of Object.entries(notesByProjectIdGrouped)) {
+    const latest = latestBy(rows);
+    if (!latest) continue;
+    const body =
+      pickFirst(latest, ["body", "message", "note", "content", "text"]) ?? "";
+    const createdAt = pickFirst(latest, ["created_at", "updated_at"]) ?? null;
+    latestNoteByProjectId[pid] = {
+      body: String(body || ""),
+      createdAt: createdAt ? String(createdAt) : null,
+    };
+  }
 
-      const leadEmail =
-        toStr(firstNonNull(project.lead_email, quote?.lead_email, quote?.email)) ?? "—";
+  // Union quote IDs from quotes + projects
+  const quoteIds = new Set<string>();
+  for (const q of quotes) if (q?.id) quoteIds.add(String(q.id));
+  for (const p of projects) if (p?.quote_id) quoteIds.add(String(p.quote_id));
 
-      const leadName =
-        toStr(firstNonNull(project.lead_name, quote?.lead_name, quote?.name)) ?? null;
+  const rows = [...quoteIds].map((quoteId) => {
+    const quote = quoteById[quoteId] || null;
+    const project = projectByQuoteId[quoteId] || null;
 
-      const projectStatus =
-        toStr(firstNonNull(project.status, quote?.status)) ?? "new";
+    const projectId = project?.id ? String(project.id) : null;
 
-      const clientStatus =
-        toStr(project.client_status) ?? "new";
+    // pick latest PIE (prefer project.latest_pie_report_id if present)
+    let pieRow: AnyRow | null = null;
+    const latestPieId =
+      pickFirst(project, ["latest_pie_report_id"]) ??
+      pickFirst(quote, ["latest_pie_report_id"]);
 
-      const tier = extractTier(quote, pieRow);
+    if (latestPieId) {
+      pieRow =
+        pieReports.find((r) => String(r.id) === String(latestPieId)) || null;
+    }
 
-      const createdAt =
-        toStr(firstNonNull(quote?.created_at, project.created_at)) ?? new Date().toISOString();
+    if (!pieRow && projectId && piesByProjectId[projectId]?.length) {
+      pieRow = latestBy(piesByProjectId[projectId]);
+    }
 
-      return {
-        quoteId: quoteId || `project:${projectId}`,
-        projectId,
-        createdAt,
-        status: projectStatus,
-        clientStatus,
-        tier,
-        leadEmail,
-        leadName,
+    if (!pieRow && piesByQuoteId[quoteId]?.length) {
+      pieRow = latestBy(piesByQuoteId[quoteId]);
+    }
 
-        estimate,
-        estimateFormatted: {
-          target: fmtCurrency(estimate.target),
-          min: fmtCurrency(estimate.min),
-          max: fmtCurrency(estimate.max),
-        },
+    const pie = parsePieFromRow(pieRow);
+    const estimate = parseEstimateFromQuote(quote, pie);
 
-        callRequest: callRow
-          ? {
-              status: toStr(callRow.status) ?? "new",
-              bestTime:
-                toStr(
-                  firstNonNull(
-                    callRow.best_time,
-                    callRow.bestTime,
-                    callRow.preferred_time
-                  )
-                ) ?? null,
-              preferredTimes:
-                toStr(firstNonNull(callRow.preferred_times, callRow.preferredTimes)) ?? null,
-              timezone: toStr(callRow.timezone) ?? null,
-              notes: toStr(callRow.notes) ?? null,
-            }
-          : null,
+    // Keep project status in sync with visible quote status if available
+    const quoteStatus = pickFirst(quote, ["status"]);
+    const projectStatus = pickFirst(project, ["project_status", "status"]);
+    const finalStatus =
+      (quoteStatus ? String(quoteStatus) : null) ||
+      (projectStatus ? String(projectStatus) : null) ||
+      "new";
 
-        pie,
+    const clientStatus = pickFirst(project, ["client_status"]) ?? "new";
+    const call = parseCallRequest(callByQuoteId[quoteId] || null);
 
-        adminPricing,
-        proposalText: toStr(project.proposal_text) ?? "",
+    const latestClientNote =
+      projectId && latestNoteByProjectId[projectId]
+        ? latestNoteByProjectId[projectId]
+        : null;
 
-        // NEW sync-visible fields
-        sync: {
-          assetCount: assetCountByProject[projectId] || 0,
-          revisionCount: revisionCountByProject[projectId] || 0,
-          latestClientNote,
-          latestClientNoteAt,
-        },
+    return {
+      quoteId,
+      createdAt:
+        String(pickFirst(quote, ["created_at"])) ||
+        String(pickFirst(project, ["created_at"])) ||
+        new Date(0).toISOString(),
 
-        links: {
-          detail: quoteId ? `/internal/preview/${quoteId}` : `/internal/preview`,
-        },
-      };
-    })
-    .sort((a, b) => {
-      const at = new Date(a.createdAt).getTime();
-      const bt = new Date(b.createdAt).getTime();
-      return bt - at;
-    });
+      status: finalStatus,
+      tier: String(parseTierFromQuote(quote, pie)),
+
+      leadEmail: String(parseLeadEmail(quote, project)),
+      leadName: parseLeadName(quote, project),
+
+      clientStatus: String(clientStatus),
+      assetCount: projectId ? assetCountByProjectId[projectId] || 0 : 0,
+      revisionCount: projectId ? revisionCountByProjectId[projectId] || 0 : 0,
+      latestClientNote,
+
+      estimate,
+      estimateFormatted: {
+        target: money(estimate.target),
+        min: money(estimate.min),
+        max: money(estimate.max),
+      },
+
+      callRequest: call,
+      pie,
+
+      adminPricing: parseAdminPricing(project, quote),
+      proposalText: parseProposalText(project, quote),
+
+      links: {
+        detail: buildDetailLink(quoteId),
+      },
+    };
+  });
+
+  // Newest first
+  rows.sort((a, b) => ts(b.createdAt) - ts(a.createdAt));
 
   return (
-    <div className="container">
-      <div style={{ marginBottom: 16 }}>
-        <h1 style={{ margin: 0 }}>Internal Admin</h1>
-        <div className="smallNote" style={{ marginTop: 6 }}>
-          Pipeline + PIE + client sync visibility
+    <main style={{ padding: 16 }}>
+      <div style={{ marginBottom: 12 }}>
+        <h1 style={{ margin: 0, fontSize: 22 }}>Internal Admin</h1>
+        <div style={{ opacity: 0.75, marginTop: 4, fontSize: 13 }}>
+          Leads, PIE, pricing controls, and client portal sync
         </div>
       </div>
 
       <AdminPipelineClient initialRows={rows as any} />
-    </div>
+    </main>
   );
 }
