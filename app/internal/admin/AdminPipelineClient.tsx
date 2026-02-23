@@ -20,19 +20,12 @@ type PieView = {
   timelineText: string | null;
 };
 
-type ClientPortalView = {
-  status: string;
-  latestClientNote: string | null;
-  assetCount: number;
-  revisionCount: number;
-  depositStatus: string | null;
-  portalToken?: string | null;
-};
-
 type PipelineRow = {
   quoteId: string;
+  projectId?: string;
   createdAt: string;
-  status: string;
+  status: string; // internal/admin project status
+  clientStatus?: string; // client-facing status
   tier: string;
   leadEmail: string;
   leadName: string | null;
@@ -53,8 +46,13 @@ type PipelineRow = {
     notes: string;
   };
   proposalText: string;
-  clientPortal?: ClientPortalView;
-  links: { detail: string; portal?: string | null };
+  sync?: {
+    assetCount: number;
+    revisionCount: number;
+    latestClientNote: string;
+    latestClientNoteAt: string | null;
+  };
+  links: { detail: string };
 };
 
 function fmtCurrency(n?: number | null) {
@@ -66,7 +64,7 @@ function fmtCurrency(n?: number | null) {
   }).format(n);
 }
 
-function fmtDate(iso?: string) {
+function fmtDate(iso?: string | null) {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
@@ -79,9 +77,10 @@ function statusBadge(status: string) {
   return "badge";
 }
 
-function clientStatusBadge(status?: string | null) {
-  const s = String(status || "not_started").toLowerCase();
-  if (s.includes("active") || s.includes("in_progress")) return "badge badgeHot";
+function clientStatusBadge(status?: string) {
+  const s = (status || "new").toLowerCase();
+  if (s === "awaiting_content" || s === "needs_client_review") return "badge";
+  if (s === "ready_for_launch" || s === "launched") return "badge badgeHot";
   return "badge";
 }
 
@@ -99,15 +98,6 @@ export default function AdminPipelineClient({
     const counts: Record<string, number> = {};
     for (const r of rows) {
       const key = r.status || "new";
-      counts[key] = (counts[key] || 0) + 1;
-    }
-    return counts;
-  }, [rows]);
-
-  const portalSummaryCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const r of rows) {
-      const key = r.clientPortal?.status || "not_started";
       counts[key] = (counts[key] || 0) + 1;
     }
     return counts;
@@ -210,19 +200,11 @@ export default function AdminPipelineClient({
     <div>
       <div className="card" style={{ marginBottom: 14 }}>
         <div className="cardInner">
-          <div className="row" style={{ gap: 8, marginBottom: 8 }}>
+          <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
             <span className="badge">Total: {rows.length}</span>
             {Object.entries(summaryCounts).map(([k, v]) => (
-              <span key={`q-${k}`} className="badge">
-                Pipeline {k}: {v}
-              </span>
-            ))}
-          </div>
-
-          <div className="row" style={{ gap: 8 }}>
-            {Object.entries(portalSummaryCounts).map(([k, v]) => (
-              <span key={`p-${k}`} className="badge">
-                Client {k}: {v}
+              <span key={k} className="badge">
+                {k}: {v}
               </span>
             ))}
           </div>
@@ -241,10 +223,8 @@ export default function AdminPipelineClient({
 
           const hoursMin = row.pie.hoursMin ?? null;
           const hoursMax = row.pie.hoursMax ?? null;
-          const laborMin =
-            hoursMin != null ? Math.round(hoursMin * hourlyRate) : null;
-          const laborMax =
-            hoursMax != null ? Math.round(hoursMax * hourlyRate) : null;
+          const laborMin = hoursMin != null ? Math.round(hoursMin * hourlyRate) : null;
+          const laborMax = hoursMax != null ? Math.round(hoursMax * hourlyRate) : null;
 
           const isBusy = !!busyByQuote[row.quoteId];
           const isExpanded = !!expanded[row.quoteId];
@@ -261,8 +241,11 @@ export default function AdminPipelineClient({
                   }}
                 >
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <div className="row" style={{ gap: 8, marginBottom: 8 }}>
+                    <div className="row" style={{ gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
                       <span className={statusBadge(row.status)}>{row.status}</span>
+                      <span className={clientStatusBadge(row.clientStatus)}>
+                        client: {row.clientStatus || "new"}
+                      </span>
                       <span className="badge">{row.pie.tier || row.tier || "—"}</span>
                       {row.pie.score != null ? (
                         <span className="badge">Score: {row.pie.score}</span>
@@ -272,8 +255,12 @@ export default function AdminPipelineClient({
                       ) : null}
                     </div>
 
-                    <div style={{ fontWeight: 900, marginBottom: 6 }}>{row.leadEmail}</div>
-                    <div style={{ opacity: 0.78, fontSize: 13 }}>Quote: {row.quoteId}</div>
+                    <div style={{ fontWeight: 900, marginBottom: 6 }}>
+                      {row.leadEmail}
+                    </div>
+                    <div style={{ opacity: 0.78, fontSize: 13 }}>
+                      Quote: {row.quoteId}
+                    </div>
                     <div style={{ opacity: 0.78, fontSize: 13 }}>
                       Created: {fmtDate(row.createdAt)}
                     </div>
@@ -281,11 +268,46 @@ export default function AdminPipelineClient({
                     {row.callRequest ? (
                       <div style={{ opacity: 0.85, fontSize: 13, marginTop: 6 }}>
                         Call request: {row.callRequest.status || "new"} •{" "}
-                        {row.callRequest.bestTime ||
-                          row.callRequest.preferredTimes ||
-                          "—"}
+                        {row.callRequest.bestTime || row.callRequest.preferredTimes || "—"}
                       </div>
                     ) : null}
+
+                    {/* Admin ↔ Client Sync Visibility */}
+                    <div
+                      style={{
+                        marginTop: 10,
+                        padding: "10px 12px",
+                        borderRadius: 10,
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        background: "rgba(255,255,255,0.03)",
+                      }}
+                    >
+                      <div style={{ fontWeight: 800, marginBottom: 6, fontSize: 13 }}>
+                        Client portal activity
+                      </div>
+                      <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+                        <span className="badge">Assets: {row.sync?.assetCount ?? 0}</span>
+                        <span className="badge">Revisions: {row.sync?.revisionCount ?? 0}</span>
+                        <span className="badge">
+                          Client status: {row.clientStatus || "new"}
+                        </span>
+                      </div>
+
+                      {row.sync?.latestClientNote ? (
+                        <div style={{ marginTop: 8, fontSize: 13, opacity: 0.92, lineHeight: 1.5 }}>
+                          <div style={{ fontWeight: 700, marginBottom: 4 }}>
+                            Latest client note {row.sync.latestClientNoteAt ? `• ${fmtDate(row.sync.latestClientNoteAt)}` : ""}
+                          </div>
+                          <div style={{ whiteSpace: "pre-wrap" }}>
+                            {row.sync.latestClientNote}
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ marginTop: 8, fontSize: 13, opacity: 0.7 }}>
+                          No client note yet
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div style={{ minWidth: 220 }}>
@@ -312,7 +334,7 @@ export default function AdminPipelineClient({
                   </div>
                 </div>
 
-                {/* PIE summary */}
+                {/* PIE summary card */}
                 <div
                   className="card"
                   style={{
@@ -322,12 +344,18 @@ export default function AdminPipelineClient({
                   }}
                 >
                   <div className="cardInner">
-                    <div style={{ fontWeight: 900, marginBottom: 8 }}>PIE summary</div>
-                    <div style={{ lineHeight: 1.6, opacity: 0.92 }}>{row.pie.summary}</div>
+                    <div style={{ fontWeight: 900, marginBottom: 8 }}>
+                      PIE summary
+                    </div>
+                    <div style={{ lineHeight: 1.6, opacity: 0.92 }}>
+                      {row.pie.summary}
+                    </div>
 
                     {row.pie.risks?.length ? (
                       <div style={{ marginTop: 10 }}>
-                        <div style={{ fontWeight: 800, marginBottom: 6 }}>Risks / blockers</div>
+                        <div style={{ fontWeight: 800, marginBottom: 6 }}>
+                          Risks / blockers
+                        </div>
                         <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
                           {row.pie.risks.map((r, i) => (
                             <li key={i}>{r}</li>
@@ -341,7 +369,7 @@ export default function AdminPipelineClient({
                         <div style={{ fontWeight: 800, marginBottom: 6 }}>
                           What to emphasize on the call
                         </div>
-                        <div className="row" style={{ gap: 8 }}>
+                        <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
                           {row.pie.pitch.emphasize.map((item: string, i: number) => (
                             <span key={i} className="badge">
                               {item}
@@ -350,66 +378,6 @@ export default function AdminPipelineClient({
                         </div>
                       </div>
                     ) : null}
-                  </div>
-                </div>
-
-                {/* Client portal sync card */}
-                <div
-                  className="card"
-                  style={{
-                    marginTop: 14,
-                    borderColor: "rgba(255,255,255,0.10)",
-                    background: "rgba(255,255,255,0.03)",
-                  }}
-                >
-                  <div className="cardInner">
-                    <div
-                      className="row"
-                      style={{ justifyContent: "space-between", alignItems: "center", gap: 10 }}
-                    >
-                      <div style={{ fontWeight: 900 }}>Client portal sync</div>
-                      <div className="row" style={{ gap: 8 }}>
-                        <span className={clientStatusBadge(row.clientPortal?.status)}>
-                          Client: {row.clientPortal?.status || "not_started"}
-                        </span>
-                        <span className="badge">
-                          Deposit: {row.clientPortal?.depositStatus || "unpaid"}
-                        </span>
-                        <span className="badge">
-                          Assets: {row.clientPortal?.assetCount ?? 0}
-                        </span>
-                        <span className="badge">
-                          Revisions: {row.clientPortal?.revisionCount ?? 0}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div style={{ marginTop: 10, fontSize: 13, opacity: 0.92, lineHeight: 1.6 }}>
-                      <strong>Latest client note:</strong>{" "}
-                      {row.clientPortal?.latestClientNote || "—"}
-                    </div>
-
-                    <div className="row" style={{ gap: 10, marginTop: 10 }}>
-                      <a
-                        className="btn btnGhost"
-                        href={row.links.detail}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Open quote detail
-                      </a>
-
-                      {row.links.portal ? (
-                        <a
-                          className="btn btnGhost"
-                          href={row.links.portal}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Open client portal
-                        </a>
-                      ) : null}
-                    </div>
                   </div>
                 </div>
 
@@ -519,7 +487,7 @@ export default function AdminPipelineClient({
 
                       <div
                         className="row"
-                        style={{ marginTop: 12, alignItems: "center", gap: 10 }}
+                        style={{ marginTop: 12, alignItems: "center", gap: 10, flexWrap: "wrap" }}
                       >
                         <button
                           className="btn btnPrimary"
@@ -533,6 +501,15 @@ export default function AdminPipelineClient({
                         >
                           Save status + pricing
                         </button>
+
+                        <a
+                          className="btn btnGhost"
+                          href={row.links.detail}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open quote detail
+                        </a>
                       </div>
                     </div>
                   </div>
@@ -543,11 +520,11 @@ export default function AdminPipelineClient({
                     </div>
                     <div className="panelBody">
                       <div className="smallNote" style={{ marginBottom: 10 }}>
-                        Uses PIE + quote info to draft proposal text. If OPENAI is configured,
+                        Uses PIE + quote info to draft proposal text. If OpenAI is configured,
                         it can generate a stronger version automatically.
                       </div>
 
-                      <div className="row" style={{ gap: 10, marginBottom: 10 }}>
+                      <div className="row" style={{ gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
                         <button
                           className="btn btnPrimary"
                           disabled={isBusy}
@@ -559,12 +536,17 @@ export default function AdminPipelineClient({
                         <button
                           className="btn btnGhost"
                           disabled={isBusy || !row.proposalText}
-                          onClick={() => {
-                            if (typeof navigator !== "undefined" && navigator.clipboard) {
-                              navigator.clipboard.writeText(row.proposalText || "");
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(row.proposalText || "");
                               setMessageByQuote((m) => ({
                                 ...m,
                                 [row.quoteId]: "Proposal copied.",
+                              }));
+                            } catch {
+                              setMessageByQuote((m) => ({
+                                ...m,
+                                [row.quoteId]: "Could not copy to clipboard.",
                               }));
                             }
                           }}
