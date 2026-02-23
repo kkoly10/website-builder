@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState, type CSSProperties, type FormEvent } from "react";
 
 type Trade =
   | "Plumbing"
@@ -11,6 +12,9 @@ type Trade =
   | "Landscaping"
   | "Auto Shop"
   | "Agency"
+  | "Dental"
+  | "Medical"
+  | "Law Firm"
   | "Other";
 
 type TeamSize = "Solo" | "2-5" | "6-10" | "11-20" | "20+";
@@ -84,8 +88,11 @@ const initialState: IntakeState = {
 };
 
 export default function SystemsIntakePage() {
+  const router = useRouter();
+
   const [form, setForm] = useState<IntakeState>(initialState);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const recommendation = useMemo(() => getRecommendation(form), [form]);
 
@@ -93,7 +100,10 @@ export default function SystemsIntakePage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  function toggleArrayValue(key: "currentTools" | "painPoints" | "workflowsNeeded", value: string) {
+  function toggleArrayValue(
+    key: "currentTools" | "painPoints" | "workflowsNeeded",
+    value: string
+  ) {
     setForm((prev) => {
       const list = prev[key];
       const exists = list.includes(value);
@@ -104,50 +114,82 @@ export default function SystemsIntakePage() {
     });
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    setError(null);
+    setSubmitting(true);
 
     try {
+      // keep a local copy too (helpful fallback)
       localStorage.setItem(
         "crecystudio:lastOpsIntake",
         JSON.stringify({
           ...form,
           recommendation,
           savedAt: new Date().toISOString(),
-        }),
+        })
       );
-    } catch {
-      // ignore localStorage issues
-    }
 
-    setSubmitted(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+      const res = await fetch("/api/ops/submit-intake", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companyName: form.companyName,
+          contactName: form.contactName,
+          email: form.email,
+          phone: form.phone,
+          trade: form.trade,
+          teamSize: form.teamSize,
+          jobVolume: form.jobVolume,
+          urgency: form.urgency,
+          readiness: form.readiness,
+          currentTools: form.currentTools,
+          painPoints: form.painPoints,
+          workflowsNeeded: form.workflowsNeeded,
+          notes: form.notes,
+          recommendation,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || "Failed to save intake.");
+      }
+
+      // FIX: route into ops flow (not /book?quoteId=...)
+      router.push(data.nextUrl || `/ops-book?opsIntakeId=${data.opsIntakeId}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unexpected error");
+      setSubmitting(false);
+      return;
+    }
   }
 
   return (
     <main className="container">
-      <section className="hero" style={{ paddingBottom: 10 }}>
+      <section className="section">
         <div className="heroGrid">
-          <div className="card cardHover">
+          <div className="card">
             <div className="cardInner">
               <div className="kicker">
                 <span className="kickerDot" aria-hidden="true" />
                 CrecyStudio Ops • Workflow Review Intake
               </div>
 
-              <div style={{ height: 14 }} />
+              <div style={{ height: 10 }} />
 
-              <h1 className="h1">
-                Tell me how your business runs now — I’ll map the{" "}
-                <span className="underline">best workflow fix</span>.
+              <h1 className="h2">
+                Tell me how your business runs now — I’ll map the best workflow fix.
               </h1>
 
-              <p className="p" style={{ marginTop: 12, maxWidth: 760 }}>
-                This intake is for invoicing, CRM, lead handling, job tracking, and back-office automation.
-                Great for contractors, home-service businesses, and small teams that want cleaner systems.
+              <p className="p" style={{ marginTop: 10 }}>
+                This intake is for invoicing, CRM, lead handling, job tracking, and back-office
+                automation. Works for contractors, small offices, agencies, clinics, shops, and
+                service businesses.
               </p>
 
-              <div className="pills" style={{ marginTop: 14 }}>
+              <div className="pills" style={{ marginTop: 10 }}>
                 <span className="pill">Billing & invoice reminders</span>
                 <span className="pill">CRM workflows</span>
                 <span className="pill">Job tracking</span>
@@ -155,9 +197,6 @@ export default function SystemsIntakePage() {
               </div>
 
               <div className="heroActions" style={{ marginTop: 14 }}>
-                <Link href="/book?service=ops" className="btn btnGhost">
-                  Book a Call Instead
-                </Link>
                 <Link href="/build" className="btn btnGhost">
                   Need a Website Quote?
                 </Link>
@@ -166,70 +205,57 @@ export default function SystemsIntakePage() {
           </div>
 
           <div className="card">
-            <div className="statRow">
-              <div className="stat">
-                <div className="statNum">{recommendation.tierLabel}</div>
-                <div className="statLab">Current fit</div>
-              </div>
-              <div className="stat">
+            <div className="cardInner" style={{ display: "grid", gap: 12 }}>
+              <div className="badge badgeHot">{recommendation.tierLabel}</div>
+              <div>
                 <div className="statNum">{recommendation.priceRange}</div>
-                <div className="statLab">Estimated range</div>
-              </div>
-            </div>
-
-            <div className="cardInner">
-              <div style={{ fontWeight: 950, marginBottom: 10 }}>How this works</div>
-              <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.85, color: "rgba(255,255,255,0.84)" }}>
-                <li>Answer the intake questions</li>
-                <li>See a recommended service tier</li>
-                <li>Book a 15-minute workflow review</li>
-                <li>Get a clear scope + next steps</li>
-              </ul>
-
-              <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <span className="badge badgeHot">Fastest path to a quote</span>
-                <span className="badge">No pressure call</span>
+                <div className="statLab">Current fit estimate</div>
               </div>
 
-              {submitted && (
+              <div className="p">{recommendation.summary}</div>
+
+              <div className="card" style={{ background: "rgba(255,255,255,0.03)" }}>
+                <div className="cardInner">
+                  <div style={{ fontWeight: 900, marginBottom: 8 }}>How this works</div>
+                  <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.8 }}>
+                    <li>Complete the intake</li>
+                    <li>Get routed to the ops booking page</li>
+                    <li>Book a workflow review call</li>
+                    <li>Get a clear scope + next steps</li>
+                  </ul>
+                </div>
+              </div>
+
+              {error ? (
                 <div
                   style={{
-                    marginTop: 14,
-                    padding: 12,
                     borderRadius: 12,
-                    border: "1px solid rgba(255,122,24,0.28)",
-                    background: "rgba(255,122,24,0.08)",
-                    color: "rgba(255,255,255,0.92)",
+                    padding: 12,
+                    border: "1px solid rgba(255,80,80,0.35)",
+                    background: "rgba(255,80,80,0.08)",
                   }}
                 >
-                  Intake saved. Your current fit is <strong>{recommendation.tierLabel}</strong>{" "}
-                  ({recommendation.priceRange}). Next step: book your workflow review.
+                  <strong>Error:</strong> {error}
                 </div>
-              )}
-
-              <div style={{ marginTop: 14 }}>
-                <Link className="btn btnPrimary" href="/book?service=ops">
-                  Book Workflow Review <span className="btnArrow">→</span>
-                </Link>
-              </div>
+              ) : null}
             </div>
           </div>
         </div>
       </section>
 
-      <section className="section" style={{ paddingTop: 8 }}>
+      <section className="section" style={{ paddingTop: 0 }}>
         <form onSubmit={handleSubmit}>
           <div className="card">
-            <div className="cardInner">
+            <div className="cardInner" style={{ display: "grid", gap: 14 }}>
               <h2 className="h2" style={{ margin: 0 }}>
                 Workflow Automation Intake
               </h2>
-              <p className="p" style={{ marginTop: 8 }}>
-                Fill this out once and use it as your source of truth for the review call.
+              <p className="p" style={{ marginTop: 0 }}>
+                Fill this out once and use it as the source of truth for the review call.
               </p>
 
-              <div style={{ display: "grid", gap: 14, marginTop: 14 }}>
-                <Field label="Company Name">
+              <div style={twoCol}>
+                <Field label="Company name">
                   <input
                     value={form.companyName}
                     onChange={(e) => update("companyName", e.target.value)}
@@ -239,107 +265,59 @@ export default function SystemsIntakePage() {
                   />
                 </Field>
 
-                <div style={twoCol}>
-                  <Field label="Your Name">
-                    <input
-                      value={form.contactName}
-                      onChange={(e) => update("contactName", e.target.value)}
-                      placeholder="Owner / Manager"
-                      style={inputStyle}
-                      required
-                    />
-                  </Field>
+                <Field label="Contact name">
+                  <input
+                    value={form.contactName}
+                    onChange={(e) => update("contactName", e.target.value)}
+                    placeholder="Owner / Manager"
+                    style={inputStyle}
+                    required
+                  />
+                </Field>
+              </div>
 
-                  <Field label="Email">
-                    <input
-                      type="email"
-                      value={form.email}
-                      onChange={(e) => update("email", e.target.value)}
-                      placeholder="name@company.com"
-                      style={inputStyle}
-                      required
-                    />
-                  </Field>
-                </div>
+              <div style={twoCol}>
+                <Field label="Email">
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => update("email", e.target.value)}
+                    placeholder="name@company.com"
+                    style={inputStyle}
+                    required
+                  />
+                </Field>
 
-                <div style={twoCol}>
-                  <Field label="Phone">
-                    <input
-                      value={form.phone}
-                      onChange={(e) => update("phone", e.target.value)}
-                      placeholder="(555) 555-5555"
-                      style={inputStyle}
-                    />
-                  </Field>
+                <Field label="Phone">
+                  <input
+                    value={form.phone}
+                    onChange={(e) => update("phone", e.target.value)}
+                    placeholder="(555) 555-5555"
+                    style={inputStyle}
+                  />
+                </Field>
+              </div>
 
-                  <Field label="Industry / Trade">
-                    <select
-                      value={form.trade}
-                      onChange={(e) => update("trade", e.target.value as Trade)}
-                      style={inputStyle}
-                    >
-                      {["Plumbing", "Electrical", "HVAC", "Cleaning", "Landscaping", "Auto Shop", "Agency", "Other"].map(
-                        (v) => (
-                          <option key={v} value={v}>
-                            {v}
-                          </option>
-                        ),
-                      )}
-                    </select>
-                  </Field>
-                </div>
-
-                <div style={threeCol}>
-                  <Field label="Team Size">
-                    <select
-                      value={form.teamSize}
-                      onChange={(e) => update("teamSize", e.target.value as TeamSize)}
-                      style={inputStyle}
-                    >
-                      {["Solo", "2-5", "6-10", "11-20", "20+"].map((v) => (
-                        <option key={v} value={v}>
-                          {v}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-
-                  <Field label="Jobs / Projects per Month">
-                    <select
-                      value={form.jobVolume}
-                      onChange={(e) => update("jobVolume", e.target.value as JobVolume)}
-                      style={inputStyle}
-                    >
-                      {["1-10", "11-30", "31-75", "76+"].map((v) => (
-                        <option key={v} value={v}>
-                          {v}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-
-                  <Field label="Timeline">
-                    <select
-                      value={form.urgency}
-                      onChange={(e) => update("urgency", e.target.value as Urgency)}
-                      style={inputStyle}
-                    >
-                      {["ASAP", "2-4 weeks", "1-2 months", "Exploring"].map((v) => (
-                        <option key={v} value={v}>
-                          {v}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                </div>
-
-                <Field label="How documented is your current process?">
+              <div style={threeCol}>
+                <Field label="Industry">
                   <select
-                    value={form.readiness}
-                    onChange={(e) => update("readiness", e.target.value as Readiness)}
+                    value={form.trade}
+                    onChange={(e) => update("trade", e.target.value as Trade)}
                     style={inputStyle}
                   >
-                    {["Process documented", "Somewhat documented", "Need help mapping"].map((v) => (
+                    {[
+                      "Plumbing",
+                      "Electrical",
+                      "HVAC",
+                      "Cleaning",
+                      "Landscaping",
+                      "Auto Shop",
+                      "Agency",
+                      "Dental",
+                      "Medical",
+                      "Law Firm",
+                      "Other",
+                    ].map((v) => (
                       <option key={v} value={v}>
                         {v}
                       </option>
@@ -347,72 +325,129 @@ export default function SystemsIntakePage() {
                   </select>
                 </Field>
 
-                <Field label="What tools do you already use?">
-                  <ToggleGrid
-                    options={TOOL_OPTIONS}
-                    selected={form.currentTools}
-                    onToggle={(v) => toggleArrayValue("currentTools", v)}
-                  />
+                <Field label="Team size">
+                  <select
+                    value={form.teamSize}
+                    onChange={(e) => update("teamSize", e.target.value as TeamSize)}
+                    style={inputStyle}
+                  >
+                    {["Solo", "2-5", "6-10", "11-20", "20+"].map((v) => (
+                      <option key={v} value={v}>
+                        {v}
+                      </option>
+                    ))}
+                  </select>
                 </Field>
 
-                <Field label="What are your biggest pain points?">
-                  <ToggleGrid
-                    options={PAIN_OPTIONS}
-                    selected={form.painPoints}
-                    onToggle={(v) => toggleArrayValue("painPoints", v)}
-                  />
+                <Field label="Monthly job/client volume">
+                  <select
+                    value={form.jobVolume}
+                    onChange={(e) => update("jobVolume", e.target.value as JobVolume)}
+                    style={inputStyle}
+                  >
+                    {["1-10", "11-30", "31-75", "76+"].map((v) => (
+                      <option key={v} value={v}>
+                        {v}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+
+              <div style={twoCol}>
+                <Field label="Urgency">
+                  <select
+                    value={form.urgency}
+                    onChange={(e) => update("urgency", e.target.value as Urgency)}
+                    style={inputStyle}
+                  >
+                    {["ASAP", "2-4 weeks", "1-2 months", "Exploring"].map((v) => (
+                      <option key={v} value={v}>
+                        {v}
+                      </option>
+                    ))}
+                  </select>
                 </Field>
 
-                <Field label="What do you want automated or cleaned up first?">
-                  <ToggleGrid
-                    options={WORKFLOW_OPTIONS}
-                    selected={form.workflowsNeeded}
-                    onToggle={(v) => toggleArrayValue("workflowsNeeded", v)}
-                  />
+                <Field label="Process readiness">
+                  <select
+                    value={form.readiness}
+                    onChange={(e) => update("readiness", e.target.value as Readiness)}
+                    style={inputStyle}
+                  >
+                    {[
+                      "Process documented",
+                      "Somewhat documented",
+                      "Need help mapping",
+                    ].map((v) => (
+                      <option key={v} value={v}>
+                        {v}
+                      </option>
+                    ))}
+                  </select>
                 </Field>
+              </div>
 
-                <Field label="Anything else I should know? (optional)">
-                  <textarea
-                    value={form.notes}
-                    onChange={(e) => update("notes", e.target.value)}
-                    placeholder="Example: We use QuickBooks and Gmail, but all job updates happen over text messages and follow-up is inconsistent."
-                    style={{ ...inputStyle, minHeight: 110, resize: "vertical" }}
-                  />
-                </Field>
+              <Field label="Current tools">
+                <ToggleGrid
+                  options={TOOL_OPTIONS}
+                  selected={form.currentTools}
+                  onToggle={(v) => toggleArrayValue("currentTools", v)}
+                />
+              </Field>
 
-                <div
-                  className="card"
-                  style={{
-                    background: "rgba(255,255,255,0.03)",
-                    borderColor: "rgba(255,255,255,0.10)",
-                  }}
-                >
-                  <div className="cardInner" style={{ display: "grid", gap: 8 }}>
-                    <div style={{ fontWeight: 950 }}>Current recommendation preview</div>
-                    <div className="p">
-                      <strong>{recommendation.tierLabel}</strong> • {recommendation.priceRange}
-                    </div>
-                    <div className="p" style={{ marginTop: 0 }}>
-                      {recommendation.summary}
-                    </div>
+              <Field label="Main pain points">
+                <ToggleGrid
+                  options={PAIN_OPTIONS}
+                  selected={form.painPoints}
+                  onToggle={(v) => toggleArrayValue("painPoints", v)}
+                />
+              </Field>
+
+              <Field label="What workflows do you want fixed first?">
+                <ToggleGrid
+                  options={WORKFLOW_OPTIONS}
+                  selected={form.workflowsNeeded}
+                  onToggle={(v) => toggleArrayValue("workflowsNeeded", v)}
+                />
+              </Field>
+
+              <Field label="Notes">
+                <textarea
+                  value={form.notes}
+                  onChange={(e) => update("notes", e.target.value)}
+                  placeholder="Example: We use QuickBooks and Gmail, but all job updates happen over text messages and follow-up is inconsistent."
+                  style={{ ...inputStyle, minHeight: 110, resize: "vertical" }}
+                />
+              </Field>
+
+              <div
+                className="card"
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  borderColor: "rgba(255,255,255,0.10)",
+                }}
+              >
+                <div className="cardInner" style={{ display: "grid", gap: 8 }}>
+                  <div style={{ fontWeight: 950 }}>Current recommendation preview</div>
+                  <div className="p">
+                    <strong>{recommendation.tierLabel}</strong> • {recommendation.priceRange}
+                  </div>
+                  <div className="p" style={{ marginTop: 0 }}>
+                    {recommendation.summary}
                   </div>
                 </div>
+              </div>
 
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <button type="submit" className="btn btnPrimary">
-                    Save Intake + Get Recommendation <span className="btnArrow">→</span>
-                  </button>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button type="submit" className="btn btnPrimary" disabled={submitting}>
+                  {submitting ? "Saving intake..." : "Save Intake + Continue to Ops Booking"}
+                  <span className="btnArrow">→</span>
+                </button>
 
-                  <Link className="btn btnGhost" href="/book?service=ops">
-                    Book Review Call
-                  </Link>
-                </div>
-
-                {submitted && (
-                  <div className="p" style={{ color: "rgba(255,255,255,0.78)" }}>
-                    Next step: click <strong>Book Review Call</strong> so we can turn this into a clean scope and quote.
-                  </div>
-                )}
+                <Link className="btn btnGhost" href="/build">
+                  Website Quote Instead
+                </Link>
               </div>
             </div>
           </div>
@@ -452,7 +487,9 @@ function ToggleGrid({
             style={{
               borderRadius: 999,
               padding: "10px 12px",
-              border: active ? "1px solid rgba(255,122,24,0.45)" : "1px solid rgba(255,255,255,0.14)",
+              border: active
+                ? "1px solid rgba(255,122,24,0.45)"
+                : "1px solid rgba(255,255,255,0.14)",
               background: active ? "rgba(255,122,24,0.12)" : "rgba(255,255,255,0.03)",
               color: active ? "rgba(255,235,220,0.98)" : "rgba(255,255,255,0.88)",
               cursor: "pointer",
@@ -471,27 +508,20 @@ function ToggleGrid({
 function getRecommendation(form: IntakeState) {
   let score = 0;
 
-  // workflow count
   score += form.workflowsNeeded.length;
-
-  // pain count
   score += Math.min(form.painPoints.length, 4);
 
-  // team size
   if (form.teamSize === "6-10") score += 1;
   if (form.teamSize === "11-20") score += 2;
   if (form.teamSize === "20+") score += 3;
 
-  // job volume
   if (form.jobVolume === "11-30") score += 1;
   if (form.jobVolume === "31-75") score += 2;
   if (form.jobVolume === "76+") score += 3;
 
-  // urgency
   if (form.urgency === "ASAP") score += 2;
   if (form.urgency === "2-4 weeks") score += 1;
 
-  // readiness penalty (more discovery needed)
   if (form.readiness === "Need help mapping") score += 1;
 
   let tierLabel = "Quick Win Setup";
@@ -516,7 +546,7 @@ function getRecommendation(form: IntakeState) {
   return { score, tierLabel, priceRange, summary };
 }
 
-const inputStyle: React.CSSProperties = {
+const inputStyle: CSSProperties = {
   width: "100%",
   borderRadius: 12,
   border: "1px solid rgba(255,255,255,0.14)",
@@ -526,13 +556,13 @@ const inputStyle: React.CSSProperties = {
   outline: "none",
 };
 
-const twoCol: React.CSSProperties = {
+const twoCol: CSSProperties = {
   display: "grid",
   gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
   gap: 12,
 };
 
-const threeCol: React.CSSProperties = {
+const threeCol: CSSProperties = {
   display: "grid",
   gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
   gap: 12,
