@@ -1,8 +1,38 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient, isAdminEmail } from "@/lib/supabase/server";
-import { generateOpsPieForQuote } from "@/lib/ops/pie";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { generateOpsPieForIntake } from "@/lib/opsPie";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+async function userIsAdmin(email?: string | null, userId?: string | null) {
+  const normalizedEmail = (email || "").trim().toLowerCase();
+  if (!normalizedEmail) return false;
+
+  // 1) ENV admin emails
+  if (isAdminEmail(normalizedEmail)) return true;
+
+  // 2) profiles.role fallback
+  if (userId) {
+    const { data } = await supabaseAdmin
+      .from("profiles")
+      .select("role,email")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (String(data?.role || "").toLowerCase() === "admin") return true;
+  }
+
+  // 3) profiles.email fallback (if profile row isn't attached by id yet)
+  const { data: byEmail } = await supabaseAdmin
+    .from("profiles")
+    .select("role,email")
+    .ilike("email", normalizedEmail)
+    .maybeSingle();
+
+  return String(byEmail?.role || "").toLowerCase() === "admin";
+}
 
 export async function POST(req: Request) {
   try {
@@ -10,61 +40,74 @@ export async function POST(req: Request) {
 
     const {
       data: { user },
+      error: userErr,
     } = await supabase.auth.getUser();
 
-    const email = user?.email ?? null;
-
-    if (!email || !isAdminEmail(email)) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    if (userErr || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json().catch(() => ({}));
-    const quoteId =
-      typeof body?.quoteId === "string" && body.quoteId.trim().length > 0
-        ? body.quoteId.trim()
-        : null;
-
-    if (!quoteId) {
-      return NextResponse.json({ ok: false, error: "Missing quoteId" }, { status: 400 });
+    const adminOk = await userIsAdmin(user.email, user.id);
+    if (!adminOk) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // NOTE:
-    // Some versions of generateOpsPieForQuote return:
-    //   A) the report row directly
-    // Other versions return:
-    //   B) { generated: boolean, report: <row> }
-    // This normalizes both shapes so the route won't break again.
-    const rawResult = (await generateOpsPieForQuote(quoteId)) as any;
+    // Accept JSON body and a few key variants for compatibility
+    let body: any = {};
+    try {
+      body = await req.json();
+    } catch {
+      body = {};
+    }
 
-    const report = rawResult?.report ?? rawResult ?? null;
-    const generated =
-      typeof rawResult?.generated === "boolean" ? rawResult.generated : !!report;
+    const url = new URL(req.url);
 
-    if (!report) {
+    const opsIntakeId =
+      String(
+        body?.opsIntakeId ||
+          body?.ops_intake_id ||
+          url.searchParams.get("opsIntakeId") ||
+          url.searchParams.get("ops_intake_id") ||
+          ""
+      ).trim();
+
+    if (!opsIntakeId) {
       return NextResponse.json(
-        { ok: false, error: "Could not generate PIE report" },
-        { status: 404 }
+        {
+          error:
+            "Missing ops intake id. Send { opsIntakeId } in the POST body.",
+        },
+        { status: 400 }
       );
     }
 
+    const force =
+      body?.force === true ||
+      body?.force === "true" ||
+      url.searchParams.get("force") === "true";
+
+    const report = await generateOpsPieForIntake(opsIntakeId, { force });
+
     return NextResponse.json({
       ok: true,
-      generated,
       report: {
-        id: report.id ?? null,
-        created_at: report.created_at ?? null,
-        quote_id: report.quote_id ?? null,
-        project_id: report.project_id ?? null,
-        // keep these optional so the route doesn't fail if your row shape changes
-        summary: report.summary ?? null,
-        score: report.score ?? null,
-        version: report.version ?? null,
+        id: report.id,
+        ops_intake_id: report.ops_intake_id,
+        generator: report.generator,
+        model: report.model,
+        status: report.status,
+        summary: report.summary,
+        created_at: report.created_at,
       },
     });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unexpected error generating PIE report";
+  } catch (error: any) {
+    console.error("[/api/internal/ops/generate-pie] error:", error);
 
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: error?.message || "Failed to generate PIE report",
+      },
+      { status: 500 }
+    );
   }
 }
