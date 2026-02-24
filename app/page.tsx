@@ -1,80 +1,112 @@
-// app/page.tsx
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <main className="container">
+    <div className="container homePage">
       {/* HERO */}
       <section className="hero">
         <div className="heroGrid">
-          <div className="card cardHover">
-            <div className="cardInner heroCardInner">
+          <div className="card cardHover heroCopy">
+            <div className="cardInner">
               <div className="kicker">
                 <span className="kickerDot" aria-hidden="true" />
-                CrecyStudio • System 2 pricing
+                CrecyStudio • Websites + Business Systems
               </div>
 
-              <h1 className="h1" style={{ marginTop: 14 }}>
-                Professional <span className="underline">websites</span>, priced clearly — built fast.
+              <div style={{ height: 14 }} />
+
+              <h1 className="h1">
+                Build your <span className="underline">website</span> and fix your{" "}
+                <span className="underline">workflow</span> — in one place.
               </h1>
 
               <p className="p heroLead">
-                You should know what you’re paying for before the build starts. CrecyStudio gives
-                you a clear quote, scope snapshot, tier recommendation, and revision policy so the
-                project stays clean from day one.
+                CrecyStudio helps service businesses launch professional websites and clean up the back office:
+                lead capture, CRM handoff, invoicing flow, reminders, request tracking, and simple dashboards.
               </p>
+
+              <div className="heroRoleLine">
+                <strong>Business Systems Developer (Web + Automation)</strong>
+                <span>•</span>
+                <span>Scope-first pricing</span>
+                <span>•</span>
+                <span>Client portal included</span>
+              </div>
 
               <div className="heroActions">
                 <Link href="/build" className="btn btnPrimary">
-                  Get an Estimate <span className="btnArrow">→</span>
+                  Start Website Quote <span className="btnArrow">→</span>
                 </Link>
-                <Link href="/book" className="btn btnGhost">
-                  Start a Build
+
+                <Link href="/systems" className="btn btnGhost">
+                  Start Workflow Review
+                </Link>
+
+                <Link href="/portal" className="btn btnGhost">
+                  Client Portal
                 </Link>
               </div>
 
               <div className="pills">
                 <span className="pill">Wix / Squarespace / Custom (Next.js)</span>
-                <span className="pill">Clear revisions</span>
-                <span className="pill">Mobile-first</span>
-                <span className="pill">Fast turnaround</span>
+                <span className="pill">CRM + intake workflows</span>
+                <span className="pill">Invoice reminders</span>
+                <span className="pill">Dashboards + automation</span>
               </div>
             </div>
           </div>
 
-          <div className="card">
-            <div className="cardInner heroSideCard">
-              <div className="heroMetricGrid">
-                <div className="metricBox">
-                  <div className="metricValue">$550+</div>
-                  <div className="metricLabel">Start price (System 2)</div>
+          <div className="card heroSideCard">
+            <div className="statRow">
+              <div className="stat">
+                <div className="statNum">$550+</div>
+                <div className="statLab">Website builds</div>
+              </div>
+              <div className="stat">
+                <div className="statNum">$500+</div>
+                <div className="statLab">Ops systems</div>
+              </div>
+            </div>
+
+            <div className="cardInner">
+              <div className="splitIntro">
+                <div className="splitCard">
+                  <div className="splitBadge">Web</div>
+                  <div className="splitTitle">Website Build</div>
+                  <div className="splitText">
+                    Launch or upgrade your site with clear scope, pricing tiers, and revision structure.
+                  </div>
                 </div>
-                <div className="metricBox">
-                  <div className="metricValue">1–3</div>
-                  <div className="metricLabel">Typical weeks</div>
+
+                <div className="splitCard">
+                  <div className="splitBadge splitBadgeOps">Ops</div>
+                  <div className="splitTitle">Workflow System</div>
+                  <div className="splitText">
+                    Fix lead intake, request tracking, invoicing follow-up, and reporting visibility.
+                  </div>
                 </div>
               </div>
 
-              <div className="featurePanel">
-                <div className="featurePanelTitle">Every quote includes</div>
-                <ul className="softList">
-                  <li>Scope snapshot (deliverables + exclusions)</li>
-                  <li>Tier recommendation + price range</li>
-                  <li>Clear revision policy</li>
-                  <li>Next step: deposit / call / assets</li>
+              <div className="miniChecklist">
+                <div className="miniChecklistTitle">What clients get</div>
+                <ul className="featureList">
+                  <li className="featureItem">Scope snapshot (deliverables + exclusions)</li>
+                  <li className="featureItem">Tier recommendation + price range</li>
+                  <li className="featureItem">Clear revision policy</li>
+                  <li className="featureItem">Next step: deposit / call / assets</li>
                 </ul>
               </div>
 
-              <div className="heroBottomCards">
-                <div className="miniCallout miniCalloutHot">
-                  <div className="miniCalloutTitle">Most clients choose Growth</div>
-                  <div className="miniCalloutSub">Balanced speed + stronger conversion flow</div>
+              <div className="miniGrid">
+                <div className="miniCard miniCardHot">
+                  <div className="miniCardTitle">Most clients choose Growth</div>
+                  <div className="miniCardText">Start fast, then expand features</div>
                 </div>
-                <div className="miniCallout">
-                  <div className="miniCalloutTitle">No hidden fees</div>
-                  <div className="miniCalloutSub">Scope-first pricing</div>
+                <div className="miniCard">
+                  <div className="miniCardTitle">No hidden fees</div>
+                  <div className="miniCardText">Scope-first pricing system</div>
                 </div>
               </div>
             </div>
@@ -82,146 +114,197 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SYSTEM 2 INTRO */}
+      {/* CHOOSE PATH */}
       <section className="section">
-        <div className="splitSection">
+        <div className="sectionHeader">
           <div>
-            <div className="sectionKicker">System 2 • 3 Tiers</div>
-            <h2 className="h2" style={{ marginTop: 10 }}>
-              Choose the right build level
-            </h2>
-            <p className="p" style={{ marginTop: 10, maxWidth: 760 }}>
-              Tier recommendations come after the questionnaire, and your quote stays tied to the
-              scope snapshot. That means cleaner decisions, fewer surprises, and better project
-              delivery.
+            <div className="kicker">
+              <span className="kickerDot" aria-hidden="true" />
+              Choose your path
+            </div>
+            <div style={{ height: 10 }} />
+            <h2 className="h2">What do you need help with right now?</h2>
+            <p className="p" style={{ maxWidth: 820, marginTop: 10 }}>
+              Start with the problem you want solved first. You can always bundle website + workflow together.
+            </p>
+          </div>
+        </div>
+
+        <div className="tierGrid" style={{ marginTop: 18 }}>
+          <ServiceCard
+            title="Custom Websites"
+            subtitle="Best for launching or upgrading your online presence"
+            bullets={[
+              "Professional website design + build",
+              "Lead capture and contact/booking setup",
+              "Wix / Squarespace / Custom (Next.js)",
+              "Clear scope + revision structure",
+            ]}
+            ctaLabel="Get Website Quote"
+            ctaHref="/build"
+            secondaryLabel="Website Pricing"
+            secondaryHref="/estimate"
+          />
+
+          <ServiceCard
+            title="Workflow Automation"
+            subtitle="Best for invoicing, CRM, and back-office systems"
+            hot
+            bullets={[
+              "Lead intake + request/job tracking",
+              "Invoice reminders and payment follow-up",
+              "CRM / QuickBooks workflow cleanup",
+              "Dashboards + process visibility",
+            ]}
+            ctaLabel="Start Workflow Review"
+            ctaHref="/systems"
+            secondaryLabel="Ops Packages"
+            secondaryHref="#ops-packages"
+          />
+        </div>
+      </section>
+
+      {/* WEB TIERS */}
+      <section className="section">
+        <div className="sectionHeader">
+          <div>
+            <div className="kicker">
+              <span className="kickerDot" aria-hidden="true" />
+              Website Services • System 2
+            </div>
+            <div style={{ height: 10 }} />
+            <h2 className="h2">Website builds with clear pricing and scope</h2>
+            <p className="p" style={{ maxWidth: 860, marginTop: 10 }}>
+              Use the estimate flow to get a real price range based on your scope, timeline, and features.
             </p>
           </div>
 
-          <div className="snapshotPanel">
-            <ul className="softList" style={{ margin: 0 }}>
-              <li>Scope snapshot (deliverables + exclusions)</li>
-              <li>Tier recommendation + price range</li>
-              <li>Clear revision policy</li>
-              <li>Next step: deposit / call / assets</li>
-            </ul>
-
-            <div className="heroBottomCards" style={{ marginTop: 12 }}>
-              <div className="miniCallout miniCalloutHot">
-                <div className="miniCalloutTitle">Most clients choose Growth</div>
-                <div className="miniCalloutSub">Best balance of price + outcomes</div>
-              </div>
-              <div className="miniCallout">
-                <div className="miniCalloutTitle">No hidden fees</div>
-                <div className="miniCalloutSub">Clear revisions</div>
-              </div>
-            </div>
-          </div>
+          <Link className="btn btnPrimary" href="/build">
+            Start Website Quote <span className="btnArrow">→</span>
+          </Link>
         </div>
-      </section>
 
-      {/* TIERS */}
-      <section id="pricing" className="section">
-        <div className="tierGrid">
+        <div className="tierGrid" style={{ marginTop: 18 }}>
           <TierCard
             name="Essential Launch"
             price="$550–$850"
             badge="Best for simple launches"
             bullets={[
-              "Landing page or compact site build",
-              "Clean mobile layout + contact form",
-              "Professional starter structure",
-              "Structured revision process",
+              "Up to ~5 sections/pages",
+              "Clean layout + mobile responsive",
+              "Contact form + basic SEO setup",
+              "1 structured revision round",
             ]}
           />
 
           <TierCard
             name="Growth Build"
             price="$900–$1,500"
-            badge="Recommended"
+            badge="Most chosen"
             hot
             bullets={[
-              "Stronger content flow + conversion focus",
-              "Lead capture and booking improvements",
-              "Better structure for SEO and trust",
-              "Most common choice for local businesses",
+              "5–8 pages/sections + stronger UX",
+              "Booking + lead capture improvements",
+              "Better SEO structure + analytics",
+              "2 structured revision rounds",
             ]}
           />
 
           <TierCard
             name="Premium Platform"
-            price="$1,700–$3,600+"
-            badge="For scale / custom features"
+            price="$1,700–$3,500+"
+            badge="Best for scale"
             bullets={[
-              "Custom layouts and advanced interactions",
-              "Integrations, payments, or automation",
-              "Portal/dashboard-ready architecture",
-              "Best for long-term growth builds",
+              "Custom features + integrations",
+              "Advanced UI + performance focus",
+              "Payments / portal / automation options",
+              "2–3 revisions by scope",
             ]}
           />
         </div>
-
-        <div className="ctaRow" style={{ marginTop: 16 }}>
-          <Link href="/build" className="btn btnPrimary">
-            Get Your Estimate <span className="btnArrow">→</span>
-          </Link>
-          <Link href="/estimate" className="btn btnGhost">
-            View Pricing Flow
-          </Link>
-        </div>
       </section>
 
-      {/* SECONDARY OFFER: SYSTEMS / OPS */}
-      <section className="section">
+      {/* OPS PACKAGES */}
+      <section id="ops-packages" className="section">
         <div className="card">
           <div className="cardInner">
-            <div className="sectionKicker">Workflow Systems • Add-on or Standalone</div>
-            <h2 className="h2" style={{ marginTop: 10 }}>
-              Need help with invoicing, CRM, or back-office workflows?
-            </h2>
-            <p className="p" style={{ marginTop: 10, maxWidth: 900 }}>
-              CrecyStudio also builds lightweight business systems for contractors and small
-              businesses — lead intake, request tracking, payment reminders, client portals, and
-              internal dashboards.
-            </p>
+            <div className="sectionHeader">
+              <div>
+                <div className="kicker">
+                  <span className="kickerDot" aria-hidden="true" />
+                  CrecyStudio Ops • Workflow Systems
+                </div>
+                <div style={{ height: 10 }} />
+                <h2 className="h2">Back-office systems for service businesses</h2>
+                <p className="p" style={{ marginTop: 10, maxWidth: 900 }}>
+                  We build practical systems that reduce admin chaos: intake, request tracking, invoicing follow-up,
+                  CRM handoff, and owner dashboards.
+                </p>
+              </div>
 
-            <div className="tierGrid" style={{ marginTop: 16 }}>
-              <MiniOfferCard
+              <Link className="btn btnGhost" href="/systems">
+                View Workflow Review
+              </Link>
+            </div>
+
+            <div className="tierGrid" style={{ marginTop: 18 }}>
+              <OpsCard
                 title="Quick Win Setup"
                 price="$500–$1,200"
+                badge="Fastest start"
                 bullets={[
-                  "1–2 immediate workflow fixes",
-                  "Lead intake + follow-up cleanup",
-                  "Invoice reminder automation",
+                  "1–2 workflow fixes (intake + reminders)",
+                  "Basic request/job tracking",
+                  "Invoice reminder setup",
+                  "7–10 day setup target",
                 ]}
               />
-              <MiniOfferCard
+
+              <OpsCard
                 title="Operations Upgrade"
                 price="$1,200–$3,000"
+                badge="Best value"
                 hot
                 bullets={[
-                  "Lead → job → invoice workflow",
-                  "CRM cleanup + visibility",
+                  "CRM + workflow cleanup",
+                  "Lead → job → invoice process",
                   "Owner dashboard / reporting",
+                  "Process mapping + optimization",
                 ]}
               />
-              <MiniOfferCard
+
+              <OpsCard
                 title="Custom Workflow Platform"
                 price="$3,000+"
+                badge="Advanced systems"
                 bullets={[
-                  "Portals + dashboards",
-                  "Stripe / QuickBooks integrations",
+                  "Multi-step automations",
+                  "Client/staff portals",
+                  "Integrations (Stripe, QuickBooks, etc.)",
                   "Custom internal tools",
                 ]}
               />
             </div>
 
-            <div className="ctaRow" style={{ marginTop: 16 }}>
-              <Link href="/systems" className="btn btnPrimary">
-                Start Workflow Review <span className="btnArrow">→</span>
-              </Link>
-              <Link href="/book?service=ops" className="btn btnGhost">
-                Book a Call
-              </Link>
+            <div className="ctaBand">
+              <div>
+                <div className="ctaBandTitle">Need both website + ops setup?</div>
+                <div className="ctaBandText">
+                  Start with whichever is urgent, then bundle the second phase into one roadmap.
+                </div>
+              </div>
+
+              <div className="row">
+                <Link className="btn btnPrimary" href="/build">
+                  Website Quote
+                </Link>
+                <Link className="btn btnGhost" href="/systems">
+                  Workflow Review
+                </Link>
+                <Link className="btn btnGhost" href="/book?service=ops">
+                  Book Call
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -231,62 +314,89 @@ export default function Home() {
       <section className="section">
         <div className="card">
           <div className="cardInner">
-            <div className="sectionKicker">Professional Process</div>
-            <h2 className="h2" style={{ marginTop: 10 }}>
-              How CrecyStudio works
-            </h2>
+            <div className="kicker">
+              <span className="kickerDot" aria-hidden="true" />
+              Professional process
+            </div>
 
-            <div className="processGrid" style={{ marginTop: 14 }}>
-              <StepCard
+            <div style={{ height: 10 }} />
+            <h2 className="h2">How CrecyStudio works</h2>
+
+            <div className="processGrid">
+              <Step
                 n="1"
-                title="Estimate"
-                desc="Start with the questionnaire so pricing and scope are grounded in real inputs."
+                title="Choose your track"
+                desc="Website build, workflow system, or both. Start with the problem you want solved first."
               />
-              <StepCard
+              <Step
                 n="2"
-                title="Scope Snapshot"
-                desc="Get deliverables, exclusions, revision rules, and a recommended tier."
+                title="Scope intake"
+                desc="We collect the right details so pricing is based on real scope, not guesswork."
               />
-              <StepCard
+              <Step
                 n="3"
-                title="Deposit + Assets"
-                desc="Approve the project, pay deposit, and upload your content/logo/assets."
+                title="Estimate + scope snapshot"
+                desc="You get pricing range, deliverables, exclusions, revisions, and clear next steps."
               />
-              <StepCard
+              <Step
                 n="4"
-                title="Build + Revisions"
-                desc="We build fast, track milestones, and handle revisions through the client portal."
+                title="Build + portal visibility"
+                desc="Track status, assets, revisions, and updates through your client portal."
               />
             </div>
           </div>
         </div>
       </section>
+    </div>
+  );
+}
 
-      {/* FINAL CTA */}
-      <section className="section">
-        <div className="ctaBand">
+function ServiceCard({
+  title,
+  subtitle,
+  bullets,
+  ctaLabel,
+  ctaHref,
+  secondaryLabel,
+  secondaryHref,
+  hot,
+}: {
+  title: string;
+  subtitle: string;
+  bullets: string[];
+  ctaLabel: string;
+  ctaHref: string;
+  secondaryLabel: string;
+  secondaryHref: string;
+  hot?: boolean;
+}) {
+  return (
+    <div className="card cardHover">
+      <div className="cardInner">
+        <div className="tierHead">
           <div>
-            <div className="sectionKicker">Ready to start?</div>
-            <h2 className="h2" style={{ marginTop: 10 }}>
-              Let’s turn your idea into a clean, professional website.
-            </h2>
-            <p className="p" style={{ marginTop: 10, maxWidth: 780 }}>
-              Start with a quote, then move into the client portal only when you’re ready to begin.
-              That keeps the first step simple and the project flow organized.
-            </p>
+            <div className="tierName">{title}</div>
+            <div className="tierSub">{subtitle}</div>
           </div>
-
-          <div className="ctaRow">
-            <Link href="/build" className="btn btnPrimary">
-              Get Estimate <span className="btnArrow">→</span>
-            </Link>
-            <Link href="/login" className="btn btnGhost">
-              Client Login
-            </Link>
-          </div>
+          <div className={`badge ${hot ? "badgeHot" : ""}`}>{hot ? "Recommended" : "Service"}</div>
         </div>
-      </section>
-    </main>
+
+        <ul className="tierList">
+          {bullets.map((b) => (
+            <li key={b}>{b}</li>
+          ))}
+        </ul>
+
+        <div className="tierCTA">
+          <Link className="btn btnPrimary" href={ctaHref}>
+            {ctaLabel} <span className="btnArrow">→</span>
+          </Link>
+          <Link className="btn btnGhost" href={secondaryHref}>
+            {secondaryLabel}
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -304,14 +414,20 @@ function TierCard({
   hot?: boolean;
 }) {
   return (
-    <div className={`card cardHover ${hot ? "tierCardHot" : ""}`}>
+    <div className="card cardHover">
       <div className="cardInner">
         <div className="tierHead">
           <div>
             <div className="tierName">{name}</div>
-            <div className="tierSub">{price}</div>
+            <div className="tierSub">{badge}</div>
           </div>
-          <div className={`badge ${hot ? "badgeHot" : ""}`}>{badge}</div>
+
+          <div style={{ textAlign: "right" }}>
+            <div className="tierPrice">{price}</div>
+            <div className={`badge ${hot ? "badgeHot" : ""}`} style={{ marginTop: 8 }}>
+              {hot ? "Recommended" : "Tier"}
+            </div>
+          </div>
         </div>
 
         <ul className="tierList">
@@ -322,7 +438,10 @@ function TierCard({
 
         <div className="tierCTA">
           <Link className="btn btnPrimary" href="/build">
-            Start estimate <span className="btnArrow">→</span>
+            Get estimate <span className="btnArrow">→</span>
+          </Link>
+          <Link className="btn btnGhost" href="/estimate">
+            Pricing details
           </Link>
         </div>
       </div>
@@ -330,26 +449,34 @@ function TierCard({
   );
 }
 
-function MiniOfferCard({
+function OpsCard({
   title,
   price,
   bullets,
+  badge,
   hot,
 }: {
   title: string;
   price: string;
   bullets: string[];
+  badge: string;
   hot?: boolean;
 }) {
   return (
-    <div className={`card cardHover ${hot ? "tierCardHot" : ""}`}>
+    <div className="card cardHover">
       <div className="cardInner">
         <div className="tierHead">
           <div>
             <div className="tierName">{title}</div>
-            <div className="tierSub">{price}</div>
+            <div className="tierSub">{badge}</div>
           </div>
-          <div className={`badge ${hot ? "badgeHot" : ""}`}>{hot ? "Popular" : "Ops"}</div>
+
+          <div style={{ textAlign: "right" }}>
+            <div className="tierPrice">{price}</div>
+            <div className={`badge ${hot ? "badgeHot" : ""}`} style={{ marginTop: 8 }}>
+              {hot ? "Popular" : "Ops"}
+            </div>
+          </div>
         </div>
 
         <ul className="tierList">
@@ -357,20 +484,21 @@ function MiniOfferCard({
             <li key={b}>{b}</li>
           ))}
         </ul>
+
+        <div className="tierCTA">
+          <Link className="btn btnPrimary" href="/systems">
+            Start review <span className="btnArrow">→</span>
+          </Link>
+          <Link className="btn btnGhost" href="/book?service=ops">
+            Book call
+          </Link>
+        </div>
       </div>
     </div>
   );
 }
 
-function StepCard({
-  n,
-  title,
-  desc,
-}: {
-  n: string;
-  title: string;
-  desc: string;
-}) {
+function Step({ n, title, desc }: { n: string; title: string; desc: string }) {
   return (
     <div className="stepCard">
       <div className="stepNum">{n}</div>
