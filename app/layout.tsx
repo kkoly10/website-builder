@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import "./globals.css";
 import { createSupabaseServerClient, isAdminEmail } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "CrecyStudio",
-  description: "Custom websites and workflow systems with clear pricing and client portal access.",
+  description: "Website design quotes, planning, and project portal.",
 };
 
 export const dynamic = "force-dynamic";
@@ -30,159 +29,115 @@ export default async function RootLayout({
     userEmail = user?.email ?? null;
     isAdmin = isAdminEmail(userEmail);
   } catch {
-    // Keep layout rendering if auth is temporarily unavailable
+    // Keep layout rendering even if auth client fails temporarily
   }
 
   return (
     <html lang="en">
       <body>
+        {/* Background layers (mock-style nebula + stars) */}
+        <div className="bgNebula" aria-hidden="true" />
         <div className="bgFx" aria-hidden="true" />
+        <div className="bgFx bgFx2" aria-hidden="true" />
+        <div className="bgVignette" aria-hidden="true" />
+
         <div className="siteShell">
           <header className="topNav">
-            <div className="container topNavInner">
-              <Link href="/" className="brand" aria-label="CrecyStudio home">
-                <span className="brandLogoWrap">
-                  <Image
-                    src="/brand/crecy_logo_mark_tight.png"
-                    alt="CrecyStudio logo"
-                    width={42}
-                    height={42}
-                    className="brandLogo"
-                    priority
-                  />
-                </span>
-
-                <span className="brandCopy">
-                  <span className="brandTitle">CrecyStudio</span>
-                  <span className="brandSubtitle">Custom Websites • Ops Systems</span>
+            <div className="topNavInner">
+              <Link href="/" className="brand">
+                <span className="brandMark">C</span>
+                <span>
+                  <strong>CrecyStudio</strong>
+                  <span style={{ display: "block", opacity: 0.8, fontSize: 12 }}>
+                    Websites • Quotes • Client Portal
+                  </span>
                 </span>
               </Link>
 
-              <div className="navCluster">
-                <nav className="navLinks" aria-label="Main navigation">
-                  <Link href="/" className="navItem">
-                    Home
-                  </Link>
-                  <Link href="/build" className="navItem">
-                    Website Build
-                  </Link>
-                  <Link href="/systems" className="navItem">
-                    Ops Systems
-                  </Link>
-                  <Link href="/pricing" className="navItem">
-                    Pricing
-                  </Link>
-                  <Link href="/portal" className="navItem">
-                    Client Portal
-                  </Link>
-                </nav>
+              <nav className="navLinks" aria-label="Main navigation">
+                <Link href="/">Home</Link>
+                <Link href="/build">Build</Link>
+                <Link href="/estimate">Estimate</Link>
+                <Link href="/systems">Systems</Link>
 
-                <div className="navActions">
-                  {userEmail ? (
-                    <>
-                      <span className="navUserEmail" title={userEmail}>
-                        {userEmail}
-                      </span>
+                {userEmail ? (
+                  <>
+                    <Link href="/portal">Dashboard</Link>
+                    {isAdmin ? <Link href="/internal">Internal Admin</Link> : null}
 
-                      {isAdmin ? (
-                        <Link href="/internal" className="btn btnGhost navBtn">
-                          Admin
-                        </Link>
-                      ) : null}
+                    <span
+                      style={{
+                        fontSize: 12,
+                        opacity: 0.8,
+                        marginLeft: 8,
+                        whiteSpace: "nowrap",
+                      }}
+                      title={userEmail}
+                    >
+                      {userEmail}
+                    </span>
 
-                      <form action="/auth/signout" method="post">
-                        <button type="submit" className="btn btnGhost navBtn">
-                          Sign out
-                        </button>
-                      </form>
-                    </>
-                  ) : (
-                    <>
-                      <Link href="/login" className="btn btnGhost navBtn">
-                        Login
-                      </Link>
-                      <Link href="/signup" className="btn btnPrimary navBtn">
-                        Create account
-                      </Link>
-                      <Link href="/estimate" className="btn btnGhost navBtn">
-                        Get estimate
-                      </Link>
-                    </>
-                  )}
-                </div>
-              </div>
+                    <form action="/auth/signout" method="post" style={{ display: "inline" }}>
+                      <button
+                        type="submit"
+                        className="btn btnGhost"
+                        style={{ marginLeft: 8 }}
+                      >
+                        Sign out
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login">Login</Link>
+                    <Link href="/signup" className="btn btnPrimary">
+                      Create account
+                    </Link>
+                    <Link href="/internal" className="btn btnGhost">
+                      Internal Admin
+                    </Link>
+                  </>
+                )}
+              </nav>
             </div>
           </header>
 
           <main>{children}</main>
 
           <footer className="footer">
-            <div className="container footerInner">
-              <div className="footerTop">
-                <div className="footerBrandBlock">
-                  <div className="footerBrandRow">
-                    <Image
-                      src="/brand/crecy_logo_mark_tight.png"
-                      alt="CrecyStudio"
-                      width={34}
-                      height={34}
-                      className="footerLogo"
-                    />
-                    <div>
-                      <div className="footerBrandTitle">CrecyStudio</div>
-                      <div className="footerBrandSub">Websites • Workflow Systems • Client Portal</div>
-                    </div>
-                  </div>
-
-                  <p className="footerBlurb">
-                    Scope-first builds for service businesses: websites, automation workflows, and client-facing project portals.
-                  </p>
-                </div>
-
-                <div className="footerCols">
-                  <div className="footerCol">
-                    <div className="footerColTitle">Services</div>
-                    <Link href="/build" className="footerLink">Website Build</Link>
-                    <Link href="/systems" className="footerLink">Ops Systems</Link>
-                    <Link href="/estimate" className="footerLink">Website Estimate</Link>
-                    <Link href="/pricing" className="footerLink">Pricing</Link>
-                  </div>
-
-                  <div className="footerCol">
-                    <div className="footerColTitle">Portal</div>
-                    <Link href="/portal" className="footerLink">Client Portal</Link>
-                    <Link href="/login" className="footerLink">Login</Link>
-                    <Link href="/signup" className="footerLink">Create Account</Link>
-                    {isAdmin ? <Link href="/internal" className="footerLink">Internal Admin</Link> : null}
-                  </div>
-
-                  <div className="footerCol">
-                    <div className="footerColTitle">Contact</div>
-                    <div className="footerText">Virginia (DMV)</div>
-                    <div className="footerText">Fast turnaround</div>
-                    <div className="footerText">Clear revision policy</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="footerBottom">
-                <span>© {year} CrecyStudio</span>
-
-                <div className="footerBottomLinks">
-                  <Link href="/" className="footerBottomLink">Home</Link>
-                  <Link href="/build" className="footerBottomLink">Build</Link>
-                  <Link href="/systems" className="footerBottomLink">Systems</Link>
-                  <Link href="/portal" className="footerBottomLink">Portal</Link>
-
-                  {userEmail ? (
-                    <form action="/auth/signout" method="post">
-                      <button type="submit" className="linkButton">
-                        Sign out
-                      </button>
-                    </form>
-                  ) : null}
-                </div>
-              </div>
+            <div>© {year} CrecyStudio</div>
+            <div className="footerLinks">
+              <Link href="/">Home</Link>
+              <Link href="/build">Build</Link>
+              <Link href="/estimate">Estimate</Link>
+              <Link href="/systems">Systems</Link>
+              {userEmail ? (
+                <>
+                  <Link href="/portal">Dashboard</Link>
+                  {isAdmin ? <Link href="/internal">Internal Admin</Link> : null}
+                  <form action="/auth/signout" method="post" style={{ display: "inline" }}>
+                    <button
+                      type="submit"
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "inherit",
+                        cursor: "pointer",
+                        padding: 0,
+                        textDecoration: "underline",
+                      }}
+                    >
+                      Sign out
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <>
+                  <Link href="/login">Login</Link>
+                  <Link href="/signup">Create account</Link>
+                  <Link href="/internal">Internal Admin</Link>
+                </>
+              )}
             </div>
           </footer>
         </div>
