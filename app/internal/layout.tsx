@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { createSupabaseServerClient, isAdminEmail } from "@/lib/supabase/server";
+import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -19,8 +19,13 @@ export default async function InternalLayout({
     redirect(`/login?next=${encodeURIComponent("/internal")}`);
   }
 
-  if (!isAdminEmail(user.email)) {
-    redirect("/");
+  const admin = await isAdminUser({
+    userId: user.id,
+    email: user.email,
+  });
+
+  if (!admin) {
+    redirect("/portal");
   }
 
   return (
@@ -55,16 +60,25 @@ export default async function InternalLayout({
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             <Link href="/internal" className="btn btnGhost">
               Internal Home
             </Link>
             <Link href="/internal/admin" className="btn btnGhost">
-              Website Pipeline
+              Unified Dashboard
             </Link>
-            <Link href="/internal/ops" className="btn btnPrimary">
-              Ops Intakes <span className="btnArrow">→</span>
+            <Link href="/internal/ops" className="btn btnGhost">
+              Ops Intakes
             </Link>
+            <Link href="/portal" className="btn btnGhost">
+              Client Portal
+            </Link>
+
+            <form action="/auth/signout" method="post">
+              <button type="submit" className="btn btnPrimary">
+                Sign out <span className="btnArrow">→</span>
+              </button>
+            </form>
           </div>
         </div>
       </div>
