@@ -1,6 +1,7 @@
 // app/api/submit-estimate/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/server";
 import crypto from "crypto";
 
 export const runtime = "nodejs";
@@ -29,8 +30,7 @@ function cleanEmail(email: unknown) {
 }
 
 function makePublicToken() {
-  // short, shareable reference token (not a secret)
-  return crypto.randomBytes(8).toString("hex"); // 16 chars
+  return crypto.randomBytes(8).toString("hex");
 }
 
 export async function POST(req: Request) {
@@ -47,19 +47,41 @@ export async function POST(req: Request) {
 
     const source = String(body?.source ?? "estimate");
 
+    // Detect logged-in user (if any)
+    let authUserId: string | null = null;
+    let authUserEmail: string | null = null;
+
+    try {
+      const supabase = await createSupabaseServerClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      authUserId = user?.id ?? null;
+      authUserEmail = normalizeEmail(user?.email);
+    } catch {
+      // okay if request is anonymous
+    }
+
+    const shouldAttachToUser = !!authUserId && !!authUserEmail && authUserEmail === email;
+
     // 1) upsert lead by email
+    const leadUpsertPayload: Record<string, any> = {
+      email,
+      phone,
+      name,
+      source,
+      owner_email_norm: email,
+      last_seen_at: new Date().toISOString(),
+    };
+
+    if (shouldAttachToUser) {
+      leadUpsertPayload.auth_user_id = authUserId;
+    }
+
     const upsertLead = await supabaseAdmin
       .from("leads")
-      .upsert(
-        {
-          email,
-          phone,
-          name,
-          source,
-          last_seen_at: new Date().toISOString(),
-        },
-        { onConflict: "email" }
-      )
+      .upsert(leadUpsertPayload, { onConflict: "email" })
       .select("id,email")
       .single();
 
@@ -76,23 +98,30 @@ export async function POST(req: Request) {
 
     const publicToken = makePublicToken();
 
+    const quoteInsertPayload: Record<string, any> = {
+      lead_id: leadId,
+      status: "new",
+      public_token: publicToken,
+      owner_email_norm: email,
+
+      tier_recommended: body?.estimate?.tierRecommended ?? null,
+      estimate_total: total,
+      estimate_low: low,
+      estimate_high: high,
+
+      intake_raw: body?.intakeRaw ?? {},
+      intake_normalized: body?.intakeNormalized ?? {},
+      scope_snapshot: body?.scopeSnapshot ?? {},
+      debug: body?.debug ?? {},
+    };
+
+    if (shouldAttachToUser) {
+      quoteInsertPayload.auth_user_id = authUserId;
+    }
+
     const insertQuote = await supabaseAdmin
       .from("quotes")
-      .insert({
-        lead_id: leadId,
-        status: "new",
-        public_token: publicToken,
-
-        tier_recommended: body?.estimate?.tierRecommended ?? null,
-        estimate_total: total,
-        estimate_low: low,
-        estimate_high: high,
-
-        intake_raw: body?.intakeRaw ?? {},
-        intake_normalized: body?.intakeNormalized ?? {},
-        scope_snapshot: body?.scopeSnapshot ?? {},
-        debug: body?.debug ?? {},
-      })
+      .insert(quoteInsertPayload)
       .select("id, public_token")
       .single();
 
@@ -105,6 +134,7 @@ export async function POST(req: Request) {
       leadId,
       quoteId: insertQuote.data.id,
       publicToken: insertQuote.data.public_token,
+      attachedToUser: shouldAttachToUser,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Unknown error" }, { status: 500 });
