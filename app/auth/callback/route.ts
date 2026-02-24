@@ -1,7 +1,7 @@
-// app/auth/callback/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import {
   createSupabaseServerClient,
+  getSiteUrl,
   isAdminEmail,
   safeNextPath,
 } from "@/lib/supabase/server";
@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
 
   const supabase = await createSupabaseServerClient();
 
+  // For magic link / OAuth flows
   if (code) {
     await supabase.auth.exchangeCodeForSession(code);
   }
@@ -25,13 +26,17 @@ export async function GET(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Admins always go internal (unless next explicitly points to another internal page)
   if (user?.email && isAdminEmail(user.email)) {
-    return NextResponse.redirect(
-      new URL(nextPath && nextPath.startsWith("/internal") ? nextPath : "/internal/admin", request.url)
-    );
+    const adminTarget =
+      nextPath && nextPath.startsWith("/internal") ? nextPath : "/internal/admin";
+    return NextResponse.redirect(new URL(adminTarget, getSiteUrl()));
   }
 
-  return NextResponse.redirect(
-    new URL(nextPath || "/", request.url)
-  );
+  // Non-admins go to a real customer dashboard by default
+  // If they came from a non-internal page, honor that
+  const customerTarget =
+    nextPath && !nextPath.startsWith("/internal") ? nextPath : "/portal";
+
+  return NextResponse.redirect(new URL(customerTarget, getSiteUrl()));
 }
