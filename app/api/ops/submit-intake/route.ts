@@ -3,20 +3,21 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
 
-type RecommendationPayload = {
+type Recommendation = {
   score?: number;
   tierLabel?: string;
   priceRange?: string;
+  summary?: string;
 };
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const companyName = String(body.companyName ?? body.company_name ?? "").trim();
-    const contactName = String(body.contactName ?? body.contact_name ?? "").trim();
+    const companyName = String(body.companyName ?? "").trim();
+    const contactName = String(body.contactName ?? "").trim();
     const email = String(body.email ?? "").trim();
-    const phone = String(body.phone ?? "").trim();
+    const phone = String(body.phone ?? "").trim() || null;
 
     if (!companyName || !contactName || !email) {
       return NextResponse.json(
@@ -25,36 +26,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const recommendation = (body.recommendation || {}) as RecommendationPayload;
+    const recommendation: Recommendation = body.recommendation ?? {};
 
     const payload = {
       company_name: companyName,
       contact_name: contactName,
       email,
-      phone: phone || null,
-
+      phone,
       industry: String(body.trade ?? body.industry ?? "").trim() || null,
       team_size: String(body.teamSize ?? body.team_size ?? "").trim() || null,
       job_volume: String(body.jobVolume ?? body.job_volume ?? "").trim() || null,
       urgency: String(body.urgency ?? "").trim() || null,
       readiness: String(body.readiness ?? "").trim() || null,
-
-      current_tools: Array.isArray(body.currentTools ?? body.current_tools)
-        ? (body.currentTools ?? body.current_tools)
-        : [],
-      pain_points: Array.isArray(body.painPoints ?? body.pain_points)
-        ? (body.painPoints ?? body.pain_points)
-        : [],
-      workflows_needed: Array.isArray(body.workflowsNeeded ?? body.workflows_needed)
-        ? (body.workflowsNeeded ?? body.workflows_needed)
-        : [],
-
+      current_tools: Array.isArray(body.currentTools) ? body.currentTools : [],
+      pain_points: Array.isArray(body.painPoints) ? body.painPoints : [],
+      workflows_needed: Array.isArray(body.workflowsNeeded) ? body.workflowsNeeded : [],
       notes: String(body.notes ?? "").trim() || null,
 
-      recommendation_tier: recommendation.tierLabel ?? null,
-      recommendation_price_range: recommendation.priceRange ?? null,
-      recommendation_score:
-        typeof recommendation.score === "number" ? recommendation.score : null,
+      recommendation_tier: String(recommendation.tierLabel ?? "").trim() || null,
+      recommendation_price_range: String(recommendation.priceRange ?? "").trim() || null,
+      recommendation_score: Number.isFinite(Number(recommendation.score))
+        ? Number(recommendation.score)
+        : null,
 
       status: "new",
     };
@@ -65,17 +58,19 @@ export async function POST(req: NextRequest) {
       .select("id")
       .single<{ id: string }>();
 
-    if (error || !data) {
+    if (error || !data?.id) {
       return NextResponse.json(
         { ok: false, error: error?.message || "Failed to save ops intake." },
         { status: 500 }
       );
     }
 
+    const opsIntakeId = data.id;
+
     return NextResponse.json({
       ok: true,
-      opsIntakeId: data.id,
-      nextUrl: `/ops-book?opsIntakeId=${encodeURIComponent(data.id)}`,
+      opsIntakeId,
+      nextUrl: `/ops-book?opsIntakeId=${encodeURIComponent(opsIntakeId)}`,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected server error";
