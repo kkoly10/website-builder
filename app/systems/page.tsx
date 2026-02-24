@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, type CSSProperties, type FormEvent } from "react";
+import {
+  useMemo,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 
 type Trade =
   | "Plumbing"
@@ -20,7 +26,10 @@ type Trade =
 type TeamSize = "Solo" | "2-5" | "6-10" | "11-20" | "20+";
 type JobVolume = "1-10" | "11-30" | "31-75" | "76+";
 type Urgency = "ASAP" | "2-4 weeks" | "1-2 months" | "Exploring";
-type Readiness = "Process documented" | "Somewhat documented" | "Need help mapping";
+type Readiness =
+  | "Process documented"
+  | "Somewhat documented"
+  | "Need help mapping";
 
 type IntakeState = {
   companyName: string;
@@ -37,6 +46,36 @@ type IntakeState = {
   workflowsNeeded: string[];
   notes: string;
 };
+
+type Recommendation = {
+  score: number;
+  tierLabel: string;
+  priceRange: string;
+  summary: string;
+};
+
+const TRADE_OPTIONS: Trade[] = [
+  "Plumbing",
+  "Electrical",
+  "HVAC",
+  "Cleaning",
+  "Landscaping",
+  "Auto Shop",
+  "Agency",
+  "Dental",
+  "Medical",
+  "Law Firm",
+  "Other",
+];
+
+const TEAM_OPTIONS: TeamSize[] = ["Solo", "2-5", "6-10", "11-20", "20+"];
+const JOB_VOLUME_OPTIONS: JobVolume[] = ["1-10", "11-30", "31-75", "76+"];
+const URGENCY_OPTIONS: Urgency[] = ["ASAP", "2-4 weeks", "1-2 months", "Exploring"];
+const READINESS_OPTIONS: Readiness[] = [
+  "Process documented",
+  "Somewhat documented",
+  "Need help mapping",
+];
 
 const TOOL_OPTIONS = [
   "QuickBooks",
@@ -120,7 +159,7 @@ export default function SystemsIntakePage() {
     setSubmitting(true);
 
     try {
-      // keep a local copy too (helpful fallback)
+      // local fallback copy
       localStorage.setItem(
         "crecystudio:lastOpsIntake",
         JSON.stringify({
@@ -157,8 +196,32 @@ export default function SystemsIntakePage() {
         throw new Error(data?.error || "Failed to save intake.");
       }
 
-      // FIX: route into ops flow (not /book?quoteId=...)
-      router.push(data.nextUrl || `/ops-book?opsIntakeId=${data.opsIntakeId}`);
+      let opsIntakeId = String(
+        data?.opsIntakeId ?? data?.id ?? data?.ops_intake_id ?? ""
+      ).trim();
+
+      // Fallback: try parsing from nextUrl if server returned only nextUrl
+      if (!opsIntakeId && typeof data?.nextUrl === "string") {
+        try {
+          const parsed = new URL(data.nextUrl, window.location.origin);
+          opsIntakeId = parsed.searchParams.get("opsIntakeId")?.trim() || "";
+        } catch {
+          // ignore parse failure
+        }
+      }
+
+      if (!opsIntakeId) {
+        throw new Error("Intake saved, but server did not return opsIntakeId.");
+      }
+
+      try {
+        localStorage.setItem("crecystudio:lastOpsIntakeId", opsIntakeId);
+      } catch {
+        // ignore localStorage errors
+      }
+
+      // Force the correct ops flow route
+      router.push(`/ops-book?opsIntakeId=${encodeURIComponent(opsIntakeId)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unexpected error");
       setSubmitting(false);
@@ -170,7 +233,7 @@ export default function SystemsIntakePage() {
     <main className="container">
       <section className="section">
         <div className="heroGrid">
-          <div className="card">
+          <div className="card cardHover">
             <div className="cardInner">
               <div className="kicker">
                 <span className="kickerDot" aria-hidden="true" />
@@ -179,14 +242,14 @@ export default function SystemsIntakePage() {
 
               <div style={{ height: 10 }} />
 
-              <h1 className="h2">
+              <h1 className="h1" style={{ margin: 0 }}>
                 Tell me how your business runs now — I’ll map the best workflow fix.
               </h1>
 
-              <p className="p" style={{ marginTop: 10 }}>
-                This intake is for invoicing, CRM, lead handling, job tracking, and back-office
-                automation. Works for contractors, small offices, agencies, clinics, shops, and
-                service businesses.
+              <p className="p" style={{ marginTop: 12, maxWidth: 780 }}>
+                This intake is for invoicing, CRM, lead handling, job tracking, and
+                back-office automation. It works for contractors, offices, agencies,
+                clinics, and service businesses.
               </p>
 
               <div className="pills" style={{ marginTop: 10 }}>
@@ -196,7 +259,7 @@ export default function SystemsIntakePage() {
                 <span className="pill">Dashboards</span>
               </div>
 
-              <div className="heroActions" style={{ marginTop: 14 }}>
+              <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <Link href="/build" className="btn btnGhost">
                   Need a Website Quote?
                 </Link>
@@ -205,30 +268,51 @@ export default function SystemsIntakePage() {
           </div>
 
           <div className="card">
-            <div className="cardInner" style={{ display: "grid", gap: 12 }}>
-              <div className="badge badgeHot">{recommendation.tierLabel}</div>
-              <div>
-                <div className="statNum">{recommendation.priceRange}</div>
-                <div className="statLab">Current fit estimate</div>
+            <div className="cardInner">
+              <div style={{ fontWeight: 900, marginBottom: 10 }}>Current fit estimate</div>
+
+              <div className="statRow">
+                <div className="stat">
+                  <div className="statNum">{recommendation.tierLabel}</div>
+                  <div className="statLab">Recommended tier</div>
+                </div>
+                <div className="stat">
+                  <div className="statNum">{recommendation.priceRange}</div>
+                  <div className="statLab">Typical range</div>
+                </div>
               </div>
 
-              <div className="p">{recommendation.summary}</div>
-
-              <div className="card" style={{ background: "rgba(255,255,255,0.03)" }}>
-                <div className="cardInner">
-                  <div style={{ fontWeight: 900, marginBottom: 8 }}>How this works</div>
-                  <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.8 }}>
-                    <li>Complete the intake</li>
-                    <li>Get routed to the ops booking page</li>
-                    <li>Book a workflow review call</li>
-                    <li>Get a clear scope + next steps</li>
-                  </ul>
+              <div
+                style={{
+                  marginTop: 12,
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  background: "rgba(255,255,255,0.02)",
+                  padding: 12,
+                }}
+              >
+                <div style={{ fontWeight: 800, marginBottom: 6 }}>
+                  Score: {recommendation.score}/100
                 </div>
+                <div className="p" style={{ marginTop: 0 }}>
+                  {recommendation.summary}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontWeight: 800, marginBottom: 6 }}>How this works</div>
+                <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.75 }}>
+                  <li>Complete the intake</li>
+                  <li>Get routed to the ops booking page</li>
+                  <li>Book a workflow review call</li>
+                  <li>Get a clear scope + next steps</li>
+                </ul>
               </div>
 
               {error ? (
                 <div
                   style={{
+                    marginTop: 12,
                     borderRadius: 12,
                     padding: 12,
                     border: "1px solid rgba(255,80,80,0.35)",
@@ -241,21 +325,24 @@ export default function SystemsIntakePage() {
             </div>
           </div>
         </div>
-      </section>
 
-      <section className="section" style={{ paddingTop: 0 }}>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} style={{ marginTop: 14 }}>
           <div className="card">
-            <div className="cardInner" style={{ display: "grid", gap: 14 }}>
-              <h2 className="h2" style={{ margin: 0 }}>
+            <div className="cardInner">
+              <div className="kicker">
+                <span className="kickerDot" aria-hidden="true" />
                 Workflow Automation Intake
-              </h2>
-              <p className="p" style={{ marginTop: 0 }}>
-                Fill this out once and use it as the source of truth for the review call.
-              </p>
+              </div>
 
-              <div style={twoCol}>
-                <Field label="Company name">
+              <div style={{ height: 10 }} />
+              <h2 className="h2" style={{ margin: 0 }}>
+                Fill this out once and use it as the source of truth for the review call
+              </h2>
+
+              <div style={{ height: 14 }} />
+
+              <div style={grid2}>
+                <Field label="Company name" required>
                   <input
                     value={form.companyName}
                     onChange={(e) => update("companyName", e.target.value)}
@@ -265,7 +352,7 @@ export default function SystemsIntakePage() {
                   />
                 </Field>
 
-                <Field label="Contact name">
+                <Field label="Contact name" required>
                   <input
                     value={form.contactName}
                     onChange={(e) => update("contactName", e.target.value)}
@@ -274,10 +361,8 @@ export default function SystemsIntakePage() {
                     required
                   />
                 </Field>
-              </div>
 
-              <div style={twoCol}>
-                <Field label="Email">
+                <Field label="Email" required>
                   <input
                     type="email"
                     value={form.email}
@@ -296,28 +381,14 @@ export default function SystemsIntakePage() {
                     style={inputStyle}
                   />
                 </Field>
-              </div>
 
-              <div style={threeCol}>
-                <Field label="Industry">
+                <Field label="Industry / business type">
                   <select
                     value={form.trade}
                     onChange={(e) => update("trade", e.target.value as Trade)}
                     style={inputStyle}
                   >
-                    {[
-                      "Plumbing",
-                      "Electrical",
-                      "HVAC",
-                      "Cleaning",
-                      "Landscaping",
-                      "Auto Shop",
-                      "Agency",
-                      "Dental",
-                      "Medical",
-                      "Law Firm",
-                      "Other",
-                    ].map((v) => (
+                    {TRADE_OPTIONS.map((v) => (
                       <option key={v} value={v}>
                         {v}
                       </option>
@@ -331,7 +402,7 @@ export default function SystemsIntakePage() {
                     onChange={(e) => update("teamSize", e.target.value as TeamSize)}
                     style={inputStyle}
                   >
-                    {["Solo", "2-5", "6-10", "11-20", "20+"].map((v) => (
+                    {TEAM_OPTIONS.map((v) => (
                       <option key={v} value={v}>
                         {v}
                       </option>
@@ -339,29 +410,27 @@ export default function SystemsIntakePage() {
                   </select>
                 </Field>
 
-                <Field label="Monthly job/client volume">
+                <Field label="Jobs / clients per month">
                   <select
                     value={form.jobVolume}
                     onChange={(e) => update("jobVolume", e.target.value as JobVolume)}
                     style={inputStyle}
                   >
-                    {["1-10", "11-30", "31-75", "76+"].map((v) => (
+                    {JOB_VOLUME_OPTIONS.map((v) => (
                       <option key={v} value={v}>
                         {v}
                       </option>
                     ))}
                   </select>
                 </Field>
-              </div>
 
-              <div style={twoCol}>
                 <Field label="Urgency">
                   <select
                     value={form.urgency}
                     onChange={(e) => update("urgency", e.target.value as Urgency)}
                     style={inputStyle}
                   >
-                    {["ASAP", "2-4 weeks", "1-2 months", "Exploring"].map((v) => (
+                    {URGENCY_OPTIONS.map((v) => (
                       <option key={v} value={v}>
                         {v}
                       </option>
@@ -369,17 +438,13 @@ export default function SystemsIntakePage() {
                   </select>
                 </Field>
 
-                <Field label="Process readiness">
+                <Field label="How ready are your processes?">
                   <select
                     value={form.readiness}
                     onChange={(e) => update("readiness", e.target.value as Readiness)}
                     style={inputStyle}
                   >
-                    {[
-                      "Process documented",
-                      "Somewhat documented",
-                      "Need help mapping",
-                    ].map((v) => (
+                    {READINESS_OPTIONS.map((v) => (
                       <option key={v} value={v}>
                         {v}
                       </option>
@@ -388,66 +453,64 @@ export default function SystemsIntakePage() {
                 </Field>
               </div>
 
-              <Field label="Current tools">
-                <ToggleGrid
-                  options={TOOL_OPTIONS}
-                  selected={form.currentTools}
-                  onToggle={(v) => toggleArrayValue("currentTools", v)}
-                />
-              </Field>
+              <div style={{ height: 10 }} />
 
-              <Field label="Main pain points">
-                <ToggleGrid
-                  options={PAIN_OPTIONS}
-                  selected={form.painPoints}
-                  onToggle={(v) => toggleArrayValue("painPoints", v)}
-                />
-              </Field>
+              <MultiSelectBlock
+                title="Current tools"
+                subtitle="Select what you currently use"
+                options={TOOL_OPTIONS}
+                selected={form.currentTools}
+                onToggle={(v) => toggleArrayValue("currentTools", v)}
+              />
 
-              <Field label="What workflows do you want fixed first?">
-                <ToggleGrid
-                  options={WORKFLOW_OPTIONS}
-                  selected={form.workflowsNeeded}
-                  onToggle={(v) => toggleArrayValue("workflowsNeeded", v)}
-                />
-              </Field>
+              <div style={{ height: 10 }} />
 
-              <Field label="Notes">
+              <MultiSelectBlock
+                title="Main pain points"
+                subtitle="Pick the biggest blockers"
+                options={PAIN_OPTIONS}
+                selected={form.painPoints}
+                onToggle={(v) => toggleArrayValue("painPoints", v)}
+              />
+
+              <div style={{ height: 10 }} />
+
+              <MultiSelectBlock
+                title="What workflows do you want fixed?"
+                subtitle="Choose what you want help building"
+                options={WORKFLOW_OPTIONS}
+                selected={form.workflowsNeeded}
+                onToggle={(v) => toggleArrayValue("workflowsNeeded", v)}
+              />
+
+              <div style={{ height: 10 }} />
+
+              <Field label="Extra notes">
                 <textarea
                   value={form.notes}
                   onChange={(e) => update("notes", e.target.value)}
-                  placeholder="Example: We use QuickBooks and Gmail, but all job updates happen over text messages and follow-up is inconsistent."
-                  style={{ ...inputStyle, minHeight: 110, resize: "vertical" }}
+                  placeholder="Anything else? (billing issues, no-shows, team handoff problems, lead response delays, etc.)"
+                  style={{ ...inputStyle, minHeight: 120, resize: "vertical" }}
                 />
               </Field>
 
               <div
-                className="card"
                 style={{
-                  background: "rgba(255,255,255,0.03)",
-                  borderColor: "rgba(255,255,255,0.10)",
+                  marginTop: 14,
+                  display: "flex",
+                  gap: 10,
+                  flexWrap: "wrap",
+                  justifyContent: "space-between",
                 }}
               >
-                <div className="cardInner" style={{ display: "grid", gap: 8 }}>
-                  <div style={{ fontWeight: 950 }}>Current recommendation preview</div>
-                  <div className="p">
-                    <strong>{recommendation.tierLabel}</strong> • {recommendation.priceRange}
-                  </div>
-                  <div className="p" style={{ marginTop: 0 }}>
-                    {recommendation.summary}
-                  </div>
-                </div>
-              </div>
+                <Link href="/" className="btn btnGhost">
+                  Back Home
+                </Link>
 
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <button type="submit" className="btn btnPrimary" disabled={submitting}>
-                  {submitting ? "Saving intake..." : "Save Intake + Continue to Ops Booking"}
+                <button className="btn btnPrimary" type="submit" disabled={submitting}>
+                  {submitting ? "Saving intake..." : "Continue to Ops Booking"}
                   <span className="btnArrow">→</span>
                 </button>
-
-                <Link className="btn btnGhost" href="/build">
-                  Website Quote Instead
-                </Link>
               </div>
             </div>
           </div>
@@ -457,94 +520,171 @@ export default function SystemsIntakePage() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function getRecommendation(form: IntakeState): Recommendation {
+  let score = 25;
+
+  // Size / volume
+  score +=
+    form.teamSize === "Solo"
+      ? 4
+      : form.teamSize === "2-5"
+      ? 10
+      : form.teamSize === "6-10"
+      ? 14
+      : form.teamSize === "11-20"
+      ? 18
+      : 22;
+
+  score +=
+    form.jobVolume === "1-10"
+      ? 4
+      : form.jobVolume === "11-30"
+      ? 10
+      : form.jobVolume === "31-75"
+      ? 16
+      : 22;
+
+  // Urgency and readiness
+  if (form.urgency === "ASAP") score += 10;
+  else if (form.urgency === "2-4 weeks") score += 7;
+  else if (form.urgency === "1-2 months") score += 4;
+  else score += 1;
+
+  if (form.readiness === "Need help mapping") score += 10;
+  else if (form.readiness === "Somewhat documented") score += 6;
+  else score += 3;
+
+  // Complexity / pain
+  score += Math.min(form.painPoints.length * 4, 20);
+  score += Math.min(form.workflowsNeeded.length * 4, 20);
+
+  if (form.currentTools.includes("No real system (manual)")) score += 10;
+  if (form.currentTools.includes("Google Sheets")) score += 3;
+  if (
+    form.currentTools.includes("Jobber") ||
+    form.currentTools.includes("Housecall Pro")
+  ) {
+    score += 2; // easier integrations but still process cleanup value
+  }
+
+  // Industry nudge (service businesses benefit a lot)
+  if (
+    ["Plumbing", "Electrical", "HVAC", "Cleaning", "Landscaping", "Auto Shop"].includes(
+      form.trade
+    )
+  ) {
+    score += 5;
+  }
+
+  score = Math.max(0, Math.min(100, score));
+
+  let tierLabel = "Starter Workflow Fix";
+  let priceRange = "$450–$900";
+  let summary =
+    "Best for one or two workflows (like invoicing reminders or lead follow-up) with a simple setup.";
+
+  if (score >= 50) {
+    tierLabel = "Growth Ops System";
+    priceRange = "$900–$1,800";
+    summary =
+      "Good fit for multi-step workflow cleanup: lead intake, quoting, invoicing reminders, and tracking dashboards.";
+  }
+
+  if (score >= 75) {
+    tierLabel = "Full Ops Build";
+    priceRange = "$1,800–$4,000+";
+    summary =
+      "Best for businesses needing a full systems overhaul: CRM, job tracking, billing automation, reporting, and team handoff workflows.";
+  }
+
+  return { score, tierLabel, priceRange, summary };
+}
+
+function Field({
+  label,
+  required,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: ReactNode;
+}) {
   return (
     <label style={{ display: "grid", gap: 8 }}>
-      <span style={{ fontWeight: 850, color: "rgba(255,255,255,0.94)" }}>{label}</span>
+      <span style={{ fontWeight: 800 }}>
+        {label} {required ? <span style={{ opacity: 0.8 }}>*</span> : null}
+      </span>
       {children}
     </label>
   );
 }
 
-function ToggleGrid({
+function MultiSelectBlock({
+  title,
+  subtitle,
   options,
   selected,
   onToggle,
 }: {
+  title: string;
+  subtitle?: string;
   options: string[];
   selected: string[];
   onToggle: (value: string) => void;
 }) {
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-      {options.map((option) => {
-        const active = selected.includes(option);
-        return (
-          <button
-            key={option}
-            type="button"
-            onClick={() => onToggle(option)}
-            style={{
-              borderRadius: 999,
-              padding: "10px 12px",
-              border: active
-                ? "1px solid rgba(255,122,24,0.45)"
-                : "1px solid rgba(255,255,255,0.14)",
-              background: active ? "rgba(255,122,24,0.12)" : "rgba(255,255,255,0.03)",
-              color: active ? "rgba(255,235,220,0.98)" : "rgba(255,255,255,0.88)",
-              cursor: "pointer",
-              fontSize: 13,
-              lineHeight: 1.2,
-            }}
-          >
-            {option}
-          </button>
-        );
-      })}
+    <div
+      style={{
+        borderRadius: 12,
+        border: "1px solid rgba(255,255,255,0.10)",
+        background: "rgba(255,255,255,0.02)",
+        padding: 12,
+      }}
+    >
+      <div style={{ fontWeight: 850 }}>{title}</div>
+      {subtitle ? (
+        <div className="p" style={{ marginTop: 4 }}>
+          {subtitle}
+        </div>
+      ) : null}
+
+      <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+        {options.map((option) => {
+          const checked = selected.includes(option);
+          return (
+            <label
+              key={option}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                borderRadius: 10,
+                padding: "8px 10px",
+                border: "1px solid rgba(255,255,255,0.08)",
+                background: checked ? "rgba(255,122,24,0.10)" : "transparent",
+                cursor: "pointer",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={() => onToggle(option)}
+                style={{ width: 16, height: 16 }}
+              />
+              <span>{option}</span>
+            </label>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-function getRecommendation(form: IntakeState) {
-  let score = 0;
-
-  score += form.workflowsNeeded.length;
-  score += Math.min(form.painPoints.length, 4);
-
-  if (form.teamSize === "6-10") score += 1;
-  if (form.teamSize === "11-20") score += 2;
-  if (form.teamSize === "20+") score += 3;
-
-  if (form.jobVolume === "11-30") score += 1;
-  if (form.jobVolume === "31-75") score += 2;
-  if (form.jobVolume === "76+") score += 3;
-
-  if (form.urgency === "ASAP") score += 2;
-  if (form.urgency === "2-4 weeks") score += 1;
-
-  if (form.readiness === "Need help mapping") score += 1;
-
-  let tierLabel = "Quick Win Setup";
-  let priceRange = "$500–$1,200";
-  let summary =
-    "Best for one or two workflow fixes (like intake + invoice reminders) with a fast setup and minimal disruption.";
-
-  if (score >= 6 && score < 10) {
-    tierLabel = "Operations Upgrade";
-    priceRange = "$1,200–$3,000";
-    summary =
-      "Best for growing businesses that need multiple connected workflows (lead handling, job tracking, invoicing, and reporting).";
-  }
-
-  if (score >= 10) {
-    tierLabel = "Custom Workflow Platform";
-    priceRange = "$3,000+";
-    summary =
-      "Best for multi-step operations, team workflows, custom dashboards, and deeper integrations across your tools.";
-  }
-
-  return { score, tierLabel, priceRange, summary };
-}
+const grid2: CSSProperties = {
+  display: "grid",
+  gap: 12,
+  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+};
 
 const inputStyle: CSSProperties = {
   width: "100%",
@@ -554,16 +694,4 @@ const inputStyle: CSSProperties = {
   color: "rgba(255,255,255,0.95)",
   padding: "12px 14px",
   outline: "none",
-};
-
-const twoCol: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: 12,
-};
-
-const threeCol: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-  gap: 12,
 };
