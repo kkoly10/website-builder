@@ -1,240 +1,201 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
-type AnyRow = Record<string, any>;
+type Intake = {
+  id: string;
+  company_name: string;
+  contact_name: string;
+  email: string;
+  recommendation_tier?: string | null;
+  recommendation_price_range?: string | null;
+};
 
-function fmtDate(value: any) {
-  if (!value) return "—";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return String(value);
-  return d.toLocaleString();
+const BEST_TIME_OPTIONS = [
+  "Weekday morning (9am–12pm)",
+  "Weekday afternoon (12pm–4pm)",
+  "Weekday evening (4pm–7pm)",
+  "Weekend",
+  "Anytime",
+];
+
+function detectTimezone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York";
+  } catch {
+    return "America/New_York";
+  }
 }
 
-function fmtCurrency(value: any) {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return "—";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
+export default function OpsBookClient({ intake }: { intake: Intake }) {
+  const [bestTimeToCall, setBestTimeToCall] = useState(BEST_TIME_OPTIONS[0]);
+  const [preferredTimes, setPreferredTimes] = useState("");
+  const [timezone, setTimezone] = useState(detectTimezone());
+  const [notes, setNotes] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
 
-export default function OpsBookClient(props: any) {
-  // Flexible input so it won't break even if page.tsx passes a different prop name
-  const rows: AnyRow[] = useMemo(() => {
-    if (Array.isArray(props?.initialRows)) return props.initialRows;
-    if (Array.isArray(props?.rows)) return props.rows;
-    if (Array.isArray(props?.items)) return props.items;
-    if (Array.isArray(props?.data)) return props.data;
-    return [];
-  }, [props]);
+  const intakeId = useMemo(() => String(intake?.id ?? "").trim(), [intake]);
 
-  const [query, setQuery] = useState("");
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  async function requestCall() {
+    setErrorMsg("");
+    if (!intakeId) {
+      setStatus("error");
+      setErrorMsg("Missing ops intake ID. Please start from the workflow intake page.");
+      return;
+    }
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return rows;
+    setStatus("sending");
 
-    return rows.filter((r) => {
-      const hay = JSON.stringify(r ?? {}).toLowerCase();
-      return hay.includes(q);
-    });
-  }, [rows, query]);
+    try {
+      const res = await fetch("/api/ops/request-call", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          opsIntakeId: intakeId,
+          bestTimeToCall,
+          preferredTimes,
+          timezone,
+          notes,
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Failed to request ops call.");
+      }
+
+      try {
+        localStorage.setItem("crecystudio:lastOpsIntakeId", intakeId);
+      } catch {}
+
+      setStatus("sent");
+
+      if (json?.nextUrl) {
+        window.location.assign(json.nextUrl);
+        return;
+      }
+    } catch (e: any) {
+      setStatus("error");
+      setErrorMsg(e?.message || "Failed to request call.");
+    }
+  }
 
   return (
-    <div>
-      <div className="card" style={{ marginBottom: 14 }}>
-        <div className="cardInner">
+    <div className="card" style={{ marginTop: 14 }}>
+      <div className="cardInner" style={{ display: "grid", gap: 14 }}>
+        <div className="p">
+          <strong>Company:</strong> {intake.company_name}
+          <br />
+          <strong>Contact:</strong> {intake.contact_name} ({intake.email})
+          <br />
+          {intake.recommendation_tier ? (
+            <>
+              <strong>Suggested tier:</strong> {intake.recommendation_tier}
+              {intake.recommendation_price_range ? ` • ${intake.recommendation_price_range}` : ""}
+            </>
+          ) : null}
+        </div>
+
+        <label style={{ display: "grid", gap: 8 }}>
+          <span style={{ fontWeight: 800 }}>Best time to call</span>
+          <select
+            value={bestTimeToCall}
+            onChange={(e) => setBestTimeToCall(e.target.value)}
+            style={inputStyle}
+          >
+            {BEST_TIME_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label style={{ display: "grid", gap: 8 }}>
+          <span style={{ fontWeight: 800 }}>Preferred times (optional)</span>
+          <input
+            value={preferredTimes}
+            onChange={(e) => setPreferredTimes(e.target.value)}
+            placeholder='e.g., "Mon/Wed after 5pm"'
+            style={inputStyle}
+          />
+        </label>
+
+        <div className="p">Timezone detected: {timezone}</div>
+
+        <label style={{ display: "grid", gap: 8 }}>
+          <span style={{ fontWeight: 800 }}>Anything we should know before the call?</span>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Budget, priority workflow, deadlines, or special notes..."
+            style={{ ...inputStyle, minHeight: 100, resize: "vertical" }}
+          />
+        </label>
+
+        {status === "sent" ? (
           <div
-            className="row"
             style={{
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 10,
-              flexWrap: "wrap",
+              border: "1px solid rgba(34,197,94,0.35)",
+              background: "rgba(34,197,94,0.08)",
+              borderRadius: 12,
+              padding: 12,
+              fontWeight: 700,
             }}
           >
-            <div>
-              <div style={{ fontWeight: 900, fontSize: 18 }}>Ops Book</div>
-              <div className="smallNote">
-                Internal operations view (quotes / projects / handoff items)
-              </div>
-            </div>
-
-            <div style={{ minWidth: 260, flex: 1, maxWidth: 420 }}>
-              <input
-                className="input"
-                placeholder="Search email, quote ID, status..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-            </div>
+            Call request submitted. You can also create an account to track progress.
           </div>
+        ) : null}
 
-          <div className="row" style={{ marginTop: 10, gap: 8 }}>
-            <span className="badge">Total: {rows.length}</span>
-            <span className="badge">Filtered: {filtered.length}</span>
+        {status === "error" ? (
+          <div
+            style={{
+              border: "1px solid rgba(255,0,0,0.35)",
+              background: "rgba(255,0,0,0.08)",
+              borderRadius: 12,
+              padding: 12,
+              fontWeight: 700,
+            }}
+          >
+            {errorMsg || "Something went wrong."}
           </div>
+        ) : null}
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "space-between" }}>
+          <Link className="btn btnGhost" href="/systems">
+            Back to Ops Intake
+          </Link>
+
+          <button
+            type="button"
+            className="btn btnPrimary"
+            onClick={requestCall}
+            disabled={status === "sending"}
+          >
+            {status === "sending" ? "Requesting..." : "Request workflow call"}{" "}
+            <span className="btnArrow">→</span>
+          </button>
+        </div>
+
+        <div className="p" style={{ fontSize: 13, opacity: 0.8 }}>
+          Want a portal login?{" "}
+          <Link href={`/signup?next=${encodeURIComponent("/internal")}`}>Create account</Link>{" "}
+          or{" "}
+          <Link href={`/login?next=${encodeURIComponent("/internal")}`}>Sign in</Link>.
         </div>
       </div>
-
-      {filtered.length === 0 ? (
-        <div className="card">
-          <div className="cardInner">
-            <div style={{ fontWeight: 800, marginBottom: 6 }}>No records found</div>
-            <div className="smallNote">
-              If this page should show data, make sure your page loader is passing
-              <code style={{ marginLeft: 6 }}>initialRows</code> (or rows/items/data).
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="row" style={{ flexDirection: "column", gap: 14 }}>
-          {filtered.map((row, idx) => {
-            const key =
-              row.quoteId ||
-              row.quote_id ||
-              row.id ||
-              row.projectId ||
-              `row-${idx}`;
-
-            const isExpanded = !!expanded[key];
-
-            const leadEmail =
-              row.leadEmail ||
-              row.lead_email ||
-              row.email ||
-              row.client_email ||
-              "—";
-
-            const projectStatus =
-              row.projectStatus ||
-              row.project_status ||
-              row.status ||
-              "new";
-
-            const clientStatus =
-              row.clientStatus || row.client_status || "—";
-
-            const createdAt = row.createdAt || row.created_at || row.inserted_at;
-
-            const price =
-              row.price ??
-              row.target ??
-              row.estimate_target ??
-              row.pricingTarget ??
-              row.pie_pricing_target;
-
-            const assetCount =
-              row.assetCount ?? row.asset_count ?? row.assets ?? 0;
-
-            const revisionCount =
-              row.revisionCount ?? row.revision_count ?? row.revisions ?? 0;
-
-            const latestNote =
-              row.latestClientNote ||
-              row.latest_client_note ||
-              row.latestNote ||
-              row.note ||
-              "";
-
-            return (
-              <div key={String(key)} className="card">
-                <div className="cardInner">
-                  <div
-                    className="row"
-                    style={{
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                      gap: 12,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div className="row" style={{ gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
-                        <span className="badge">{projectStatus}</span>
-                        <span className="badge">Client: {clientStatus}</span>
-                        <span className="badge">Assets: {assetCount}</span>
-                        <span className="badge">Revisions: {revisionCount}</span>
-                      </div>
-
-                      <div style={{ fontWeight: 900, marginBottom: 4 }}>{leadEmail}</div>
-
-                      <div style={{ fontSize: 13, opacity: 0.8 }}>
-                        Quote: {row.quoteId || row.quote_id || "—"}
-                      </div>
-                      <div style={{ fontSize: 13, opacity: 0.8 }}>
-                        Created: {fmtDate(createdAt)}
-                      </div>
-
-                      {latestNote ? (
-                        <div style={{ marginTop: 8, fontSize: 13, opacity: 0.92 }}>
-                          <strong>Latest client note:</strong> {String(latestNote)}
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div style={{ minWidth: 180 }}>
-                      <div style={{ fontWeight: 900, fontSize: 18 }}>
-                        {price != null ? fmtCurrency(price) : "—"}
-                      </div>
-                      <div className="smallNote">Current target / estimate</div>
-                    </div>
-                  </div>
-
-                  <div className="row" style={{ marginTop: 12, gap: 10, flexWrap: "wrap" }}>
-                    <button
-                      className="btn btnGhost"
-                      onClick={() =>
-                        setExpanded((m) => ({ ...m, [key]: !m[key] }))
-                      }
-                    >
-                      {isExpanded ? "Hide raw" : "Show raw"}
-                    </button>
-
-                    {(row.quoteId || row.quote_id) ? (
-                      <a
-                        className="btn btnGhost"
-                        href={`/internal/project/${row.quoteId || row.quote_id}`}
-                      >
-                        Open project
-                      </a>
-                    ) : null}
-                  </div>
-
-                  {isExpanded ? (
-                    <div
-                      style={{
-                        marginTop: 10,
-                        background: "rgba(255,255,255,0.03)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        borderRadius: 10,
-                        padding: 10,
-                        overflowX: "auto",
-                      }}
-                    >
-                      <pre
-                        style={{
-                          margin: 0,
-                          fontSize: 12,
-                          lineHeight: 1.5,
-                          whiteSpace: "pre-wrap",
-                          wordBreak: "break-word",
-                        }}
-                      >
-                        {JSON.stringify(row, null, 2)}
-                      </pre>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  borderRadius: 12,
+  border: "1px solid rgba(255,255,255,0.14)",
+  background: "rgba(255,255,255,0.03)",
+  color: "rgba(255,255,255,0.95)",
+  padding: "12px 14px",
+  outline: "none",
+};
