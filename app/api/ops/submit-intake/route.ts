@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest) {
 
     const companyName = String(body.companyName ?? "").trim();
     const contactName = String(body.contactName ?? "").trim();
-    const email = String(body.email ?? "").trim();
+    const email = normalizeEmail(String(body.email ?? ""));
     const phone = String(body.phone ?? "").trim() || null;
 
     if (!companyName || !contactName || !email) {
@@ -26,12 +27,31 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Detect logged-in user (if any)
+    let authUserId: string | null = null;
+    let authUserEmail: string | null = null;
+
+    try {
+      const supabase = await createSupabaseServerClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      authUserId = user?.id ?? null;
+      authUserEmail = normalizeEmail(user?.email);
+    } catch {
+      // anonymous submit is allowed
+    }
+
+    const shouldAttachToUser = !!authUserId && !!authUserEmail && authUserEmail === email;
+
     const recommendation: Recommendation = body.recommendation ?? {};
 
-    const payload = {
+    const payload: Record<string, any> = {
       company_name: companyName,
       contact_name: contactName,
       email,
+      owner_email_norm: email,
       phone,
       industry: String(body.trade ?? body.industry ?? "").trim() || null,
       team_size: String(body.teamSize ?? body.team_size ?? "").trim() || null,
@@ -52,6 +72,10 @@ export async function POST(req: NextRequest) {
       status: "new",
     };
 
+    if (shouldAttachToUser) {
+      payload.auth_user_id = authUserId;
+    }
+
     const { data, error } = await supabaseAdmin
       .from("ops_intakes")
       .insert(payload)
@@ -71,6 +95,7 @@ export async function POST(req: NextRequest) {
       ok: true,
       opsIntakeId,
       nextUrl: `/ops-book?opsIntakeId=${encodeURIComponent(opsIntakeId)}`,
+      attachedToUser: shouldAttachToUser,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected server error";
