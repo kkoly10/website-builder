@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState, type FormEvent } from "react";
+import { useSearchParams } from "next/navigation";
+import { useMemo, useState, type CSSProperties, type FormEvent } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 function safeNextPath(next: string | null) {
@@ -11,7 +11,6 @@ function safeNextPath(next: string | null) {
 }
 
 export default function LoginClient() {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const [email, setEmail] = useState("");
@@ -52,8 +51,10 @@ export default function LoginClient() {
 
       if (error) throw error;
 
-      router.replace(nextPath);
-      router.refresh();
+      // Important: route through callback so ADMIN_EMAILS admin logic runs
+      // (and non-admins still land on nextPath safely)
+      window.location.assign(`/auth/callback?next=${encodeURIComponent(nextPath)}`);
+      return;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to sign in.");
       setSubmitting(false);
@@ -96,6 +97,7 @@ export default function LoginClient() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@company.com"
             required
+            autoComplete="email"
             style={inputStyle}
           />
 
@@ -105,6 +107,7 @@ export default function LoginClient() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
             required
+            autoComplete="current-password"
             style={inputStyle}
           />
 
@@ -132,9 +135,13 @@ export default function LoginClient() {
         </div>
 
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <Link href={`/signup?next=${encodeURIComponent(nextPath)}`} className="btn btnGhost">
+          <Link
+            href={`/signup?next=${encodeURIComponent(nextPath)}`}
+            className="btn btnGhost"
+          >
             Create Account
           </Link>
+
           <Link
             href={`/forgot-password?next=${encodeURIComponent(nextPath)}`}
             className="btn btnGhost"
@@ -147,7 +154,7 @@ export default function LoginClient() {
   );
 }
 
-const inputStyle: React.CSSProperties = {
+const inputStyle: CSSProperties = {
   width: "100%",
   borderRadius: 12,
   border: "1px solid rgba(255,255,255,0.14)",
