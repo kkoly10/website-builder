@@ -1,13 +1,12 @@
-// app/layout.tsx
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import "./globals.css";
-import BrandLogo from "@/components/brand/BrandLogo";
 import { createSupabaseServerClient, isAdminEmail } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "CrecyStudio",
-  description: "Professional websites, clear pricing, and client portal.",
+  description: "Custom websites and workflow systems with clear pricing and client portal access.",
 };
 
 export const dynamic = "force-dynamic";
@@ -31,7 +30,7 @@ export default async function RootLayout({
     userEmail = user?.email ?? null;
     isAdmin = isAdminEmail(userEmail);
   } catch {
-    // keep rendering if auth is temporarily unavailable
+    // Keep layout rendering if auth is temporarily unavailable
   }
 
   return (
@@ -41,17 +40,39 @@ export default async function RootLayout({
         <div className="siteShell">
           <header className="topNav">
             <div className="container topNavInner">
-              <BrandLogo />
+              <Link href="/" className="brand" aria-label="CrecyStudio home">
+                <span className="brandLogoWrap">
+                  <Image
+                    src="/brand/crecy_logo_mark_tight.png"
+                    alt="CrecyStudio logo"
+                    width={42}
+                    height={42}
+                    className="brandLogo"
+                    priority
+                  />
+                </span>
+
+                <span className="brandCopy">
+                  <span className="brandTitle">CrecyStudio</span>
+                  <span className="brandSubtitle">Custom Websites • Ops Systems</span>
+                </span>
+              </Link>
 
               <div className="navCluster">
-                <nav className="navMain" aria-label="Main navigation">
-                  <Link href="/build" className="navLink">
-                    Custom Build
+                <nav className="navLinks" aria-label="Main navigation">
+                  <Link href="/" className="navItem">
+                    Home
                   </Link>
-                  <Link href="/estimate" className="navLink">
+                  <Link href="/build" className="navItem">
+                    Website Build
+                  </Link>
+                  <Link href="/systems" className="navItem">
+                    Ops Systems
+                  </Link>
+                  <Link href="/pricing" className="navItem">
                     Pricing
                   </Link>
-                  <Link href="/portal" className="navLink">
+                  <Link href="/portal" className="navItem">
                     Client Portal
                   </Link>
                 </nav>
@@ -59,29 +80,32 @@ export default async function RootLayout({
                 <div className="navActions">
                   {userEmail ? (
                     <>
-                      <span className="badge" title={userEmail}>
+                      <span className="navUserEmail" title={userEmail}>
                         {userEmail}
                       </span>
 
                       {isAdmin ? (
-                        <Link href="/internal" className="btn btnGhost btnSm">
-                          Internal Admin
+                        <Link href="/internal" className="btn btnGhost navBtn">
+                          Admin
                         </Link>
                       ) : null}
 
                       <form action="/auth/signout" method="post">
-                        <button type="submit" className="btn btnGhost btnSm">
+                        <button type="submit" className="btn btnGhost navBtn">
                           Sign out
                         </button>
                       </form>
                     </>
                   ) : (
                     <>
-                      <Link href="/login" className="btn btnGhost btnSm">
+                      <Link href="/login" className="btn btnGhost navBtn">
                         Login
                       </Link>
-                      <Link href="/build" className="btn btnPrimary btnSm">
-                        Get Estimate
+                      <Link href="/signup" className="btn btnPrimary navBtn">
+                        Create account
+                      </Link>
+                      <Link href="/estimate" className="btn btnGhost navBtn">
+                        Get estimate
                       </Link>
                     </>
                   )}
@@ -90,56 +114,74 @@ export default async function RootLayout({
             </div>
           </header>
 
-          <main className="siteMain">{children}</main>
+          <main>{children}</main>
 
           <footer className="footer">
-            <div className="container">
-              <div className="footerWrap">
-                <div className="footerBrandCol">
-                  <BrandLogo showTag={false} />
-                  <div className="footerBrandText">Custom Websites • Clear Revisions • Fast Turnaround</div>
-
-                  <div className="footerTagRow">
-                    <span className="badge">Virginia</span>
-                    <span className="badge">Fast turnaround</span>
-                    <span className="badge">Clear revisions</span>
+            <div className="container footerInner">
+              <div className="footerTop">
+                <div className="footerBrandBlock">
+                  <div className="footerBrandRow">
+                    <Image
+                      src="/brand/crecy_logo_mark_tight.png"
+                      alt="CrecyStudio"
+                      width={34}
+                      height={34}
+                      className="footerLogo"
+                    />
+                    <div>
+                      <div className="footerBrandTitle">CrecyStudio</div>
+                      <div className="footerBrandSub">Websites • Workflow Systems • Client Portal</div>
+                    </div>
                   </div>
+
+                  <p className="footerBlurb">
+                    Scope-first builds for service businesses: websites, automation workflows, and client-facing project portals.
+                  </p>
                 </div>
 
                 <div className="footerCols">
                   <div className="footerCol">
-                    <div className="footerHead">Explore</div>
-                    <Link href="/build">Custom Build</Link>
-                    <Link href="/estimate">Pricing / Estimate</Link>
-                    <Link href="/portal">Client Portal</Link>
-                    <Link href="/systems">Workflow Systems</Link>
+                    <div className="footerColTitle">Services</div>
+                    <Link href="/build" className="footerLink">Website Build</Link>
+                    <Link href="/systems" className="footerLink">Ops Systems</Link>
+                    <Link href="/estimate" className="footerLink">Website Estimate</Link>
+                    <Link href="/pricing" className="footerLink">Pricing</Link>
                   </div>
 
                   <div className="footerCol">
-                    <div className="footerHead">Access</div>
-                    {!userEmail ? (
-                      <>
-                        <Link href="/login">Login</Link>
-                        <Link href="/signup">Create account</Link>
-                      </>
-                    ) : (
-                      <>
-                        <Link href="/portal">Dashboard</Link>
-                        {isAdmin ? <Link href="/internal">Internal Admin</Link> : null}
-                        <form action="/auth/signout" method="post">
-                          <button type="submit" className="footerLinkButton">
-                            Sign out
-                          </button>
-                        </form>
-                      </>
-                    )}
+                    <div className="footerColTitle">Portal</div>
+                    <Link href="/portal" className="footerLink">Client Portal</Link>
+                    <Link href="/login" className="footerLink">Login</Link>
+                    <Link href="/signup" className="footerLink">Create Account</Link>
+                    {isAdmin ? <Link href="/internal" className="footerLink">Internal Admin</Link> : null}
+                  </div>
+
+                  <div className="footerCol">
+                    <div className="footerColTitle">Contact</div>
+                    <div className="footerText">Virginia (DMV)</div>
+                    <div className="footerText">Fast turnaround</div>
+                    <div className="footerText">Clear revision policy</div>
                   </div>
                 </div>
               </div>
 
               <div className="footerBottom">
                 <span>© {year} CrecyStudio</span>
-                <span>Scope-first pricing • Professional delivery</span>
+
+                <div className="footerBottomLinks">
+                  <Link href="/" className="footerBottomLink">Home</Link>
+                  <Link href="/build" className="footerBottomLink">Build</Link>
+                  <Link href="/systems" className="footerBottomLink">Systems</Link>
+                  <Link href="/portal" className="footerBottomLink">Portal</Link>
+
+                  {userEmail ? (
+                    <form action="/auth/signout" method="post">
+                      <button type="submit" className="linkButton">
+                        Sign out
+                      </button>
+                    </form>
+                  ) : null}
+                </div>
               </div>
             </div>
           </footer>
