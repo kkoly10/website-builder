@@ -1,353 +1,353 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 
-type DashboardRow = {
-  intake: any;
-  latestCallRequest: any | null;
-  latestPieReport: any | null;
+type IntakeRow = {
+  id: string;
+  created_at: string | null;
+  company_name: string | null;
+  contact_name: string | null;
+  email: string | null;
+  phone: string | null;
+  industry: string | null;
+  urgency: string | null;
+  readiness: string | null;
+  recommendation_tier: string | null;
+  recommendation_price_range: string | null;
+  recommendation_score: number | null;
+  status: string | null;
 };
 
-export default function OpsDashboardClient() {
-  const [rows, setRows] = useState<DashboardRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+type CallRow = {
+  id: string;
+  ops_intake_id: string;
+  created_at: string | null;
+  best_time_to_call: string | null;
+  preferred_times: string | null;
+  timezone: string | null;
+  status: string | null;
+};
 
-  const [selectedIntakeId, setSelectedIntakeId] = useState<string | null>(null);
-  const [generating, setGenerating] = useState(false);
-  const [generateError, setGenerateError] = useState<string | null>(null);
-  const [followUpNote, setFollowUpNote] = useState("");
-  const [regenerate, setRegenerate] = useState(false);
+type PieRow = {
+  id: string;
+  ops_intake_id: string;
+  created_at: string | null;
+  status: string | null;
+  summary: string | null;
+  generator: string | null;
+  model: string | null;
+};
 
-  useEffect(() => {
-    void refresh();
-  }, []);
+type Row = {
+  intake: IntakeRow;
+  latestCall: CallRow | null;
+  latestPie: PieRow | null;
+};
 
-  async function refresh() {
-    setLoading(true);
-    setLoadError(null);
+function fmtDate(value?: string | null) {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleString();
+}
+
+export default function OpsDashboardClient({ initialRows }: { initialRows: Row[] }) {
+  const [rows, setRows] = useState<Row[]>(initialRows);
+  const [query, setQuery] = useState("");
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [busyAction, setBusyAction] = useState<"pie" | "contacted" | null>(null);
+  const [flash, setFlash] = useState<string | null>(null);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return rows;
+
+    return rows.filter((r) => {
+      const haystack = [
+        r.intake.company_name,
+        r.intake.contact_name,
+        r.intake.email,
+        r.intake.industry,
+        r.intake.status,
+        r.intake.recommendation_tier,
+        r.latestCall?.status,
+        r.latestPie?.status,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(q);
+    });
+  }, [rows, query]);
+
+  async function markContacted(opsIntakeId: string) {
+    setBusyId(opsIntakeId);
+    setBusyAction("contacted");
+    setFlash(null);
+
     try {
-      const res = await fetch("/api/internal/ops/dashboard", { cache: "no-store" });
-      const data = await res.json();
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || "Failed to load ops dashboard.");
-      }
-      setRows(Array.isArray(data.rows) ? data.rows : []);
-
-      setSelectedIntakeId((prev) => {
-        if (prev && (data.rows || []).some((r: DashboardRow) => r.intake?.id === prev)) {
-          return prev;
-        }
-        return data.rows?.[0]?.intake?.id ?? null;
+      const res = await fetch("/api/internal/ops/mark-contacted", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ opsIntakeId }),
       });
-    } catch (err) {
-      setLoadError(err instanceof Error ? err.message : "Unexpected error");
+
+      const json = await res.json();
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to update status.");
+
+      setRows((prev) =>
+        prev.map((r) =>
+          r.intake.id === opsIntakeId
+            ? { ...r, intake: { ...r.intake, status: "contacted" } }
+            : r
+        )
+      );
+
+      setFlash("Marked as contacted.");
+    } catch (e: any) {
+      setFlash(e?.message || "Failed to mark contacted.");
     } finally {
-      setLoading(false);
+      setBusyId(null);
+      setBusyAction(null);
     }
   }
 
-  const selected = useMemo(
-    () => rows.find((r) => r.intake?.id === selectedIntakeId) ?? null,
-    [rows, selectedIntakeId]
-  );
-
-  async function generatePie() {
-    if (!selected?.intake?.id) return;
-
-    setGenerating(true);
-    setGenerateError(null);
+  async function generatePie(opsIntakeId: string) {
+    setBusyId(opsIntakeId);
+    setBusyAction("pie");
+    setFlash(null);
 
     try {
-      const res = await fetch("/api/internal/generate-ops-pie-report", {
+      const res = await fetch("/api/internal/ops/generate-pie", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          opsIntakeId: selected.intake.id,
-          followUpNote: followUpNote.trim() || undefined,
-          regenerate,
-        }),
+        body: JSON.stringify({ opsIntakeId }),
       });
 
-      const data = await res.json();
+      const json = await res.json();
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to generate PIE.");
 
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || "Failed to generate PIE report.");
-      }
+      setRows((prev) =>
+        prev.map((r) =>
+          r.intake.id === opsIntakeId
+            ? {
+                ...r,
+                latestPie: {
+                  id: json.report?.id ?? `temp-${opsIntakeId}`,
+                  ops_intake_id: opsIntakeId,
+                  created_at: json.report?.created_at ?? new Date().toISOString(),
+                  status: json.report?.status ?? "generated",
+                  summary: json.report?.summary ?? "PIE report generated.",
+                  generator: json.report?.generator ?? "ops_rules_v1",
+                  model: json.report?.model ?? null,
+                },
+              }
+            : r
+        )
+      );
 
-      setFollowUpNote("");
-      setRegenerate(false);
-      await refresh();
-      setSelectedIntakeId(selected.intake.id);
-    } catch (err) {
-      setGenerateError(err instanceof Error ? err.message : "Unexpected error");
+      setFlash("PIE report generated.");
+    } catch (e: any) {
+      setFlash(e?.message || "Failed to generate PIE.");
     } finally {
-      setGenerating(false);
+      setBusyId(null);
+      setBusyAction(null);
     }
   }
 
   return (
-    <section className="section" style={{ paddingTop: 0 }}>
-      <div className="heroGrid">
-        <div className="card">
-          <div className="cardInner" style={{ display: "grid", gap: 10 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-              <div style={{ fontWeight: 900 }}>Recent Intakes</div>
-              <button className="btn btnGhost" type="button" onClick={refresh} disabled={loading}>
-                {loading ? "Refreshing..." : "Refresh"}
-              </button>
-            </div>
+    <div className="card" style={{ marginTop: 14 }}>
+      <div className="cardInner">
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search company, contact, email, tier, status..."
+            style={{
+              flex: "1 1 320px",
+              borderRadius: 12,
+              border: "1px solid rgba(255,255,255,0.14)",
+              background: "rgba(255,255,255,0.03)",
+              color: "rgba(255,255,255,0.95)",
+              padding: "12px 14px",
+              outline: "none",
+            }}
+          />
+          <div className="pill">{filtered.length} results</div>
+        </div>
 
-            {loadError ? (
-              <div
-                style={{
-                  borderRadius: 12,
-                  padding: 12,
-                  border: "1px solid rgba(255,80,80,0.35)",
-                  background: "rgba(255,80,80,0.08)",
-                }}
-              >
-                <strong>Error:</strong> {loadError}
-              </div>
-            ) : null}
+        {flash ? (
+          <div
+            style={{
+              marginTop: 10,
+              borderRadius: 12,
+              padding: 10,
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(255,255,255,0.03)",
+            }}
+          >
+            {flash}
+          </div>
+        ) : null}
 
-            {rows.length === 0 && !loading ? (
-              <div className="p">No ops intakes yet.</div>
-            ) : null}
+        <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+          {filtered.length === 0 ? (
+            <div className="p">No ops intakes match your search.</div>
+          ) : (
+            filtered.map((row) => {
+              const { intake, latestCall, latestPie } = row;
+              const loadingThisRow = busyId === intake.id;
 
-            <div style={{ display: "grid", gap: 10 }}>
-              {rows.map((row) => {
-                const intake = row.intake;
-                const active = intake.id === selectedIntakeId;
-                const hasPie = !!row.latestPieReport;
-                const hasCall = !!row.latestCallRequest;
-
-                return (
-                  <button
-                    key={intake.id}
-                    type="button"
-                    onClick={() => setSelectedIntakeId(intake.id)}
+              return (
+                <div
+                  key={intake.id}
+                  style={{
+                    borderRadius: 12,
+                    border: "1px solid rgba(255,255,255,0.10)",
+                    background: "rgba(255,255,255,0.02)",
+                    padding: 12,
+                  }}
+                >
+                  <div
                     style={{
-                      textAlign: "left",
-                      borderRadius: 14,
-                      border: active
-                        ? "1px solid rgba(255,122,24,0.35)"
-                        : "1px solid rgba(255,255,255,0.12)",
-                      background: active ? "rgba(255,122,24,0.08)" : "rgba(255,255,255,0.03)",
-                      padding: 12,
-                      cursor: "pointer",
-                      color: "inherit",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 10,
+                      flexWrap: "wrap",
+                      alignItems: "flex-start",
                     }}
                   >
-                    <div style={{ fontWeight: 900 }}>{intake.company_name}</div>
-                    <div className="p" style={{ marginTop: 4 }}>
-                      {intake.contact_name} • {intake.email}
+                    <div>
+                      <div style={{ fontWeight: 900 }}>
+                        {intake.company_name || "Unnamed company"}
+                      </div>
+                      <div className="p" style={{ marginTop: 4 }}>
+                        {intake.contact_name || "—"} • {intake.email || "—"}
+                      </div>
+                      <div className="p" style={{ marginTop: 4 }}>
+                        Submitted: {fmtDate(intake.created_at)}
+                      </div>
                     </div>
 
-                    <div
-                      style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: 8,
-                        marginTop: 8,
-                        opacity: 0.95,
-                      }}
-                    >
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {intake.status ? <span className="pill">{intake.status}</span> : null}
                       {intake.recommendation_tier ? (
                         <span className="pill">{intake.recommendation_tier}</span>
                       ) : null}
                       {intake.recommendation_price_range ? (
                         <span className="pill">{intake.recommendation_price_range}</span>
                       ) : null}
-                      <span className="pill">{hasCall ? "Call requested" : "No call yet"}</span>
-                      <span className="pill">{hasPie ? "PIE ready" : "No PIE yet"}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="cardInner" style={{ display: "grid", gap: 12 }}>
-            {!selected ? (
-              <div className="p">Select an intake to view details.</div>
-            ) : (
-              <>
-                <div>
-                  <div className="kicker">
-                    <span className="kickerDot" aria-hidden="true" />
-                    Selected Intake
-                  </div>
-                  <div style={{ height: 8 }} />
-                  <div className="h2" style={{ margin: 0 }}>
-                    {selected.intake.company_name}
-                  </div>
-                  <div className="p" style={{ marginTop: 8 }}>
-                    {selected.intake.contact_name} • {selected.intake.email}
-                    {selected.intake.phone ? ` • ${selected.intake.phone}` : ""}
-                  </div>
-                </div>
-
-                <div className="card" style={{ background: "rgba(255,255,255,0.03)" }}>
-                  <div className="cardInner" style={{ display: "grid", gap: 8 }}>
-                    <div style={{ fontWeight: 900 }}>Intake snapshot</div>
-                    <div className="p">
-                      <strong>Industry:</strong> {selected.intake.industry || "—"}
-                    </div>
-                    <div className="p">
-                      <strong>Team size:</strong> {selected.intake.team_size || "—"}
-                    </div>
-                    <div className="p">
-                      <strong>Volume:</strong> {selected.intake.job_volume || "—"}
-                    </div>
-                    <div className="p">
-                      <strong>Urgency:</strong> {selected.intake.urgency || "—"}
-                    </div>
-                    <div className="p">
-                      <strong>Readiness:</strong> {selected.intake.readiness || "—"}
                     </div>
                   </div>
-                </div>
 
-                <div className="card" style={{ background: "rgba(255,255,255,0.03)" }}>
-                  <div className="cardInner" style={{ display: "grid", gap: 8 }}>
-                    <div style={{ fontWeight: 900 }}>Latest call request</div>
-                    {selected.latestCallRequest ? (
-                      <>
-                        <div className="p">
-                          <strong>Best time:</strong>{" "}
-                          {selected.latestCallRequest.best_time_to_call || "—"}
-                        </div>
-                        <div className="p">
-                          <strong>Preferred windows:</strong>{" "}
-                          {selected.latestCallRequest.preferred_times || "—"}
-                        </div>
-                        <div className="p">
-                          <strong>Timezone:</strong>{" "}
-                          {selected.latestCallRequest.timezone || "—"}
-                        </div>
-                      </>
-                    ) : (
-                      <div className="p">No call request submitted yet.</div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="card" style={{ background: "rgba(255,255,255,0.03)" }}>
-                  <div className="cardInner" style={{ display: "grid", gap: 8 }}>
-                    <div style={{ fontWeight: 900 }}>PIE Actions</div>
-
-                    <textarea
-                      value={followUpNote}
-                      onChange={(e) => setFollowUpNote(e.target.value)}
-                      placeholder="Optional follow-up note for PIE (ex: client says budget max is $1200, focus on invoice automation first)"
+                  <div
+                    style={{
+                      marginTop: 10,
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                      gap: 10,
+                    }}
+                  >
+                    <div
                       style={{
-                        width: "100%",
-                        minHeight: 84,
-                        borderRadius: 12,
-                        border: "1px solid rgba(255,255,255,0.14)",
-                        background: "rgba(255,255,255,0.03)",
-                        color: "rgba(255,255,255,0.95)",
-                        padding: "12px 14px",
-                        resize: "vertical",
-                      }}
-                    />
-
-                    <label
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        fontSize: 13,
-                        opacity: 0.95,
+                        borderRadius: 10,
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        padding: 10,
                       }}
                     >
-                      <input
-                        type="checkbox"
-                        checked={regenerate}
-                        onChange={(e) => setRegenerate(e.target.checked)}
-                      />
-                      Force regenerate (ignore cached latest report)
-                    </label>
-
-                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                      <button
-                        className="btn btnPrimary"
-                        type="button"
-                        onClick={generatePie}
-                        disabled={generating}
-                      >
-                        {generating ? "Generating PIE..." : "Generate PIE Report"}
-                        <span className="btnArrow">→</span>
-                      </button>
+                      <div style={{ fontWeight: 800, marginBottom: 4 }}>Intake</div>
+                      <div className="p">
+                        <strong>Industry:</strong> {intake.industry || "—"}
+                        <br />
+                        <strong>Urgency:</strong> {intake.urgency || "—"}
+                        <br />
+                        <strong>Readiness:</strong> {intake.readiness || "—"}
+                        <br />
+                        <strong>Score:</strong> {intake.recommendation_score ?? "—"}
+                      </div>
                     </div>
 
-                    {generateError ? (
-                      <div
-                        style={{
-                          borderRadius: 12,
-                          padding: 12,
-                          border: "1px solid rgba(255,80,80,0.35)",
-                          background: "rgba(255,80,80,0.08)",
-                        }}
-                      >
-                        <strong>Error:</strong> {generateError}
-                      </div>
-                    ) : null}
+                    <div
+                      style={{
+                        borderRadius: 10,
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        padding: 10,
+                      }}
+                    >
+                      <div style={{ fontWeight: 800, marginBottom: 4 }}>Call Request</div>
+                      {latestCall ? (
+                        <div className="p">
+                          <strong>Status:</strong> {latestCall.status || "submitted"}
+                          <br />
+                          <strong>Best time:</strong> {latestCall.best_time_to_call || "—"}
+                          <br />
+                          <strong>Window:</strong> {latestCall.preferred_times || "—"}
+                          <br />
+                          <strong>Timezone:</strong> {latestCall.timezone || "—"}
+                        </div>
+                      ) : (
+                        <div className="p">No call request yet.</div>
+                      )}
+                    </div>
+
+                    <div
+                      style={{
+                        borderRadius: 10,
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        padding: 10,
+                      }}
+                    >
+                      <div style={{ fontWeight: 800, marginBottom: 4 }}>PIE Report</div>
+                      {latestPie ? (
+                        <div className="p">
+                          <strong>Status:</strong> {latestPie.status || "generated"}
+                          <br />
+                          <strong>Generated:</strong> {fmtDate(latestPie.created_at)}
+                          <br />
+                          <strong>Summary:</strong> {latestPie.summary || "—"}
+                        </div>
+                      ) : (
+                        <div className="p">No PIE report yet.</div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+                    <Link href={`/internal/ops/${intake.id}`} className="btn btnGhost">
+                      View Details
+                    </Link>
+
+                    <button
+                      type="button"
+                      className="btn btnGhost"
+                      onClick={() => markContacted(intake.id)}
+                      disabled={loadingThisRow}
+                    >
+                      {loadingThisRow && busyAction === "contacted"
+                        ? "Updating..."
+                        : "Mark Contacted"}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn btnPrimary"
+                      onClick={() => generatePie(intake.id)}
+                      disabled={loadingThisRow}
+                    >
+                      {loadingThisRow && busyAction === "pie"
+                        ? "Generating..."
+                        : "Generate PIE"}{" "}
+                      <span className="btnArrow">→</span>
+                    </button>
                   </div>
                 </div>
-
-                <div className="card" style={{ background: "rgba(255,255,255,0.03)" }}>
-                  <div className="cardInner" style={{ display: "grid", gap: 8 }}>
-                    <div style={{ fontWeight: 900 }}>Latest PIE report</div>
-
-                    {selected.latestPieReport ? (
-                      <>
-                        <div className="p">
-                          <strong>Model:</strong> {selected.latestPieReport.model || "—"}
-                        </div>
-                        <div className="p">
-                          <strong>Response ID:</strong>{" "}
-                          {selected.latestPieReport.openai_response_id || "—"}
-                        </div>
-                        <div className="p">
-                          <strong>Summary:</strong>{" "}
-                          {selected.latestPieReport.summary || "No summary"}
-                        </div>
-
-                        <details>
-                          <summary style={{ cursor: "pointer", fontWeight: 800 }}>
-                            View JSON report
-                          </summary>
-                          <pre
-                            style={{
-                              marginTop: 10,
-                              whiteSpace: "pre-wrap",
-                              wordBreak: "break-word",
-                              fontSize: 12,
-                              lineHeight: 1.5,
-                              borderRadius: 12,
-                              padding: 12,
-                              background: "rgba(255,255,255,0.04)",
-                              border: "1px solid rgba(255,255,255,0.12)",
-                            }}
-                          >
-                            {JSON.stringify(selected.latestPieReport.report_json, null, 2)}
-                          </pre>
-                        </details>
-                      </>
-                    ) : (
-                      <div className="p">No PIE report generated yet.</div>
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
+              );
+            })
+          )}
         </div>
       </div>
-    </section>
+    </div>
   );
 }
