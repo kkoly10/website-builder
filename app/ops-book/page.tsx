@@ -11,21 +11,13 @@ function pick(sp: SearchParams, key: string) {
   return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
 }
 
-type IntakePreview = {
-  id: string;
-  company_name: string;
-  contact_name: string;
-  email: string;
-  recommendation_tier: string | null;
-  recommendation_price_range: string | null;
-};
-
 export default async function OpsBookPage({
   searchParams,
 }: {
-  searchParams: SearchParams;
+  searchParams: Promise<SearchParams> | SearchParams;
 }) {
-  const opsIntakeId = pick(searchParams, "opsIntakeId").trim();
+  const sp = await Promise.resolve(searchParams);
+  const opsIntakeId = pick(sp, "opsIntakeId").trim();
 
   if (!opsIntakeId) {
     return (
@@ -33,14 +25,24 @@ export default async function OpsBookPage({
         <section className="section">
           <div className="card">
             <div className="cardInner">
+              <div className="kicker">
+                <span className="kickerDot" aria-hidden="true" />
+                Ops Booking
+              </div>
+
+              <div style={{ height: 10 }} />
               <h1 className="h2">Missing ops intake</h1>
               <p className="p" style={{ marginTop: 8 }}>
                 Start from the workflow intake page so we can attach the booking to the right
                 submission.
               </p>
-              <div style={{ marginTop: 12 }}>
+
+              <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <Link href="/systems" className="btn btnPrimary">
-                  Go to Ops Intake
+                  Start Workflow Intake <span className="btnArrow">→</span>
+                </Link>
+                <Link href="/" className="btn btnGhost">
+                  Home
                 </Link>
               </div>
             </div>
@@ -50,25 +52,51 @@ export default async function OpsBookPage({
     );
   }
 
-  const { data: intake } = await supabaseAdmin
+  const { data: intake, error } = await supabaseAdmin
     .from("ops_intakes")
-    .select("id, company_name, contact_name, email, recommendation_tier, recommendation_price_range")
+    .select(
+      "id, company_name, contact_name, email, recommendation_tier, recommendation_price_range"
+    )
     .eq("id", opsIntakeId)
-    .maybeSingle<IntakePreview>();
+    .maybeSingle();
 
-  if (!intake) {
+  if (error || !intake) {
     return (
       <main className="container">
         <section className="section">
           <div className="card">
             <div className="cardInner">
-              <h1 className="h2">Ops intake not found</h1>
+              <div className="kicker">
+                <span className="kickerDot" aria-hidden="true" />
+                Ops Booking
+              </div>
+
+              <div style={{ height: 10 }} />
+              <h1 className="h2">Could not load intake</h1>
               <p className="p" style={{ marginTop: 8 }}>
-                The intake link may be expired or invalid. Start a new intake and try again.
+                We couldn’t find that workflow intake. Please restart the intake flow and try again.
               </p>
-              <div style={{ marginTop: 12 }}>
+
+              {error ? (
+                <div
+                  style={{
+                    marginTop: 12,
+                    borderRadius: 12,
+                    padding: 12,
+                    border: "1px solid rgba(255,80,80,0.35)",
+                    background: "rgba(255,80,80,0.08)",
+                  }}
+                >
+                  <strong>Error:</strong> {error.message}
+                </div>
+              ) : null}
+
+              <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <Link href="/systems" className="btn btnPrimary">
-                  Start New Ops Intake
+                  Start Workflow Intake <span className="btnArrow">→</span>
+                </Link>
+                <Link href="/" className="btn btnGhost">
+                  Home
                 </Link>
               </div>
             </div>
@@ -81,50 +109,41 @@ export default async function OpsBookPage({
   return (
     <main className="container">
       <section className="section">
-        <div className="heroGrid">
-          <div className="card">
-            <div className="cardInner">
-              <div className="kicker">
-                <span className="kickerDot" aria-hidden="true" />
-                Ops Flow • Step 2
-              </div>
-
-              <div style={{ height: 10 }} />
-              <h1 className="h2">Book your workflow review call</h1>
-
-              <p className="p" style={{ marginTop: 8 }}>
-                Intake saved for <strong>{intake.company_name}</strong>. Pick your preferred call
-                timing and I’ll use this to prepare your workflow review.
-              </p>
-
-              <div className="pills" style={{ marginTop: 10 }}>
-                <span className="pill">{intake.contact_name}</span>
-                <span className="pill">{intake.email}</span>
-                {intake.recommendation_tier ? (
-                  <span className="pill">{intake.recommendation_tier}</span>
-                ) : null}
-                {intake.recommendation_price_range ? (
-                  <span className="pill">{intake.recommendation_price_range}</span>
-                ) : null}
-              </div>
+        <div className="card">
+          <div className="cardInner">
+            <div className="kicker">
+              <span className="kickerDot" aria-hidden="true" />
+              Ops Booking
             </div>
-          </div>
 
-          <div className="card">
-            <div className="cardInner">
-              <div style={{ fontWeight: 900, marginBottom: 8 }}>What happens next</div>
-              <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.8 }}>
-                <li>You submit your call preferences</li>
-                <li>We review your intake + workflow pain points</li>
-                <li>You get a clearer scope and next steps</li>
-                <li>PIE can generate a detailed internal action plan</li>
-              </ul>
+            <div style={{ height: 10 }} />
+            <h1 className="h2">Book your workflow review call</h1>
+            <p className="p" style={{ marginTop: 8 }}>
+              We found your intake. Pick your preferred call timing below so we can attach it to the
+              correct workflow request.
+            </p>
+
+            <div className="pills" style={{ marginTop: 10 }}>
+              <span className="pill">Intake ID: {intake.id.slice(0, 8)}…</span>
+              {intake.recommendation_tier ? <span className="pill">{intake.recommendation_tier}</span> : null}
+              {intake.recommendation_price_range ? (
+                <span className="pill">{intake.recommendation_price_range}</span>
+              ) : null}
             </div>
           </div>
         </div>
-      </section>
 
-      <OpsBookClient opsIntakeId={intake.id} />
+        <OpsBookClient
+          intake={{
+            id: intake.id,
+            company_name: intake.company_name ?? "",
+            contact_name: intake.contact_name ?? "",
+            email: intake.email ?? "",
+            recommendation_tier: intake.recommendation_tier ?? null,
+            recommendation_price_range: intake.recommendation_price_range ?? null,
+          }}
+        />
+      </section>
     </main>
   );
 }
