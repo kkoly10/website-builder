@@ -1,11 +1,13 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
+import BrandLogo from "@/components/brand/BrandLogo";
 import { createSupabaseServerClient, isAdminEmail } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "CrecyStudio",
-  description: "Website design quotes, planning, and project portal.",
+  description: "Professional websites, clear pricing, and client portal.",
 };
 
 export const dynamic = "force-dynamic";
@@ -29,109 +31,116 @@ export default async function RootLayout({
     userEmail = user?.email ?? null;
     isAdmin = isAdminEmail(userEmail);
   } catch {
-    // Keep layout rendering even if auth client fails temporarily
+    // keep rendering if auth is temporarily unavailable
   }
 
   return (
     <html lang="en">
       <body>
+        <div className="bgFx" aria-hidden="true" />
         <div className="siteShell">
           <header className="topNav">
-            <div className="topNavInner">
-              <Link href="/" className="brand">
-                <span className="brandMark">C</span>
-                <span>
-                  <strong>CrecyStudio</strong>
-                  <span style={{ display: "block", opacity: 0.8, fontSize: 12 }}>
-                    Websites • Quotes • Client Portal
-                  </span>
-                </span>
-              </Link>
+            <div className="container topNavInner">
+              <BrandLogo />
 
-              <nav className="navLinks" aria-label="Main navigation">
-                <Link href="/">Home</Link>
-                <Link href="/build">Build</Link>
-                <Link href="/estimate">Estimate</Link>
-                <Link href="/systems">Systems</Link>
+              <div className="navCluster">
+                <nav className="navMain" aria-label="Main navigation">
+                  <Link href="/build" className="navLink">
+                    Custom Build
+                  </Link>
+                  <Link href="/estimate" className="navLink">
+                    Pricing
+                  </Link>
+                  <Link href="/portal" className="navLink">
+                    Client Portal
+                  </Link>
+                </nav>
 
-                {userEmail ? (
-                  <>
-                    <Link href="/portal">Dashboard</Link>
-                    {isAdmin ? <Link href="/internal">Internal Admin</Link> : null}
+                <div className="navActions">
+                  {userEmail ? (
+                    <>
+                      <span className="badge" title={userEmail}>
+                        {userEmail}
+                      </span>
 
-                    <span
-                      style={{
-                        fontSize: 12,
-                        opacity: 0.8,
-                        marginLeft: 8,
-                        whiteSpace: "nowrap",
-                      }}
-                      title={userEmail}
-                    >
-                      {userEmail}
-                    </span>
+                      {isAdmin ? (
+                        <Link href="/internal" className="btn btnGhost btnSm">
+                          Internal Admin
+                        </Link>
+                      ) : null}
 
-                    <form action="/auth/signout" method="post" style={{ display: "inline" }}>
-                      <button
-                        type="submit"
-                        className="btn btnGhost"
-                        style={{ marginLeft: 8 }}
-                      >
-                        Sign out
-                      </button>
-                    </form>
-                  </>
-                ) : (
-                  <>
-                    <Link href="/login">Login</Link>
-                    <Link href="/signup" className="btn btnPrimary">
-                      Create account
-                    </Link>
-                    <Link href="/internal" className="btn btnGhost">
-                      Internal Admin
-                    </Link>
-                  </>
-                )}
-              </nav>
+                      <form action="/auth/signout" method="post">
+                        <button type="submit" className="btn btnGhost btnSm">
+                          Sign out
+                        </button>
+                      </form>
+                    </>
+                  ) : (
+                    <>
+                      <Link href="/login" className="btn btnGhost btnSm">
+                        Login
+                      </Link>
+                      <Link href="/build" className="btn btnPrimary btnSm">
+                        Get Estimate
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           </header>
 
-          <main>{children}</main>
+          <main className="siteMain">{children}</main>
 
           <footer className="footer">
-            <div>© {year} CrecyStudio</div>
-            <div className="footerLinks">
-              <Link href="/">Home</Link>
-              <Link href="/build">Build</Link>
-              <Link href="/estimate">Estimate</Link>
-              <Link href="/systems">Systems</Link>
-              {userEmail ? (
-                <>
-                  <Link href="/portal">Dashboard</Link>
-                  {isAdmin ? <Link href="/internal">Internal Admin</Link> : null}
-                  <form action="/auth/signout" method="post" style={{ display: "inline" }}>
-                    <button
-                      type="submit"
-                      style={{
-                        background: "none",
-                        border: "none",
-                        color: "inherit",
-                        cursor: "pointer",
-                        padding: 0,
-                        textDecoration: "underline",
-                      }}
-                    >
-                      Sign out
-                    </button>
-                  </form>
-                </>
-              ) : (
-                <>
-                  <Link href="/login">Login</Link>
-                  <Link href="/signup">Create account</Link>
-                  <Link href="/internal">Internal Admin</Link>
-                </>
-              )}
+            <div className="container">
+              <div className="footerWrap">
+                <div className="footerBrandCol">
+                  <BrandLogo showTag={false} />
+                  <div className="footerBrandText">Custom Websites • Clear Revisions • Fast Turnaround</div>
+
+                  <div className="footerTagRow">
+                    <span className="badge">Virginia</span>
+                    <span className="badge">Fast turnaround</span>
+                    <span className="badge">Clear revisions</span>
+                  </div>
+                </div>
+
+                <div className="footerCols">
+                  <div className="footerCol">
+                    <div className="footerHead">Explore</div>
+                    <Link href="/build">Custom Build</Link>
+                    <Link href="/estimate">Pricing / Estimate</Link>
+                    <Link href="/portal">Client Portal</Link>
+                    <Link href="/systems">Workflow Systems</Link>
+                  </div>
+
+                  <div className="footerCol">
+                    <div className="footerHead">Access</div>
+                    {!userEmail ? (
+                      <>
+                        <Link href="/login">Login</Link>
+                        <Link href="/signup">Create account</Link>
+                      </>
+                    ) : (
+                      <>
+                        <Link href="/portal">Dashboard</Link>
+                        {isAdmin ? <Link href="/internal">Internal Admin</Link> : null}
+                        <form action="/auth/signout" method="post">
+                          <button type="submit" className="footerLinkButton">
+                            Sign out
+                          </button>
+                        </form>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="footerBottom">
+                <span>© {year} CrecyStudio</span>
+                <span>Scope-first pricing • Professional delivery</span>
+              </div>
             </div>
           </footer>
         </div>
