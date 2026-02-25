@@ -1,7 +1,7 @@
-import DashboardShell from "@/components/dashboard/DashboardShell";
-import { getMockProject } from "@/lib/mockProject";
+import { redirect } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 
 export default function DashboardPage() {
-  const project = getMockProject();
-  return <DashboardShell project={project} />;
+  redirect("/portal");
 }
