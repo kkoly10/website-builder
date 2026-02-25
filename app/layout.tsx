@@ -1,22 +1,18 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import "./globals.css";
-import { createSupabaseServerClient, isAdminEmail } from "@/lib/supabase/server";
+import Link from "next/link";
+import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "CrecyStudio",
-  description: "Website design quotes, planning, and project portal.",
+  description: "Custom websites and workflow systems for local businesses",
 };
-
-export const dynamic = "force-dynamic";
 
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const year = new Date().getFullYear();
-
   let userEmail: string | null = null;
   let isAdmin = false;
 
@@ -27,123 +23,68 @@ export default async function RootLayout({
     } = await supabase.auth.getUser();
 
     userEmail = user?.email ?? null;
-    isAdmin = isAdminEmail(userEmail);
+    isAdmin = await isAdminUser({ userId: user?.id ?? null, email: user?.email ?? null });
   } catch {
-    // Keep layout rendering even if auth client fails temporarily
+    // keep safe fallback state
   }
 
   return (
     <html lang="en">
       <body>
-        {/* Global background layers (starfield + glow) */}
-        <div className="bgNebula" aria-hidden="true" />
-        <div className="bgFx" aria-hidden="true" />
-        <div className="bgFx2" aria-hidden="true" />
-        <div className="bgFxSparkle" aria-hidden="true" />
+        <header className="siteHeader">
+          <div className="siteHeaderInner">
+            <Link href="/" className="brand" aria-label="CrecyStudio home">
+              <span className="brandDot" aria-hidden="true" />
+              <span className="brandText">CrecyStudio</span>
+            </Link>
 
-        <div className="siteShell">
-          <header className="topNav">
-            <div className="topNavInner">
-              <Link href="/" className="brand">
-                <span className="brandMark">C</span>
-                <span>
-                  <strong>CrecyStudio</strong>
-                  <span style={{ display: "block", opacity: 0.8, fontSize: 12 }}>
-                    Websites • Quotes • Client Portal
-                  </span>
-                </span>
-              </Link>
+            <nav className="siteNav" aria-label="Primary">
+              <Link href="/systems">Workflow Systems</Link>
+              <Link href="/build">Website Quotes</Link>
+              <Link href="/portal">Portal</Link>
 
-              <nav className="navLinks" aria-label="Main navigation">
-                <Link href="/">Home</Link>
-                <Link href="/build">Build</Link>
-                <Link href="/estimate">Estimate</Link>
-                <Link href="/systems">Systems</Link>
-
-                {userEmail ? (
-                  <>
-                    <Link href="/portal">Dashboard</Link>
-                    {isAdmin ? <Link href="/internal">Internal Admin</Link> : null}
-
-                    <span
+              {userEmail ? (
+                <>
+                  {isAdmin ? <Link href="/internal">Admin</Link> : null}
+                  <form action="/auth/signout" method="post" style={{ display: "inline" }}>
+                    <button
+                      type="submit"
+                      className="navButton"
                       style={{
-                        fontSize: 12,
-                        opacity: 0.8,
-                        marginLeft: 8,
-                        whiteSpace: "nowrap",
+                        background: "transparent",
+                        border: "none",
+                        color: "inherit",
+                        cursor: "pointer",
+                        padding: 0,
+                        font: "inherit",
                       }}
-                      title={userEmail}
                     >
-                      {userEmail}
-                    </span>
+                      Sign out
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <>
+                  <Link href="/login">Log in</Link>
+                  <Link href="/signup">Sign up</Link>
+                </>
+              )}
+            </nav>
+          </div>
+        </header>
 
-                    <form action="/auth/signout" method="post" style={{ display: "inline" }}>
-                      <button
-                        type="submit"
-                        className="btn btnGhost"
-                        style={{ marginLeft: 8 }}
-                      >
-                        Sign out
-                      </button>
-                    </form>
-                  </>
-                ) : (
-                  <>
-                    <Link href="/login">Login</Link>
-                    <Link href="/signup" className="btn btnPrimary">
-                      Create account
-                    </Link>
-                    <Link href="/internal" className="btn btnGhost">
-                      Internal Admin
-                    </Link>
-                  </>
-                )}
-              </nav>
-            </div>
-          </header>
+        {children}
 
-          <main className="mainContent">{children}</main>
-
-          <footer className="footer">
-            <div className="container">
-              <div>© {year} CrecyStudio</div>
-              <div className="footerLinks">
-                <Link href="/">Home</Link>
-                <Link href="/build">Build</Link>
-                <Link href="/estimate">Estimate</Link>
-                <Link href="/systems">Systems</Link>
-
-                {userEmail ? (
-                  <>
-                    <Link href="/portal">Dashboard</Link>
-                    {isAdmin ? <Link href="/internal">Internal Admin</Link> : null}
-                    <form action="/auth/signout" method="post" style={{ display: "inline" }}>
-                      <button
-                        type="submit"
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "inherit",
-                          cursor: "pointer",
-                          padding: 0,
-                          textDecoration: "underline",
-                        }}
-                      >
-                        Sign out
-                      </button>
-                    </form>
-                  </>
-                ) : (
-                  <>
-                    <Link href="/login">Login</Link>
-                    <Link href="/signup">Create account</Link>
-                    <Link href="/internal">Internal Admin</Link>
-                  </>
-                )}
-              </div>
-            </div>
-          </footer>
-        </div>
+        <footer className="footer">
+          <div>© 2026 CrecyStudio. Websites + workflow systems.</div>
+          <div className="footerLinks">
+            <Link href="/">Home</Link>
+            <Link href="/systems">Workflow Systems</Link>
+            <Link href="/build">Website Quotes</Link>
+            <Link href="/portal">Portal</Link>
+            <a href="mailto:hello@crecystudio.com">hello@crecystudio.com</a>
+          </div>
+        </footer>
       </body>
     </html>
   );
