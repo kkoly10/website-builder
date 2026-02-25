@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import "./globals.css";
 import Link from "next/link";
+import "./globals.css";
 import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let userEmail: string | null = null;
-  let isAdmin = false;
+  let admin = false;
 
   try {
     const supabase = await createSupabaseServerClient();
@@ -23,68 +23,95 @@ export default async function RootLayout({
     } = await supabase.auth.getUser();
 
     userEmail = user?.email ?? null;
-    isAdmin = await isAdminUser({ userId: user?.id ?? null, email: user?.email ?? null });
+    admin = await isAdminUser({ userId: user?.id ?? null, email: user?.email ?? null });
   } catch {
-    // keep safe fallback state
+    // fail safe: render public nav
+    userEmail = null;
+    admin = false;
   }
 
   return (
     <html lang="en">
       <body>
-        <header className="siteHeader">
-          <div className="siteHeaderInner">
-            <Link href="/" className="brand" aria-label="CrecyStudio home">
-              <span className="brandDot" aria-hidden="true" />
-              <span className="brandText">CrecyStudio</span>
-            </Link>
+        {/* Global animated background layers (match globals.css) */}
+        <div className="bgNebula" aria-hidden="true" />
+        <div className="bgFx" aria-hidden="true" />
+        <div className="bgFx2" aria-hidden="true" />
+        <div className="bgFxSparkle" aria-hidden="true" />
 
-            <nav className="siteNav" aria-label="Primary">
-              <Link href="/systems">Workflow Systems</Link>
-              <Link href="/build">Website Quotes</Link>
-              <Link href="/portal">Portal</Link>
+        <div className="siteShell">
+          {/* Top Navigation (match globals.css class names) */}
+          <header className="topNav">
+            <div className="topNavInner">
+              <Link href="/" className="brand" aria-label="CrecyStudio home">
+                <span className="brandMark" aria-hidden="true">
+                  CS
+                </span>
+                <span className="brandText">CrecyStudio</span>
+              </Link>
 
-              {userEmail ? (
-                <>
-                  {isAdmin ? <Link href="/internal">Admin</Link> : null}
-                  <form action="/auth/signout" method="post" style={{ display: "inline" }}>
-                    <button
-                      type="submit"
-                      className="navButton"
-                      style={{
-                        background: "transparent",
-                        border: "none",
-                        color: "inherit",
-                        cursor: "pointer",
-                        padding: 0,
-                        font: "inherit",
-                      }}
-                    >
-                      Sign out
-                    </button>
-                  </form>
-                </>
-              ) : (
-                <>
-                  <Link href="/login">Log in</Link>
-                  <Link href="/signup">Sign up</Link>
-                </>
-              )}
-            </nav>
-          </div>
-        </header>
+              <nav className="navLinks" aria-label="Primary navigation">
+                <Link href="/systems">Workflow Systems</Link>
+                <Link href="/build">Custom Build</Link>
+                <Link href="/pricing">Pricing</Link>
+                <Link href="/portal">Client Portal</Link>
 
-        {children}
+                {userEmail ? (
+                  <>
+                    {admin ? <Link href="/internal">Admin</Link> : null}
 
-        <footer className="footer">
-          <div>© 2026 CrecyStudio. Websites + workflow systems.</div>
-          <div className="footerLinks">
-            <Link href="/">Home</Link>
-            <Link href="/systems">Workflow Systems</Link>
-            <Link href="/build">Website Quotes</Link>
-            <Link href="/portal">Portal</Link>
-            <a href="mailto:hello@crecystudio.com">hello@crecystudio.com</a>
-          </div>
-        </footer>
+                    <form action="/auth/signout" method="post" style={{ display: "inline" }}>
+                      <button
+                        type="submit"
+                        className="btn btnGhost"
+                        style={{
+                          padding: "10px 14px",
+                          borderRadius: 12,
+                          background: "rgba(255,255,255,0.04)",
+                          color: "rgba(255,255,255,0.86)",
+                        }}
+                      >
+                        Sign out
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login">Log in</Link>
+                    <Link href="/signup">Sign up</Link>
+                    <Link href="/build" className="btn btnPrimary">
+                      Get Estimate
+                    </Link>
+                  </>
+                )}
+              </nav>
+            </div>
+          </header>
+
+          {/* Main content wrapper (match globals.css) */}
+          <div className="mainContent">{children}</div>
+
+          {/* Footer (match globals.css) */}
+          <footer className="footer">
+            <div className="container">
+              <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.88)" }}>
+                CrecyStudio
+              </div>
+              <div style={{ marginTop: 6 }}>
+                Custom websites and workflow systems for local businesses.
+              </div>
+
+              <div className="footerLinks">
+                <Link href="/">Home</Link>
+                <Link href="/systems">Workflow Systems</Link>
+                <Link href="/build">Custom Build</Link>
+                <Link href="/pricing">Pricing</Link>
+                <Link href="/portal">Client Portal</Link>
+                {admin ? <Link href="/internal">Admin</Link> : null}
+              </div>
+            </div>
+          </footer>
+        </div>
       </body>
     </html>
   );
