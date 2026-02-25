@@ -35,11 +35,11 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body>
-        {/* Background layers (mock-style nebula + stars) */}
+        {/* Global background layers (starfield + glow) */}
         <div className="bgNebula" aria-hidden="true" />
         <div className="bgFx" aria-hidden="true" />
-        <div className="bgFx bgFx2" aria-hidden="true" />
-        <div className="bgVignette" aria-hidden="true" />
+        <div className="bgFx2" aria-hidden="true" />
+        <div className="bgFxSparkle" aria-hidden="true" />
 
         <div className="siteShell">
           <header className="topNav">
@@ -102,42 +102,45 @@ export default async function RootLayout({
             </div>
           </header>
 
-          <main>{children}</main>
+          <main className="mainContent">{children}</main>
 
           <footer className="footer">
-            <div>© {year} CrecyStudio</div>
-            <div className="footerLinks">
-              <Link href="/">Home</Link>
-              <Link href="/build">Build</Link>
-              <Link href="/estimate">Estimate</Link>
-              <Link href="/systems">Systems</Link>
-              {userEmail ? (
-                <>
-                  <Link href="/portal">Dashboard</Link>
-                  {isAdmin ? <Link href="/internal">Internal Admin</Link> : null}
-                  <form action="/auth/signout" method="post" style={{ display: "inline" }}>
-                    <button
-                      type="submit"
-                      style={{
-                        background: "none",
-                        border: "none",
-                        color: "inherit",
-                        cursor: "pointer",
-                        padding: 0,
-                        textDecoration: "underline",
-                      }}
-                    >
-                      Sign out
-                    </button>
-                  </form>
-                </>
-              ) : (
-                <>
-                  <Link href="/login">Login</Link>
-                  <Link href="/signup">Create account</Link>
-                  <Link href="/internal">Internal Admin</Link>
-                </>
-              )}
+            <div className="container">
+              <div>© {year} CrecyStudio</div>
+              <div className="footerLinks">
+                <Link href="/">Home</Link>
+                <Link href="/build">Build</Link>
+                <Link href="/estimate">Estimate</Link>
+                <Link href="/systems">Systems</Link>
+
+                {userEmail ? (
+                  <>
+                    <Link href="/portal">Dashboard</Link>
+                    {isAdmin ? <Link href="/internal">Internal Admin</Link> : null}
+                    <form action="/auth/signout" method="post" style={{ display: "inline" }}>
+                      <button
+                        type="submit"
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "inherit",
+                          cursor: "pointer",
+                          padding: 0,
+                          textDecoration: "underline",
+                        }}
+                      >
+                        Sign out
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login">Login</Link>
+                    <Link href="/signup">Create account</Link>
+                    <Link href="/internal">Internal Admin</Link>
+                  </>
+                )}
+              </div>
             </div>
           </footer>
         </div>
