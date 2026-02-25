@@ -1,4 +1,3 @@
-// app/api/submit-estimate/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/server";
@@ -10,145 +9,77 @@ function n(v: any) {
   return Number.isFinite(x) ? x : 0;
 }
 
-function pick(obj: LooseObj | null | undefined, keys: string[]) {
-  if (!obj) return undefined;
-  for (const k of keys) {
-    if (obj[k] != null) return obj[k];
-  }
-  return undefined;
-}
-
 function extractEstimate(payload: LooseObj) {
   const estimate = (payload.estimate && typeof payload.estimate === "object" ? payload.estimate : null) || {};
-  const pricing = (payload.pricing && typeof payload.pricing === "object" ? payload.pricing : null) || {};
-
-  const target = n(
-    pick(estimate, ["target", "recommended", "price", "total"]) ??
-      pick(pricing, ["target", "recommended", "price", "total"]) ??
-      payload.estimateTarget ??
-      payload.target
-  );
-
-  const min = n(
-    pick(estimate, ["min", "minimum", "low"]) ??
-      pick(pricing, ["min", "minimum", "low"]) ??
-      payload.estimateMin ??
-      payload.min
-  );
-
-  const max = n(
-    pick(estimate, ["max", "maximum", "high"]) ??
-      pick(pricing, ["max", "maximum", "high"]) ??
-      payload.estimateMax ??
-      payload.max
-  );
-
+  const target = n(estimate.target ?? payload.estimateTarget ?? payload.target);
+  const min = n(estimate.min ?? payload.estimateMin ?? payload.min);
+  const max = n(estimate.max ?? payload.estimateMax ?? payload.max);
   return { target, min, max };
-}
-
-function hasValidEstimate(payload: LooseObj) {
-  const est = extractEstimate(payload);
-
-  // allow some flows that only send target
-  const anyPositive = est.target > 0 || est.min > 0 || est.max > 0;
-  const rangeValid = est.max === 0 || est.min === 0 || est.max >= est.min;
-
-  return anyPositive && rangeValid;
 }
 
 export async function POST(req: Request) {
   try {
     const body = (await req.json().catch(() => ({}))) as LooseObj;
+    const rawEmail = String(body.leadEmail ?? body.email ?? body.contactEmail ?? body?.lead?.email ?? "").trim();
+    if (!rawEmail.includes("@")) return NextResponse.json({ ok: false, error: "Invalid email" }, { status: 400 });
+    
+    const leadEmail = rawEmail.toLowerCase();
 
-    const leadEmail = String(
-      body.leadEmail ?? body.email ?? body.contactEmail ?? body?.lead?.email ?? ""
-    )
-      .trim()
-      .toLowerCase();
-
-    if (!leadEmail || !leadEmail.includes("@")) {
-      return NextResponse.json(
-        { ok: false, error: "Missing valid lead email" },
-        { status: 400 }
-      );
+    // 1. Relational Logic: Find or Create Lead
+    let { data: lead } = await supabaseAdmin.from("leads").select("id").eq("email", leadEmail).maybeSingle();
+    if (!lead) {
+      const { data: newLead, error: lErr } = await supabaseAdmin.from("leads").insert({ email: leadEmail, name: body.contactName || null }).select("id").single();
+      if (lErr) throw lErr;
+      lead = newLead;
     }
 
-    if (!hasValidEstimate(body)) {
-      return NextResponse.json(
-        { ok: false, error: "Missing or invalid estimate payload" },
-        { status: 400 }
-      );
-    }
-
-    const quoteId = String(body.quoteId ?? "").trim() || null;
-    const ownerEmailNorm = normalizeEmail(leadEmail);
-
+    // 2. Prepare Data
+    const est = extractEstimate(body);
     const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    const authUserId = user?.id ?? null;
-
-    const payloadToStore = {
-      ...body,
-      leadEmail,
-    };
-
+    // RESTORED: Look for existing quoteId to prevent duplicates
+    const quoteId = String(body.quoteId ?? "").trim() || null;
     let savedQuoteId: string | null = quoteId;
 
+    const dbPayload = {
+      lead_id: lead.id,
+      lead_email: leadEmail,
+      owner_email_norm: normalizeEmail(leadEmail),
+      auth_user_id: user?.id ?? null,
+      quote_json: body,
+      estimate_total: est.target,
+      estimate_low: est.min,
+      estimate_high: est.max,
+      status: "submitted",
+      updated_at: new Date().toISOString()
+    };
+
     if (quoteId) {
-      const { data, error } = await supabaseAdmin
+      // RESTORED: Update existing quote
+      const { data, error: updateError } = await supabaseAdmin
         .from("quotes")
-        .update({
-          lead_email: leadEmail,
-          owner_email_norm: ownerEmailNorm,
-          auth_user_id: authUserId,
-          quote_json: payloadToStore,
-          status: "submitted",
-          updated_at: new Date().toISOString(),
-        })
+        .update(dbPayload)
         .eq("id", quoteId)
         .select("id")
         .single();
 
-      if (error) {
-        return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
-      }
-
-      savedQuoteId = data?.id ?? quoteId;
+      if (updateError) throw updateError;
+      savedQuoteId = data.id;
     } else {
-      const { data, error } = await supabaseAdmin
+      // RESTORED: Insert new quote
+      const { data, error: insertError } = await supabaseAdmin
         .from("quotes")
-        .insert({
-          lead_email: leadEmail,
-          owner_email_norm: ownerEmailNorm,
-          auth_user_id: authUserId,
-          quote_json: payloadToStore,
-          status: "submitted",
-        })
+        .insert([dbPayload])
         .select("id")
         .single();
 
-      if (error) {
-        return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
-      }
-
-      savedQuoteId = data?.id ?? null;
+      if (insertError) throw insertError;
+      savedQuoteId = data.id;
     }
 
-    return NextResponse.json({
-      ok: true,
-      quoteId: savedQuoteId,
-      nextUrl: `/book?quoteId=${encodeURIComponent(savedQuoteId || "")}`,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: error instanceof Error ? error.message : "Unexpected error",
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: true, quoteId: savedQuoteId, nextUrl: `/book?quoteId=${savedQuoteId}` });
+  } catch (error: any) {
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 }
