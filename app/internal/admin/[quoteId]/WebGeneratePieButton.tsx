@@ -6,25 +6,28 @@ import { useRouter } from "next/navigation";
 export default function WebGeneratePieButton({ quoteId }: { quoteId: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(""); // ADDED: Error state
 
-  async function generatePie() {
+  async function generate() {
     setLoading(true);
-    setError("");
-    
+    setError(""); // Clear old errors
     try {
       const res = await fetch("/api/internal/pie/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ quoteId, force: true }),
       });
-
+      
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) throw new Error(data.error || "Failed to generate PIE.");
-
+      
+      // ADDED: Explicitly check for API failures
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to generate PIE");
+      }
+      
       router.refresh();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (e: any) {
+      setError(e.message || "Generation failed");
     } finally {
       setLoading(false);
     }
@@ -32,13 +35,11 @@ export default function WebGeneratePieButton({ quoteId }: { quoteId: string }) {
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-      <button 
-        onClick={generatePie} 
-        disabled={loading} 
-        className="btn btnPrimary"
-      >
-        {loading ? "Generating..." : "Generate / Refresh PIE →"}
+      <button onClick={generate} disabled={loading} className="btn btnPrimary">
+        {loading ? "Analyzing..." : "Generate / Refresh PIE →"}
       </button>
+      
+      {/* ADDED: Shows the actual error text to you */}
       {error && <span style={{ color: "#ffb4b4", fontSize: 13, fontWeight: 700 }}>{error}</span>}
     </div>
   );
