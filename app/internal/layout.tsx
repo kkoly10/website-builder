@@ -31,7 +31,6 @@ export default async function InternalLayout({
 
   return (
     <main className="container" style={{ paddingTop: 8 }}>
-      {/* Compact admin toolbar (not a second big header) */}
       <section className="card" style={{ marginBottom: 16 }}>
         <div
           className="cardInner"
@@ -46,7 +45,7 @@ export default async function InternalLayout({
           <div style={{ minWidth: 0 }}>
             <div className="kicker">
               <span className="kickerDot" aria-hidden="true" />
-              Admin Console
+              CrecyStudio HQ
             </div>
             <div
               style={{
@@ -66,30 +65,26 @@ export default async function InternalLayout({
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <Link href="/internal" className="btn btnGhost">
-              Home
+              HQ Home
             </Link>
             
-            {/* The two active pipelines */}
-            <Link href="/internal/admin" className="btn btnPrimary">
-              Web Design Pipeline
-            </Link>
             <Link 
-              href="/internal/ops" 
+              href="/internal/admin" 
               className="btn btnPrimary" 
               style={{ 
-                background: "linear-gradient(180deg, #4f46e5, #4338ca)", 
-                borderColor: "#3730a3", 
-                boxShadow: "0 10px 30px rgba(67, 56, 202, 0.22)" 
+                background: "linear-gradient(180deg, #3b82f6, #2563eb)", 
+                borderColor: "#1d4ed8", 
+                boxShadow: "0 10px 30px rgba(37, 99, 235, 0.22)" 
               }}
             >
-              Workflow Ops Pipeline
+              Web Design Pipeline
             </Link>
 
-            <Link href="/portal" className="btn btnGhost">
-              Client Portal
+            <Link href="/internal/ops" className="btn btnPrimary">
+              Workflow Ops Pipeline
             </Link>
             
-            <form action="/auth/signout" method="post">
+            <form action="/auth/signout" method="post" style={{ marginLeft: 8 }}>
               <button type="submit" className="btn btnGhost">
                 Sign out
               </button>
