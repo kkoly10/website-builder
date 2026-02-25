@@ -11,6 +11,7 @@ export default async function InternalLayout({
   children: ReactNode;
 }) {
   const supabase = await createSupabaseServerClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -29,42 +30,45 @@ export default async function InternalLayout({
   }
 
   return (
-    <div className="container" style={{ paddingTop: 18 }}>
-      <div
-        className="card"
-        style={{
-          marginBottom: 14,
-          position: "sticky",
-          top: 10,
-          zIndex: 20,
-          backdropFilter: "blur(8px)",
-        }}
-      >
+    <main className="container" style={{ paddingTop: 8 }}>
+      {/* Compact admin toolbar (not a second big header) */}
+      <section className="card" style={{ marginBottom: 16 }}>
         <div
           className="cardInner"
           style={{
             display: "flex",
-            justifyContent: "space-between",
             alignItems: "center",
-            gap: 10,
+            justifyContent: "space-between",
+            gap: 12,
             flexWrap: "wrap",
           }}
         >
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div className="kicker">
               <span className="kickerDot" aria-hidden="true" />
-              Internal Admin
+              Admin Console
             </div>
-            <div className="p" style={{ marginTop: 6 }}>
-              Signed in as <strong>{user.email}</strong>
+            <div
+              style={{
+                marginTop: 6,
+                fontWeight: 700,
+                opacity: 0.9,
+                maxWidth: 420,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+              title={user.email ?? ""}
+            >
+              {user.email}
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <Link href="/internal" className="btn btnGhost">
-              Internal Home
+              Home
             </Link>
-            <Link href="/internal/admin" className="btn btnGhost">
+            <Link href="/internal/admin" className="btn btnPrimary">
               Unified Dashboard
             </Link>
             <Link href="/internal/ops" className="btn btnGhost">
@@ -73,17 +77,16 @@ export default async function InternalLayout({
             <Link href="/portal" className="btn btnGhost">
               Client Portal
             </Link>
-
             <form action="/auth/signout" method="post">
-              <button type="submit" className="btn btnPrimary">
-                Sign out <span className="btnArrow">→</span>
+              <button type="submit" className="btn btnGhost">
+                Sign out
               </button>
             </form>
           </div>
         </div>
-      </div>
+      </section>
 
       {children}
-    </div>
+    </main>
   );
 }
