@@ -68,15 +68,27 @@ export default async function InternalLayout({
             <Link href="/internal" className="btn btnGhost">
               Home
             </Link>
+            
+            {/* The two active pipelines */}
             <Link href="/internal/admin" className="btn btnPrimary">
-              Unified Dashboard
+              Web Design Pipeline
             </Link>
-            <Link href="/internal/ops" className="btn btnGhost">
-              Ops Intakes
+            <Link 
+              href="/internal/ops" 
+              className="btn btnPrimary" 
+              style={{ 
+                background: "linear-gradient(180deg, #4f46e5, #4338ca)", 
+                borderColor: "#3730a3", 
+                boxShadow: "0 10px 30px rgba(67, 56, 202, 0.22)" 
+              }}
+            >
+              Workflow Ops Pipeline
             </Link>
+
             <Link href="/portal" className="btn btnGhost">
               Client Portal
             </Link>
+            
             <form action="/auth/signout" method="post">
               <button type="submit" className="btn btnGhost">
                 Sign out
