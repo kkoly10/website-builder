@@ -1,18 +1,18 @@
-// app/book/page.tsx
 import Link from "next/link";
 import BookClient from "./BookClient";
 import RecoverQuoteRedirect from "./RecoverQuoteRedirect";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = Record<string, string | string[] | undefined>;
+// NEXT.JS 15+ FIX: searchParams is now a Promise
+type SearchParamsPromise = Promise<Record<string, string | string[] | undefined>>;
 
-function pick(sp: SearchParams, key: string) {
+function pick(sp: Record<string, string | string[] | undefined>, key: string) {
   const v = sp?.[key];
   return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
 }
 
-function pickAny(sp: SearchParams, keys: string[]) {
+function pickAny(sp: Record<string, string | string[] | undefined>, keys: string[]) {
   for (const k of keys) {
     const v = pick(sp, k).trim();
     if (v) return v;
@@ -20,9 +20,12 @@ function pickAny(sp: SearchParams, keys: string[]) {
   return "";
 }
 
-export default function BookPage({ searchParams }: { searchParams: SearchParams }) {
+export default async function BookPage(props: { searchParams: SearchParamsPromise }) {
+  // NEXT.JS 15+ FIX: Await the searchParams before using them
+  const sp = await props.searchParams;
+  
   // Long-term robustness: accept common variants
-  const quoteId = pickAny(searchParams, ["quoteId", "quoteid", "qid", "id"]);
+  const quoteId = pickAny(sp, ["quoteId", "quoteid", "qid", "id"]);
 
   if (!quoteId) {
     return (
