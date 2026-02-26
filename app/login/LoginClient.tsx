@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState, type CSSProperties, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 function safeNextPath(next: string | null) {
-  if (!next || !next.startsWith("/")) return "/";
+  // Enhanced: Defaults to /portal instead of /
+  if (!next || !next.startsWith("/")) return "/portal";
   return next;
 }
 
@@ -24,15 +25,9 @@ export default function LoginClient() {
   );
 
   const flashMessage = useMemo(() => {
-    if (searchParams.get("signup") === "1") {
-      return "Account created. You can sign in now.";
-    }
-    if (searchParams.get("reset") === "1") {
-      return "Password updated. Sign in with your new password.";
-    }
-    if (searchParams.get("verified") === "1") {
-      return "Email verified. You can sign in now.";
-    }
+    if (searchParams.get("signup") === "1") return "Account created. You can sign in now.";
+    if (searchParams.get("reset") === "1") return "Password updated. Sign in with your new password.";
+    if (searchParams.get("verified") === "1") return "Email verified. You can sign in now.";
     return null;
   }, [searchParams]);
 
@@ -52,7 +47,6 @@ export default function LoginClient() {
       if (error) throw error;
 
       // Important: route through callback so ADMIN_EMAILS admin logic runs
-      // (and non-admins still land on nextPath safely)
       window.location.assign(`/auth/callback?next=${encodeURIComponent(nextPath)}`);
       return;
     } catch (err) {
@@ -62,104 +56,74 @@ export default function LoginClient() {
   }
 
   return (
-    <div className="card">
-      <div className="cardInner" style={{ display: "grid", gap: 12 }}>
-        <div className="kicker">
-          <span className="kickerDot" aria-hidden="true" />
-          CrecyStudio Login
+    <div className="card" style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.4)", border: "1px solid var(--accentStroke)" }}>
+      <div className="cardInner" style={{ display: "grid", gap: 16 }}>
+        
+        <div>
+          {/* RESTORED BRANDING */}
+          <div className="kicker" style={{ marginBottom: 8 }}>
+            <span className="kickerDot" aria-hidden="true" />
+            CrecyStudio Login
+          </div>
+          <h1 className="h2" style={{ margin: 0 }}>Welcome Back</h1>
+          <p className="pDark" style={{ marginTop: 6 }}>
+            Sign in to access your project workspaces.
+          </p>
         </div>
 
-        <h1 className="h2" style={{ margin: 0 }}>
-          Sign in with email and password
-        </h1>
-
-        <p className="p" style={{ marginTop: 0 }}>
-          Access your customer portal or internal dashboard.
-        </p>
-
-        {flashMessage ? (
-          <div
-            style={{
-              borderRadius: 12,
-              padding: 12,
-              border: "1px solid rgba(80,220,120,0.35)",
-              background: "rgba(80,220,120,0.08)",
-            }}
-          >
+        {flashMessage && (
+          <div style={{ borderRadius: 8, padding: 12, border: "1px solid var(--stroke)", background: "var(--panel2)", color: "var(--fg)", fontSize: 13 }}>
             {flashMessage}
           </div>
-        ) : null}
+        )}
 
-        <form onSubmit={handleLogin} style={{ display: "grid", gap: 10 }}>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@company.com"
-            required
-            autoComplete="email"
-            style={inputStyle}
-          />
+        <form onSubmit={handleLogin} style={{ display: "grid", gap: 12 }}>
+          <div>
+            <label className="fieldLabel">Email Address</label>
+            <input
+              className="input"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@company.com"
+              required
+              autoComplete="email"
+            />
+          </div>
 
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            required
-            autoComplete="current-password"
-            style={inputStyle}
-          />
+          <div>
+            <label className="fieldLabel">Password</label>
+            <input
+              className="input"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              autoComplete="current-password"
+            />
+          </div>
 
-          <button className="btn btnPrimary" type="submit" disabled={submitting}>
-            {submitting ? "Signing in..." : "Sign In"}
-            <span className="btnArrow">→</span>
+          <button className="btn btnPrimary" type="submit" disabled={submitting} style={{ marginTop: 8, padding: "12px", fontSize: 15, width: "100%", justifyContent: "center" }}>
+            {submitting ? "Authenticating..." : "Sign In →"}
           </button>
         </form>
 
-        {error ? (
-          <div
-            style={{
-              borderRadius: 12,
-              padding: 12,
-              border: "1px solid rgba(255,80,80,0.35)",
-              background: "rgba(255,80,80,0.08)",
-            }}
-          >
-            <strong>Error:</strong> {error}
+        {error && (
+          <div style={{ borderRadius: 8, padding: 12, border: "1px solid var(--accentStroke)", background: "var(--bg2)", color: "var(--accent)", fontSize: 13, fontWeight: 700 }}>
+            <strong>Error: </strong> {error}
           </div>
-        ) : null}
+        )}
 
-        <div className="p" style={{ marginTop: 4 }}>
-          Redirect after login: <strong>{nextPath}</strong>
-        </div>
-
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <Link
-            href={`/signup?next=${encodeURIComponent(nextPath)}`}
-            className="btn btnGhost"
-          >
-            Create Account
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--stroke)", paddingTop: 16, marginTop: 8 }}>
+          <Link href={`/signup?next=${encodeURIComponent(nextPath)}`} style={{ color: "var(--muted)", fontSize: 13, textDecoration: "none" }}>
+            Need an account? <span style={{ color: "var(--fg)", fontWeight: 700 }}>Sign up</span>
           </Link>
-
-          <Link
-            href={`/forgot-password?next=${encodeURIComponent(nextPath)}`}
-            className="btn btnGhost"
-          >
-            Forgot Password
+          <Link href={`/forgot-password?next=${encodeURIComponent(nextPath)}`} style={{ color: "var(--muted)", fontSize: 13, textDecoration: "none" }}>
+            Forgot Password?
           </Link>
         </div>
       </div>
     </div>
   );
 }
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  borderRadius: 12,
-  border: "1px solid rgba(255,255,255,0.14)",
-  background: "rgba(255,255,255,0.03)",
-  color: "rgba(255,255,255,0.95)",
-  padding: "12px 14px",
-  outline: "none",
-};
