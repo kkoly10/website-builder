@@ -141,7 +141,7 @@ export default function PortalClient({ initial }: { initial: PortalBundle }) {
                   <option value="revision_requested">Revision requested</option>
                 </select>
                 <textarea className="textarea" value={clientNoteDraft} onChange={(e) => setClientNoteDraft(e.target.value)} placeholder="Message to admin..." style={{ marginBottom: 10 }} />
-                <button className="btn btnGhost" disabled={busy} onClick={() => sendAction({ type: "client_status", clientStatus: clientStatusDraft, clientNotes: clientNoteDraft }, "Status synced.")} style={{ width: "100%" }}>
+                <button className="btn btnGhost" disabled={busy} onClick={() => sendAction({ type: "client_status", clientStatus: clientStatusDraft, clientNotes: clientNoteDraft }, "Status sent.")} style={{ width: "100%" }}>
                   Send Update
                 </button>
               </div>
@@ -256,4 +256,25 @@ export default function PortalClient({ initial }: { initial: PortalBundle }) {
         <div className="panel">
           <div className="panelHeader"><div style={{ fontWeight: 900 }}>Project Milestones</div></div>
           <div className="panelBody">
-            <div style={{ marginBottom: 1
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ height: 8, borderRadius: 999, background: "var(--bg2)", overflow: "hidden" }}>
+                <div style={{ width: `${progress}%`, height: "100%", background: "var(--accent)", transition: "width 0.3s ease" }} />
+              </div>
+            </div>
+            <div className="row" style={{ flexDirection: "column", gap: 8 }}>
+              {data.portalState.milestones.map((m) => (
+                <label key={m.key} className="checkRow" style={{ background: m.done ? "var(--panel2)" : "var(--bg2)", borderColor: m.done ? "var(--stroke2)" : "var(--stroke)" }}>
+                  <div className="checkLeft">
+                    <input type="checkbox" checked={!!m.done} disabled={busy} onChange={(e) => sendAction({ type: "milestone_toggle", key: m.key, done: e.target.checked })} />
+                    <div className="checkLabel" style={{ color: m.done ? "var(--muted)" : "var(--fg)", textDecoration: m.done ? "line-through" : "none" }}>{m.label}</div>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  );
+}
