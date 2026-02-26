@@ -27,7 +27,7 @@ type PipelineRow = {
   pie: PieView;
   adminPricing: { discountPercent: number; flatAdjustment: number; hourlyRate: number; notes: string; };
   proposalText: string;
-  links: { detail: string };
+  links: { detail: string; workspace: string }; 
 };
 
 export default function AdminPipelineClient({ initialRows }: { initialRows: PipelineRow[] }) {
@@ -53,7 +53,6 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
     setRows((prev) => prev.map((r) => (r.quoteId === quoteId ? updater(r) : r)));
   }
 
-  // AI PIE GENERATOR
   async function generatePie(quoteId: string) {
     setBusyByQuote((m) => ({ ...m, [quoteId]: true }));
     setMessageByQuote((m) => ({ ...m, [quoteId]: "Analyzing lead with AI..." }));
@@ -72,7 +71,6 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
     }
   }
 
-  // RESTORED: FULL SAVE LOGIC
   async function saveQuoteAdmin(quoteId: string, payload: any) {
     setBusyByQuote((m) => ({ ...m, [quoteId]: true }));
     try {
@@ -89,7 +87,6 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
     }
   }
 
-  // RESTORED: PROPOSAL GENERATOR
   async function generateProposal(row: PipelineRow) {
     setBusyByQuote((m) => ({ ...m, [row.quoteId]: true }));
     setMessageByQuote((m) => ({ ...m, [row.quoteId]: "Drafting proposal..." }));
@@ -140,7 +137,6 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
           return (
             <div key={row.quoteId} className="card">
               <div className="cardInner">
-                {/* Header Row */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 14 }}>
                   <div style={{ minWidth: 280, flex: 1 }}>
                     <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
@@ -163,12 +159,10 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
                   </div>
                 </div>
 
-                {/* Main Content Grid: PIE, Pricing, Proposals */}
                 <div className="grid2" style={{ marginTop: 16 }}>
                   
-                  {/* Left: PIE & Controls */}
+                  {/* LEFT: PIE & Pricing */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    
                     <div style={{ background: "var(--bg2)", border: "1px solid var(--stroke)", padding: 16, borderRadius: 12 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                         <div style={{ fontWeight: 800, color: "var(--fg)" }}>AI PIE Analysis</div>
@@ -184,7 +178,6 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
                       )}
                     </div>
 
-                    {/* RESTORED: Pricing Controls */}
                     <div style={{ background: "var(--panel2)", border: "1px solid var(--stroke)", padding: 16, borderRadius: 12 }}>
                       <div style={{ fontWeight: 800, color: "var(--fg)", marginBottom: 12 }}>Pipeline & Pricing</div>
                       
@@ -208,12 +201,11 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
 
                       <div style={{ marginTop: 12, display: "flex", gap: 10 }}>
                         <button className="btn btnPrimary" disabled={isBusy} onClick={() => saveQuoteAdmin(row.quoteId, { status: row.status, adminPricing: row.adminPricing })}>Save Config</button>
-                        <Link href={row.links.detail} className="btn btnGhost">Full Detail</Link>
                       </div>
                     </div>
                   </div>
 
-                  {/* Right: Proposal Generator */}
+                  {/* RIGHT: Proposal Generator */}
                   <div style={{ background: "var(--panel2)", border: "1px solid var(--stroke)", padding: 16, borderRadius: 12 }}>
                     <div style={{ fontWeight: 800, color: "var(--fg)", marginBottom: 12 }}>Proposal Generator</div>
                     <div className="smallNote" style={{ marginBottom: 12 }}>Drafts a sales proposal using the PIE scope and pricing rules.</div>
@@ -248,6 +240,22 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
                     {messageByQuote[row.quoteId]}
                   </div>
                 )}
+
+                {/* RESTORED: Admin Project Initiator Actions */}
+                <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap", alignItems: "center", borderTop: "1px solid var(--stroke)", paddingTop: 16 }}>
+                  <button className="btn btnGhost" style={{ padding: "6px 12px", fontSize: 13 }} disabled={isBusy} onClick={() => saveQuoteAdmin(row.quoteId, { status: "call_requested" })}>Mark Call Req</button>
+                  <button className="btn btnGhost" style={{ padding: "6px 12px", fontSize: 13 }} disabled={isBusy} onClick={() => saveQuoteAdmin(row.quoteId, { status: "proposal" })}>Mark Proposal</button>
+                  
+                  <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+                    <Link href={row.links.detail} className="btn btnGhost" style={{ padding: "6px 12px", fontSize: 13 }}>
+                      Quote Details
+                    </Link>
+                    <Link href={row.links.workspace} className="btn btnPrimary" style={{ padding: "6px 12px", fontSize: 13 }}>
+                      Initialize Project Workspace →
+                    </Link>
+                  </div>
+                </div>
+
               </div>
             </div>
           );
