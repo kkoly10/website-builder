@@ -55,14 +55,16 @@ export default function SiteFooter() {
           }}
         >
           <span>© {new Date().getFullYear()} CrecyStudio. All rights reserved.</span>
-          <a 
-            href="mailto:hello@crecystudio.com" 
-            style={{ color: "var(--muted)", fontWeight: 600, textDecoration: "none", transition: "color 0.2s ease" }}
-            onMouseOver={(e) => e.currentTarget.style.color = "var(--fg)"}
-            onMouseOut={(e) => e.currentTarget.style.color = "var(--muted)"}
-          >
-            hello@crecystudio.com
-          </a>
+          
+          {/* Wrapped in footerLinks class so the globals.css hover effect handles it automatically */}
+          <div className="footerLinks" style={{ margin: 0 }}>
+            <a 
+              href="mailto:hello@crecystudio.com" 
+              style={{ color: "var(--muted)", fontWeight: 600, textDecoration: "none", transition: "color 0.2s ease" }}
+            >
+              hello@crecystudio.com
+            </a>
+          </div>
         </div>
       </div>
     </footer>
