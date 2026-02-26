@@ -36,7 +36,7 @@ function badgeForAdminStatus(status: string) {
 function friendlyClientStatus(s: string) {
   switch ((s || "").toLowerCase()) {
     case "new": return "New";
-    case "waiting_on_client": return "Waiting on client";
+    case "waiting_on_client": return "Waiting on content";
     case "content_submitted": return "Content submitted";
     case "need_help": return "Need help";
     case "revision_requested": return "Revision requested";
@@ -141,7 +141,7 @@ export default function PortalClient({ initial }: { initial: PortalBundle }) {
                   <option value="revision_requested">Revision requested</option>
                 </select>
                 <textarea className="textarea" value={clientNoteDraft} onChange={(e) => setClientNoteDraft(e.target.value)} placeholder="Message to admin..." style={{ marginBottom: 10 }} />
-                <button className="btn btnGhost" disabled={busy} onClick={() => sendAction({ type: "client_status", clientStatus: clientStatusDraft, clientNotes: clientNoteDraft }, "Status sent.")} style={{ width: "100%" }}>
+                <button className="btn btnGhost" disabled={busy} onClick={() => sendAction({ type: "client_status", clientStatus: clientStatusDraft, clientNotes: clientNoteDraft }, "Status synced.")} style={{ width: "100%" }}>
                   Send Update
                 </button>
               </div>
@@ -176,29 +176,84 @@ export default function PortalClient({ initial }: { initial: PortalBundle }) {
           </div>
         </div>
 
-        {/* BOTTOM: Milestones */}
-        <div className="panel">
-          <div className="panelHeader"><div style={{ fontWeight: 900 }}>Project Milestones</div></div>
-          <div className="panelBody">
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ height: 8, borderRadius: 999, background: "var(--bg2)", overflow: "hidden" }}>
-                <div style={{ width: `${progress}%`, height: "100%", background: "var(--accent)", transition: "width 0.3s ease" }} />
+        {/* BOTTOM LEFT: Assets Upload & History */}
+        <div className="grid2">
+          <div className="panel">
+            <div className="panelHeader"><div style={{ fontWeight: 800 }}>Submit Assets & Content</div></div>
+            <div className="panelBody">
+              <div className="grid2" style={{ marginBottom: 12 }}>
+                <div>
+                  <label className="fieldLabel">Category</label>
+                  <select className="select" value={assetDraft.category} onChange={(e) => setAssetDraft({ ...assetDraft, category: e.target.value })}>
+                    <option>Logo</option><option>Brand Guide</option><option>Photos</option><option>Website Copy</option><option>Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="fieldLabel">Label</label>
+                  <input className="input" placeholder="e.g. Hero Image" value={assetDraft.label} onChange={(e) => setAssetDraft({ ...assetDraft, label: e.target.value })} />
+                </div>
               </div>
-            </div>
-            <div className="row" style={{ flexDirection: "column", gap: 8 }}>
-              {data.portalState.milestones.map((m) => (
-                <label key={m.key} className="checkRow" style={{ background: m.done ? "var(--panel2)" : "var(--bg2)", borderColor: m.done ? "var(--stroke2)" : "var(--stroke)" }}>
-                  <div className="checkLeft">
-                    <input type="checkbox" checked={!!m.done} disabled={busy} onChange={(e) => sendAction({ type: "milestone_toggle", key: m.key, done: e.target.checked })} />
-                    <div className="checkLabel" style={{ color: m.done ? "var(--muted)" : "var(--fg)", textDecoration: m.done ? "line-through" : "none" }}>{m.label}</div>
+              <div style={{ marginBottom: 12 }}>
+                <label className="fieldLabel">Cloud Link (Drive/Dropbox)</label>
+                <input className="input" placeholder="https://" value={assetDraft.url} onChange={(e) => setAssetDraft({ ...assetDraft, url: e.target.value })} />
+              </div>
+              <button className="btn btnGhost" disabled={busy || !assetDraft.url} onClick={() => { sendAction({ type: "asset_add", asset: assetDraft }, "Asset submitted."); setAssetDraft({ category: "Logo", label: "", url: "", notes: "" }); }}>
+                Submit Asset
+              </button>
+
+              {/* RESTORED: Asset History UI */}
+              {data.portalState.assets.length > 0 && (
+                <div style={{ marginTop: 24, paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
+                  <div className="fieldLabel" style={{ marginBottom: 12 }}>Submitted Assets</div>
+                  <div style={{ display: "grid", gap: 10 }}>
+                    {data.portalState.assets.map((a) => (
+                      <div key={a.id} style={{ background: "var(--bg2)", border: "1px solid var(--stroke)", padding: 12, borderRadius: 8 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                          <strong style={{ color: "var(--fg)" }}>{a.label}</strong>
+                          <span className="badge">{a.status}</span>
+                        </div>
+                        <div className="smallNote">{a.category} • {fmtDate(a.createdAt)}</div>
+                        <a href={a.url} target="_blank" rel="noreferrer" style={{ color: "var(--accent)", fontSize: 13, display: "block", marginTop: 6, wordBreak: "break-all" }}>{a.url}</a>
+                      </div>
+                    ))}
                   </div>
-                </label>
-              ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* BOTTOM RIGHT: Revisions & History */}
+          <div className="panel">
+            <div className="panelHeader"><div style={{ fontWeight: 800 }}>Request a Revision</div></div>
+            <div className="panelBody">
+              <textarea className="textarea" placeholder="Describe what you want changed..." value={revisionDraft.message} onChange={(e) => setRevisionDraft({ ...revisionDraft, message: e.target.value })} style={{ marginBottom: 12 }} />
+              <button className="btn btnGhost" disabled={busy || !revisionDraft.message} onClick={() => { sendAction({ type: "revision_add", revision: revisionDraft }, "Revision request sent."); setRevisionDraft({ message: "", priority: "normal" }); }}>
+                Send Request
+              </button>
+
+              {/* RESTORED: Revision History UI */}
+              {data.portalState.revisions.length > 0 && (
+                <div style={{ marginTop: 24, paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
+                  <div className="fieldLabel" style={{ marginBottom: 12 }}>Revision History</div>
+                  <div style={{ display: "grid", gap: 10 }}>
+                    {data.portalState.revisions.map((r) => (
+                      <div key={r.id} style={{ background: "var(--bg2)", border: "1px solid var(--stroke)", padding: 12, borderRadius: 8 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                          <span className="smallNote">{fmtDate(r.createdAt)}</span>
+                          <span className="badge">{r.status}</span>
+                        </div>
+                        <div style={{ color: "var(--fg)", fontSize: 14, lineHeight: 1.5 }}>{r.message}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-      </div>
-    </main>
-  );
-}
+        {/* BOTTOM FULL WIDTH: Milestones */}
+        <div className="panel">
+          <div className="panelHeader"><div style={{ fontWeight: 900 }}>Project Milestones</div></div>
+          <div className="panelBody">
+            <div style={{ marginBottom: 1
