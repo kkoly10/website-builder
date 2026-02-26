@@ -5,12 +5,10 @@ export const dynamic = "force-dynamic";
 
 export default function LoginPage() {
   return (
-    <main className="container">
-      <section className="section">
-        <Suspense fallback={<LoginLoadingCard />}>
-          <LoginClient />
-        </Suspense>
-      </section>
+    <main className="container" style={{ padding: "80px 0", maxWidth: 440, margin: "0 auto" }}>
+      <Suspense fallback={<LoginLoadingCard />}>
+        <LoginClient />
+      </Suspense>
     </main>
   );
 }
@@ -21,14 +19,9 @@ function LoginLoadingCard() {
       <div className="cardInner">
         <div className="kicker">
           <span className="kickerDot" aria-hidden="true" />
-          Loading login…
+          Authenticating
         </div>
-
-        <div style={{ height: 10 }} />
-        <h1 className="h2">Preparing sign-in page</h1>
-        <p className="p" style={{ marginTop: 8 }}>
-          One moment while we load your login options.
-        </p>
+        <h1 className="h2" style={{ marginTop: 8 }}>Preparing sign-in...</h1>
       </div>
     </div>
   );
