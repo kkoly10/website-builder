@@ -14,10 +14,10 @@ function pick(sp: SearchParams, key: string) {
 export default function BookPage({ searchParams }: { searchParams: SearchParams }) {
   const quoteId = pick(searchParams, "quoteId").trim();
 
-  // Long-term UX: never render a broken form without a quote reference
+  // Long-term UX: never render a broken booking form
   if (!quoteId) {
     return (
-      <main className="container" style={{ paddingTop: 26 }}>
+      <main className="container" style={{ padding: "28px 0 80px" }}>
         <section className="card">
           <div className="cardInner">
             <div className="kicker">
@@ -27,11 +27,11 @@ export default function BookPage({ searchParams }: { searchParams: SearchParams 
 
             <div style={{ height: 10 }} />
             <h1 className="h2" style={{ margin: 0 }}>
-              This page needs a quote ID
+              This booking page needs a quote ID
             </h1>
 
             <p className="p" style={{ marginTop: 10 }}>
-              Please start from the estimate flow so we can attach your call request to the right quote.
+              Please start from the estimate step so we can attach the call request to the correct quote.
             </p>
 
             <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -39,7 +39,7 @@ export default function BookPage({ searchParams }: { searchParams: SearchParams 
                 Go to Estimate <span className="btnArrow">→</span>
               </Link>
               <Link className="btn btnGhost" href="/build">
-                Start Website Intake
+                Edit answers
               </Link>
               <Link className="btn btnGhost" href="/portal">
                 Client Portal
