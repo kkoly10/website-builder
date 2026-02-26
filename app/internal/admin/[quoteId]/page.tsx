@@ -4,11 +4,9 @@ import WebGeneratePieButton from "./WebGeneratePieButton";
 
 export const dynamic = "force-dynamic";
 
-// NEXT.JS 15+ FIX: params is now a Promise
 type ParamsPromise = Promise<{ quoteId: string }>;
 
 export default async function WebQuoteDetailPage(props: { params: ParamsPromise }) {
-  // NEXT.JS 15+ FIX: Await the params before using them
   const params = await props.params;
   const quoteId = params.quoteId;
 
@@ -19,15 +17,12 @@ export default async function WebQuoteDetailPage(props: { params: ParamsPromise 
 
   if (!quote) return <main className="container"><p style={{ marginTop: 40 }}>Quote not found.</p></main>;
 
-  // DATA FALLBACKS: Safely handles both old relational leads and new flat JSON data
   const lead = quote.leads ? (Array.isArray(quote.leads) ? quote.leads[0] : quote.leads) : null;
   const leadEmail = lead?.email || quote.lead_email || quote.quote_json?.email || "No email";
   const leadName = lead?.name || quote.quote_json?.name || quote.quote_json?.contactName || "No name provided";
   
   const latestPie = pieReports?.[0];
   const pieData = latestPie?.report || latestPie?.report_json;
-  
-  // Gets total from standard column or nested JSON
   const quoteTotal = quote.estimate_total || quote.quote_json?.estimate?.total || quote.quote_json?.estimate?.target || 0;
 
   return (
@@ -53,7 +48,6 @@ export default async function WebQuoteDetailPage(props: { params: ParamsPromise 
         <div className="cardInner">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
             <h2 className="h2" style={{ fontSize: 20 }}>PIE Analysis</h2>
-            
             <WebGeneratePieButton quoteId={quoteId} />
           </div>
 
@@ -111,7 +105,6 @@ export default async function WebQuoteDetailPage(props: { params: ParamsPromise 
         <div className="cardInner">
           <h2 className="h2" style={{ fontSize: 20, marginBottom: 12 }}>Raw Client Intake Data</h2>
           <pre style={{ background: "var(--bg2)", border: "1px solid var(--stroke)", padding: 12, borderRadius: 8, fontSize: 12, whiteSpace: "pre-wrap" }}>
-            {/* DATA FIX: Uses quote_json first, falls back to old intake_normalized */}
             {JSON.stringify(quote.quote_json || quote.intake_normalized, null, 2)}
           </pre>
         </div>
