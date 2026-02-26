@@ -6,11 +6,11 @@ import { useRouter } from "next/navigation";
 export default function WebGeneratePieButton({ quoteId }: { quoteId: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(""); // ADDED: Error state
+  const [error, setError] = useState("");
 
   async function generate() {
     setLoading(true);
-    setError(""); // Clear old errors
+    setError("");
     try {
       const res = await fetch("/api/internal/pie/generate", {
         method: "POST",
@@ -19,11 +19,7 @@ export default function WebGeneratePieButton({ quoteId }: { quoteId: string }) {
       });
       
       const data = await res.json().catch(() => ({}));
-      
-      // ADDED: Explicitly check for API failures
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to generate PIE");
-      }
+      if (!res.ok) throw new Error(data.error || "Failed to generate PIE");
       
       router.refresh();
     } catch (e: any) {
@@ -39,7 +35,6 @@ export default function WebGeneratePieButton({ quoteId }: { quoteId: string }) {
         {loading ? "Analyzing..." : "Generate / Refresh PIE →"}
       </button>
       
-      {/* ADDED: Shows the actual error text to you */}
       {error && <span style={{ color: "#ffb4b4", fontSize: 13, fontWeight: 700 }}>{error}</span>}
     </div>
   );
