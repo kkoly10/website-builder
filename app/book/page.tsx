@@ -1,6 +1,7 @@
 // app/book/page.tsx
 import Link from "next/link";
 import BookClient from "./BookClient";
+import RecoverQuoteRedirect from "./RecoverQuoteRedirect";
 
 export const dynamic = "force-dynamic";
 
@@ -11,13 +12,24 @@ function pick(sp: SearchParams, key: string) {
   return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
 }
 
-export default function BookPage({ searchParams }: { searchParams: SearchParams }) {
-  const quoteId = pick(searchParams, "quoteId").trim();
+function pickAny(sp: SearchParams, keys: string[]) {
+  for (const k of keys) {
+    const v = pick(sp, k).trim();
+    if (v) return v;
+  }
+  return "";
+}
 
-  // Long-term UX: never render a broken booking form
+export default function BookPage({ searchParams }: { searchParams: SearchParams }) {
+  // Long-term robustness: accept common variants
+  const quoteId = pickAny(searchParams, ["quoteId", "quoteid", "qid", "id"]);
+
   if (!quoteId) {
     return (
       <main className="container" style={{ padding: "28px 0 80px" }}>
+        {/* Auto-recover from localStorage if possible */}
+        <RecoverQuoteRedirect />
+
         <section className="card">
           <div className="cardInner">
             <div className="kicker">
@@ -31,7 +43,8 @@ export default function BookPage({ searchParams }: { searchParams: SearchParams 
             </h1>
 
             <p className="p" style={{ marginTop: 10 }}>
-              Please start from the estimate step so we can attach the call request to the correct quote.
+              Please start from the estimate step so we can attach your call request to the correct quote.
+              If you just submitted an estimate, this page may redirect automatically in a moment.
             </p>
 
             <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
