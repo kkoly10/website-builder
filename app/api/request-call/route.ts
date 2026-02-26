@@ -33,7 +33,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing quote reference." }, { status: 400 });
     }
 
-    // Load quote (stable select)
     const { data: quote, error: qErr } = await supabaseAdmin
       .from("quotes")
       .select("id, lead_id, lead_email, estimate_total, tier_recommended, status")
@@ -44,7 +43,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: qErr?.message || "Quote not found." }, { status: 404 });
     }
 
-    // Load lead details separately (stable long-term)
+    // Load lead safely (no nested join dependency)
     let leadEmail = quote.lead_email ?? "(missing)";
     let leadPhone = "";
     let leadName = "";
@@ -61,7 +60,7 @@ export async function POST(req: Request) {
       leadName = lead?.name ?? "";
     }
 
-    // Attach quote to signed-in user if present (prevents "where is my quote?" later)
+    // Attach quote to signed-in user if present (prevents “where is my quote?”)
     const supabase = await createSupabaseServerClient();
     const {
       data: { user },
@@ -77,7 +76,6 @@ export async function POST(req: Request) {
         .eq("id", quoteId);
     }
 
-    // Insert call request
     const { data: callRow, error: crErr } = await supabaseAdmin
       .from("call_requests")
       .insert({
@@ -95,7 +93,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: crErr.message }, { status: 400 });
     }
 
-    // Update quote status
     await supabaseAdmin.from("quotes").update({ status: "call_requested" }).eq("id", quoteId);
 
     // Email notification (optional)
@@ -106,8 +103,8 @@ export async function POST(req: Request) {
 
     if (RESEND_API_KEY && FROM && TO) {
       const internalLink = BASE ? `${BASE}/internal/preview?quoteId=${quoteId}` : "";
-
       const subject = `Scope call requested — ${leadEmail} — ${quoteId.slice(0, 8)}`;
+
       const html = `
         <div style="font-family:ui-sans-serif,system-ui;line-height:1.5">
           <h2 style="margin:0 0 10px">New scope call request</h2>
