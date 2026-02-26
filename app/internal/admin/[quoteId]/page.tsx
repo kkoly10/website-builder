@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import WebGeneratePieButton from "./WebGeneratePieButton";
+import PieAdminReport from "@/app/components/internal/PieAdminReport"; 
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,7 @@ export default async function WebQuoteDetailPage(props: { params: ParamsPromise 
   const leadName = lead?.name || quote.quote_json?.name || quote.quote_json?.contactName || "No name provided";
   
   const latestPie = pieReports?.[0];
-  const pieData = latestPie?.report || latestPie?.report_json;
+  const pieData = latestPie?.report_json || latestPie?.report || null;
   const quoteTotal = quote.estimate_total || quote.quote_json?.estimate?.total || quote.quote_json?.estimate?.target || 0;
 
   return (
@@ -30,8 +31,8 @@ export default async function WebQuoteDetailPage(props: { params: ParamsPromise 
       <div className="card">
         <div className="cardInner">
           <div className="kicker"><span className="kickerDot" /> Web Design Quote</div>
-          <h1 className="h2" style={{ marginTop: 10 }}>${quoteTotal} — {leadEmail}</h1>
-          <p className="p" style={{ marginTop: 6 }}>{leadName}</p>
+          <h1 className="h2" style={{ marginTop: 10 }}>${quoteTotal.toLocaleString()} — {leadEmail}</h1>
+          <p className="pDark" style={{ marginTop: 6 }}>{leadName}</p>
           
           <div className="pills" style={{ marginTop: 10 }}>
             <span className="pill">Status: {quote.status || "new"}</span>
@@ -46,67 +47,29 @@ export default async function WebQuoteDetailPage(props: { params: ParamsPromise 
 
       <div className="card" style={{ marginTop: 14 }}>
         <div className="cardInner">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
             <h2 className="h2" style={{ fontSize: 20 }}>PIE Analysis</h2>
             <WebGeneratePieButton quoteId={quoteId} />
           </div>
 
-          <div style={{ marginTop: 16 }}>
-            {pieData ? (
-              <div style={{ display: "grid", gap: 16 }}>
-                <div className="grid2">
-                  <div>
-                    <div className="fieldLabel">Lead Score</div>
-                    <div className="p" style={{ fontSize: 24, fontWeight: 900, color: "var(--accent)" }}>
-                      {latestPie.score || pieData.lead_score || "N/A"}/100
-                    </div>
-                  </div>
-                  <div>
-                    <div className="fieldLabel">Recommended Tier</div>
-                    <div className="p" style={{ fontSize: 24, fontWeight: 900 }}>
-                      {latestPie.tier || pieData.recommended_tier || "N/A"}
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="fieldLabel" style={{ color: "var(--accent)" }}>Executive Summary</div>
-                  <div className="p" style={{ background: "var(--bg2)", padding: 12, borderRadius: 8, border: "1px solid var(--stroke)" }}>
-                    {latestPie.summary || pieData.summary || "No summary provided."}
-                  </div>
-                </div>
-
-                {pieData.risks && Array.isArray(pieData.risks) && pieData.risks.length > 0 && (
-                  <div>
-                    <div className="fieldLabel" style={{ color: "#ffb4b4" }}>Complexity & Risks</div>
-                    <ul style={{ margin: 0, paddingLeft: 18, color: "var(--muted)", lineHeight: 1.6 }}>
-                      {pieData.risks.map((risk: string, i: number) => (
-                        <li key={i}>{risk}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                <details>
-                  <summary style={{ cursor: "pointer", opacity: 0.7, fontWeight: 700, marginTop: 10 }}>View Raw JSON</summary>
-                  <pre style={{ marginTop: 10, background: "var(--bg2)", border: "1px solid var(--stroke)", padding: 12, borderRadius: 8, fontSize: 12, overflowX: "auto" }}>
-                    {JSON.stringify(pieData, null, 2)}
-                  </pre>
-                </details>
-              </div>
-            ) : (
-              <p className="p" style={{ opacity: 0.7 }}>No PIE generated yet. Click the button above to analyze this lead.</p>
-            )}
-          </div>
+          {/* Hands the generated JSON directly to your beautiful renderer */}
+          {pieData ? (
+            <PieAdminReport report={pieData} />
+          ) : (
+            <p className="pDark" style={{ fontStyle: "italic" }}>No PIE generated yet. Click the button above to analyze this lead.</p>
+          )}
         </div>
       </div>
 
       <div className="card" style={{ marginTop: 14 }}>
         <div className="cardInner">
           <h2 className="h2" style={{ fontSize: 20, marginBottom: 12 }}>Raw Client Intake Data</h2>
-          <pre style={{ background: "var(--bg2)", border: "1px solid var(--stroke)", padding: 12, borderRadius: 8, fontSize: 12, whiteSpace: "pre-wrap" }}>
-            {JSON.stringify(quote.quote_json || quote.intake_normalized, null, 2)}
-          </pre>
+          <details>
+            <summary style={{ cursor: "pointer", fontWeight: 800, color: "var(--fg)" }}>View Form Answers</summary>
+            <pre style={{ background: "var(--bg2)", border: "1px solid var(--stroke)", padding: 12, borderRadius: 8, fontSize: 12, whiteSpace: "pre-wrap", marginTop: 10 }}>
+              {JSON.stringify(quote.quote_json || quote.intake_normalized, null, 2)}
+            </pre>
+          </details>
         </div>
       </div>
     </section>
