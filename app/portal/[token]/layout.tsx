@@ -1,53 +1,41 @@
-// app/portal/[token]/layout.tsx
 import { notFound, redirect } from "next/navigation";
-import {
-  createSupabaseServerClient,
-  isAdminEmail,
-} from "@/lib/supabase/server";
+import { createSupabaseServerClient, isAdminEmail } from "@/lib/supabase/server";
 
-export default async function PortalTokenLayout({
-  children,
-  params,
-}: {
+export default async function PortalTokenLayout(props: {
   children: React.ReactNode;
-  params: Promise<{ token: string }> | { token: string };
+  params: Promise<{ token: string }>;
 }) {
-  const { token } = await Promise.resolve(params as any);
+  // NEXT.JS 15+ FIX: Await params
+  const params = await props.params;
+  const token = params.token;
 
   const supabase = await createSupabaseServerClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (!user?.email) {
-    redirect(
-      `/auth/login?next=${encodeURIComponent(`/portal/${token}`)}&token=${encodeURIComponent(token)}`
-    );
+    redirect(`/login?next=${encodeURIComponent(`/portal/${token}`)}&token=${encodeURIComponent(token)}`);
   }
 
-  const { data: project, error } = await supabase
-    .from("projects")
-    .select("id, lead_email, portal_token")
-    .eq("portal_token", token)
+  // FIX: Fetch from the 'quotes' table using public_token, since the dashboard is quote-driven.
+  const { data: quote, error } = await supabase
+    .from("quotes")
+    .select("id, lead_email, public_token")
+    .eq("public_token", token)
     .single();
 
-  if (error || !project) {
-    notFound();
+  if (error || !quote) {
+    notFound(); // Triggers the Next.js 404 page if token is invalid
   }
 
   const email = user.email.toLowerCase();
-  const leadEmail = String(project.lead_email || "").toLowerCase();
+  const leadEmail = String(quote.lead_email || "").toLowerCase();
 
+  // Security Gate
   if (!isAdminEmail(email) && email !== leadEmail) {
     redirect(
-      `/auth/login?error=${encodeURIComponent(
-        "This account does not match the portal email for this project."
-      )}&next=${encodeURIComponent(`/portal/${token}`)}&token=${encodeURIComponent(
-        token
-      )}`
+      `/login?error=${encodeURIComponent("This account does not match the portal email for this project.")}&next=${encodeURIComponent(`/portal/${token}`)}`
     );
   }
 
-  return <>{children}</>;
+  return <>{props.children}</>;
 }
