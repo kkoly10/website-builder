@@ -9,6 +9,7 @@ type QuoteRow = { id: string; lead_id: string | null; created_at: string | null;
 type LeadRow = { id: string; email: string | null; name: string | null; };
 type OpsIntakeRow = { id: string; created_at: string | null; company_name: string | null; contact_name: string | null; email: string | null; industry: string | null; status: string | null; recommendation_tier: string | null; recommendation_price_range: string | null; recommendation_score: number | null; };
 type OpsCallRow = { id: string; ops_intake_id: string; created_at: string | null; status: string | null; };
+type OpsPieRow = { id: string; ops_intake_id: string; created_at: string | null; status: string | null; summary: string | null; };
 
 function fmtDate(value?: string | null) {
   if (!value) return "—";
@@ -40,24 +41,30 @@ export default async function PortalPage() {
   const opsRows = (opsIntakes ?? []) as OpsIntakeRow[];
 
   const leadIds = Array.from(new Set(quoteRows.map((q) => q.lead_id).filter(Boolean) as string[]));
-  const leadRowsRes = leadIds.length ? await supabaseAdmin.from("leads").select("id, email, name").in("id", leadIds) : { data: [] };
+  const opsIntakeIds = opsRows.map((r) => r.id);
+
+  // RESTORED: Fetch both Calls and PIE reports for Ops Intakes
+  const [leadRowsRes, opsCallsRes, opsPiesRes] = await Promise.all([
+    leadIds.length ? supabaseAdmin.from("leads").select("id, email, name").in("id", leadIds) : Promise.resolve({ data: [] as LeadRow[] }),
+    opsIntakeIds.length ? supabaseAdmin.from("ops_call_requests").select("id, ops_intake_id, created_at, status").in("ops_intake_id", opsIntakeIds).order("created_at", { ascending: false }) : Promise.resolve({ data: [] as OpsCallRow[] }),
+    opsIntakeIds.length ? supabaseAdmin.from("ops_pie_reports").select("id, ops_intake_id, created_at, status, summary").in("ops_intake_id", opsIntakeIds).order("created_at", { ascending: false }) : Promise.resolve({ data: [] as OpsPieRow[] }),
+  ]);
+
   const leadRows = (leadRowsRes.data ?? []) as LeadRow[];
+  const opsCalls = (opsCallsRes.data ?? []) as OpsCallRow[];
+  const opsPies = (opsPiesRes.data ?? []) as OpsPieRow[];
 
   const leadById = new Map<string, LeadRow>();
   for (const l of leadRows) leadById.set(l.id, l);
 
-  // RESTORED: Fetch Call Requests for Ops Intakes
-  const opsIntakeIds = opsRows.map((r) => r.id);
-  const opsCallsRes = opsIntakeIds.length 
-    ? await supabaseAdmin.from("ops_call_requests").select("id, ops_intake_id, created_at, status").in("ops_intake_id", opsIntakeIds).order("created_at", { ascending: false }) 
-    : { data: [] };
-  
-  const opsCalls = (opsCallsRes.data ?? []) as OpsCallRow[];
   const latestCallByOpsIntakeId = new Map<string, OpsCallRow>();
   for (const c of opsCalls) {
-    if (!latestCallByOpsIntakeId.has(c.ops_intake_id)) {
-      latestCallByOpsIntakeId.set(c.ops_intake_id, c);
-    }
+    if (!latestCallByOpsIntakeId.has(c.ops_intake_id)) latestCallByOpsIntakeId.set(c.ops_intake_id, c);
+  }
+
+  const latestPieByOpsIntakeId = new Map<string, OpsPieRow>();
+  for (const p of opsPies) {
+    if (!latestPieByOpsIntakeId.has(p.ops_intake_id)) latestPieByOpsIntakeId.set(p.ops_intake_id, p);
   }
 
   return (
@@ -154,6 +161,7 @@ export default async function PortalPage() {
               <div style={{ display: "grid", gap: 12 }}>
                 {opsRows.map((o) => {
                   const latestCall = latestCallByOpsIntakeId.get(o.id) ?? null;
+                  const latestPie = latestPieByOpsIntakeId.get(o.id) ?? null;
                   
                   return (
                     <div key={o.id} style={{ border: "1px solid var(--stroke)", borderRadius: 12, padding: 16, background: "var(--panel2)" }}>
@@ -171,7 +179,13 @@ export default async function PortalPage() {
                         Call Request: <strong style={{ color: "var(--fg)" }}>{latestCall?.status || "Not requested"}</strong>
                       </div>
 
-                      {/* RESTORED: Book Call Button */}
+                      {/* RESTORED: PIE Summary visibility for the client */}
+                      {latestPie?.summary && (
+                        <div className="pDark" style={{ marginTop: 6, fontSize: 13 }}>
+                          <strong>Status Note:</strong> {latestPie.summary}
+                        </div>
+                      )}
+
                       <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
                         <Link href={`/ops-book?opsIntakeId=${encodeURIComponent(o.id)}`} className="btn btnGhost" style={{ padding: "8px 12px", fontSize: 13, width: "100%" }}>
                           Book / Update Call
