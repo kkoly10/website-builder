@@ -5,12 +5,10 @@ export const dynamic = "force-dynamic";
 
 export default function SignupPage() {
   return (
-    <main className="container">
-      <section className="section">
-        <Suspense fallback={<SignupLoadingCard />}>
-          <SignupClient />
-        </Suspense>
-      </section>
+    <main className="container" style={{ padding: "80px 0", maxWidth: 440, margin: "0 auto" }}>
+      <Suspense fallback={<SignupLoadingCard />}>
+        <SignupClient />
+      </Suspense>
     </main>
   );
 }
@@ -21,10 +19,9 @@ function SignupLoadingCard() {
       <div className="cardInner">
         <div className="kicker">
           <span className="kickerDot" aria-hidden="true" />
-          Loading signup…
+          Registration
         </div>
-        <div style={{ height: 10 }} />
-        <h1 className="h2">Preparing account setup</h1>
+        <h1 className="h2" style={{ marginTop: 8 }}>Preparing signup...</h1>
       </div>
     </div>
   );
