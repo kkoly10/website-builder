@@ -24,7 +24,13 @@ function detectTimezone() {
 function readQuoteIdFromUrl() {
   try {
     const sp = new URLSearchParams(window.location.search);
-    return String(sp.get("quoteId") || "").trim();
+    // accept variants
+    return (
+      String(sp.get("quoteId") || "").trim() ||
+      String(sp.get("quoteid") || "").trim() ||
+      String(sp.get("qid") || "").trim() ||
+      String(sp.get("id") || "").trim()
+    );
   } catch {
     return "";
   }
@@ -78,7 +84,6 @@ export default function BookClient({ quoteId }: Props) {
   );
 
   const nextUrl = success?.nextUrl || portalPath;
-
   const loginHref = useMemo(() => `/login?next=${encodeURIComponent(nextUrl)}`, [nextUrl]);
   const signupHref = useMemo(() => `/signup?next=${encodeURIComponent(nextUrl)}`, [nextUrl]);
 
@@ -123,7 +128,7 @@ export default function BookClient({ quoteId }: Props) {
   if (success) {
     return (
       <main className="container" style={{ padding: "28px 0 80px" }}>
-        <section className="card">
+        <section className="card" style={{ marginTop: 18 }}>
           <div className="cardInner">
             <div className="kicker">
               <span className="kickerDot" aria-hidden="true" />
@@ -172,7 +177,7 @@ export default function BookClient({ quoteId }: Props) {
 
   return (
     <main className="container" style={{ padding: "28px 0 80px" }}>
-      <section className="card">
+      <section className="card" style={{ marginTop: 18 }}>
         <div className="cardInner">
           <div className="kicker">
             <span className="kickerDot" aria-hidden="true" />
