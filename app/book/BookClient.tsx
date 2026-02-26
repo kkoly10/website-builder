@@ -21,7 +21,7 @@ function detectTimezone() {
   }
 }
 
-function readQuoteIdFromUrl(): string {
+function readQuoteIdFromUrl() {
   try {
     const sp = new URLSearchParams(window.location.search);
     return String(sp.get("quoteId") || "").trim();
@@ -42,7 +42,7 @@ export default function BookClient({ quoteId }: Props) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState<SuccessState>(null);
 
-  // Long-term stability: resolve quoteId from prop -> URL -> localStorage
+  // Long-term stability: prop -> URL -> localStorage
   useEffect(() => {
     const fromProp = (quoteId || "").trim();
     if (fromProp) {
@@ -73,11 +73,12 @@ export default function BookClient({ quoteId }: Props) {
   }, []);
 
   const portalPath = useMemo(
-    () => `/portal?quoteId=${encodeURIComponent(effectiveQuoteId || "")}`,
+    () => (effectiveQuoteId ? `/portal?quoteId=${encodeURIComponent(effectiveQuoteId)}` : "/portal"),
     [effectiveQuoteId]
   );
 
   const nextUrl = success?.nextUrl || portalPath;
+
   const loginHref = useMemo(() => `/login?next=${encodeURIComponent(nextUrl)}`, [nextUrl]);
   const signupHref = useMemo(() => `/signup?next=${encodeURIComponent(nextUrl)}`, [nextUrl]);
 
@@ -93,7 +94,6 @@ export default function BookClient({ quoteId }: Props) {
     setLoading(true);
 
     try {
-      // Send quoteId in BOTH query + body (robust)
       const res = await fetch(`/api/request-call?quoteId=${encodeURIComponent(effectiveQuoteId)}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -122,8 +122,8 @@ export default function BookClient({ quoteId }: Props) {
 
   if (success) {
     return (
-      <main className="container" style={{ paddingTop: 26 }}>
-        <section className="card" style={{ marginTop: 18 }}>
+      <main className="container" style={{ padding: "28px 0 80px" }}>
+        <section className="card">
           <div className="cardInner">
             <div className="kicker">
               <span className="kickerDot" aria-hidden="true" />
@@ -141,7 +141,7 @@ export default function BookClient({ quoteId }: Props) {
             </p>
 
             <div className="hint" style={{ marginTop: 12 }}>
-              <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.92)" }}>Quote reference</div>
+              <div style={{ fontWeight: 950, color: "rgba(255,255,255,0.92)" }}>Quote reference</div>
               <div className="pDark" style={{ marginTop: 6 }}>
                 Quote ID: <strong>{effectiveQuoteId}</strong>
                 {success.callRequestId ? (
@@ -171,8 +171,8 @@ export default function BookClient({ quoteId }: Props) {
   }
 
   return (
-    <main className="container" style={{ paddingTop: 26 }}>
-      <section className="card" style={{ marginTop: 18 }}>
+    <main className="container" style={{ padding: "28px 0 80px" }}>
+      <section className="card">
         <div className="cardInner">
           <div className="kicker">
             <span className="kickerDot" aria-hidden="true" />
@@ -189,7 +189,7 @@ export default function BookClient({ quoteId }: Props) {
           </p>
 
           <div className="hint" style={{ marginTop: 12 }}>
-            <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.92)" }}>Quote reference</div>
+            <div style={{ fontWeight: 950, color: "rgba(255,255,255,0.92)" }}>Quote reference</div>
             <div className="pDark" style={{ marginTop: 6 }}>
               Quote ID: <strong>{effectiveQuoteId || "(missing)"}</strong>
             </div>
