@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 type QuoteRow = { id: string; lead_id: string | null; created_at: string | null; status: string | null; tier_recommended: string | null; estimate_total: number | null; estimate_low: number | null; estimate_high: number | null; public_token: string | null; };
 type LeadRow = { id: string; email: string | null; name: string | null; };
 type OpsIntakeRow = { id: string; created_at: string | null; company_name: string | null; contact_name: string | null; email: string | null; industry: string | null; status: string | null; recommendation_tier: string | null; recommendation_price_range: string | null; recommendation_score: number | null; };
+type OpsCallRow = { id: string; ops_intake_id: string; created_at: string | null; status: string | null; };
 
 function fmtDate(value?: string | null) {
   if (!value) return "—";
@@ -44,6 +45,20 @@ export default async function PortalPage() {
 
   const leadById = new Map<string, LeadRow>();
   for (const l of leadRows) leadById.set(l.id, l);
+
+  // RESTORED: Fetch Call Requests for Ops Intakes
+  const opsIntakeIds = opsRows.map((r) => r.id);
+  const opsCallsRes = opsIntakeIds.length 
+    ? await supabaseAdmin.from("ops_call_requests").select("id, ops_intake_id, created_at, status").in("ops_intake_id", opsIntakeIds).order("created_at", { ascending: false }) 
+    : { data: [] };
+  
+  const opsCalls = (opsCallsRes.data ?? []) as OpsCallRow[];
+  const latestCallByOpsIntakeId = new Map<string, OpsCallRow>();
+  for (const c of opsCalls) {
+    if (!latestCallByOpsIntakeId.has(c.ops_intake_id)) {
+      latestCallByOpsIntakeId.set(c.ops_intake_id, c);
+    }
+  }
 
   return (
     <main className="container" style={{ padding: "40px 0 80px" }}>
@@ -112,7 +127,6 @@ export default async function PortalPage() {
 
                       <div style={{ marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
                         {q.public_token ? (
-                           // BRIDGING THE GAP: Connects them to their specific project dashboard
                           <Link href={`/portal/${q.public_token}`} className="btn btnPrimary" style={{ padding: "8px 12px", fontSize: 13, width: "100%" }}>
                             Open Project Workspace →
                           </Link>
@@ -138,19 +152,34 @@ export default async function PortalPage() {
               <p className="pDark">No ops intakes found.</p>
             ) : (
               <div style={{ display: "grid", gap: 12 }}>
-                {opsRows.map((o) => (
-                  <div key={o.id} style={{ border: "1px solid var(--stroke)", borderRadius: 12, padding: 16, background: "var(--panel2)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-                      <div>
-                        <div style={{ fontWeight: 800, color: "var(--fg)", fontSize: 16 }}>{o.company_name || "Ops Request"}</div>
-                        <div className="pDark" style={{ marginTop: 4 }}>ID: #{String(o.id).slice(0, 8)} • {fmtDate(o.created_at)}</div>
+                {opsRows.map((o) => {
+                  const latestCall = latestCallByOpsIntakeId.get(o.id) ?? null;
+                  
+                  return (
+                    <div key={o.id} style={{ border: "1px solid var(--stroke)", borderRadius: 12, padding: 16, background: "var(--panel2)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+                        <div>
+                          <div style={{ fontWeight: 800, color: "var(--fg)", fontSize: 16 }}>{o.company_name || "Ops Request"}</div>
+                          <div className="pDark" style={{ marginTop: 4 }}>ID: #{String(o.id).slice(0, 8)} • {fmtDate(o.created_at)}</div>
+                        </div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <span className="badge">{o.status || "Reviewing"}</span>
+                        </div>
                       </div>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <span className="badge">{o.status || "Reviewing"}</span>
+
+                      <div className="pDark" style={{ marginTop: 12, fontSize: 13 }}>
+                        Call Request: <strong style={{ color: "var(--fg)" }}>{latestCall?.status || "Not requested"}</strong>
+                      </div>
+
+                      {/* RESTORED: Book Call Button */}
+                      <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
+                        <Link href={`/ops-book?opsIntakeId=${encodeURIComponent(o.id)}`} className="btn btnGhost" style={{ padding: "8px 12px", fontSize: 13, width: "100%" }}>
+                          Book / Update Call
+                        </Link>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
