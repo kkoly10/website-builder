@@ -4,118 +4,77 @@ export const dynamic = "force-dynamic";
 
 export default function SystemsPage() {
   return (
-    <main className="container">
-      <section className="hero">
-        <div className="heroGrid">
-          <div className="card cardHover heroCopy">
-            <div className="cardInner">
-              <div className="kicker">
-                <span className="kickerDot" aria-hidden="true" />
-                CrecyStudio • Business Systems
-              </div>
+    <main className="container" style={{ paddingBottom: 80 }}>
+      
+      {/* 1. HERO: Focused, authoritative, single CTA */}
+      <section className="section" style={{ padding: "80px 0 60px", textAlign: "center", maxWidth: 860, margin: "0 auto" }}>
+        <div className="kicker" style={{ marginBottom: 24 }}>
+          Business Systems & Automation
+        </div>
+        
+        <h1 className="h1">
+          Scale your operations without scaling your headcount.
+        </h1>
+        
+        <p className="p" style={{ marginTop: 24, fontSize: 20 }}>
+          I build practical, custom workflow systems for local businesses. Stop losing hours to manual data entry, disconnected software, and messy client onboarding.
+        </p>
+        
+        <div style={{ marginTop: 32, display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
+          <Link href="/ops-intake" className="btn btnPrimary" style={{ padding: "16px 28px", fontSize: 16 }}>
+            Start Workflow Audit <span className="btnArrow">→</span>
+          </Link>
+        </div>
+        
+        <div className="pills" style={{ justifyContent: "center", marginTop: 24 }}>
+          <span className="pill">Quick wins + retainers</span>
+          <span className="pill">CRM Cleanup</span>
+          <span className="pill">Intake & Billing Automation</span>
+        </div>
+      </section>
 
-              <div style={{ height: 12 }} />
-
-              <h1 className="h1">
-                Fix the workflow problems slowing down your business.
-              </h1>
-
-              <p className="p" style={{ marginTop: 12, maxWidth: 760 }}>
-                I build practical systems for small businesses: intake forms, invoice flows,
-                job tracking, client portals, CRM cleanup, and automation between the tools
-                you already use.
-              </p>
-
-              <div className="heroActions">
-                <Link href="/ops-intake" className="btn btnPrimary">
-                  Fix My Workflow <span className="btnArrow">→</span>
-                </Link>
-                <Link href="/build" className="btn btnGhost">
-                  Website Quote
-                </Link>
-              </div>
-
-              <div className="pills">
-                <span className="pill">Quick wins + retainers</span>
-                <span className="pill">Local business friendly</span>
-                <span className="pill">Custom systems</span>
-                <span className="pill">Clear scope</span>
-              </div>
-            </div>
+      {/* 2. AGITATION: The Problem Outline */}
+      <section className="section" style={{ borderTop: "1px solid var(--stroke)", paddingTop: 60 }}>
+        <div className="grid2" style={{ alignItems: "center", gap: 40 }}>
+          <div>
+            <h2 className="h2">The signs your systems are breaking:</h2>
+            <ul style={{ margin: "20px 0 0", paddingLeft: 20, color: "var(--muted)", lineHeight: 1.9, fontSize: 18 }}>
+              <li><strong style={{ color: "var(--fg)" }}>Data Entry:</strong> You manually type the same client info into 3 different tools.</li>
+              <li><strong style={{ color: "var(--fg)" }}>Lost Revenue:</strong> Leads come in, but follow-ups and invoices fall through the cracks.</li>
+              <li><strong style={{ color: "var(--fg)" }}>Client Friction:</strong> Onboarding requires endless back-and-forth emails and messy PDFs.</li>
+              <li><strong style={{ color: "var(--fg)" }}>Software Soup:</strong> You pay for 8 different SaaS tools, but none of them talk to each other.</li>
+            </ul>
           </div>
-
+          
           <div className="card">
-            <div className="statRow">
-              <div className="stat">
-                <div className="statNum">1–3 days</div>
-                <div className="statLab">Fast fixes (typical)</div>
+            <div className="cardInner" style={{ padding: 40 }}>
+              <div style={{ fontWeight: 800, fontSize: 22, color: "var(--fg)", marginBottom: 12 }}>
+                The Solution is Connection.
               </div>
-              <div className="stat">
-                <div className="statNum">Ongoing</div>
-                <div className="statLab">Retainer support</div>
-              </div>
-            </div>
-
-            <div className="cardInner">
-              <div style={{ fontWeight: 950, marginBottom: 10 }}>
-                Common problems I solve
-              </div>
-
-              <ul
-                style={{
-                  margin: 0,
-                  paddingLeft: 18,
-                  lineHeight: 1.85,
-                  color: "rgba(255,255,255,0.84)",
-                }}
-              >
-                <li>Leads coming in but no organized follow-up</li>
-                <li>Invoices/estimates done manually every time</li>
-                <li>Client updates spread across text/email/notes</li>
-                <li>No clear handoff from quote to booking</li>
-                <li>Too many tools, no system connecting them</li>
-              </ul>
-
-              <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <span className="badge badgeHot">Fast-start services available</span>
-                <span className="badge">Custom workflows</span>
-              </div>
-
-              <div style={{ marginTop: 14 }}>
-                <Link className="btn btnPrimary" href="/ops-intake">
-                  Start Workflow Intake <span className="btnArrow">→</span>
-                </Link>
-              </div>
+              <p className="pDark">
+                You don't need more software. You need your current software (QuickBooks, HubSpot, Stripe, Google Workspace) wired together properly. I build the bridges and client-facing portals that make your business run on autopilot.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Services / examples */}
+      {/* 3. SOLUTIONS: Service Tiers */}
       <section className="section">
-        <div>
-          <div className="kicker">
-            <span className="kickerDot" aria-hidden="true" />
-            Service Examples
-          </div>
-
-          <div style={{ height: 12 }} />
-          <h2 className="h2">Built for both quick fixes and long-term systems</h2>
-          <p className="p" style={{ marginTop: 10, maxWidth: 860 }}>
-            Some clients need one workflow fixed fast. Others need ongoing help improving
-            operations as they grow. This service is designed for both.
-          </p>
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <div className="kicker">Service Levels</div>
+          <h2 className="h2" style={{ marginTop: 12 }}>Built for quick fixes and long-term scaling</h2>
         </div>
 
-        <div className="tierGrid" style={{ marginTop: 18 }}>
+        <div className="tierGrid">
           <ServiceCard
             title="Quick Workflow Fix"
-            subtitle="Fast-start"
+            subtitle="Fast-start sprint"
             bullets={[
               "Fix a broken intake / booking flow",
               "Clean up lead handoff to email/CRM",
               "Improve quote or invoice process",
-              "Small automation setup (practical wins)",
+              "Small automation setup (Zapier/Make)",
             ]}
             ctaHref="/ops-intake"
             ctaLabel="Start Intake"
@@ -123,23 +82,23 @@ export default function SystemsPage() {
 
           <ServiceCard
             title="Ops System Build"
-            subtitle="Most common"
+            subtitle="Most common engagement"
             hot
             bullets={[
               "Custom intake + booking + status flow",
               "Client-facing portal/dashboard setup",
               "Back-office admin tracking + reporting",
-              "Automations between your existing tools",
+              "Complex integrations between your tools",
             ]}
             ctaHref="/ops-intake"
-            ctaLabel="Fix My Workflow"
+            ctaLabel="Start Full Audit"
           />
 
           <ServiceCard
-            title="Ongoing Systems Support"
-            subtitle="Retainer"
+            title="Ongoing Systems Partner"
+            subtitle="Monthly Retainer"
             bullets={[
-              "Monthly improvements and maintenance",
+              "Continuous improvements & maintenance",
               "Workflow updates as your team grows",
               "New forms, automations, and reports",
               "Priority support for issues and changes",
@@ -150,52 +109,48 @@ export default function SystemsPage() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="section">
+      {/* 4. PROCESS */}
+      <section className="section" style={{ paddingBottom: 0 }}>
         <div className="card">
-          <div className="cardInner">
-            <div className="kicker">
-              <span className="kickerDot" aria-hidden="true" />
-              Process
+          <div className="cardInner" style={{ padding: 40 }}>
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
+              <h2 className="h2">The path to a smoother business</h2>
             </div>
 
-            <div style={{ height: 12 }} />
-            <h2 className="h2">Simple path from issue to solution</h2>
-
-            <div style={{ height: 14 }} />
-
-            <div style={{ display: "grid", gap: 12 }}>
+            <div style={{ display: "grid", gap: 16 }}>
               <Step
                 n="1"
-                title="Workflow intake"
-                desc="Tell me what’s breaking, what tools you use, and what outcome you need."
+                title="Submit the Workflow Audit"
+                desc="Tell me what’s breaking, what tools you currently pay for, and what your ideal outcome is."
               />
               <Step
                 n="2"
-                title="PIE analysis + recommendation"
-                desc="You get a structured plan with priorities, scope options, and the best next step."
+                title="AI & Expert Analysis"
+                desc="I run your data through my PIE framework to identify risks, scope options, and generate a projected investment range."
               />
               <Step
                 n="3"
-                title="Build + handoff"
-                desc="I implement the fix or system and organize a clean handoff so your team can use it."
+                title="Strategy Call & Build"
+                desc="We review the plan. If it makes sense, I build the automation, test it, and train your team on how to use it."
               />
             </div>
 
-            <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <Link href="/ops-intake" className="btn btnPrimary">
-                Start Workflow Intake <span className="btnArrow">→</span>
-              </Link>
-              <Link href="/build" className="btn btnGhost">
-                I need a website instead
+            <div style={{ marginTop: 32, display: "flex", justifyContent: "center" }}>
+              <Link href="/ops-intake" className="btn btnPrimary" style={{ padding: "16px 32px" }}>
+                Start Workflow Audit <span className="btnArrow">→</span>
               </Link>
             </div>
           </div>
         </div>
       </section>
+
     </main>
   );
 }
+
+/* ============================
+   COMPONENTS
+   ============================ */
 
 function ServiceCard({
   title,
@@ -213,14 +168,13 @@ function ServiceCard({
   hot?: boolean;
 }) {
   return (
-    <div className="card cardHover">
-      <div className="cardInner">
+    <div className="card cardHover" style={{ display: "flex", flexDirection: "column" }}>
+      <div className="cardInner" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
         <div className="tierHead">
           <div>
             <div className="tierName">{title}</div>
             <div className="tierSub">{subtitle}</div>
           </div>
-
           <div>
             <span className={`badge ${hot ? "badgeHot" : ""}`}>
               {hot ? "Recommended" : "Service"}
@@ -228,14 +182,14 @@ function ServiceCard({
           </div>
         </div>
 
-        <ul className="tierList">
+        <ul className="tierList" style={{ flexGrow: 1, margin: "24px 0" }}>
           {bullets.map((b) => (
-            <li key={b}>{b}</li>
+            <li key={b} style={{ marginBottom: 8 }}>{b}</li>
           ))}
         </ul>
 
-        <div className="tierCTA">
-          <Link className="btn btnPrimary" href={ctaHref}>
+        <div className="tierCTA" style={{ marginTop: "auto" }}>
+          <Link className="btn btnPrimary" href={ctaHref} style={{ width: "100%" }}>
             {ctaLabel} <span className="btnArrow">→</span>
           </Link>
         </div>
@@ -254,28 +208,20 @@ function Step({
   desc: string;
 }) {
   return (
-    <div
-      className="card"
-      style={{
-        background: "rgba(255,255,255,0.04)",
-        borderColor: "rgba(255,255,255,0.10)",
-      }}
-    >
-      <div
-        className="cardInner"
-        style={{ display: "flex", gap: 14, alignItems: "flex-start" }}
-      >
+    <div className="card" style={{ background: "var(--panel2)" }}>
+      <div className="cardInner" style={{ display: "flex", gap: 16, alignItems: "flex-start", padding: 24 }}>
         <div
           style={{
-            width: 36,
-            height: 36,
-            borderRadius: 14,
+            width: 40,
+            height: 40,
+            borderRadius: 12,
             display: "grid",
             placeItems: "center",
-            fontWeight: 950,
-            background: "rgba(255,122,24,0.14)",
-            border: "1px solid rgba(255,122,24,0.30)",
-            color: "rgba(255,220,200,0.95)",
+            fontWeight: 800,
+            fontSize: 18,
+            background: "var(--accentSoft)",
+            border: "1px solid var(--accentStroke)",
+            color: "var(--accent)",
             flex: "0 0 auto",
           }}
         >
@@ -283,8 +229,8 @@ function Step({
         </div>
 
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontWeight: 950 }}>{title}</div>
-          <div className="p" style={{ marginTop: 4 }}>
+          <div style={{ fontWeight: 800, fontSize: 18, color: "var(--fg)" }}>{title}</div>
+          <div className="p" style={{ marginTop: 6, fontSize: 15 }}>
             {desc}
           </div>
         </div>
