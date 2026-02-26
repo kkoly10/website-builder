@@ -1,41 +1,68 @@
-import ComingLaterLink from "./ComingLaterLink";
+import Link from "next/link";
+// import ComingLaterLink from "./ComingLaterLink"; // Left commented out to prevent build errors if the file doesn't exist
 
 export default function SiteFooter() {
   return (
-    <footer
-      style={{
-        borderTop: "1px solid #E5E7EB",
-        padding: "24px 16px",
-        marginTop: 40,
-        background: "#fff",
-      }}
-    >
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            gap: 16,
-            flexWrap: "wrap",
-            alignItems: "center",
+    <footer className="footer">
+      <div className="container">
+        <div 
+          style={{ 
+            display: "flex", 
+            justifyContent: "space-between", 
+            alignItems: "flex-start", 
+            flexWrap: "wrap", 
+            gap: 32 
           }}
         >
-          <div style={{ fontWeight: 900, color: "#111827" }}>Your Brand</div>
+          {/* Brand & Mission */}
+          <div style={{ maxWidth: 320 }}>
+            <div style={{ fontWeight: 800, color: "var(--fg)", fontSize: 20, letterSpacing: "-0.02em" }}>
+              CrecyStudio
+            </div>
+            <div style={{ marginTop: 12, color: "var(--muted)", lineHeight: 1.6 }}>
+              I build professional websites and automated workflow systems for local businesses.
+            </div>
+          </div>
 
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            <a
-              href="mailto:your@email.com"
-              style={{ color: "#6B7280", textDecoration: "none", fontWeight: 700, fontSize: 13 }}
-            >
-              your@email.com
-            </a>
-
-            <ComingLaterLink />
+          {/* Navigation Links */}
+          <div className="footerLinks" style={{ marginTop: 0, gap: 32 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ fontWeight: 700, color: "var(--fg)", marginBottom: 4 }}>Services</div>
+              <Link href="/systems" style={{ color: "var(--muted)", textDecoration: "none" }}>Workflow Systems</Link>
+              <Link href="/build" style={{ color: "var(--muted)", textDecoration: "none" }}>Website Builds</Link>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ fontWeight: 700, color: "var(--fg)", marginBottom: 4 }}>Client Hub</div>
+              <Link href="/portal" style={{ color: "var(--muted)", textDecoration: "none" }}>Client Portal</Link>
+              <Link href="/login" style={{ color: "var(--muted)", textDecoration: "none" }}>Log in</Link>
+            </div>
           </div>
         </div>
 
-        <div style={{ marginTop: 12, color: "#9CA3AF", fontSize: 12 }}>
-          © {new Date().getFullYear()} · All rights reserved
+        {/* Copyright & Contact */}
+        <div 
+          style={{ 
+            marginTop: 48, 
+            paddingTop: 24, 
+            borderTop: "1px solid var(--stroke)", 
+            display: "flex", 
+            justifyContent: "space-between", 
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 16,
+            color: "var(--muted2)", 
+            fontSize: 13 
+          }}
+        >
+          <span>© {new Date().getFullYear()} CrecyStudio. All rights reserved.</span>
+          <a 
+            href="mailto:hello@crecystudio.com" 
+            style={{ color: "var(--muted)", fontWeight: 600, textDecoration: "none", transition: "color 0.2s ease" }}
+            onMouseOver={(e) => e.currentTarget.style.color = "var(--fg)"}
+            onMouseOut={(e) => e.currentTarget.style.color = "var(--muted)"}
+          >
+            hello@crecystudio.com
+          </a>
         </div>
       </div>
     </footer>
