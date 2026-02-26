@@ -43,7 +43,6 @@ export default async function PortalPage() {
   const leadIds = Array.from(new Set(quoteRows.map((q) => q.lead_id).filter(Boolean) as string[]));
   const opsIntakeIds = opsRows.map((r) => r.id);
 
-  // RESTORED: Fetch both Calls and PIE reports for Ops Intakes
   const [leadRowsRes, opsCallsRes, opsPiesRes] = await Promise.all([
     leadIds.length ? supabaseAdmin.from("leads").select("id, email, name").in("id", leadIds) : Promise.resolve({ data: [] as LeadRow[] }),
     opsIntakeIds.length ? supabaseAdmin.from("ops_call_requests").select("id, ops_intake_id, created_at, status").in("ops_intake_id", opsIntakeIds).order("created_at", { ascending: false }) : Promise.resolve({ data: [] as OpsCallRow[] }),
@@ -179,7 +178,6 @@ export default async function PortalPage() {
                         Call Request: <strong style={{ color: "var(--fg)" }}>{latestCall?.status || "Not requested"}</strong>
                       </div>
 
-                      {/* RESTORED: PIE Summary visibility for the client */}
                       {latestPie?.summary && (
                         <div className="pDark" style={{ marginTop: 6, fontSize: 13 }}>
                           <strong>Status Note:</strong> {latestPie.summary}
