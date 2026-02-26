@@ -1,26 +1,19 @@
-// app/internal/project/[quoteId]/page.tsx
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import ProjectWorkspaceClient from "./ProjectWorkspaceClient";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-function makeAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  return createClient(url, key, { auth: { persistSession: false } });
-}
+// NEXT.JS 15+ FIX: params is now a Promise
+type ParamsPromise = Promise<{ quoteId: string }>;
 
-export default async function InternalProjectWorkspacePage({
-  params,
-}: {
-  params: { quoteId: string };
-}) {
+export default async function InternalProjectWorkspacePage(props: { params: ParamsPromise }) {
+  // NEXT.JS 15+ FIX: Await the params before using them
+  const params = await props.params;
   const quoteId = params.quoteId;
-  const supabase = makeAdminClient();
 
   // Ensure project exists (via RPC)
-  const ensureRes = await supabase.rpc("ensure_project_for_quote", { p_quote_id: quoteId });
+  const ensureRes = await supabaseAdmin.rpc("ensure_project_for_quote", { p_quote_id: quoteId });
   const projectId = ensureRes.data ? String(ensureRes.data) : null;
 
   let project: any = null;
@@ -31,21 +24,21 @@ export default async function InternalProjectWorkspacePage({
 
   if (projectId) {
     const [projectRes, quoteRes, pieRes, snapRes, coRes] = await Promise.all([
-      supabase.from("projects").select("*").eq("id", projectId).maybeSingle(),
-      supabase.from("quotes").select("*").eq("id", quoteId).maybeSingle(),
-      supabase
+      supabaseAdmin.from("projects").select("*").eq("id", projectId).maybeSingle(),
+      supabaseAdmin.from("quotes").select("*").eq("id", quoteId).maybeSingle(),
+      supabaseAdmin
         .from("pie_reports")
         .select("*")
         .eq("project_id", projectId)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
-      supabase
+      supabaseAdmin
         .from("project_scope_snapshots")
         .select("*")
         .eq("project_id", projectId)
         .order("version_no", { ascending: false }),
-      supabase
+      supabaseAdmin
         .from("project_change_orders")
         .select("*")
         .eq("project_id", projectId)
@@ -60,16 +53,17 @@ export default async function InternalProjectWorkspacePage({
   }
 
   return (
-    <div className="container" style={{ paddingTop: 16, paddingBottom: 24 }}>
-      <h1 style={{ marginBottom: 6 }}>Project Workspace</h1>
-      <div className="smallNote" style={{ marginBottom: 14 }}>
-        Manage scope snapshots and change orders for this quote/project.
+    <div className="container" style={{ paddingTop: 32, paddingBottom: 80, maxWidth: 1000 }}>
+      <div className="kicker"><span className="kickerDot" /> Admin Area</div>
+      <h1 className="h1" style={{ marginTop: 12, marginBottom: 6 }}>Project Workspace</h1>
+      <div className="pDark" style={{ marginBottom: 24 }}>
+        Manage scope snapshots, change orders, and final deliverables for this build.
       </div>
 
       {!projectId ? (
         <div className="card">
-          <div className="cardInner">
-            Could not load or create a project for quote <code>{quoteId}</code>.
+          <div className="cardInner" style={{ color: "#ffb4b4" }}>
+            Could not load or create a project for quote <code>{quoteId}</code>. Check your database RPC functions.
           </div>
         </div>
       ) : (
