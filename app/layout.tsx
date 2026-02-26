@@ -3,9 +3,13 @@ import Link from "next/link";
 import "./globals.css";
 import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 
+// Import your custom components
+import BrandLogo from "@/components/brand/BrandLogo";
+import SiteFooter from "@/components/site/SiteFooter";
+
 export const metadata: Metadata = {
-  title: "CrecyStudio",
-  description: "Custom websites and workflow systems for local businesses",
+  title: "CrecyStudio | B2B Operations & Web Design",
+  description: "Custom websites and workflow systems for local service businesses.",
 };
 
 export default async function RootLayout({
@@ -29,18 +33,15 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="bgNebula" aria-hidden="true" />
-        <div className="bgFx" aria-hidden="true" />
-        <div className="bgFx2" aria-hidden="true" />
-        <div className="bgFxSparkle" aria-hidden="true" />
+        {/* Childish background layer divs have been entirely removed */}
 
         <div className="siteShell">
           <header className="topNav">
             <div className="topNavInner">
-              <Link href="/" className="brand">
-                <span className="brandMark">CS</span>
-                <span className="brandText">CrecyStudio</span>
-              </Link>
+              
+              {/* Custom SVG Brand Logo INJECTED HERE */}
+              <BrandLogo showTag={true} />
+
               <nav className="navLinks">
                 <Link href="/systems">Workflow Systems</Link>
                 <Link href="/build">Custom Build</Link>
@@ -49,7 +50,7 @@ export default async function RootLayout({
                   <>
                     {admin ? <Link href="/internal">Admin</Link> : null}
                     <form action="/auth/signout" method="post" style={{ display: "inline" }}>
-                      <button type="submit" className="btn btnGhost" style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,0.04)" }}>
+                      <button type="submit" className="btn btnGhost" style={{ padding: "8px 12px" }}>
                         Sign out
                       </button>
                     </form>
@@ -63,19 +64,12 @@ export default async function RootLayout({
               </nav>
             </div>
           </header>
+
           <div className="mainContent">{children}</div>
-          <footer className="footer">
-            <div className="container">
-              <div style={{ fontWeight: 900 }}>CrecyStudio</div>
-              <div style={{ marginTop: 6 }}>Custom websites and workflow systems.</div>
-              <div className="footerLinks">
-                <Link href="/">Home</Link>
-                <Link href="/systems">Workflow Systems</Link>
-                <Link href="/build">Custom Build</Link>
-                <Link href="/portal">Client Portal</Link>
-              </div>
-            </div>
-          </footer>
+
+          {/* Dark Mode Site Footer INJECTED HERE */}
+          <SiteFooter />
+          
         </div>
       </body>
     </html>
