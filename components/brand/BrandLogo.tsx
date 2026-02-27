@@ -13,13 +13,12 @@ export default function BrandLogo({
     <Link href={href} className="brandLogo" aria-label="CrecyStudio home">
       <span className="brandLogoMark" aria-hidden="true">
         <Image
-          src="/brand/crecy_logo_header_tight.png"
+          src="/brand/logo-a.svg"
           alt="CrecyStudio"
-          width={1050}
-          height={282}
+          width={168}
+          height={56}
           priority
-          unoptimized
-          style={{ width: 190, height: "auto" }}
+          style={{ width: 132, height: "auto" }}
         />
       </span>
 
