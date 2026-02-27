@@ -27,7 +27,7 @@ export default function Home() {
             <Link href="/systems" className="btn btnPrimary" style={{ padding: "16px 24px", fontSize: 16 }}>
               Fix My Workflow Operations
             </Link>
-            <Link href="/build" className="btn btnGhost" style={{ padding: "16px 24px", fontSize: 16 }}>
+            <Link href="/build/intro" className="btn btnGhost" style={{ padding: "16px 24px", fontSize: 16 }}>
               Get a Website Quote
             </Link>
           </div>
@@ -112,7 +112,7 @@ export default function Home() {
                   </ul>
                 </div>
                 <div style={{ marginTop: "auto" }}>
-                  <Link href="/build" className="btn btnGhost" style={{ width: "100%" }}>
+                  <Link href="/build/intro" className="btn btnGhost" style={{ width: "100%" }}>
                     Get Instant Website Quote
                   </Link>
                 </div>

@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -58,6 +57,7 @@ const LS_KEY = "crecystudio:intake";
 
 export default function BuildPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<number>(0);
 
   const [form, setForm] = useState<FormState>({
@@ -103,6 +103,23 @@ export default function BuildPage() {
       window.localStorage.setItem(LS_KEY, JSON.stringify(form));
     } catch {}
   }, [form]);
+
+  useEffect(() => {
+    const mode = searchParams.get("mode");
+    const intent = searchParams.get("intent");
+    const websiteType = searchParams.get("websiteType");
+    const pages = searchParams.get("pages");
+    const timeline = searchParams.get("timeline");
+
+    setForm((f) => ({
+      ...f,
+      mode: mode === "guided" || mode === "known" ? mode : f.mode,
+      intent: INTENTS.includes(intent as Intent) ? (intent as Intent) : f.intent,
+      websiteType: WEBSITE_TYPES.includes(websiteType as WebsiteType) ? (websiteType as WebsiteType) : f.websiteType,
+      pages: PAGES.includes(pages as Pages) ? (pages as Pages) : f.pages,
+      timeline: TIMELINES.includes(timeline as Timeline) ? (timeline as Timeline) : f.timeline,
+    }));
+  }, [searchParams]);
 
   const suggested = useMemo(() => {
     const s: Partial<FormState> = {};
