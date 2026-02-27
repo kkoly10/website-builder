@@ -95,7 +95,7 @@ ${JSON.stringify(pieInput)}
       return NextResponse.json({ ok: false, error: "AI returned malformed data. Please try generating again." }, { status: 500 });
     }
 
-    // FIX: Removed unverified columns (generator, model, status) to prevent Postgres crash on the Web side
+    // FIX: Changed 'report_json' to 'report' to perfectly match the Web Database Schema
     const { data: pieRow, error: pErr } = await supabaseAdmin
       .from("pie_reports")
       .insert({
@@ -103,7 +103,7 @@ ${JSON.stringify(pieInput)}
         score: parsedData.complexity?.score_100 || null,
         tier: parsedData.overview?.tier || null,
         summary: parsedData.overview?.summary || "Analysis complete.",
-        report_json: parsedData,
+        report: parsedData,
         input: pieInput
       })
       .select("id")
