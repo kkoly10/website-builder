@@ -1,4 +1,3 @@
-// app/auth/login/page.tsx
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
@@ -7,20 +6,19 @@ import {
   safeNextPath,
 } from "@/lib/supabase/server";
 
-type SearchParams = {
+// Next.js 15+ Search Params type
+type SearchParamsPromise = Promise<{
   error?: string;
   message?: string;
   next?: string;
   token?: string;
   email?: string;
-};
+}>;
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams?: Promise<SearchParams> | SearchParams;
-}) {
-  const sp = (await Promise.resolve(searchParams || {})) as SearchParams;
+export const dynamic = "force-dynamic";
+
+export default async function LoginPage(props: { searchParams: SearchParamsPromise }) {
+  const sp = await props.searchParams;
 
   const error = sp.error || "";
   const message = sp.message || "";
@@ -50,15 +48,15 @@ export default async function LoginPage({
 
     const supabase = await createSupabaseServerClient();
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error || !data.user) {
+    if (authError || !data.user) {
       redirect(
         `/auth/login?error=${encodeURIComponent(
-          error?.message || "Invalid login credentials."
+          authError?.message || "Invalid login credentials."
         )}${nextPath ? `&next=${encodeURIComponent(nextPath)}` : ""}${
           tokenRaw ? `&token=${encodeURIComponent(tokenRaw)}` : ""
         }&email=${encodeURIComponent(email)}`
@@ -76,7 +74,7 @@ export default async function LoginPage({
     }
 
     // Customer flow
-    if (nextPath && nextPath.startsWith("/portal/")) {
+    if (nextPath && nextPath.startsWith("/portal")) {
       redirect(nextPath);
     }
 
@@ -85,149 +83,98 @@ export default async function LoginPage({
     }
 
     // Fallback if customer logs in without a portal link
-    redirect("/");
+    redirect("/portal");
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "grid",
-        placeItems: "center",
-        padding: 20,
-        background: "#0b0b0c",
-        color: "#fff",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 520,
-          border: "1px solid rgba(255,255,255,0.12)",
-          borderRadius: 16,
-          background: "rgba(255,255,255,0.03)",
-          padding: 20,
-        }}
-      >
-        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900 }}>Sign in</h1>
-        <p style={{ marginTop: 8, opacity: 0.85, lineHeight: 1.5 }}>
-          Admins and clients use the same login page. Admins are redirected to the
-          internal dashboard. Clients are redirected to their project portal.
-        </p>
-
-        {message ? (
-          <div
-            style={{
-              marginTop: 12,
-              padding: "10px 12px",
-              borderRadius: 10,
-              background: "rgba(0, 180, 120, 0.12)",
-              border: "1px solid rgba(0, 180, 120, 0.35)",
-              fontSize: 14,
-            }}
-          >
-            {message}
-          </div>
-        ) : null}
-
-        {error ? (
-          <div
-            style={{
-              marginTop: 12,
-              padding: "10px 12px",
-              borderRadius: 10,
-              background: "rgba(255, 80, 80, 0.12)",
-              border: "1px solid rgba(255, 80, 80, 0.35)",
-              fontSize: 14,
-            }}
-          >
-            {error}
-          </div>
-        ) : null}
-
-        <form action={signIn} style={{ marginTop: 14, display: "grid", gap: 12 }}>
-          <input type="hidden" name="next" value={next || ""} />
-          <input type="hidden" name="token" value={token || ""} />
-
+    <main className="container" style={{ padding: "80px 0", maxWidth: 440, margin: "0 auto" }}>
+      <div className="card" style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.4)", border: "1px solid var(--accentStroke)" }}>
+        <div className="cardInner" style={{ display: "grid", gap: 16 }}>
+          
           <div>
-            <label style={{ display: "block", marginBottom: 6, fontSize: 13 }}>
-              Email
-            </label>
-            <input
-              name="email"
-              type="email"
-              defaultValue={prefillEmail}
-              required
-              placeholder="you@example.com"
-              style={{
-                width: "100%",
-                padding: "12px 14px",
-                borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.14)",
-                background: "rgba(255,255,255,0.04)",
-                color: "#fff",
-              }}
-            />
+            <div className="kicker" style={{ marginBottom: 8 }}>
+              <span className="kickerDot" aria-hidden="true" />
+              CrecyStudio Login
+            </div>
+            <h1 className="h2" style={{ margin: 0 }}>Welcome Back</h1>
+            <p className="pDark" style={{ marginTop: 6 }}>
+              Sign in to access your project workspaces.
+            </p>
           </div>
 
-          <div>
-            <label style={{ display: "block", marginBottom: 6, fontSize: 13 }}>
-              Password
-            </label>
-            <input
-              name="password"
-              type="password"
-              required
-              placeholder="••••••••"
-              style={{
-                width: "100%",
-                padding: "12px 14px",
-                borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.14)",
-                background: "rgba(255,255,255,0.04)",
-                color: "#fff",
-              }}
-            />
-          </div>
+          {message ? (
+            <div style={{ borderRadius: 8, padding: 12, border: "1px solid var(--stroke)", background: "var(--panel2)", color: "var(--fg)", fontSize: 13 }}>
+              {message}
+            </div>
+          ) : null}
 
-          <button
-            type="submit"
-            style={{
-              marginTop: 4,
-              padding: "12px 14px",
-              borderRadius: 10,
-              border: "none",
-              background: "#ff7a18",
-              color: "#111",
-              fontWeight: 800,
-              cursor: "pointer",
-            }}
-          >
-            Sign in
-          </button>
-        </form>
+          {error ? (
+            <div style={{ borderRadius: 8, padding: 12, border: "1px solid var(--accentStroke)", background: "var(--bg2)", color: "var(--accent)", fontSize: 13, fontWeight: 700 }}>
+              {error}
+            </div>
+          ) : null}
 
-        <div style={{ marginTop: 14, fontSize: 14, opacity: 0.9 }}>
-          {token ? (
-            <p style={{ margin: 0 }}>
-              First time client?{" "}
-              <Link
-                href={`/auth/create-account?token=${encodeURIComponent(token)}${
-                  prefillEmail ? `&email=${encodeURIComponent(prefillEmail)}` : ""
-                }`}
-                style={{ color: "#ffb26b" }}
-              >
-                Create your account
+          <form action={signIn} style={{ display: "grid", gap: 12 }}>
+            <input type="hidden" name="next" value={next || ""} />
+            <input type="hidden" name="token" value={token || ""} />
+
+            <div>
+              <label className="fieldLabel">Email Address</label>
+              <input
+                className="input"
+                name="email"
+                type="email"
+                defaultValue={prefillEmail}
+                required
+                placeholder="you@company.com"
+                autoComplete="email"
+              />
+            </div>
+
+            <div>
+              <label className="fieldLabel">Password</label>
+              <input
+                className="input"
+                name="password"
+                type="password"
+                required
+                placeholder="••••••••"
+                autoComplete="current-password"
+              />
+            </div>
+
+            <button className="btn btnPrimary" type="submit" style={{ marginTop: 8, padding: "12px", fontSize: 15, width: "100%", justifyContent: "center" }}>
+              Sign In →
+            </button>
+          </form>
+
+          {/* RESTORED: Gatekeeper Logic for Signups */}
+          <div style={{ borderTop: "1px solid var(--stroke)", paddingTop: 16, marginTop: 8, textAlign: "center", fontSize: 13 }}>
+            {token ? (
+              <span style={{ color: "var(--muted)" }}>
+                First time client?{" "}
+                <Link 
+                  href={`/signup?token=${encodeURIComponent(token)}${prefillEmail ? `&email=${encodeURIComponent(prefillEmail)}` : ""}${next ? `&next=${encodeURIComponent(next)}` : ""}`}
+                  style={{ color: "var(--fg)", fontWeight: 700, textDecoration: "none" }}
+                >
+                  Create your account
+                </Link>
+              </span>
+            ) : (
+              <span style={{ color: "var(--muted)", lineHeight: 1.5, display: "inline-block" }}>
+                Clients should use the secure portal link from their quote or email to create an account.
+              </span>
+            )}
+            
+            <div style={{ marginTop: 12 }}>
+              <Link href="/forgot-password" style={{ color: "var(--muted)", textDecoration: "none" }}>
+                Forgot Password?
               </Link>
-            </p>
-          ) : (
-            <p style={{ margin: 0 }}>
-              Clients should use the portal link from their quote/call email to create
-              an account.
-            </p>
-          )}
+            </div>
+          </div>
+
         </div>
       </div>
-    </div>
+    </main>
   );
 }
