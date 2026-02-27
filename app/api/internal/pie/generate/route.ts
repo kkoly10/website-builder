@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import crypto from "crypto"; 
 
 export const maxDuration = 60; 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// CRITICAL FIX 1: Strict type checking to prevent Node.js crashes on malicious payloads
 function isUuid(v: any) {
   if (typeof v !== "string") return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
@@ -96,40 +96,21 @@ ${JSON.stringify(pieInput)}
       return NextResponse.json({ ok: false, error: "AI returned malformed data. Please try generating again." }, { status: 500 });
     }
 
-    // CRITICAL FIX 2: Graceful Schema Fallback Insert
-    let { data: pieRow, error: pErr } = await supabaseAdmin
+    // Generate token to satisfy Postgres Not-Null constraint
+    const generatedToken = crypto.randomUUID();
+
+    // Stripped down insert: ONLY guaranteed columns
+    const { data: pieRow, error: pErr } = await supabaseAdmin
       .from("pie_reports")
       .insert({
         quote_id: quoteId,
-        score: parsedData.complexity?.score_100 || null,
-        tier: parsedData.overview?.tier || null,
-        summary: parsedData.overview?.summary || "Analysis complete.",
-        report_json: parsedData,
-        input: pieInput,
-        status: "generated",
-        generator: "system",
-        model: "gpt-4o"
+        report: parsedData,    
+        token: generatedToken  
       })
       .select("id")
       .single();
 
-    // If Supabase throws a schema cache error, instantly fallback to the guaranteed minimal insert
-    if (pErr && (pErr.message.includes("Could not find") || pErr.message.includes("schema") || pErr.message.includes("column"))) {
-      const { data: fallbackRow, error: fErr } = await supabaseAdmin
-        .from("pie_reports")
-        .insert({ quote_id: quoteId, report: parsedData })
-        .select("id")
-        .single();
-        
-      if (fErr) return NextResponse.json({ ok: false, error: `Database fallback failed: ${fErr.message}` }, { status: 500 });
-      pieRow = fallbackRow;
-      pErr = null;
-    }
-
     if (pErr) return NextResponse.json({ ok: false, error: `Failed to save to database: ${pErr.message}` }, { status: 500 });
-
-    // CRITICAL FIX 3: Update Quote Status for Kanban Board
-    await supabaseAdmin.from("quotes").update({ status: "analyzed" }).eq("id", quoteId);
 
     return NextResponse.json({ ok: true, pieReportId: pieRow.id });
 
