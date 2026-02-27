@@ -81,7 +81,7 @@ export default async function PortalPage() {
             )}
 
             <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <Link href="/build" className="btn btnPrimary">New Website Quote</Link>
+              <Link href="/build/intro" className="btn btnPrimary">New Website Quote</Link>
               <Link href="/systems" className="btn btnGhost">New Ops Intake</Link>
               {admin && <Link href="/internal/admin" className="btn btnGhost" style={{ borderColor: "var(--accentStroke)", color: "var(--accent)" }}>Admin HQ</Link>}
             </div>
