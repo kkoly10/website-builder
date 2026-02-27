@@ -1,30 +1,27 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
-import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
-
-// Import your custom components
 import BrandLogo from "@/components/brand/BrandLogo";
 import SiteFooter from "@/components/site/SiteFooter";
+import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "CrecyStudio | B2B Operations & Web Design",
+  title: "CrecyStudio | Websites & Workflow Systems",
   description: "Custom websites and workflow systems for local service businesses.",
 };
 
-export default async function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export const dynamic = "force-dynamic";
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   let userEmail: string | null = null;
   let admin = false;
 
   try {
     const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    userEmail = user?.email ?? null;
-    admin = await isAdminUser({ userId: user?.id ?? null, email: user?.email ?? null });
+    const { data } = await supabase.auth.getUser();
+    userEmail = data?.user?.email ?? null;
+    admin = await isAdminUser({ userId: data?.user?.id ?? null, email: data?.user?.email ?? null });
   } catch {
     userEmail = null;
     admin = false;
@@ -33,43 +30,36 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body>
-        {/* Childish background layer divs have been entirely removed */}
-
         <div className="siteShell">
           <header className="topNav">
             <div className="topNavInner">
-              
-              {/* Custom SVG Brand Logo INJECTED HERE */}
-              <BrandLogo showTag={true} />
+              <BrandLogo href="/" showTag />
 
               <nav className="navLinks">
                 <Link href="/systems">Workflow Systems</Link>
-                <Link href="/build">Custom Build</Link>
+                <Link href="/build">Website Quote</Link>
                 <Link href="/portal">Client Portal</Link>
+
                 {userEmail ? (
                   <>
-                    {admin ? <Link href="/internal">Admin</Link> : null}
-                    <form action="/auth/signout" method="post" style={{ display: "inline" }}>
-                      <button type="submit" className="btn btnGhost" style={{ padding: "8px 12px" }}>
-                        Sign out
-                      </button>
-                    </form>
+                    {admin ? <Link href="/internal/admin">Admin</Link> : null}
+                    <Link className="btn btnGhost" href="/auth/signout">
+                      Sign out
+                    </Link>
                   </>
                 ) : (
                   <>
-                    <Link href="/login">Log in</Link>
-                    <Link href="/signup" className="btn btnPrimary">Get Started</Link>
+                    <Link className="btn btnPrimary" href="/build">
+                      Get Estimate <span className="btnArrow">→</span>
+                    </Link>
                   </>
                 )}
               </nav>
             </div>
           </header>
 
-          <div className="mainContent">{children}</div>
-
-          {/* Dark Mode Site Footer INJECTED HERE */}
+          <main className="mainContent">{children}</main>
           <SiteFooter />
-          
         </div>
       </body>
     </html>
