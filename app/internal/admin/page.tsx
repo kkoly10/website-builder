@@ -1,18 +1,9 @@
-import { redirect } from "next/navigation";
-import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import AdminPipelineClient from "./AdminPipelineClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function WebPipelinePage() {
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login?next=/internal/admin");
-  const admin = await isAdminUser({ userId: user.id, email: user.email });
-  if (!admin) redirect("/portal");
-
   const [quotesRes, piesRes, callsRes] = await Promise.all([
     supabaseAdmin.from("quotes").select("*, leads(email, name)").order("created_at", { ascending: false }),
     supabaseAdmin.from("pie_reports").select("*").order("created_at", { ascending: false }),
