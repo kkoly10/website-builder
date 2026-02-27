@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import crypto from "crypto"; 
+import crypto from "crypto";
 
-export const maxDuration = 60; 
+export const maxDuration = 60;
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -15,27 +15,33 @@ function extractJsonFromText(text: string) {
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
   if (start === -1 || end === -1 || end <= start) return null;
-  try { return JSON.parse(text.slice(start, end + 1)); } catch { return null; }
+  try {
+    return JSON.parse(text.slice(start, end + 1));
+  } catch {
+    return null;
+  }
 }
 
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => null);
     if (!body) return NextResponse.json({ ok: false, error: "Could not parse request body." }, { status: 400 });
-    
+
     const quoteId = body?.quoteId;
     if (!quoteId || !isUuid(quoteId)) return NextResponse.json({ ok: false, error: "Invalid or missing quoteId." }, { status: 400 });
 
     const { data: quote, error: qErr } = await supabaseAdmin
       .from("quotes")
-      .select("*, leads(*)")
+      .select("*")
       .eq("id", quoteId)
       .single();
 
-    if (qErr || !quote) return NextResponse.json({ ok: false, error: "Quote not found in database." }, { status: 404 });
+    if (qErr || !quote) return NextResponse.json({ ok: false, error: `Quote not found in database: ${qErr?.message || "missing"}` }, { status: 404 });
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) return NextResponse.json({ ok: false, error: "Server configuration missing OpenAI key." }, { status: 500 });
+
+    const model = process.env.PIE_OPENAI_MODEL || process.env.OPENAI_MODEL || "gpt-4o-mini";
 
     const pieInput = {
       quote_details: {
@@ -77,44 +83,53 @@ ${JSON.stringify(pieInput)}
       oaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-4o", messages: [{ role: "user", content: prompt }], temperature: 0.2 }),
+        body: JSON.stringify({
+          model,
+          response_format: { type: "json_object" },
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.2,
+        }),
       });
-    } catch (fetchErr: any) {
-      return NextResponse.json({ ok: false, error: "Network error connecting to OpenAI AI." }, { status: 500 });
+    } catch {
+      return NextResponse.json({ ok: false, error: "Network error connecting to OpenAI API." }, { status: 500 });
     }
 
     if (!oaiRes.ok) {
       const oaiError = await oaiRes.json().catch(() => ({}));
-      return NextResponse.json({ ok: false, error: `AI Service Error: ${oaiError?.error?.message || oaiRes.statusText}` }, { status: 500 });
+      return NextResponse.json({ ok: false, error: `AI Service Error (${model}): ${oaiError?.error?.message || oaiRes.statusText}` }, { status: 500 });
     }
 
     const oaiJson = await oaiRes.json();
     const responseText = oaiJson.choices?.[0]?.message?.content || "";
-    
-    const parsedData = extractJsonFromText(responseText);
-    if (!parsedData) {
-      return NextResponse.json({ ok: false, error: "AI returned malformed data. Please try generating again." }, { status: 500 });
+
+    const parsedData = typeof responseText === "string" ? extractJsonFromText(responseText) : responseText;
+    if (!parsedData || typeof parsedData !== "object") {
+      return NextResponse.json({ ok: false, error: "AI returned malformed JSON. Please try again." }, { status: 500 });
     }
 
-    // Generate token to satisfy Postgres Not-Null constraint
     const generatedToken = crypto.randomUUID();
 
-    // Stripped down insert: ONLY guaranteed columns
     const { data: pieRow, error: pErr } = await supabaseAdmin
       .from("pie_reports")
       .insert({
         quote_id: quoteId,
-        report: parsedData,    
-        token: generatedToken  
+        report: parsedData,
+        token: generatedToken,
+        input: pieInput,
+        summary: parsedData?.overview?.summary ?? null,
+        score: parsedData?.complexity?.score_100 ?? null,
+        tier: parsedData?.overview?.tier ?? null,
+        status: "generated",
       })
       .select("id")
       .single();
 
     if (pErr) return NextResponse.json({ ok: false, error: `Failed to save to database: ${pErr.message}` }, { status: 500 });
 
-    return NextResponse.json({ ok: true, pieReportId: pieRow.id });
+    await supabaseAdmin.from("quotes").update({ latest_pie_report_id: pieRow.id }).eq("id", quoteId);
 
+    return NextResponse.json({ ok: true, pieReportId: pieRow.id });
   } catch (err: any) {
-    return NextResponse.json({ ok: false, error: "An unexpected server error occurred." }, { status: 500 });
+    return NextResponse.json({ ok: false, error: err?.message || "An unexpected server error occurred." }, { status: 500 });
   }
 }
