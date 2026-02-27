@@ -1,4 +1,3 @@
-// app/api/request-call/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/server";
@@ -13,9 +12,19 @@ function normalizeBaseUrl(v: string | undefined) {
   return `https://${s}`;
 }
 
+function escapeHtml(s: string) {
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 export async function POST(req: Request) {
   try {
     const url = new URL(req.url);
+
     let body: any = {};
     try {
       body = await req.json();
@@ -108,13 +117,24 @@ export async function POST(req: Request) {
       const html = `
         <div style="font-family:ui-sans-serif,system-ui;line-height:1.5">
           <h2 style="margin:0 0 10px">New scope call request</h2>
-          <p style="margin:0 0 6px"><strong>Quote ID:</strong> ${quoteId}</p>
-          <p style="margin:0 0 6px"><strong>Lead:</strong> ${escapeHtml(leadEmail)}${leadPhone ? ` • ${escapeHtml(leadPhone)}` : ""}${leadName ? ` • ${escapeHtml(leadName)}` : ""}</p>
-          <p style="margin:0 0 6px"><strong>Estimate:</strong> $${Number(quote.estimate_total || 0)} • ${escapeHtml(String(quote.tier_recommended ?? "—"))}</p>
-          ${bestTimeToCall ? `<p style="margin:0 0 6px"><strong>Best time to call:</strong> ${escapeHtml(bestTimeToCall)}</p>` : ""}
+          <p style="margin:0 0 6px"><strong>Quote ID:</strong> ${escapeHtml(quoteId)}</p>
+          <p style="margin:0 0 6px"><strong>Lead:</strong> ${escapeHtml(leadEmail)}${
+            leadPhone ? ` • ${escapeHtml(leadPhone)}` : ""
+          }${leadName ? ` • ${escapeHtml(leadName)}` : ""}</p>
+          <p style="margin:0 0 6px"><strong>Estimate:</strong> $${Number(quote.estimate_total || 0)} • ${escapeHtml(
+        String(quote.tier_recommended ?? "—")
+      )}</p>
+
+          ${bestTimeToCall ? `<p style="margin:0 0 6px"><strong>Best time:</strong> ${escapeHtml(bestTimeToCall)}</p>` : ""}
           ${preferredTimes ? `<p style="margin:0 0 6px"><strong>Preferred times:</strong> ${escapeHtml(preferredTimes)}</p>` : ""}
           ${timezone ? `<p style="margin:0 0 6px"><strong>Timezone:</strong> ${escapeHtml(timezone)}</p>` : ""}
-          ${notes ? `<p style="margin:10px 0 0"><strong>Notes:</strong><br/>${escapeHtml(notes).replace(/\n/g, "<br/>")}</p>` : ""}
+
+          ${
+            notes
+              ? `<p style="margin:10px 0 0"><strong>Notes:</strong><br/>${escapeHtml(notes).replace(/\n/g, "<br/>")}</p>`
+              : ""
+          }
+
           ${internalLink ? `<p style="margin:12px 0 0"><a href="${internalLink}">Open internal preview</a></p>` : ""}
         </div>
       `;
@@ -137,13 +157,4 @@ export async function POST(req: Request) {
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Unknown error" }, { status: 500 });
   }
-}
-
-function escapeHtml(s: string) {
-  return s
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
 }
