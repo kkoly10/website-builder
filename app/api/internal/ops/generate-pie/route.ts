@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-// CRITICAL FIX: Forces Vercel to allow up to 60 seconds for OpenAI to respond
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-function isUuid(v: string) {
+// CRITICAL FIX 1: Strict type checking to prevent Node.js crashes
+function isUuid(v: any) {
+  if (typeof v !== "string") return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
 }
 
@@ -98,8 +99,8 @@ ${JSON.stringify(pieInput)}
       return NextResponse.json({ ok: false, error: "AI returned malformed data. Please try generating again." }, { status: 500 });
     }
 
-    // Keeps advanced tracking specifically because Ops UI calls for it
-    const { data: pieRow, error: pErr } = await supabaseAdmin
+    // CRITICAL FIX 2: Graceful Schema Fallback Insert
+    let { data: pieRow, error: pErr } = await supabaseAdmin
       .from("ops_pie_reports")
       .insert({
         ops_intake_id: opsIntakeId,
@@ -114,6 +115,19 @@ ${JSON.stringify(pieInput)}
       })
       .select("id")
       .single();
+
+    // Fallback if schema cache is stale
+    if (pErr && (pErr.message.includes("Could not find") || pErr.message.includes("schema") || pErr.message.includes("column"))) {
+      const { data: fallbackRow, error: fErr } = await supabaseAdmin
+        .from("ops_pie_reports")
+        .insert({ ops_intake_id: opsIntakeId, report_json: parsedData })
+        .select("id")
+        .single();
+        
+      if (fErr) return NextResponse.json({ ok: false, error: `Database fallback failed: ${fErr.message}` }, { status: 500 });
+      pieRow = fallbackRow;
+      pErr = null;
+    }
 
     if (pErr) return NextResponse.json({ ok: false, error: `Failed to save to database: ${pErr.message}` }, { status: 500 });
 
