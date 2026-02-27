@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+// CRITICAL FIX: Forces Vercel to allow up to 60 seconds for OpenAI to respond
+export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
@@ -47,7 +49,6 @@ export async function POST(req: NextRequest) {
       notes: intake.notes,
     };
 
-    // FIX 1: Reverted "by_phase" keys to match Web schema so PieAdminReport.tsx doesn't crash
     const prompt = `
 You are CrecyStudio PIE (Project Intake Engine), an expert Business Systems and Workflow Automation Architect.
 Analyze the client intake data for an Operations project.
@@ -86,7 +87,7 @@ ${JSON.stringify(pieInput)}
 
     if (!oaiRes.ok) {
       const oaiError = await oaiRes.json().catch(() => ({}));
-      return NextResponse.json({ ok: false, error: \`AI Service Error: \${oaiError?.error?.message || oaiRes.statusText}\` }, { status: 500 });
+      return NextResponse.json({ ok: false, error: `AI Service Error: ${oaiError?.error?.message || oaiRes.statusText}` }, { status: 500 });
     }
 
     const oaiJson = await oaiRes.json();
@@ -97,7 +98,7 @@ ${JSON.stringify(pieInput)}
       return NextResponse.json({ ok: false, error: "AI returned malformed data. Please try generating again." }, { status: 500 });
     }
 
-    // FIX 2: Added 'generator' and 'model' to populate the Ops UI card correctly
+    // Keeps advanced tracking specifically because Ops UI calls for it
     const { data: pieRow, error: pErr } = await supabaseAdmin
       .from("ops_pie_reports")
       .insert({
@@ -114,7 +115,7 @@ ${JSON.stringify(pieInput)}
       .select("id")
       .single();
 
-    if (pErr) return NextResponse.json({ ok: false, error: "Failed to save PIE report to database." }, { status: 500 });
+    if (pErr) return NextResponse.json({ ok: false, error: `Failed to save to database: ${pErr.message}` }, { status: 500 });
 
     await supabaseAdmin.from("ops_intakes").update({ status: "analyzed" }).eq("id", opsIntakeId);
 
