@@ -1,0 +1,21 @@
+<svg width="1200" height="700" viewBox="0 0 1200 700" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Website project preview">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="700" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111522"/>
+      <stop offset="1" stop-color="#1F2436"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="700" rx="24" fill="url(#bg)"/>
+  <rect x="80" y="70" width="1040" height="560" rx="18" fill="#0E111C" stroke="#2F3850"/>
+  <rect x="120" y="120" width="340" height="34" rx="8" fill="#FF7A18"/>
+  <rect x="120" y="176" width="600" height="18" rx="6" fill="#B8C3D9" fill-opacity="0.45"/>
+  <rect x="120" y="208" width="520" height="18" rx="6" fill="#B8C3D9" fill-opacity="0.3"/>
+  <rect x="120" y="260" width="210" height="54" rx="12" fill="#FF7A18"/>
+  <rect x="360" y="260" width="210" height="54" rx="12" fill="#26314A"/>
+  <rect x="760" y="140" width="300" height="420" rx="14" fill="#151B2D" stroke="#2F3850"/>
+  <rect x="790" y="178" width="240" height="20" rx="6" fill="#DDE5F7" fill-opacity="0.7"/>
+  <rect x="790" y="220" width="240" height="70" rx="10" fill="#111726"/>
+  <rect x="790" y="306" width="240" height="70" rx="10" fill="#111726"/>
+  <rect x="790" y="392" width="240" height="70" rx="10" fill="#111726"/>
+  <text x="120" y="535" fill="#DDE5F7" font-size="28" font-family="Inter, Arial, sans-serif" font-weight="700">Conversion-focused website mockup</text>
+</svg>
