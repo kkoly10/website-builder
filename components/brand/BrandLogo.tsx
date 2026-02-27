@@ -1,4 +1,5 @@
 // components/brand/BrandLogo.tsx
+import Image from "next/image";
 import Link from "next/link";
 
 export default function BrandLogo({
@@ -11,12 +12,13 @@ export default function BrandLogo({
   return (
     <Link href={href} className="brandLogo" aria-label="CrecyStudio home">
       <span className="brandLogoMark" aria-hidden="true">
-        <img
-          src="/brand/crecy_logo_header_tight.png"
+        <Image
+          src="/brand/logo-a.svg"
           alt="CrecyStudio"
-          width={1050}
-          height={282}
-          style={{ width: 190, height: "auto" }}
+          width={168}
+          height={56}
+          priority
+          style={{ width: 132, height: "auto" }}
         />
       </span>
 
