@@ -1,8 +1,7 @@
-// app/internal/admin/AdminClient.tsx
 "use client";
 
-import AdminPipelineClient from "./AdminPipelineClient";
+import AdminPipelineClient, { PipelineRow } from "./AdminPipelineClient";
 
-export default function AdminClient(props: any) {
-  return <AdminPipelineClient {...props} />;
+export default function AdminClient({ initialRows }: { initialRows: PipelineRow[] }) {
+  return <AdminPipelineClient initialRows={initialRows} />;
 }

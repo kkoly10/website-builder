@@ -27,7 +27,7 @@ export default function Home() {
               Fix My Workflow Operations
             </Link>
             <Link href="/build/intro" className="btn btnGhost" style={{ padding: "16px 24px", fontSize: 16 }}>
-              Start Custom Build
+              Get a Website Quote
             </Link>
           </div>
         </div>
@@ -38,7 +38,7 @@ export default function Home() {
           <div className="grid2" style={{ alignItems: "stretch" }}>
             <div className="card">
               <div className="cardInner" style={{ padding: 0, overflow: "hidden" }}>
-                <Image src="/marketing/website-preview-v2.svg" alt="Website design preview" width={1200} height={700} style={{ width: "100%", height: "auto", display: "block" }} />
+                <Image src="/marketing/website-preview.svg" alt="Website design preview" width={1200} height={700} style={{ width: "100%", height: "auto", display: "block" }} />
                 <div style={{ padding: 20 }}>
                   <div style={{ fontWeight: 800, color: "var(--fg)" }}>Website Delivery Preview</div>
                   <p className="pDark" style={{ marginTop: 8 }}>Conversion layout, mobile responsiveness, lead capture, and performance baseline included.</p>
@@ -61,6 +61,8 @@ export default function Home() {
       <section className="section" style={{ background: "var(--panel)", borderTop: "1px solid var(--stroke)", borderBottom: "1px solid var(--stroke)" }}>
         <div className="container">
           <div className="grid2" style={{ alignItems: "center" }}>
+            
+            {/* TEXT COLUMN */}
             <div>
               <h2 className="h2">Most local businesses outgrow their systems.</h2>
               <p className="p" style={{ marginTop: 16 }}>
@@ -72,40 +74,21 @@ export default function Home() {
                 <span className="badge">Outdated Web Design</span>
               </div>
             </div>
-
+            
+            {/* PATH 1: WORKFLOW SYSTEMS (With the 1-3 metric) */}
             <div className="card">
-              <div className="cardInner" style={{ padding: 40 }}>
-                <div style={{ fontSize: 48, fontWeight: 900, color: "var(--accent)", lineHeight: 1 }}>1-3</div>
-                <div style={{ fontWeight: 800, fontSize: 18, marginTop: 12 }}>Days to deploy a quick win.</div>
-                <p className="pDark" style={{ marginTop: 8 }}>
-                  Stop bleeding time. We can implement a fully automated lead-to-invoice pipeline or a fresh website landing page in under a week.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="container">
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <h2 className="h2">Choose your path</h2>
-            <p className="p" style={{ marginTop: 12 }}>Start with the immediate bottleneck holding your business back.</p>
-          </div>
-
-          <div className="grid2">
-            <div className="card cardHover">
               <div className="cardInner" style={{ padding: 40, height: "100%", display: "flex", flexDirection: "column" }}>
                 <div>
-                  <div className="badge badgeHot">Operations</div>
+                  <div style={{ fontSize: 48, fontWeight: 900, color: "var(--accent)", lineHeight: 1 }}>1-3</div>
+                  <div className="badge" style={{ marginTop: 16 }}>Operations</div>
                   <h3 className="h2" style={{ fontSize: 28, marginTop: 16 }}>Workflow Systems</h3>
                   <p className="p" style={{ marginTop: 12 }}>
-                    Stop manually typing client data. CrecyStudio connects your forms, CRM, and accounting stack so data flows automatically.
+                    Custom automations to eliminate manual data entry. Connect your CRM, email, and invoicing tools to run on autopilot.
                   </p>
                   <ul style={{ margin: "24px 0", paddingLeft: 20, color: "var(--muted)", lineHeight: 1.8 }}>
-                    <li>Automated Client Intake Portals</li>
-                    <li>CRM to Billing Synchronization</li>
-                    <li>Internal Admin Dashboards</li>
+                    <li>Automated Client Intake</li>
+                    <li>Zapier & Make.com Integrations</li>
+                    <li>Custom CRM Dashboards</li>
                   </ul>
                 </div>
                 <div style={{ marginTop: "auto" }}>
@@ -116,6 +99,7 @@ export default function Home() {
               </div>
             </div>
 
+            {/* PATH 2: CUSTOM WEBSITES */}
             <div className="card cardHover">
               <div className="cardInner" style={{ padding: 40, height: "100%", display: "flex", flexDirection: "column" }}>
                 <div>

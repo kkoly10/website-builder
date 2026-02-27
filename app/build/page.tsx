@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-
-export const dynamic = "force-dynamic";
 
 type Mode = "chooser" | "guided" | "known";
 type Intent = "Marketing" | "Leads" | "Booking" | "Selling" | "Content" | "Membership" | "Other";
@@ -55,7 +53,7 @@ const INTEGRATION_OPTIONS = ["Google Maps / location", "Calendly / scheduling", 
 
 const LS_KEY = "crecystudio:intake";
 
-export default function BuildPage() {
+function BuildFormInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState<number>(0);
@@ -111,14 +109,21 @@ export default function BuildPage() {
     const pages = searchParams.get("pages");
     const timeline = searchParams.get("timeline");
 
-    setForm((f) => ({
-      ...f,
-      mode: mode === "guided" || mode === "known" ? mode : f.mode,
-      intent: INTENTS.includes(intent as Intent) ? (intent as Intent) : f.intent,
-      websiteType: WEBSITE_TYPES.includes(websiteType as WebsiteType) ? (websiteType as WebsiteType) : f.websiteType,
-      pages: PAGES.includes(pages as Pages) ? (pages as Pages) : f.pages,
-      timeline: TIMELINES.includes(timeline as Timeline) ? (timeline as Timeline) : f.timeline,
-    }));
+    if (mode || intent || websiteType || pages || timeline) {
+      setForm((f) => ({
+        ...f,
+        mode: mode === "guided" || mode === "known" ? (mode as Mode) : f.mode,
+        intent: INTENTS.includes(intent as Intent) ? (intent as Intent) : f.intent,
+        websiteType: WEBSITE_TYPES.includes(websiteType as WebsiteType) ? (websiteType as WebsiteType) : f.websiteType,
+        pages: PAGES.includes(pages as Pages) ? (pages as Pages) : f.pages,
+        timeline: TIMELINES.includes(timeline as Timeline) ? (timeline as Timeline) : f.timeline,
+      }));
+
+      // Bypasses Step 0 (Chooser) if parameters are already fed in from the Quiz Intro
+      if (mode === "guided" || mode === "known") {
+        setStep(1);
+      }
+    }
   }, [searchParams]);
 
   const suggested = useMemo(() => {
@@ -136,7 +141,7 @@ export default function BuildPage() {
     setStep(1);
   }
 
-  function next() { setStep((s) => Math.min(s + 1, 7)); } // Max step reduced to 7
+  function next() { setStep((s) => Math.min(s + 1, 7)); }
   function back() { setStep((s) => Math.max(s - 1, 0)); }
   function applySuggested() { setForm((f) => ({ ...f, ...suggested })); }
 
@@ -172,13 +177,16 @@ export default function BuildPage() {
       stakeholdersCount: form.stakeholdersCount, notes: form.notes,
     }).toString();
 
+    // Clears the cache to prevent old states from loading on the next quote attempt
+    window.localStorage.removeItem(LS_KEY);
+
     router.push(`/estimate?${params}`);
   }
 
   const stepLabel = step === 0 ? "Choose how you'd like to start" : step === 6 ? "Review & Summary" : step === 7 ? "Final Step: Contact Details" : `Step ${step} of 5`;
 
   return (
-    <main className="container" style={{ padding: "60px 0 100px", maxWidth: 760 }}>
+    <div style={{ width: "100%" }}>
       <div className="kicker">
         <span className="kickerDot" aria-hidden="true" />
         Website Builder Quote
@@ -420,13 +428,24 @@ export default function BuildPage() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// Suspense Boundary wrapping the page to satisfy Next.js useSearchParams requirements.
+export default function BuildPage() {
+  return (
+    <main className="container" style={{ padding: "60px 0 100px", maxWidth: 760 }}>
+      <Suspense fallback={<div style={{ textAlign: "center", padding: "40px", color: "var(--muted)" }}>Loading builder...</div>}>
+        <BuildFormInner />
+      </Suspense>
     </main>
   );
 }
 
 function CheckRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void; }) {
   return (
-    <label className="checkRow" style={{ cursor: "pointer", background: checked ? "var(--accentSoft)" : "var(--bg2)", borderColor: checked ? "var(--accentStroke)" : "var(--stroke)" }}>
+    <label className="checkLine" style={{ cursor: "pointer", background: checked ? "var(--accentSoft)" : "var(--bg2)", borderColor: checked ? "var(--accentStroke)" : "var(--stroke)" }}>
       <div className="checkLeft">
         <input type="checkbox" className="check" checked={checked} onChange={(e) => onChange(e.target.checked)} />
         <div className="checkLabel">{label}</div>
