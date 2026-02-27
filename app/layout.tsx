@@ -27,6 +27,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     admin = false;
   }
 
+  const customBuildHref = "/build/intro";
+  const portalHref = userEmail ? "/portal" : `/login?next=${encodeURIComponent("/portal")}`;
+
   return (
     <html lang="en">
       <body>
@@ -37,20 +40,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
               <nav className="navLinks">
                 <Link href="/systems">Workflow Systems</Link>
-                <Link href="/build">Website Quote</Link>
-                <Link href="/portal">Client Portal</Link>
+                <Link href={customBuildHref}>Custom Build</Link>
+                <Link href="/process">How It Works</Link>
+                <Link href={portalHref}>Client Portal</Link>
 
                 {userEmail ? (
                   <>
-                    {admin ? <Link href="/internal/admin">Admin</Link> : null}
-                    <Link className="btn btnGhost" href="/auth/signout">
-                      Sign out
-                    </Link>
+                    {admin ? <Link href="/internal/admin">Admin Dashboard</Link> : null}
+                    <form action="/auth/signout" method="post" style={{ margin: 0 }}>
+                      <button type="submit" className="btn btnGhost">
+                        Sign out
+                      </button>
+                    </form>
                   </>
                 ) : (
                   <>
-                    <Link className="btn btnPrimary" href="/build">
-                      Get Estimate <span className="btnArrow">→</span>
+                    <Link className="btn btnPrimary" href="/faq">
+                      View FAQ <span className="btnArrow">→</span>
                     </Link>
                   </>
                 )}

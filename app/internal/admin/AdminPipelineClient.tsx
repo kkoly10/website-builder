@@ -61,7 +61,8 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
       const res = await fetch("/api/internal/pie/generate", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ quoteId, force: true }),
       });
-      if (!res.ok) throw new Error("Failed to generate PIE");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Failed to generate PIE");
       setMessageByQuote((m) => ({ ...m, [quoteId]: "PIE Generated! Refreshing..." }));
       router.refresh(); 
     } catch (err: any) {
