@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+// CRITICAL FIX: Forces Vercel to allow up to 60 seconds for OpenAI to respond
+export const maxDuration = 60; 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -82,7 +84,7 @@ ${JSON.stringify(pieInput)}
 
     if (!oaiRes.ok) {
       const oaiError = await oaiRes.json().catch(() => ({}));
-      return NextResponse.json({ ok: false, error: \`AI Service Error: \${oaiError?.error?.message || oaiRes.statusText}\` }, { status: 500 });
+      return NextResponse.json({ ok: false, error: `AI Service Error: ${oaiError?.error?.message || oaiRes.statusText}` }, { status: 500 });
     }
 
     const oaiJson = await oaiRes.json();
@@ -93,7 +95,7 @@ ${JSON.stringify(pieInput)}
       return NextResponse.json({ ok: false, error: "AI returned malformed data. Please try generating again." }, { status: 500 });
     }
 
-    // FIX: Added tracking columns to match the Ops schema exactly.
+    // FIX: Removed unverified columns (generator, model, status) to prevent Postgres crash on the Web side
     const { data: pieRow, error: pErr } = await supabaseAdmin
       .from("pie_reports")
       .insert({
@@ -102,18 +104,12 @@ ${JSON.stringify(pieInput)}
         tier: parsedData.overview?.tier || null,
         summary: parsedData.overview?.summary || "Analysis complete.",
         report_json: parsedData,
-        input: pieInput,
-        status: "generated",
-        generator: "system",
-        model: "gpt-4o"
+        input: pieInput
       })
       .select("id")
       .single();
 
-    if (pErr) return NextResponse.json({ ok: false, error: "Failed to save PIE report to database." }, { status: 500 });
-
-    // FIX: Removed the risky `update("quotes")` call. 
-    // The UI handles linking dynamically via quote_id, so this prevents unnecessary database 500 crashes!
+    if (pErr) return NextResponse.json({ ok: false, error: `Failed to save to database: ${pErr.message}` }, { status: 500 });
 
     return NextResponse.json({ ok: true, pieReportId: pieRow.id });
 
