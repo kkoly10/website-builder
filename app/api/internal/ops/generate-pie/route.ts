@@ -17,12 +17,11 @@ function extractJsonFromText(text: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => null);
+    if (!body) return NextResponse.json({ ok: false, error: "Could not parse request body." }, { status: 400 });
+
     const opsIntakeId = String(body.opsIntakeId ?? "").trim();
-    
-    if (!opsIntakeId || !isUuid(opsIntakeId)) {
-      return NextResponse.json({ ok: false, error: "Invalid or missing opsIntakeId" }, { status: 400 });
-    }
+    if (!opsIntakeId || !isUuid(opsIntakeId)) return NextResponse.json({ ok: false, error: "Invalid or missing opsIntakeId." }, { status: 400 });
 
     const { data: intake, error: intakeError } = await supabaseAdmin
       .from("ops_intakes")
@@ -30,9 +29,10 @@ export async function POST(req: NextRequest) {
       .eq("id", opsIntakeId)
       .single();
 
-    if (intakeError || !intake) {
-      return NextResponse.json({ ok: false, error: "Ops intake not found" }, { status: 404 });
-    }
+    if (intakeError || !intake) return NextResponse.json({ ok: false, error: "Ops intake not found in database." }, { status: 404 });
+
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) return NextResponse.json({ ok: false, error: "Server configuration missing OpenAI key." }, { status: 500 });
 
     const pieInput = {
       businessName: intake.company_name,
@@ -47,85 +47,57 @@ export async function POST(req: NextRequest) {
       notes: intake.notes,
     };
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) return NextResponse.json({ ok: false, error: "Missing OPENAI_API_KEY" }, { status: 500 });
-
+    // FIX 1: Reverted "by_phase" keys to match Web schema so PieAdminReport.tsx doesn't crash
     const prompt = `
 You are CrecyStudio PIE (Project Intake Engine), an expert Business Systems and Workflow Automation Architect.
 Analyze the client intake data for an Operations project.
-Return STRICT JSON ONLY. No markdown, no conversational text.
+Return STRICT JSON ONLY. No markdown.
 
-You MUST use this EXACT JSON schema:
+Use this EXACT JSON schema:
 {
   "version": "1.0",
-  "overview": {
-    "tier": "Essential | Growth | Premium",
-    "headline": "A short, punchy title for this automation project",
-    "summary": "A 2-3 sentence executive summary of their operational bottlenecks and proposed solution",
-    "quoted_price": 2000,
-    "fit": "Great | Good | Risky"
-  },
-  "pricing_guardrail": {
-    "hourly_rate_used": 60,
-    "cost_at_hourly": 1800,
-    "quoted_price": 2000,
-    "pricing_position": "Underpriced | Fair | Premium",
-    "recommended_range": { "min": 1500, "max": 3000 },
-    "delta": 200,
-    "tier_range_check": { "tier": "Growth", "public_min": 1500, "public_max": 3500, "within_public_range": true }
-  },
-  "complexity": {
-    "level": "Low | Medium | High",
-    "score_100": 85,
-    "drivers": ["List of factors making this complex (e.g. legacy software, bad APIs)"]
-  },
-  "hours": {
-    "total_hours": 30,
-    "by_phase": { "design": 5, "development": 20, "admin": 5 },
-    "assumptions": ["list", "of", "assumptions"]
-  },
-  "timeline": {
-    "part_time_weeks": 3,
-    "full_time_weeks": 1
-  },
-  "platform_recommendation": {
-    "recommended": "Zapier | Make.com | Airtable | Custom API",
-    "why": ["reasons"],
-    "caution": ["API limits, data silos, adoption pushback"]
-  },
-  "questions_to_ask": ["Discovery call questions about their operations"],
-  "risks": ["Scope creep risks"],
-  "scope_tradeoffs": ["Workflows to cut if budget is tight"],
-  "ai_insights": {
-    "executive_summary": "Deep dive note on operational efficiency",
-    "client_psychology": "Analysis of their readiness for change management",
-    "hidden_risks": ["hidden traps in their current tools"],
-    "upsell_opportunities": ["ongoing maintenance retainer, more workflows"],
-    "call_strategy": ["how to pitch the ROI of time saved"]
-  },
-  "call_strategy": {
-    "emphasize": ["2-3 short bullet points to emphasize on the call"]
-  }
+  "overview": { "tier": "Growth", "headline": "Short title", "summary": "2 sentence summary", "quoted_price": 2000, "fit": "Good" },
+  "pricing_guardrail": { "hourly_rate_used": 60, "cost_at_hourly": 1800, "quoted_price": 2000, "pricing_position": "Fair", "recommended_range": { "min": 1500, "max": 3000 }, "delta": 200, "tier_range_check": { "tier": "Growth", "public_min": 1500, "public_max": 3500, "within_public_range": true } },
+  "complexity": { "level": "Medium", "score_100": 85, "drivers": ["Legacy software integration"] },
+  "hours": { "total_hours": 30, "by_phase": { "design": 5, "development": 20, "admin": 5 }, "assumptions": ["API access is available"] },
+  "timeline": { "part_time_weeks": 3, "full_time_weeks": 1 },
+  "platform_recommendation": { "recommended": "Make.com", "why": ["Handles complex routing better"], "caution": ["High operation count risk"] },
+  "questions_to_ask": ["How is data currently entered?"],
+  "risks": ["API rate limits"],
+  "scope_tradeoffs": ["Cut Slack alerts to save time"],
+  "ai_insights": { "executive_summary": "Deep dive note", "client_psychology": "Readiness analysis", "hidden_risks": ["Trap warnings"], "upsell_opportunities": ["Maintenance retainer"], "call_strategy": ["Pitch time savings ROI"] },
+  "call_strategy": { "emphasize": ["Reduce manual entry", "Eliminate errors"] }
 }
 
 Client Data:
 ${JSON.stringify(pieInput)}
 `;
 
-    const oaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "gpt-4o", messages: [{ role: "user", content: prompt }], temperature: 0.2 }),
-    });
+    let oaiRes;
+    try {
+      oaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "gpt-4o", messages: [{ role: "user", content: prompt }], temperature: 0.2 }),
+      });
+    } catch (fetchErr: any) {
+      return NextResponse.json({ ok: false, error: "Network error connecting to OpenAI AI." }, { status: 500 });
+    }
 
-    if (!oaiRes.ok) return NextResponse.json({ ok: false, error: "OpenAI API failed" }, { status: 500 });
+    if (!oaiRes.ok) {
+      const oaiError = await oaiRes.json().catch(() => ({}));
+      return NextResponse.json({ ok: false, error: \`AI Service Error: \${oaiError?.error?.message || oaiRes.statusText}\` }, { status: 500 });
+    }
 
     const oaiJson = await oaiRes.json();
     const responseText = oaiJson.choices?.[0]?.message?.content || "";
+    
     const parsedData = extractJsonFromText(responseText);
+    if (!parsedData) {
+      return NextResponse.json({ ok: false, error: "AI returned malformed data. Please try generating again." }, { status: 500 });
+    }
 
-    if (!parsedData) return NextResponse.json({ ok: false, error: "OpenAI returned invalid JSON" }, { status: 500 });
-
+    // FIX 2: Added 'generator' and 'model' to populate the Ops UI card correctly
     const { data: pieRow, error: pErr } = await supabaseAdmin
       .from("ops_pie_reports")
       .insert({
@@ -135,17 +107,20 @@ ${JSON.stringify(pieInput)}
         summary: parsedData.overview?.summary || "Analysis complete.",
         report_json: parsedData,
         input: pieInput,
-        status: "generated"
+        status: "generated",
+        generator: "system",
+        model: "gpt-4o"
       })
       .select("id")
       .single();
 
-    if (pErr || !pieRow) return NextResponse.json({ ok: false, error: "Database insert failed" }, { status: 500 });
+    if (pErr) return NextResponse.json({ ok: false, error: "Failed to save PIE report to database." }, { status: 500 });
 
     await supabaseAdmin.from("ops_intakes").update({ status: "analyzed" }).eq("id", opsIntakeId);
 
     return NextResponse.json({ ok: true, reportId: pieRow.id });
+
   } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err.message || "Server Error" }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "An unexpected server error occurred." }, { status: 500 });
   }
 }
