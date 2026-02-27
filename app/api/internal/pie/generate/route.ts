@@ -17,27 +17,22 @@ function extractJsonFromText(text: string) {
 
 export async function POST(req: Request) {
   try {
-    // STEP 1: Payload check
     const body = await req.json().catch(() => null);
-    if (!body) return NextResponse.json({ ok: false, error: "STEP 1 FAILED: Could not parse request body." }, { status: 400 });
+    if (!body) return NextResponse.json({ ok: false, error: "Could not parse request body." }, { status: 400 });
     
     const quoteId = body?.quoteId;
-    if (!quoteId) return NextResponse.json({ ok: false, error: "STEP 1 FAILED: quoteId is missing from the payload." }, { status: 400 });
-    if (!isUuid(quoteId)) return NextResponse.json({ ok: false, error: `STEP 1 FAILED: quoteId (${quoteId}) is not a valid UUID.` }, { status: 400 });
+    if (!quoteId || !isUuid(quoteId)) return NextResponse.json({ ok: false, error: "Invalid or missing quoteId." }, { status: 400 });
 
-    // STEP 2: Database Fetch check
     const { data: quote, error: qErr } = await supabaseAdmin
       .from("quotes")
       .select("*, leads(*)")
       .eq("id", quoteId)
       .single();
 
-    if (qErr) return NextResponse.json({ ok: false, error: `STEP 2 FAILED: Supabase Error fetching quote: ${qErr.message}` }, { status: 500 });
-    if (!quote) return NextResponse.json({ ok: false, error: "STEP 2 FAILED: Quote ID not found in database." }, { status: 404 });
+    if (qErr || !quote) return NextResponse.json({ ok: false, error: "Quote not found in database." }, { status: 404 });
 
-    // STEP 3: Environment check
     const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) return NextResponse.json({ ok: false, error: "STEP 3 FAILED: OPENAI_API_KEY is missing from your environment variables (.env)." }, { status: 500 });
+    if (!apiKey) return NextResponse.json({ ok: false, error: "Server configuration missing OpenAI key." }, { status: 500 });
 
     const pieInput = {
       quote_details: {
@@ -49,7 +44,6 @@ export async function POST(req: Request) {
       client_intake: quote.quote_json || quote.intake_normalized || {},
     };
 
-    // Using the EXACT production prompt to ensure we test the real constraints
     const prompt = `
 You are CrecyStudio PIE (Project Intake Engine), an expert software agency project manager.
 Analyze the client intake data for a web design project.
@@ -75,7 +69,6 @@ Client Data:
 ${JSON.stringify(pieInput)}
 `;
 
-    // STEP 4: OpenAI Network call
     let oaiRes;
     try {
       oaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -84,25 +77,23 @@ ${JSON.stringify(pieInput)}
         body: JSON.stringify({ model: "gpt-4o", messages: [{ role: "user", content: prompt }], temperature: 0.2 }),
       });
     } catch (fetchErr: any) {
-      return NextResponse.json({ ok: false, error: `STEP 4 FAILED: Network error reaching OpenAI: ${fetchErr.message}` }, { status: 500 });
+      return NextResponse.json({ ok: false, error: "Network error connecting to OpenAI AI." }, { status: 500 });
     }
 
-    // STEP 5: OpenAI Response check
     if (!oaiRes.ok) {
-      const errText = await oaiRes.text();
-      return NextResponse.json({ ok: false, error: `STEP 5 FAILED: OpenAI rejected request. Status: ${oaiRes.status}. Details: ${errText}` }, { status: 500 });
+      const oaiError = await oaiRes.json().catch(() => ({}));
+      return NextResponse.json({ ok: false, error: \`AI Service Error: \${oaiError?.error?.message || oaiRes.statusText}\` }, { status: 500 });
     }
 
     const oaiJson = await oaiRes.json();
     const responseText = oaiJson.choices?.[0]?.message?.content || "";
     
-    // STEP 6: JSON Parsing check
     const parsedData = extractJsonFromText(responseText);
     if (!parsedData) {
-      return NextResponse.json({ ok: false, error: `STEP 6 FAILED: OpenAI returned invalid JSON. Raw output: ${responseText.slice(0, 150)}...` }, { status: 500 });
+      return NextResponse.json({ ok: false, error: "AI returned malformed data. Please try generating again." }, { status: 500 });
     }
 
-    // STEP 7: DB Insert check (pie_reports)
+    // FIX: Added tracking columns to match the Ops schema exactly.
     const { data: pieRow, error: pErr } = await supabaseAdmin
       .from("pie_reports")
       .insert({
@@ -112,24 +103,21 @@ ${JSON.stringify(pieInput)}
         summary: parsedData.overview?.summary || "Analysis complete.",
         report_json: parsedData,
         input: pieInput,
+        status: "generated",
+        generator: "system",
+        model: "gpt-4o"
       })
       .select("id")
       .single();
 
-    if (pErr) return NextResponse.json({ ok: false, error: `STEP 7 FAILED: Failed to insert into pie_reports. Error: ${pErr.message}` }, { status: 500 });
+    if (pErr) return NextResponse.json({ ok: false, error: "Failed to save PIE report to database." }, { status: 500 });
 
-    // STEP 8: DB Update check (quotes)
-    const { error: updateErr } = await supabaseAdmin
-      .from("quotes")
-      .update({ latest_pie_report_id: pieRow.id })
-      .eq("id", quoteId);
+    // FIX: Removed the risky `update("quotes")` call. 
+    // The UI handles linking dynamically via quote_id, so this prevents unnecessary database 500 crashes!
 
-    if (updateErr) return NextResponse.json({ ok: false, error: `STEP 8 FAILED: Inserted PIE but failed to update 'quotes' table. Error: ${updateErr.message}` }, { status: 500 });
-
-    // SUCCESS
     return NextResponse.json({ ok: true, pieReportId: pieRow.id });
 
   } catch (err: any) {
-    return NextResponse.json({ ok: false, error: `CRITICAL CRASH: Unhandled error: ${err.message}` }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "An unexpected server error occurred." }, { status: 500 });
   }
 }
