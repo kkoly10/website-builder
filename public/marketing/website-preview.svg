@@ -1,0 +1,48 @@
+<svg width="1200" height="700" viewBox="0 0 1200 700" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Website delivery preview with content blocks">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="700" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F1422"/>
+      <stop offset="1" stop-color="#1E2840"/>
+    </linearGradient>
+    <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FF8D3A"/>
+      <stop offset="1" stop-color="#FF5A23"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="700" rx="24" fill="url(#bg)"/>
+  <rect x="72" y="56" width="1056" height="588" rx="22" fill="#0B111E" stroke="#2B3550"/>
+
+  <rect x="106" y="92" width="600" height="228" rx="16" fill="url(#hero)"/>
+  <text x="140" y="152" fill="#FFFFFF" font-size="34" font-family="Inter, Arial, sans-serif" font-weight="800">Turn Browsers Into Buyers</text>
+  <text x="140" y="191" fill="#FFE9D8" font-size="20" font-family="Inter, Arial, sans-serif">Launch a conversion-ready site with portal + automations in 14 days.</text>
+  <rect x="140" y="226" width="190" height="48" rx="10" fill="#0E1424"/>
+  <text x="170" y="257" fill="#F7FBFF" font-size="18" font-family="Inter, Arial, sans-serif" font-weight="700">Start Build →</text>
+
+  <rect x="654" y="92" width="440" height="228" rx="16" fill="#121A2D" stroke="#2E3A58"/>
+  <text x="686" y="135" fill="#EAF0FF" font-size="24" font-family="Inter, Arial, sans-serif" font-weight="700">Service Blocks</text>
+  <rect x="686" y="155" width="376" height="48" rx="10" fill="#0F1628"/>
+  <text x="706" y="186" fill="#BFD0F5" font-size="18" font-family="Inter, Arial, sans-serif">• Website Design + Copywriting</text>
+  <rect x="686" y="214" width="376" height="48" rx="10" fill="#0F1628"/>
+  <text x="706" y="245" fill="#BFD0F5" font-size="18" font-family="Inter, Arial, sans-serif">• CRM Forms + Follow-up Workflow</text>
+  <rect x="686" y="273" width="376" height="48" rx="10" fill="#0F1628"/>
+  <text x="706" y="304" fill="#BFD0F5" font-size="18" font-family="Inter, Arial, sans-serif">• Client Portal + Reporting</text>
+
+  <rect x="106" y="346" width="988" height="264" rx="16" fill="#121A2D" stroke="#2E3A58"/>
+
+  <rect x="138" y="382" width="300" height="192" rx="12" fill="#0F1628"/>
+  <text x="160" y="420" fill="#EAF0FF" font-size="22" font-family="Inter, Arial, sans-serif" font-weight="700">Homepage Draft</text>
+  <text x="160" y="452" fill="#BFD0F5" font-size="16" font-family="Inter, Arial, sans-serif">Headline, trust badges, FAQs, CTA</text>
+  <text x="160" y="476" fill="#BFD0F5" font-size="16" font-family="Inter, Arial, sans-serif">optimized for local leads.</text>
+
+  <rect x="450" y="382" width="300" height="192" rx="12" fill="#0F1628"/>
+  <text x="472" y="420" fill="#EAF0FF" font-size="22" font-family="Inter, Arial, sans-serif" font-weight="700">Automation Setup</text>
+  <text x="472" y="452" fill="#BFD0F5" font-size="16" font-family="Inter, Arial, sans-serif">Form intake → CRM entry →</text>
+  <text x="472" y="476" fill="#BFD0F5" font-size="16" font-family="Inter, Arial, sans-serif">email + SMS follow-up sequence.</text>
+
+  <rect x="762" y="382" width="300" height="192" rx="12" fill="#0F1628"/>
+  <text x="784" y="420" fill="#EAF0FF" font-size="22" font-family="Inter, Arial, sans-serif" font-weight="700">Launch Checklist</text>
+  <text x="784" y="452" fill="#BFD0F5" font-size="16" font-family="Inter, Arial, sans-serif">Domain connect, analytics, SEO,</text>
+  <text x="784" y="476" fill="#BFD0F5" font-size="16" font-family="Inter, Arial, sans-serif">handoff video, admin training.</text>
+
+  <text x="106" y="668" fill="#DDE5F7" font-size="28" font-family="Inter, Arial, sans-serif" font-weight="700">Website delivery preview</text>
+</svg>
