@@ -9,13 +9,15 @@ export default function SiteFooter() {
           <div style={{ maxWidth: 520 }}>
             <div style={{ fontWeight: 900, fontSize: 16, color: "var(--fg)" }}>CrecyStudio</div>
             <div className="pDark" style={{ marginTop: 10 }}>
-              I build professional websites and automated workflow systems for local businesses.
+              CrecyStudio delivers conversion-focused websites and automation-driven workflow systems for growth-focused local businesses.
             </div>
           </div>
 
           <div className="footerLinks" style={{ justifyContent: "flex-end" }}>
             <Link href="/systems">Workflow Systems</Link>
-            <Link href="/build">Website Quote</Link>
+            <Link href="/build/intro">Custom Build</Link>
+            <Link href="/process">How It Works</Link>
+            <Link href="/faq">FAQ</Link>
             <Link href="/portal">Client Portal</Link>
           </div>
         </div>

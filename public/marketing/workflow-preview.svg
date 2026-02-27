@@ -1,0 +1,25 @@
+<svg width="1200" height="700" viewBox="0 0 1200 700" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Workflow automation preview">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1200" y2="700" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10131D"/>
+      <stop offset="1" stop-color="#1E2638"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="700" rx="24" fill="url(#bg2)"/>
+  <rect x="80" y="70" width="1040" height="560" rx="18" fill="#0E111C" stroke="#2F3850"/>
+  <rect x="130" y="260" width="180" height="90" rx="12" fill="#1F2A44" stroke="#3A4866"/>
+  <rect x="390" y="260" width="180" height="90" rx="12" fill="#1F2A44" stroke="#3A4866"/>
+  <rect x="650" y="260" width="180" height="90" rx="12" fill="#1F2A44" stroke="#3A4866"/>
+  <rect x="910" y="260" width="180" height="90" rx="12" fill="#FF7A18"/>
+  <path d="M310 305H390" stroke="#8EA1C8" stroke-width="6" stroke-linecap="round"/>
+  <path d="M570 305H650" stroke="#8EA1C8" stroke-width="6" stroke-linecap="round"/>
+  <path d="M830 305H910" stroke="#8EA1C8" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="350" cy="305" r="6" fill="#8EA1C8"/>
+  <circle cx="610" cy="305" r="6" fill="#8EA1C8"/>
+  <circle cx="870" cy="305" r="6" fill="#8EA1C8"/>
+  <text x="157" y="315" fill="#DDE5F7" font-size="20" font-family="Inter, Arial, sans-serif" font-weight="700">Lead Intake</text>
+  <text x="420" y="315" fill="#DDE5F7" font-size="20" font-family="Inter, Arial, sans-serif" font-weight="700">CRM Sync</text>
+  <text x="674" y="315" fill="#DDE5F7" font-size="20" font-family="Inter, Arial, sans-serif" font-weight="700">Status Ops</text>
+  <text x="948" y="315" fill="#111522" font-size="20" font-family="Inter, Arial, sans-serif" font-weight="800">Billing</text>
+  <text x="130" y="535" fill="#DDE5F7" font-size="28" font-family="Inter, Arial, sans-serif" font-weight="700">Automation pipeline preview</text>
+</svg>
