@@ -41,7 +41,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <nav className="navLinks">
                 <Link href="/systems">Workflow Systems</Link>
                 <Link href={customBuildHref}>Custom Build</Link>
-                <Link href="/process">How It Works</Link>
                 <Link href={portalHref}>Client Portal</Link>
 
                 {userEmail ? (
@@ -55,8 +54,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   </>
                 ) : (
                   <>
-                    <Link className="btn btnPrimary" href="/faq">
-                      View FAQ <span className="btnArrow">→</span>
+                    <Link className="btn btnPrimary" href={customBuildHref}>
+                      Start Custom Build <span className="btnArrow">→</span>
                     </Link>
                   </>
                 )}
