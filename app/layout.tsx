@@ -1,4 +1,3 @@
-// app/layout.tsx
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
@@ -21,7 +20,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     const supabase = await createSupabaseServerClient();
     const { data } = await supabase.auth.getUser();
     userEmail = data?.user?.email ?? null;
-    admin = await isAdminUser({ userId: data?.user?.id ?? null, email: data?.user?.email ?? null });
+    admin = await isAdminUser({
+      userId: data?.user?.id ?? null,
+      email: data?.user?.email ?? null,
+    });
   } catch {
     userEmail = null;
     admin = false;
@@ -29,6 +31,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   const customBuildHref = "/build/intro";
   const portalHref = userEmail ? "/portal" : `/login?next=${encodeURIComponent("/portal")}`;
+
+  const navLinks = [
+    { href: "/systems", label: "Workflow Systems" },
+    { href: customBuildHref, label: "Custom Build" },
+    { href: "/process", label: "How It Works" },
+    { href: "/faq", label: "FAQ" },
+    { href: portalHref, label: "Client Portal" },
+  ];
 
   return (
     <html lang="en">
@@ -38,24 +48,68 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <div className="topNavInner">
               <BrandLogo href="/" showTag />
 
-              <nav className="navLinks">
-                <Link href="/systems">Workflow Systems</Link>
-                <Link href={customBuildHref}>Custom Build</Link>
-                <Link href="/process">How It Works</Link>
-                <Link href="/faq">FAQ</Link>
-                <Link href={portalHref}>Client Portal</Link>
+              {/* Desktop nav */}
+              <nav className="navLinks navDesktop">
+                {navLinks.map((item) => (
+                  <Link key={item.label} href={item.href}>
+                    {item.label}
+                  </Link>
+                ))}
 
                 {userEmail ? (
                   <>
                     {admin ? <Link href="/internal/admin">Admin Dashboard</Link> : null}
-                    <form action="/auth/signout" method="post" style={{ margin: 0 }}>
+                    <form action="/auth/signout" method="post" className="navForm">
                       <button type="submit" className="btn btnGhost">
                         Sign out
                       </button>
                     </form>
                   </>
-                ) : null}
+                ) : (
+                  <Link href={customBuildHref} className="btn btnPrimary">
+                    Get Quote <span className="btnArrow">→</span>
+                  </Link>
+                )}
               </nav>
+
+              {/* Mobile header actions */}
+              <div className="mobileHeaderActions">
+                <Link href={customBuildHref} className="btn btnPrimary mobilePrimaryCta">
+                  Get Quote
+                </Link>
+
+                <details className="mobileMenu">
+                  <summary className="mobileMenuSummary" aria-label="Open navigation menu">
+                    <span />
+                    <span />
+                    <span />
+                  </summary>
+
+                  <div className="mobileMenuPanel">
+                    <div className="mobileMenuLinks">
+                      {navLinks.map((item) => (
+                        <Link key={item.label} href={item.href}>
+                          {item.label}
+                        </Link>
+                      ))}
+
+                      {admin ? <Link href="/internal/admin">Admin Dashboard</Link> : null}
+
+                      {userEmail ? (
+                        <form action="/auth/signout" method="post" className="mobileMenuForm">
+                          <button type="submit" className="btn btnGhost mobileMenuSignout">
+                            Sign out
+                          </button>
+                        </form>
+                      ) : (
+                        <Link href="/login" className="mobileMenuMutedLink">
+                          Log in
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                </details>
+              </div>
             </div>
           </header>
 
