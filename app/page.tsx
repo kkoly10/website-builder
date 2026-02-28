@@ -53,9 +53,7 @@ export default function Home() {
                   style={{ width: "100%", height: "auto", display: "block" }}
                 />
                 <div style={{ padding: 20 }}>
-                  <div style={{ fontWeight: 800, color: "var(--fg)" }}>
-                    Website Delivery Preview
-                  </div>
+                  <div style={{ fontWeight: 800, color: "var(--fg)" }}>Website Delivery Preview</div>
                   <p className="pDark" style={{ marginTop: 8 }}>
                     Conversion layout, mobile responsiveness, lead capture, and performance baseline included.
                   </p>
@@ -73,9 +71,7 @@ export default function Home() {
                   style={{ width: "100%", height: "auto", display: "block" }}
                 />
                 <div style={{ padding: 20 }}>
-                  <div style={{ fontWeight: 800, color: "var(--fg)" }}>
-                    Operations Workflow Preview
-                  </div>
+                  <div style={{ fontWeight: 800, color: "var(--fg)" }}>Operations Workflow Preview</div>
                   <p className="pDark" style={{ marginTop: 8 }}>
                     Lead intake, status tracking, billing handoff, and reporting flow designed for less admin overhead.
                   </p>
@@ -103,6 +99,7 @@ export default function Home() {
                 15 hours a week chasing down invoices, copying data between tools, and losing potential
                 clients because your website doesn&apos;t convert them instantly.
               </p>
+
               <div className="pills" style={{ marginTop: 24 }}>
                 <span className="badge">Data Entry Bottlenecks</span>
                 <span className="badge">Messy Client Intake</span>
@@ -121,14 +118,7 @@ export default function Home() {
                 }}
               >
                 <div>
-                  <div
-                    style={{
-                      fontSize: 48,
-                      fontWeight: 900,
-                      color: "var(--accent)",
-                      lineHeight: 1,
-                    }}
-                  >
+                  <div style={{ fontSize: 48, fontWeight: 900, color: "var(--accent)", lineHeight: 1 }}>
                     1-3
                   </div>
                   <div className="badge" style={{ marginTop: 16 }}>
@@ -154,6 +144,7 @@ export default function Home() {
                     <li>Custom CRM Dashboards</li>
                   </ul>
                 </div>
+
                 <div style={{ marginTop: "auto" }}>
                   <Link href="/systems" className="btn btnPrimary" style={{ width: "100%" }}>
                     Start Workflow Audit
@@ -194,6 +185,7 @@ export default function Home() {
                     <li>Starting at $550</li>
                   </ul>
                 </div>
+
                 <div style={{ marginTop: "auto" }}>
                   <Link href="/build/intro" className="btn btnGhost" style={{ width: "100%" }}>
                     Get Instant Website Quote
