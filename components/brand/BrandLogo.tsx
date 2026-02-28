@@ -13,9 +13,9 @@ export default function BrandLogo({
     <Link href={href} className="brandLogo" aria-label="CrecyStudio home">
       <span className="brandLogoMark" aria-hidden="true">
         <svg
-          width="44"
-          height="44"
-          viewBox="0 0 44 44"
+          width="46"
+          height="46"
+          viewBox="0 0 46 46"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           role="img"
@@ -23,40 +23,40 @@ export default function BrandLogo({
           <rect
             x="1"
             y="1"
-            width="42"
-            height="42"
-            rx="12"
+            width="44"
+            height="44"
+            rx="13"
             fill="#0f1220"
             stroke="#262a36"
           />
           <defs>
-            <linearGradient id="crecyLogoGrad" x1="8" y1="8" x2="36" y2="36">
+            <linearGradient id="crecyBrandGrad" x1="8" y1="8" x2="38" y2="38">
               <stop offset="0%" stopColor="#ff8c33" />
               <stop offset="100%" stopColor="#ff6b00" />
             </linearGradient>
           </defs>
 
-          {/* outer C */}
+          {/* Outer C */}
           <path
-            d="M30.8 14.2C29.1 12.6 26.9 11.6 24.4 11.6C19.1 11.6 14.8 15.5 14.1 20.6C13.2 26.9 18 32.4 24 32.4C27.5 32.4 30.4 31.2 32.3 28.8"
-            stroke="url(#crecyLogoGrad)"
-            strokeWidth="3.6"
+            d="M31.8 14.6C30 12.9 27.7 11.9 25 11.9C19.2 11.9 14.6 16.1 14 21.6C13.2 27.9 17.9 33.2 24.2 33.2C27.6 33.2 30.5 31.9 32.5 29.7"
+            stroke="url(#crecyBrandGrad)"
+            strokeWidth="3.7"
             strokeLinecap="round"
           />
 
-          {/* inner curve */}
+          {/* Inner C / G curve */}
           <path
-            d="M24.2 16.4C21.5 16.4 19.2 18.3 18.8 20.9C18.2 24.5 21.1 27.6 24.5 27.6C26.6 27.6 28.2 26.9 29.4 25.5"
-            stroke="url(#crecyLogoGrad)"
-            strokeWidth="3.6"
+            d="M24.6 16.8C21.5 16.8 19 19 18.7 22C18.3 25.4 20.9 28.1 24.2 28.1C26.2 28.1 27.9 27.4 29.1 26"
+            stroke="url(#crecyBrandGrad)"
+            strokeWidth="3.7"
             strokeLinecap="round"
           />
 
           {/* G bar */}
           <path
-            d="M24.9 22H31.2"
-            stroke="url(#crecyLogoGrad)"
-            strokeWidth="3.6"
+            d="M25.2 22.9H31.6"
+            stroke="url(#crecyBrandGrad)"
+            strokeWidth="3.7"
             strokeLinecap="round"
           />
         </svg>
