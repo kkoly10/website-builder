@@ -1,6 +1,7 @@
 // app/api/internal/admin/adjustments/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireAdminRoute } from "@/lib/routeAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,6 +41,9 @@ function normalizeAdjustments(raw: any) {
 }
 
 export async function POST(req: NextRequest) {
+  const authErr = await requireAdminRoute();
+  if (authErr) return authErr;
+
   try {
     const body = (await req.json()) as {
       quoteId?: string;
