@@ -17,7 +17,8 @@ export async function requireAdminRoute(): Promise<NextResponse | null> {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    return null; // authorized
+    return null;
   } catch {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
+}
