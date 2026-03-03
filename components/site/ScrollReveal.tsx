@@ -1,16 +1,8 @@
-// components/site/ScrollReveal.tsx
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, ReactNode } from "react";
 
-/**
- * Attaches an IntersectionObserver that adds .inView
- * to any element with .fadeUp, .heroFadeUp, or .scaleIn
- * when it enters the viewport.
- *
- * Mount this once in your layout or homepage.
- */
-export default function ScrollReveal() {
+export default function ScrollReveal({ children }: { children: ReactNode }) {
   useEffect(() => {
     const targets = document.querySelectorAll(".fadeUp, .heroFadeUp, .scaleIn");
     if (!targets.length) return;
@@ -20,7 +12,7 @@ export default function ScrollReveal() {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add("inView");
-            observer.unobserve(entry.target); // animate once
+            observer.unobserve(entry.target);
           }
         });
       },
@@ -28,9 +20,8 @@ export default function ScrollReveal() {
     );
 
     targets.forEach((el) => observer.observe(el));
-
     return () => observer.disconnect();
   }, []);
 
-  return null;
+  return <>{children}</>;
 }
