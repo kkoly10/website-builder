@@ -2,7 +2,7 @@
 
 import { useEffect, ReactNode } from "react";
 
-export default function ScrollReveal({ children }: { children: ReactNode }) {
+export default function ScrollReveal({ children }: { children?: ReactNode }) {
   useEffect(() => {
     const targets = document.querySelectorAll(".fadeUp, .heroFadeUp, .scaleIn");
     if (!targets.length) return;
@@ -23,5 +23,5 @@ export default function ScrollReveal({ children }: { children: ReactNode }) {
     return () => observer.disconnect();
   }, []);
 
-  return <>{children}</>;
+  return children ? <>{children}</> : null;
 }
