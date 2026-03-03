@@ -1,3 +1,4 @@
+// components/brand/BrandLogo.tsx
 import Link from "next/link";
 
 type BrandLogoProps = {
@@ -26,13 +27,13 @@ export default function BrandLogo({
             width="44"
             height="44"
             rx="13"
-            fill="#0f1220"
-            stroke="#262a36"
+            fill="#0a0c14"
+            stroke="#252a3a"
           />
           <defs>
             <linearGradient id="crecyBrandGrad" x1="8" y1="8" x2="38" y2="38">
-              <stop offset="0%" stopColor="#ff8c33" />
-              <stop offset="100%" stopColor="#ff6b00" />
+              <stop offset="0%" stopColor="#c9a84c" />
+              <stop offset="100%" stopColor="#dfc06a" />
             </linearGradient>
           </defs>
 
@@ -66,7 +67,7 @@ export default function BrandLogo({
         <span className="brandLogoTitle">CrecyStudio</span>
         {showTag ? (
           <span className="brandLogoSub">
-            Websites • Automation • Portal Systems
+            Websites &bull; Automation &bull; Portal Systems
           </span>
         ) : null}
       </span>
