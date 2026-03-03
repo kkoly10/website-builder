@@ -868,6 +868,86 @@ hr { border: none; border-top: 1px solid var(--stroke); }
 
 
 /* =========================
+   ADDITIONAL UTILITIES
+   ========================= */
+
+/* Active checkbox state */
+.checkLineActive {
+  background: var(--accentSoft) !important;
+  border-color: var(--accentStroke) !important;
+}
+
+/* Form page wrapper */
+.formPage {
+  padding: var(--sp-32) 0 var(--sp-48);
+  max-width: 760px;
+}
+
+.formPageWide {
+  padding: var(--sp-32) 0 var(--sp-48);
+  max-width: 980px;
+}
+
+/* Form grid (vertical stack with gap) */
+.formGrid {
+  display: grid;
+  gap: var(--sp-8);
+}
+
+/* Auth page centered layout */
+.authPage {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: var(--sp-24);
+}
+
+.authCard {
+  width: min(440px, 100%);
+}
+
+.authCard .panelBody {
+  display: grid;
+  gap: var(--sp-8);
+}
+
+/* Nav row for form steps */
+.formNav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--sp-12);
+}
+
+/* Stat emphasis */
+.emphasis { color: var(--fg); font-weight: 800; }
+
+/* Pointer cursor helper */
+.pointer { cursor: pointer; }
+
+/* Margin helpers for edge cases */
+.mt0  { margin-top: 0; }
+.mt8  { margin-top: var(--sp-4); }
+.mt16 { margin-top: var(--sp-8); }
+.mt24 { margin-top: var(--sp-12); }
+.mt32 { margin-top: var(--sp-16); }
+.mb0  { margin-bottom: 0; }
+.mb8  { margin-bottom: var(--sp-4); }
+.mb16 { margin-bottom: var(--sp-8); }
+.mb24 { margin-bottom: var(--sp-12); }
+
+/* Gap helpers */
+.gap8  { gap: var(--sp-4); }
+.gap16 { gap: var(--sp-8); }
+.gap24 { gap: var(--sp-12); }
+
+/* Max-width helpers */
+.maxW640 { max-width: 640px; }
+.maxW760 { max-width: 760px; }
+.maxW860 { max-width: 860px; }
+.maxW980 { max-width: 980px; }
+
+
+/* =========================
    RESPONSIVE
    ========================= */
 @media (max-width: 980px) {
