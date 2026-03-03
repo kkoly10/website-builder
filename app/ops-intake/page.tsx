@@ -53,33 +53,33 @@ const WORKFLOWS_LIST = [
 
 const BUDGET_OPTIONS = [
   "Under $1,000",
-  "$1,000 – $2,000",
-  "$2,000 – $4,000",
-  "$4,000 – $8,000",
+  "$1,000 - $2,000",
+  "$2,000 - $4,000",
+  "$4,000 - $8,000",
   "$8,000+",
   "Not sure yet",
 ];
 
 const REVENUE_OPTIONS = [
   "Under $10k/mo",
-  "$10k – $50k/mo",
-  "$50k – $200k/mo",
+  "$10k - $50k/mo",
+  "$50k - $200k/mo",
   "$200k+/mo",
   "Prefer not to say",
 ];
 
 const URGENCY_OPTIONS = [
-  "ASAP — this is costing us now",
+  "ASAP - this is costing us now",
   "Within the next month",
-  "Next 2–3 months",
+  "Next 2-3 months",
   "Exploring options",
 ];
 
 const TRIED_BEFORE_OPTIONS = [
-  "No — first time addressing this",
-  "Yes — tried to fix it internally",
-  "Yes — hired someone and it didn't work",
-  "Yes — using a tool but it's not working",
+  "No - first time addressing this",
+  "Yes - tried to fix it internally",
+  "Yes - hired someone and it didn't work",
+  "Yes - using a tool but it's not working",
 ];
 
 export default function OpsIntakePage() {
@@ -100,7 +100,7 @@ export default function OpsIntakePage() {
     budgetRange: "Not sure yet",
     currentTools: [],
     painPoints: [],
-    triedBefore: "No — first time addressing this",
+    triedBefore: "No - first time addressing this",
     workflowsNeeded: [],
     urgency: "Exploring options",
     readiness: "Just doing research",
@@ -109,13 +109,15 @@ export default function OpsIntakePage() {
 
   const getEstimate = () => {
     let base = 1000;
-    base += form.workflowsNeeded.length * 400;
-    if (form.teamSize === "16-50 employees") base += 1500;
-    if (form.teamSize === "50+ employees") base += 3500;
+    base += form.workflowsNeeded.length * 600;
+    if (form.teamSize === "16-50 employees") base += 1000;
+    if (form.teamSize === "50+ employees") base += 2500;
     if (form.painPoints.length >= 4) base += 500;
     if (form.triedBefore.includes("hired someone")) base += 500;
+    if (form.monthlyRevenue === "$50k - $200k/mo") base += 500;
+    if (form.monthlyRevenue === "$200k+/mo") base += 1000;
     const high = Math.round(base * 1.6);
-    return `$${base.toLocaleString()} – $${high.toLocaleString()}`;
+    return "$" + base.toLocaleString() + " - $" + high.toLocaleString();
   };
 
   const toggleArray = (
@@ -152,9 +154,7 @@ export default function OpsIntakePage() {
           recommendation: {
             priceRange: getEstimate(),
             tierLabel:
-              form.workflowsNeeded.length > 2
-                ? "Ops System Build"
-                : "Quick Workflow Fix",
+              form.workflowsNeeded.length > 2 ? "Ops System Build" : "Quick Workflow Fix",
           },
         }),
       });
@@ -192,7 +192,6 @@ export default function OpsIntakePage() {
       <section className="card">
         <div className="cardInner" style={{ display: "grid", gap: 20 }}>
 
-          {/* STEP 1 */}
           {step === 1 && (
             <>
               <h2 className="h2">Tell us about your business</h2>
@@ -245,7 +244,6 @@ export default function OpsIntakePage() {
             </>
           )}
 
-          {/* STEP 2 */}
           {step === 2 && (
             <>
               <h2 className="h2">Your Tools & Pain Points</h2>
@@ -274,7 +272,6 @@ export default function OpsIntakePage() {
             </>
           )}
 
-          {/* STEP 3 */}
           {step === 3 && (
             <>
               <h2 className="h2">Goals & Budget</h2>
@@ -305,13 +302,14 @@ export default function OpsIntakePage() {
             </>
           )}
 
-          {/* STEP 4 */}
           {step === 4 && (
             <>
               <div style={{ background: "rgba(255,122,24,0.08)", border: "1px solid rgba(255,122,24,0.3)", padding: 20, borderRadius: 12 }}>
                 <div className="fieldLabel" style={{ color: "var(--accent)" }}>Your Projected Investment Range</div>
                 <div style={{ fontSize: 28, fontWeight: 950, marginTop: 6 }}>{getEstimate()}</div>
-                <div className="smallNote" style={{ marginTop: 6 }}>Based on your selections. Final scope confirmed on a free strategy call.</div>
+                <div className="smallNote" style={{ marginTop: 6 }}>
+                  Based on your selections. Final scope confirmed on a free strategy call.
+                </div>
               </div>
               <h2 className="h2">Where should we send your audit?</h2>
               <div className="grid2">
