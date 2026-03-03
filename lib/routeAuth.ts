@@ -1,3 +1,9 @@
+// lib/routeAuth.ts
+// Shared helper to protect /api/internal/* routes.
+// Usage:
+//   const authErr = await requireAdminRoute();
+//   if (authErr) return authErr;
+
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 
@@ -17,7 +23,7 @@ export async function requireAdminRoute(): Promise<NextResponse | null> {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    return null;
+    return null; // authorized
   } catch {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }

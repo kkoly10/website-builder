@@ -1,6 +1,8 @@
+// app/api/internal/generate-ops-pie-report/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { generatePieOpsReport } from "@/lib/pie/ops-agent";
+import { requireAdminRoute } from "@/lib/routeAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +20,9 @@ function getExecutiveSummary(report: unknown): string | null {
 }
 
 export async function POST(req: NextRequest) {
+  const authErr = await requireAdminRoute();
+  if (authErr) return authErr;
+
   try {
     const body = (await req.json()) as Body;
 
@@ -29,7 +34,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1) load intake
     const { data: intake, error: intakeError } = await supabaseAdmin
       .from("ops_intakes")
       .select("*")
@@ -43,7 +47,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2) return latest existing if not regenerating and no follow-up note
     if (!body.regenerate && !body.followUpNote) {
       const { data: latestExisting } = await supabaseAdmin
         .from("ops_pie_reports")
@@ -65,7 +68,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3) resolve previous_response_id
     let previousResponseId =
       typeof body.previousResponseId === "string" && body.previousResponseId.trim()
         ? body.previousResponseId.trim()
@@ -91,7 +93,6 @@ export async function POST(req: NextRequest) {
       .filter(Boolean)
       .join("\n\n");
 
-    // 4) build PIE input
     const pieIntake = {
       submissionId: intake.id,
       businessName: intake.company_name,
@@ -115,7 +116,6 @@ export async function POST(req: NextRequest) {
       },
     };
 
-    // 5) generate via OpenAI
     const pie = await generatePieOpsReport({
       intake: pieIntake,
       previousResponseId,
@@ -123,7 +123,6 @@ export async function POST(req: NextRequest) {
 
     const summary = getExecutiveSummary(pie.report);
 
-    // 6) persist
     const { data: inserted, error: insertError } = await supabaseAdmin
       .from("ops_pie_reports")
       .insert({
@@ -153,7 +152,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // optional status update
     await supabaseAdmin
       .from("ops_intakes")
       .update({ status: "analyzed" })

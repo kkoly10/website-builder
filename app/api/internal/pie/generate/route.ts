@@ -1,5 +1,7 @@
+// app/api/internal/pie/generate/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireAdminRoute } from "@/lib/routeAuth";
 import crypto from "crypto";
 
 export const maxDuration = 60;
@@ -23,6 +25,9 @@ function extractJsonFromText(text: string) {
 }
 
 export async function POST(req: Request) {
+  const authErr = await requireAdminRoute();
+  if (authErr) return authErr;
+
   try {
     const body = await req.json().catch(() => null);
     if (!body) return NextResponse.json({ ok: false, error: "Could not parse request body." }, { status: 400 });
