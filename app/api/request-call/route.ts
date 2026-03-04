@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/server";
+import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
+import { recordServerEvent } from "@/lib/analytics/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,6 +25,10 @@ function escapeHtml(s: string) {
 
 export async function POST(req: Request) {
   try {
+    const ip = getIpFromHeaders(req.headers);
+    const rl = enforceRateLimit({ key: `request-call:${ip}`, limit: 10, windowMs: 60_000 });
+    if (!rl.ok) return rateLimitResponse(rl.resetAt);
+
     const url = new URL(req.url);
 
     let body: any = {};
@@ -148,6 +154,16 @@ export async function POST(req: Request) {
         body: JSON.stringify({ from: FROM, to: [TO], subject, html }),
       });
     }
+
+    await recordServerEvent({
+      event: "website_call_requested",
+      page: "/book",
+      ip,
+      metadata: {
+        quoteId,
+        callRequestId: callRow?.id ?? null,
+      },
+    });
 
     return NextResponse.json({
       ok: true,

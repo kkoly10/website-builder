@@ -43,6 +43,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <body>
+        <a href="#main-content" className="skipLink">Skip to main content</a>
         <div className="siteShell">
           <header className="topNav">
             <div className="topNavInner">
@@ -113,7 +114,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </div>
           </header>
 
-          <main className="mainContent">{children}</main>
+          <main id="main-content" className="mainContent" tabIndex={-1}>{children}</main>
           <SiteFooter />
         </div>
       </body>

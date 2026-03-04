@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/server";
+import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
+import { recordServerEvent } from "@/lib/analytics/server";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +15,10 @@ type Recommendation = {
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getIpFromHeaders(req.headers);
+    const rl = enforceRateLimit({ key: `ops-submit-intake:${ip}`, limit: 8, windowMs: 60_000 });
+    if (!rl.ok) return rateLimitResponse(rl.resetAt);
+
     const body = await req.json();
 
     const companyName = String(body.companyName ?? "").trim();
@@ -90,6 +96,16 @@ export async function POST(req: NextRequest) {
     }
 
     const opsIntakeId = data.id;
+
+    await recordServerEvent({
+      event: "ops_intake_submitted",
+      page: "/ops-intake",
+      ip,
+      metadata: {
+        opsIntakeId,
+        attachedToUser: shouldAttachToUser,
+      },
+    });
 
     return NextResponse.json({
       ok: true,

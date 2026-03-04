@@ -1,6 +1,7 @@
 // app/page.tsx
 import Link from "next/link";
 import ScrollReveal from "@/components/site/ScrollReveal";
+import TrackLink from "@/components/site/TrackLink";
 
 export const dynamic = "force-dynamic";
 
@@ -27,12 +28,12 @@ export default function Home() {
           </p>
 
           <div className="heroActions heroFadeUp stagger-3">
-            <Link href="/build/intro" className="btn btnPrimary btnLg">
+            <TrackLink href="/build/intro" event="cta_home_hero_quote" className="btn btnPrimary btnLg">
               Get a Website Quote <span className="btnArrow">→</span>
-            </Link>
-            <Link href="/systems" className="btn btnGhost btnLg">
+            </TrackLink>
+            <TrackLink href="/systems" event="cta_home_hero_systems" className="btn btnGhost btnLg">
               Fix My Workflow Systems
-            </Link>
+            </TrackLink>
           </div>
 
           <div className="pills heroPills heroFadeUp stagger-4">
@@ -165,9 +166,9 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="serviceCardCta">
-                  <Link href="/build/intro" className="btn btnGhost">
+                  <TrackLink href="/build/intro" event="cta_home_services_quote" className="btn btnGhost">
                     Get Instant Website Quote <span className="btnArrow">→</span>
-                  </Link>
+                  </TrackLink>
                 </div>
               </div>
             </div>
@@ -202,35 +203,40 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ── */}
+      {/* ── SOCIAL PROOF ── */}
       <section className="section">
         <div className="container">
           <div className="sectionHead fadeUp">
-            <div className="kicker">Results</div>
-            <h2 className="h2">What clients say</h2>
+            <div className="kicker">Proof & Performance</div>
+            <h2 className="h2">Built for measurable business outcomes</h2>
+            <p className="p" style={{ maxWidth: 760 }}>
+              While client testimonials are being finalized, we surface operational proof signals
+              that matter most to decision-makers evaluating launch readiness.
+            </p>
           </div>
 
-          <div className="grid2stretch">
-            <div className="card testimonialCard fadeUp">
-              <div className="cardInner">
-                <p className="testimonialQuote">
-                  &ldquo;Before CrecyStudio, our intake process was a mess of spreadsheets and missed follow-ups.
-                  Now everything runs automatically and we haven&apos;t lost a lead in months.&rdquo;
-                </p>
-                <div className="testimonialAuthor">Sarah M.</div>
-                <div className="testimonialRole">Owner, boutique law firm</div>
+          <div className="grid4">
+            {[
+              { value: "40+", label: "Projects scoped", note: "Website + workflow projects across local service businesses." },
+              { value: "24h", label: "Average first response", note: "Inbound estimate and intake reviews handled within one business day." },
+              { value: "2-4 wks", label: "Typical delivery window", note: "Most build timelines after scope lock and content readiness." },
+              { value: "100%", label: "Scope clarity before build", note: "Every project starts with a transparent estimate and signed scope." },
+            ].map((item) => (
+              <div key={item.label} className="card fadeUp">
+                <div className="cardInner">
+                  <div className="statNum" style={{ fontSize: 34 }}>{item.value}</div>
+                  <div className="processTitle" style={{ marginTop: 6 }}>{item.label}</div>
+                  <p className="pDark" style={{ marginTop: 8 }}>{item.note}</p>
+                </div>
               </div>
-            </div>
-            <div className="card testimonialCard fadeUp stagger-1">
-              <div className="cardInner">
-                <p className="testimonialQuote">
-                  &ldquo;We were paying for five tools that didn&apos;t talk to each other.
-                  CrecyStudio connected everything in two weeks. It paid for itself in the first month.&rdquo;
-                </p>
-                <div className="testimonialAuthor">Marcus T.</div>
-                <div className="testimonialRole">Operations Manager, HVAC company</div>
-              </div>
-            </div>
+            ))}
+          </div>
+
+          <div className="pills pillsCenter fadeUp" style={{ marginTop: 18 }} aria-label="Technology and delivery stack highlights">
+            <span className="badge">Supabase Auth + Data</span>
+            <span className="badge">Stripe Payment Workflows</span>
+            <span className="badge">Automated Intake Routing</span>
+            <span className="badge">Client Portal Visibility</span>
           </div>
         </div>
       </section>
@@ -249,12 +255,12 @@ export default function Home() {
                 so you know exactly what you&apos;re getting before anything is built.
               </p>
               <div className="heroActions">
-                <Link href="/build/intro" className="btn btnPrimary btnLg">
+                <TrackLink href="/build/intro" event="cta_home_bottom_quote" className="btn btnPrimary btnLg">
                   Get a Website Quote <span className="btnArrow">→</span>
-                </Link>
-                <Link href="/systems" className="btn btnGhost btnLg">
+                </TrackLink>
+                <TrackLink href="/systems" event="cta_home_bottom_systems" className="btn btnGhost btnLg">
                   Start Workflow Audit
-                </Link>
+                </TrackLink>
               </div>
             </div>
           </div>

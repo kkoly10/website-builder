@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/server";
+import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
+import { recordServerEvent } from "@/lib/analytics/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -73,6 +75,10 @@ async function ensureLeadId(email: string, name: string | null) {
 
 export async function POST(req: Request) {
   try {
+    const ip = getIpFromHeaders(req.headers);
+    const rl = enforceRateLimit({ key: `submit-estimate:${ip}`, limit: 12, windowMs: 60_000 });
+    if (!rl.ok) return rateLimitResponse(rl.resetAt);
+
     const body = (await req.json().catch(() => ({}))) as LooseObj;
 
     const leadEmail = extractLeadEmail(body);
@@ -110,6 +116,16 @@ export async function POST(req: Request) {
       if (error) throw new Error(error.message);
       savedQuoteId = String(data.id);
     }
+
+    await recordServerEvent({
+      event: "estimate_submitted",
+      page: "/estimate",
+      ip,
+      metadata: {
+        quoteId: savedQuoteId,
+        hasAuthUser: !!user?.id,
+      },
+    });
 
     return NextResponse.json({ ok: true, quoteId: savedQuoteId, nextUrl: `/book?quoteId=${savedQuoteId}` });
   } catch (error: any) {
