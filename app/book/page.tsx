@@ -37,17 +37,17 @@ export default async function BookPage(props: { searchParams: SearchParamsPromis
           <div className="cardInner">
             <div className="kicker">
               <span className="kickerDot" aria-hidden="true" />
-              Missing quote reference
+              Continue your quote to book
             </div>
 
             <div style={{ height: 10 }} />
             <h1 className="h2" >
-              This booking page needs a quote ID
+              We need your quote reference before scheduling
             </h1>
 
             <p className="p">
-              Please start from the estimate step so we can attach your call request to the correct quote.
-              If you just submitted an estimate, this page may redirect automatically in a moment.
+              Start from your estimate so we can attach the call request to the correct project.
+              If you recently submitted an estimate, this page may redirect automatically in a moment.
             </p>
 
             <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -59,6 +59,9 @@ export default async function BookPage(props: { searchParams: SearchParamsPromis
               </Link>
               <Link className="btn btnGhost" href="/portal">
                 Client Portal
+              </Link>
+              <Link className="btn btnGhost" href="mailto:hello@crecystudio.com?subject=Help%20finding%20my%20quote">
+                Help me find my quote
               </Link>
             </div>
           </div>

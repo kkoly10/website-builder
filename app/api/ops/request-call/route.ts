@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { generateOpsPieForIntake } from "@/lib/opsPie";
+import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
+import { recordServerEvent } from "@/lib/analytics/server";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +17,10 @@ type Payload = {
 
 export async function POST(req: Request) {
   try {
+    const ip = getIpFromHeaders(req.headers);
+    const rl = enforceRateLimit({ key: `ops-request-call:${ip}`, limit: 10, windowMs: 60_000 });
+    if (!rl.ok) return rateLimitResponse(rl.resetAt);
+
     const body = (await req.json()) as Payload;
 
     const opsIntakeId = String(body.opsIntakeId || "").trim();
@@ -90,6 +96,17 @@ export async function POST(req: Request) {
     }
 
     const nextUrl = `/portal?opsIntakeId=${encodeURIComponent(opsIntakeId)}`;
+
+    await recordServerEvent({
+      event: "ops_call_requested",
+      page: "/ops-book",
+      ip,
+      metadata: {
+        opsIntakeId,
+        callRequestId: callRow.id,
+        pieGenerated,
+      },
+    });
 
     return NextResponse.json({
       ok: true,

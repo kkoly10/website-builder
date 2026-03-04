@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { trackEvent } from "@/lib/analytics/client";
 
 type QuizGoal = "more-leads" | "bookings" | "sell-online" | "show-work";
 type QuizTimeline = "fast" | "standard" | "flexible";
@@ -257,7 +258,20 @@ export default function BuildIntroPage() {
           )}
 
           <div style={{ display: "flex", gap: 12, marginTop: 20, flexWrap: "wrap" }}>
-            <Link href={intakeHref} className="btn btnPrimary">
+            <Link
+              href={intakeHref}
+              className="btn btnPrimary"
+              onClick={() => trackEvent({
+                event: "cta_build_intro_continue",
+                metadata: {
+                  goal: quiz.goal,
+                  pages: quiz.pages,
+                  timeline: quiz.timeline,
+                  contentReady: quiz.contentReady,
+                  budget: quiz.budget,
+                },
+              })}
+            >
               Continue to Full Estimate <span className="btnArrow">→</span>
             </Link>
             <Link href="/systems" className="btn btnGhost">

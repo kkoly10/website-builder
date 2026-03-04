@@ -1,6 +1,8 @@
 // app/api/book/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
+import { recordServerEvent } from "@/lib/analytics/server";
 
 export const runtime = "nodejs";
 
@@ -20,6 +22,10 @@ type Payload = {
 
 export async function POST(req: Request) {
   try {
+    const ip = getIpFromHeaders(req.headers);
+    const rl = enforceRateLimit({ key: `book:${ip}`, limit: 10, windowMs: 60_000 });
+    if (!rl.ok) return rateLimitResponse(rl.resetAt);
+
     const body = (await req.json()) as Payload;
 
     const quoteId = String(body?.quoteId ?? "").trim();
@@ -78,6 +84,13 @@ export async function POST(req: Request) {
         })
         .eq("id", (q as any).lead_id);
     }
+
+    await recordServerEvent({
+      event: "workspace_call_request_submitted",
+      page: "/portal/[token]",
+      ip,
+      metadata: { quoteId },
+    });
 
     return NextResponse.json({ ok: true });
   } catch (err: any) {

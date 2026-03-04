@@ -66,6 +66,9 @@ export default async function PortalPage() {
     if (!latestPieByOpsIntakeId.has(p.ops_intake_id)) latestPieByOpsIntakeId.set(p.ops_intake_id, p);
   }
 
+  const websiteInProgress = quoteRows.filter((q) => (q.status || "").toLowerCase() !== "completed").length;
+  const opsInProgress = opsRows.filter((o) => (o.status || "").toLowerCase() !== "completed").length;
+
   return (
     <main className="container" style={{ padding: "40px 0 80px" }}>
       <section className="heroGrid">
@@ -83,6 +86,7 @@ export default async function PortalPage() {
             <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
               <Link href="/build/intro" className="btn btnPrimary">New Website Quote</Link>
               <Link href="/systems" className="btn btnGhost">New Ops Intake</Link>
+              <Link href="/contact" className="btn btnGhost">Support</Link>
               {admin && <Link href="/internal/admin" className="btn btnGhost" style={{ borderColor: "var(--accentStroke)", color: "var(--accent)" }}>Admin HQ</Link>}
             </div>
           </div>
@@ -91,28 +95,45 @@ export default async function PortalPage() {
         <div className="card">
           <div className="cardInner">
             <div className="statRow" style={{ padding: 0, gap: 12 }}>
-              <div className="stat" >
-                <div className="statNum">{quoteRows.length}</div>
-                <div className="statLab">Active Projects</div>
+              <div className="stat">
+                <div className="statNum">{websiteInProgress}</div>
+                <div className="statLab">Website In Progress</div>
               </div>
-              <div className="stat" >
-                <div className="statNum">{opsRows.length}</div>
-                <div className="statLab">Ops Requests</div>
+              <div className="stat">
+                <div className="statNum">{opsInProgress}</div>
+                <div className="statLab">Ops In Progress</div>
               </div>
+            </div>
+            <div className="pDark" style={{ marginTop: 12, fontSize: 13 }}>
+              Keep project status current in your workspace for the fastest support turnaround.
             </div>
           </div>
         </div>
       </section>
 
+      <section className="card" style={{ marginBottom: 20 }}>
+        <div className="cardInner" style={{ display: "flex", justifyContent: "space-between", gap: 14, flexWrap: "wrap", alignItems: "center" }}>
+          <div>
+            <div style={{ fontWeight: 800, color: "var(--fg)" }}>How status updates work</div>
+            <div className="pDark" style={{ marginTop: 6 }}>Evaluating → Scoped → In Progress → Completed</div>
+          </div>
+          <Link href="/terms" className="btn btnGhost" style={{ padding: "8px 12px", fontSize: 13 }}>Service terms</Link>
+        </div>
+      </section>
+
       <div className="grid2">
-        {/* WEBSITES */}
         <section className="card">
           <div className="cardInner">
             <h2 className="h2" style={{ marginBottom: 16, fontSize: 20 }}>Website Projects</h2>
             {quoteRows.length === 0 ? (
-              <p className="pDark">No website projects found.</p>
+              <div className="card" style={{ background: "var(--panel2)" }}>
+                <div className="cardInner">
+                  <p className="pDark">No website projects found yet.</p>
+                  <Link href="/build/intro" className="btn btnPrimary">Start a website quote</Link>
+                </div>
+              </div>
             ) : (
-              <div >
+              <div style={{ display: "grid", gap: 10 }}>
                 {quoteRows.map((q) => {
                   const lead = q.lead_id ? leadById.get(q.lead_id) : null;
                   return (
@@ -122,11 +143,9 @@ export default async function PortalPage() {
                           <div style={{ fontWeight: 800, color: "var(--fg)", fontSize: 16 }}>{lead?.name || "Website Project"}</div>
                           <div className="pDark" style={{ marginTop: 4 }}>ID: #{String(q.id).slice(0, 8)} • {fmtDate(q.created_at)}</div>
                         </div>
-                        <div >
-                          <span className="badge">{q.status || "Evaluating"}</span>
-                        </div>
+                        <span className="badge">{q.status || "Evaluating"}</span>
                       </div>
-                      
+
                       <div className="pDark" style={{ marginTop: 12, fontSize: 13 }}>
                         Target Investment: <strong>{q.estimate_total != null ? money(q.estimate_total) : `${money(q.estimate_low)} - ${money(q.estimate_high)}`}</strong>
                       </div>
@@ -150,18 +169,22 @@ export default async function PortalPage() {
           </div>
         </section>
 
-        {/* OPS INTAKES */}
         <section className="card">
           <div className="cardInner">
             <h2 className="h2" style={{ marginBottom: 16, fontSize: 20 }}>Ops / Workflow Intakes</h2>
             {opsRows.length === 0 ? (
-              <p className="pDark">No ops intakes found.</p>
+              <div className="card" style={{ background: "var(--panel2)" }}>
+                <div className="cardInner">
+                  <p className="pDark">No ops workflow requests found yet.</p>
+                  <Link href="/ops-intake" className="btn btnPrimary">Start ops intake</Link>
+                </div>
+              </div>
             ) : (
-              <div >
+              <div style={{ display: "grid", gap: 10 }}>
                 {opsRows.map((o) => {
                   const latestCall = latestCallByOpsIntakeId.get(o.id) ?? null;
                   const latestPie = latestPieByOpsIntakeId.get(o.id) ?? null;
-                  
+
                   return (
                     <div key={o.id} style={{ border: "1px solid var(--stroke)", borderRadius: 12, padding: 16, background: "var(--panel2)" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
@@ -169,9 +192,7 @@ export default async function PortalPage() {
                           <div style={{ fontWeight: 800, color: "var(--fg)", fontSize: 16 }}>{o.company_name || "Ops Request"}</div>
                           <div className="pDark" style={{ marginTop: 4 }}>ID: #{String(o.id).slice(0, 8)} • {fmtDate(o.created_at)}</div>
                         </div>
-                        <div >
-                          <span className="badge">{o.status || "Reviewing"}</span>
-                        </div>
+                        <span className="badge">{o.status || "Reviewing"}</span>
                       </div>
 
                       <div className="pDark" style={{ marginTop: 12, fontSize: 13 }}>
