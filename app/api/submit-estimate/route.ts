@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/server";
 import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { recordServerEvent } from "@/lib/analytics/server";
+import { sendInternalEmail } from "@/lib/email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -126,6 +127,14 @@ export async function POST(req: Request) {
         hasAuthUser: !!user?.id,
       },
     });
+
+    // Notify admin of new estimate
+    const baseUrl = (process.env.APP_BASE_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+    if (baseUrl) {
+      sendInternalEmail(`${baseUrl}/internal/preview?quoteId=${savedQuoteId}`).catch((err) =>
+        console.error("[submit-estimate] email notification failed:", err),
+      );
+    }
 
     return NextResponse.json({ ok: true, quoteId: savedQuoteId, nextUrl: `/book?quoteId=${savedQuoteId}` });
   } catch (error: any) {

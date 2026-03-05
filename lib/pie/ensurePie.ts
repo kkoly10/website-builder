@@ -589,7 +589,7 @@ function buildPiePayload(args: {
       ? "High"
       : score < 70
       ? "Medium"
-      : "Medium";
+      : "Low";
 
   const payload: PiePayloadV2 = {
     version: "2.0",
