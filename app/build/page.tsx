@@ -194,7 +194,7 @@ function BuildFormInner() {
     step === 0 ? "Choose how you'd like to start" :
     step === 7 ? "Review & Summary" :
     step === 8 ? "Final Step: Contact Details" :
-    `Step ${step} of 6`;
+    `Step ${step} of ${TOTAL_STEPS - 2}`;
 
   return (
     <div style={{ width: "100%" }}>

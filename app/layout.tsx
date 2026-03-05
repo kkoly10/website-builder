@@ -5,9 +5,30 @@ import BrandLogo from "@/components/brand/BrandLogo";
 import SiteFooter from "@/components/site/SiteFooter";
 import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://crecystudio.com";
+
 export const metadata: Metadata = {
-  title: "CrecyStudio | Websites & Workflow Systems",
-  description: "Custom websites and workflow systems for local service businesses.",
+  title: {
+    default: "CrecyStudio | Websites & Workflow Systems",
+    template: "%s | CrecyStudio",
+  },
+  description:
+    "Custom websites and workflow systems for local service businesses. Free estimates, 50% deposit model, 2–4 week delivery.",
+  metadataBase: new URL(siteUrl),
+  openGraph: {
+    type: "website",
+    siteName: "CrecyStudio",
+    title: "CrecyStudio | Websites & Workflow Systems",
+    description:
+      "Custom websites and workflow systems for local service businesses. Free estimates, 50% deposit model, 2–4 week delivery.",
+    url: siteUrl,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CrecyStudio | Websites & Workflow Systems",
+    description:
+      "Custom websites and workflow systems for local service businesses.",
+  },
 };
 
 export const dynamic = "force-dynamic";
@@ -42,6 +63,29 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "ProfessionalService",
+              name: "CrecyStudio",
+              url: siteUrl,
+              description:
+                "Custom websites and workflow systems for local service businesses.",
+              email: "hello@crecystudio.com",
+              serviceType: [
+                "Web Design",
+                "Web Development",
+                "Workflow Automation",
+              ],
+              areaServed: { "@type": "Country", name: "US" },
+              priceRange: "$$",
+            }),
+          }}
+        />
+      </head>
       <body>
         <a href="#main-content" className="skipLink">Skip to main content</a>
         <div className="siteShell">

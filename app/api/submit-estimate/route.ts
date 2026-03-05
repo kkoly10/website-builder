@@ -94,6 +94,22 @@ export async function POST(req: Request) {
     const leadId = await ensureLeadId(leadEmail, leadName);
     const quoteId = String(body.quoteId ?? "").trim() || null;
 
+    // Duplicate detection: if no quoteId provided, check for a recent quote
+    // from this email (within the last 5 minutes) and update it instead.
+    let resolvedQuoteId = quoteId;
+    if (!resolvedQuoteId) {
+      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const { data: recent } = await supabaseAdmin
+        .from("quotes")
+        .select("id")
+        .eq("lead_email", leadEmail)
+        .gte("created_at", fiveMinAgo)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (recent?.id) resolvedQuoteId = String(recent.id);
+    }
+
     const dbPayload = {
       lead_id: leadId,
       lead_email: leadEmail,
@@ -108,8 +124,8 @@ export async function POST(req: Request) {
 
     let savedQuoteId: string;
 
-    if (quoteId) {
-      const { data, error } = await supabaseAdmin.from("quotes").update(dbPayload).eq("id", quoteId).select("id").single();
+    if (resolvedQuoteId) {
+      const { data, error } = await supabaseAdmin.from("quotes").update(dbPayload).eq("id", resolvedQuoteId).select("id").single();
       if (error) throw new Error(error.message);
       savedQuoteId = String(data.id);
     } else {
