@@ -335,4 +335,67 @@ The PIE engine provides much richer analysis for internal decision-making, which
 
 ---
 
+---
+
+## Appendix A: Critical Code-Level Findings
+
+### A1. Pricing Logic Fragmentation (BLOCKING)
+
+Three separate pricing systems exist with **conflicting numbers**:
+
+| Feature | `lib/pricing.ts` | `EstimateClient.tsx` | PIE Engine |
+|---------|-----------------|---------------------|------------|
+| Booking | $250 | $400 | Keyword-scored |
+| Payments | $300 | $600 | Keyword-scored |
+| Blog | $150 | $300 | Keyword-scored |
+| Membership | Not covered | $1,200 | Keyword-scored |
+
+**Risk:** Clients may receive inconsistent quotes depending on which path generates the estimate. `lib/pricing.ts` appears unused (dead code).
+
+**Fix:** Consolidate into a single pricing module with unit tests.
+
+### A2. Email Notifications Not Implemented (BLOCKING)
+
+`lib/email.ts` is a stub — it only does `console.log()`:
+```typescript
+export async function sendInternalEmail(link: string) {
+  console.log("INTERNAL PIE REPORT");
+  console.log("Open:", link);
+}
+```
+
+Admin receives **no notification** when new estimates are submitted. Only the `/api/request-call` route sends real emails via Resend. Leads can submit quotes and the admin won't know unless they manually check the dashboard.
+
+**Fix:** Wire up Resend integration in `sendInternalEmail()`.
+
+### A3. PIE Confidence Logic Bug
+
+`lib/pie/ensurePie.ts` lines 587-592:
+```typescript
+const confidence: "Low" | "Medium" | "High" =
+  score < 45 && features.length <= 2 && pagesEstimate <= 4
+    ? "High"
+    : score < 70
+    ? "Medium"
+    : "Medium";  // BUG: Always "Medium" for score >= 70
+```
+
+High-complexity projects (score >= 70) should return "Low" confidence, but the ternary falls through to "Medium". The admin dashboard never flags uncertain estimates.
+
+### A4. Database Schema Migration Incomplete
+
+`app/api/submit-estimate/route.ts` lines 37-67 contains fallback logic trying both `email` and `lead_email` columns on the `leads` table. This indicates a column rename migration was started but not completed. Risk of silent data loss or duplicate lead creation.
+
+### A5. No Test Coverage
+
+Zero test files exist in the repository. Critical business logic (pricing calculations, PIE scoring, authentication, API validation) is entirely untested.
+
+### A6. `force-dynamic` on Root Layout
+
+`app/layout.tsx` line 13: `export const dynamic = "force-dynamic"` forces server-side rendering on **every page**, including static marketing pages. This impacts TTFB and prevents CDN caching of the homepage, /process, /faq, etc.
+
+**Fix:** Remove from root layout. Add `force-dynamic` only to pages that need it (portal, admin, API-backed pages).
+
+---
+
 *Analysis based on live site visit to crecystudio.com and full codebase review of 40+ pages, 40+ API routes, and supporting libraries.*
