@@ -13,11 +13,37 @@ type Bucket = {
 
 type RateLimitStore = Map<string, Bucket>;
 
+/** Max keys before LRU eviction to prevent unbounded memory growth. */
+const MAX_STORE_SIZE = 10_000;
+const EVICTION_INTERVAL_MS = 60_000;
+let lastEviction = Date.now();
+
 function getStore(): RateLimitStore {
   const globalKey = "__crecy_rate_limit_store__";
   const g = globalThis as unknown as Record<string, RateLimitStore | undefined>;
   if (!g[globalKey]) g[globalKey] = new Map<string, Bucket>();
   return g[globalKey] as RateLimitStore;
+}
+
+/** Remove expired entries and enforce max size. */
+function evictIfNeeded(store: RateLimitStore) {
+  const now = Date.now();
+  if (now - lastEviction < EVICTION_INTERVAL_MS) return;
+  lastEviction = now;
+
+  for (const [key, bucket] of store) {
+    if (now > bucket.resetAt) store.delete(key);
+  }
+
+  if (store.size > MAX_STORE_SIZE) {
+    const excess = store.size - MAX_STORE_SIZE;
+    let removed = 0;
+    for (const key of store.keys()) {
+      if (removed >= excess) break;
+      store.delete(key);
+      removed++;
+    }
+  }
 }
 
 export function getIpFromHeaders(headers: Headers): string {
@@ -29,6 +55,9 @@ export function getIpFromHeaders(headers: Headers): string {
 export function enforceRateLimit(options: RateLimitOptions) {
   const now = Date.now();
   const store = getStore();
+
+  evictIfNeeded(store);
+
   const existing = store.get(options.key);
 
   if (!existing || now > existing.resetAt) {

@@ -4,6 +4,7 @@ import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/serve
 import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { recordServerEvent } from "@/lib/analytics/server";
 import { sendInternalEmail } from "@/lib/email";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -154,6 +155,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true, quoteId: savedQuoteId, nextUrl: `/book?quoteId=${savedQuoteId}` });
   } catch (error: any) {
+    logger.captureException(error, { route: "/api/submit-estimate" });
     return NextResponse.json({ ok: false, error: error?.message || "Unknown error" }, { status: 500 });
   }
 }

@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/server";
 import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { recordServerEvent } from "@/lib/analytics/server";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -171,6 +172,7 @@ export async function POST(req: Request) {
       nextUrl: `/portal?quoteId=${encodeURIComponent(quoteId)}`,
     });
   } catch (err: any) {
+    logger.captureException(err, { route: "/api/request-call" });
     return NextResponse.json({ error: err?.message || "Unknown error" }, { status: 500 });
   }
 }
