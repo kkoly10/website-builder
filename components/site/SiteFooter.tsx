@@ -17,6 +17,7 @@ export default function SiteFooter() {
 
           <div className="footerLinks">
             <Link href="/systems">Workflow Systems</Link>
+            <Link href="/ecommerce">E-Commerce Ops</Link>
             <Link href="/build/intro">Custom Build</Link>
             <Link href="/process">How It Works</Link>
             <Link href="/faq">FAQ</Link>
