@@ -255,11 +255,11 @@ export default function Home() {
                 so you know exactly what you&apos;re getting before anything is built.
               </p>
               <div className="heroActions">
-                <TrackLink href="/build/intro" event="cta_home_bottom_quote" className="btn btnPrimary btnLg">
-                  Get a Website Quote <span className="btnArrow">→</span>
+                <TrackLink href="/ecommerce/intake" event="cta_home_bottom_ecommerce" className="btn btnPrimary btnLg">
+                  Start E-Commerce Intake <span className="btnArrow">→</span>
                 </TrackLink>
-                <TrackLink href="/systems" event="cta_home_bottom_systems" className="btn btnGhost btnLg">
-                  Start Workflow Audit
+                <TrackLink href="/build/intro" event="cta_home_bottom_quote" className="btn btnGhost btnLg">
+                  Get a Website Quote
                 </TrackLink>
               </div>
             </div>
