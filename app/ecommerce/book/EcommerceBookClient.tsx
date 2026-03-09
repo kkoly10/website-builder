@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { trackEvent } from "@/lib/analytics/client";
 
 type Props = {
   ecomIntakeId: string;
@@ -18,31 +17,20 @@ export default function EcommerceBookClient({ ecomIntakeId }: Props) {
   const [error, setError] = useState("");
 
   const intakeShort = useMemo(() => ecomIntakeId.slice(0, 8), [ecomIntakeId]);
-  useEffect(() => {
-    trackEvent({ event: "ecom_call_booking_viewed", page: "/ecommerce/book" });
-    try {
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      if (tz) setTimezone(tz);
-    } catch {}
-  }, []);
-
 
   const submit = async () => {
     if (!ecomIntakeId) {
-      trackEvent({ event: "ecom_call_booking_dropoff", page: "/ecommerce/book", metadata: { reason: "missing_intake" } });
       setError("Missing intake id. Please return to the intake form first.");
       return;
     }
 
     if (!bestTime.trim()) {
-      trackEvent({ event: "ecom_call_booking_dropoff", page: "/ecommerce/book", metadata: { reason: "missing_best_time" } });
       setError("Please select your best time to connect.");
       return;
     }
 
     setSubmitting(true);
     setError("");
-    trackEvent({ event: "ecom_call_booking_submit_attempted", page: "/ecommerce/book" });
 
     try {
       const res = await fetch("/api/ecommerce/request-call", {
@@ -53,11 +41,9 @@ export default function EcommerceBookClient({ ecomIntakeId }: Props) {
 
       const data = await res.json();
       if (!res.ok || !data?.ok) throw new Error(data?.error || "Request failed.");
-      trackEvent({ event: "ecom_call_booking_submit_succeeded", page: "/ecommerce/book" });
 
       router.push(data.nextUrl || `/ecommerce/success?ecomIntakeId=${encodeURIComponent(ecomIntakeId)}`);
     } catch (err: any) {
-      trackEvent({ event: "ecom_call_booking_submit_failed", page: "/ecommerce/book" });
       setError(err.message || "Something went wrong.");
       setSubmitting(false);
     }
@@ -69,7 +55,7 @@ export default function EcommerceBookClient({ ecomIntakeId }: Props) {
         <div className="card">
           <div className="cardInner" style={{ padding: 30 }}>
             <div className="kicker">Next Step</div>
-            <h1 className="h1" style={{ marginTop: 10 }}>Book or update your seller planning call</h1>
+            <h1 className="h1" style={{ marginTop: 10 }}>Request your seller planning call</h1>
             <p className="pDark">Your intake #{intakeShort || "pending"} is in. Share your preferred times and we&apos;ll coordinate your next strategy call.</p>
 
             <div style={{ display: "grid", gap: 12, marginTop: 20 }}>
@@ -100,7 +86,7 @@ export default function EcommerceBookClient({ ecomIntakeId }: Props) {
 
             <div style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap" }}>
               <button className="btn btnPrimary" onClick={submit} disabled={submitting}>
-                {submitting ? "Saving..." : "Book / Update Call"}
+                {submitting ? "Submitting..." : "Request Seller Strategy Call"}
               </button>
             </div>
           </div>
