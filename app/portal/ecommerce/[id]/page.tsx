@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/server";
-import { statusLabel } from "@/lib/ecommerce/status";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +18,7 @@ function formatArr(value: unknown) {
 }
 
 function statusText(value: string | null | undefined, fallback: string) {
-  return statusLabel(value, fallback);
+  return String(value || "").trim().toLowerCase() || fallback;
 }
 
 export default async function EcommercePortalWorkspacePage({
@@ -83,12 +82,12 @@ export default async function EcommercePortalWorkspacePage({
           </div>
           <h1 className="h2">{intake.business_name || "E-Commerce Request"}</h1>
           <p className="pDark" style={{ marginTop: 4 }}>
-            Submitted {fmtDate(intake.created_at)} • Intake Status: {statusText(intake.status, "new")}
+            Submitted {fmtDate(intake.created_at)} • Intake status: {statusText(intake.status, "new")}
           </p>
 
           <div className="pills" style={{ marginTop: 10 }}>
-            <span className="pill">Call Status: {statusText(call?.status, "not requested")}</span>
-            <span className="pill">Quote Status: {statusText(quote?.status, "not started")}</span>
+            <span className="pill">Call: {statusText(call?.status, "not requested")}</span>
+            <span className="pill">Quote: {statusText(quote?.status, "not started")}</span>
           </div>
 
           <div style={{ marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -126,8 +125,8 @@ export default async function EcommercePortalWorkspacePage({
         <section className="card">
           <div className="cardInner" style={{ display: "grid", gap: 8 }}>
             <h2 className="h3">Quote and next steps</h2>
-            <div className="pDark"><strong>Call Status:</strong> {statusText(call?.status, "not requested")}</div>
-            <div className="pDark"><strong>Quote Status:</strong> {statusText(quote?.status, "not started")}</div>
+            <div className="pDark"><strong>Latest call status:</strong> {statusText(call?.status, "not requested")}</div>
+            <div className="pDark"><strong>Latest quote status:</strong> {statusText(quote?.status, "not started")}</div>
 
             {quote ? (
               <>

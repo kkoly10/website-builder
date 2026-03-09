@@ -1,7 +1,7 @@
 export const ECOM_INTAKE_STATUSES = ["new", "reviewing", "quoted", "in_progress", "completed", "archived"] as const;
 export const ECOM_CALL_STATUSES = ["new", "requested", "scheduled", "reviewing", "completed", "closed"] as const;
 export const ECOM_QUOTE_STATUSES = ["draft", "review", "sent", "accepted", "declined"] as const;
-export const ECOM_OPEN_CALL_STATUSES = ["new", "requested", "scheduled", "active", "open", "reviewing", "review", "pending"] as const;
+export const ECOM_OPEN_CALL_STATUSES = ["new", "requested", "scheduled", "active", "open", "reviewing"] as const;
 
 export type EcommerceIntakeStatus = (typeof ECOM_INTAKE_STATUSES)[number];
 export type EcommerceCallStatus = (typeof ECOM_CALL_STATUSES)[number];
