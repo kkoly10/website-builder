@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/server";
-import { statusLabel } from "@/lib/ecommerce/status";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +18,7 @@ function formatArr(value: unknown) {
 }
 
 function statusText(value: string | null | undefined, fallback: string) {
-  return statusLabel(value, fallback);
+  return String(value || "").trim().toLowerCase() || fallback;
 }
 
 export default async function EcommercePortalWorkspacePage({
