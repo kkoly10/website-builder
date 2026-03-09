@@ -17,14 +17,9 @@ export async function POST(req: NextRequest) {
     const businessName = String(body.businessName ?? "").trim();
     const contactName = String(body.contactName ?? "").trim();
     const email = normalizeEmail(String(body.email ?? ""));
-    const serviceTypes = Array.isArray(body.serviceTypes) ? body.serviceTypes : [];
 
     if (!businessName || !contactName || !email || !/^\S+@\S+\.\S+$/.test(email)) {
       return NextResponse.json({ ok: false, error: "businessName, contactName, and valid email are required." }, { status: 400 });
-    }
-
-    if (!serviceTypes.length) {
-      return NextResponse.json({ ok: false, error: "At least one service type is required." }, { status: 400 });
     }
 
     let authUserId: string | null = null;
@@ -49,7 +44,7 @@ export async function POST(req: NextRequest) {
       phone: String(body.phone ?? "").trim() || null,
       store_url: String(body.storeUrl ?? "").trim() || null,
       sales_channels: Array.isArray(body.salesChannels) ? body.salesChannels : [],
-      service_types: serviceTypes,
+      service_types: Array.isArray(body.serviceTypes) ? body.serviceTypes : [],
       sku_count: String(body.skuCount ?? "").trim() || null,
       units_in_stock: String(body.unitsInStock ?? "").trim() || null,
       product_size: String(body.productSize ?? "").trim() || null,

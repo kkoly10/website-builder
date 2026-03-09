@@ -55,7 +55,7 @@ export default function EcommerceBookClient({ ecomIntakeId }: Props) {
         <div className="card">
           <div className="cardInner" style={{ padding: 30 }}>
             <div className="kicker">Next Step</div>
-            <h1 className="h1" style={{ marginTop: 10 }}>Book or update your seller planning call</h1>
+            <h1 className="h1" style={{ marginTop: 10 }}>Request your seller planning call</h1>
             <p className="pDark">Your intake #{intakeShort || "pending"} is in. Share your preferred times and we&apos;ll coordinate your next strategy call.</p>
 
             <div style={{ display: "grid", gap: 12, marginTop: 20 }}>
@@ -86,7 +86,7 @@ export default function EcommerceBookClient({ ecomIntakeId }: Props) {
 
             <div style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap" }}>
               <button className="btn btnPrimary" onClick={submit} disabled={submitting}>
-                {submitting ? "Saving..." : "Book / Update Call"}
+                {submitting ? "Submitting..." : "Request Seller Strategy Call"}
               </button>
             </div>
           </div>

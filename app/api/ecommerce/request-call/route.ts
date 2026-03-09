@@ -14,8 +14,6 @@ type Payload = {
   notes?: string;
 };
 
-const OPEN_CALL_STATUSES = new Set(["new", "requested", "scheduled", "active", "open", "reviewing"]);
-
 export async function POST(req: NextRequest) {
   try {
     const ip = getIpFromHeaders(req.headers);
@@ -39,7 +37,7 @@ export async function POST(req: NextRequest) {
 
     const { data: intake, error: intakeErr } = await supabaseAdmin
       .from("ecom_intakes")
-      .select("id, auth_user_id")
+      .select("id, auth_user_id, email")
       .eq("id", ecomIntakeId)
       .maybeSingle();
 
@@ -64,73 +62,34 @@ export async function POST(req: NextRequest) {
       // anonymous request is allowed
     }
 
-    const { data: latestCall, error: latestCallErr } = await supabaseAdmin
+    const { data: call, error: callErr } = await supabaseAdmin
       .from("ecom_call_requests")
-      .select("id, status")
-      .eq("ecom_intake_id", ecomIntakeId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle<{ id: string; status: string | null }>();
+      .insert({
+        ecom_intake_id: ecomIntakeId,
+        best_time: bestTime,
+        preferred_times: preferredTimes || null,
+        timezone: timezone || null,
+        notes: notes || null,
+        status: "requested",
+      })
+      .select("id")
+      .single<{ id: string }>();
 
-    if (latestCallErr) {
-      return NextResponse.json({ ok: false, error: latestCallErr.message }, { status: 500 });
-    }
-
-    const latestStatus = String(latestCall?.status || "").toLowerCase();
-    const shouldUpdate = !!latestCall?.id && OPEN_CALL_STATUSES.has(latestStatus);
-
-    let callRequestId: string;
-
-    if (shouldUpdate) {
-      const { data: updated, error: updateErr } = await supabaseAdmin
-        .from("ecom_call_requests")
-        .update({
-          best_time: bestTime,
-          preferred_times: preferredTimes || null,
-          timezone: timezone || null,
-          notes: notes || null,
-          status: "requested",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", latestCall.id)
-        .select("id")
-        .single<{ id: string }>();
-
-      if (updateErr || !updated?.id) {
-        return NextResponse.json({ ok: false, error: updateErr?.message || "Failed to update call request" }, { status: 500 });
-      }
-      callRequestId = updated.id;
-    } else {
-      const { data: created, error: callErr } = await supabaseAdmin
-        .from("ecom_call_requests")
-        .insert({
-          ecom_intake_id: ecomIntakeId,
-          best_time: bestTime,
-          preferred_times: preferredTimes || null,
-          timezone: timezone || null,
-          notes: notes || null,
-          status: "requested",
-        })
-        .select("id")
-        .single<{ id: string }>();
-
-      if (callErr || !created?.id) {
-        return NextResponse.json({ ok: false, error: callErr?.message || "Failed to save call request" }, { status: 500 });
-      }
-      callRequestId = created.id;
+    if (callErr || !call?.id) {
+      return NextResponse.json({ ok: false, error: callErr?.message || "Failed to save call request" }, { status: 500 });
     }
 
     await recordServerEvent({
       event: "ecom_call_requested",
       page: "/ecommerce/book",
       ip,
-      metadata: { ecomIntakeId, callRequestId, updatedExisting: shouldUpdate },
+      metadata: { ecomIntakeId, callRequestId: call.id },
     });
 
     return NextResponse.json({
       ok: true,
-      callRequestId,
-      nextUrl: `/ecommerce/success?ecomIntakeId=${encodeURIComponent(ecomIntakeId)}&callRequestId=${encodeURIComponent(callRequestId)}`,
+      callRequestId: call.id,
+      nextUrl: `/ecommerce/success?ecomIntakeId=${encodeURIComponent(ecomIntakeId)}&callRequestId=${encodeURIComponent(call.id)}`,
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unexpected error";
