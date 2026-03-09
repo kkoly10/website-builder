@@ -94,6 +94,7 @@ export default async function PortalPage() {
 
   const websiteInProgress = quoteRows.filter((q) => (q.status || "").toLowerCase() !== "completed").length;
   const opsInProgress = opsRows.filter((o) => (o.status || "").toLowerCase() !== "completed").length;
+  const ecomInProgress = ecomRows.filter((e) => (e.status || "").toLowerCase() !== "completed").length;
 
   return (
     <main className="container" style={{ padding: "40px 0 80px" }}>
