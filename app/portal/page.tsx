@@ -23,7 +23,15 @@ function fmtDate(value?: string | null) {
 
 function money(value?: number | null) {
   if (value == null || !Number.isFinite(Number(value))) return "—";
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(Number(value));
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(Number(value));
+}
+
+function statusText(value: string | null | undefined, fallback: string) {
+  return String(value || "").trim().toLowerCase() || fallback;
 }
 
 export default async function PortalPage() {
@@ -92,7 +100,9 @@ export default async function PortalPage() {
       <section className="heroGrid">
         <div className="card">
           <div className="cardInner">
-            <div className="kicker"><span className="kickerDot" aria-hidden="true" /> Client Portal</div>
+            <div className="kicker">
+              <span className="kickerDot" aria-hidden="true" /> Client Portal
+            </div>
             <div style={{ height: 10 }} />
             <h1 className="h2">Welcome back</h1>
             <p className="pDark">Signed in as <strong>{user.email}</strong></p>
@@ -119,12 +129,19 @@ export default async function PortalPage() {
       </section>
 
       <section className="card" style={{ marginBottom: 20 }}>
-        <div className="cardInner" style={{ display: "flex", justifyContent: "space-between", gap: 14, flexWrap: "wrap", alignItems: "center" }}>
+        <div
+          className="cardInner"
+          style={{ display: "flex", justifyContent: "space-between", gap: 14, flexWrap: "wrap", alignItems: "center" }}
+        >
           <div>
             <div style={{ fontWeight: 800, color: "var(--fg)" }}>How status updates work</div>
-            <div className="pDark" style={{ marginTop: 6 }}>Evaluating → Scoped → In Progress → Completed</div>
+            <div className="pDark" style={{ marginTop: 6 }}>
+              Evaluating → Scoped → In Progress → Completed
+            </div>
           </div>
-          <Link href="/terms" className="btn btnGhost" style={{ padding: "8px 12px", fontSize: 13 }}>Service terms</Link>
+          <Link href="/terms" className="btn btnGhost" style={{ padding: "8px 12px", fontSize: 13 }}>
+            Service terms
+          </Link>
         </div>
       </section>
 
