@@ -30,35 +30,29 @@ export default function BrandLogo({
             fill="#0a0c14"
             stroke="#252a3a"
           />
+
           <defs>
-            <linearGradient id="crecyBrandGrad" x1="8" y1="8" x2="38" y2="38">
+            <linearGradient id="crecyBrandGrad" x1="9" y1="9" x2="37" y2="37">
               <stop offset="0%" stopColor="#c9a84c" />
               <stop offset="100%" stopColor="#dfc06a" />
             </linearGradient>
           </defs>
 
-          {/* Outer C */}
+          {/* C stroke with more margin from badge edge */}
           <path
-            d="M31.8 14.6C30 12.9 27.7 11.9 25 11.9C19.2 11.9 14.6 16.1 14 21.6C13.2 27.9 17.9 33.2 24.2 33.2C27.6 33.2 30.5 31.9 32.5 29.7"
+            d="M30.3 15.9C28.9 14.6 27 13.8 24.8 13.8C20 13.8 16.1 17.8 16.1 22.6C16.1 27.4 20 31.4 24.8 31.4C27 31.4 28.9 30.6 30.3 29.3"
             stroke="url(#crecyBrandGrad)"
-            strokeWidth="3.7"
+            strokeWidth="2.9"
             strokeLinecap="round"
           />
 
-          {/* Inner C / G curve */}
+          {/* S stroke centered with lighter weight for legibility */}
           <path
-            d="M24.6 16.8C21.5 16.8 19 19 18.7 22C18.3 25.4 20.9 28.1 24.2 28.1C26.2 28.1 27.9 27.4 29.1 26"
+            d="M27.6 17.8C26.7 17.2 25.5 16.8 24.3 16.8C22.4 16.8 21 17.8 21 19.2C21 20.5 22 21.3 24.1 21.7C26.7 22.2 27.9 23.1 27.9 24.8C27.9 26.6 26.2 27.7 23.9 27.7C22.5 27.7 21.2 27.2 20.2 26.4"
             stroke="url(#crecyBrandGrad)"
-            strokeWidth="3.7"
+            strokeWidth="2.5"
             strokeLinecap="round"
-          />
-
-          {/* G bar */}
-          <path
-            d="M25.2 22.9H31.6"
-            stroke="url(#crecyBrandGrad)"
-            strokeWidth="3.7"
-            strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </svg>
       </span>
