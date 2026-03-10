@@ -6,16 +6,6 @@ import { recordServerEvent } from "@/lib/analytics/server";
 
 export const dynamic = "force-dynamic";
 
-function toNullableInt(value: unknown) {
-  const digits = String(value ?? "").replace(/[^0-9]/g, "").trim();
-  return digits ? Number(digits) : null;
-}
-
-function toNullableNumeric(value: unknown) {
-  const cleaned = String(value ?? "").replace(/[^0-9.]/g, "").trim();
-  return cleaned ? Number(cleaned) : null;
-}
-
 export async function POST(req: NextRequest) {
   try {
     const ip = getIpFromHeaders(req.headers);
@@ -27,14 +17,9 @@ export async function POST(req: NextRequest) {
     const businessName = String(body.businessName ?? "").trim();
     const contactName = String(body.contactName ?? "").trim();
     const email = normalizeEmail(String(body.email ?? ""));
-    const serviceTypes = Array.isArray(body.serviceTypes) ? body.serviceTypes : [];
 
     if (!businessName || !contactName || !email || !/^\S+@\S+\.\S+$/.test(email)) {
       return NextResponse.json({ ok: false, error: "businessName, contactName, and valid email are required." }, { status: 400 });
-    }
-
-    if (!serviceTypes.length) {
-      return NextResponse.json({ ok: false, error: "At least one service type is required." }, { status: 400 });
     }
 
     let authUserId: string | null = null;
@@ -59,7 +44,7 @@ export async function POST(req: NextRequest) {
       phone: String(body.phone ?? "").trim() || null,
       store_url: String(body.storeUrl ?? "").trim() || null,
       sales_channels: Array.isArray(body.salesChannels) ? body.salesChannels : [],
-      service_types: serviceTypes,
+      service_types: Array.isArray(body.serviceTypes) ? body.serviceTypes : [],
       sku_count: String(body.skuCount ?? "").trim() || null,
       units_in_stock: String(body.unitsInStock ?? "").trim() || null,
       product_size: String(body.productSize ?? "").trim() || null,
@@ -69,12 +54,6 @@ export async function POST(req: NextRequest) {
       peak_orders: String(body.peakOrders ?? "").trim() || null,
       avg_items_per_order: String(body.avgItemsPerOrder ?? "").trim() || null,
       monthly_returns: String(body.monthlyReturns ?? "").trim() || null,
-      sku_count_num: toNullableInt(body.skuCount),
-      units_in_stock_num: toNullableInt(body.unitsInStock),
-      monthly_orders_num: toNullableInt(body.monthlyOrders),
-      peak_orders_num: toNullableInt(body.peakOrders),
-      avg_items_per_order_num: toNullableNumeric(body.avgItemsPerOrder),
-      monthly_returns_num: toNullableInt(body.monthlyReturns),
       readiness_stage: String(body.readinessStage ?? "").trim() || null,
       budget_range: String(body.budgetRange ?? "").trim() || null,
       timeline: String(body.timeline ?? "").trim() || null,
