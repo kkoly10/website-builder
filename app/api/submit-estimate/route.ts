@@ -9,17 +9,39 @@ export const dynamic = "force-dynamic";
 
 type LooseObj = Record<string, any>;
 
-function toNum(v: any) { const x = Number(v); return Number.isFinite(x) ? x : 0; }
-function firstString(...vals: any[]) { for (const v of vals) { if (typeof v === "string" && v.trim()) return v.trim(); } return ""; }
+function toNum(v: any) {
+  const x = Number(v);
+  return Number.isFinite(x) ? x : 0;
+}
+
+function firstString(...vals: any[]) {
+  for (const v of vals) {
+    if (typeof v === "string" && v.trim()) return v.trim();
+  }
+  return "";
+}
 
 function extractLeadEmail(body: LooseObj) {
-  const raw = firstString(body?.leadEmail, body?.email, body?.contactEmail, body?.lead?.email, body?.intakeNormalized?.leadEmail, body?.intakeRaw?.leadEmail);
+  const raw = firstString(
+    body?.leadEmail,
+    body?.email,
+    body?.contactEmail,
+    body?.lead?.email,
+    body?.intakeNormalized?.leadEmail,
+    body?.intakeRaw?.leadEmail
+  );
   const norm = raw.trim().toLowerCase();
   return norm.includes("@") ? norm : "";
 }
 
 function extractLeadName(body: LooseObj) {
-  return firstString(body?.contactName, body?.lead?.name, body?.intakeNormalized?.contactName, body?.intakeRaw?.contactName, body?.intakeRaw?.name);
+  return firstString(
+    body?.contactName,
+    body?.lead?.name,
+    body?.intakeNormalized?.contactName,
+    body?.intakeRaw?.contactName,
+    body?.intakeRaw?.name
+  );
 }
 
 function extractEstimate(body: LooseObj) {
@@ -30,23 +52,56 @@ function extractEstimate(body: LooseObj) {
 
   const safeLow = low > 0 ? low : Math.round(total * 0.9);
   const safeHigh = high > 0 ? high : Math.round(total * 1.15);
-  return { total, low: Math.min(safeLow, safeHigh), high: Math.max(safeLow, safeHigh) };
+
+  return {
+    total,
+    low: Math.min(safeLow, safeHigh),
+    high: Math.max(safeLow, safeHigh),
+  };
 }
 
-// RESTORED: Safely check both column name variants
+function normalizePricing(body: LooseObj) {
+  const estimate = extractEstimate(body);
+  const pricing = body?.pricing && typeof body.pricing === "object" ? body.pricing : {};
+
+  const bandMin = toNum(pricing?.band?.min ?? estimate.low);
+  const bandMax = toNum(pricing?.band?.max ?? estimate.high);
+  const bandTarget = toNum(pricing?.band?.target ?? estimate.total);
+
+  return {
+    version: firstString(pricing?.version) || "legacy",
+    lane: firstString(pricing?.lane) || "website",
+    tierKey: firstString(pricing?.tierKey) || "unknown",
+    tierLabel: firstString(pricing?.tierLabel) || "Unclassified",
+    position: firstString(pricing?.position) || "middle",
+    isCustomScope: Boolean(pricing?.isCustomScope),
+    band: {
+      min: bandMin,
+      max: bandMax,
+      target: bandTarget,
+    },
+    displayRange: firstString(pricing?.displayRange),
+    publicMessage: firstString(pricing?.publicMessage),
+    summary: firstString(pricing?.summary),
+    estimatorSummary: firstString(pricing?.estimatorSummary),
+    reasons: Array.isArray(pricing?.reasons) ? pricing.reasons : [],
+    complexityFlags: Array.isArray(pricing?.complexityFlags) ? pricing.complexityFlags : [],
+    complexityScore: toNum(pricing?.complexityScore),
+  };
+}
+
 async function findLeadByEmail(email: string) {
   {
     const res = await supabaseAdmin.from("leads").select("id").eq("email", email).maybeSingle();
-    if (!res.error && res.data?.id) return { id: String(res.data.id), col: "email" as const };
+    if (!res.error && res.data?.id) return { id: String(res.data.id) };
   }
   {
     const res = await supabaseAdmin.from("leads").select("id").eq("lead_email", email).maybeSingle();
-    if (!res.error && res.data?.id) return { id: String(res.data.id), col: "lead_email" as const };
+    if (!res.error && res.data?.id) return { id: String(res.data.id) };
   }
   return null;
 }
 
-// RESTORED: Safely attempt insert on both column name variants
 async function createLead(email: string, name: string | null) {
   {
     const res = await supabaseAdmin.from("leads").insert({ email }).select("id").single();
@@ -82,23 +137,38 @@ export async function POST(req: Request) {
     const body = (await req.json().catch(() => ({}))) as LooseObj;
 
     const leadEmail = extractLeadEmail(body);
-    if (!leadEmail) return NextResponse.json({ ok: false, error: "Invalid email" }, { status: 400 });
+    if (!leadEmail) {
+      return NextResponse.json({ ok: false, error: "Invalid email" }, { status: 400 });
+    }
 
     const leadName = extractLeadName(body) || null;
-    const { total, low, high } = extractEstimate(body);
+    const pricingTruth = normalizePricing(body);
+
+    const total = pricingTruth.band.target || extractEstimate(body).total;
+    const low = pricingTruth.band.min || extractEstimate(body).low;
+    const high = pricingTruth.band.max || extractEstimate(body).high;
 
     const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     const leadId = await ensureLeadId(leadEmail, leadName);
     const quoteId = String(body.quoteId ?? "").trim() || null;
+
+    const quoteJson = {
+      ...body,
+      leadEmail,
+      pricingTruth,
+      estimateComputed: { total, low, high },
+    };
 
     const dbPayload = {
       lead_id: leadId,
       lead_email: leadEmail,
       owner_email_norm: normalizeEmail(leadEmail),
       auth_user_id: user?.id ?? null,
-      quote_json: { ...body, leadEmail, estimateComputed: { total, low, high } },
+      quote_json: quoteJson,
       estimate_total: total,
       estimate_low: low,
       estimate_high: high,
@@ -108,11 +178,22 @@ export async function POST(req: Request) {
     let savedQuoteId: string;
 
     if (quoteId) {
-      const { data, error } = await supabaseAdmin.from("quotes").update(dbPayload).eq("id", quoteId).select("id").single();
+      const { data, error } = await supabaseAdmin
+        .from("quotes")
+        .update(dbPayload)
+        .eq("id", quoteId)
+        .select("id")
+        .single();
+
       if (error) throw new Error(error.message);
       savedQuoteId = String(data.id);
     } else {
-      const { data, error } = await supabaseAdmin.from("quotes").insert(dbPayload).select("id").single();
+      const { data, error } = await supabaseAdmin
+        .from("quotes")
+        .insert(dbPayload)
+        .select("id")
+        .single();
+
       if (error) throw new Error(error.message);
       savedQuoteId = String(data.id);
     }
@@ -124,11 +205,21 @@ export async function POST(req: Request) {
       metadata: {
         quoteId: savedQuoteId,
         hasAuthUser: !!user?.id,
+        pricingVersion: pricingTruth.version,
+        tierKey: pricingTruth.tierKey,
+        isCustomScope: pricingTruth.isCustomScope,
       },
     });
 
-    return NextResponse.json({ ok: true, quoteId: savedQuoteId, nextUrl: `/book?quoteId=${savedQuoteId}` });
+    return NextResponse.json({
+      ok: true,
+      quoteId: savedQuoteId,
+      nextUrl: `/book?quoteId=${savedQuoteId}`,
+    });
   } catch (error: any) {
-    return NextResponse.json({ ok: false, error: error?.message || "Unknown error" }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: error?.message || "Unknown error" },
+      { status: 500 }
+    );
   }
 }
