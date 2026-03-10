@@ -11,7 +11,85 @@ type Recommendation = {
   tierLabel?: string;
   priceRange?: string;
   summary?: string;
+  pricingVersion?: string;
+  position?: string;
+  isCustomScope?: boolean;
+  band?: {
+    min?: number;
+    max?: number;
+    target?: number;
+  };
+  reasons?: unknown[];
+  complexityFlags?: unknown[];
 };
+
+function firstString(...vals: unknown[]) {
+  for (const v of vals) {
+    if (typeof v === "string" && v.trim()) return v.trim();
+  }
+  return "";
+}
+
+function toNum(v: unknown) {
+  const x = Number(v);
+  return Number.isFinite(x) ? x : 0;
+}
+
+function normalizeRecommendation(input: unknown) {
+  const recommendation =
+    input && typeof input === "object" ? (input as Recommendation) : {};
+
+  return {
+    score: toNum(recommendation.score),
+    tierLabel: firstString(recommendation.tierLabel) || null,
+    priceRange: firstString(recommendation.priceRange) || null,
+    summary: firstString(recommendation.summary) || null,
+    pricingVersion: firstString(recommendation.pricingVersion) || null,
+    position: firstString(recommendation.position) || null,
+    isCustomScope: Boolean(recommendation.isCustomScope),
+    band: {
+      min: toNum(recommendation.band?.min),
+      max: toNum(recommendation.band?.max),
+      target: toNum(recommendation.band?.target),
+    },
+    reasons: Array.isArray(recommendation.reasons) ? recommendation.reasons : [],
+    complexityFlags: Array.isArray(recommendation.complexityFlags)
+      ? recommendation.complexityFlags
+      : [],
+  };
+}
+
+async function insertOpsIntake(
+  basePayload: Record<string, any>,
+  recommendationSnapshot: Record<string, any>
+) {
+  const firstAttempt = await supabaseAdmin
+    .from("ops_intakes")
+    .insert({
+      ...basePayload,
+      recommendation_json: recommendationSnapshot,
+    })
+    .select("id")
+    .single<{ id: string }>();
+
+  if (!firstAttempt.error && firstAttempt.data?.id) {
+    return firstAttempt;
+  }
+
+  const errorMessage = String(firstAttempt.error?.message || "");
+  const missingRecommendationJsonColumn =
+    /recommendation_json/i.test(errorMessage);
+
+  if (!missingRecommendationJsonColumn) {
+    return firstAttempt;
+  }
+
+  return await supabaseAdmin
+    .from("ops_intakes")
+    .insert(basePayload)
+    .select("id")
+    .single<{ id: string }>();
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,7 +111,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Detect logged-in user (if any)
     let authUserId: string | null = null;
     let authUserEmail: string | null = null;
 
@@ -50,8 +127,7 @@ export async function POST(req: NextRequest) {
     }
 
     const shouldAttachToUser = !!authUserId && !!authUserEmail && authUserEmail === email;
-
-    const recommendation: Recommendation = body.recommendation ?? {};
+    const recommendation = normalizeRecommendation(body.recommendation);
 
     const payload: Record<string, any> = {
       company_name: companyName,
@@ -69,11 +145,11 @@ export async function POST(req: NextRequest) {
       workflows_needed: Array.isArray(body.workflowsNeeded) ? body.workflowsNeeded : [],
       notes: String(body.notes ?? "").trim() || null,
 
-      recommendation_tier: String(recommendation.tierLabel ?? "").trim() || null,
-      recommendation_price_range: String(recommendation.priceRange ?? "").trim() || null,
-      recommendation_score: Number.isFinite(Number(recommendation.score))
-        ? Number(recommendation.score)
-        : null,
+      recommendation_tier: recommendation.tierLabel,
+      recommendation_price_range: recommendation.isCustomScope
+        ? recommendation.priceRange || "Custom ops scope — strategy call required."
+        : recommendation.priceRange,
+      recommendation_score: recommendation.score || null,
 
       status: "new",
     };
@@ -82,11 +158,12 @@ export async function POST(req: NextRequest) {
       payload.auth_user_id = authUserId;
     }
 
-    const { data, error } = await supabaseAdmin
-      .from("ops_intakes")
-      .insert(payload)
-      .select("id")
-      .single<{ id: string }>();
+    const recommendationSnapshot = {
+      ...recommendation,
+      source: "ops-intake",
+    };
+
+    const { data, error } = await insertOpsIntake(payload, recommendationSnapshot);
 
     if (error || !data?.id) {
       return NextResponse.json(
@@ -104,6 +181,9 @@ export async function POST(req: NextRequest) {
       metadata: {
         opsIntakeId,
         attachedToUser: shouldAttachToUser,
+        pricingVersion: recommendation.pricingVersion,
+        tierLabel: recommendation.tierLabel,
+        isCustomScope: recommendation.isCustomScope,
       },
     });
 
