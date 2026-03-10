@@ -1,9 +1,9 @@
-// app/estimate/EstimateClient.tsx
 "use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { getWebsitePricing, money, PRICING_MESSAGES } from "@/lib/pricing";
 
 type YesNo = "yes" | "no";
 type PagesBucket = "1" | "1-3" | "4-6" | "6-8" | "9+";
@@ -26,41 +26,51 @@ type Normalized = {
   leadEmail: string;
   leadPhone: string;
   notes: string;
+  budget: string;
+  hasLogo: YesNo;
+  hasBrandGuide: YesNo;
 };
-
-type BreakdownLine = { label: string; amount: number };
 
 const LS_KEY = "crecystudio:intake";
 const LAST_QUOTE_KEY = "crecystudio:lastQuoteId";
 
-const FREE_AUTOMATIONS = new Set(["Email confirmations", "Email confirmation"]);
-const FREE_INTEGRATIONS = new Set(["Google Maps / location", "Analytics (GA4 / Pixel)"]);
-
 const CORE_KEYS = new Set([
-  "websiteType", "pages", "booking", "payments", "blog", "membership",
-  "wantsAutomation", "automationTypes", "integrations", "integrationOther",
-  "contentReady", "domainHosting", "timeline", "intent",
-  "leadEmail", "leadPhone", "notes",
+  "websiteType",
+  "pages",
+  "booking",
+  "payments",
+  "blog",
+  "membership",
+  "wantsAutomation",
+  "automationTypes",
+  "integrations",
+  "integrationOther",
+  "contentReady",
+  "domainHosting",
+  "timeline",
+  "intent",
+  "leadEmail",
+  "leadPhone",
+  "notes",
+  "budget",
+  "hasLogo",
+  "hasBrandGuide",
 ]);
 
-function money(n: number) {
-  return `$${Math.round(n).toLocaleString()}`;
-}
-
-function toBool(v: any): boolean {
+function toBool(v: unknown): boolean {
   if (typeof v === "boolean") return v;
   const s = String(v ?? "").trim().toLowerCase();
   return s === "1" || s === "true" || s === "yes" || s === "on";
 }
 
-function normYesNo(v: any, fallback: YesNo = "no"): YesNo {
+function normYesNo(v: unknown, fallback: YesNo = "no"): YesNo {
   const s = String(v ?? "").trim().toLowerCase();
   if (s === "yes" || s === "true" || s === "1" || s === "on") return "yes";
   if (s === "no" || s === "false" || s === "0" || s === "off") return "no";
   return fallback;
 }
 
-function normWebsiteType(v: any): Normalized["websiteType"] {
+function normWebsiteType(v: unknown): Normalized["websiteType"] {
   const s = String(v ?? "").trim().toLowerCase();
   if (s.includes("ecom")) return "ecommerce";
   if (s.includes("port")) return "portfolio";
@@ -68,21 +78,21 @@ function normWebsiteType(v: any): Normalized["websiteType"] {
   return "business";
 }
 
-function normContentReady(v: any): Normalized["contentReady"] {
+function normContentReady(v: unknown): Normalized["contentReady"] {
   const s = String(v ?? "").trim().toLowerCase();
-  if (s.includes("ready")) return "ready";
   if (s.includes("not")) return "not_ready";
+  if (s.includes("ready")) return "ready";
   return "some";
 }
 
-function splitList(v: any): string[] {
+function splitList(v: unknown): string[] {
   if (Array.isArray(v)) return v.map(String).map((x) => x.trim()).filter(Boolean);
   const s = String(v ?? "").trim();
   if (!s) return [];
   return s.split(",").map((x) => x.trim()).filter(Boolean);
 }
 
-function parsePagesMax(raw: any): { max: number } {
+function parsePagesMax(raw: unknown): { max: number } {
   const s = String(raw ?? "").trim();
   if (!s) return { max: 3 };
   if (s.includes("+")) {
@@ -90,8 +100,9 @@ function parsePagesMax(raw: any): { max: number } {
     return { max: Number.isFinite(n) ? n : 9 };
   }
   if (s.includes("-")) {
-    const [, b] = s.split("-").map((x) => parseInt(x.trim(), 10));
-    return { max: Number.isFinite(b) ? b : 3 };
+    const nums = s.split("-").map((x) => parseInt(x.trim(), 10)).filter(Number.isFinite);
+    const max = nums.length ? nums[nums.length - 1] : 3;
+    return { max };
   }
   const n = parseInt(s, 10);
   return { max: Number.isFinite(n) ? n : 3 };
@@ -105,83 +116,11 @@ function bucketPages(max: number): PagesBucket {
   return "9+";
 }
 
-function computeEstimate(n: Normalized) {
-  const lines: BreakdownLine[] = [];
-  let base = 0;
-
-  // ── BASE PRICES (updated to match published pricing) ──
-  if (n.pages === "1") {
-    base = 800;
-    lines.push({ label: "Single landing page base", amount: 800 });
-  } else if (n.pages === "1-3") {
-    base = 1500;
-    lines.push({ label: "Starter site base (1–3 pages)", amount: 1500 });
-  } else {
-    base = 2500;
-    lines.push({ label: "Growth site base (4–6 pages)", amount: 2500 });
-    if (n.pages === "6-8") lines.push({ label: "Extended scope (6–8 pages)", amount: 800 });
-    if (n.pages === "9+") lines.push({ label: "Large scope (9+ pages)", amount: 2000 });
-  }
-
-  // ── WEBSITE TYPE ──
-  if (n.websiteType === "ecommerce") lines.push({ label: "Ecommerce baseline", amount: 800 });
-
-  // ── FEATURES ──
-  if (n.booking) lines.push({ label: "Booking / appointments", amount: 400 });
-  if (n.payments) lines.push({ label: "Payments / checkout", amount: 600 });
-  if (n.membership) lines.push({ label: "Membership / gated content", amount: 1200 });
-  if (n.blog && (n.pages === "1" || n.pages === "1-3")) {
-    lines.push({ label: "Blog / articles", amount: 300 });
-  }
-
-  // ── AUTOMATIONS ──
-  const wantsAuto = n.wantsAutomation === "yes";
-  const paidAutoTypes = n.automationTypes.filter((x) => !FREE_AUTOMATIONS.has(x));
-  if (wantsAuto && paidAutoTypes.length > 0) {
-    lines.push({ label: "Automations setup", amount: 500 });
-    lines.push({ label: `Automation types (${paidAutoTypes.length})`, amount: paidAutoTypes.length * 150 });
-  }
-
-  // ── INTEGRATIONS ──
-  const filteredIntegrations = n.integrations.filter(
-    (x) => x !== "Stripe payments" && x !== "PayPal payments" && x !== "Calendly / scheduling"
-  );
-  let paidIntegrationCount = 0;
-  let integrationTotal = 0;
-  for (const i of filteredIntegrations) {
-    if (FREE_INTEGRATIONS.has(i)) continue;
-    paidIntegrationCount += 1;
-    integrationTotal += 150;
-  }
-  if (paidIntegrationCount > 0) {
-    lines.push({ label: `Integrations (${paidIntegrationCount})`, amount: integrationTotal });
-  }
-
-  // ── CONTENT & READINESS ──
-  if (n.contentReady === "some") lines.push({ label: "Partial content (extra coordination)", amount: 200 });
-  if (n.contentReady === "not_ready") lines.push({ label: "Content not ready (help needed)", amount: 500 });
-  if (n.domainHosting === "no") lines.push({ label: "Domain / hosting setup guidance", amount: 150 });
-
-  const total = lines.reduce((sum, l) => sum + l.amount, 0);
-  const low = Math.max(0, Math.round(total * 0.9));
-  const high = Math.max(low + 1, Math.round(total * 1.15));
-
-  const pagesMax =
-    n.pages === "1" ? 1 : n.pages === "1-3" ? 3 : n.pages === "4-6" ? 6 : n.pages === "6-8" ? 8 : 12;
-
-  let tier: "essential" | "growth" | "premium" = "essential";
-  if (pagesMax >= 9 || n.payments || n.membership || paidAutoTypes.length > 0) tier = "premium";
-  else if (pagesMax >= 4 || n.booking || paidIntegrationCount > 0 || n.websiteType === "ecommerce") tier = "growth";
-  else tier = total > 2000 ? "growth" : "essential";
-
-  return { total, low, high, lines, tier };
-}
-
 export default function EstimateClient() {
   const sp = useSearchParams();
   const router = useRouter();
 
-  const [loadedFromLocalStorage, setLoadedFromLocalStorage] = useState<any>(null);
+  const [loadedFromLocalStorage, setLoadedFromLocalStorage] = useState<Record<string, unknown> | null>(null);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
 
@@ -189,7 +128,9 @@ export default function EstimateClient() {
     try {
       const raw = window.localStorage.getItem(LS_KEY);
       if (raw) setLoadedFromLocalStorage(JSON.parse(raw));
-    } catch {}
+    } catch {
+      setLoadedFromLocalStorage(null);
+    }
   }, []);
 
   const parsedQuery = useMemo(() => {
@@ -204,38 +145,6 @@ export default function EstimateClient() {
     }
     return false;
   }, [parsedQuery]);
-
-  const hasIntake = !!loadedFromLocalStorage || hasMeaningfulQuery;
-
-  if (!hasIntake) {
-    return (
-      <main className="container" style={{ padding: "48px 0 80px" }}>
-        <div className="kicker">
-          <span className="kickerDot" aria-hidden="true" />
-          CrecyStudio • Estimate
-        </div>
-        <div style={{ height: 14 }} />
-        <h1 className="h1">Start with the questionnaire</h1>
-        <p className="p" style={{ maxWidth: 860, marginTop: 10 }}>
-          To generate an accurate estimate, we need a few details (pages, features, timeline, and your email).
-        </p>
-        <div style={{ height: 18 }} />
-        <section className="panel" style={{ maxWidth: 760 }}>
-          <div className="panelHeader">
-            <div style={{ fontWeight: 800 }}>No intake found</div>
-            <div className="smallNote">This page only works after the "Build" questionnaire.</div>
-          </div>
-          <div className="panelBody" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <Link className="btn btnPrimary" href="/build">
-              Start Questionnaire <span className="btnArrow">→</span>
-            </Link>
-            <Link className="btn btnGhost" href="/systems">Fix My Workflow</Link>
-            <Link className="btn btnGhost" href="/">Home</Link>
-          </div>
-        </section>
-      </main>
-    );
-  }
 
   const merged = useMemo(
     () => ({ ...(loadedFromLocalStorage || {}), ...parsedQuery }),
@@ -257,15 +166,19 @@ export default function EstimateClient() {
       integrationOther: String(merged.integrationOther ?? "").trim(),
       contentReady: normContentReady(merged.contentReady),
       domainHosting: normYesNo(merged.domainHosting, "no"),
-      timeline: String(merged.timeline ?? "").trim() || "2-3w",
+      timeline: String(merged.timeline ?? "").trim() || "2-3 weeks",
       intent: String(merged.intent ?? "").trim() || "business",
-      leadEmail: String(merged.leadEmail ?? merged?.lead?.email ?? "").trim(),
-      leadPhone: String(merged.leadPhone ?? merged?.lead?.phone ?? "").trim(),
+      leadEmail: String(merged.leadEmail ?? "").trim(),
+      leadPhone: String(merged.leadPhone ?? "").trim(),
       notes: String(merged.notes ?? "").trim(),
+      budget: String(merged.budget ?? "").trim(),
+      hasLogo: normYesNo(merged.hasLogo, "yes"),
+      hasBrandGuide: normYesNo(merged.hasBrandGuide, "no"),
     };
   }, [merged]);
 
-  const estimate = useMemo(() => computeEstimate(normalized), [normalized]);
+  const pricing = useMemo(() => getWebsitePricing(normalized), [normalized]);
+  const hasIntake = !!loadedFromLocalStorage || hasMeaningfulQuery;
 
   async function onSendEstimate() {
     setSendError("");
@@ -274,35 +187,84 @@ export default function EstimateClient() {
       setSendError("Missing a valid email. Go back to the questionnaire and add your email first.");
       return;
     }
+
     setSending(true);
+
     try {
       const payload = {
         source: "estimate",
-        lead: { email, phone: normalized.leadPhone || undefined },
+        lead: {
+          email,
+          phone: normalized.leadPhone || undefined,
+        },
         intakeRaw: merged,
         intakeNormalized: normalized,
+        pricing,
         estimate: {
-          total: estimate.total,
-          low: estimate.low,
-          high: estimate.high,
-          tierRecommended: estimate.tier,
+          total: pricing.band.target,
+          low: pricing.band.min,
+          high: pricing.band.max,
+          tierRecommended: pricing.tierLabel,
+          tierKey: pricing.tierKey,
+          isCustomScope: pricing.isCustomScope,
         },
       };
+
       const res = await fetch("/api/submit-estimate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
       const json = await res.json();
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to save estimate.");
       if (!json?.quoteId) throw new Error("Saved, but missing quoteId.");
-      try { window.localStorage.setItem(LAST_QUOTE_KEY, String(json.quoteId)); } catch {}
+
+      try {
+        window.localStorage.setItem(LAST_QUOTE_KEY, String(json.quoteId));
+      } catch {}
+
       router.push(`/book?quoteId=${encodeURIComponent(String(json.quoteId))}`);
-    } catch (e: any) {
-      setSendError(e?.message || "Failed to save estimate.");
+    } catch (e) {
+      setSendError(e instanceof Error ? e.message : "Failed to save estimate.");
     } finally {
       setSending(false);
     }
+  }
+
+  if (!hasIntake) {
+    return (
+      <main className="container" style={{ padding: "48px 0 80px" }}>
+        <div className="kicker">
+          <span className="kickerDot" aria-hidden="true" />
+          CrecyStudio • Estimate
+        </div>
+        <div style={{ height: 14 }} />
+        <h1 className="h1">Start with the questionnaire</h1>
+        <p className="p" style={{ maxWidth: 860, marginTop: 10 }}>
+          To generate an accurate estimate, we need a few details about your pages, features,
+          timeline, and goals.
+        </p>
+        <div style={{ height: 18 }} />
+        <section className="panel" style={{ maxWidth: 760 }}>
+          <div className="panelHeader">
+            <div style={{ fontWeight: 800 }}>No intake found</div>
+            <div className="smallNote">This page only works after the Build questionnaire.</div>
+          </div>
+          <div className="panelBody" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <Link className="btn btnPrimary" href="/build">
+              Start Questionnaire <span className="btnArrow">→</span>
+            </Link>
+            <Link className="btn btnGhost" href="/systems">
+              Fix My Workflow
+            </Link>
+            <Link className="btn btnGhost" href="/">
+              Home
+            </Link>
+          </div>
+        </section>
+      </main>
+    );
   }
 
   return (
@@ -315,7 +277,8 @@ export default function EstimateClient() {
       <div style={{ height: 12 }} />
       <h1 className="h1">Your estimate</h1>
       <p className="p" style={{ maxWidth: 900, marginTop: 10 }}>
-        Review your breakdown below. Then save your quote and book a discovery call to confirm final scope.
+        We now classify your project into a clean pricing tier first, then place it inside a fair
+        startup range based on scope, features, readiness, and launch pressure.
       </p>
       <div style={{ height: 18 }} />
 
@@ -323,40 +286,86 @@ export default function EstimateClient() {
         <div className="panelHeader">
           <div className="pDark">
             Type: <strong>{normalized.websiteType}</strong> • Pages:{" "}
-            <strong>{normalized.pages}</strong> • Tier: <strong>{estimate.tier}</strong>
+            <strong>{normalized.pages}</strong> • Recommended package:{" "}
+            <strong>{pricing.tierLabel}</strong>
           </div>
+
           <div style={{ height: 10 }} />
-          <div style={{ display: "flex", gap: 14, alignItems: "baseline", flexWrap: "wrap" }}>
-            <div style={{ fontWeight: 900, fontSize: 34, letterSpacing: "-0.8px" }}>
-              {money(estimate.total)}
+
+          {pricing.isCustomScope ? (
+            <div
+              style={{
+                border: "1px solid var(--accentStroke)",
+                background: "var(--accentSoft)",
+                borderRadius: 12,
+                padding: "14px 16px",
+                fontWeight: 800,
+                color: "var(--fg)",
+              }}
+            >
+              {pricing.publicMessage}
             </div>
-            <div className="pDark">
-              Typical range: {money(estimate.low)} – {money(estimate.high)}
+          ) : (
+            <div style={{ display: "flex", gap: 14, alignItems: "baseline", flexWrap: "wrap" }}>
+              <div style={{ fontWeight: 900, fontSize: 34, letterSpacing: "-0.8px" }}>
+                {money(pricing.band.target)}
+              </div>
+              <div className="pDark">Typical range: {pricing.displayRange}</div>
             </div>
-          </div>
+          )}
         </div>
 
-        <div className="panelBody">
-          <div style={{ fontWeight: 800, marginBottom: 10 }}>Line item breakdown</div>
-          <div style={{ display: "grid", gap: 10 }}>
-            {estimate.lines.map((l) => (
-              <div
-                key={l.label}
-                style={{
-                  display: "flex", justifyContent: "space-between", gap: 12,
-                  border: "1px solid var(--stroke)", background: "var(--panel2)",
-                  borderRadius: 10, padding: "12px 12px",
-                }}
-              >
-                <div style={{ color: "var(--fg)", fontWeight: 700 }}>{l.label}</div>
-                <div style={{ color: "var(--fg)", fontWeight: 800 }}>
-                  {l.amount === 0 ? "Included" : `+ ${money(l.amount)}`}
-                </div>
-              </div>
-            ))}
+        <div className="panelBody" style={{ display: "grid", gap: 14 }}>
+          <div
+            style={{
+              border: "1px solid var(--stroke)",
+              background: "var(--panel2)",
+              borderRadius: 12,
+              padding: "14px 16px",
+            }}
+          >
+            <div style={{ fontWeight: 800, marginBottom: 6 }}>What this means</div>
+            <div className="pDark">{pricing.summary}</div>
           </div>
-          <div className="smallNote" style={{ marginTop: 14 }}>
-            Final scope and price confirmed on a discovery call before any work begins. 50% deposit to start, 50% on completion.
+
+          {pricing.complexityFlags.length > 0 ? (
+            <div>
+              <div style={{ fontWeight: 800, marginBottom: 8 }}>Complexity flags</div>
+              <div className="pills">
+                {pricing.complexityFlags.map((flag) => (
+                  <span key={flag} className="pill">
+                    {flag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          <div>
+            <div style={{ fontWeight: 800, marginBottom: 10 }}>Why it landed here</div>
+            <div style={{ display: "grid", gap: 10 }}>
+              {pricing.reasons.map((reason, idx) => (
+                <div
+                  key={`${reason.label}-${idx}`}
+                  style={{
+                    border: "1px solid var(--stroke)",
+                    background: "var(--panel2)",
+                    borderRadius: 10,
+                    padding: "12px 12px",
+                  }}
+                >
+                  <div style={{ color: "var(--fg)", fontWeight: 800 }}>{reason.label}</div>
+                  <div className="pDark" style={{ marginTop: 4 }}>
+                    {reason.note}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="smallNote">
+            Final scope and price are confirmed on a discovery call before any work begins.{" "}
+            {PRICING_MESSAGES.depositPolicy}
           </div>
         </div>
       </section>
@@ -371,16 +380,24 @@ export default function EstimateClient() {
           </div>
         </div>
         <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-          {sendError && (
-            <div style={{
-              border: "1px solid rgba(255,0,0,0.35)", background: "rgba(255,0,0,0.08)",
-              borderRadius: 10, padding: 12, fontWeight: 700,
-            }}>
+          {sendError ? (
+            <div
+              style={{
+                border: "1px solid rgba(255,0,0,0.35)",
+                background: "rgba(255,0,0,0.08)",
+                borderRadius: 10,
+                padding: 12,
+                fontWeight: 700,
+              }}
+            >
               {sendError}
             </div>
-          )}
+          ) : null}
+
           <div className="row" style={{ justifyContent: "space-between" }}>
-            <Link className="btn btnGhost" href="/build">Edit answers</Link>
+            <Link className="btn btnGhost" href="/build">
+              Edit answers
+            </Link>
             <button className="btn btnPrimary" type="button" onClick={onSendEstimate} disabled={sending}>
               {sending ? "Saving..." : "Save + book call"} <span className="btnArrow">→</span>
             </button>
