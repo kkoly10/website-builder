@@ -8,12 +8,11 @@ import {
 import type {
   OpsPricingInput,
   OpsTierKey,
-  PricingPosition,
   PricingReason,
   PricingResult,
 } from "@/lib/pricing/types";
 
-function choosePosition(score: number): PricingPosition {
+function choosePosition(score: number): "low" | "middle" | "high" {
   if (score >= 5) return "high";
   if (score >= 2) return "middle";
   return "low";
