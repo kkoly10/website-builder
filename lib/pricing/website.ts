@@ -6,7 +6,6 @@ import {
   targetFromBand,
 } from "@/lib/pricing/config";
 import type {
-  PricingPosition,
   PricingReason,
   PricingResult,
   WebsitePricingInput,
@@ -38,7 +37,7 @@ function isRushTimeline(timeline: string) {
   return /under 14|asap|rush|fast|today|this week/i.test(String(timeline || ""));
 }
 
-function choosePosition(score: number): PricingPosition {
+function choosePosition(score: number): "low" | "middle" | "high" {
   if (score >= 5) return "high";
   if (score >= 2) return "middle";
   return "low";
