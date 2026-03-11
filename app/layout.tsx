@@ -6,13 +6,18 @@ import SiteFooter from "@/components/site/SiteFooter";
 import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "CrecyStudio | Websites & Workflow Systems",
-  description: "Custom websites and workflow systems for local service businesses.",
+  title: "CrecyStudio | Websites, E-Commerce & Workflow Systems",
+  description:
+    "Premium websites, e-commerce systems, and workflow automation for growth-focused businesses.",
 };
 
 export const dynamic = "force-dynamic";
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   let userEmail: string | null = null;
   let admin = false;
 
@@ -29,12 +34,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     admin = false;
   }
 
-  const customBuildHref = "/build/intro";
-  const portalHref = userEmail ? "/portal" : `/login?next=${encodeURIComponent("/portal")}`;
+  const startHereHref = "/#services";
+  const portalHref = userEmail
+    ? "/portal"
+    : `/login?next=${encodeURIComponent("/portal")}`;
 
   const navLinks = [
+    { href: "/websites", label: "Websites" },
+    { href: "/ecommerce", label: "E-Commerce" },
     { href: "/systems", label: "Workflow Systems" },
-    { href: customBuildHref, label: "Custom Build" },
     { href: "/process", label: "How It Works" },
     { href: "/faq", label: "FAQ" },
     { href: portalHref, label: "Client Portal" },
@@ -43,13 +51,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <body>
-        <a href="#main-content" className="skipLink">Skip to main content</a>
+        <a href="#main-content" className="skipLink">
+          Skip to main content
+        </a>
+
         <div className="siteShell">
           <header className="topNav">
             <div className="topNavInner">
               <BrandLogo href="/" showTag />
 
-              {/* Desktop nav */}
               <nav className="navLinks navDesktop">
                 {navLinks.map((item) => (
                   <Link key={item.label} href={item.href}>
@@ -67,20 +77,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     </form>
                   </>
                 ) : (
-                  <Link href={customBuildHref} className="btn btnPrimary">
-                    Get Quote <span className="btnArrow">→</span>
+                  <Link href={startHereHref} className="btn btnPrimary">
+                    Start Here <span className="btnArrow">→</span>
                   </Link>
                 )}
               </nav>
 
-              {/* Mobile header actions */}
               <div className="mobileHeaderActions">
-                <Link href={customBuildHref} className="btn btnPrimary mobilePrimaryCta">
-                  Get Quote
+                <Link href={startHereHref} className="btn btnPrimary mobilePrimaryCta">
+                  Start Here
                 </Link>
 
                 <details className="mobileMenu">
-                  <summary className="mobileMenuSummary" aria-label="Open navigation menu">
+                  <summary
+                    className="mobileMenuSummary"
+                    aria-label="Open navigation menu"
+                  >
                     <span />
                     <span />
                     <span />
@@ -97,8 +109,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                       {admin ? <Link href="/internal/admin">Admin Dashboard</Link> : null}
 
                       {userEmail ? (
-                        <form action="/auth/signout" method="post" className="mobileMenuForm">
-                          <button type="submit" className="btn btnGhost mobileMenuSignout">
+                        <form
+                          action="/auth/signout"
+                          method="post"
+                          className="mobileMenuForm"
+                        >
+                          <button
+                            type="submit"
+                            className="btn btnGhost mobileMenuSignout"
+                          >
                             Sign out
                           </button>
                         </form>
@@ -114,7 +133,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </div>
           </header>
 
-          <main id="main-content" className="mainContent" tabIndex={-1}>{children}</main>
+          <main id="main-content" className="mainContent" tabIndex={-1}>
+            {children}
+          </main>
+
           <SiteFooter />
         </div>
       </body>
