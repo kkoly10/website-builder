@@ -1,66 +1,95 @@
 // app/page.tsx
-import Link from "next/link";
 import ScrollReveal from "@/components/site/ScrollReveal";
 import TrackLink from "@/components/site/TrackLink";
 
 export const dynamic = "force-dynamic";
+
+const serviceCards = [
+  {
+    id: "1",
+    title: "Website Building",
+    image: "https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?auto=format&fit=crop&w=1400&q=80",
+    imageAlt: "Website design shown on desktop monitor",
+    desc: "Premium conversion websites for brands that need a stronger first impression and cleaner lead capture.",
+    who: "Who it’s for: businesses with outdated sites and low-quality leads from current traffic.",
+    price: "Starts at: $1,500",
+    href: "/build/intro",
+    event: "cta_home_services_website",
+  },
+  {
+    id: "2",
+    title: "E-Commerce Systems",
+    image: "https://images.unsplash.com/photo-1556742111-a301076d9d18?auto=format&fit=crop&w=1400&q=80",
+    imageAlt: "E-commerce order and checkout process",
+    desc: "Storefront and backend flow upgrades for cleaner order operations, higher clarity, and better retention.",
+    who: "Who it’s for: sellers scaling order volume with friction across checkout and fulfillment.",
+    price: "Pricing: Transparent tiered options",
+    href: "/ecommerce",
+    event: "cta_home_services_ecommerce",
+  },
+  {
+    id: "3",
+    title: "Ops Workflow Automation",
+    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1400&q=80",
+    imageAlt: "Automation and AI workflow concept",
+    desc: "Automation for intake, routing, status, and handoff so teams spend less time on repetitive admin tasks.",
+    who: "Who it’s for: teams managing growth through manual handoffs and disconnected tools.",
+    price: "Starts at: $1,000",
+    href: "/systems",
+    event: "cta_home_services_ops",
+  },
+];
 
 export default function Home() {
   return (
     <main className="homePage">
       <ScrollReveal />
 
-      {/* ── HERO ── */}
       <section className="section heroSection">
         <div className="container heroContainer">
           <div className="heroFadeUp">
-            <div className="kicker">Websites &amp; Workflow Systems</div>
+            <div className="kicker">Premium Websites + E-Commerce Systems for Local Brands</div>
           </div>
 
           <h1 className="h1 heroFadeUp stagger-1">
-            Look <span className="textGradient">elite</span> online.<br />
-            Run on autopilot behind the scenes.
+            Look premium at first click.
+            <br />
+            Convert more visitors into buyers.
           </h1>
 
           <p className="p heroSubtitle heroFadeUp stagger-2">
-            CrecyStudio builds high-converting websites and custom workflow systems for local businesses
-            that are ready to stop doing everything manually.
+            We build conversion-focused websites and e-commerce systems that sharpen brand perception,
+            improve buyer flow, and reduce manual backend drag.
           </p>
 
           <div className="heroActions heroFadeUp stagger-3">
-            <TrackLink href="/build/intro" event="cta_home_hero_quote" className="btn btnPrimary btnLg">
-              Get a Website Quote <span className="btnArrow">→</span>
+            <TrackLink href="/build/intro" event="cta_home_hero_unified" className="btn btnPrimary btnLg">
+              Get My Growth Plan <span className="btnArrow">→</span>
             </TrackLink>
-            <TrackLink href="/systems" event="cta_home_hero_systems" className="btn btnGhost btnLg">
-              Fix My Workflow Systems
+            <TrackLink href="#how-it-works" event="cta_home_hero_how" className="btn btnGhost btnLg">
+              See How It Works
             </TrackLink>
           </div>
 
           <div className="pills heroPills heroFadeUp stagger-4">
-            <span className="pill">Free estimates</span>
-            <span className="pill">50% deposit to start</span>
-            <span className="pill">Local business specialists</span>
-            <span className="pill">Fast turnaround</span>
+            <span className="pill">3-min intake</span>
+            <span className="pill">Scoped estimate in 24h</span>
+            <span className="pill">Pricing visible upfront</span>
+            <span className="pill">Website + E-Commerce priority</span>
           </div>
         </div>
       </section>
 
-      {/* ── PREVIEW CARDS ── */}
       <section className="section">
         <div className="container">
           <div className="grid2stretch">
             <div className="card cardMedia cardHover scaleIn">
               <div className="cardInner">
-                <img
-                  src="/marketing/website-preview-v2.svg"
-                  alt="Website design preview"
-                  width={1200}
-                  height={700}
-                />
+                <img src="https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?auto=format&fit=crop&w=1400&q=80" alt="Website lane outcome preview" width={1200} height={700} style={{ aspectRatio: "16/9", objectFit: "cover" }} />
                 <div className="cardMediaBody">
-                  <div className="cardMediaTitle">Website Delivery Preview</div>
+                  <div className="cardMediaTitle">What your website lane delivers</div>
                   <p className="pDark cardMediaDesc">
-                    Conversion layout, mobile responsiveness, lead capture, and performance baseline included.
+                    Premium visual positioning, conversion architecture, mobile performance, and cleaner lead capture.
                   </p>
                 </div>
               </div>
@@ -68,16 +97,11 @@ export default function Home() {
 
             <div className="card cardMedia cardHover scaleIn stagger-1">
               <div className="cardInner">
-                <img
-                  src="/marketing/workflow-preview.svg"
-                  alt="Workflow automation preview"
-                  width={1200}
-                  height={700}
-                />
+                <img src="https://images.unsplash.com/photo-1556742111-a301076d9d18?auto=format&fit=crop&w=1400&q=80" alt="E-commerce lane outcome preview" width={1200} height={700} style={{ aspectRatio: "16/9", objectFit: "cover" }} />
                 <div className="cardMediaBody">
-                  <div className="cardMediaTitle">Operations Workflow Preview</div>
+                  <div className="cardMediaTitle">What your e-commerce lane delivers</div>
                   <p className="pDark cardMediaDesc">
-                    Lead intake, status tracking, billing handoff, and reporting flow designed for less admin overhead.
+                    Checkout and fulfillment flow cleanup, margin-aware ops support, and repeat-order system clarity.
                   </p>
                 </div>
               </div>
@@ -86,116 +110,70 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── PROBLEM SECTION ── */}
       <section className="section sectionBand">
         <div className="container">
-          <div className="sectionIntro fadeUp">
-            <h2 className="h2">Most local businesses outgrow their systems.</h2>
-            <p className="p">
-              You started by tracking leads in a notebook or spreadsheet. Now you&apos;re spending 15 hours
-              a week chasing invoices, copying data between tools, and losing clients because your website
-              doesn&apos;t convert them instantly.
-            </p>
-          </div>
-
-          <div className="pills pillsCenter fadeUp stagger-1">
-            <span className="badge">Data Entry Bottlenecks</span>
-            <span className="badge">Messy Client Intake</span>
-            <span className="badge">Outdated Web Design</span>
-            <span className="badge">Disconnected Software</span>
-            <span className="badge">Lost Revenue</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SERVICES ── */}
-      <section className="section">
-        <div className="container">
           <div className="sectionHead fadeUp">
-            <div className="kicker">What We Build</div>
-            <h2 className="h2">Two ways to transform your business</h2>
+            <div className="kicker">Services</div>
+            <h2 className="h2">Three service lanes + who each is for</h2>
           </div>
 
-          <div className="grid2stretch">
-            <div className="card cardHover serviceCard scaleIn">
-              <div className="cardInner">
-                <div className="serviceCardBody">
-                  <div className="badge">Operations</div>
-                  <h3 className="h3 serviceCardTitle">Workflow Systems</h3>
-                  <p className="p serviceCardDesc">
-                    Custom automations to eliminate manual data entry. Connect your CRM, email,
-                    and invoicing tools to run on autopilot.
-                  </p>
-                  <ul className="serviceCardList">
-                    <li>Automated Client Intake</li>
-                    <li>Zapier &amp; Make.com Integrations</li>
-                    <li>Custom CRM Dashboards</li>
-                    <li>Invoice &amp; Billing Automation</li>
-                  </ul>
-                  <div className="serviceCardPills">
-                    <span className="pill">From $1,000</span>
-                    <span className="pill">Free workflow audit</span>
+          <div className="homeServicesGrid">
+            {serviceCards.map((card, idx) => (
+              <div key={card.title} className={`card cardHover homeServiceCard scaleIn stagger-${idx + 1}`}>
+                <div className="cardInner">
+                  <img src={card.image} alt={card.imageAlt} width={1200} height={700} className="homeServiceImage" />
+                  <div className="badge">Service {card.id}</div>
+                  <h3 className="h3" style={{ margin: 0 }}>{card.title}</h3>
+                  <p className="pDark homeServiceDesc">{card.desc}</p>
+                  <div className="pDark homeServiceWho">
+                    {card.who}
                   </div>
-                </div>
-                <div className="serviceCardCta">
-                  <Link href="/systems" className="btn btnPrimary">
-                    Start Workflow Audit <span className="btnArrow">→</span>
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            <div className="card cardHover serviceCard scaleIn stagger-1">
-              <div className="cardInner">
-                <div className="serviceCardBody">
-                  <div className="badge">Marketing</div>
-                  <h3 className="h3 serviceCardTitle">Custom Websites</h3>
-                  <p className="p serviceCardDesc">
-                    Professional, mobile-optimized sites built to convert visitors into booked jobs.
-                    Perfect for local services needing to outrank competitors.
-                  </p>
-                  <ul className="serviceCardList">
-                    <li>Lead Capture &amp; Booking Forms</li>
-                    <li>SEO &amp; Performance Optimized</li>
-                    <li>Booking &amp; Payment Integrations</li>
-                    <li>Mobile-first, fast delivery</li>
-                  </ul>
-                  <div className="serviceCardPills">
-                    <span className="pill">From $1,500</span>
-                    <span className="pill">Free instant estimate</span>
-                  </div>
-                </div>
-                <div className="serviceCardCta">
-                  <TrackLink href="/build/intro" event="cta_home_services_quote" className="btn btnGhost">
-                    Get Instant Website Quote <span className="btnArrow">→</span>
+                  <p className="pDark homeServicePrice">{card.price}</p>
+                  <TrackLink href={card.href} event={card.event} className="btn btnGhost">
+                    Explore {card.title} <span className="btnArrow">→</span>
                   </TrackLink>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ── */}
-      <section className="section sectionBand">
+      <section id="how-it-works" className="section">
         <div className="container">
           <div className="sectionHead fadeUp">
-            <div className="kicker">The Process</div>
-            <h2 className="h2">Simple from first click to launch</h2>
+            <div className="kicker">How it Works</div>
+            <h2 className="h2">Low-friction from intake to launch</h2>
           </div>
 
           <div className="grid4">
             {[
-              { n: "1", title: "Submit Your Intake", desc: "Answer a few questions about your goals, tools, and timeline. Takes under 3 minutes." },
-              { n: "2", title: "Get a Scoped Estimate", desc: "Our AI-powered PIE system analyzes your needs and generates a transparent price range instantly." },
-              { n: "3", title: "Quick Strategy Call", desc: "We align on scope, timeline, and budget. No pressure — just a clear plan." },
-              { n: "4", title: "We Build. You Launch.", desc: "50% deposit to start. We deliver fast, revise until you're happy, then hand it over." },
-            ].map(({ n, title, desc }) => (
-              <div key={n} className={`card processCard fadeUp stagger-${n}`}>
+              { n: "1", title: "Submit Intake", desc: "3 minutes. We capture goals, offer model, and timeline constraints." },
+              { n: "2", title: "Get Scoped Plan", desc: "You receive priorities, transparent pricing range, and execution sequence." },
+              { n: "3", title: "Strategy Alignment", desc: "Quick call to lock scope, timeline, and conversion priorities." },
+              { n: "4", title: "Build + Launch", desc: "Milestone-driven delivery, revision clarity, and launch handoff support." },
+            ].map((step) => (
+              <div key={step.n} className={`card processCard fadeUp stagger-${step.n}`}>
                 <div className="cardInner">
-                  <div className="processNum">{n}</div>
-                  <div className="processTitle">{title}</div>
-                  <p className="pDark">{desc}</p>
+                  <div className="processNum">{step.n}</div>
+                  <div className="processTitle">{step.title}</div>
+                  <p className="pDark">{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid4" style={{ marginTop: 14 }}>
+            {[
+              { value: "24h", label: "Average first response window" },
+              { value: "2-4 wks", label: "Typical delivery after scope lock" },
+              { value: "100%", label: "Scope clarity before build begins" },
+              { value: "Portal", label: "Milestone visibility and updates" },
+            ].map((metric) => (
+              <div key={metric.label} className="card fadeUp">
+                <div className="cardInner">
+                  <div className="statNum" style={{ fontSize: 34 }}>{metric.value}</div>
+                  <p className="pDark" style={{ marginTop: 6 }}>{metric.label}</p>
                 </div>
               </div>
             ))}
@@ -203,70 +181,28 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── SOCIAL PROOF ── */}
-      <section className="section">
-        <div className="container">
-          <div className="sectionHead fadeUp">
-            <div className="kicker">Proof & Performance</div>
-            <h2 className="h2">Built for measurable business outcomes</h2>
-            <p className="p" style={{ maxWidth: 760 }}>
-              While client testimonials are being finalized, we surface operational proof signals
-              that matter most to decision-makers evaluating launch readiness.
-            </p>
-          </div>
-
-          <div className="grid4">
-            {[
-              { value: "40+", label: "Projects scoped", note: "Website + workflow projects across local service businesses." },
-              { value: "24h", label: "Average first response", note: "Inbound estimate and intake reviews handled within one business day." },
-              { value: "2-4 wks", label: "Typical delivery window", note: "Most build timelines after scope lock and content readiness." },
-              { value: "100%", label: "Scope clarity before build", note: "Every project starts with a transparent estimate and signed scope." },
-            ].map((item) => (
-              <div key={item.label} className="card fadeUp">
-                <div className="cardInner">
-                  <div className="statNum" style={{ fontSize: 34 }}>{item.value}</div>
-                  <div className="processTitle" style={{ marginTop: 6 }}>{item.label}</div>
-                  <p className="pDark" style={{ marginTop: 8 }}>{item.note}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="pills pillsCenter fadeUp" style={{ marginTop: 18 }} aria-label="Technology and delivery stack highlights">
-            <span className="badge">Supabase Auth + Data</span>
-            <span className="badge">Stripe Payment Workflows</span>
-            <span className="badge">Automated Intake Routing</span>
-            <span className="badge">Client Portal Visibility</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ── BOTTOM CTA ── */}
       <section className="section">
         <div className="container">
           <div className="card ctaCard scaleIn">
             <div className="cardInner">
               <div className="kicker">Ready to start?</div>
-              <h2 className="h2">
-                Tell us what you need.<br />Get a clear plan in 24 hours.
-              </h2>
+              <h2 className="h2">Start with one unified growth plan.</h2>
               <p className="p">
-                No vague proposals. No hidden fees. Every project starts with a free estimate and a strategy call
-                so you know exactly what you&apos;re getting before anything is built.
+                Clear scope, clear pricing, no hidden add-ons. We route into the right lane and prioritize
+                Website + E-Commerce outcomes first.
               </p>
               <div className="heroActions">
-                <TrackLink href="/build/intro" event="cta_home_bottom_quote" className="btn btnPrimary btnLg">
-                  Get a Website Quote <span className="btnArrow">→</span>
+                <TrackLink href="/ecommerce/intake" event="cta_home_bottom_ecommerce" className="btn btnPrimary btnLg">
+                  Start E-Commerce Intake <span className="btnArrow">→</span>
                 </TrackLink>
-                <TrackLink href="/systems" event="cta_home_bottom_systems" className="btn btnGhost btnLg">
-                  Start Workflow Audit
+                <TrackLink href="/build/intro" event="cta_home_bottom_quote" className="btn btnGhost btnLg">
+                  Get Website Quote
                 </TrackLink>
               </div>
             </div>
           </div>
         </div>
       </section>
-
     </main>
   );
 }

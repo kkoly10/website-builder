@@ -21,15 +21,8 @@ export default function BrandLogo({
           xmlns="http://www.w3.org/2000/svg"
           role="img"
         >
-          <rect
-            x="1"
-            y="1"
-            width="44"
-            height="44"
-            rx="13"
-            fill="#0a0c14"
-            stroke="#252a3a"
-          />
+          <rect x="1" y="1" width="44" height="44" rx="13" fill="#0a0c14" stroke="#252a3a" />
+
           <defs>
             <linearGradient id="crecyBrandGrad" x1="8" y1="8" x2="38" y2="38">
               <stop offset="0%" stopColor="#c9a84c" />
@@ -37,39 +30,30 @@ export default function BrandLogo({
             </linearGradient>
           </defs>
 
-          {/* Outer C */}
+          {/* C stroke — monoline minimal */}
           <path
-            d="M31.8 14.6C30 12.9 27.7 11.9 25 11.9C19.2 11.9 14.6 16.1 14 21.6C13.2 27.9 17.9 33.2 24.2 33.2C27.6 33.2 30.5 31.9 32.5 29.7"
+            d="M30.3 16.1C29 14.8 27.1 14 24.9 14C20.2 14 16.4 17.8 16.4 22.5C16.4 27.2 20.2 31 24.9 31C27.1 31 29 30.2 30.3 28.9"
+            fill="none"
             stroke="url(#crecyBrandGrad)"
-            strokeWidth="3.7"
+            strokeWidth="2.55"
             strokeLinecap="round"
           />
 
-          {/* Inner C / G curve */}
+          {/* S stroke — monoline minimal */}
           <path
-            d="M24.6 16.8C21.5 16.8 19 19 18.7 22C18.3 25.4 20.9 28.1 24.2 28.1C26.2 28.1 27.9 27.4 29.1 26"
+            d="M27 17.9C26.2 17.4 25.4 17.1 24.5 17.1C23.1 17.1 21.9 17.8 21.9 19C21.9 20 22.6 20.8 24.4 21.1C26.9 21.5 27.7 22.8 27.7 24.2C27.7 26 26.2 27 24.1 27C22.8 27 21.5 26.6 20.5 25.9"
+            fill="none"
             stroke="url(#crecyBrandGrad)"
-            strokeWidth="3.7"
+            strokeWidth="2.05"
             strokeLinecap="round"
-          />
-
-          {/* G bar */}
-          <path
-            d="M25.2 22.9H31.6"
-            stroke="url(#crecyBrandGrad)"
-            strokeWidth="3.7"
-            strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </svg>
       </span>
 
       <span className="brandLogoText">
         <span className="brandLogoTitle">CrecyStudio</span>
-        {showTag ? (
-          <span className="brandLogoSub">
-            Websites &bull; Automation &bull; Portal Systems
-          </span>
-        ) : null}
+        {showTag ? <span className="brandLogoSub">Web • Ops • E-Commerce</span> : null}
       </span>
     </Link>
   );
