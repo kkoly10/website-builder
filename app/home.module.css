@@ -11,7 +11,7 @@
 
 .hero {
   position: relative;
-  min-height: 88vh;
+  min-height: 82vh;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -32,16 +32,28 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(3, 7, 16, 0.92) 0%, rgba(3, 7, 16, 0.82) 30%, rgba(3, 7, 16, 0.48) 56%, rgba(3, 7, 16, 0.62) 100%),
-    linear-gradient(180deg, rgba(3, 7, 16, 0.22) 0%, rgba(3, 7, 16, 0.34) 28%, rgba(3, 7, 16, 0.74) 100%);
+    linear-gradient(
+      90deg,
+      rgba(3, 7, 16, 0.94) 0%,
+      rgba(3, 7, 16, 0.84) 28%,
+      rgba(3, 7, 16, 0.58) 52%,
+      rgba(3, 7, 16, 0.66) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(3, 7, 16, 0.36) 0%,
+      rgba(3, 7, 16, 0.28) 18%,
+      rgba(3, 7, 16, 0.42) 42%,
+      rgba(3, 7, 16, 0.78) 100%
+    );
 }
 
 .heroGlow {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 52% 76%, rgba(255, 214, 127, 0.18), transparent 0 18%),
-    radial-gradient(circle at 18% 20%, rgba(77, 120, 255, 0.08), transparent 0 28%);
+    radial-gradient(circle at 52% 74%, rgba(255, 214, 127, 0.11), transparent 0 14%),
+    radial-gradient(circle at 18% 20%, rgba(77, 120, 255, 0.06), transparent 0 24%);
   pointer-events: none;
 }
 
@@ -53,22 +65,22 @@
 
 .heroShell {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.58fr);
-  gap: 28px;
-  align-items: end;
-  min-height: 72vh;
-  padding: 110px 0 52px;
+  grid-template-columns: minmax(0, 1.14fr) minmax(300px, 0.5fr);
+  gap: 24px;
+  align-items: center;
+  min-height: 66vh;
+  padding: 82px 0 34px;
 }
 
 .heroCopy {
-  max-width: 760px;
+  max-width: 700px;
 }
 
 .heroTitle {
-  margin-top: 18px;
-  max-width: 820px;
+  margin-top: 16px;
+  max-width: 760px;
   line-height: 0.98;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.055em;
   color: #f4f7ff;
   text-shadow: 0 10px 30px rgba(0, 0, 0, 0.34);
 }
@@ -78,25 +90,25 @@
 }
 
 .heroText {
-  max-width: 690px;
-  margin-top: 18px;
+  max-width: 620px;
+  margin-top: 16px;
   font-size: 18px;
   line-height: 1.7;
-  color: rgba(232, 238, 248, 0.86);
+  color: rgba(232, 238, 248, 0.88);
 }
 
 .heroActions {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  margin-top: 24px;
+  margin-top: 22px;
 }
 
 .quickLinks {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
-  margin-top: 20px;
+  margin-top: 18px;
 }
 
 .quickLink {
@@ -114,15 +126,18 @@
 }
 
 .heroPanel {
+  justify-self: end;
+  width: 100%;
+  max-width: 420px;
   border-radius: 20px;
-  border: 1px solid rgba(91, 103, 143, 0.34);
+  border: 1px solid rgba(91, 103, 143, 0.32);
   background:
-    linear-gradient(180deg, rgba(11, 17, 31, 0.76), rgba(8, 12, 22, 0.9));
+    linear-gradient(180deg, rgba(11, 17, 31, 0.7), rgba(8, 12, 22, 0.88));
   box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.28),
+    0 20px 52px rgba(0, 0, 0, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(10px);
-  padding: 22px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -140,7 +155,7 @@
 
 .panelTitle {
   margin-top: 10px;
-  font-size: 22px;
+  font-size: 21px;
   font-weight: 800;
   line-height: 1.15;
   color: #eef2ff;
@@ -148,8 +163,8 @@
 
 .laneList {
   display: grid;
-  gap: 14px;
-  margin-top: 18px;
+  gap: 12px;
+  margin-top: 16px;
 }
 
 .laneItem {
@@ -158,7 +173,7 @@
   gap: 12px;
   align-items: start;
   padding: 12px 0;
-  border-top: 1px solid rgba(67, 75, 108, 0.32);
+  border-top: 1px solid rgba(67, 75, 108, 0.28);
 }
 
 .laneItem:first-child {
@@ -189,9 +204,9 @@
 }
 
 .heroPanelFoot {
-  margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(67, 75, 108, 0.32);
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(67, 75, 108, 0.28);
   color: #7e879f;
   font-size: 13px;
   line-height: 1.55;
@@ -400,6 +415,11 @@
     align-items: start;
   }
 
+  .heroPanel {
+    justify-self: start;
+    max-width: 520px;
+  }
+
   .hero {
     min-height: auto;
   }
@@ -412,7 +432,7 @@
   }
 
   .heroShell {
-    padding: 98px 0 44px;
+    padding: 88px 0 40px;
     min-height: auto;
   }
 }
@@ -427,7 +447,7 @@
   }
 
   .heroShell {
-    padding: 88px 0 38px;
+    padding: 78px 0 34px;
     gap: 18px;
   }
 
@@ -458,5 +478,9 @@
 
   .quickLink {
     justify-content: center;
+  }
+
+  .heroPanel {
+    max-width: none;
   }
 }
