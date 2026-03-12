@@ -111,38 +111,19 @@ export default function Home() {
                 <span className={styles.accent}> One cleaner growth engine.</span>
               </h1>
 
-              <p className={`p ${styles.heroText}`}>
-                CrecyStudio helps businesses build a stronger online presence,
-                improve customer-facing sales flow, and remove backend friction
-                so growth feels more organized from first click to fulfillment.
-              </p>
-
-              <div className={styles.heroActions}>
-                <TrackLink
-                  href="/#services"
-                  event="cta_home_hero_start_here"
-                  className="btn btnPrimary btnLg"
-                >
-                  Start Here <span className="btnArrow">→</span>
-                </TrackLink>
-
-                <TrackLink
-                  href="/process"
-                  event="cta_home_hero_process"
-                  className="btn btnGhost btnLg"
-                >
-                  How It Works
-                </TrackLink>
+              <div className={styles.heroBridgeCopy}>
+                <div className={styles.heroBridgeLabel}>Start with the right lane</div>
+                <p className={styles.heroBridgeText}>
+                  Pick the problem you need solved first. CrecyStudio helps
+                  businesses build a stronger online presence, improve
+                  customer-facing sales flow, and remove backend friction so
+                  growth feels more organized from first click to fulfillment.
+                </p>
               </div>
             </div>
 
             <aside className={styles.heroPanel}>
-              <div>
-                <div className={styles.panelEyebrow}>Start with the right lane</div>
-                <div className={styles.panelTitle}>
-                  Pick the problem you need solved first.
-                </div>
-              </div>
+              <div className={styles.panelEyebrow}>Choose your lane</div>
 
               <div className={styles.laneList}>
                 <div className={styles.laneItem}>
@@ -168,11 +149,6 @@ export default function Home() {
                     <span>Internal operations, routing, and automation.</span>
                   </div>
                 </div>
-              </div>
-
-              <div className={styles.heroPanelFoot}>
-                The goal is not to send you into the wrong form. The goal is to
-                guide you into the right lane first.
               </div>
             </aside>
 
