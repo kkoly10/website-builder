@@ -11,7 +11,7 @@
 
 .hero {
   position: relative;
-  min-height: 76vh;
+  min-height: 74vh;
   display: flex;
   align-items: flex-start;
   overflow: hidden;
@@ -34,17 +34,17 @@
   background:
     linear-gradient(
       90deg,
-      rgba(3, 7, 16, 0.92) 0%,
-      rgba(3, 7, 16, 0.80) 20%,
-      rgba(3, 7, 16, 0.50) 44%,
-      rgba(3, 7, 16, 0.58) 100%
+      rgba(3, 7, 16, 0.90) 0%,
+      rgba(3, 7, 16, 0.76) 22%,
+      rgba(3, 7, 16, 0.42) 48%,
+      rgba(3, 7, 16, 0.56) 100%
     ),
     linear-gradient(
       180deg,
-      rgba(3, 7, 16, 0.26) 0%,
-      rgba(3, 7, 16, 0.14) 16%,
-      rgba(3, 7, 16, 0.28) 42%,
-      rgba(3, 7, 16, 0.72) 100%
+      rgba(3, 7, 16, 0.16) 0%,
+      rgba(3, 7, 16, 0.08) 18%,
+      rgba(3, 7, 16, 0.20) 42%,
+      rgba(3, 7, 16, 0.70) 100%
     );
 }
 
@@ -52,8 +52,8 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 50% 72%, rgba(255, 214, 127, 0.07), transparent 0 13%),
-    radial-gradient(circle at 18% 22%, rgba(77, 120, 255, 0.05), transparent 0 24%);
+    radial-gradient(circle at 50% 72%, rgba(255, 214, 127, 0.06), transparent 0 12%),
+    radial-gradient(circle at 18% 22%, rgba(77, 120, 255, 0.04), transparent 0 22%);
   pointer-events: none;
 }
 
@@ -64,57 +64,58 @@
 }
 
 .heroContent {
-  max-width: 760px;
-  padding: 120px 0 92px clamp(8px, 4vw, 42px);
+  width: min(1080px, 100%);
+  padding: 110px 0 84px clamp(0px, 3vw, 24px);
 }
 
 .heroTitle {
   margin-top: 14px;
-  max-width: 760px;
-  line-height: 0.97;
-  letter-spacing: -0.055em;
+  max-width: 980px;
+  line-height: 0.96;
+  letter-spacing: -0.06em;
   color: #f4f7ff;
-  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.34);
+  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.30);
 }
 
 .accent {
   color: #ddb764;
 }
 
-.heroLaneStack {
+.heroLaneGrid {
   display: grid;
-  gap: 10px;
-  margin-top: 22px;
-  max-width: 700px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  width: min(980px, 100%);
+  margin-top: 30px;
 }
 
-.heroLaneRow {
+.heroLaneCard {
   display: flex;
+  flex-direction: column;
   gap: 8px;
-  align-items: baseline;
   text-decoration: none;
-  color: inherit;
-  padding: 2px 0;
+  padding: 18px 18px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(129, 143, 188, 0.22);
+  background: rgba(255, 255, 255, 0.035);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 18px 34px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .heroLaneName {
   color: #eef2ff;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 800;
+  line-height: 1.2;
 }
 
 .heroLaneText {
-  color: rgba(228, 234, 245, 0.88);
-  font-size: 17px;
+  color: rgba(221, 228, 241, 0.88);
+  font-size: 15px;
   line-height: 1.55;
-}
-
-.heroSupport {
-  max-width: 630px;
-  margin-top: 22px;
-  color: rgba(202, 211, 226, 0.86);
-  font-size: 17px;
-  line-height: 1.72;
 }
 
 .sectionHead {
@@ -325,7 +326,13 @@
   }
 
   .heroContent {
-    padding: 108px 0 78px 0;
+    padding: 98px 0 72px 0;
+    width: min(100%, 920px);
+  }
+
+  .heroLaneGrid {
+    grid-template-columns: 1fr;
+    width: min(680px, 100%);
   }
 }
 
@@ -336,8 +343,7 @@
   }
 
   .heroContent {
-    padding: 96px 0 68px 0;
-    max-width: 100%;
+    padding: 90px 0 64px 0;
   }
 }
 
@@ -351,18 +357,16 @@
   }
 
   .heroContent {
-    padding: 84px 0 52px 0;
+    padding: 80px 0 52px 0;
   }
 
-  .heroLaneRow {
-    display: block;
+  .heroLaneName {
+    font-size: 17px;
   }
 
-  .heroLaneName,
   .heroLaneText,
-  .heroSupport,
   .bottomText {
-    font-size: 16px;
+    font-size: 15px;
   }
 
   .cardTitle {
