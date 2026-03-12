@@ -102,7 +102,7 @@ export default function Home() {
         </div>
 
         <div className={`container ${styles.heroContainer}`}>
-          <div className={styles.heroShell}>
+          <div className={styles.heroStage}>
             <div className={styles.heroCopy}>
               <div className="kicker">Unified Growth System</div>
 
@@ -132,30 +132,6 @@ export default function Home() {
                   className="btn btnGhost btnLg"
                 >
                   How It Works
-                </TrackLink>
-              </div>
-
-              <div className={styles.quickLinks}>
-                <TrackLink
-                  href="/websites"
-                  event="cta_home_quick_websites"
-                  className={styles.quickLink}
-                >
-                  Explore Websites
-                </TrackLink>
-                <TrackLink
-                  href="/ecommerce"
-                  event="cta_home_quick_ecommerce"
-                  className={styles.quickLink}
-                >
-                  Explore E-Commerce
-                </TrackLink>
-                <TrackLink
-                  href="/systems"
-                  event="cta_home_quick_systems"
-                  className={styles.quickLink}
-                >
-                  Explore Workflow Systems
                 </TrackLink>
               </div>
             </div>
@@ -199,6 +175,39 @@ export default function Home() {
                 guide you into the right lane first.
               </div>
             </aside>
+
+            <div className={styles.heroBridge}>
+              <div className={styles.heroBridgeCopy}>
+                <div className={styles.heroBridgeLabel}>Explore the three lanes</div>
+                <p className={styles.heroBridgeText}>
+                  Learn what each lane does before you jump into intake.
+                </p>
+              </div>
+
+              <div className={styles.quickLinks}>
+                <TrackLink
+                  href="/websites"
+                  event="cta_home_quick_websites"
+                  className={styles.quickLink}
+                >
+                  Explore Websites
+                </TrackLink>
+                <TrackLink
+                  href="/ecommerce"
+                  event="cta_home_quick_ecommerce"
+                  className={styles.quickLink}
+                >
+                  Explore E-Commerce
+                </TrackLink>
+                <TrackLink
+                  href="/systems"
+                  event="cta_home_quick_systems"
+                  className={styles.quickLink}
+                >
+                  Explore Workflow Systems
+                </TrackLink>
+              </div>
+            </div>
           </div>
         </div>
       </section>
