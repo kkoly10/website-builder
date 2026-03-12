@@ -102,43 +102,71 @@ export default function Home() {
         </div>
 
         <div className={`container ${styles.heroContainer}`}>
-          <div className={styles.heroContent}>
-            <div className="kicker">Unified Growth System</div>
+          <div className={styles.heroShell}>
+            <div className={styles.heroCopy}>
+              <div className="kicker">Unified Growth System</div>
 
-            <h1 className={`h1 ${styles.heroTitle}`}>
-              Websites, e-commerce, and workflow systems built to help your
-              business look better, sell better, and run cleaner.
-            </h1>
+              <h1 className={`h1 ${styles.heroTitle}`}>
+                Three service lanes.
+                <span className={styles.accent}> One cleaner growth engine.</span>
+              </h1>
 
-            <p className={styles.heroSubheadline}>
-              For businesses that need stronger credibility, smoother online
-              selling, and less backend friction.
-            </p>
+              <p className={styles.heroSubheadline}>
+                Websites, e-commerce, and workflow systems designed to help your
+                business look better, sell better, and run cleaner.
+              </p>
 
-            <div className={styles.heroDescriptors}>
-              <div className={styles.heroDescriptor}>
-                <span className={styles.heroDescriptorTitle}>Websites</span>
-                <span className={styles.heroDescriptorText}>
-                  Trust, credibility, and lead conversion.
-                </span>
-              </div>
+              <div className={styles.heroActions}>
+                <TrackLink
+                  href="/#services"
+                  event="cta_home_hero_start_here"
+                  className="btn btnPrimary btnLg"
+                >
+                  Start Here <span className="btnArrow">→</span>
+                </TrackLink>
 
-              <div className={styles.heroDescriptor}>
-                <span className={styles.heroDescriptorTitle}>E-Commerce</span>
-                <span className={styles.heroDescriptorText}>
-                  Storefront, checkout, and order experience.
-                </span>
-              </div>
-
-              <div className={styles.heroDescriptor}>
-                <span className={styles.heroDescriptorTitle}>
-                  Workflow Systems
-                </span>
-                <span className={styles.heroDescriptorText}>
-                  Internal operations, routing, and automation.
-                </span>
+                <TrackLink
+                  href="/process"
+                  event="cta_home_hero_process"
+                  className="btn btnGhost btnLg"
+                >
+                  How It Works
+                </TrackLink>
               </div>
             </div>
+
+            <aside className={styles.heroPanel}>
+              <div className={styles.panelEyebrow}>Start with the right lane</div>
+              <div className={styles.panelTitle}>
+                Pick the problem you need solved first.
+              </div>
+
+              <div className={styles.laneList}>
+                <div className={styles.laneItem}>
+                  <div className={styles.laneDot} />
+                  <div>
+                    <strong>Websites</strong>
+                    <span>Trust, credibility, and lead conversion.</span>
+                  </div>
+                </div>
+
+                <div className={styles.laneItem}>
+                  <div className={styles.laneDot} />
+                  <div>
+                    <strong>E-Commerce</strong>
+                    <span>Storefront flow, checkout, and order experience.</span>
+                  </div>
+                </div>
+
+                <div className={styles.laneItem}>
+                  <div className={styles.laneDot} />
+                  <div>
+                    <strong>Workflow Systems</strong>
+                    <span>Internal operations, routing, and automation.</span>
+                  </div>
+                </div>
+              </div>
+            </aside>
           </div>
         </div>
       </section>
