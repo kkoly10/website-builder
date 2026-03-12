@@ -110,34 +110,28 @@ export default function Home() {
               <span className={styles.accent}> One cleaner growth engine.</span>
             </h1>
 
-            <div className={styles.heroLaneStack}>
-              <Link href="/websites" className={styles.heroLaneRow}>
-                <span className={styles.heroLaneName}>Websites:</span>
+            <div className={styles.heroLaneGrid}>
+              <Link href="/websites" className={styles.heroLaneCard}>
+                <span className={styles.heroLaneName}>Websites</span>
                 <span className={styles.heroLaneText}>
-                  trust, credibility, and lead conversion.
+                  Trust, credibility, and lead conversion.
                 </span>
               </Link>
 
-              <Link href="/ecommerce" className={styles.heroLaneRow}>
-                <span className={styles.heroLaneName}>E-Commerce:</span>
+              <Link href="/ecommerce" className={styles.heroLaneCard}>
+                <span className={styles.heroLaneName}>E-Commerce</span>
                 <span className={styles.heroLaneText}>
-                  storefront, checkout, and order experience.
+                  Storefront, checkout, and order experience.
                 </span>
               </Link>
 
-              <Link href="/systems" className={styles.heroLaneRow}>
-                <span className={styles.heroLaneName}>Workflow Systems:</span>
+              <Link href="/systems" className={styles.heroLaneCard}>
+                <span className={styles.heroLaneName}>Workflow Systems</span>
                 <span className={styles.heroLaneText}>
-                  internal operations, routing, and automation.
+                  Internal operations, routing, and automation.
                 </span>
               </Link>
             </div>
-
-            <p className={styles.heroSupport}>
-              CrecyStudio helps businesses build a stronger online presence,
-              improve customer-facing sales flow, and remove backend friction so
-              growth feels more organized from first click to fulfillment.
-            </p>
           </div>
         </div>
       </section>
