@@ -87,23 +87,34 @@ export default function Home() {
     <main className={styles.home10x}>
       <ScrollReveal />
 
-      <section className={`section ${styles.hero}`}>
-        <div className="container">
-          <div className={`${styles.heroShell} card fadeUp inView`}>
+      <section className={styles.hero}>
+        <div className={styles.heroMedia}>
+          <Image
+            src="/marketing/hero-convergence.png"
+            alt="Abstract convergence of three service lanes into one unified growth system"
+            fill
+            priority
+            sizes="100vw"
+            className={styles.heroImage}
+          />
+          <div className={styles.heroOverlay} />
+          <div className={styles.heroGlow} />
+        </div>
+
+        <div className={`container ${styles.heroContainer}`}>
+          <div className={styles.heroShell}>
             <div className={styles.heroCopy}>
               <div className="kicker">Unified Growth System</div>
 
               <h1 className={`h1 ${styles.heroTitle}`}>
-                One studio for your
-                <span className={styles.accent}> website</span>,
-                <span className={styles.accent}> e-commerce</span>, and
-                <span className={styles.accent}> operations</span>.
+                Three service lanes.
+                <span className={styles.accent}> One cleaner growth engine.</span>
               </h1>
 
               <p className={`p ${styles.heroText}`}>
-                CrecyStudio helps businesses look more credible online, improve
-                their customer-facing sales flow, and remove manual backend
-                friction so growth feels cleaner from first click to delivery.
+                CrecyStudio helps businesses build a stronger online presence,
+                improve customer-facing sales flow, and remove backend friction
+                so growth feels more organized from first click to fulfillment.
               </p>
 
               <div className={styles.heroActions}>
@@ -149,11 +160,11 @@ export default function Home() {
               </div>
             </div>
 
-            <div className={styles.heroPanel}>
+            <aside className={styles.heroPanel}>
               <div>
-                <div className={styles.panelEyebrow}>What this solves</div>
+                <div className={styles.panelEyebrow}>Start with the right lane</div>
                 <div className={styles.panelTitle}>
-                  Three lanes. One clearer buyer journey.
+                  Pick the problem you need solved first.
                 </div>
               </div>
 
@@ -161,16 +172,16 @@ export default function Home() {
                 <div className={styles.laneItem}>
                   <div className={styles.laneDot} />
                   <div>
-                    <strong>Website Building</strong>
-                    <span>Trust, positioning, and lead conversion.</span>
+                    <strong>Websites</strong>
+                    <span>Trust, credibility, and lead conversion.</span>
                   </div>
                 </div>
 
                 <div className={styles.laneItem}>
                   <div className={styles.laneDot} />
                   <div>
-                    <strong>E-Commerce Systems</strong>
-                    <span>Storefront flow, checkout, and post-purchase clarity.</span>
+                    <strong>E-Commerce</strong>
+                    <span>Storefront flow, checkout, and order experience.</span>
                   </div>
                 </div>
 
@@ -178,16 +189,16 @@ export default function Home() {
                   <div className={styles.laneDot} />
                   <div>
                     <strong>Workflow Systems</strong>
-                    <span>Routing, automation, handoffs, and admin cleanup.</span>
+                    <span>Internal operations, routing, and automation.</span>
                   </div>
                 </div>
               </div>
 
               <div className={styles.heroPanelFoot}>
-                Built to help buyers understand the right lane before they enter
-                the wrong form.
+                The goal is not to send you into the wrong form. The goal is to
+                guide you into the right lane first.
               </div>
-            </div>
+            </aside>
           </div>
         </div>
       </section>
