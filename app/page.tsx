@@ -106,31 +106,38 @@ export default function Home() {
             <div className="kicker">Unified Growth System</div>
 
             <h1 className={`h1 ${styles.heroTitle}`}>
-              Three service lanes.
-              <span className={styles.accent}> One cleaner growth engine.</span>
+              Websites, e-commerce, and workflow systems built to help your
+              business look better, sell better, and run cleaner.
             </h1>
 
-            <div className={styles.heroLaneGrid}>
-              <Link href="/websites" className={styles.heroLaneCard}>
-                <span className={styles.heroLaneName}>Websites</span>
-                <span className={styles.heroLaneText}>
+            <p className={styles.heroSubheadline}>
+              For businesses that need stronger credibility, smoother online
+              selling, and less backend friction.
+            </p>
+
+            <div className={styles.heroDescriptors}>
+              <div className={styles.heroDescriptor}>
+                <span className={styles.heroDescriptorTitle}>Websites</span>
+                <span className={styles.heroDescriptorText}>
                   Trust, credibility, and lead conversion.
                 </span>
-              </Link>
+              </div>
 
-              <Link href="/ecommerce" className={styles.heroLaneCard}>
-                <span className={styles.heroLaneName}>E-Commerce</span>
-                <span className={styles.heroLaneText}>
+              <div className={styles.heroDescriptor}>
+                <span className={styles.heroDescriptorTitle}>E-Commerce</span>
+                <span className={styles.heroDescriptorText}>
                   Storefront, checkout, and order experience.
                 </span>
-              </Link>
+              </div>
 
-              <Link href="/systems" className={styles.heroLaneCard}>
-                <span className={styles.heroLaneName}>Workflow Systems</span>
-                <span className={styles.heroLaneText}>
+              <div className={styles.heroDescriptor}>
+                <span className={styles.heroDescriptorTitle}>
+                  Workflow Systems
+                </span>
+                <span className={styles.heroDescriptorText}>
                   Internal operations, routing, and automation.
                 </span>
-              </Link>
+              </div>
             </div>
           </div>
         </div>
