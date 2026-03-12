@@ -39,6 +39,10 @@ export default async function RootLayout({
     ? "/portal"
     : `/login?next=${encodeURIComponent("/portal")}`;
 
+  const mobilePrimaryHref = userEmail ? "/portal" : startHereHref;
+  const mobilePrimaryLabel = userEmail ? "Portal" : "Start";
+  const mobilePrimaryAria = userEmail ? "Open client portal" : "Start Here";
+
   const navLinks = [
     { href: "/websites", label: "Websites" },
     { href: "/ecommerce", label: "E-Commerce" },
@@ -84,8 +88,12 @@ export default async function RootLayout({
               </nav>
 
               <div className="mobileHeaderActions">
-                <Link href={startHereHref} className="btn btnPrimary mobilePrimaryCta">
-                  Start Here
+                <Link
+                  href={mobilePrimaryHref}
+                  className="btn btnPrimary mobilePrimaryCta"
+                  aria-label={mobilePrimaryAria}
+                >
+                  {mobilePrimaryLabel}
                 </Link>
 
                 <details className="mobileMenu">
