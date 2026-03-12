@@ -82,32 +82,27 @@ const comparison = [
   },
 ] as const;
 
-const laneChooser = [
-  {
-    title: "Websites",
-    desc: "Trust, credibility, and lead conversion.",
-    href: "/websites",
-  },
-  {
-    title: "E-Commerce",
-    desc: "Storefront flow, checkout, and order experience.",
-    href: "/ecommerce",
-  },
-  {
-    title: "Workflow Systems",
-    desc: "Internal operations, routing, and automation.",
-    href: "/systems",
-  },
-] as const;
-
 export default function Home() {
   return (
     <main className={styles.home10x}>
       <ScrollReveal />
 
       <section className={styles.hero}>
-        <div className="container">
-          <div className={styles.heroShell}>
+        <div className={styles.heroMedia}>
+          <Image
+            src="/marketing/hero-convergence.png"
+            alt="Abstract convergence of three service lanes into one unified growth system"
+            fill
+            priority
+            sizes="100vw"
+            className={styles.heroImage}
+          />
+          <div className={styles.heroOverlay} />
+          <div className={styles.heroGlow} />
+        </div>
+
+        <div className={`container ${styles.heroContainer}`}>
+          <div className={styles.heroStage}>
             <div className={styles.heroCopy}>
               <div className="kicker">Unified Growth System</div>
 
@@ -139,6 +134,55 @@ export default function Home() {
                   How It Works
                 </TrackLink>
               </div>
+            </div>
+
+            <aside className={styles.heroPanel}>
+              <div>
+                <div className={styles.panelEyebrow}>Start with the right lane</div>
+                <div className={styles.panelTitle}>
+                  Pick the problem you need solved first.
+                </div>
+              </div>
+
+              <div className={styles.laneList}>
+                <div className={styles.laneItem}>
+                  <div className={styles.laneDot} />
+                  <div>
+                    <strong>Websites</strong>
+                    <span>Trust, credibility, and lead conversion.</span>
+                  </div>
+                </div>
+
+                <div className={styles.laneItem}>
+                  <div className={styles.laneDot} />
+                  <div>
+                    <strong>E-Commerce</strong>
+                    <span>Storefront flow, checkout, and order experience.</span>
+                  </div>
+                </div>
+
+                <div className={styles.laneItem}>
+                  <div className={styles.laneDot} />
+                  <div>
+                    <strong>Workflow Systems</strong>
+                    <span>Internal operations, routing, and automation.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.heroPanelFoot}>
+                The goal is not to send you into the wrong form. The goal is to
+                guide you into the right lane first.
+              </div>
+            </aside>
+
+            <div className={styles.heroBridge}>
+              <div className={styles.heroBridgeCopy}>
+                <div className={styles.heroBridgeLabel}>Explore the three lanes</div>
+                <p className={styles.heroBridgeText}>
+                  Learn what each lane does before you jump into intake.
+                </p>
+              </div>
 
               <div className={styles.quickLinks}>
                 <TrackLink
@@ -148,6 +192,7 @@ export default function Home() {
                 >
                   Explore Websites
                 </TrackLink>
+
                 <TrackLink
                   href="/ecommerce"
                   event="cta_home_quick_ecommerce"
@@ -155,6 +200,7 @@ export default function Home() {
                 >
                   Explore E-Commerce
                 </TrackLink>
+
                 <TrackLink
                   href="/systems"
                   event="cta_home_quick_systems"
@@ -164,39 +210,6 @@ export default function Home() {
                 </TrackLink>
               </div>
             </div>
-
-            <div className={styles.heroVisualShell}>
-              <div className={styles.heroVisualTopbar}>
-                <span className={styles.visualTopPill}>3 lanes → 1 engine</span>
-              </div>
-
-              <div className={styles.heroVisual}>
-                <Image
-                  src="/marketing/hero-convergence.png"
-                  alt="Abstract convergence of three service lanes into one unified growth system"
-                  fill
-                  priority
-                  sizes="(max-width: 1100px) 100vw, 48vw"
-                  className={styles.heroImage}
-                />
-                <div className={styles.heroImageOverlay} />
-
-                <div className={styles.visualLegend}>
-                  <span>Websites</span>
-                  <span>E-Commerce</span>
-                  <span>Workflow Systems</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.laneChooser}>
-            {laneChooser.map((lane) => (
-              <Link key={lane.title} href={lane.href} className={styles.laneChooserCard}>
-                <div className={styles.laneChooserTitle}>{lane.title}</div>
-                <div className={styles.laneChooserText}>{lane.desc}</div>
-              </Link>
-            ))}
           </div>
         </div>
       </section>
