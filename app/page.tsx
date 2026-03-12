@@ -102,90 +102,42 @@ export default function Home() {
         </div>
 
         <div className={`container ${styles.heroContainer}`}>
-          <div className={styles.heroStage}>
-            <div className={styles.heroCopy}>
-              <div className="kicker">Unified Growth System</div>
+          <div className={styles.heroContent}>
+            <div className="kicker">Unified Growth System</div>
 
-              <h1 className={`h1 ${styles.heroTitle}`}>
-                Three service lanes.
-                <span className={styles.accent}> One cleaner growth engine.</span>
-              </h1>
+            <h1 className={`h1 ${styles.heroTitle}`}>
+              Three service lanes.
+              <span className={styles.accent}> One cleaner growth engine.</span>
+            </h1>
 
-              <div className={styles.heroBridgeCopy}>
-                <div className={styles.heroBridgeLabel}>Start with the right lane</div>
-                <p className={styles.heroBridgeText}>
-                  Pick the problem you need solved first. CrecyStudio helps
-                  businesses build a stronger online presence, improve
-                  customer-facing sales flow, and remove backend friction so
-                  growth feels more organized from first click to fulfillment.
-                </p>
-              </div>
+            <div className={styles.heroLaneStack}>
+              <Link href="/websites" className={styles.heroLaneRow}>
+                <span className={styles.heroLaneName}>Websites:</span>
+                <span className={styles.heroLaneText}>
+                  trust, credibility, and lead conversion.
+                </span>
+              </Link>
+
+              <Link href="/ecommerce" className={styles.heroLaneRow}>
+                <span className={styles.heroLaneName}>E-Commerce:</span>
+                <span className={styles.heroLaneText}>
+                  storefront, checkout, and order experience.
+                </span>
+              </Link>
+
+              <Link href="/systems" className={styles.heroLaneRow}>
+                <span className={styles.heroLaneName}>Workflow Systems:</span>
+                <span className={styles.heroLaneText}>
+                  internal operations, routing, and automation.
+                </span>
+              </Link>
             </div>
 
-            <aside className={styles.heroPanel}>
-              <div className={styles.panelEyebrow}>Choose your lane</div>
-
-              <div className={styles.laneList}>
-                <div className={styles.laneItem}>
-                  <div className={styles.laneDot} />
-                  <div>
-                    <strong>Websites</strong>
-                    <span>Trust, credibility, and lead conversion.</span>
-                  </div>
-                </div>
-
-                <div className={styles.laneItem}>
-                  <div className={styles.laneDot} />
-                  <div>
-                    <strong>E-Commerce</strong>
-                    <span>Storefront flow, checkout, and order experience.</span>
-                  </div>
-                </div>
-
-                <div className={styles.laneItem}>
-                  <div className={styles.laneDot} />
-                  <div>
-                    <strong>Workflow Systems</strong>
-                    <span>Internal operations, routing, and automation.</span>
-                  </div>
-                </div>
-              </div>
-            </aside>
-
-            <div className={styles.heroBridge}>
-              <div className={styles.heroBridgeCopy}>
-                <div className={styles.heroBridgeLabel}>Explore the three lanes</div>
-                <p className={styles.heroBridgeText}>
-                  Learn what each lane does before you jump into intake.
-                </p>
-              </div>
-
-              <div className={styles.quickLinks}>
-                <TrackLink
-                  href="/websites"
-                  event="cta_home_quick_websites"
-                  className={styles.quickLink}
-                >
-                  Explore Websites
-                </TrackLink>
-
-                <TrackLink
-                  href="/ecommerce"
-                  event="cta_home_quick_ecommerce"
-                  className={styles.quickLink}
-                >
-                  Explore E-Commerce
-                </TrackLink>
-
-                <TrackLink
-                  href="/systems"
-                  event="cta_home_quick_systems"
-                  className={styles.quickLink}
-                >
-                  Explore Workflow Systems
-                </TrackLink>
-              </div>
-            </div>
+            <p className={styles.heroSupport}>
+              CrecyStudio helps businesses build a stronger online presence,
+              improve customer-facing sales flow, and remove backend friction so
+              growth feels more organized from first click to fulfillment.
+            </p>
           </div>
         </div>
       </section>
