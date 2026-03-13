@@ -63,6 +63,15 @@ type PortalBundle = {
     integrations: string[];
     notes: string | null;
   };
+  scopeSnapshot: {
+    tierLabel: string;
+    platform: string;
+    pagesIncluded: string[];
+    featuresIncluded: string[];
+    timeline: string;
+    revisionPolicy: string;
+    exclusions: string[];
+  };
   callRequest: {
     status: string | null;
     bestTime: string | null;
@@ -108,6 +117,16 @@ type PortalBundle = {
     ownershipModel: string;
     publishedAt: string | null;
   };
+  launch: {
+    status: string;
+    productionUrl: string | null;
+    domainStatus: string;
+    analyticsStatus: string;
+    formsStatus: string;
+    seoStatus: string;
+    handoffStatus: string;
+    notes: string | null;
+  };
   portalState: {
     clientStatus: string;
     clientUpdatedAt: string | null;
@@ -116,6 +135,7 @@ type PortalBundle = {
     milestones: PortalMilestone[];
     assets: PortalAsset[];
     revisions: PortalRevision[];
+    waitingOn: string;
   };
 };
 
@@ -178,7 +198,9 @@ function getCurrentPhase(bundle: PortalBundle) {
   const depositStatus = String(bundle.quote.deposit.status || "").toLowerCase();
   const assetsCount = bundle.portalState.assets.length;
   const previewStatus = String(bundle.preview.status || "").toLowerCase();
+  const launchStatus = String(bundle.launch.status || "").toLowerCase();
 
+  if (launchStatus === "live") return "Live";
   if (depositStatus === "paid") return "Kickoff Ready";
   if (previewStatus.includes("review")) return "Preview Review";
   if (quoteStatus === "active") return "Build In Progress";
@@ -316,8 +338,7 @@ export default function PortalClient({
 
             <p className="p" style={{ maxWidth: 860, marginTop: 12 }}>
               This is your website workspace. It shows what is being built,
-              where the project stands, what we need from you, and what happens
-              next.
+              where the project stands, what we need from you, and what happens next.
             </p>
 
             <div className="row" style={{ marginTop: 16, alignItems: "center" }}>
@@ -393,16 +414,16 @@ export default function PortalClient({
         <MiniCard label="Current Phase" value={phase} />
         <MiniCard label="Next Action" value={nextAction} />
         <MiniCard
+          label="Waiting On"
+          value={bundle.portalState.waitingOn}
+        />
+        <MiniCard
           label="Target Investment"
           value={
             bundle.quote.estimate.target != null
               ? money(bundle.quote.estimate.target)
               : `${money(bundle.quote.estimate.min)} - ${money(bundle.quote.estimate.max)}`
           }
-        />
-        <MiniCard
-          label="Deposit"
-          value={pretty(bundle.quote.deposit.status || "unpaid")}
         />
       </section>
 
@@ -496,9 +517,127 @@ export default function PortalClient({
                 value={bundle.preview.clientReviewStatus}
               />
               <CompactStatus
-                label="Last Client Update"
-                value={fmtDate(bundle.portalState.clientUpdatedAt)}
+                label="Launch Status"
+                value={bundle.launch.status}
               />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section style={{ marginTop: 28 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+            gap: 16,
+          }}
+        >
+          <div className="panel fadeUp">
+            <div className="panelHeader">
+              <h2 className="h2">Scope Snapshot</h2>
+            </div>
+            <div className="panelBody">
+              <div style={{ display: "grid", gap: 12 }}>
+                <InfoBlock label="Tier" value={bundle.scopeSnapshot.tierLabel} />
+                <InfoBlock label="Platform" value={bundle.scopeSnapshot.platform} />
+                <InfoBlock label="Timeline" value={bundle.scopeSnapshot.timeline} />
+                <InfoBlock
+                  label="Revision Policy"
+                  value={bundle.scopeSnapshot.revisionPolicy}
+                />
+              </div>
+
+              <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
+                <ListBlock
+                  title="Pages Included"
+                  items={bundle.scopeSnapshot.pagesIncluded}
+                />
+                <ListBlock
+                  title="Features Included"
+                  items={bundle.scopeSnapshot.featuresIncluded}
+                />
+                <ListBlock
+                  title="Exclusions"
+                  items={bundle.scopeSnapshot.exclusions}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="panel fadeUp">
+            <div className="panelHeader">
+              <h2 className="h2">Agreement</h2>
+            </div>
+            <div className="panelBody">
+              <div style={{ display: "grid", gap: 12 }}>
+                <InfoBlock
+                  label="Agreement Status"
+                  value={bundle.agreement.status}
+                />
+                <InfoBlock
+                  label="Agreement Model"
+                  value={bundle.agreement.model}
+                />
+                <InfoBlock
+                  label="Ownership Model"
+                  value={bundle.agreement.ownershipModel}
+                />
+                <InfoBlock
+                  label="Published"
+                  value={fmtDate(bundle.agreement.publishedAt)}
+                />
+                <InfoBlock
+                  label="Deposit Status"
+                  value={pretty(bundle.quote.deposit.status)}
+                />
+                <InfoBlock
+                  label="Deposit Amount"
+                  value={money(bundle.quote.deposit.amount)}
+                />
+              </div>
+
+              {bundle.quote.deposit.notes ? (
+                <div
+                  style={{
+                    marginTop: 14,
+                    border: "1px solid var(--stroke)",
+                    borderRadius: 14,
+                    background: "var(--panel2)",
+                    padding: 14,
+                  }}
+                >
+                  <div
+                    style={{
+                      color: "var(--fg)",
+                      fontWeight: 800,
+                      marginBottom: 6,
+                    }}
+                  >
+                    Deposit Notes
+                  </div>
+                  <p className="p" style={{ margin: 0, fontSize: 14 }}>
+                    {bundle.quote.deposit.notes}
+                  </p>
+                </div>
+              ) : null}
+
+              <div className="row" style={{ marginTop: 14 }}>
+                {bundle.quote.deposit.link ? (
+                  <a
+                    href={bundle.quote.deposit.link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btnPrimary"
+                  >
+                    Open Deposit Link <span className="btnArrow">→</span>
+                  </a>
+                ) : (
+                  <button className="btn btnGhost" type="button" disabled>
+                    Deposit Link Pending
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -594,37 +733,19 @@ export default function PortalClient({
 
           <div className="panel fadeUp">
             <div className="panelHeader">
-              <h2 className="h2">Agreement</h2>
+              <h2 className="h2">Launch & Handoff</h2>
             </div>
             <div className="panelBody">
               <div style={{ display: "grid", gap: 12 }}>
-                <InfoBlock
-                  label="Agreement Status"
-                  value={bundle.agreement.status}
-                />
-                <InfoBlock
-                  label="Agreement Model"
-                  value={bundle.agreement.model}
-                />
-                <InfoBlock
-                  label="Ownership Model"
-                  value={bundle.agreement.ownershipModel}
-                />
-                <InfoBlock
-                  label="Published"
-                  value={fmtDate(bundle.agreement.publishedAt)}
-                />
-                <InfoBlock
-                  label="Deposit Status"
-                  value={pretty(bundle.quote.deposit.status)}
-                />
-                <InfoBlock
-                  label="Deposit Amount"
-                  value={money(bundle.quote.deposit.amount)}
-                />
+                <InfoBlock label="Launch Status" value={bundle.launch.status} />
+                <InfoBlock label="Domain" value={bundle.launch.domainStatus} />
+                <InfoBlock label="Analytics" value={bundle.launch.analyticsStatus} />
+                <InfoBlock label="Forms" value={bundle.launch.formsStatus} />
+                <InfoBlock label="SEO Basics" value={bundle.launch.seoStatus} />
+                <InfoBlock label="Handoff" value={bundle.launch.handoffStatus} />
               </div>
 
-              {bundle.quote.deposit.notes ? (
+              {bundle.launch.notes ? (
                 <div
                   style={{
                     marginTop: 14,
@@ -641,30 +762,13 @@ export default function PortalClient({
                       marginBottom: 6,
                     }}
                   >
-                    Deposit Notes
+                    Launch Notes
                   </div>
                   <p className="p" style={{ margin: 0, fontSize: 14 }}>
-                    {bundle.quote.deposit.notes}
+                    {bundle.launch.notes}
                   </p>
                 </div>
               ) : null}
-
-              <div className="row" style={{ marginTop: 14 }}>
-                {bundle.quote.deposit.link ? (
-                  <a
-                    href={bundle.quote.deposit.link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn btnPrimary"
-                  >
-                    Open Deposit Link <span className="btnArrow">→</span>
-                  </a>
-                ) : (
-                  <button className="btn btnGhost" type="button" disabled>
-                    Deposit Link Pending
-                  </button>
-                )}
-              </div>
             </div>
           </div>
         </div>
@@ -1099,7 +1203,7 @@ function MiniCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function InfoBlock({ label, value }: { label: string; value: string }) {
+function InfoBlock({ label, value }: { label: string }) {
   return (
     <div
       style={{
@@ -1168,6 +1272,42 @@ function CompactStatus({ label, value }: { label: string; value: string }) {
       >
         {value}
       </div>
+    </div>
+  );
+}
+
+function ListBlock({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div
+      style={{
+        border: "1px solid var(--stroke)",
+        borderRadius: 14,
+        background: "var(--panel2)",
+        padding: 14,
+      }}
+    >
+      <div
+        style={{
+          color: "var(--fg)",
+          fontWeight: 800,
+          fontSize: 15,
+          marginBottom: 8,
+        }}
+      >
+        {title}
+      </div>
+
+      {items.length === 0 ? (
+        <div className="p" style={{ margin: 0, fontSize: 14 }}>
+          None listed yet.
+        </div>
+      ) : (
+        <ul style={{ margin: 0, paddingLeft: 18, color: "var(--muted)", lineHeight: 1.7 }}>
+          {items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
