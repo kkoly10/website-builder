@@ -40,7 +40,6 @@ type PortalStateRow = {
   deposit_notes?: string | null;
   admin_public_note?: string | null;
 
-  /* Optional future fields — safe to read if columns are added later */
   preview_url?: string | null;
   production_url?: string | null;
   preview_status?: string | null;
@@ -152,8 +151,11 @@ function parsePieReport(rawPie: any) {
       asArray<string>((report as any).discoveryQuestions).filter(Boolean).length > 0
         ? asArray<string>((report as any).discoveryQuestions).filter(Boolean)
         : asArray<string>(discoveryObj.questions).filter(Boolean),
-    reportRaw: report,
   };
+}
+
+function fallbackString(primary: unknown, secondary: unknown): string | null {
+  return str(primary) ?? str(secondary);
 }
 
 function inferOwnershipModel(intent?: string | null, stored?: string | null) {
@@ -232,7 +234,7 @@ function buildDefaultMilestones(input: {
   const buildStarted = ["active", "closed_won"].includes(s);
   const launched = ["closed_won"].includes(s);
 
-  const list: PortalMilestone[] = [
+  return [
     { key: "quote_submitted", label: "Quote submitted", done: true },
     { key: "discovery_call", label: "Discovery call completed", done: afterCall },
     { key: "scope_confirmed", label: "Scope confirmed", done: scopeLocked },
@@ -241,9 +243,7 @@ function buildDefaultMilestones(input: {
     { key: "build_in_progress", label: "Build in progress", done: buildStarted },
     { key: "review_round", label: "Review / revisions", done: false },
     { key: "launch", label: "Launch completed", done: launched },
-  ];
-
-  return list;
+  ] as PortalMilestone[];
 }
 
 function mergeMilestones(defaults: PortalMilestone[], saved: PortalMilestone[]) {
@@ -314,6 +314,7 @@ export async function getPortalBundleByToken(token: string) {
         "deposit_status",
         "deposit_paid_at",
         "lead_id",
+        "debug",
       ].join(",")
     )
     .eq("public_token", token)
@@ -358,6 +359,8 @@ export async function getPortalBundleByToken(token: string) {
   ]);
 
   const intake = asObj((quote as any).intake_normalized);
+  const debug = asObj((quote as any).debug);
+  const portalAdmin = asObj(debug.portalAdmin);
   const pie = parsePieReport(pieRes.data);
 
   const savedAssets = asArray<PortalAsset>(portalState?.assets);
@@ -374,30 +377,36 @@ export async function getPortalBundleByToken(token: string) {
 
   const ownershipModel = inferOwnershipModel(
     str(intake.intent),
-    str((portalState as any)?.ownership_model)
+    fallbackString((portalState as any)?.ownership_model, portalAdmin.ownershipModel)
   );
 
   const agreementStatus = deriveAgreementStatus({
-    stored: str((portalState as any)?.agreement_status),
+    stored: fallbackString((portalState as any)?.agreement_status, portalAdmin.agreementStatus),
     quoteStatus: str((quote as any).status),
     depositStatus: str((quote as any).deposit_status),
   });
 
   const agreementModel = deriveAgreementModel({
-    stored: str((portalState as any)?.agreement_model),
+    stored: fallbackString((portalState as any)?.agreement_model, portalAdmin.agreementModel),
     ownershipModel,
   });
 
-  const previewUrl = str((portalState as any)?.preview_url);
-  const productionUrl = str((portalState as any)?.production_url);
+  const previewUrl = fallbackString((portalState as any)?.preview_url, portalAdmin.previewUrl);
+  const productionUrl = fallbackString(
+    (portalState as any)?.production_url,
+    portalAdmin.productionUrl
+  );
 
   const previewStatus = derivePreviewStatus({
-    stored: str((portalState as any)?.preview_status),
+    stored: fallbackString((portalState as any)?.preview_status, portalAdmin.previewStatus),
     previewUrl,
   });
 
   const clientReviewStatus = deriveClientReviewStatus({
-    stored: str((portalState as any)?.client_review_status),
+    stored: fallbackString(
+      (portalState as any)?.client_review_status,
+      portalAdmin.clientReviewStatus
+    ),
     revisionsCount: savedRevisions.length,
     previewUrl,
   });
@@ -457,6 +466,7 @@ export async function getPortalBundleByToken(token: string) {
             notes: str((callRes.data as any).notes),
           }
         : null,
+      },
       pie: {
         exists: pie.exists,
         id: pie.id,
@@ -476,16 +486,19 @@ export async function getPortalBundleByToken(token: string) {
         productionUrl,
         status: previewStatus,
         updatedAt:
-          str((portalState as any)?.preview_updated_at) ||
+          fallbackString((portalState as any)?.preview_updated_at, portalAdmin.previewUpdatedAt) ||
           str((portalState as any)?.updated_at),
-        notes: str((portalState as any)?.preview_notes),
+        notes: fallbackString((portalState as any)?.preview_notes, portalAdmin.previewNotes),
         clientReviewStatus,
       },
       agreement: {
         status: agreementStatus,
         model: agreementModel,
         ownershipModel,
-        publishedAt: str((portalState as any)?.agreement_published_at),
+        publishedAt: fallbackString(
+          (portalState as any)?.agreement_published_at,
+          portalAdmin.agreementPublishedAt
+        ),
       },
       portalState: {
         clientStatus: str(portalState?.client_status) || "new",
