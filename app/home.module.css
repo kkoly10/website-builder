@@ -423,60 +423,95 @@
 
 @media (max-width: 640px) {
   .home10x :global(.section) {
-    padding: 52px 0;
+    padding: 48px 0;
+  }
+
+  .hero {
+    min-height: auto;
+  }
+
+  .heroImage {
+    object-position: center 62%;
   }
 
   .heroShell {
-    gap: 18px;
-    padding: 42px 0 34px;
+    gap: 16px;
+    padding: 26px 0 24px;
   }
 
   .heroTitle {
-    margin-top: 12px;
-    line-height: 1;
+    margin-top: 10px;
+    max-width: none;
+    font-size: clamp(28px, 12vw, 44px);
+    line-height: 0.96;
     letter-spacing: -0.04em;
   }
 
   .heroSubheadline {
-    margin-top: 16px;
+    margin-top: 14px;
     max-width: none;
-    font-size: 16px;
-    line-height: 1.58;
+    font-size: 15px;
+    line-height: 1.5;
   }
 
-  .heroActions,
-  .bottomActions {
+  .heroActions {
+    margin-top: 18px;
     flex-direction: column;
   }
 
-  .heroActions :global(.btn),
-  .bottomActions :global(.btn),
-  .compareActions :global(.btn) {
+  .heroActions :global(.btn) {
     width: 100%;
     justify-content: center;
+    min-height: 52px;
+  }
+
+  .heroActions :global(a:nth-child(2)) {
+    display: none;
   }
 
   .heroPanel {
-    padding: 18px 16px 16px;
-    border-radius: 18px;
+    margin-top: 2px;
+    padding: 16px 14px 14px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.02);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.03),
+      0 10px 22px rgba(0, 0, 0, 0.12);
   }
 
   .panelTitle {
-    font-size: 18px;
-    line-height: 1.22;
+    margin-top: 8px;
+    font-size: 16px;
+    line-height: 1.2;
+  }
+
+  .laneList {
+    margin-top: 12px;
   }
 
   .laneItem {
-    padding: 12px 0;
+    gap: 10px;
+    padding: 10px 0;
   }
 
   .laneItem strong {
     font-size: 14px;
+    margin-bottom: 2px;
   }
 
-  .laneItem span,
-  .bottomText {
-    font-size: 15px;
+  .laneItem span {
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .bottomActions {
+    flex-direction: column;
+  }
+
+  .bottomActions :global(.btn),
+  .compareActions :global(.btn) {
+    width: 100%;
+    justify-content: center;
   }
 
   .sectionHead {
@@ -502,28 +537,29 @@
   .bottomTitle {
     font-size: clamp(28px, 9vw, 40px);
   }
+
+  .bottomText {
+    font-size: 15px;
+    line-height: 1.55;
+  }
 }
 
 @media (max-width: 420px) {
   .heroShell {
-    padding: 36px 0 30px;
+    padding: 22px 0 22px;
   }
 
-  .heroActions {
-    margin-top: 20px;
-  }
-
-  .heroActions :global(.btn) {
-    min-height: 52px;
-  }
-
-  .cardTitle {
-    font-size: 21px;
+  .heroTitle {
+    font-size: clamp(26px, 12vw, 38px);
   }
 
   .panelEyebrow,
   .eyebrow,
   .bottomEyebrow {
     letter-spacing: 0.12em;
+  }
+
+  .cardTitle {
+    font-size: 21px;
   }
 }
