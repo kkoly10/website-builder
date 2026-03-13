@@ -401,7 +401,6 @@ a { color: inherit; text-decoration: none; }
   line-height: 1.6;
 }
 
-/* Gradient accent text — gold shimmer */
 .textGradient {
   background: linear-gradient(135deg, var(--accent), var(--accent2));
   -webkit-background-clip: text;
@@ -416,7 +415,6 @@ a { color: inherit; text-decoration: none; }
 .section   { padding: var(--sp-24) 0; }
 .sectionSm { padding: var(--sp-12) 0; }
 
-/* Section header — centered title + subtitle */
 .sectionHead {
   text-align: center;
   margin-bottom: var(--sp-16);
@@ -432,14 +430,12 @@ a { color: inherit; text-decoration: none; }
   margin-top: var(--sp-4);
 }
 
-/* Banded section (alternating bg) */
 .sectionBand {
   background: var(--panel);
   border-top: 1px solid var(--stroke);
   border-bottom: 1px solid var(--stroke);
 }
 
-/* Section intro — narrower centered text block */
 .sectionIntro {
   text-align: center;
   max-width: 680px;
@@ -511,7 +507,6 @@ a { color: inherit; text-decoration: none; }
   box-shadow: var(--shadow), var(--shadow-glow);
 }
 
-/* Card with image at top */
 .cardMedia .cardInner { padding: 0; overflow: hidden; }
 .cardMedia img {
   width: 100%;
@@ -526,7 +521,6 @@ a { color: inherit; text-decoration: none; }
 .cardMediaTitle { font-weight: 800; color: var(--fg); }
 .cardMediaDesc  { margin-top: var(--sp-4); }
 
-/* Service card (tall, flex column) */
 .serviceCard {
   display: flex;
   flex-direction: column;
@@ -555,7 +549,6 @@ a { color: inherit; text-decoration: none; }
 .serviceCardCta     { margin-top: var(--sp-12); }
 .serviceCardCta .btn { width: 100%; }
 
-/* Process card */
 .processCard .cardInner { padding: var(--sp-12); }
 .processCard { background: var(--panel2); }
 .processNum {
@@ -578,7 +571,6 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: var(--sp-4);
 }
 
-/* Testimonial card */
 .testimonialCard .cardInner { padding: var(--sp-16); }
 .testimonialQuote {
   font-size: 16px;
@@ -596,7 +588,6 @@ a { color: inherit; text-decoration: none; }
   color: var(--muted2);
 }
 
-/* CTA card (bottom section) */
 .ctaCard {
   background: var(--panel2);
   border-color: var(--accentStroke);
@@ -874,8 +865,6 @@ hr { border: none; border-top: 1px solid var(--stroke); }
 /* =========================
    SCROLL ANIMATIONS
    ========================= */
-
-/* Elements start hidden, animate in when .inView is added */
 .fadeUp {
   opacity: 0;
   transform: translateY(24px);
@@ -889,13 +878,11 @@ hr { border: none; border-top: 1px solid var(--stroke); }
   transform: translateY(0);
 }
 
-/* Stagger children */
 .stagger-1 { transition-delay: 0.06s; }
 .stagger-2 { transition-delay: 0.12s; }
 .stagger-3 { transition-delay: 0.18s; }
 .stagger-4 { transition-delay: 0.24s; }
 
-/* Hero-specific entrance (bigger, slower) */
 .heroFadeUp {
   opacity: 0;
   transform: translateY(32px);
@@ -908,7 +895,6 @@ hr { border: none; border-top: 1px solid var(--stroke); }
   transform: translateY(0);
 }
 
-/* Scale-in for cards */
 .scaleIn {
   opacity: 0;
   transform: scale(0.96);
@@ -925,14 +911,11 @@ hr { border: none; border-top: 1px solid var(--stroke); }
 /* =========================
    ADDITIONAL UTILITIES
    ========================= */
-
-/* Active checkbox state */
 .checkLineActive {
   background: var(--accentSoft) !important;
   border-color: var(--accentStroke) !important;
 }
 
-/* Form page wrapper */
 .formPage {
   padding: var(--sp-32) 0 var(--sp-48);
   max-width: 760px;
@@ -943,13 +926,11 @@ hr { border: none; border-top: 1px solid var(--stroke); }
   max-width: 980px;
 }
 
-/* Form grid (vertical stack with gap) */
 .formGrid {
   display: grid;
   gap: var(--sp-8);
 }
 
-/* Auth page centered layout */
 .authPage {
   min-height: 100svh;
   display: grid;
@@ -966,20 +947,15 @@ hr { border: none; border-top: 1px solid var(--stroke); }
   gap: var(--sp-8);
 }
 
-/* Nav row for form steps */
 .formNav {
   display: flex;
   justify-content: space-between;
   margin-top: var(--sp-12);
 }
 
-/* Stat emphasis */
 .emphasis { color: var(--fg); font-weight: 800; }
-
-/* Pointer cursor helper */
 .pointer { cursor: pointer; }
 
-/* Margin helpers for edge cases */
 .mt0  { margin-top: 0; }
 .mt8  { margin-top: var(--sp-4); }
 .mt16 { margin-top: var(--sp-8); }
@@ -990,12 +966,10 @@ hr { border: none; border-top: 1px solid var(--stroke); }
 .mb16 { margin-bottom: var(--sp-8); }
 .mb24 { margin-bottom: var(--sp-12); }
 
-/* Gap helpers */
 .gap8  { gap: var(--sp-4); }
 .gap16 { gap: var(--sp-8); }
 .gap24 { gap: var(--sp-12); }
 
-/* Max-width helpers */
 .maxW640 { max-width: 640px; }
 .maxW760 { max-width: 760px; }
 .maxW860 { max-width: 860px; }
@@ -1051,7 +1025,10 @@ hr { border: none; border-top: 1px solid var(--stroke); }
 }
 
 @media (max-width: 820px) {
-  .grid2, .grid2stretch { grid-template-columns: 1fr; }
+  .grid2,
+  .grid2stretch {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 680px) {
@@ -1059,18 +1036,31 @@ hr { border: none; border-top: 1px solid var(--stroke); }
     width: min(var(--max), calc(100% - var(--sp-16)));
   }
 
-  .section     { padding: var(--sp-16) 0; }
-  .heroSection { padding: var(--sp-32) 0 var(--sp-24); }
+  .section {
+    padding: var(--sp-16) 0;
+  }
+
+  .heroSection {
+    padding: var(--sp-32) 0 var(--sp-24);
+  }
 
   .topNavInner {
-    padding: 12px 0;
-    gap: 10px;
-    min-height: 68px;
+    padding: 10px 0;
+    gap: 8px;
+    min-height: 64px;
+  }
+
+  .mobileHeaderActions {
+    gap: 0;
+  }
+
+  .mobilePrimaryCta {
+    display: none;
   }
 
   .brandLogo {
     gap: 10px;
-    max-width: calc(100% - 142px);
+    max-width: calc(100% - 54px);
   }
 
   .brandLogoMark svg {
@@ -1082,15 +1072,10 @@ hr { border: none; border-top: 1px solid var(--stroke); }
     font-size: 16px;
   }
 
-  .mobilePrimaryCta {
-    min-width: 84px;
-    padding: 10px 12px;
-    font-size: 13px;
-  }
-
   .mobileMenuSummary {
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
   }
 
   .mobileMenuPanel {
@@ -1102,7 +1087,10 @@ hr { border: none; border-top: 1px solid var(--stroke); }
     line-height: 1.02;
   }
 
-  .p { font-size: 15px; line-height: 1.65; }
+  .p {
+    font-size: 15px;
+    line-height: 1.65;
+  }
 
   .cardInner,
   .panelBody,
@@ -1128,15 +1116,10 @@ hr { border: none; border-top: 1px solid var(--stroke); }
 
 @media (max-width: 420px) {
   .brandLogo {
-    max-width: calc(100% - 134px);
+    max-width: calc(100% - 52px);
   }
 
   .brandLogoTitle {
     font-size: 15px;
-  }
-
-  .mobilePrimaryCta {
-    min-width: 78px;
-    padding: 10px 10px;
   }
 }
