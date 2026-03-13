@@ -19,6 +19,10 @@ function safeObj(v: any) {
   return {};
 }
 
+function cleanString(v: any) {
+  return typeof v === "string" ? v.trim() : "";
+}
+
 export async function POST(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
@@ -73,6 +77,23 @@ export async function POST(req: NextRequest) {
     if (typeof body?.proposalText === "string") {
       nextDebug.generatedProposal = body.proposalText;
       nextDebug.generatedProposalUpdatedAt = new Date().toISOString();
+    }
+
+    if (body?.portalAdmin && typeof body.portalAdmin === "object") {
+      nextDebug.portalAdmin = {
+        previewUrl: cleanString(body.portalAdmin.previewUrl),
+        productionUrl: cleanString(body.portalAdmin.productionUrl),
+        previewStatus: cleanString(body.portalAdmin.previewStatus) || "Awaiting published preview",
+        previewNotes: typeof body.portalAdmin.previewNotes === "string" ? body.portalAdmin.previewNotes : "",
+        previewUpdatedAt: new Date().toISOString(),
+        clientReviewStatus: cleanString(body.portalAdmin.clientReviewStatus) || "Preview pending",
+        agreementStatus: cleanString(body.portalAdmin.agreementStatus) || "Not published yet",
+        agreementModel: cleanString(body.portalAdmin.agreementModel) || "Managed build agreement",
+        ownershipModel:
+          cleanString(body.portalAdmin.ownershipModel) ||
+          "Managed with project handoff options",
+        agreementPublishedAt: cleanString(body.portalAdmin.agreementPublishedAt),
+      };
     }
 
     const patch: any = {
