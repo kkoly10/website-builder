@@ -39,6 +39,20 @@ type PortalStateRow = {
   deposit_amount?: number | null;
   deposit_notes?: string | null;
   admin_public_note?: string | null;
+
+  /* Optional future fields — safe to read if columns are added later */
+  preview_url?: string | null;
+  production_url?: string | null;
+  preview_status?: string | null;
+  preview_updated_at?: string | null;
+  preview_notes?: string | null;
+  client_review_status?: string | null;
+
+  agreement_status?: string | null;
+  agreement_model?: string | null;
+  agreement_published_at?: string | null;
+  ownership_model?: string | null;
+
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -104,8 +118,9 @@ function parsePieReport(rawPie: any) {
 
   const pricingBuffers = asArray<any>(pricing.buffers);
   const upperBuffer =
-    pricingBuffers.find((b) => String(b?.label || "").toLowerCase().includes("upper")) ??
-    pricingBuffers[0];
+    pricingBuffers.find((b) =>
+      String(b?.label || "").toLowerCase().includes("upper")
+    ) ?? pricingBuffers[0];
 
   return {
     exists: !!rawPie,
@@ -139,6 +154,68 @@ function parsePieReport(rawPie: any) {
         : asArray<string>(discoveryObj.questions).filter(Boolean),
     reportRaw: report,
   };
+}
+
+function inferOwnershipModel(intent?: string | null, stored?: string | null) {
+  if (stored) return stored;
+
+  const i = String(intent || "").toLowerCase();
+
+  if (i.includes("handoff") || i.includes("client")) {
+    return "Client-owned / handoff";
+  }
+
+  return "Managed with project handoff options";
+}
+
+function deriveAgreementStatus(input: {
+  stored?: string | null;
+  quoteStatus?: string | null;
+  depositStatus?: string | null;
+}) {
+  if (input.stored) return input.stored;
+
+  const quoteStatus = String(input.quoteStatus || "").toLowerCase();
+  const depositStatus = String(input.depositStatus || "").toLowerCase();
+
+  if (depositStatus === "paid") return "Kickoff ready";
+  if (["proposal", "deposit", "active", "closed_won"].includes(quoteStatus)) {
+    return "Pre-draft / agreement stage";
+  }
+  return "Not published yet";
+}
+
+function deriveAgreementModel(input: {
+  stored?: string | null;
+  ownershipModel: string;
+}) {
+  if (input.stored) return input.stored;
+
+  if (input.ownershipModel.toLowerCase().includes("handoff")) {
+    return "Client handoff agreement";
+  }
+
+  return "Managed build agreement";
+}
+
+function derivePreviewStatus(input: {
+  stored?: string | null;
+  previewUrl?: string | null;
+}) {
+  if (input.stored) return input.stored;
+  if (input.previewUrl) return "Ready for review";
+  return "Awaiting published preview";
+}
+
+function deriveClientReviewStatus(input: {
+  stored?: string | null;
+  revisionsCount: number;
+  previewUrl?: string | null;
+}) {
+  if (input.stored) return input.stored;
+  if (!input.previewUrl) return "Preview pending";
+  if (input.revisionsCount > 0) return "Changes requested";
+  return "Pending review";
 }
 
 function buildDefaultMilestones(input: {
@@ -190,11 +267,8 @@ async function getPortalState(quoteId: string): Promise<PortalStateRow | null> {
     .maybeSingle();
 
   if (error) {
-    // Helpful message if table is not created yet
     if (error.message?.toLowerCase().includes("quote_portal_state")) {
-      throw new Error(
-        'Missing table "quote_portal_state". Run the SQL migration first.'
-      );
+      throw new Error('Missing table "quote_portal_state". Run the SQL migration first.');
     }
     throw new Error(error.message);
   }
@@ -214,9 +288,7 @@ async function upsertPortalState(row: PortalStateRow) {
 
   if (error) {
     if (error.message?.toLowerCase().includes("quote_portal_state")) {
-      throw new Error(
-        'Missing table "quote_portal_state". Run the SQL migration first.'
-      );
+      throw new Error('Missing table "quote_portal_state". Run the SQL migration first.');
     }
     throw new Error(error.message);
   }
@@ -290,6 +362,8 @@ export async function getPortalBundleByToken(token: string) {
 
   const savedAssets = asArray<PortalAsset>(portalState?.assets);
   const savedMilestones = asArray<PortalMilestone>(portalState?.milestones);
+  const savedRevisions = asArray<PortalRevision>(portalState?.revision_requests);
+
   const defaults = buildDefaultMilestones({
     quoteStatus: String((quote as any).status || ""),
     depositStatus: String((quote as any).deposit_status || ""),
@@ -297,6 +371,36 @@ export async function getPortalBundleByToken(token: string) {
   });
 
   const mergedMilestones = mergeMilestones(defaults, savedMilestones);
+
+  const ownershipModel = inferOwnershipModel(
+    str(intake.intent),
+    str((portalState as any)?.ownership_model)
+  );
+
+  const agreementStatus = deriveAgreementStatus({
+    stored: str((portalState as any)?.agreement_status),
+    quoteStatus: str((quote as any).status),
+    depositStatus: str((quote as any).deposit_status),
+  });
+
+  const agreementModel = deriveAgreementModel({
+    stored: str((portalState as any)?.agreement_model),
+    ownershipModel,
+  });
+
+  const previewUrl = str((portalState as any)?.preview_url);
+  const productionUrl = str((portalState as any)?.production_url);
+
+  const previewStatus = derivePreviewStatus({
+    stored: str((portalState as any)?.preview_status),
+    previewUrl,
+  });
+
+  const clientReviewStatus = deriveClientReviewStatus({
+    stored: str((portalState as any)?.client_review_status),
+    revisionsCount: savedRevisions.length,
+    previewUrl,
+  });
 
   return {
     ok: true as const,
@@ -367,6 +471,22 @@ export async function getPortalBundleByToken(token: string) {
         timelineText: pie.timelineText,
         discoveryQuestions: pie.discoveryQuestions,
       },
+      preview: {
+        url: previewUrl,
+        productionUrl,
+        status: previewStatus,
+        updatedAt:
+          str((portalState as any)?.preview_updated_at) ||
+          str((portalState as any)?.updated_at),
+        notes: str((portalState as any)?.preview_notes),
+        clientReviewStatus,
+      },
+      agreement: {
+        status: agreementStatus,
+        model: agreementModel,
+        ownershipModel,
+        publishedAt: str((portalState as any)?.agreement_published_at),
+      },
       portalState: {
         clientStatus: str(portalState?.client_status) || "new",
         clientUpdatedAt: str(portalState?.client_updated_at),
@@ -374,7 +494,7 @@ export async function getPortalBundleByToken(token: string) {
         adminPublicNote: str(portalState?.admin_public_note),
         milestones: mergedMilestones,
         assets: savedAssets,
-        revisions: asArray<PortalRevision>(portalState?.revision_requests),
+        revisions: savedRevisions,
       },
     },
   };
