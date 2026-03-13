@@ -128,6 +128,13 @@ export default async function WebPipelinePage() {
         agreementModel: portalAdmin.agreementModel || "Managed build agreement",
         ownershipModel: portalAdmin.ownershipModel || "Managed with project handoff options",
         agreementPublishedAt: portalAdmin.agreementPublishedAt || "",
+        launchStatus: portalAdmin.launchStatus || "Not ready",
+        domainStatus: portalAdmin.domainStatus || "Pending",
+        analyticsStatus: portalAdmin.analyticsStatus || "Pending",
+        formsStatus: portalAdmin.formsStatus || "Pending",
+        seoStatus: portalAdmin.seoStatus || "Pending",
+        handoffStatus: portalAdmin.handoffStatus || "Pending",
+        launchNotes: portalAdmin.launchNotes || "",
       },
 
       proposalText: debug?.generatedProposal || "",
@@ -159,8 +166,8 @@ export default async function WebPipelinePage() {
           </div>
           <h1 className="h2">Website Quotes</h1>
           <p className="pDark" style={{ marginTop: 4 }}>
-            Manage website leads, adjust pricing, run PIE analysis, draft proposals,
-            and now publish preview/agreement data into the client workspace.
+            Manage website leads, pricing, PIE analysis, workspace publishing,
+            launch readiness, and the client-facing Website Project Studio.
           </p>
         </div>
       </div>
