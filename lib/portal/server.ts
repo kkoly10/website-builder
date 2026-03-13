@@ -52,6 +52,14 @@ type PortalStateRow = {
   agreement_published_at?: string | null;
   ownership_model?: string | null;
 
+  launch_status?: string | null;
+  domain_status?: string | null;
+  analytics_status?: string | null;
+  forms_status?: string | null;
+  seo_status?: string | null;
+  handoff_status?: string | null;
+  launch_notes?: string | null;
+
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -107,6 +115,46 @@ function makeId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function fallbackString(primary: unknown, secondary: unknown): string | null {
+  return str(primary) ?? str(secondary);
+}
+
+function cleanList(values: unknown): string[] {
+  if (Array.isArray(values)) {
+    return values
+      .map((v) => String(v || "").trim())
+      .filter(Boolean);
+  }
+
+  if (typeof values === "string" && values.trim()) {
+    return values
+      .split(/[,|\n]/)
+      .map((v) => v.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function parsePages(value: unknown): string[] {
+  const raw = String(value || "").trim();
+  if (!raw) return [];
+
+  if (raw.toLowerCase().includes("one pager")) {
+    return ["Homepage / One-page flow"];
+  }
+
+  const match = raw.match(/\d+/);
+  if (match) {
+    const count = Number(match[0]);
+    if (Number.isFinite(count) && count > 0) {
+      return Array.from({ length: count }).map((_, i) => `Page ${i + 1}`);
+    }
+  }
+
+  return [raw];
+}
+
 function parsePieReport(rawPie: any) {
   const report = asObj(rawPie?.report);
   const pricing = asObj(report.pricing);
@@ -154,15 +202,10 @@ function parsePieReport(rawPie: any) {
   };
 }
 
-function fallbackString(primary: unknown, secondary: unknown): string | null {
-  return str(primary) ?? str(secondary);
-}
-
 function inferOwnershipModel(intent?: string | null, stored?: string | null) {
   if (stored) return stored;
 
   const i = String(intent || "").toLowerCase();
-
   if (i.includes("handoff") || i.includes("client")) {
     return "Client-owned / handoff";
   }
@@ -220,6 +263,19 @@ function deriveClientReviewStatus(input: {
   return "Pending review";
 }
 
+function deriveLaunchStatus(input: {
+  stored?: string | null;
+  productionUrl?: string | null;
+  agreementStatus?: string | null;
+}) {
+  if (input.stored) return input.stored;
+  if (input.productionUrl) return "Live";
+  if (String(input.agreementStatus || "").toLowerCase().includes("kickoff")) {
+    return "Pre-launch";
+  }
+  return "Not ready";
+}
+
 function buildDefaultMilestones(input: {
   quoteStatus: string;
   depositStatus: string;
@@ -257,6 +313,23 @@ function mergeMilestones(defaults: PortalMilestone[], saved: PortalMilestone[]) 
       updatedAt: s.updatedAt ?? d.updatedAt ?? null,
     };
   });
+}
+
+function deriveWaitingOn(input: {
+  depositStatus: string;
+  assetsCount: number;
+  previewUrl?: string | null;
+  clientReviewStatus?: string | null;
+}) {
+  if (input.depositStatus.toLowerCase() !== "paid") return "Client deposit step";
+  if (input.assetsCount === 0) return "Client assets / content";
+  if (input.previewUrl && input.clientReviewStatus === "Pending review") {
+    return "Client preview review";
+  }
+  if (input.clientReviewStatus === "Changes requested") {
+    return "CrecyStudio revisions";
+  }
+  return "CrecyStudio next build step";
 }
 
 async function getPortalState(quoteId: string): Promise<PortalStateRow | null> {
@@ -359,6 +432,7 @@ export async function getPortalBundleByToken(token: string) {
   ]);
 
   const intake = asObj((quote as any).intake_normalized);
+  const scopeSnapshotRaw = asObj((quote as any).scope_snapshot);
   const debug = asObj((quote as any).debug);
   const portalAdmin = asObj(debug.portalAdmin);
   const pie = parsePieReport(pieRes.data);
@@ -411,6 +485,27 @@ export async function getPortalBundleByToken(token: string) {
     previewUrl,
   });
 
+  const launchStatus = deriveLaunchStatus({
+    stored: fallbackString((portalState as any)?.launch_status, portalAdmin.launchStatus),
+    productionUrl,
+    agreementStatus,
+  });
+
+  const pagesIncluded =
+    cleanList(scopeSnapshotRaw.pagesIncluded).length > 0
+      ? cleanList(scopeSnapshotRaw.pagesIncluded)
+      : parsePages(intake.pages);
+
+  const featuresIncluded =
+    cleanList(scopeSnapshotRaw.featuresIncluded).length > 0
+      ? cleanList(scopeSnapshotRaw.featuresIncluded)
+      : cleanList(intake.integrations);
+
+  const exclusions =
+    cleanList(scopeSnapshotRaw.exclusions).length > 0
+      ? cleanList(scopeSnapshotRaw.exclusions)
+      : ["Third-party fees", "Custom post-launch growth work"];
+
   return {
     ok: true as const,
     data: {
@@ -456,6 +551,29 @@ export async function getPortalBundleByToken(token: string) {
           : [],
         notes: str(intake.notes),
       },
+      scopeSnapshot: {
+        tierLabel:
+          str(scopeSnapshotRaw.tierLabel) ||
+          str(scopeSnapshotRaw.packageName) ||
+          String((quote as any).tier_recommended || "Website Scope"),
+        platform:
+          str(scopeSnapshotRaw.platform) ||
+          str(scopeSnapshotRaw.stack) ||
+          str(intake.domainHosting) ||
+          "To be finalized",
+        pagesIncluded,
+        featuresIncluded,
+        timeline:
+          str(scopeSnapshotRaw.timeline) ||
+          str(scopeSnapshotRaw.timelineText) ||
+          str(intake.timeline) ||
+          "Aligned during scoping",
+        revisionPolicy:
+          str(scopeSnapshotRaw.revisionPolicy) ||
+          str(scopeSnapshotRaw.revisions) ||
+          "Revision structure aligned during scope approval",
+        exclusions,
+      },
       callRequest: callRes.data
         ? {
             status: str((callRes.data as any).status),
@@ -500,6 +618,28 @@ export async function getPortalBundleByToken(token: string) {
           portalAdmin.agreementPublishedAt
         ),
       },
+      launch: {
+        status: launchStatus,
+        productionUrl,
+        domainStatus:
+          fallbackString((portalState as any)?.domain_status, portalAdmin.domainStatus) ||
+          "Pending",
+        analyticsStatus:
+          fallbackString((portalState as any)?.analytics_status, portalAdmin.analyticsStatus) ||
+          "Pending",
+        formsStatus:
+          fallbackString((portalState as any)?.forms_status, portalAdmin.formsStatus) ||
+          "Pending",
+        seoStatus:
+          fallbackString((portalState as any)?.seo_status, portalAdmin.seoStatus) ||
+          "Pending",
+        handoffStatus:
+          fallbackString((portalState as any)?.handoff_status, portalAdmin.handoffStatus) ||
+          "Pending",
+        notes:
+          fallbackString((portalState as any)?.launch_notes, portalAdmin.launchNotes) ||
+          null,
+      },
       portalState: {
         clientStatus: str(portalState?.client_status) || "new",
         clientUpdatedAt: str(portalState?.client_updated_at),
@@ -508,6 +648,12 @@ export async function getPortalBundleByToken(token: string) {
         milestones: mergedMilestones,
         assets: savedAssets,
         revisions: savedRevisions,
+        waitingOn: deriveWaitingOn({
+          depositStatus: String((quote as any).deposit_status || ""),
+          assetsCount: savedAssets.length,
+          previewUrl,
+          clientReviewStatus,
+        }),
       },
     },
   };
