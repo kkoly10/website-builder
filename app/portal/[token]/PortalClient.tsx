@@ -94,6 +94,20 @@ type PortalBundle = {
     timelineText: string | null;
     discoveryQuestions: string[];
   };
+  preview: {
+    url: string | null;
+    productionUrl: string | null;
+    status: string;
+    updatedAt: string | null;
+    notes: string | null;
+    clientReviewStatus: string;
+  };
+  agreement: {
+    status: string;
+    model: string;
+    ownershipModel: string;
+    publishedAt: string | null;
+  };
   portalState: {
     clientStatus: string;
     clientUpdatedAt: string | null;
@@ -123,9 +137,7 @@ function fmtDate(value?: string | null) {
 
 function pretty(value?: string | null) {
   if (!value) return "—";
-  return value
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (m) => m.toUpperCase());
+  return value.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
 function statusTone(status?: string | null) {
@@ -144,9 +156,7 @@ function statusTone(status?: string | null) {
     };
   }
 
-  if (
-    ["proposal", "deposit", "reviewing", "evaluating", "pending"].includes(s)
-  ) {
+  if (["proposal", "deposit", "reviewing", "evaluating", "pending"].includes(s)) {
     return {
       bg: "rgba(201, 168, 76, 0.14)",
       border: "rgba(201, 168, 76, 0.34)",
@@ -167,8 +177,10 @@ function getCurrentPhase(bundle: PortalBundle) {
   const quoteStatus = String(bundle.quote.status || "").toLowerCase();
   const depositStatus = String(bundle.quote.deposit.status || "").toLowerCase();
   const assetsCount = bundle.portalState.assets.length;
+  const previewStatus = String(bundle.preview.status || "").toLowerCase();
 
   if (depositStatus === "paid") return "Kickoff Ready";
+  if (previewStatus.includes("review")) return "Preview Review";
   if (quoteStatus === "active") return "Build In Progress";
   if (assetsCount > 0) return "Assets Submitted";
   if (["proposal", "deposit"].includes(quoteStatus)) return "Pre-Start";
@@ -183,6 +195,9 @@ function getNextAction(bundle: PortalBundle) {
   if (depositStatus !== "paid" && bundle.quote.deposit.link) {
     return "Review deposit step";
   }
+  if (bundle.preview.url && bundle.preview.clientReviewStatus === "Pending review") {
+    return "Review current preview";
+  }
   if (assetsCount === 0) {
     return "Upload content and assets";
   }
@@ -190,27 +205,6 @@ function getNextAction(bundle: PortalBundle) {
     return "Review revision queue";
   }
   return "Review project workspace";
-}
-
-function getAgreementStatus(bundle: PortalBundle) {
-  const quoteStatus = String(bundle.quote.status || "").toLowerCase();
-  const depositStatus = String(bundle.quote.deposit.status || "").toLowerCase();
-
-  if (depositStatus === "paid") return "Kickoff ready";
-  if (["proposal", "deposit", "active", "closed_won"].includes(quoteStatus)) {
-    return "Pre-draft / agreement stage";
-  }
-  return "Not published yet";
-}
-
-function getOwnershipModel(bundle: PortalBundle) {
-  const intent = String(bundle.scope.intent || "").toLowerCase();
-
-  if (intent.includes("handoff") || intent.includes("client")) {
-    return "Client-owned / handoff";
-  }
-
-  return "Managed with project handoff options";
 }
 
 export default function PortalClient({
@@ -237,10 +231,6 @@ export default function PortalClient({
   const phase = useMemo(() => getCurrentPhase(bundle), [bundle]);
   const nextAction = useMemo(() => getNextAction(bundle), [bundle]);
   const quoteTone = useMemo(() => statusTone(bundle.quote.status), [bundle]);
-
-  const previewUrl = "";
-  const productionUrl = "";
-  const previewStatus = "Awaiting published preview";
 
   async function applyAction(body: any) {
     setSaving(true);
@@ -322,9 +312,7 @@ export default function PortalClient({
           }}
         >
           <div>
-            <h1 className="h1">
-              {bundle.lead.name || "Website Project"}
-            </h1>
+            <h1 className="h1">{bundle.lead.name || "Website Project"}</h1>
 
             <p className="p" style={{ maxWidth: 860, marginTop: 12 }}>
               This is your website workspace. It shows what is being built,
@@ -495,18 +483,21 @@ export default function PortalClient({
                 label="Workspace Status"
                 value={pretty(bundle.portalState.clientStatus || "new")}
               />
-              <CompactStatus label="Agreement Layer" value={getAgreementStatus(bundle)} />
+              <CompactStatus
+                label="Agreement Layer"
+                value={bundle.agreement.status}
+              />
               <CompactStatus
                 label="Ownership Model"
-                value={getOwnershipModel(bundle)}
+                value={bundle.agreement.ownershipModel}
+              />
+              <CompactStatus
+                label="Preview Review"
+                value={bundle.preview.clientReviewStatus}
               />
               <CompactStatus
                 label="Last Client Update"
                 value={fmtDate(bundle.portalState.clientUpdatedAt)}
-              />
-              <CompactStatus
-                label="Call Request"
-                value={bundle.callRequest?.status ? pretty(bundle.callRequest.status) : "Not requested"}
               />
             </div>
           </div>
@@ -526,33 +517,55 @@ export default function PortalClient({
               <h2 className="h2">Preview & Review</h2>
             </div>
             <div className="panelBody">
-              <div
-                style={{
-                  display: "grid",
-                  gap: 12,
-                }}
-              >
-                <InfoBlock label="Preview Status" value={previewStatus} />
+              <div style={{ display: "grid", gap: 12 }}>
+                <InfoBlock label="Preview Status" value={bundle.preview.status} />
+                <InfoBlock
+                  label="Client Review Status"
+                  value={bundle.preview.clientReviewStatus}
+                />
                 <InfoBlock
                   label="Latest Preview"
-                  value={previewUrl || "Preview not published yet"}
+                  value={bundle.preview.url || "Preview not published yet"}
                 />
                 <InfoBlock
                   label="Production URL"
-                  value={productionUrl || "Not live yet"}
+                  value={bundle.preview.productionUrl || "Not live yet"}
+                />
+                <InfoBlock
+                  label="Last Updated"
+                  value={fmtDate(bundle.preview.updatedAt)}
                 />
               </div>
 
-              <p className="p" style={{ marginTop: 14, fontSize: 14 }}>
-                This block is ready for the Vercel preview layer. The next step
-                is to publish one client-facing preview URL into this project
-                workspace instead of exposing every raw deployment.
-              </p>
+              {bundle.preview.notes ? (
+                <div
+                  style={{
+                    marginTop: 14,
+                    border: "1px solid var(--stroke)",
+                    borderRadius: 14,
+                    background: "var(--panel2)",
+                    padding: 14,
+                  }}
+                >
+                  <div
+                    style={{
+                      color: "var(--fg)",
+                      fontWeight: 800,
+                      marginBottom: 6,
+                    }}
+                  >
+                    Preview Notes
+                  </div>
+                  <p className="p" style={{ margin: 0, fontSize: 14 }}>
+                    {bundle.preview.notes}
+                  </p>
+                </div>
+              ) : null}
 
               <div className="row" style={{ marginTop: 14 }}>
-                {previewUrl ? (
+                {bundle.preview.url ? (
                   <a
-                    href={previewUrl}
+                    href={bundle.preview.url}
                     target="_blank"
                     rel="noreferrer"
                     className="btn btnPrimary"
@@ -565,9 +578,9 @@ export default function PortalClient({
                   </button>
                 )}
 
-                {productionUrl ? (
+                {bundle.preview.productionUrl ? (
                   <a
-                    href={productionUrl}
+                    href={bundle.preview.productionUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="btn btnGhost"
@@ -584,15 +597,22 @@ export default function PortalClient({
               <h2 className="h2">Agreement</h2>
             </div>
             <div className="panelBody">
-              <div
-                style={{
-                  display: "grid",
-                  gap: 12,
-                }}
-              >
+              <div style={{ display: "grid", gap: 12 }}>
                 <InfoBlock
                   label="Agreement Status"
-                  value={getAgreementStatus(bundle)}
+                  value={bundle.agreement.status}
+                />
+                <InfoBlock
+                  label="Agreement Model"
+                  value={bundle.agreement.model}
+                />
+                <InfoBlock
+                  label="Ownership Model"
+                  value={bundle.agreement.ownershipModel}
+                />
+                <InfoBlock
+                  label="Published"
+                  value={fmtDate(bundle.agreement.publishedAt)}
                 />
                 <InfoBlock
                   label="Deposit Status"
@@ -1024,7 +1044,9 @@ export default function PortalClient({
                 label="Best Time to Call"
                 value={
                   bundle.callRequest?.bestTime
-                    ? `${bundle.callRequest.bestTime}${bundle.callRequest.timezone ? ` (${bundle.callRequest.timezone})` : ""}`
+                    ? `${bundle.callRequest.bestTime}${
+                        bundle.callRequest.timezone ? ` (${bundle.callRequest.timezone})` : ""
+                      }`
                     : "Not provided"
                 }
               />
