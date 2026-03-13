@@ -1,4 +1,3 @@
-// lib/portal/server.ts
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 type JsonRecord = Record<string, any>;
@@ -67,21 +66,24 @@ type PortalStateRow = {
 function asObj(v: unknown): JsonRecord {
   if (!v) return {};
   if (typeof v === "object" && !Array.isArray(v)) return v as JsonRecord;
+
   if (typeof v === "string") {
     try {
       const parsed = JSON.parse(v);
-      return typeof parsed === "object" && parsed && !Array.isArray(parsed)
-        ? (parsed as JsonRecord)
-        : {};
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed as JsonRecord;
+      }
     } catch {
       return {};
     }
   }
+
   return {};
 }
 
 function asArray<T = any>(v: unknown): T[] {
   if (Array.isArray(v)) return v as T[];
+
   if (typeof v === "string") {
     try {
       const parsed = JSON.parse(v);
@@ -90,20 +92,20 @@ function asArray<T = any>(v: unknown): T[] {
       return [];
     }
   }
+
   return [];
+}
+
+function str(v: unknown): string | null {
+  return typeof v === "string" ? v : null;
 }
 
 function num(v: unknown): number | null {
   if (typeof v === "number" && Number.isFinite(v)) return v;
-  if (typeof v === "string" && v.trim() !== "") {
+  if (typeof v === "string" && v.trim()) {
     const n = Number(v);
     return Number.isFinite(n) ? n : null;
   }
-  return null;
-}
-
-function str(v: unknown): string | null {
-  if (typeof v === "string") return v;
   return null;
 }
 
@@ -148,7 +150,7 @@ function parsePages(value: unknown): string[] {
   if (match) {
     const count = Number(match[0]);
     if (Number.isFinite(count) && count > 0) {
-      return Array.from({ length: count }).map((_, i) => `Page ${i + 1}`);
+      return Array.from({ length: count }, (_, i) => `Page ${i + 1}`);
     }
   }
 
@@ -227,6 +229,7 @@ function deriveAgreementStatus(input: {
   if (["proposal", "deposit", "active", "closed_won"].includes(quoteStatus)) {
     return "Pre-draft / agreement stage";
   }
+
   return "Not published yet";
 }
 
@@ -280,10 +283,10 @@ function buildDefaultMilestones(input: {
   quoteStatus: string;
   depositStatus: string;
   assetsCount: number;
-}) {
+}): PortalMilestone[] {
   const { quoteStatus, depositStatus, assetsCount } = input;
-  const s = (quoteStatus || "").toLowerCase();
-  const isDepositPaid = (depositStatus || "").toLowerCase() === "paid";
+  const s = quoteStatus.toLowerCase();
+  const isDepositPaid = depositStatus.toLowerCase() === "paid";
 
   const afterCall = ["call", "proposal", "deposit", "active", "closed_won"].includes(s);
   const scopeLocked = ["proposal", "deposit", "active", "closed_won"].includes(s);
@@ -299,14 +302,16 @@ function buildDefaultMilestones(input: {
     { key: "build_in_progress", label: "Build in progress", done: buildStarted },
     { key: "review_round", label: "Review / revisions", done: false },
     { key: "launch", label: "Launch completed", done: launched },
-  ] as PortalMilestone[];
+  ];
 }
 
 function mergeMilestones(defaults: PortalMilestone[], saved: PortalMilestone[]) {
   const savedMap = new Map(saved.map((m) => [m.key, m]));
+
   return defaults.map((d) => {
     const s = savedMap.get(d.key);
     if (!s) return d;
+
     return {
       ...d,
       done: typeof s.done === "boolean" ? s.done : d.done,
@@ -355,9 +360,9 @@ async function upsertPortalState(row: PortalStateRow) {
     updated_at: isoNow(),
   };
 
-  const { error } = await supabaseAdmin.from("quote_portal_state").upsert(payload, {
-    onConflict: "quote_id",
-  });
+  const { error } = await supabaseAdmin
+    .from("quote_portal_state")
+    .upsert(payload, { onConflict: "quote_id" });
 
   if (error) {
     if (error.message?.toLowerCase().includes("quote_portal_state")) {
@@ -451,34 +456,34 @@ export async function getPortalBundleByToken(token: string) {
 
   const ownershipModel = inferOwnershipModel(
     str(intake.intent),
-    fallbackString((portalState as any)?.ownership_model, portalAdmin.ownershipModel)
+    fallbackString(portalState?.ownership_model, portalAdmin.ownershipModel)
   );
 
   const agreementStatus = deriveAgreementStatus({
-    stored: fallbackString((portalState as any)?.agreement_status, portalAdmin.agreementStatus),
+    stored: fallbackString(portalState?.agreement_status, portalAdmin.agreementStatus),
     quoteStatus: str((quote as any).status),
     depositStatus: str((quote as any).deposit_status),
   });
 
   const agreementModel = deriveAgreementModel({
-    stored: fallbackString((portalState as any)?.agreement_model, portalAdmin.agreementModel),
+    stored: fallbackString(portalState?.agreement_model, portalAdmin.agreementModel),
     ownershipModel,
   });
 
-  const previewUrl = fallbackString((portalState as any)?.preview_url, portalAdmin.previewUrl);
+  const previewUrl = fallbackString(portalState?.preview_url, portalAdmin.previewUrl);
   const productionUrl = fallbackString(
-    (portalState as any)?.production_url,
+    portalState?.production_url,
     portalAdmin.productionUrl
   );
 
   const previewStatus = derivePreviewStatus({
-    stored: fallbackString((portalState as any)?.preview_status, portalAdmin.previewStatus),
+    stored: fallbackString(portalState?.preview_status, portalAdmin.previewStatus),
     previewUrl,
   });
 
   const clientReviewStatus = deriveClientReviewStatus({
     stored: fallbackString(
-      (portalState as any)?.client_review_status,
+      portalState?.client_review_status,
       portalAdmin.clientReviewStatus
     ),
     revisionsCount: savedRevisions.length,
@@ -486,7 +491,7 @@ export async function getPortalBundleByToken(token: string) {
   });
 
   const launchStatus = deriveLaunchStatus({
-    stored: fallbackString((portalState as any)?.launch_status, portalAdmin.launchStatus),
+    stored: fallbackString(portalState?.launch_status, portalAdmin.launchStatus),
     productionUrl,
     agreementStatus,
   });
@@ -532,11 +537,13 @@ export async function getPortalBundleByToken(token: string) {
           notes: str(portalState?.deposit_notes),
         },
       },
+
       lead: {
         email: str((leadRes.data as any)?.email),
         phone: str((leadRes.data as any)?.phone),
         name: str((leadRes.data as any)?.name),
       },
+
       scope: {
         websiteType: str(intake.websiteType),
         pages: str(intake.pages),
@@ -551,6 +558,7 @@ export async function getPortalBundleByToken(token: string) {
           : [],
         notes: str(intake.notes),
       },
+
       scopeSnapshot: {
         tierLabel:
           str(scopeSnapshotRaw.tierLabel) ||
@@ -574,6 +582,7 @@ export async function getPortalBundleByToken(token: string) {
           "Revision structure aligned during scope approval",
         exclusions,
       },
+
       callRequest: callRes.data
         ? {
             status: str((callRes.data as any).status),
@@ -584,7 +593,7 @@ export async function getPortalBundleByToken(token: string) {
             notes: str((callRes.data as any).notes),
           }
         : null,
-      },
+
       pie: {
         exists: pie.exists,
         id: pie.id,
@@ -599,47 +608,47 @@ export async function getPortalBundleByToken(token: string) {
         timelineText: pie.timelineText,
         discoveryQuestions: pie.discoveryQuestions,
       },
+
       preview: {
         url: previewUrl,
         productionUrl,
         status: previewStatus,
         updatedAt:
-          fallbackString((portalState as any)?.preview_updated_at, portalAdmin.previewUpdatedAt) ||
-          str((portalState as any)?.updated_at),
-        notes: fallbackString((portalState as any)?.preview_notes, portalAdmin.previewNotes),
+          fallbackString(portalState?.preview_updated_at, portalAdmin.previewUpdatedAt) ||
+          str(portalState?.updated_at),
+        notes: fallbackString(portalState?.preview_notes, portalAdmin.previewNotes),
         clientReviewStatus,
       },
+
       agreement: {
         status: agreementStatus,
         model: agreementModel,
         ownershipModel,
         publishedAt: fallbackString(
-          (portalState as any)?.agreement_published_at,
+          portalState?.agreement_published_at,
           portalAdmin.agreementPublishedAt
         ),
       },
+
       launch: {
         status: launchStatus,
         productionUrl,
         domainStatus:
-          fallbackString((portalState as any)?.domain_status, portalAdmin.domainStatus) ||
-          "Pending",
+          fallbackString(portalState?.domain_status, portalAdmin.domainStatus) || "Pending",
         analyticsStatus:
-          fallbackString((portalState as any)?.analytics_status, portalAdmin.analyticsStatus) ||
+          fallbackString(portalState?.analytics_status, portalAdmin.analyticsStatus) ||
           "Pending",
         formsStatus:
-          fallbackString((portalState as any)?.forms_status, portalAdmin.formsStatus) ||
-          "Pending",
+          fallbackString(portalState?.forms_status, portalAdmin.formsStatus) || "Pending",
         seoStatus:
-          fallbackString((portalState as any)?.seo_status, portalAdmin.seoStatus) ||
-          "Pending",
+          fallbackString(portalState?.seo_status, portalAdmin.seoStatus) || "Pending",
         handoffStatus:
-          fallbackString((portalState as any)?.handoff_status, portalAdmin.handoffStatus) ||
+          fallbackString(portalState?.handoff_status, portalAdmin.handoffStatus) ||
           "Pending",
         notes:
-          fallbackString((portalState as any)?.launch_notes, portalAdmin.launchNotes) ||
-          null,
+          fallbackString(portalState?.launch_notes, portalAdmin.launchNotes) || null,
       },
+
       portalState: {
         clientStatus: str(portalState?.client_status) || "new",
         clientUpdatedAt: str(portalState?.client_updated_at),
@@ -704,6 +713,7 @@ export async function applyPortalAction(token: string, body: PortalActionBody) {
     case "milestone_toggle": {
       const next = [...milestones];
       const idx = next.findIndex((m) => m.key === body.key);
+
       if (idx >= 0) {
         next[idx] = {
           ...next[idx],
@@ -718,6 +728,7 @@ export async function applyPortalAction(token: string, body: PortalActionBody) {
           updatedAt: isoNow(),
         });
       }
+
       patch.milestones = next;
       patch.client_updated_at = isoNow();
       break;
@@ -728,6 +739,7 @@ export async function applyPortalAction(token: string, body: PortalActionBody) {
       if (!a?.url || !a?.label) {
         return { ok: false as const, error: "Asset label and URL are required." };
       }
+
       const next: PortalAsset[] = [
         {
           id: makeId(),
@@ -740,6 +752,7 @@ export async function applyPortalAction(token: string, body: PortalActionBody) {
         },
         ...assets,
       ];
+
       patch.assets = next;
       patch.client_status = "content_submitted";
       patch.client_updated_at = isoNow();
@@ -751,6 +764,7 @@ export async function applyPortalAction(token: string, body: PortalActionBody) {
       if (!msg) {
         return { ok: false as const, error: "Revision request message is required." };
       }
+
       const next: PortalRevision[] = [
         {
           id: makeId(),
@@ -766,6 +780,7 @@ export async function applyPortalAction(token: string, body: PortalActionBody) {
         },
         ...revisions,
       ];
+
       patch.revision_requests = next;
       patch.client_status = "revision_requested";
       patch.client_updated_at = isoNow();
