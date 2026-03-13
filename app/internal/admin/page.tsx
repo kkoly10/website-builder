@@ -5,18 +5,44 @@ import AdminPipelineClient from "./AdminPipelineClient";
 
 export const dynamic = "force-dynamic";
 
+function safeObj(v: any) {
+  if (!v) return {};
+  if (typeof v === "object") return v;
+  if (typeof v === "string") {
+    try {
+      return JSON.parse(v);
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
+
 export default async function WebPipelinePage() {
   const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) redirect("/login?next=/internal/admin");
   const admin = await isAdminUser({ userId: user.id, email: user.email });
   if (!admin) redirect("/portal");
 
   const [quotesRes, piesRes, callsRes] = await Promise.all([
-    supabaseAdmin.from("quotes").select("*, leads(email, name)").order("created_at", { ascending: false }),
-    supabaseAdmin.from("pie_reports").select("*").order("created_at", { ascending: false }),
-    supabaseAdmin.from("call_requests").select("*").order("created_at", { ascending: false })
+    supabaseAdmin
+      .from("quotes")
+      .select("*, leads(email, name)")
+      .order("created_at", { ascending: false }),
+
+    supabaseAdmin
+      .from("pie_reports")
+      .select("*")
+      .order("created_at", { ascending: false }),
+
+    supabaseAdmin
+      .from("call_requests")
+      .select("*")
+      .order("created_at", { ascending: false }),
   ]);
 
   const quotes = quotesRes.data || [];
@@ -33,15 +59,32 @@ export default async function WebPipelinePage() {
     if (!callMap.has(c.quote_id)) callMap.set(c.quote_id, c);
   }
 
-  const rows = quotes.map(q => {
+  const rows = quotes.map((q) => {
     const lead = Array.isArray(q.leads) ? q.leads[0] : q.leads;
     const pieRecord = pieMap.get(q.id);
     const pieData = pieRecord?.report || pieRecord?.report_json || {};
     const callRecord = callMap.get(q.id);
 
-    const baseTarget = q.estimate_total || q.quote_json?.estimateComputed?.total || q.quote_json?.estimate?.target || 0;
-    const baseMin = q.estimate_low || q.quote_json?.estimateComputed?.low || q.quote_json?.estimate?.min || 0;
-    const baseMax = q.estimate_high || q.quote_json?.estimateComputed?.high || q.quote_json?.estimate?.max || 0;
+    const debug = safeObj(q.debug);
+    const portalAdmin = safeObj(debug.portalAdmin);
+
+    const baseTarget =
+      q.estimate_total ||
+      q.quote_json?.estimateComputed?.total ||
+      q.quote_json?.estimate?.target ||
+      0;
+
+    const baseMin =
+      q.estimate_low ||
+      q.quote_json?.estimateComputed?.low ||
+      q.quote_json?.estimate?.min ||
+      0;
+
+    const baseMax =
+      q.estimate_high ||
+      q.quote_json?.estimateComputed?.high ||
+      q.quote_json?.estimate?.max ||
+      0;
 
     return {
       quoteId: q.id,
@@ -49,27 +92,15 @@ export default async function WebPipelinePage() {
       status: q.status || "new",
       tier: q.tier_recommended || q.quote_json?.estimate?.tierRecommended || "—",
       leadEmail: q.lead_email || lead?.email || q.quote_json?.leadEmail || "No Email",
-      leadName: lead?.name || q.quote_json?.contactName || null,
-      
-      clientStatus: q.client_status || q.quote_json?.portalState?.clientStatus || null,
-      latestClientNote: q.client_notes || null,
-      assetCount: Array.isArray(q.quote_json?.assets) ? q.quote_json.assets.length : 0,
-      revisionCount: Array.isArray(q.quote_json?.revisions) ? q.quote_json.revisions.length : 0,
-
-      callRequest: callRecord ? {
-        status: callRecord.status || "new",
-        bestTime: callRecord.best_time_to_call || null,
-        preferredTimes: callRecord.preferred_times || null,
-        timezone: callRecord.timezone || null,
-        notes: callRecord.notes || null,
-      } : null,
+      leadName: lead?.name || q.quote_json?.contactName || "Unknown Lead",
 
       estimate: { target: baseTarget, min: baseMin, max: baseMax },
       estimateFormatted: {
         target: `$${baseTarget.toLocaleString()}`,
         min: `$${baseMin.toLocaleString()}`,
-        max: `$${baseMax.toLocaleString()}`
+        max: `$${baseMax.toLocaleString()}`,
       },
+
       pie: {
         exists: !!pieRecord,
         id: pieRecord?.id || null,
@@ -77,27 +108,44 @@ export default async function WebPipelinePage() {
         tier: pieRecord?.tier || pieData?.recommended_tier || null,
         confidence: pieData?.confidence || null,
         summary: pieRecord?.summary || pieData?.summary || "",
-        pricingTarget: pieData?.pricing_guardrail?.quoted_price || null,
-        pricingMin: pieData?.pricing_guardrail?.recommended_range?.min || null,
-        pricingMax: pieData?.pricing_guardrail?.recommended_range?.max || null,
-        risks: pieData?.risks || [],
-        pitch: pieData?.call_strategy || { emphasize: [] },
-        hoursMin: pieData?.hours?.total_hours ? Math.floor(pieData.hours.total_hours * 0.8) : null,
-        hoursMax: pieData?.hours?.total_hours || null,
-        timelineText: pieData?.timeline?.full_time_weeks ? `${pieData.timeline.full_time_weeks} weeks` : null
       },
-      adminPricing: { 
-        discountPercent: q.admin_pricing?.discountPercent || 0, 
-        flatAdjustment: q.admin_pricing?.flatAdjustment || 0, 
-        hourlyRate: q.admin_pricing?.hourlyRate || 40, 
-        notes: q.admin_pricing?.notes || "" 
+
+      adminPricing: {
+        discountPercent: debug?.adminPricing?.discountPercent || 0,
+        flatAdjustment: debug?.adminPricing?.flatAdjustment || 0,
+        hourlyRate: debug?.adminPricing?.hourlyRate || 40,
+        notes: debug?.adminPricing?.notes || "",
       },
-      proposalText: q.proposal_text || "",
-      // THE FIX: Adding the workspace link required by the UI component
-      links: { 
+
+      portalAdmin: {
+        previewUrl: portalAdmin.previewUrl || "",
+        productionUrl: portalAdmin.productionUrl || "",
+        previewStatus: portalAdmin.previewStatus || "Awaiting published preview",
+        previewNotes: portalAdmin.previewNotes || "",
+        previewUpdatedAt: portalAdmin.previewUpdatedAt || "",
+        clientReviewStatus: portalAdmin.clientReviewStatus || "Preview pending",
+        agreementStatus: portalAdmin.agreementStatus || "Not published yet",
+        agreementModel: portalAdmin.agreementModel || "Managed build agreement",
+        ownershipModel: portalAdmin.ownershipModel || "Managed with project handoff options",
+        agreementPublishedAt: portalAdmin.agreementPublishedAt || "",
+      },
+
+      proposalText: debug?.generatedProposal || "",
+
+      callRequest: callRecord
+        ? {
+            status: callRecord.status || "new",
+            bestTime: callRecord.best_time_to_call || null,
+            preferredTimes: callRecord.preferred_times || null,
+            timezone: callRecord.timezone || null,
+            notes: callRecord.notes || null,
+          }
+        : null,
+
+      links: {
         detail: `/internal/admin/${q.id}`,
-        workspace: `/internal/project/${q.id}`
-      }
+        workspace: q.public_token ? `/portal/${q.public_token}` : `/internal/project/${q.id}`,
+      },
     };
   });
 
@@ -105,9 +153,15 @@ export default async function WebPipelinePage() {
     <section className="section" style={{ paddingTop: 0 }}>
       <div className="card">
         <div className="cardInner">
-          <div className="kicker"><span className="kickerDot" /> Pipeline</div>
+          <div className="kicker">
+            <span className="kickerDot" />
+            Pipeline
+          </div>
           <h1 className="h2">Website Quotes</h1>
-          <p className="pDark" style={{ marginTop: 4 }}>Manage web design leads, adjust pricing, run PIE analysis, and draft proposals.</p>
+          <p className="pDark" style={{ marginTop: 4 }}>
+            Manage website leads, adjust pricing, run PIE analysis, draft proposals,
+            and now publish preview/agreement data into the client workspace.
+          </p>
         </div>
       </div>
 
