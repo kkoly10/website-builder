@@ -23,6 +23,13 @@ type PortalAdminView = {
   agreementModel: string;
   ownershipModel: string;
   agreementPublishedAt: string;
+  launchStatus: string;
+  domainStatus: string;
+  analyticsStatus: string;
+  formsStatus: string;
+  seoStatus: string;
+  handoffStatus: string;
+  launchNotes: string;
 };
 
 export type PipelineRow = {
@@ -181,6 +188,15 @@ export default function AdminPipelineClient({
     "Client-owned / handoff",
   ];
 
+  const launchStatusOptions = [
+    "Not ready",
+    "Pre-launch",
+    "Ready for launch",
+    "Live",
+  ];
+
+  const readinessOptions = ["Pending", "In progress", "Ready", "Complete"];
+
   return (
     <div>
       <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
@@ -246,6 +262,7 @@ export default function AdminPipelineClient({
                       )}
                       <span className="badge">{row.portalAdmin.previewStatus}</span>
                       <span className="badge">{row.portalAdmin.agreementStatus}</span>
+                      <span className="badge">{row.portalAdmin.launchStatus}</span>
                     </div>
                   </div>
 
@@ -414,7 +431,7 @@ export default function AdminPipelineClient({
                       <div className="panelHeader">
                         <div>Workspace Publishing</div>
                         <div className="smallNote">
-                          Publish preview and agreement data into the Website Project Studio.
+                          Publish preview, agreement, and launch data into the Website Project Studio.
                         </div>
                       </div>
 
@@ -583,6 +600,144 @@ export default function AdminPipelineClient({
                               placeholder="2026-03-13T14:30:00.000Z"
                             />
                           </label>
+
+                          <label>
+                            <span className="fieldLabel">Launch Status</span>
+                            <select
+                              className="select"
+                              value={row.portalAdmin.launchStatus}
+                              onChange={(e) =>
+                                updateRowLocal(row.quoteId, (r) => ({
+                                  ...r,
+                                  portalAdmin: {
+                                    ...r.portalAdmin,
+                                    launchStatus: e.target.value,
+                                  },
+                                }))
+                              }
+                            >
+                              {launchStatusOptions.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label>
+                            <span className="fieldLabel">Domain Status</span>
+                            <select
+                              className="select"
+                              value={row.portalAdmin.domainStatus}
+                              onChange={(e) =>
+                                updateRowLocal(row.quoteId, (r) => ({
+                                  ...r,
+                                  portalAdmin: {
+                                    ...r.portalAdmin,
+                                    domainStatus: e.target.value,
+                                  },
+                                }))
+                              }
+                            >
+                              {readinessOptions.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label>
+                            <span className="fieldLabel">Analytics Status</span>
+                            <select
+                              className="select"
+                              value={row.portalAdmin.analyticsStatus}
+                              onChange={(e) =>
+                                updateRowLocal(row.quoteId, (r) => ({
+                                  ...r,
+                                  portalAdmin: {
+                                    ...r.portalAdmin,
+                                    analyticsStatus: e.target.value,
+                                  },
+                                }))
+                              }
+                            >
+                              {readinessOptions.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label>
+                            <span className="fieldLabel">Forms Status</span>
+                            <select
+                              className="select"
+                              value={row.portalAdmin.formsStatus}
+                              onChange={(e) =>
+                                updateRowLocal(row.quoteId, (r) => ({
+                                  ...r,
+                                  portalAdmin: {
+                                    ...r.portalAdmin,
+                                    formsStatus: e.target.value,
+                                  },
+                                }))
+                              }
+                            >
+                              {readinessOptions.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label>
+                            <span className="fieldLabel">SEO Status</span>
+                            <select
+                              className="select"
+                              value={row.portalAdmin.seoStatus}
+                              onChange={(e) =>
+                                updateRowLocal(row.quoteId, (r) => ({
+                                  ...r,
+                                  portalAdmin: {
+                                    ...r.portalAdmin,
+                                    seoStatus: e.target.value,
+                                  },
+                                }))
+                              }
+                            >
+                              {readinessOptions.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label>
+                            <span className="fieldLabel">Handoff Status</span>
+                            <select
+                              className="select"
+                              value={row.portalAdmin.handoffStatus}
+                              onChange={(e) =>
+                                updateRowLocal(row.quoteId, (r) => ({
+                                  ...r,
+                                  portalAdmin: {
+                                    ...r.portalAdmin,
+                                    handoffStatus: e.target.value,
+                                  },
+                                }))
+                              }
+                            >
+                              {readinessOptions.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
                         </div>
 
                         <label style={{ display: "block", marginTop: 14 }}>
@@ -601,6 +756,25 @@ export default function AdminPipelineClient({
                               }))
                             }
                             placeholder="What changed in this preview? What should the client review?"
+                          />
+                        </label>
+
+                        <label style={{ display: "block", marginTop: 14 }}>
+                          <span className="fieldLabel">Launch Notes</span>
+                          <textarea
+                            className="textarea"
+                            rows={5}
+                            value={row.portalAdmin.launchNotes}
+                            onChange={(e) =>
+                              updateRowLocal(row.quoteId, (r) => ({
+                                ...r,
+                                portalAdmin: {
+                                  ...r.portalAdmin,
+                                  launchNotes: e.target.value,
+                                },
+                              }))
+                            }
+                            placeholder="Domain, analytics, forms, SEO, launch readiness, or handoff notes..."
                           />
                         </label>
 
