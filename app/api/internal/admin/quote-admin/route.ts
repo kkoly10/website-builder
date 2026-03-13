@@ -84,15 +84,31 @@ export async function POST(req: NextRequest) {
         previewUrl: cleanString(body.portalAdmin.previewUrl),
         productionUrl: cleanString(body.portalAdmin.productionUrl),
         previewStatus: cleanString(body.portalAdmin.previewStatus) || "Awaiting published preview",
-        previewNotes: typeof body.portalAdmin.previewNotes === "string" ? body.portalAdmin.previewNotes : "",
+        previewNotes:
+          typeof body.portalAdmin.previewNotes === "string"
+            ? body.portalAdmin.previewNotes
+            : "",
         previewUpdatedAt: new Date().toISOString(),
-        clientReviewStatus: cleanString(body.portalAdmin.clientReviewStatus) || "Preview pending",
-        agreementStatus: cleanString(body.portalAdmin.agreementStatus) || "Not published yet",
-        agreementModel: cleanString(body.portalAdmin.agreementModel) || "Managed build agreement",
+        clientReviewStatus:
+          cleanString(body.portalAdmin.clientReviewStatus) || "Preview pending",
+        agreementStatus:
+          cleanString(body.portalAdmin.agreementStatus) || "Not published yet",
+        agreementModel:
+          cleanString(body.portalAdmin.agreementModel) || "Managed build agreement",
         ownershipModel:
           cleanString(body.portalAdmin.ownershipModel) ||
           "Managed with project handoff options",
         agreementPublishedAt: cleanString(body.portalAdmin.agreementPublishedAt),
+        launchStatus: cleanString(body.portalAdmin.launchStatus) || "Not ready",
+        domainStatus: cleanString(body.portalAdmin.domainStatus) || "Pending",
+        analyticsStatus: cleanString(body.portalAdmin.analyticsStatus) || "Pending",
+        formsStatus: cleanString(body.portalAdmin.formsStatus) || "Pending",
+        seoStatus: cleanString(body.portalAdmin.seoStatus) || "Pending",
+        handoffStatus: cleanString(body.portalAdmin.handoffStatus) || "Pending",
+        launchNotes:
+          typeof body.portalAdmin.launchNotes === "string"
+            ? body.portalAdmin.launchNotes
+            : "",
       };
     }
 
