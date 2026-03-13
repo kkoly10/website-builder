@@ -12,12 +12,26 @@ type PieView = {
   summary: string;
 };
 
+type PortalAdminView = {
+  previewUrl: string;
+  productionUrl: string;
+  previewStatus: string;
+  previewNotes: string;
+  previewUpdatedAt: string;
+  clientReviewStatus: string;
+  agreementStatus: string;
+  agreementModel: string;
+  ownershipModel: string;
+  agreementPublishedAt: string;
+};
+
 export type PipelineRow = {
   quoteId: string;
   createdAt: string;
   status: string;
   tier: string;
   leadEmail: string;
+  leadName: string;
 
   estimate: { target: number; min: number; max: number };
   estimateFormatted: { target: string; min: string; max: string };
@@ -31,6 +45,8 @@ export type PipelineRow = {
     notes: string;
   };
 
+  portalAdmin: PortalAdminView;
+
   proposalText: string;
 
   links?: {
@@ -39,7 +55,11 @@ export type PipelineRow = {
   };
 };
 
-export default function AdminPipelineClient({ initialRows }: { initialRows: PipelineRow[] }) {
+export default function AdminPipelineClient({
+  initialRows,
+}: {
+  initialRows: PipelineRow[];
+}) {
   const router = useRouter();
 
   const [rows, setRows] = useState<PipelineRow[]>(initialRows ?? []);
@@ -56,9 +76,11 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
 
     if (q) {
       next = next.filter((r) => {
-        const lead = (r.leadEmail || "").toLowerCase();
-        const id = (r.quoteId || "").toLowerCase();
-        return lead.includes(q) || id.includes(q);
+        return (
+          (r.leadEmail || "").toLowerCase().includes(q) ||
+          (r.leadName || "").toLowerCase().includes(q) ||
+          (r.quoteId || "").toLowerCase().includes(q)
+        );
       });
     }
 
@@ -112,6 +134,7 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
 
       setRows((prev) => prev.map((r) => (r.quoteId === quoteId ? { ...r, ...payload } : r)));
       setMessageByQuote((m) => ({ ...m, [quoteId]: "Saved successfully." }));
+      router.refresh();
     } catch (err: any) {
       setMessageByQuote((m) => ({ ...m, [quoteId]: err?.message || "Save failed" }));
     } finally {
@@ -119,24 +142,58 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
     }
   }
 
-  const statusOptions = ["new", "call_requested", "call", "proposal", "deposit", "active", "closed"];
+  const statusOptions = [
+    "new",
+    "call_requested",
+    "call",
+    "proposal",
+    "deposit",
+    "active",
+    "closed",
+  ];
+
+  const previewStatusOptions = [
+    "Awaiting published preview",
+    "Ready for review",
+    "Revision in progress",
+    "Approved for launch",
+    "Live",
+  ];
+
+  const reviewStatusOptions = [
+    "Preview pending",
+    "Pending review",
+    "Changes requested",
+    "Approved",
+    "Live",
+  ];
+
+  const agreementStatusOptions = [
+    "Not published yet",
+    "Pre-draft / agreement stage",
+    "Published to client",
+    "Signed",
+    "Kickoff ready",
+  ];
+
+  const ownershipOptions = [
+    "Managed with project handoff options",
+    "Client-owned / handoff",
+  ];
 
   return (
-    <div >
-      {/* Filters */}
+    <div>
       <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
         <div className="row">
           <input
             className="input"
-            
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by email or quote id…"
+            placeholder="Search by name, email, or quote id…"
           />
 
           <select
             className="select"
-            
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
@@ -154,22 +211,24 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
         </div>
       </div>
 
-      {/* Rows */}
-      <div >
+      <div>
         {filteredRows.map((row) => {
           const isBusy = !!busyByQuote[row.quoteId];
           const isExpanded = !!expanded[row.quoteId];
 
           const baseTarget = row.estimate.target || 0;
-          const discounted = Math.round(baseTarget * (1 - (row.adminPricing?.discountPercent || 0) / 100));
+          const discounted = Math.round(
+            baseTarget * (1 - (row.adminPricing?.discountPercent || 0) / 100)
+          );
           const adjustedTarget = discounted + (row.adminPricing?.flatAdjustment || 0);
 
           return (
             <div key={row.quoteId} className="card">
-              <div className="cardInner" >
+              <div className="cardInner">
                 <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div>
-                    <div >{row.leadEmail}</div>
+                    <div style={{ fontWeight: 900, fontSize: 20 }}>{row.leadName}</div>
+                    <div className="pDark" style={{ marginTop: 4 }}>{row.leadEmail}</div>
                     <div className="pDark">
                       Created: {new Date(row.createdAt).toLocaleString()} • ID:{" "}
                       <code>{row.quoteId.slice(0, 8)}</code>
@@ -185,27 +244,37 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
                       ) : (
                         <span className="badge">PIE Missing</span>
                       )}
+                      <span className="badge">{row.portalAdmin.previewStatus}</span>
+                      <span className="badge">{row.portalAdmin.agreementStatus}</span>
                     </div>
                   </div>
 
                   <div style={{ textAlign: "right" }}>
-                    <div >${adjustedTarget.toLocaleString()}</div>
+                    <div style={{ fontWeight: 900, fontSize: 24 }}>
+                      ${adjustedTarget.toLocaleString()}
+                    </div>
                     <div className="pDark" style={{ marginTop: 6 }}>
                       Base: {row.estimateFormatted.target}
                     </div>
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="row">
-                  <button className="btn btnPrimary" disabled={isBusy} onClick={() => generatePie(row.quoteId)}>
-                    {row.pie?.exists ? "Refresh PIE" : "Generate PIE"} <span className="btnArrow">→</span>
+                <div className="row" style={{ marginTop: 16 }}>
+                  <button
+                    className="btn btnPrimary"
+                    disabled={isBusy}
+                    onClick={() => generatePie(row.quoteId)}
+                  >
+                    {row.pie?.exists ? "Refresh PIE" : "Generate PIE"}{" "}
+                    <span className="btnArrow">→</span>
                   </button>
 
                   <button
                     className="btn btnGhost"
                     type="button"
-                    onClick={() => setExpanded((m) => ({ ...m, [row.quoteId]: !m[row.quoteId] }))}
+                    onClick={() =>
+                      setExpanded((m) => ({ ...m, [row.quoteId]: !m[row.quoteId] }))
+                    }
                   >
                     {isExpanded ? "Hide" : "Details"}
                   </button>
@@ -223,8 +292,7 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
                   ) : null}
                 </div>
 
-                {/* PIE summary */}
-                <div className="panel">
+                <div className="panel" style={{ marginTop: 16 }}>
                   <div className="panelHeader">
                     <div>AI PIE Summary</div>
                     <div className="smallNote">Quick snapshot of scope + risks + next steps.</div>
@@ -240,16 +308,15 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
                   </div>
                 </div>
 
-                {/* Editable admin controls */}
-                <div className="panel">
+                <div className="panel" style={{ marginTop: 16 }}>
                   <div className="panelHeader">
                     <div>Pipeline & Pricing</div>
                     <div className="smallNote">Update status + pricing adjustments, then save.</div>
                   </div>
 
-                  <div className="panelBody" >
+                  <div className="panelBody">
                     <div className="grid2">
-                      <label >
+                      <label>
                         <span className="fieldLabel">Status</span>
                         <select
                           className="select"
@@ -269,7 +336,7 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
                         </select>
                       </label>
 
-                      <label >
+                      <label>
                         <span className="fieldLabel">Discount %</span>
                         <input
                           className="input"
@@ -287,7 +354,7 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
                         />
                       </label>
 
-                      <label >
+                      <label>
                         <span className="fieldLabel">Adjustment ($)</span>
                         <input
                           className="input"
@@ -305,7 +372,7 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
                         />
                       </label>
 
-                      <label >
+                      <label>
                         <span className="fieldLabel">Hourly rate</span>
                         <input
                           className="input"
@@ -324,39 +391,266 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
                       </label>
                     </div>
 
-                    <button
-                      className="btn btnGhost"
-                      disabled={isBusy}
-                      onClick={() =>
-                        saveQuoteAdmin(row.quoteId, {
-                          status: row.status,
-                          adminPricing: row.adminPricing,
-                        })
-                      }
-                    >
-                      Save Config
-                    </button>
+                    <div className="row" style={{ marginTop: 14 }}>
+                      <button
+                        className="btn btnGhost"
+                        disabled={isBusy}
+                        onClick={() =>
+                          saveQuoteAdmin(row.quoteId, {
+                            status: row.status,
+                            adminPricing: row.adminPricing,
+                          })
+                        }
+                      >
+                        Save Config
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
-                    {isExpanded ? (
-                      <label >
-                        <span className="fieldLabel">Proposal Draft</span>
-                        <textarea
-                          className="textarea"
-                          rows={8}
-                          value={row.proposalText || ""}
-                          onChange={(e) =>
-                            updateRowLocal(row.quoteId, (r) => ({
-                              ...r,
-                              proposalText: e.target.value,
-                            }))
-                          }
-                          placeholder="Draft proposal here…"
-                        />
-                        <div className="row">
+                {isExpanded ? (
+                  <>
+                    <div className="panel" style={{ marginTop: 16 }}>
+                      <div className="panelHeader">
+                        <div>Workspace Publishing</div>
+                        <div className="smallNote">
+                          Publish preview and agreement data into the Website Project Studio.
+                        </div>
+                      </div>
+
+                      <div className="panelBody">
+                        <div className="grid2">
+                          <label>
+                            <span className="fieldLabel">Preview URL</span>
+                            <input
+                              className="input"
+                              value={row.portalAdmin.previewUrl}
+                              onChange={(e) =>
+                                updateRowLocal(row.quoteId, (r) => ({
+                                  ...r,
+                                  portalAdmin: {
+                                    ...r.portalAdmin,
+                                    previewUrl: e.target.value,
+                                  },
+                                }))
+                              }
+                              placeholder="https://project-branch.vercel.app"
+                            />
+                          </label>
+
+                          <label>
+                            <span className="fieldLabel">Production URL</span>
+                            <input
+                              className="input"
+                              value={row.portalAdmin.productionUrl}
+                              onChange={(e) =>
+                                updateRowLocal(row.quoteId, (r) => ({
+                                  ...r,
+                                  portalAdmin: {
+                                    ...r.portalAdmin,
+                                    productionUrl: e.target.value,
+                                  },
+                                }))
+                              }
+                              placeholder="https://clientsite.com"
+                            />
+                          </label>
+
+                          <label>
+                            <span className="fieldLabel">Preview Status</span>
+                            <select
+                              className="select"
+                              value={row.portalAdmin.previewStatus}
+                              onChange={(e) =>
+                                updateRowLocal(row.quoteId, (r) => ({
+                                  ...r,
+                                  portalAdmin: {
+                                    ...r.portalAdmin,
+                                    previewStatus: e.target.value,
+                                  },
+                                }))
+                              }
+                            >
+                              {previewStatusOptions.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label>
+                            <span className="fieldLabel">Client Review Status</span>
+                            <select
+                              className="select"
+                              value={row.portalAdmin.clientReviewStatus}
+                              onChange={(e) =>
+                                updateRowLocal(row.quoteId, (r) => ({
+                                  ...r,
+                                  portalAdmin: {
+                                    ...r.portalAdmin,
+                                    clientReviewStatus: e.target.value,
+                                  },
+                                }))
+                              }
+                            >
+                              {reviewStatusOptions.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label>
+                            <span className="fieldLabel">Agreement Status</span>
+                            <select
+                              className="select"
+                              value={row.portalAdmin.agreementStatus}
+                              onChange={(e) =>
+                                updateRowLocal(row.quoteId, (r) => ({
+                                  ...r,
+                                  portalAdmin: {
+                                    ...r.portalAdmin,
+                                    agreementStatus: e.target.value,
+                                  },
+                                }))
+                              }
+                            >
+                              {agreementStatusOptions.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label>
+                            <span className="fieldLabel">Ownership Model</span>
+                            <select
+                              className="select"
+                              value={row.portalAdmin.ownershipModel}
+                              onChange={(e) =>
+                                updateRowLocal(row.quoteId, (r) => ({
+                                  ...r,
+                                  portalAdmin: {
+                                    ...r.portalAdmin,
+                                    ownershipModel: e.target.value,
+                                  },
+                                }))
+                              }
+                            >
+                              {ownershipOptions.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label>
+                            <span className="fieldLabel">Agreement Model</span>
+                            <input
+                              className="input"
+                              value={row.portalAdmin.agreementModel}
+                              onChange={(e) =>
+                                updateRowLocal(row.quoteId, (r) => ({
+                                  ...r,
+                                  portalAdmin: {
+                                    ...r.portalAdmin,
+                                    agreementModel: e.target.value,
+                                  },
+                                }))
+                              }
+                              placeholder="Managed build agreement"
+                            />
+                          </label>
+
+                          <label>
+                            <span className="fieldLabel">Agreement Published At</span>
+                            <input
+                              className="input"
+                              value={row.portalAdmin.agreementPublishedAt}
+                              onChange={(e) =>
+                                updateRowLocal(row.quoteId, (r) => ({
+                                  ...r,
+                                  portalAdmin: {
+                                    ...r.portalAdmin,
+                                    agreementPublishedAt: e.target.value,
+                                  },
+                                }))
+                              }
+                              placeholder="2026-03-13T14:30:00.000Z"
+                            />
+                          </label>
+                        </div>
+
+                        <label style={{ display: "block", marginTop: 14 }}>
+                          <span className="fieldLabel">Preview Notes</span>
+                          <textarea
+                            className="textarea"
+                            rows={5}
+                            value={row.portalAdmin.previewNotes}
+                            onChange={(e) =>
+                              updateRowLocal(row.quoteId, (r) => ({
+                                ...r,
+                                portalAdmin: {
+                                  ...r.portalAdmin,
+                                  previewNotes: e.target.value,
+                                },
+                              }))
+                            }
+                            placeholder="What changed in this preview? What should the client review?"
+                          />
+                        </label>
+
+                        <div className="row" style={{ marginTop: 14 }}>
+                          <button
+                            className="btn btnPrimary"
+                            disabled={isBusy}
+                            onClick={() =>
+                              saveQuoteAdmin(row.quoteId, {
+                                portalAdmin: row.portalAdmin,
+                              })
+                            }
+                          >
+                            Publish to Workspace <span className="btnArrow">→</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="panel" style={{ marginTop: 16 }}>
+                      <div className="panelHeader">
+                        <div>Proposal Draft</div>
+                        <div className="smallNote">Save proposal draft separately.</div>
+                      </div>
+                      <div className="panelBody">
+                        <label>
+                          <span className="fieldLabel">Proposal Draft</span>
+                          <textarea
+                            className="textarea"
+                            rows={8}
+                            value={row.proposalText || ""}
+                            onChange={(e) =>
+                              updateRowLocal(row.quoteId, (r) => ({
+                                ...r,
+                                proposalText: e.target.value,
+                              }))
+                            }
+                            placeholder="Draft proposal here…"
+                          />
+                        </label>
+
+                        <div className="row" style={{ marginTop: 14 }}>
                           <button
                             className="btn btnGhost"
                             disabled={isBusy}
-                            onClick={() => saveQuoteAdmin(row.quoteId, { proposalText: row.proposalText })}
+                            onClick={() =>
+                              saveQuoteAdmin(row.quoteId, {
+                                proposalText: row.proposalText,
+                              })
+                            }
                           >
                             Save Proposal Draft
                           </button>
@@ -369,16 +663,16 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
                             Copy
                           </button>
                         </div>
-                      </label>
-                    ) : null}
-
-                    {messageByQuote[row.quoteId] ? (
-                      <div style={{ fontSize: 13, color: "var(--accent2)", fontWeight: 800 }}>
-                        {messageByQuote[row.quoteId]}
                       </div>
-                    ) : null}
+                    </div>
+                  </>
+                ) : null}
+
+                {messageByQuote[row.quoteId] ? (
+                  <div style={{ marginTop: 12, fontSize: 13, color: "var(--accent2)", fontWeight: 800 }}>
+                    {messageByQuote[row.quoteId]}
                   </div>
-                </div>
+                ) : null}
               </div>
             </div>
           );
