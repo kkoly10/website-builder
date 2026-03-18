@@ -52,6 +52,51 @@ function parsePages(value: unknown): string[] {
   return [raw];
 }
 
+type Milestone = {
+  key: string;
+  label: string;
+  done: boolean;
+  updatedAt?: string | null;
+};
+
+function buildDefaultMilestones(input: {
+  quoteStatus: string;
+  depositStatus: string;
+  assetsCount: number;
+}): Milestone[] {
+  const s = String(input.quoteStatus || "").toLowerCase();
+  const isDepositPaid = String(input.depositStatus || "").toLowerCase() === "paid";
+
+  const afterCall = ["call", "proposal", "deposit", "active", "closed_won"].includes(s);
+  const scopeLocked = ["proposal", "deposit", "active", "closed_won"].includes(s);
+  const buildStarted = ["active", "closed_won"].includes(s);
+  const launched = ["closed_won"].includes(s);
+
+  return [
+    { key: "quote_submitted", label: "Quote submitted", done: true },
+    { key: "discovery_call", label: "Discovery call completed", done: afterCall },
+    { key: "scope_confirmed", label: "Scope confirmed", done: scopeLocked },
+    { key: "deposit_paid", label: "Deposit paid", done: isDepositPaid },
+    { key: "assets_submitted", label: "Content/assets submitted", done: input.assetsCount > 0 },
+    { key: "build_in_progress", label: "Build in progress", done: buildStarted },
+    { key: "review_round", label: "Review / revisions", done: false },
+    { key: "launch", label: "Launch completed", done: launched },
+  ];
+}
+
+function mergeMilestones(defaults: Milestone[], saved: Milestone[]): Milestone[] {
+  const savedMap = new Map(saved.map((m) => [m.key, m]));
+  return defaults.map((d) => {
+    const s = savedMap.get(d.key);
+    if (!s) return d;
+    return {
+      ...d,
+      done: typeof s.done === "boolean" ? s.done : d.done,
+      updatedAt: s.updatedAt ?? d.updatedAt ?? null,
+    };
+  });
+}
+
 type Params = {
   id: string;
 };
@@ -137,6 +182,19 @@ export default async function AdminQuoteDetailPage({
     quote.quote_json?.estimateComputed?.high ||
     quote.quote_json?.estimate?.max ||
     0;
+
+  const savedMilestones = Array.isArray(portalState?.milestones)
+    ? portalState.milestones
+    : [];
+
+  const mergedMilestones = mergeMilestones(
+    buildDefaultMilestones({
+      quoteStatus: quote.status || "",
+      depositStatus: quote.deposit_status || "",
+      assetsCount: Array.isArray(portalState?.assets) ? portalState.assets.length : 0,
+    }),
+    savedMilestones
+  );
 
   const initialData = {
     quoteId: quote.id,
@@ -232,12 +290,15 @@ export default async function AdminQuoteDetailPage({
       launchNotes: portalAdmin.launchNotes || "",
     },
 
-    clientFacing: {
-      publicNote: portalState?.admin_public_note || "",
+    portalStateAdmin: {
+      clientStatus: portalState?.client_status || "new",
+      clientNotes: portalState?.client_notes || "",
+      adminPublicNote: portalState?.admin_public_note || "",
       depositAmount:
         portalState?.deposit_amount ??
         (baseTarget ? Math.round(baseTarget * 0.5) : 0),
       depositNotes: portalState?.deposit_notes || "",
+      milestones: mergedMilestones,
     },
 
     proposalText: debug?.generatedProposal || "",
