@@ -37,6 +37,17 @@ function cleanList(values: any) {
   return [];
 }
 
+function cleanMilestones(values: any) {
+  if (!Array.isArray(values)) return [];
+
+  return values.map((m) => ({
+    key: cleanString(m?.key),
+    label: cleanString(m?.label) || cleanString(m?.key),
+    done: !!m?.done,
+    updatedAt: new Date().toISOString(),
+  }));
+}
+
 export async function POST(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
@@ -191,29 +202,59 @@ export async function POST(req: NextRequest) {
     }
 
     const existingPortalState = existingPortalStateRes.data || { quote_id: quoteId };
+
     const shouldUpdatePortalState =
       typeof body?.publicNote === "string" ||
       typeof body?.depositNotes === "string" ||
-      body?.depositAmount != null;
+      body?.depositAmount != null ||
+      (body?.portalStateAdmin && typeof body.portalStateAdmin === "object");
 
     if (shouldUpdatePortalState) {
-      const portalStatePatch = {
+      const portalStatePatch: any = {
         ...existingPortalState,
         quote_id: quoteId,
-        admin_public_note:
-          typeof body?.publicNote === "string"
-            ? body.publicNote
-            : existingPortalState.admin_public_note || null,
-        deposit_notes:
-          typeof body?.depositNotes === "string"
-            ? body.depositNotes
-            : existingPortalState.deposit_notes || null,
-        deposit_amount:
-          body?.depositAmount != null
-            ? Number(body.depositAmount || 0)
-            : existingPortalState.deposit_amount || null,
         updated_at: new Date().toISOString(),
       };
+
+      if (typeof body?.publicNote === "string") {
+        portalStatePatch.admin_public_note = body.publicNote;
+      }
+
+      if (typeof body?.depositNotes === "string") {
+        portalStatePatch.deposit_notes = body.depositNotes;
+      }
+
+      if (body?.depositAmount != null) {
+        portalStatePatch.deposit_amount = Number(body.depositAmount || 0);
+      }
+
+      if (body?.portalStateAdmin && typeof body.portalStateAdmin === "object") {
+        if (typeof body.portalStateAdmin.clientStatus === "string") {
+          portalStatePatch.client_status = body.portalStateAdmin.clientStatus;
+        }
+
+        if (typeof body.portalStateAdmin.clientNotes === "string") {
+          portalStatePatch.client_notes = body.portalStateAdmin.clientNotes;
+        }
+
+        if (typeof body.portalStateAdmin.adminPublicNote === "string") {
+          portalStatePatch.admin_public_note = body.portalStateAdmin.adminPublicNote;
+        }
+
+        if (typeof body.portalStateAdmin.depositNotes === "string") {
+          portalStatePatch.deposit_notes = body.portalStateAdmin.depositNotes;
+        }
+
+        if (body.portalStateAdmin.depositAmount != null) {
+          portalStatePatch.deposit_amount = Number(body.portalStateAdmin.depositAmount || 0);
+        }
+
+        if (Array.isArray(body.portalStateAdmin.milestones)) {
+          portalStatePatch.milestones = cleanMilestones(body.portalStateAdmin.milestones);
+        }
+
+        portalStatePatch.client_updated_at = new Date().toISOString();
+      }
 
       const { error: portalStateUpdateError } = await supabaseAdmin
         .from("quote_portal_state")
