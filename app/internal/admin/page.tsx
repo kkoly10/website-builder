@@ -151,7 +151,9 @@ export default async function WebPipelinePage() {
 
       links: {
         detail: `/internal/admin/${q.id}`,
-        workspace: q.public_token ? `/portal/${q.public_token}` : `/internal/project/${q.id}`,
+        workspace: q.public_token
+          ? `/portal/${q.public_token}`
+          : `/internal/admin/${q.id}`,
       },
     };
   });
