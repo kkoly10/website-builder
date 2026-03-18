@@ -231,6 +231,9 @@ export default function ProjectControlClient({
     "live",
   ];
 
+  const assetStatusOptions = ["submitted", "received", "approved"];
+  const revisionStatusOptions = ["new", "reviewed", "scheduled", "done"];
+
   function toggleMilestone(key: string) {
     setData((prev) => ({
       ...prev,
@@ -243,11 +246,38 @@ export default function ProjectControlClient({
     }));
   }
 
+  function updateAssetStatus(id: string, status: string) {
+    setData((prev) => ({
+      ...prev,
+      clientSync: {
+        ...prev.clientSync,
+        assets: prev.clientSync.assets.map((asset) =>
+          asset.id === id ? { ...asset, status } : asset
+        ),
+      },
+    }));
+  }
+
+  function updateRevisionStatus(id: string, status: string) {
+    setData((prev) => ({
+      ...prev,
+      clientSync: {
+        ...prev.clientSync,
+        revisions: prev.clientSync.revisions.map((rev) =>
+          rev.id === id ? { ...rev, status } : rev
+        ),
+      },
+    }));
+  }
+
   return (
     <main className="section" style={{ paddingTop: 0 }}>
       <div className="card">
         <div className="cardInner">
-          <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div
+            className="row"
+            style={{ justifyContent: "space-between", alignItems: "flex-start" }}
+          >
             <div>
               <div className="kicker">
                 <span className="kickerDot" />
@@ -293,7 +323,13 @@ export default function ProjectControlClient({
           </div>
 
           {message ? (
-            <div style={{ marginTop: 14, color: "var(--accent2)", fontWeight: 800 }}>
+            <div
+              style={{
+                marginTop: 14,
+                color: "var(--accent2)",
+                fontWeight: 800,
+              }}
+            >
               {message}
             </div>
           ) : null}
@@ -972,7 +1008,9 @@ export default function ProjectControlClient({
                           {milestone.label}
                         </div>
                         <div className="checkHint">
-                          {milestone.updatedAt ? `Updated ${fmtDate(milestone.updatedAt)}` : "Not updated yet"}
+                          {milestone.updatedAt
+                            ? `Updated ${fmtDate(milestone.updatedAt)}`
+                            : "Not updated yet"}
                         </div>
                       </div>
                     </div>
@@ -1151,15 +1189,27 @@ export default function ProjectControlClient({
           <div className="panelHeader">
             <div>Client Sync</div>
             <div className="smallNote">
-              View the latest client activity already submitted through the workspace.
+              View the latest client activity and manage submission statuses.
             </div>
           </div>
           <div className="panelBody">
             <div className="grid2">
-              <ReadOnly label="Last client update" value={fmtDate(data.clientSync.lastClientUpdate)} />
-              <ReadOnly label="Assets submitted" value={String(data.clientSync.assets.length)} />
-              <ReadOnly label="Revision requests" value={String(data.clientSync.revisions.length)} />
-              <ReadOnly label="Workspace status" value={pretty(data.portalStateAdmin.clientStatus)} />
+              <ReadOnly
+                label="Last client update"
+                value={fmtDate(data.clientSync.lastClientUpdate)}
+              />
+              <ReadOnly
+                label="Assets submitted"
+                value={String(data.clientSync.assets.length)}
+              />
+              <ReadOnly
+                label="Revision requests"
+                value={String(data.clientSync.revisions.length)}
+              />
+              <ReadOnly
+                label="Workspace status"
+                value={pretty(data.portalStateAdmin.clientStatus)}
+              />
             </div>
 
             <div style={{ marginTop: 18 }}>
@@ -1168,7 +1218,7 @@ export default function ProjectControlClient({
                 {data.clientSync.assets.length === 0 ? (
                   <div className="smallNote">No client assets submitted yet.</div>
                 ) : (
-                  data.clientSync.assets.slice(0, 6).map((asset) => (
+                  data.clientSync.assets.map((asset) => (
                     <div
                       key={asset.id}
                       style={{
@@ -1178,19 +1228,50 @@ export default function ProjectControlClient({
                         padding: 14,
                       }}
                     >
-                      <div style={{ fontWeight: 800 }}>{asset.label}</div>
-                      <div className="smallNote" style={{ marginTop: 4 }}>
-                        {asset.category} • {pretty(asset.status)} • {fmtDate(asset.createdAt)}
-                      </div>
-                      {asset.notes ? (
-                        <div className="pDark" style={{ marginTop: 8 }}>
-                          {asset.notes}
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "minmax(0, 1fr) 220px",
+                          gap: 14,
+                          alignItems: "start",
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 800 }}>{asset.label}</div>
+                          <div className="smallNote" style={{ marginTop: 4 }}>
+                            {asset.category} • {fmtDate(asset.createdAt)}
+                          </div>
+                          {asset.notes ? (
+                            <div className="pDark" style={{ marginTop: 8 }}>
+                              {asset.notes}
+                            </div>
+                          ) : null}
+                          <div className="row" style={{ marginTop: 10 }}>
+                            <a
+                              href={asset.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="btn btnGhost"
+                            >
+                              Open Asset
+                            </a>
+                          </div>
                         </div>
-                      ) : null}
-                      <div className="row" style={{ marginTop: 10 }}>
-                        <a href={asset.url} target="_blank" rel="noreferrer" className="btn btnGhost">
-                          Open Asset
-                        </a>
+
+                        <label>
+                          <div className="fieldLabel">Asset status</div>
+                          <select
+                            className="select"
+                            value={asset.status}
+                            onChange={(e) => updateAssetStatus(asset.id, e.target.value)}
+                          >
+                            {assetStatusOptions.map((option) => (
+                              <option key={option} value={option}>
+                                {pretty(option)}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
                       </div>
                     </div>
                   ))
@@ -1204,7 +1285,7 @@ export default function ProjectControlClient({
                 {data.clientSync.revisions.length === 0 ? (
                   <div className="smallNote">No client revision requests yet.</div>
                 ) : (
-                  data.clientSync.revisions.slice(0, 6).map((rev) => (
+                  data.clientSync.revisions.map((rev) => (
                     <div
                       key={rev.id}
                       style={{
@@ -1214,19 +1295,65 @@ export default function ProjectControlClient({
                         padding: 14,
                       }}
                     >
-                      <div style={{ fontWeight: 800 }}>
-                        {pretty(rev.status)} • {pretty(rev.priority)}
-                      </div>
-                      <div className="smallNote" style={{ marginTop: 4 }}>
-                        {fmtDate(rev.createdAt)}
-                      </div>
-                      <div className="pDark" style={{ marginTop: 8 }}>
-                        {rev.message}
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "minmax(0, 1fr) 220px",
+                          gap: 14,
+                          alignItems: "start",
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 800 }}>
+                            {pretty(rev.priority)} priority
+                          </div>
+                          <div className="smallNote" style={{ marginTop: 4 }}>
+                            {fmtDate(rev.createdAt)}
+                          </div>
+                          <div className="pDark" style={{ marginTop: 8 }}>
+                            {rev.message}
+                          </div>
+                        </div>
+
+                        <label>
+                          <div className="fieldLabel">Revision status</div>
+                          <select
+                            className="select"
+                            value={rev.status}
+                            onChange={(e) => updateRevisionStatus(rev.id, e.target.value)}
+                          >
+                            {revisionStatusOptions.map((option) => (
+                              <option key={option} value={option}>
+                                {pretty(option)}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
                       </div>
                     </div>
                   ))
                 )}
               </div>
+            </div>
+
+            <div className="row" style={{ marginTop: 14 }}>
+              <button
+                className="btn btnPrimary"
+                disabled={busy}
+                onClick={() =>
+                  savePatch(
+                    {
+                      clientSync: {
+                        assets: data.clientSync.assets,
+                        revisions: data.clientSync.revisions,
+                      },
+                    },
+                    "Client submission statuses updated."
+                  )
+                }
+              >
+                Save Client Sync Statuses →
+              </button>
             </div>
           </div>
         </div>
@@ -1237,15 +1364,26 @@ export default function ProjectControlClient({
           </div>
           <div className="panelBody">
             <div className="grid2">
-              <ReadOnly label="PIE status" value={data.pie.exists ? "Ready" : "Missing"} />
-              <ReadOnly label="PIE score" value={data.pie.score != null ? String(data.pie.score) : "—"} />
+              <ReadOnly
+                label="PIE status"
+                value={data.pie.exists ? "Ready" : "Missing"}
+              />
+              <ReadOnly
+                label="PIE score"
+                value={data.pie.score != null ? String(data.pie.score) : "—"}
+              />
               <ReadOnly label="PIE tier" value={data.pie.tier || "—"} />
               <ReadOnly label="Call request" value={data.callRequest?.status || "—"} />
             </div>
 
             <label style={{ display: "block", marginTop: 14 }}>
               <div className="fieldLabel">PIE summary</div>
-              <textarea className="textarea" rows={8} value={data.pie.summary || ""} disabled />
+              <textarea
+                className="textarea"
+                rows={8}
+                value={data.pie.summary || ""}
+                disabled
+              />
             </label>
 
             <div className="row" style={{ marginTop: 14 }}>
