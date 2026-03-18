@@ -1,0 +1,1077 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+
+type ProjectControlData = {
+  quoteId: string;
+  publicToken: string;
+  workspaceUrl: string;
+  createdAt: string;
+  status: string;
+  tier: string;
+  leadName: string;
+  leadEmail: string;
+  estimate: {
+    target: number;
+    min: number;
+    max: number;
+  };
+  pie: {
+    exists: boolean;
+    score: number | null;
+    tier: string | null;
+    summary: string;
+  };
+  callRequest: {
+    status: string;
+    bestTime: string;
+    timezone: string;
+    notes: string;
+  } | null;
+  adminPricing: {
+    discountPercent: number;
+    flatAdjustment: number;
+    hourlyRate: number;
+    notes: string;
+  };
+  scopeSnapshot: {
+    tierLabel: string;
+    platform: string;
+    timeline: string;
+    revisionPolicy: string;
+    pagesIncluded: string[];
+    featuresIncluded: string[];
+    exclusions: string[];
+  };
+  portalAdmin: {
+    previewUrl: string;
+    productionUrl: string;
+    previewStatus: string;
+    previewNotes: string;
+    previewUpdatedAt: string;
+    clientReviewStatus: string;
+    agreementStatus: string;
+    agreementModel: string;
+    ownershipModel: string;
+    agreementPublishedAt: string;
+    launchStatus: string;
+    domainStatus: string;
+    analyticsStatus: string;
+    formsStatus: string;
+    seoStatus: string;
+    handoffStatus: string;
+    launchNotes: string;
+  };
+  clientFacing: {
+    publicNote: string;
+    depositAmount: number;
+    depositNotes: string;
+  };
+  proposalText: string;
+};
+
+function money(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0));
+}
+
+function fmtDate(value?: string) {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleString();
+}
+
+function listToText(values: string[]) {
+  return values.join("\n");
+}
+
+function textToList(value: string) {
+  return value
+    .split(/\n|,/)
+    .map((v) => v.trim())
+    .filter(Boolean);
+}
+
+export default function ProjectControlClient({
+  initialData,
+}: {
+  initialData: ProjectControlData;
+}) {
+  const [data, setData] = useState<ProjectControlData>(initialData);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+
+  async function savePatch(payload: Record<string, any>, successMessage: string) {
+    setBusy(true);
+    setMessage("Saving...");
+
+    try {
+      const res = await fetch("/api/internal/admin/quote-admin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          quoteId: data.quoteId,
+          ...payload,
+        }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Failed to save changes.");
+      }
+
+      setMessage(successMessage);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "Failed to save changes.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const previewStatusOptions = [
+    "Awaiting published preview",
+    "Ready for review",
+    "Revision in progress",
+    "Approved for launch",
+    "Live",
+  ];
+
+  const reviewStatusOptions = [
+    "Preview pending",
+    "Pending review",
+    "Changes requested",
+    "Approved",
+    "Live",
+  ];
+
+  const agreementStatusOptions = [
+    "Not published yet",
+    "Pre-draft / agreement stage",
+    "Published to client",
+    "Signed",
+    "Kickoff ready",
+  ];
+
+  const ownershipOptions = [
+    "Managed with project handoff options",
+    "Client-owned / handoff",
+  ];
+
+  const launchStatusOptions = [
+    "Not ready",
+    "Pre-launch",
+    "Ready for launch",
+    "Live",
+  ];
+
+  const readinessOptions = ["Pending", "In progress", "Ready", "Complete"];
+
+  const statusOptions = [
+    "new",
+    "call_requested",
+    "call",
+    "proposal",
+    "deposit",
+    "active",
+    "closed",
+  ];
+
+  return (
+    <main className="section" style={{ paddingTop: 0 }}>
+      <div className="card">
+        <div className="cardInner">
+          <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <div className="kicker">
+                <span className="kickerDot" />
+                Project Control
+              </div>
+              <h1 className="h2" style={{ marginTop: 10 }}>
+                {data.leadName}
+              </h1>
+              <p className="pDark" style={{ marginTop: 6 }}>
+                {data.leadEmail}
+              </p>
+              <p className="pDark" style={{ marginTop: 6 }}>
+                Quote ID <code>{data.quoteId}</code> • Created {fmtDate(data.createdAt)}
+              </p>
+            </div>
+
+            <div className="row">
+              <Link href="/internal/admin" className="btn btnGhost">
+                Back to Pipeline
+              </Link>
+              {data.workspaceUrl ? (
+                <Link href={data.workspaceUrl} className="btn btnPrimary">
+                  Open Client Workspace →
+                </Link>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="grid4" style={{ marginTop: 18 }}>
+            <StatCard label="Status" value={data.status} />
+            <StatCard label="Tier" value={data.tier} />
+            <StatCard label="Target" value={money(data.estimate.target)} />
+            <StatCard
+              label="PIE"
+              value={
+                data.pie.exists
+                  ? data.pie.score != null
+                    ? `Score ${data.pie.score}`
+                    : "Ready"
+                  : "Missing"
+              }
+            />
+          </div>
+
+          {message ? (
+            <div style={{ marginTop: 14, color: "var(--accent2)", fontWeight: 800 }}>
+              {message}
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="grid2stretch" style={{ marginTop: 18 }}>
+        <div className="panel">
+          <div className="panelHeader">
+            <div>Scope Snapshot</div>
+            <div className="smallNote">
+              This becomes the client-facing source of truth for what is included.
+            </div>
+          </div>
+          <div className="panelBody">
+            <div className="grid2">
+              <label>
+                <div className="fieldLabel">Tier label</div>
+                <input
+                  className="input"
+                  value={data.scopeSnapshot.tierLabel}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      scopeSnapshot: {
+                        ...prev.scopeSnapshot,
+                        tierLabel: e.target.value,
+                      },
+                    }))
+                  }
+                />
+              </label>
+
+              <label>
+                <div className="fieldLabel">Platform</div>
+                <input
+                  className="input"
+                  value={data.scopeSnapshot.platform}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      scopeSnapshot: {
+                        ...prev.scopeSnapshot,
+                        platform: e.target.value,
+                      },
+                    }))
+                  }
+                />
+              </label>
+
+              <label>
+                <div className="fieldLabel">Timeline</div>
+                <input
+                  className="input"
+                  value={data.scopeSnapshot.timeline}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      scopeSnapshot: {
+                        ...prev.scopeSnapshot,
+                        timeline: e.target.value,
+                      },
+                    }))
+                  }
+                />
+              </label>
+
+              <label>
+                <div className="fieldLabel">Revision policy</div>
+                <input
+                  className="input"
+                  value={data.scopeSnapshot.revisionPolicy}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      scopeSnapshot: {
+                        ...prev.scopeSnapshot,
+                        revisionPolicy: e.target.value,
+                      },
+                    }))
+                  }
+                />
+              </label>
+            </div>
+
+            <label style={{ display: "block", marginTop: 14 }}>
+              <div className="fieldLabel">Pages included</div>
+              <textarea
+                className="textarea"
+                rows={5}
+                value={listToText(data.scopeSnapshot.pagesIncluded)}
+                onChange={(e) =>
+                  setData((prev) => ({
+                    ...prev,
+                    scopeSnapshot: {
+                      ...prev.scopeSnapshot,
+                      pagesIncluded: textToList(e.target.value),
+                    },
+                  }))
+                }
+                placeholder="Homepage&#10;About&#10;Services&#10;Contact"
+              />
+            </label>
+
+            <label style={{ display: "block", marginTop: 14 }}>
+              <div className="fieldLabel">Features included</div>
+              <textarea
+                className="textarea"
+                rows={5}
+                value={listToText(data.scopeSnapshot.featuresIncluded)}
+                onChange={(e) =>
+                  setData((prev) => ({
+                    ...prev,
+                    scopeSnapshot: {
+                      ...prev.scopeSnapshot,
+                      featuresIncluded: textToList(e.target.value),
+                    },
+                  }))
+                }
+                placeholder="Contact form&#10;CMS&#10;Booking flow"
+              />
+            </label>
+
+            <label style={{ display: "block", marginTop: 14 }}>
+              <div className="fieldLabel">Exclusions</div>
+              <textarea
+                className="textarea"
+                rows={5}
+                value={listToText(data.scopeSnapshot.exclusions)}
+                onChange={(e) =>
+                  setData((prev) => ({
+                    ...prev,
+                    scopeSnapshot: {
+                      ...prev.scopeSnapshot,
+                      exclusions: textToList(e.target.value),
+                    },
+                  }))
+                }
+                placeholder="Copywriting beyond provided draft&#10;Third-party fees"
+              />
+            </label>
+
+            <div className="row" style={{ marginTop: 14 }}>
+              <button
+                className="btn btnPrimary"
+                disabled={busy}
+                onClick={() =>
+                  savePatch(
+                    { scopeSnapshot: data.scopeSnapshot },
+                    "Scope Snapshot saved."
+                  )
+                }
+              >
+                Save Scope Snapshot →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panelHeader">
+            <div>Workspace Publishing</div>
+            <div className="smallNote">
+              Control preview, agreement, ownership, launch, and handoff from one place.
+            </div>
+          </div>
+          <div className="panelBody">
+            <div className="grid2">
+              <label>
+                <div className="fieldLabel">Preview URL</div>
+                <input
+                  className="input"
+                  value={data.portalAdmin.previewUrl}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      portalAdmin: {
+                        ...prev.portalAdmin,
+                        previewUrl: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder="https://project-branch.vercel.app"
+                />
+              </label>
+
+              <label>
+                <div className="fieldLabel">Production URL</div>
+                <input
+                  className="input"
+                  value={data.portalAdmin.productionUrl}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      portalAdmin: {
+                        ...prev.portalAdmin,
+                        productionUrl: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder="https://clientsite.com"
+                />
+              </label>
+
+              <label>
+                <div className="fieldLabel">Preview status</div>
+                <select
+                  className="select"
+                  value={data.portalAdmin.previewStatus}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      portalAdmin: {
+                        ...prev.portalAdmin,
+                        previewStatus: e.target.value,
+                      },
+                    }))
+                  }
+                >
+                  {previewStatusOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <div className="fieldLabel">Client review status</div>
+                <select
+                  className="select"
+                  value={data.portalAdmin.clientReviewStatus}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      portalAdmin: {
+                        ...prev.portalAdmin,
+                        clientReviewStatus: e.target.value,
+                      },
+                    }))
+                  }
+                >
+                  {reviewStatusOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <div className="fieldLabel">Agreement status</div>
+                <select
+                  className="select"
+                  value={data.portalAdmin.agreementStatus}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      portalAdmin: {
+                        ...prev.portalAdmin,
+                        agreementStatus: e.target.value,
+                      },
+                    }))
+                  }
+                >
+                  {agreementStatusOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <div className="fieldLabel">Agreement model</div>
+                <input
+                  className="input"
+                  value={data.portalAdmin.agreementModel}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      portalAdmin: {
+                        ...prev.portalAdmin,
+                        agreementModel: e.target.value,
+                      },
+                    }))
+                  }
+                />
+              </label>
+
+              <label>
+                <div className="fieldLabel">Ownership model</div>
+                <select
+                  className="select"
+                  value={data.portalAdmin.ownershipModel}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      portalAdmin: {
+                        ...prev.portalAdmin,
+                        ownershipModel: e.target.value,
+                      },
+                    }))
+                  }
+                >
+                  {ownershipOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <div className="fieldLabel">Agreement published at</div>
+                <input
+                  className="input"
+                  value={data.portalAdmin.agreementPublishedAt}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      portalAdmin: {
+                        ...prev.portalAdmin,
+                        agreementPublishedAt: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder="2026-03-13T14:30:00.000Z"
+                />
+              </label>
+
+              <label>
+                <div className="fieldLabel">Launch status</div>
+                <select
+                  className="select"
+                  value={data.portalAdmin.launchStatus}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      portalAdmin: {
+                        ...prev.portalAdmin,
+                        launchStatus: e.target.value,
+                      },
+                    }))
+                  }
+                >
+                  {launchStatusOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <div className="fieldLabel">Domain</div>
+                <select
+                  className="select"
+                  value={data.portalAdmin.domainStatus}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      portalAdmin: {
+                        ...prev.portalAdmin,
+                        domainStatus: e.target.value,
+                      },
+                    }))
+                  }
+                >
+                  {readinessOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <div className="fieldLabel">Analytics</div>
+                <select
+                  className="select"
+                  value={data.portalAdmin.analyticsStatus}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      portalAdmin: {
+                        ...prev.portalAdmin,
+                        analyticsStatus: e.target.value,
+                      },
+                    }))
+                  }
+                >
+                  {readinessOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <div className="fieldLabel">Forms</div>
+                <select
+                  className="select"
+                  value={data.portalAdmin.formsStatus}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      portalAdmin: {
+                        ...prev.portalAdmin,
+                        formsStatus: e.target.value,
+                      },
+                    }))
+                  }
+                >
+                  {readinessOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <div className="fieldLabel">SEO basics</div>
+                <select
+                  className="select"
+                  value={data.portalAdmin.seoStatus}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      portalAdmin: {
+                        ...prev.portalAdmin,
+                        seoStatus: e.target.value,
+                      },
+                    }))
+                  }
+                >
+                  {readinessOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <div className="fieldLabel">Handoff</div>
+                <select
+                  className="select"
+                  value={data.portalAdmin.handoffStatus}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      portalAdmin: {
+                        ...prev.portalAdmin,
+                        handoffStatus: e.target.value,
+                      },
+                    }))
+                  }
+                >
+                  {readinessOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <label style={{ display: "block", marginTop: 14 }}>
+              <div className="fieldLabel">Preview notes</div>
+              <textarea
+                className="textarea"
+                rows={5}
+                value={data.portalAdmin.previewNotes}
+                onChange={(e) =>
+                  setData((prev) => ({
+                    ...prev,
+                    portalAdmin: {
+                      ...prev.portalAdmin,
+                      previewNotes: e.target.value,
+                    },
+                  }))
+                }
+                placeholder="What changed in this preview? What should the client review?"
+              />
+            </label>
+
+            <label style={{ display: "block", marginTop: 14 }}>
+              <div className="fieldLabel">Launch notes</div>
+              <textarea
+                className="textarea"
+                rows={5}
+                value={data.portalAdmin.launchNotes}
+                onChange={(e) =>
+                  setData((prev) => ({
+                    ...prev,
+                    portalAdmin: {
+                      ...prev.portalAdmin,
+                      launchNotes: e.target.value,
+                    },
+                  }))
+                }
+                placeholder="Domain, analytics, forms, SEO, launch readiness, or handoff notes..."
+              />
+            </label>
+
+            <div className="row" style={{ marginTop: 14 }}>
+              <button
+                className="btn btnPrimary"
+                disabled={busy}
+                onClick={() =>
+                  savePatch(
+                    { portalAdmin: data.portalAdmin },
+                    "Workspace publishing updated."
+                  )
+                }
+              >
+                Save Workspace Publishing →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid2stretch" style={{ marginTop: 18 }}>
+        <div className="panel">
+          <div className="panelHeader">
+            <div>Client-Facing Notes & Commercials</div>
+            <div className="smallNote">
+              These are the parts the client workspace will surface directly.
+            </div>
+          </div>
+          <div className="panelBody">
+            <div className="grid2">
+              <label>
+                <div className="fieldLabel">Quote status</div>
+                <select
+                  className="select"
+                  value={data.status}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      status: e.target.value,
+                    }))
+                  }
+                >
+                  {statusOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <div className="fieldLabel">Deposit amount</div>
+                <input
+                  className="input"
+                  type="number"
+                  value={data.clientFacing.depositAmount}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      clientFacing: {
+                        ...prev.clientFacing,
+                        depositAmount: Number(e.target.value || 0),
+                      },
+                    }))
+                  }
+                />
+              </label>
+            </div>
+
+            <label style={{ display: "block", marginTop: 14 }}>
+              <div className="fieldLabel">Admin public note</div>
+              <textarea
+                className="textarea"
+                rows={6}
+                value={data.clientFacing.publicNote}
+                onChange={(e) =>
+                  setData((prev) => ({
+                    ...prev,
+                    clientFacing: {
+                      ...prev.clientFacing,
+                      publicNote: e.target.value,
+                    },
+                  }))
+                }
+                placeholder="Client-facing update that appears inside the workspace."
+              />
+            </label>
+
+            <label style={{ display: "block", marginTop: 14 }}>
+              <div className="fieldLabel">Deposit notes</div>
+              <textarea
+                className="textarea"
+                rows={5}
+                value={data.clientFacing.depositNotes}
+                onChange={(e) =>
+                  setData((prev) => ({
+                    ...prev,
+                    clientFacing: {
+                      ...prev.clientFacing,
+                      depositNotes: e.target.value,
+                    },
+                  }))
+                }
+                placeholder="Anything the client should know about deposit timing or payment."
+              />
+            </label>
+
+            <div className="row" style={{ marginTop: 14 }}>
+              <button
+                className="btn btnPrimary"
+                disabled={busy}
+                onClick={() =>
+                  savePatch(
+                    {
+                      status: data.status,
+                      publicNote: data.clientFacing.publicNote,
+                      depositAmount: data.clientFacing.depositAmount,
+                      depositNotes: data.clientFacing.depositNotes,
+                    },
+                    "Client-facing settings updated."
+                  )
+                }
+              >
+                Save Client-Facing Settings →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panelHeader">
+            <div>Pricing & Proposal</div>
+            <div className="smallNote">
+              Internal pricing controls and proposal draft for this one project.
+            </div>
+          </div>
+          <div className="panelBody">
+            <div className="grid2">
+              <label>
+                <div className="fieldLabel">Discount %</div>
+                <input
+                  className="input"
+                  type="number"
+                  value={data.adminPricing.discountPercent}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      adminPricing: {
+                        ...prev.adminPricing,
+                        discountPercent: Number(e.target.value || 0),
+                      },
+                    }))
+                  }
+                />
+              </label>
+
+              <label>
+                <div className="fieldLabel">Flat adjustment</div>
+                <input
+                  className="input"
+                  type="number"
+                  value={data.adminPricing.flatAdjustment}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      adminPricing: {
+                        ...prev.adminPricing,
+                        flatAdjustment: Number(e.target.value || 0),
+                      },
+                    }))
+                  }
+                />
+              </label>
+
+              <label>
+                <div className="fieldLabel">Hourly rate</div>
+                <input
+                  className="input"
+                  type="number"
+                  value={data.adminPricing.hourlyRate}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      adminPricing: {
+                        ...prev.adminPricing,
+                        hourlyRate: Number(e.target.value || 40),
+                      },
+                    }))
+                  }
+                />
+              </label>
+
+              <label>
+                <div className="fieldLabel">Adjusted target</div>
+                <input
+                  className="input"
+                  value={money(
+                    Math.round(
+                      data.estimate.target *
+                        (1 - data.adminPricing.discountPercent / 100)
+                    ) + data.adminPricing.flatAdjustment
+                  )}
+                  disabled
+                />
+              </label>
+            </div>
+
+            <label style={{ display: "block", marginTop: 14 }}>
+              <div className="fieldLabel">Pricing notes</div>
+              <textarea
+                className="textarea"
+                rows={4}
+                value={data.adminPricing.notes}
+                onChange={(e) =>
+                  setData((prev) => ({
+                    ...prev,
+                    adminPricing: {
+                      ...prev.adminPricing,
+                      notes: e.target.value,
+                    },
+                  }))
+                }
+              />
+            </label>
+
+            <div className="row" style={{ marginTop: 14 }}>
+              <button
+                className="btn btnGhost"
+                disabled={busy}
+                onClick={() =>
+                  savePatch(
+                    { adminPricing: data.adminPricing },
+                    "Pricing controls updated."
+                  )
+                }
+              >
+                Save Pricing
+              </button>
+            </div>
+
+            <label style={{ display: "block", marginTop: 18 }}>
+              <div className="fieldLabel">Proposal draft</div>
+              <textarea
+                className="textarea"
+                rows={10}
+                value={data.proposalText}
+                onChange={(e) =>
+                  setData((prev) => ({
+                    ...prev,
+                    proposalText: e.target.value,
+                  }))
+                }
+                placeholder="Draft proposal here..."
+              />
+            </label>
+
+            <div className="row" style={{ marginTop: 14 }}>
+              <button
+                className="btn btnPrimary"
+                disabled={busy}
+                onClick={() =>
+                  savePatch(
+                    { proposalText: data.proposalText },
+                    "Proposal draft saved."
+                  )
+                }
+              >
+                Save Proposal Draft →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid2stretch" style={{ marginTop: 18 }}>
+        <div className="panel">
+          <div className="panelHeader">
+            <div>PIE Snapshot</div>
+          </div>
+          <div className="panelBody">
+            <div className="grid2">
+              <ReadOnly label="PIE status" value={data.pie.exists ? "Ready" : "Missing"} />
+              <ReadOnly label="PIE score" value={data.pie.score != null ? String(data.pie.score) : "—"} />
+              <ReadOnly label="PIE tier" value={data.pie.tier || "—"} />
+              <ReadOnly label="Call request" value={data.callRequest?.status || "—"} />
+            </div>
+
+            <label style={{ display: "block", marginTop: 14 }}>
+              <div className="fieldLabel">PIE summary</div>
+              <textarea className="textarea" rows={8} value={data.pie.summary || ""} disabled />
+            </label>
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panelHeader">
+            <div>Quick Links</div>
+          </div>
+          <div className="panelBody">
+            <div className="row">
+              <Link href="/internal/admin" className="btn btnGhost">
+                Back to Pipeline
+              </Link>
+              {data.workspaceUrl ? (
+                <Link href={data.workspaceUrl} className="btn btnPrimary">
+                  Client Workspace →
+                </Link>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="panel" style={{ background: "var(--panel2)" }}>
+      <div className="panelBody">
+        <div className="smallNote">{label}</div>
+        <div style={{ marginTop: 8, fontWeight: 900, fontSize: 24 }}>{value}</div>
+      </div>
+    </div>
+  );
+}
+
+function ReadOnly({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="fieldLabel">{label}</div>
+      <input className="input" value={value} disabled />
+    </div>
+  );
+}
