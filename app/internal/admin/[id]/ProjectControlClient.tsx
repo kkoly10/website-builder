@@ -3,6 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 
+type Milestone = {
+  key: string;
+  label: string;
+  done: boolean;
+  updatedAt?: string | null;
+};
+
 type ProjectControlData = {
   quoteId: string;
   publicToken: string;
@@ -63,10 +70,13 @@ type ProjectControlData = {
     handoffStatus: string;
     launchNotes: string;
   };
-  clientFacing: {
-    publicNote: string;
+  portalStateAdmin: {
+    clientStatus: string;
+    clientNotes: string;
+    adminPublicNote: string;
     depositAmount: number;
     depositNotes: string;
+    milestones: Milestone[];
   };
   proposalText: string;
 };
@@ -182,6 +192,28 @@ export default function ProjectControlClient({
     "active",
     "closed",
   ];
+
+  const workspaceStatusOptions = [
+    "new",
+    "intake_review",
+    "content_submitted",
+    "preview_ready",
+    "revision_requested",
+    "launch_ready",
+    "live",
+  ];
+
+  function toggleMilestone(key: string) {
+    setData((prev) => ({
+      ...prev,
+      portalStateAdmin: {
+        ...prev.portalStateAdmin,
+        milestones: prev.portalStateAdmin.milestones.map((m) =>
+          m.key === key ? { ...m, done: !m.done } : m
+        ),
+      },
+    }));
+  }
 
   return (
     <main className="section" style={{ paddingTop: 0 }}>
@@ -763,9 +795,9 @@ export default function ProjectControlClient({
       <div className="grid2stretch" style={{ marginTop: 18 }}>
         <div className="panel">
           <div className="panelHeader">
-            <div>Client-Facing Notes & Commercials</div>
+            <div>Workspace State & Timeline</div>
             <div className="smallNote">
-              These are the parts the client workspace will surface directly.
+              Control what the client workspace shows for status, notes, and milestones.
             </div>
           </div>
           <div className="panelBody">
@@ -791,16 +823,39 @@ export default function ProjectControlClient({
               </label>
 
               <label>
+                <div className="fieldLabel">Workspace status</div>
+                <select
+                  className="select"
+                  value={data.portalStateAdmin.clientStatus}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      portalStateAdmin: {
+                        ...prev.portalStateAdmin,
+                        clientStatus: e.target.value,
+                      },
+                    }))
+                  }
+                >
+                  {workspaceStatusOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
                 <div className="fieldLabel">Deposit amount</div>
                 <input
                   className="input"
                   type="number"
-                  value={data.clientFacing.depositAmount}
+                  value={data.portalStateAdmin.depositAmount}
                   onChange={(e) =>
                     setData((prev) => ({
                       ...prev,
-                      clientFacing: {
-                        ...prev.clientFacing,
+                      portalStateAdmin: {
+                        ...prev.portalStateAdmin,
                         depositAmount: Number(e.target.value || 0),
                       },
                     }))
@@ -810,17 +865,36 @@ export default function ProjectControlClient({
             </div>
 
             <label style={{ display: "block", marginTop: 14 }}>
+              <div className="fieldLabel">Client notes</div>
+              <textarea
+                className="textarea"
+                rows={5}
+                value={data.portalStateAdmin.clientNotes}
+                onChange={(e) =>
+                  setData((prev) => ({
+                    ...prev,
+                    portalStateAdmin: {
+                      ...prev.portalStateAdmin,
+                      clientNotes: e.target.value,
+                    },
+                  }))
+                }
+                placeholder="Internal client-specific notes that can surface in the workspace."
+              />
+            </label>
+
+            <label style={{ display: "block", marginTop: 14 }}>
               <div className="fieldLabel">Admin public note</div>
               <textarea
                 className="textarea"
                 rows={6}
-                value={data.clientFacing.publicNote}
+                value={data.portalStateAdmin.adminPublicNote}
                 onChange={(e) =>
                   setData((prev) => ({
                     ...prev,
-                    clientFacing: {
-                      ...prev.clientFacing,
-                      publicNote: e.target.value,
+                    portalStateAdmin: {
+                      ...prev.portalStateAdmin,
+                      adminPublicNote: e.target.value,
                     },
                   }))
                 }
@@ -833,12 +907,12 @@ export default function ProjectControlClient({
               <textarea
                 className="textarea"
                 rows={5}
-                value={data.clientFacing.depositNotes}
+                value={data.portalStateAdmin.depositNotes}
                 onChange={(e) =>
                   setData((prev) => ({
                     ...prev,
-                    clientFacing: {
-                      ...prev.clientFacing,
+                    portalStateAdmin: {
+                      ...prev.portalStateAdmin,
                       depositNotes: e.target.value,
                     },
                   }))
@@ -846,6 +920,38 @@ export default function ProjectControlClient({
                 placeholder="Anything the client should know about deposit timing or payment."
               />
             </label>
+
+            <div style={{ marginTop: 18 }}>
+              <div className="fieldLabel">Timeline milestones</div>
+              <div style={{ display: "grid", gap: 10 }}>
+                {data.portalStateAdmin.milestones.map((milestone) => (
+                  <label
+                    key={milestone.key}
+                    className="checkLine"
+                    style={{
+                      alignItems: "flex-start",
+                      gap: 12,
+                    }}
+                  >
+                    <div className="checkLeft" style={{ alignItems: "flex-start" }}>
+                      <input
+                        type="checkbox"
+                        checked={milestone.done}
+                        onChange={() => toggleMilestone(milestone.key)}
+                      />
+                      <div>
+                        <div className="checkLabel" style={{ whiteSpace: "normal" }}>
+                          {milestone.label}
+                        </div>
+                        <div className="checkHint">
+                          {milestone.updatedAt ? `Updated ${fmtDate(milestone.updatedAt)}` : "Not updated yet"}
+                        </div>
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
 
             <div className="row" style={{ marginTop: 14 }}>
               <button
@@ -855,15 +961,13 @@ export default function ProjectControlClient({
                   savePatch(
                     {
                       status: data.status,
-                      publicNote: data.clientFacing.publicNote,
-                      depositAmount: data.clientFacing.depositAmount,
-                      depositNotes: data.clientFacing.depositNotes,
+                      portalStateAdmin: data.portalStateAdmin,
                     },
-                    "Client-facing settings updated."
+                    "Workspace state updated."
                   )
                 }
               >
-                Save Client-Facing Settings →
+                Save Workspace State →
               </button>
             </div>
           </div>
