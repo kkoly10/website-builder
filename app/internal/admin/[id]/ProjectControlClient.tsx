@@ -10,6 +10,24 @@ type Milestone = {
   updatedAt?: string | null;
 };
 
+type ClientAsset = {
+  id: string;
+  category: string;
+  label: string;
+  url: string;
+  notes?: string;
+  status: string;
+  createdAt: string;
+};
+
+type ClientRevision = {
+  id: string;
+  message: string;
+  priority: string;
+  status: string;
+  createdAt: string;
+};
+
 type ProjectControlData = {
   quoteId: string;
   publicToken: string;
@@ -78,6 +96,11 @@ type ProjectControlData = {
     depositNotes: string;
     milestones: Milestone[];
   };
+  clientSync: {
+    lastClientUpdate: string;
+    assets: ClientAsset[];
+    revisions: ClientRevision[];
+  };
   proposalText: string;
 };
 
@@ -105,6 +128,11 @@ function textToList(value: string) {
     .split(/\n|,/)
     .map((v) => v.trim())
     .filter(Boolean);
+}
+
+function pretty(value?: string | null) {
+  if (!value) return "—";
+  return value.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
 export default function ProjectControlClient({
@@ -1121,6 +1149,90 @@ export default function ProjectControlClient({
       <div className="grid2stretch" style={{ marginTop: 18 }}>
         <div className="panel">
           <div className="panelHeader">
+            <div>Client Sync</div>
+            <div className="smallNote">
+              View the latest client activity already submitted through the workspace.
+            </div>
+          </div>
+          <div className="panelBody">
+            <div className="grid2">
+              <ReadOnly label="Last client update" value={fmtDate(data.clientSync.lastClientUpdate)} />
+              <ReadOnly label="Assets submitted" value={String(data.clientSync.assets.length)} />
+              <ReadOnly label="Revision requests" value={String(data.clientSync.revisions.length)} />
+              <ReadOnly label="Workspace status" value={pretty(data.portalStateAdmin.clientStatus)} />
+            </div>
+
+            <div style={{ marginTop: 18 }}>
+              <div className="fieldLabel">Submitted assets</div>
+              <div style={{ display: "grid", gap: 10, marginTop: 8 }}>
+                {data.clientSync.assets.length === 0 ? (
+                  <div className="smallNote">No client assets submitted yet.</div>
+                ) : (
+                  data.clientSync.assets.slice(0, 6).map((asset) => (
+                    <div
+                      key={asset.id}
+                      style={{
+                        border: "1px solid var(--stroke)",
+                        borderRadius: 14,
+                        background: "var(--panel2)",
+                        padding: 14,
+                      }}
+                    >
+                      <div style={{ fontWeight: 800 }}>{asset.label}</div>
+                      <div className="smallNote" style={{ marginTop: 4 }}>
+                        {asset.category} • {pretty(asset.status)} • {fmtDate(asset.createdAt)}
+                      </div>
+                      {asset.notes ? (
+                        <div className="pDark" style={{ marginTop: 8 }}>
+                          {asset.notes}
+                        </div>
+                      ) : null}
+                      <div className="row" style={{ marginTop: 10 }}>
+                        <a href={asset.url} target="_blank" rel="noreferrer" className="btn btnGhost">
+                          Open Asset
+                        </a>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div style={{ marginTop: 18 }}>
+              <div className="fieldLabel">Revision requests</div>
+              <div style={{ display: "grid", gap: 10, marginTop: 8 }}>
+                {data.clientSync.revisions.length === 0 ? (
+                  <div className="smallNote">No client revision requests yet.</div>
+                ) : (
+                  data.clientSync.revisions.slice(0, 6).map((rev) => (
+                    <div
+                      key={rev.id}
+                      style={{
+                        border: "1px solid var(--stroke)",
+                        borderRadius: 14,
+                        background: "var(--panel2)",
+                        padding: 14,
+                      }}
+                    >
+                      <div style={{ fontWeight: 800 }}>
+                        {pretty(rev.status)} • {pretty(rev.priority)}
+                      </div>
+                      <div className="smallNote" style={{ marginTop: 4 }}>
+                        {fmtDate(rev.createdAt)}
+                      </div>
+                      <div className="pDark" style={{ marginTop: 8 }}>
+                        {rev.message}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panelHeader">
             <div>PIE Snapshot</div>
           </div>
           <div className="panelBody">
@@ -1135,15 +1247,8 @@ export default function ProjectControlClient({
               <div className="fieldLabel">PIE summary</div>
               <textarea className="textarea" rows={8} value={data.pie.summary || ""} disabled />
             </label>
-          </div>
-        </div>
 
-        <div className="panel">
-          <div className="panelHeader">
-            <div>Quick Links</div>
-          </div>
-          <div className="panelBody">
-            <div className="row">
+            <div className="row" style={{ marginTop: 14 }}>
               <Link href="/internal/admin" className="btn btnGhost">
                 Back to Pipeline
               </Link>
