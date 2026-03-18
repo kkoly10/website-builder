@@ -48,6 +48,50 @@ function cleanMilestones(values: any) {
   }));
 }
 
+function normalizeAssetStatus(value: any) {
+  const v = cleanString(value).toLowerCase();
+  if (["submitted", "received", "approved"].includes(v)) return v;
+  return "submitted";
+}
+
+function normalizeRevisionStatus(value: any) {
+  const v = cleanString(value).toLowerCase();
+  if (["new", "reviewed", "scheduled", "done"].includes(v)) return v;
+  return "new";
+}
+
+function normalizePriority(value: any) {
+  const v = cleanString(value).toLowerCase();
+  if (["low", "normal", "high"].includes(v)) return v;
+  return "normal";
+}
+
+function cleanAssets(values: any) {
+  if (!Array.isArray(values)) return [];
+
+  return values.map((asset, idx) => ({
+    id: cleanString(asset?.id) || `asset-${Date.now()}-${idx}`,
+    category: cleanString(asset?.category) || "General",
+    label: cleanString(asset?.label) || `Asset ${idx + 1}`,
+    url: cleanString(asset?.url),
+    notes: typeof asset?.notes === "string" ? asset.notes : "",
+    status: normalizeAssetStatus(asset?.status),
+    createdAt: cleanString(asset?.createdAt) || new Date().toISOString(),
+  }));
+}
+
+function cleanRevisions(values: any) {
+  if (!Array.isArray(values)) return [];
+
+  return values.map((rev, idx) => ({
+    id: cleanString(rev?.id) || `revision-${Date.now()}-${idx}`,
+    message: cleanString(rev?.message) || "",
+    priority: normalizePriority(rev?.priority),
+    status: normalizeRevisionStatus(rev?.status),
+    createdAt: cleanString(rev?.createdAt) || new Date().toISOString(),
+  }));
+}
+
 export async function POST(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
@@ -207,7 +251,8 @@ export async function POST(req: NextRequest) {
       typeof body?.publicNote === "string" ||
       typeof body?.depositNotes === "string" ||
       body?.depositAmount != null ||
-      (body?.portalStateAdmin && typeof body.portalStateAdmin === "object");
+      (body?.portalStateAdmin && typeof body.portalStateAdmin === "object") ||
+      (body?.clientSync && typeof body.clientSync === "object");
 
     if (shouldUpdatePortalState) {
       const portalStatePatch: any = {
@@ -246,14 +291,30 @@ export async function POST(req: NextRequest) {
         }
 
         if (body.portalStateAdmin.depositAmount != null) {
-          portalStatePatch.deposit_amount = Number(body.portalStateAdmin.depositAmount || 0);
+          portalStatePatch.deposit_amount = Number(
+            body.portalStateAdmin.depositAmount || 0
+          );
         }
 
         if (Array.isArray(body.portalStateAdmin.milestones)) {
-          portalStatePatch.milestones = cleanMilestones(body.portalStateAdmin.milestones);
+          portalStatePatch.milestones = cleanMilestones(
+            body.portalStateAdmin.milestones
+          );
         }
 
         portalStatePatch.client_updated_at = new Date().toISOString();
+      }
+
+      if (body?.clientSync && typeof body.clientSync === "object") {
+        if (Array.isArray(body.clientSync.assets)) {
+          portalStatePatch.assets = cleanAssets(body.clientSync.assets);
+        }
+
+        if (Array.isArray(body.clientSync.revisions)) {
+          portalStatePatch.revision_requests = cleanRevisions(
+            body.clientSync.revisions
+          );
+        }
       }
 
       const { error: portalStateUpdateError } = await supabaseAdmin
