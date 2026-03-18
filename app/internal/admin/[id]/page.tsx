@@ -183,6 +183,10 @@ export default async function AdminQuoteDetailPage({
     quote.quote_json?.estimate?.max ||
     0;
 
+  const assets = Array.isArray(portalState?.assets) ? portalState.assets : [];
+  const revisions = Array.isArray(portalState?.revision_requests)
+    ? portalState.revision_requests
+    : [];
   const savedMilestones = Array.isArray(portalState?.milestones)
     ? portalState.milestones
     : [];
@@ -191,7 +195,7 @@ export default async function AdminQuoteDetailPage({
     buildDefaultMilestones({
       quoteStatus: quote.status || "",
       depositStatus: quote.deposit_status || "",
-      assetsCount: Array.isArray(portalState?.assets) ? portalState.assets.length : 0,
+      assetsCount: assets.length,
     }),
     savedMilestones
   );
@@ -299,6 +303,12 @@ export default async function AdminQuoteDetailPage({
         (baseTarget ? Math.round(baseTarget * 0.5) : 0),
       depositNotes: portalState?.deposit_notes || "",
       milestones: mergedMilestones,
+    },
+
+    clientSync: {
+      lastClientUpdate: portalState?.client_updated_at || "",
+      assets,
+      revisions,
     },
 
     proposalText: debug?.generatedProposal || "",
