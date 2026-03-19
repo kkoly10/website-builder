@@ -172,6 +172,11 @@ export async function POST(req: NextRequest) {
       nextDebug.generatedProposalUpdatedAt = new Date().toISOString();
     }
 
+    if (typeof body?.preContractDraft === "string") {
+      nextDebug.generatedPreContract = body.preContractDraft;
+      nextDebug.generatedPreContractUpdatedAt = new Date().toISOString();
+    }
+
     if (body?.portalAdmin && typeof body.portalAdmin === "object") {
       nextDebug.portalAdmin = {
         previewUrl: cleanString(body.portalAdmin.previewUrl),
