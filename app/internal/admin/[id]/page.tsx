@@ -312,6 +312,7 @@ export default async function AdminQuoteDetailPage({
     },
 
     proposalText: debug?.generatedProposal || "",
+    preContractDraft: debug?.generatedPreContract || "",
   };
 
   return <ProjectControlClient initialData={initialData} />;
