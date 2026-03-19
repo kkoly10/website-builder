@@ -102,6 +102,7 @@ type ProjectControlData = {
     revisions: ClientRevision[];
   };
   proposalText: string;
+  preContractDraft: string;
 };
 
 function money(value: number) {
@@ -168,6 +169,40 @@ export default function ProjectControlClient({
       setMessage(successMessage);
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Failed to save changes.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function generatePreContract() {
+    setBusy(true);
+    setMessage("Generating pre-contract draft...");
+
+    try {
+      const res = await fetch("/api/internal/admin/pre-contract", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          quoteId: data.quoteId,
+        }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Failed to generate pre-contract draft.");
+      }
+
+      setData((prev) => ({
+        ...prev,
+        preContractDraft: String(json.draft || ""),
+      }));
+      setMessage("Pre-contract draft generated.");
+    } catch (err) {
+      setMessage(
+        err instanceof Error ? err.message : "Failed to generate pre-contract draft."
+      );
     } finally {
       setBusy(false);
     }
@@ -1181,6 +1216,55 @@ export default function ProjectControlClient({
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="panel" style={{ marginTop: 18 }}>
+        <div className="panelHeader">
+          <div>Pre-Contract Draft</div>
+          <div className="smallNote">
+            Generated from the admin-confirmed scope, deposit, ownership, preview, and launch data.
+          </div>
+        </div>
+        <div className="panelBody">
+          <div className="row" style={{ marginBottom: 14 }}>
+            <button
+              className="btn btnPrimary"
+              disabled={busy}
+              onClick={generatePreContract}
+            >
+              {data.preContractDraft ? "Regenerate Draft →" : "Generate Draft →"}
+            </button>
+
+            <button
+              className="btn btnGhost"
+              disabled={busy || !data.preContractDraft.trim()}
+              onClick={() =>
+                savePatch(
+                  { preContractDraft: data.preContractDraft },
+                  "Pre-contract draft saved."
+                )
+              }
+            >
+              Save Draft
+            </button>
+          </div>
+
+          <label style={{ display: "block" }}>
+            <div className="fieldLabel">Draft text</div>
+            <textarea
+              className="textarea"
+              rows={18}
+              value={data.preContractDraft}
+              onChange={(e) =>
+                setData((prev) => ({
+                  ...prev,
+                  preContractDraft: e.target.value,
+                }))
+              }
+              placeholder="Generate a pre-contract draft to review and edit."
+            />
+          </label>
         </div>
       </div>
 
