@@ -66,6 +66,12 @@ function normalizePriority(value: any) {
   return "normal";
 }
 
+function normalizeChangeOrderStatus(value: any) {
+  const v = cleanString(value).toLowerCase();
+  if (["draft", "sent", "approved", "declined"].includes(v)) return v;
+  return "draft";
+}
+
 function cleanAssets(values: any) {
   if (!Array.isArray(values)) return [];
 
@@ -89,6 +95,39 @@ function cleanRevisions(values: any) {
     priority: normalizePriority(rev?.priority),
     status: normalizeRevisionStatus(rev?.status),
     createdAt: cleanString(rev?.createdAt) || new Date().toISOString(),
+  }));
+}
+
+function cleanScopeVersions(values: any) {
+  if (!Array.isArray(values)) return [];
+
+  return values.map((item, idx) => ({
+    id: cleanString(item?.id) || `scope-${Date.now()}-${idx}`,
+    createdAt: cleanString(item?.createdAt) || new Date().toISOString(),
+    label: cleanString(item?.label) || `Scope Version ${idx + 1}`,
+    summary: cleanString(item?.summary),
+    tierLabel: cleanString(item?.tierLabel),
+    platform: cleanString(item?.platform),
+    timeline: cleanString(item?.timeline),
+    revisionPolicy: cleanString(item?.revisionPolicy),
+    pagesIncluded: cleanList(item?.pagesIncluded),
+    featuresIncluded: cleanList(item?.featuresIncluded),
+    exclusions: cleanList(item?.exclusions),
+  }));
+}
+
+function cleanChangeOrders(values: any) {
+  if (!Array.isArray(values)) return [];
+
+  return values.map((item, idx) => ({
+    id: cleanString(item?.id) || `co-${Date.now()}-${idx}`,
+    createdAt: cleanString(item?.createdAt) || new Date().toISOString(),
+    title: cleanString(item?.title) || `Change Order ${idx + 1}`,
+    summary: cleanString(item?.summary),
+    priceImpact: cleanString(item?.priceImpact),
+    timelineImpact: cleanString(item?.timelineImpact),
+    scopeImpact: cleanString(item?.scopeImpact),
+    status: normalizeChangeOrderStatus(item?.status),
   }));
 }
 
@@ -224,6 +263,28 @@ export async function POST(req: NextRequest) {
         featuresIncluded: cleanList(body.scopeSnapshot.featuresIncluded),
         exclusions: cleanList(body.scopeSnapshot.exclusions),
       };
+    }
+
+    if (body?.workspaceHistory && typeof body.workspaceHistory === "object") {
+      const currentHistory = safeObj(currentDebug.workspaceHistory);
+      const nextHistory: any = {
+        ...currentHistory,
+        updatedAt: new Date().toISOString(),
+      };
+
+      if (Array.isArray(body.workspaceHistory.scopeVersions)) {
+        nextHistory.scopeVersions = cleanScopeVersions(
+          body.workspaceHistory.scopeVersions
+        );
+      }
+
+      if (Array.isArray(body.workspaceHistory.changeOrders)) {
+        nextHistory.changeOrders = cleanChangeOrders(
+          body.workspaceHistory.changeOrders
+        );
+      }
+
+      nextDebug.workspaceHistory = nextHistory;
     }
 
     const quotePatch: any = {
