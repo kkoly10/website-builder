@@ -223,6 +223,61 @@ function statusTone(status?: string | null) {
   };
 }
 
+function isReadyState(value?: string | null) {
+  const v = String(value || "").toLowerCase();
+  return v === "ready" || v === "complete";
+}
+
+function computeClientLaunchReadiness(bundle: PortalBundle) {
+  const checks = [
+    {
+      key: "agreement",
+      label: "Agreement published",
+      done:
+        !!bundle.agreement.publishedText?.trim() ||
+        ["published to client", "signed", "kickoff ready"].includes(
+          String(bundle.agreement.status || "").toLowerCase()
+        ),
+    },
+    {
+      key: "preview",
+      label: "Preview published",
+      done: !!bundle.preview.url,
+    },
+    {
+      key: "domain",
+      label: "Domain ready",
+      done: isReadyState(bundle.launch.domainStatus),
+    },
+    {
+      key: "analytics",
+      label: "Analytics ready",
+      done: isReadyState(bundle.launch.analyticsStatus),
+    },
+    {
+      key: "forms",
+      label: "Forms ready",
+      done: isReadyState(bundle.launch.formsStatus),
+    },
+    {
+      key: "seo",
+      label: "SEO basics ready",
+      done: isReadyState(bundle.launch.seoStatus),
+    },
+    {
+      key: "handoff",
+      label: "Handoff ready",
+      done: isReadyState(bundle.launch.handoffStatus),
+    },
+  ];
+
+  const completed = checks.filter((item) => item.done).length;
+  const percent = Math.round((completed / checks.length) * 100);
+  const blockers = checks.filter((item) => !item.done).map((item) => item.label);
+
+  return { checks, percent, blockers };
+}
+
 function getCurrentPhase(bundle: PortalBundle) {
   const quoteStatus = String(bundle.quote.status || "").toLowerCase();
   const depositStatus = String(bundle.quote.deposit.status || "").toLowerCase();
@@ -283,6 +338,10 @@ export default function PortalClient({
   const phase = useMemo(() => getCurrentPhase(bundle), [bundle]);
   const nextAction = useMemo(() => getNextAction(bundle), [bundle]);
   const quoteTone = useMemo(() => statusTone(bundle.quote.status), [bundle]);
+  const launchReadiness = useMemo(
+    () => computeClientLaunchReadiness(bundle),
+    [bundle]
+  );
 
   async function applyAction(body: any) {
     setSaving(true);
@@ -443,12 +502,8 @@ export default function PortalClient({
         <MiniCard label="Next Action" value={nextAction} />
         <MiniCard label="Waiting On" value={bundle.portalState.waitingOn} />
         <MiniCard
-          label="Target Investment"
-          value={
-            bundle.quote.estimate.target != null
-              ? money(bundle.quote.estimate.target)
-              : `${money(bundle.quote.estimate.min)} - ${money(bundle.quote.estimate.max)}`
-          }
+          label="Launch Readiness"
+          value={`${launchReadiness.percent}%`}
         />
       </section>
 
@@ -732,6 +787,7 @@ export default function PortalClient({
             <div className="panelBody">
               <div style={{ display: "grid", gap: 12 }}>
                 <InfoBlock label="Launch Status" value={bundle.launch.status} />
+                <InfoBlock label="Launch Readiness" value={`${launchReadiness.percent}%`} />
                 <InfoBlock label="Domain" value={bundle.launch.domainStatus} />
                 <InfoBlock label="Analytics" value={bundle.launch.analyticsStatus} />
                 <InfoBlock label="Forms" value={bundle.launch.formsStatus} />
@@ -764,6 +820,88 @@ export default function PortalClient({
                 </div>
               ) : null}
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section style={{ marginTop: 28 }}>
+        <div className="panel fadeUp">
+          <div className="panelHeader">
+            <h2 className="h2">Launch Readiness Checklist</h2>
+          </div>
+          <div className="panelBody">
+            <div style={{ display: "grid", gap: 10 }}>
+              {launchReadiness.checks.map((item) => (
+                <div
+                  key={item.key}
+                  style={{
+                    border: "1px solid var(--stroke)",
+                    borderRadius: 14,
+                    background: "var(--panel2)",
+                    padding: 14,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 12,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div style={{ fontWeight: 800, color: "var(--fg)" }}>{item.label}</div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 800,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                      color: item.done ? "#b7f5c4" : "var(--muted)",
+                    }}
+                  >
+                    {item.done ? "Ready" : "Pending"}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {launchReadiness.blockers.length > 0 ? (
+              <div
+                style={{
+                  marginTop: 14,
+                  border: "1px solid var(--stroke)",
+                  borderRadius: 14,
+                  background: "var(--panel2)",
+                  padding: 14,
+                }}
+              >
+                <div
+                  style={{
+                    color: "var(--fg)",
+                    fontWeight: 800,
+                    marginBottom: 8,
+                  }}
+                >
+                  Remaining blockers
+                </div>
+                <ul style={{ margin: 0, paddingLeft: 18, color: "var(--muted)", lineHeight: 1.7 }}>
+                  {launchReadiness.blockers.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <div
+                style={{
+                  marginTop: 14,
+                  border: "1px solid rgba(46, 160, 67, 0.28)",
+                  borderRadius: 14,
+                  background: "rgba(46, 160, 67, 0.08)",
+                  padding: 14,
+                  color: "#b7f5c4",
+                  fontWeight: 800,
+                }}
+              >
+                All launch readiness items are complete.
+              </div>
+            )}
           </div>
         </div>
       </section>
