@@ -145,6 +145,7 @@ type PortalBundle = {
     model: string;
     ownershipModel: string;
     publishedAt: string | null;
+    publishedText: string;
   };
   launch: {
     status: string;
@@ -592,6 +593,38 @@ export default function PortalClient({
                   <p className="p" style={{ margin: 0, fontSize: 14 }}>
                     {bundle.quote.deposit.notes}
                   </p>
+                </div>
+              ) : null}
+
+              {bundle.agreement.publishedText ? (
+                <div
+                  style={{
+                    marginTop: 14,
+                    border: "1px solid var(--stroke)",
+                    borderRadius: 14,
+                    background: "var(--panel2)",
+                    padding: 14,
+                  }}
+                >
+                  <div
+                    style={{
+                      color: "var(--fg)",
+                      fontWeight: 800,
+                      marginBottom: 8,
+                    }}
+                  >
+                    Published Agreement
+                  </div>
+                  <div
+                    style={{
+                      color: "var(--muted)",
+                      fontSize: 14,
+                      lineHeight: 1.7,
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {bundle.agreement.publishedText}
+                  </div>
                 </div>
               ) : null}
 
