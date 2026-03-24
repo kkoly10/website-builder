@@ -216,6 +216,11 @@ export async function POST(req: NextRequest) {
       nextDebug.generatedPreContractUpdatedAt = new Date().toISOString();
     }
 
+    if (typeof body?.publishedAgreementText === "string") {
+      nextDebug.publishedAgreementText = body.publishedAgreementText;
+      nextDebug.publishedAgreementUpdatedAt = new Date().toISOString();
+    }
+
     if (body?.portalAdmin && typeof body.portalAdmin === "object") {
       nextDebug.portalAdmin = {
         previewUrl: cleanString(body.portalAdmin.previewUrl),
@@ -273,15 +278,11 @@ export async function POST(req: NextRequest) {
       };
 
       if (Array.isArray(body.workspaceHistory.scopeVersions)) {
-        nextHistory.scopeVersions = cleanScopeVersions(
-          body.workspaceHistory.scopeVersions
-        );
+        nextHistory.scopeVersions = cleanScopeVersions(body.workspaceHistory.scopeVersions);
       }
 
       if (Array.isArray(body.workspaceHistory.changeOrders)) {
-        nextHistory.changeOrders = cleanChangeOrders(
-          body.workspaceHistory.changeOrders
-        );
+        nextHistory.changeOrders = cleanChangeOrders(body.workspaceHistory.changeOrders);
       }
 
       nextDebug.workspaceHistory = nextHistory;
