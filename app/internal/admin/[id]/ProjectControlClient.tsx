@@ -166,6 +166,80 @@ function pretty(value?: string | null) {
   return value.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
+function isReadyState(value?: string | null) {
+  const v = String(value || "").toLowerCase();
+  return v === "ready" || v === "complete";
+}
+
+function isAgreementPublished(input: {
+  agreementStatus: string;
+  publishedAgreementText: string;
+}) {
+  const status = String(input.agreementStatus || "").toLowerCase();
+  return (
+    !!input.publishedAgreementText.trim() ||
+    status === "published to client" ||
+    status === "signed" ||
+    status === "kickoff ready"
+  );
+}
+
+function computeLaunchReadiness(data: ProjectControlData) {
+  const checks = [
+    {
+      key: "agreement",
+      label: "Agreement published",
+      done: isAgreementPublished({
+        agreementStatus: data.portalAdmin.agreementStatus,
+        publishedAgreementText: data.publishedAgreementText,
+      }),
+    },
+    {
+      key: "preview",
+      label: "Preview published",
+      done: !!data.portalAdmin.previewUrl.trim(),
+    },
+    {
+      key: "domain",
+      label: "Domain ready",
+      done: isReadyState(data.portalAdmin.domainStatus),
+    },
+    {
+      key: "analytics",
+      label: "Analytics ready",
+      done: isReadyState(data.portalAdmin.analyticsStatus),
+    },
+    {
+      key: "forms",
+      label: "Forms ready",
+      done: isReadyState(data.portalAdmin.formsStatus),
+    },
+    {
+      key: "seo",
+      label: "SEO basics ready",
+      done: isReadyState(data.portalAdmin.seoStatus),
+    },
+    {
+      key: "handoff",
+      label: "Handoff ready",
+      done: isReadyState(data.portalAdmin.handoffStatus),
+    },
+  ];
+
+  const completed = checks.filter((item) => item.done).length;
+  const percent = Math.round((completed / checks.length) * 100);
+  const blockers = checks.filter((item) => !item.done).map((item) => item.label);
+
+  return {
+    checks,
+    completed,
+    percent,
+    blockers,
+    canMarkLaunchReady: percent === 100,
+    canMarkLive: percent === 100 && !!data.portalAdmin.productionUrl.trim(),
+  };
+}
+
 export default function ProjectControlClient({
   initialData,
 }: {
@@ -182,6 +256,8 @@ export default function ProjectControlClient({
     scopeImpact: "",
     status: "draft",
   });
+
+  const readiness = computeLaunchReadiness(data);
 
   async function savePatch(payload: Record<string, any>, successMessage: string) {
     setBusy(true);
@@ -282,6 +358,52 @@ export default function ProjectControlClient({
         portalAdmin: nextPortalAdmin,
       },
       "Agreement published to client."
+    );
+  }
+
+  async function markLaunchReady() {
+    if (!readiness.canMarkLaunchReady) {
+      setMessage("Complete all launch readiness items first.");
+      return;
+    }
+
+    const nextPortalAdmin = {
+      ...data.portalAdmin,
+      launchStatus: "Ready for launch",
+    };
+
+    setData((prev) => ({
+      ...prev,
+      portalAdmin: nextPortalAdmin,
+    }));
+
+    await savePatch(
+      { portalAdmin: nextPortalAdmin },
+      "Launch status marked ready."
+    );
+  }
+
+  async function markLive() {
+    if (!readiness.canMarkLive) {
+      setMessage("Add a production URL and complete all launch items first.");
+      return;
+    }
+
+    const nextPortalAdmin = {
+      ...data.portalAdmin,
+      launchStatus: "Live",
+      previewStatus: "Live",
+      clientReviewStatus: "Live",
+    };
+
+    setData((prev) => ({
+      ...prev,
+      portalAdmin: nextPortalAdmin,
+    }));
+
+    await savePatch(
+      { portalAdmin: nextPortalAdmin },
+      "Project marked live."
     );
   }
 
@@ -1481,6 +1603,90 @@ export default function ProjectControlClient({
               placeholder="This agreement text will be shown to the client once published."
             />
           </label>
+        </div>
+      </div>
+
+      <div className="panel" style={{ marginTop: 18 }}>
+        <div className="panelHeader">
+          <div>Launch Readiness</div>
+          <div className="smallNote">
+            Complete every item below before marking the website ready for launch.
+          </div>
+        </div>
+        <div className="panelBody">
+          <div className="grid2">
+            <ReadOnly label="Readiness" value={`${readiness.percent}%`} />
+            <ReadOnly label="Open blockers" value={String(readiness.blockers.length)} />
+          </div>
+
+          <div style={{ marginTop: 18, display: "grid", gap: 10 }}>
+            {readiness.checks.map((item) => (
+              <div
+                key={item.key}
+                style={{
+                  border: "1px solid var(--stroke)",
+                  borderRadius: 14,
+                  background: "var(--panel2)",
+                  padding: 14,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <div style={{ fontWeight: 800 }}>{item.label}</div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: item.done ? "#b7f5c4" : "var(--muted)",
+                  }}
+                >
+                  {item.done ? "Ready" : "Pending"}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {readiness.blockers.length > 0 ? (
+            <div
+              style={{
+                marginTop: 14,
+                border: "1px solid var(--stroke)",
+                borderRadius: 14,
+                background: "var(--panel2)",
+                padding: 14,
+              }}
+            >
+              <div style={{ fontWeight: 800, marginBottom: 8 }}>Remaining blockers</div>
+              <ul style={{ margin: 0, paddingLeft: 18, color: "var(--muted)", lineHeight: 1.7 }}>
+                {readiness.blockers.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          <div className="row" style={{ marginTop: 14 }}>
+            <button
+              className="btn btnGhost"
+              disabled={busy || !readiness.canMarkLaunchReady}
+              onClick={markLaunchReady}
+            >
+              Mark Ready For Launch
+            </button>
+
+            <button
+              className="btn btnPrimary"
+              disabled={busy || !readiness.canMarkLive}
+              onClick={markLive}
+            >
+              Mark Live →
+            </button>
+          </div>
         </div>
       </div>
 
