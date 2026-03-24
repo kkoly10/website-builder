@@ -28,6 +28,31 @@ type PortalRevision = {
   createdAt: string;
 };
 
+type ScopeVersion = {
+  id: string;
+  createdAt: string;
+  label: string;
+  summary: string;
+  tierLabel: string;
+  platform: string;
+  timeline: string;
+  revisionPolicy: string;
+  pagesIncluded: string[];
+  featuresIncluded: string[];
+  exclusions: string[];
+};
+
+type ChangeOrder = {
+  id: string;
+  createdAt: string;
+  title: string;
+  summary: string;
+  priceImpact: string;
+  timelineImpact: string;
+  scopeImpact: string;
+  status: string;
+};
+
 type PortalBundle = {
   quote: {
     id: string;
@@ -71,6 +96,10 @@ type PortalBundle = {
     timeline: string;
     revisionPolicy: string;
     exclusions: string[];
+  };
+  history: {
+    scopeVersions: ScopeVersion[];
+    changeOrders: ChangeOrder[];
   };
   callRequest: {
     status: string | null;
@@ -701,6 +730,65 @@ export default function PortalClient({
                   </p>
                 </div>
               ) : null}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section style={{ marginTop: 28 }}>
+        <div className="panel fadeUp">
+          <div className="panelHeader">
+            <h2 className="h2">Scope History & Change Orders</h2>
+          </div>
+          <div className="panelBody">
+            <div style={{ display: "grid", gap: 12 }}>
+              {bundle.history.scopeVersions.length === 0 ? (
+                <InfoBlock label="Scope History" value="No saved scope versions yet." />
+              ) : (
+                <ListBlock
+                  title="Saved Scope Versions"
+                  items={bundle.history.scopeVersions.map(
+                    (item) => `${item.label} — ${fmtDate(item.createdAt)}`
+                  )}
+                />
+              )}
+
+              {bundle.history.changeOrders.length === 0 ? (
+                <InfoBlock label="Change Orders" value="No change orders have been logged yet." />
+              ) : (
+                <div style={{ display: "grid", gap: 12 }}>
+                  {bundle.history.changeOrders.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        border: "1px solid var(--stroke)",
+                        borderRadius: 14,
+                        background: "var(--panel2)",
+                        padding: 14,
+                      }}
+                    >
+                      <div style={{ fontWeight: 800 }}>{item.title}</div>
+                      <div className="smallNote" style={{ marginTop: 4 }}>
+                        {fmtDate(item.createdAt)} • {pretty(item.status)}
+                      </div>
+                      <p className="p" style={{ marginTop: 8, marginBottom: 0, fontSize: 14 }}>
+                        {item.summary}
+                      </p>
+                      {(item.priceImpact || item.timelineImpact || item.scopeImpact) && (
+                        <div className="smallNote" style={{ marginTop: 8 }}>
+                          {item.priceImpact ? `Price: ${item.priceImpact}` : ""}
+                          {item.priceImpact && item.timelineImpact ? " • " : ""}
+                          {item.timelineImpact ? `Timeline: ${item.timelineImpact}` : ""}
+                          {(item.priceImpact || item.timelineImpact) && item.scopeImpact
+                            ? " • "
+                            : ""}
+                          {item.scopeImpact ? `Scope: ${item.scopeImpact}` : ""}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
