@@ -132,6 +132,7 @@ type ProjectControlData = {
   };
   proposalText: string;
   preContractDraft: string;
+  publishedAgreementText: string;
 };
 
 function money(value: number) {
@@ -243,6 +244,45 @@ export default function ProjectControlClient({
     } finally {
       setBusy(false);
     }
+  }
+
+  function copyDraftToPublishedAgreement() {
+    if (!data.preContractDraft.trim()) {
+      setMessage("Generate or write a pre-contract draft first.");
+      return;
+    }
+
+    setData((prev) => ({
+      ...prev,
+      publishedAgreementText: prev.preContractDraft,
+    }));
+    setMessage("Pre-contract copied into published agreement.");
+  }
+
+  async function publishAgreementToClient() {
+    if (!data.publishedAgreementText.trim()) {
+      setMessage("Add published agreement text first.");
+      return;
+    }
+
+    const nextPortalAdmin = {
+      ...data.portalAdmin,
+      agreementStatus: "Published to client",
+      agreementPublishedAt: new Date().toISOString(),
+    };
+
+    setData((prev) => ({
+      ...prev,
+      portalAdmin: nextPortalAdmin,
+    }));
+
+    await savePatch(
+      {
+        publishedAgreementText: data.publishedAgreementText,
+        portalAdmin: nextPortalAdmin,
+      },
+      "Agreement published to client."
+    );
   }
 
   const previewStatusOptions = [
@@ -1382,6 +1422,63 @@ export default function ProjectControlClient({
                 }))
               }
               placeholder="Generate a pre-contract draft to review and edit."
+            />
+          </label>
+        </div>
+      </div>
+
+      <div className="panel" style={{ marginTop: 18 }}>
+        <div className="panelHeader">
+          <div>Published Agreement</div>
+          <div className="smallNote">
+            This is the client-facing agreement text that can be published into the workspace.
+          </div>
+        </div>
+        <div className="panelBody">
+          <div className="row" style={{ marginBottom: 14 }}>
+            <button
+              className="btn btnGhost"
+              disabled={busy}
+              onClick={copyDraftToPublishedAgreement}
+            >
+              Copy From Pre-Contract
+            </button>
+
+            <button
+              className="btn btnGhost"
+              disabled={busy || !data.publishedAgreementText.trim()}
+              onClick={() =>
+                savePatch(
+                  { publishedAgreementText: data.publishedAgreementText },
+                  "Published agreement saved."
+                )
+              }
+            >
+              Save Agreement
+            </button>
+
+            <button
+              className="btn btnPrimary"
+              disabled={busy || !data.publishedAgreementText.trim()}
+              onClick={publishAgreementToClient}
+            >
+              Publish To Client →
+            </button>
+          </div>
+
+          <label style={{ display: "block" }}>
+            <div className="fieldLabel">Published agreement text</div>
+            <textarea
+              className="textarea"
+              rows={18}
+              value={data.publishedAgreementText}
+              onChange={(e) =>
+                setData((prev) => ({
+                  ...prev,
+                  publishedAgreementText: e.target.value,
+                }))
+              }
+              placeholder="This agreement text will be shown to the client once published."
             />
           </label>
         </div>
