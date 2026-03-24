@@ -161,6 +161,7 @@ export default async function AdminQuoteDetailPage({
   const intake = safeObj(quote.intake_normalized);
   const portalAdmin = safeObj(debug.portalAdmin);
   const scopeSnapshotRaw = safeObj(quote.scope_snapshot);
+  const historyRaw = safeObj(debug.workspaceHistory);
   const portalState = portalStateRes.data || null;
   const pie = pieRes.data || null;
   const call = callRes.data || null;
@@ -309,6 +310,11 @@ export default async function AdminQuoteDetailPage({
       lastClientUpdate: portalState?.client_updated_at || "",
       assets,
       revisions,
+    },
+
+    workspaceHistory: {
+      scopeVersions: Array.isArray(historyRaw.scopeVersions) ? historyRaw.scopeVersions : [],
+      changeOrders: Array.isArray(historyRaw.changeOrders) ? historyRaw.changeOrders : [],
     },
 
     proposalText: debug?.generatedProposal || "",
