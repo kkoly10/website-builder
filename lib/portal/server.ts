@@ -661,6 +661,7 @@ export async function getPortalBundleByToken(token: string) {
           portalState?.agreement_published_at,
           portalAdmin.agreementPublishedAt
         ),
+        publishedText: str(debug.publishedAgreementText) || "",
       },
 
       launch: {
