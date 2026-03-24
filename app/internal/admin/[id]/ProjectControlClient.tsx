@@ -28,6 +28,31 @@ type ClientRevision = {
   createdAt: string;
 };
 
+type ScopeVersion = {
+  id: string;
+  createdAt: string;
+  label: string;
+  summary: string;
+  tierLabel: string;
+  platform: string;
+  timeline: string;
+  revisionPolicy: string;
+  pagesIncluded: string[];
+  featuresIncluded: string[];
+  exclusions: string[];
+};
+
+type ChangeOrder = {
+  id: string;
+  createdAt: string;
+  title: string;
+  summary: string;
+  priceImpact: string;
+  timelineImpact: string;
+  scopeImpact: string;
+  status: string;
+};
+
 type ProjectControlData = {
   quoteId: string;
   publicToken: string;
@@ -101,6 +126,10 @@ type ProjectControlData = {
     assets: ClientAsset[];
     revisions: ClientRevision[];
   };
+  workspaceHistory: {
+    scopeVersions: ScopeVersion[];
+    changeOrders: ChangeOrder[];
+  };
   proposalText: string;
   preContractDraft: string;
 };
@@ -144,6 +173,14 @@ export default function ProjectControlClient({
   const [data, setData] = useState<ProjectControlData>(initialData);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [newChangeOrder, setNewChangeOrder] = useState({
+    title: "",
+    summary: "",
+    priceImpact: "",
+    timelineImpact: "",
+    scopeImpact: "",
+    status: "draft",
+  });
 
   async function savePatch(payload: Record<string, any>, successMessage: string) {
     setBusy(true);
@@ -268,6 +305,7 @@ export default function ProjectControlClient({
 
   const assetStatusOptions = ["submitted", "received", "approved"];
   const revisionStatusOptions = ["new", "reviewed", "scheduled", "done"];
+  const changeOrderStatusOptions = ["draft", "sent", "approved", "declined"];
 
   function toggleMilestone(key: string) {
     setData((prev) => ({
@@ -300,6 +338,79 @@ export default function ProjectControlClient({
         ...prev.clientSync,
         revisions: prev.clientSync.revisions.map((rev) =>
           rev.id === id ? { ...rev, status } : rev
+        ),
+      },
+    }));
+  }
+
+  function captureScopeVersion() {
+    const nextVersion: ScopeVersion = {
+      id: `scope-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      label: `${data.scopeSnapshot.tierLabel || "Scope"} snapshot`,
+      summary: `${data.scopeSnapshot.pagesIncluded.length} pages • ${data.scopeSnapshot.featuresIncluded.length} features`,
+      tierLabel: data.scopeSnapshot.tierLabel,
+      platform: data.scopeSnapshot.platform,
+      timeline: data.scopeSnapshot.timeline,
+      revisionPolicy: data.scopeSnapshot.revisionPolicy,
+      pagesIncluded: [...data.scopeSnapshot.pagesIncluded],
+      featuresIncluded: [...data.scopeSnapshot.featuresIncluded],
+      exclusions: [...data.scopeSnapshot.exclusions],
+    };
+
+    setData((prev) => ({
+      ...prev,
+      workspaceHistory: {
+        ...prev.workspaceHistory,
+        scopeVersions: [nextVersion, ...prev.workspaceHistory.scopeVersions],
+      },
+    }));
+    setMessage("Current scope captured locally. Save history to persist it.");
+  }
+
+  function addChangeOrder() {
+    if (!newChangeOrder.title.trim() || !newChangeOrder.summary.trim()) {
+      setMessage("Add at least a change-order title and summary.");
+      return;
+    }
+
+    const nextItem: ChangeOrder = {
+      id: `co-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      title: newChangeOrder.title.trim(),
+      summary: newChangeOrder.summary.trim(),
+      priceImpact: newChangeOrder.priceImpact.trim(),
+      timelineImpact: newChangeOrder.timelineImpact.trim(),
+      scopeImpact: newChangeOrder.scopeImpact.trim(),
+      status: newChangeOrder.status,
+    };
+
+    setData((prev) => ({
+      ...prev,
+      workspaceHistory: {
+        ...prev.workspaceHistory,
+        changeOrders: [nextItem, ...prev.workspaceHistory.changeOrders],
+      },
+    }));
+
+    setNewChangeOrder({
+      title: "",
+      summary: "",
+      priceImpact: "",
+      timelineImpact: "",
+      scopeImpact: "",
+      status: "draft",
+    });
+    setMessage("Change order added locally. Save history to persist it.");
+  }
+
+  function updateChangeOrderStatus(id: string, status: string) {
+    setData((prev) => ({
+      ...prev,
+      workspaceHistory: {
+        ...prev.workspaceHistory,
+        changeOrders: prev.workspaceHistory.changeOrders.map((item) =>
+          item.id === id ? { ...item, status } : item
         ),
       },
     }));
@@ -519,6 +630,14 @@ export default function ProjectControlClient({
                 }
               >
                 Save Scope Snapshot →
+              </button>
+
+              <button
+                className="btn btnGhost"
+                disabled={busy}
+                onClick={captureScopeVersion}
+              >
+                Capture Scope Version
               </button>
             </div>
           </div>
@@ -1271,6 +1390,243 @@ export default function ProjectControlClient({
       <div className="grid2stretch" style={{ marginTop: 18 }}>
         <div className="panel">
           <div className="panelHeader">
+            <div>Scope Versions & Change Orders</div>
+            <div className="smallNote">
+              Track approved scope history and proposed scope changes over time.
+            </div>
+          </div>
+          <div className="panelBody">
+            <div className="grid2">
+              <ReadOnly
+                label="Scope versions"
+                value={String(data.workspaceHistory.scopeVersions.length)}
+              />
+              <ReadOnly
+                label="Change orders"
+                value={String(data.workspaceHistory.changeOrders.length)}
+              />
+            </div>
+
+            <div style={{ marginTop: 18 }}>
+              <div className="fieldLabel">Scope history</div>
+              <div style={{ display: "grid", gap: 10, marginTop: 8 }}>
+                {data.workspaceHistory.scopeVersions.length === 0 ? (
+                  <div className="smallNote">No saved scope versions yet.</div>
+                ) : (
+                  data.workspaceHistory.scopeVersions.map((version) => (
+                    <div
+                      key={version.id}
+                      style={{
+                        border: "1px solid var(--stroke)",
+                        borderRadius: 14,
+                        background: "var(--panel2)",
+                        padding: 14,
+                      }}
+                    >
+                      <div style={{ fontWeight: 800 }}>{version.label}</div>
+                      <div className="smallNote" style={{ marginTop: 4 }}>
+                        {fmtDate(version.createdAt)} • {version.summary}
+                      </div>
+                      <div className="pDark" style={{ marginTop: 8 }}>
+                        {version.platform} • {version.timeline}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div style={{ marginTop: 18 }}>
+              <div className="fieldLabel">Create change order</div>
+
+              <div className="grid2" style={{ marginTop: 8 }}>
+                <label>
+                  <div className="fieldLabel">Title</div>
+                  <input
+                    className="input"
+                    value={newChangeOrder.title}
+                    onChange={(e) =>
+                      setNewChangeOrder((prev) => ({ ...prev, title: e.target.value }))
+                    }
+                    placeholder="Add booking flow"
+                  />
+                </label>
+
+                <label>
+                  <div className="fieldLabel">Status</div>
+                  <select
+                    className="select"
+                    value={newChangeOrder.status}
+                    onChange={(e) =>
+                      setNewChangeOrder((prev) => ({ ...prev, status: e.target.value }))
+                    }
+                  >
+                    {changeOrderStatusOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {pretty(option)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <label style={{ display: "block", marginTop: 12 }}>
+                <div className="fieldLabel">Summary</div>
+                <textarea
+                  className="textarea"
+                  rows={4}
+                  value={newChangeOrder.summary}
+                  onChange={(e) =>
+                    setNewChangeOrder((prev) => ({ ...prev, summary: e.target.value }))
+                  }
+                  placeholder="Describe the requested scope change."
+                />
+              </label>
+
+              <div className="grid2" style={{ marginTop: 12 }}>
+                <label>
+                  <div className="fieldLabel">Price impact</div>
+                  <input
+                    className="input"
+                    value={newChangeOrder.priceImpact}
+                    onChange={(e) =>
+                      setNewChangeOrder((prev) => ({
+                        ...prev,
+                        priceImpact: e.target.value,
+                      }))
+                    }
+                    placeholder="+$300"
+                  />
+                </label>
+
+                <label>
+                  <div className="fieldLabel">Timeline impact</div>
+                  <input
+                    className="input"
+                    value={newChangeOrder.timelineImpact}
+                    onChange={(e) =>
+                      setNewChangeOrder((prev) => ({
+                        ...prev,
+                        timelineImpact: e.target.value,
+                      }))
+                    }
+                    placeholder="+3 business days"
+                  />
+                </label>
+              </div>
+
+              <label style={{ display: "block", marginTop: 12 }}>
+                <div className="fieldLabel">Scope impact</div>
+                <textarea
+                  className="textarea"
+                  rows={3}
+                  value={newChangeOrder.scopeImpact}
+                  onChange={(e) =>
+                    setNewChangeOrder((prev) => ({ ...prev, scopeImpact: e.target.value }))
+                  }
+                  placeholder="What changes in the build if approved?"
+                />
+              </label>
+
+              <div className="row" style={{ marginTop: 12 }}>
+                <button
+                  className="btn btnGhost"
+                  type="button"
+                  disabled={busy}
+                  onClick={addChangeOrder}
+                >
+                  Add Change Order
+                </button>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 18 }}>
+              <div className="fieldLabel">Change orders</div>
+              <div style={{ display: "grid", gap: 10, marginTop: 8 }}>
+                {data.workspaceHistory.changeOrders.length === 0 ? (
+                  <div className="smallNote">No change orders yet.</div>
+                ) : (
+                  data.workspaceHistory.changeOrders.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        border: "1px solid var(--stroke)",
+                        borderRadius: 14,
+                        background: "var(--panel2)",
+                        padding: 14,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "minmax(0, 1fr) 220px",
+                          gap: 14,
+                          alignItems: "start",
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 800 }}>{item.title}</div>
+                          <div className="smallNote" style={{ marginTop: 4 }}>
+                            {fmtDate(item.createdAt)}
+                          </div>
+                          <div className="pDark" style={{ marginTop: 8 }}>
+                            {item.summary}
+                          </div>
+                          {(item.priceImpact || item.timelineImpact || item.scopeImpact) && (
+                            <div className="smallNote" style={{ marginTop: 8 }}>
+                              {item.priceImpact ? `Price: ${item.priceImpact}` : ""}
+                              {item.priceImpact && item.timelineImpact ? " • " : ""}
+                              {item.timelineImpact ? `Timeline: ${item.timelineImpact}` : ""}
+                              {(item.priceImpact || item.timelineImpact) && item.scopeImpact
+                                ? " • "
+                                : ""}
+                              {item.scopeImpact ? `Scope: ${item.scopeImpact}` : ""}
+                            </div>
+                          )}
+                        </div>
+
+                        <label>
+                          <div className="fieldLabel">Change-order status</div>
+                          <select
+                            className="select"
+                            value={item.status}
+                            onChange={(e) =>
+                              updateChangeOrderStatus(item.id, e.target.value)
+                            }
+                          >
+                            {changeOrderStatusOptions.map((option) => (
+                              <option key={option} value={option}>
+                                {pretty(option)}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="row" style={{ marginTop: 14 }}>
+              <button
+                className="btn btnPrimary"
+                disabled={busy}
+                onClick={() =>
+                  savePatch(
+                    { workspaceHistory: data.workspaceHistory },
+                    "Scope history and change orders updated."
+                  )
+                }
+              >
+                Save Scope History →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panelHeader">
             <div>Client Sync</div>
             <div className="smallNote">
               View the latest client activity and manage submission statuses.
@@ -1441,45 +1797,45 @@ export default function ProjectControlClient({
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="panel">
-          <div className="panelHeader">
-            <div>PIE Snapshot</div>
+      <div className="panel" style={{ marginTop: 18 }}>
+        <div className="panelHeader">
+          <div>PIE Snapshot</div>
+        </div>
+        <div className="panelBody">
+          <div className="grid2">
+            <ReadOnly
+              label="PIE status"
+              value={data.pie.exists ? "Ready" : "Missing"}
+            />
+            <ReadOnly
+              label="PIE score"
+              value={data.pie.score != null ? String(data.pie.score) : "—"}
+            />
+            <ReadOnly label="PIE tier" value={data.pie.tier || "—"} />
+            <ReadOnly label="Call request" value={data.callRequest?.status || "—"} />
           </div>
-          <div className="panelBody">
-            <div className="grid2">
-              <ReadOnly
-                label="PIE status"
-                value={data.pie.exists ? "Ready" : "Missing"}
-              />
-              <ReadOnly
-                label="PIE score"
-                value={data.pie.score != null ? String(data.pie.score) : "—"}
-              />
-              <ReadOnly label="PIE tier" value={data.pie.tier || "—"} />
-              <ReadOnly label="Call request" value={data.callRequest?.status || "—"} />
-            </div>
 
-            <label style={{ display: "block", marginTop: 14 }}>
-              <div className="fieldLabel">PIE summary</div>
-              <textarea
-                className="textarea"
-                rows={8}
-                value={data.pie.summary || ""}
-                disabled
-              />
-            </label>
+          <label style={{ display: "block", marginTop: 14 }}>
+            <div className="fieldLabel">PIE summary</div>
+            <textarea
+              className="textarea"
+              rows={8}
+              value={data.pie.summary || ""}
+              disabled
+            />
+          </label>
 
-            <div className="row" style={{ marginTop: 14 }}>
-              <Link href="/internal/admin" className="btn btnGhost">
-                Back to Pipeline
+          <div className="row" style={{ marginTop: 14 }}>
+            <Link href="/internal/admin" className="btn btnGhost">
+              Back to Pipeline
+            </Link>
+            {data.workspaceUrl ? (
+              <Link href={data.workspaceUrl} className="btn btnPrimary">
+                Client Workspace →
               </Link>
-              {data.workspaceUrl ? (
-                <Link href={data.workspaceUrl} className="btn btnPrimary">
-                  Client Workspace →
-                </Link>
-              ) : null}
-            </div>
+            ) : null}
           </div>
         </div>
       </div>
