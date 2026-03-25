@@ -74,7 +74,7 @@ const templates: Record<
     html: `
       <h2>New revision request</h2>
       <p>${ctx.leadName} submitted a revision request for quote ${ctx.quoteId.slice(0, 8)}.</p>
-      ${ctx.workspaceUrl ? `<p><a href="${ctx.workspaceUrl}">View in Admin</a></p>` : ""}
+      ${ctx.workspaceUrl ? `<p><a href="${ctx.workspaceUrl}">Open Workspace</a></p>` : ""}
     `,
     toClient: false,
     toAdmin: true,
@@ -85,7 +85,19 @@ const templates: Record<
     html: `
       <h2>New asset submitted</h2>
       <p>${ctx.leadName} submitted a new asset for quote ${ctx.quoteId.slice(0, 8)}.</p>
-      ${ctx.workspaceUrl ? `<p><a href="${ctx.workspaceUrl}">View in Admin</a></p>` : ""}
+      ${ctx.workspaceUrl ? `<p><a href="${ctx.workspaceUrl}">Open Workspace</a></p>` : ""}
+    `,
+    toClient: false,
+    toAdmin: true,
+  }),
+
+  deposit_notice_sent: (ctx) => ({
+    subject: `Deposit notice from ${ctx.leadName}`,
+    html: `
+      <h2>Client reported deposit sent</h2>
+      <p>${ctx.leadName} reported that they sent the deposit for quote ${ctx.quoteId.slice(0, 8)}.</p>
+      <p>This is a client notification only and should still be verified before marking the deposit as paid.</p>
+      ${ctx.workspaceUrl ? `<p><a href="${ctx.workspaceUrl}">Open Workspace</a></p>` : ""}
     `,
     toClient: false,
     toAdmin: true,
