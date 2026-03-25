@@ -2,17 +2,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { resolvePortalAccess } from "@/lib/portalAccess";
+import { sendEventNotification } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const ASSET_BUCKET = process.env.PORTAL_ASSETS_BUCKET || "portal-assets";
 
+type PortalMilestone = {
+  key: string;
+  label: string;
+  done: boolean;
+  updatedAt?: string | null;
+};
+
 function sanitizeFilename(name: string) {
   return (name || "file")
     .replace(/[^\w.\-]+/g, "_")
     .replace(/_+/g, "_")
     .slice(0, 160);
+}
+
+function setMilestoneDone(
+  milestones: PortalMilestone[],
+  key: string,
+  label: string,
+  done: boolean
+): PortalMilestone[] {
+  const now = new Date().toISOString();
+  const found = milestones.some((m) => m.key === key);
+
+  if (!found) {
+    return [...milestones, { key, label, done, updatedAt: now }];
+  }
+
+  return milestones.map((m) =>
+    m.key === key ? { ...m, label: m.label || label, done, updatedAt: now } : m
+  );
 }
 
 async function listAssetsForQuote(quoteId: string) {
@@ -32,13 +58,13 @@ async function listAssetsForQuote(quoteId: string) {
         try {
           const signed = await supabaseAdmin.storage
             .from(row.storage_bucket)
-            .createSignedUrl(row.storage_path, 60 * 60); // 1 hour
+            .createSignedUrl(row.storage_path, 60 * 60);
 
           if (!signed.error) {
             signedUrl = signed.data.signedUrl;
           }
         } catch {
-          // keep null if signing fails
+          // ignore signing failures
         }
       }
 
@@ -50,6 +76,86 @@ async function listAssetsForQuote(quoteId: string) {
   );
 
   return rows;
+}
+
+async function syncPortalStateForAsset(quoteId: string) {
+  const { data: existing, error: existingError } = await supabaseAdmin
+    .from("quote_portal_state")
+    .select("*")
+    .eq("quote_id", quoteId)
+    .maybeSingle();
+
+  if (
+    existingError &&
+    !String(existingError.message || "").toLowerCase().includes("no rows")
+  ) {
+    throw new Error(existingError.message);
+  }
+
+  const milestones = Array.isArray(existing?.milestones) ? existing.milestones : [];
+  const nextMilestones = setMilestoneDone(
+    milestones,
+    "assets_submitted",
+    "Content/assets submitted",
+    true
+  );
+
+  const currentStatus = String(existing?.client_status || "").trim();
+  const nextStatus =
+    !currentStatus || currentStatus === "new" || currentStatus === "intake_review"
+      ? "content_submitted"
+      : currentStatus;
+
+  const patch = {
+    ...(existing || {}),
+    quote_id: quoteId,
+    client_status: nextStatus,
+    client_updated_at: new Date().toISOString(),
+    milestones: nextMilestones,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error: upsertError } = await supabaseAdmin
+    .from("quote_portal_state")
+    .upsert(patch, { onConflict: "quote_id" });
+
+  if (upsertError) {
+    throw new Error(upsertError.message);
+  }
+}
+
+async function getNotificationContext(quoteId: string) {
+  const { data: quote, error: quoteError } = await supabaseAdmin
+    .from("quotes")
+    .select("id, public_token, lead_id")
+    .eq("id", quoteId)
+    .maybeSingle();
+
+  if (quoteError || !quote) {
+    return null;
+  }
+
+  let leadName = "";
+  let leadEmail = "";
+
+  if (quote.lead_id) {
+    const { data: lead } = await supabaseAdmin
+      .from("leads")
+      .select("name, email")
+      .eq("id", quote.lead_id)
+      .maybeSingle();
+
+    leadName = String(lead?.name || "");
+    leadEmail = String(lead?.email || "");
+  }
+
+  return {
+    event: "asset_submitted",
+    quoteId,
+    leadName,
+    leadEmail,
+    workspaceUrl: quote.public_token ? `/portal/${quote.public_token}` : undefined,
+  } as const;
 }
 
 export async function GET(req: NextRequest) {
@@ -78,7 +184,6 @@ export async function POST(req: NextRequest) {
   try {
     const contentType = req.headers.get("content-type") || "";
 
-    // ---- JSON mode (link submission) ----
     if (contentType.includes("application/json")) {
       const body = await req.json();
       const resolved = await resolvePortalAccess(body?.token || "");
@@ -90,7 +195,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const url = (body?.url || "").trim();
+      const url = String(body?.url || "").trim();
       if (!url) {
         return NextResponse.json(
           { ok: false, error: "Asset URL is required." },
@@ -103,11 +208,11 @@ export async function POST(req: NextRequest) {
         .insert({
           quote_id: resolved.quoteId,
           source: "portal_link",
-          asset_type: (body?.assetType || "link").trim(),
-          label: (body?.label || "Client link").trim(),
+          asset_type: String(body?.assetType || "link").trim(),
+          label: String(body?.label || "Client link").trim(),
           url,
-          notes: (body?.notes || "").trim(),
-          status: "new",
+          notes: String(body?.notes || "").trim(),
+          status: "submitted",
         })
         .select("*")
         .single();
@@ -119,10 +224,18 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      await syncPortalStateForAsset(resolved.quoteId);
+
+      const notificationCtx = await getNotificationContext(resolved.quoteId);
+      if (notificationCtx) {
+        sendEventNotification(notificationCtx).catch((err) => {
+          console.error("[portal/assets] notification error:", err);
+        });
+      }
+
       return NextResponse.json({ ok: true, asset: data });
     }
 
-    // ---- multipart mode (file upload) ----
     if (contentType.includes("multipart/form-data")) {
       const form = await req.formData();
 
@@ -182,7 +295,7 @@ export async function POST(req: NextRequest) {
           file_name: maybeFile.name || safeName,
           mime_type: maybeFile.type || "application/octet-stream",
           file_size: maybeFile.size || null,
-          status: "new",
+          status: "submitted",
         })
         .select("*")
         .single();
@@ -192,6 +305,15 @@ export async function POST(req: NextRequest) {
           { ok: false, error: error.message },
           { status: 500 }
         );
+      }
+
+      await syncPortalStateForAsset(resolved.quoteId);
+
+      const notificationCtx = await getNotificationContext(resolved.quoteId);
+      if (notificationCtx) {
+        sendEventNotification(notificationCtx).catch((err) => {
+          console.error("[portal/assets] notification error:", err);
+        });
       }
 
       return NextResponse.json({ ok: true, asset: data });
