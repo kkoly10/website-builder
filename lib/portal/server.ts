@@ -445,8 +445,15 @@ function deriveWaitingOn(input: {
   assetsCount: number;
   previewUrl?: string | null;
   clientReviewStatus?: string | null;
+  clientStatus?: string | null;
 }) {
-  if (input.depositStatus.toLowerCase() !== "paid") return "Client deposit step";
+  if (input.depositStatus.toLowerCase() !== "paid") {
+    if (String(input.clientStatus || "").toLowerCase() === "deposit_sent") {
+      return "Studio payment verification";
+    }
+    return "Client deposit step";
+  }
+
   if (input.assetsCount === 0) return "Client assets / content";
   if (input.previewUrl && input.clientReviewStatus === "Pending review") {
     return "Client preview review";
@@ -793,6 +800,7 @@ export async function getPortalBundleByToken(token: string) {
           assetsCount: mergedAssets.length,
           previewUrl,
           clientReviewStatus,
+          clientStatus: str(portalState?.client_status),
         }),
       },
     },
@@ -807,7 +815,7 @@ type PortalActionBody =
       asset: { category: string; label: string; url: string; notes?: string };
     }
   | { type: "revision_add"; revision: { message: string; priority?: string } }
-  | { type: "deposit_mark_paid"; note?: string };
+  | { type: "deposit_notice_sent"; note?: string };
 
 export async function applyPortalAction(token: string, body: PortalActionBody) {
   const portal = await getPortalBundleByToken(token);
@@ -927,33 +935,16 @@ export async function applyPortalAction(token: string, body: PortalActionBody) {
       break;
     }
 
-    case "deposit_mark_paid": {
-      const now = isoNow();
-
-      patch.milestones = setMilestoneDone(
-        milestones,
-        "deposit_paid",
-        "Deposit paid",
-        true
-      );
-      patch.client_notes = [patch.client_notes, body.note || "Client marked deposit as paid."]
+    case "deposit_notice_sent": {
+      patch.client_status = "deposit_sent";
+      patch.client_notes = [
+        patch.client_notes,
+        body.note || "Client reported that the deposit was sent and is awaiting verification.",
+      ]
         .filter(Boolean)
         .join("\n")
         .trim();
-      patch.client_updated_at = now;
-
-      const { error: quoteUpdateError } = await supabaseAdmin
-        .from("quotes")
-        .update({
-          deposit_status: "paid",
-          deposit_paid_at: now,
-        })
-        .eq("id", quoteId);
-
-      if (quoteUpdateError) {
-        return { ok: false as const, error: quoteUpdateError.message };
-      }
-
+      patch.client_updated_at = isoNow();
       break;
     }
 
