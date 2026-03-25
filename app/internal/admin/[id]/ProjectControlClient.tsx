@@ -240,6 +240,24 @@ function computeLaunchReadiness(data: ProjectControlData) {
   };
 }
 
+function setMilestoneDone(
+  milestones: Milestone[],
+  key: string,
+  label: string,
+  done: boolean
+): Milestone[] {
+  const now = new Date().toISOString();
+  const found = milestones.some((m) => m.key === key);
+
+  if (!found) {
+    return [...milestones, { key, label, done, updatedAt: now }];
+  }
+
+  return milestones.map((m) =>
+    m.key === key ? { ...m, label: m.label || label, done, updatedAt: now } : m
+  );
+}
+
 export default function ProjectControlClient({
   initialData,
 }: {
@@ -372,13 +390,37 @@ export default function ProjectControlClient({
       launchStatus: "Ready for launch",
     };
 
+    let nextMilestones = [...data.portalStateAdmin.milestones];
+    nextMilestones = setMilestoneDone(
+      nextMilestones,
+      "build_in_progress",
+      "Build in progress",
+      true
+    );
+    nextMilestones = setMilestoneDone(
+      nextMilestones,
+      "review_round",
+      "Review / revisions",
+      true
+    );
+
+    const nextPortalStateAdmin = {
+      ...data.portalStateAdmin,
+      clientStatus: "launch_ready",
+      milestones: nextMilestones,
+    };
+
     setData((prev) => ({
       ...prev,
       portalAdmin: nextPortalAdmin,
+      portalStateAdmin: nextPortalStateAdmin,
     }));
 
     await savePatch(
-      { portalAdmin: nextPortalAdmin },
+      {
+        portalAdmin: nextPortalAdmin,
+        portalStateAdmin: nextPortalStateAdmin,
+      },
       "Launch status marked ready."
     );
   }
@@ -396,13 +438,43 @@ export default function ProjectControlClient({
       clientReviewStatus: "Live",
     };
 
+    let nextMilestones = [...data.portalStateAdmin.milestones];
+    nextMilestones = setMilestoneDone(
+      nextMilestones,
+      "build_in_progress",
+      "Build in progress",
+      true
+    );
+    nextMilestones = setMilestoneDone(
+      nextMilestones,
+      "review_round",
+      "Review / revisions",
+      true
+    );
+    nextMilestones = setMilestoneDone(
+      nextMilestones,
+      "launch",
+      "Launch completed",
+      true
+    );
+
+    const nextPortalStateAdmin = {
+      ...data.portalStateAdmin,
+      clientStatus: "live",
+      milestones: nextMilestones,
+    };
+
     setData((prev) => ({
       ...prev,
       portalAdmin: nextPortalAdmin,
+      portalStateAdmin: nextPortalStateAdmin,
     }));
 
     await savePatch(
-      { portalAdmin: nextPortalAdmin },
+      {
+        portalAdmin: nextPortalAdmin,
+        portalStateAdmin: nextPortalStateAdmin,
+      },
       "Project marked live."
     );
   }
