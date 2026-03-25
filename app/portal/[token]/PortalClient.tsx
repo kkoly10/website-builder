@@ -206,7 +206,19 @@ function statusTone(status?: string | null) {
     };
   }
 
-  if (["proposal", "deposit", "reviewing", "evaluating", "pending", "preview_ready", "revision_requested", "content_submitted"].includes(s)) {
+  if (
+    [
+      "proposal",
+      "deposit",
+      "deposit_sent",
+      "reviewing",
+      "evaluating",
+      "pending",
+      "preview_ready",
+      "revision_requested",
+      "content_submitted",
+    ].includes(s)
+  ) {
     return {
       bg: "rgba(201, 168, 76, 0.14)",
       border: "rgba(201, 168, 76, 0.34)",
@@ -286,23 +298,31 @@ function getCurrentPhase(bundle: PortalBundle) {
   const clientStatus = String(bundle.portalState.clientStatus || "").toLowerCase();
 
   if (launchStatus === "live" || clientStatus === "live") return "Live";
-  if (launchStatus === "ready for launch" || clientStatus === "launch_ready")
+  if (launchStatus === "ready for launch" || clientStatus === "launch_ready") {
     return "Ready for Launch";
-  if (bundle.preview.url && bundle.preview.clientReviewStatus === "Pending review")
+  }
+  if (bundle.preview.url && bundle.preview.clientReviewStatus === "Pending review") {
     return "Preview Review";
-  if (quoteStatus === "active" || clientStatus === "preview_ready")
+  }
+  if (quoteStatus === "active" || clientStatus === "preview_ready") {
     return "Build In Progress";
-  if (assetsCount > 0) return "Assets Submitted";
+  }
   if (depositStatus === "paid") return "Kickoff Ready";
+  if (clientStatus === "deposit_sent") return "Deposit Sent";
+  if (assetsCount > 0) return "Assets Submitted";
   if (["proposal", "deposit"].includes(quoteStatus)) return "Pre-Start";
   return "Intake / Estimate";
 }
 
 function getNextAction(bundle: PortalBundle) {
   const depositStatus = String(bundle.quote.deposit.status || "").toLowerCase();
+  const clientStatus = String(bundle.portalState.clientStatus || "").toLowerCase();
   const revisions = bundle.portalState.revisions.length;
   const assetsCount = bundle.portalState.assets.length;
 
+  if (depositStatus !== "paid" && clientStatus === "deposit_sent") {
+    return "Await payment verification";
+  }
   if (depositStatus !== "paid" && bundle.quote.deposit.link) {
     return "Review deposit step";
   }
@@ -345,21 +365,24 @@ export default function PortalClient({
   const [refreshing, setRefreshing] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const refreshBundle = useCallback(async (silent = true) => {
-    if (!silent) setRefreshing(true);
-    try {
-      const res = await fetch(`/api/portal/${token}`, { method: "GET" });
-      const json = await res.json();
-      if (res.ok && json?.data) {
-        setBundle(json.data as PortalBundle);
-        setLastRefresh(new Date());
+  const refreshBundle = useCallback(
+    async (silent = true) => {
+      if (!silent) setRefreshing(true);
+      try {
+        const res = await fetch(`/api/portal/${token}`, { method: "GET" });
+        const json = await res.json();
+        if (res.ok && json?.data) {
+          setBundle(json.data as PortalBundle);
+          setLastRefresh(new Date());
+        }
+      } catch {
+        // silent fail on poll
+      } finally {
+        if (!silent) setRefreshing(false);
       }
-    } catch {
-      // silent fail on poll
-    } finally {
-      if (!silent) setRefreshing(false);
-    }
-  }, [token]);
+    },
+    [token]
+  );
 
   useEffect(() => {
     pollRef.current = setInterval(() => refreshBundle(true), 30_000);
@@ -371,6 +394,10 @@ export default function PortalClient({
   const phase = useMemo(() => getCurrentPhase(bundle), [bundle]);
   const nextAction = useMemo(() => getNextAction(bundle), [bundle]);
   const quoteTone = useMemo(() => statusTone(bundle.quote.status), [bundle]);
+  const workspaceTone = useMemo(
+    () => statusTone(bundle.portalState.clientStatus),
+    [bundle]
+  );
   const launchReadiness = useMemo(
     () => computeClientLaunchReadiness(bundle),
     [bundle]
@@ -424,7 +451,6 @@ export default function PortalClient({
         if (!res.ok || !json?.ok) {
           throw new Error(json?.error || "Upload failed.");
         }
-        // Refresh bundle to pick up the new asset
         await refreshBundle(true);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Upload failed.");
@@ -511,6 +537,22 @@ export default function PortalClient({
 
               <span
                 style={{
+                  padding: "8px 12px",
+                  borderRadius: 999,
+                  background: workspaceTone.bg,
+                  border: `1px solid ${workspaceTone.border}`,
+                  color: workspaceTone.color,
+                  fontSize: 12,
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                {workspaceTone.label}
+              </span>
+
+              <span
+                style={{
                   color: "var(--muted)",
                   fontSize: 14,
                   fontWeight: 700,
@@ -527,6 +569,16 @@ export default function PortalClient({
                 }}
               >
                 Created {fmtDate(bundle.quote.createdAt)}
+              </span>
+
+              <span
+                style={{
+                  color: "var(--muted)",
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                Refreshed {lastRefresh.toLocaleTimeString()}
               </span>
             </div>
           </div>
@@ -573,10 +625,7 @@ export default function PortalClient({
         <MiniCard label="Current Phase" value={phase} />
         <MiniCard label="Next Action" value={nextAction} />
         <MiniCard label="Waiting On" value={bundle.portalState.waitingOn} />
-        <MiniCard
-          label="Launch Readiness"
-          value={`${launchReadiness.percent}%`}
-        />
+        <MiniCard label="Launch Readiness" value={`${launchReadiness.percent}%`} />
       </section>
 
       <section style={{ marginTop: 28 }}>
@@ -602,8 +651,14 @@ export default function PortalClient({
                 <InfoBlock label="Website Type" value={pretty(bundle.scope.websiteType)} />
                 <InfoBlock label="Pages" value={pretty(bundle.scope.pages)} />
                 <InfoBlock label="Timeline" value={pretty(bundle.scope.timeline)} />
-                <InfoBlock label="Content Readiness" value={pretty(bundle.scope.contentReady)} />
-                <InfoBlock label="Domain / Hosting" value={pretty(bundle.scope.domainHosting)} />
+                <InfoBlock
+                  label="Content Readiness"
+                  value={pretty(bundle.scope.contentReady)}
+                />
+                <InfoBlock
+                  label="Domain / Hosting"
+                  value={pretty(bundle.scope.domainHosting)}
+                />
                 <InfoBlock
                   label="Integrations"
                   value={
@@ -646,10 +701,19 @@ export default function PortalClient({
               <h2 className="h2">Project Health</h2>
             </div>
             <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-              <CompactStatus label="Workspace Status" value={pretty(bundle.portalState.clientStatus || "new")} />
+              <CompactStatus
+                label="Workspace Status"
+                value={pretty(bundle.portalState.clientStatus || "new")}
+              />
               <CompactStatus label="Agreement Layer" value={bundle.agreement.status} />
-              <CompactStatus label="Ownership Model" value={bundle.agreement.ownershipModel} />
-              <CompactStatus label="Preview Review" value={bundle.preview.clientReviewStatus} />
+              <CompactStatus
+                label="Ownership Model"
+                value={bundle.agreement.ownershipModel}
+              />
+              <CompactStatus
+                label="Preview Review"
+                value={bundle.preview.clientReviewStatus}
+              />
               <CompactStatus label="Launch Status" value={bundle.launch.status} />
             </div>
           </div>
@@ -673,12 +737,21 @@ export default function PortalClient({
                 <InfoBlock label="Tier" value={bundle.scopeSnapshot.tierLabel} />
                 <InfoBlock label="Platform" value={bundle.scopeSnapshot.platform} />
                 <InfoBlock label="Timeline" value={bundle.scopeSnapshot.timeline} />
-                <InfoBlock label="Revision Policy" value={bundle.scopeSnapshot.revisionPolicy} />
+                <InfoBlock
+                  label="Revision Policy"
+                  value={bundle.scopeSnapshot.revisionPolicy}
+                />
               </div>
 
               <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
-                <ListBlock title="Pages Included" items={bundle.scopeSnapshot.pagesIncluded} />
-                <ListBlock title="Features Included" items={bundle.scopeSnapshot.featuresIncluded} />
+                <ListBlock
+                  title="Pages Included"
+                  items={bundle.scopeSnapshot.pagesIncluded}
+                />
+                <ListBlock
+                  title="Features Included"
+                  items={bundle.scopeSnapshot.featuresIncluded}
+                />
                 <ListBlock title="Exclusions" items={bundle.scopeSnapshot.exclusions} />
               </div>
             </div>
@@ -692,10 +765,19 @@ export default function PortalClient({
               <div style={{ display: "grid", gap: 12 }}>
                 <InfoBlock label="Agreement Status" value={bundle.agreement.status} />
                 <InfoBlock label="Agreement Model" value={bundle.agreement.model} />
-                <InfoBlock label="Ownership Model" value={bundle.agreement.ownershipModel} />
+                <InfoBlock
+                  label="Ownership Model"
+                  value={bundle.agreement.ownershipModel}
+                />
                 <InfoBlock label="Published" value={fmtDate(bundle.agreement.publishedAt)} />
-                <InfoBlock label="Deposit Status" value={pretty(bundle.quote.deposit.status)} />
-                <InfoBlock label="Deposit Amount" value={money(bundle.quote.deposit.amount)} />
+                <InfoBlock
+                  label="Deposit Status"
+                  value={pretty(bundle.quote.deposit.status)}
+                />
+                <InfoBlock
+                  label="Deposit Amount"
+                  value={money(bundle.quote.deposit.amount)}
+                />
               </div>
 
               {bundle.quote.deposit.notes ? (
@@ -771,19 +853,49 @@ export default function PortalClient({
                   </button>
                 )}
 
-                {bundle.quote.deposit.status !== "paid" ? (
+                {bundle.quote.deposit.status !== "paid" &&
+                bundle.portalState.clientStatus !== "deposit_sent" ? (
                   <button
                     className="btn btnGhost"
                     type="button"
                     disabled={saving}
                     onClick={() =>
-                      applyAction({ type: "deposit_mark_paid", note: "Client confirmed deposit." })
+                      applyAction({
+                        type: "deposit_notice_sent",
+                        note: "Client reported that the deposit was sent and is awaiting verification.",
+                      })
                     }
                   >
-                    {saving ? "Saving..." : "Mark Deposit as Paid"}
+                    {saving ? "Sending..." : "I Sent the Deposit"}
+                  </button>
+                ) : null}
+
+                {bundle.quote.deposit.status !== "paid" &&
+                bundle.portalState.clientStatus === "deposit_sent" ? (
+                  <button className="btn btnGhost" type="button" disabled>
+                    Deposit Notice Sent
                   </button>
                 ) : null}
               </div>
+
+              {bundle.quote.deposit.status !== "paid" ? (
+                <div
+                  style={{
+                    marginTop: 12,
+                    border: "1px solid var(--stroke)",
+                    borderRadius: 12,
+                    background: "var(--panel2)",
+                    padding: 12,
+                    color: "var(--muted)",
+                    fontSize: 13,
+                    lineHeight: 1.55,
+                  }}
+                >
+                  {bundle.portalState.clientStatus === "deposit_sent"
+                    ? "Your deposit notice has been sent to the studio. Payment will be marked paid only after verification."
+                    : "Use “I Sent the Deposit” only after you have actually submitted payment. This does not mark the deposit as paid automatically — the studio verifies it separately."}
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -804,9 +916,18 @@ export default function PortalClient({
             <div className="panelBody">
               <div style={{ display: "grid", gap: 12 }}>
                 <InfoBlock label="Preview Status" value={bundle.preview.status} />
-                <InfoBlock label="Client Review Status" value={bundle.preview.clientReviewStatus} />
-                <InfoBlock label="Latest Preview" value={bundle.preview.url || "Preview not published yet"} />
-                <InfoBlock label="Production URL" value={bundle.preview.productionUrl || "Not live yet"} />
+                <InfoBlock
+                  label="Client Review Status"
+                  value={bundle.preview.clientReviewStatus}
+                />
+                <InfoBlock
+                  label="Latest Preview"
+                  value={bundle.preview.url || "Preview not published yet"}
+                />
+                <InfoBlock
+                  label="Production URL"
+                  value={bundle.preview.productionUrl || "Not live yet"}
+                />
                 <InfoBlock label="Last Updated" value={fmtDate(bundle.preview.updatedAt)} />
               </div>
 
@@ -872,7 +993,10 @@ export default function PortalClient({
             <div className="panelBody">
               <div style={{ display: "grid", gap: 12 }}>
                 <InfoBlock label="Launch Status" value={bundle.launch.status} />
-                <InfoBlock label="Launch Readiness" value={`${launchReadiness.percent}%`} />
+                <InfoBlock
+                  label="Launch Readiness"
+                  value={`${launchReadiness.percent}%`}
+                />
                 <InfoBlock label="Domain" value={bundle.launch.domainStatus} />
                 <InfoBlock label="Analytics" value={bundle.launch.analyticsStatus} />
                 <InfoBlock label="Forms" value={bundle.launch.formsStatus} />
@@ -966,7 +1090,14 @@ export default function PortalClient({
                 >
                   Remaining blockers
                 </div>
-                <ul style={{ margin: 0, paddingLeft: 18, color: "var(--muted)", lineHeight: 1.7 }}>
+                <ul
+                  style={{
+                    margin: 0,
+                    paddingLeft: 18,
+                    color: "var(--muted)",
+                    lineHeight: 1.7,
+                  }}
+                >
                   {launchReadiness.blockers.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
@@ -1010,7 +1141,10 @@ export default function PortalClient({
               )}
 
               {bundle.history.changeOrders.length === 0 ? (
-                <InfoBlock label="Change Orders" value="No change orders have been logged yet." />
+                <InfoBlock
+                  label="Change Orders"
+                  value="No change orders have been logged yet."
+                />
               ) : (
                 <div style={{ display: "grid", gap: 12 }}>
                   {bundle.history.changeOrders.map((item) => (
@@ -1442,13 +1576,21 @@ export default function PortalClient({
               <h2 className="h2">Notes & Updates</h2>
             </div>
             <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-              <InfoBlock label="Studio Update" value={bundle.portalState.adminPublicNote || "No updates from the studio yet."} />
-              <InfoBlock label="Project Notes" value={bundle.portalState.clientNotes || "No project notes yet."} />
+              <InfoBlock
+                label="Studio Update"
+                value={bundle.portalState.adminPublicNote || "No updates from the studio yet."}
+              />
+              <InfoBlock
+                label="Project Notes"
+                value={bundle.portalState.clientNotes || "No project notes yet."}
+              />
               <InfoBlock
                 label="Best Time to Call"
                 value={
                   bundle.callRequest?.bestTime
-                    ? `${bundle.callRequest.bestTime}${bundle.callRequest.timezone ? ` (${bundle.callRequest.timezone})` : ""}`
+                    ? `${bundle.callRequest.bestTime}${
+                        bundle.callRequest.timezone ? ` (${bundle.callRequest.timezone})` : ""
+                      }`
                     : "Not provided"
                 }
               />
