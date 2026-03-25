@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireAdminRoute } from "@/lib/routeAuth";
+import { sendEventNotification } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -433,6 +434,30 @@ export async function POST(req: NextRequest) {
           { ok: false, error: portalStateUpdateError.message },
           { status: 500 }
         );
+      }
+    }
+
+    // Fire notification if _event was provided
+    if (typeof body?._event === "string" && body._event) {
+      const leadRow = await supabaseAdmin
+        .from("quotes")
+        .select("lead_name, lead_email, public_token")
+        .eq("id", quoteId)
+        .maybeSingle();
+
+      const lead = leadRow.data;
+      if (lead) {
+        sendEventNotification({
+          event: body._event,
+          quoteId,
+          leadName: lead.lead_name || "",
+          leadEmail: lead.lead_email || "",
+          workspaceUrl: lead.public_token
+            ? `${process.env.NEXT_PUBLIC_BASE_URL || ""}/portal/${lead.public_token}`
+            : undefined,
+        }).catch((err) => {
+          console.error("[quote-admin] notification error:", err);
+        });
       }
     }
 

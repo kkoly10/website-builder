@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type PortalMilestone = {
   key: string;
@@ -333,11 +333,40 @@ export default function PortalClient({
   const [assetCategory, setAssetCategory] = useState("Brand");
   const [assetUrl, setAssetUrl] = useState("");
   const [assetNotes, setAssetNotes] = useState("");
+  const [assetMode, setAssetMode] = useState<"link" | "file">("link");
+  const [assetFile, setAssetFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [revisionMessage, setRevisionMessage] = useState("");
   const [revisionPriority, setRevisionPriority] = useState<"low" | "normal" | "high">(
     "normal"
   );
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [refreshing, setRefreshing] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const refreshBundle = useCallback(async (silent = true) => {
+    if (!silent) setRefreshing(true);
+    try {
+      const res = await fetch(`/api/portal/${token}`, { method: "GET" });
+      const json = await res.json();
+      if (res.ok && json?.data) {
+        setBundle(json.data as PortalBundle);
+        setLastRefresh(new Date());
+      }
+    } catch {
+      // silent fail on poll
+    } finally {
+      if (!silent) setRefreshing(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    pollRef.current = setInterval(() => refreshBundle(true), 30_000);
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [refreshBundle]);
 
   const phase = useMemo(() => getCurrentPhase(bundle), [bundle]);
   const nextAction = useMemo(() => getNextAction(bundle), [bundle]);
@@ -374,21 +403,52 @@ export default function PortalClient({
 
   async function submitAsset(e: React.FormEvent) {
     e.preventDefault();
-    if (!assetLabel.trim() || !assetUrl.trim()) return;
+    if (!assetLabel.trim()) return;
 
-    await applyAction({
-      type: "asset_add",
-      asset: {
-        category: assetCategory,
-        label: assetLabel.trim(),
-        url: assetUrl.trim(),
-        notes: assetNotes.trim(),
-      },
-    });
+    if (assetMode === "file" && assetFile) {
+      setSaving(true);
+      setError("");
+      try {
+        const form = new FormData();
+        form.append("token", token);
+        form.append("file", assetFile);
+        form.append("label", assetLabel.trim());
+        form.append("assetType", assetCategory);
+        form.append("notes", assetNotes.trim());
+
+        const res = await fetch("/api/portal/assets", {
+          method: "POST",
+          body: form,
+        });
+        const json = await res.json();
+        if (!res.ok || !json?.ok) {
+          throw new Error(json?.error || "Upload failed.");
+        }
+        // Refresh bundle to pick up the new asset
+        await refreshBundle(true);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Upload failed.");
+      } finally {
+        setSaving(false);
+      }
+    } else {
+      if (!assetUrl.trim()) return;
+      await applyAction({
+        type: "asset_add",
+        asset: {
+          category: assetCategory,
+          label: assetLabel.trim(),
+          url: assetUrl.trim(),
+          notes: assetNotes.trim(),
+        },
+      });
+    }
 
     setAssetLabel("");
     setAssetUrl("");
     setAssetNotes("");
+    setAssetFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   async function submitRevision(e: React.FormEvent) {
@@ -471,7 +531,15 @@ export default function PortalClient({
             </div>
           </div>
 
-          <div className="row" style={{ justifyContent: "flex-end" }}>
+          <div className="row" style={{ justifyContent: "flex-end", gap: 10 }}>
+            <button
+              className="btn btnGhost"
+              disabled={refreshing}
+              onClick={() => refreshBundle(false)}
+              style={{ fontSize: 13 }}
+            >
+              {refreshing ? "Refreshing..." : "Refresh"}
+            </button>
             <Link href="/portal" className="btn btnGhost">
               Back to Portal
             </Link>
@@ -1028,6 +1096,30 @@ export default function PortalClient({
                   </div>
 
                   <div>
+                    <div className="fieldLabel">Submit as</div>
+                    <div className="row" style={{ gap: 8 }}>
+                      <button
+                        type="button"
+                        className={`btn ${assetMode === "link" ? "btnPrimary" : "btnGhost"}`}
+                        style={{ fontSize: 12, padding: "6px 14px" }}
+                        onClick={() => setAssetMode("link")}
+                      >
+                        Link
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn ${assetMode === "file" ? "btnPrimary" : "btnGhost"}`}
+                        style={{ fontSize: 12, padding: "6px 14px" }}
+                        onClick={() => setAssetMode("file")}
+                      >
+                        File Upload
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {assetMode === "link" ? (
+                  <div>
                     <div className="fieldLabel">URL</div>
                     <input
                       className="input"
@@ -1036,7 +1128,23 @@ export default function PortalClient({
                       placeholder="Google Drive / Dropbox / direct file link"
                     />
                   </div>
-                </div>
+                ) : (
+                  <div>
+                    <div className="fieldLabel">Choose file</div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="input"
+                      style={{ padding: 8 }}
+                      onChange={(e) => setAssetFile(e.target.files?.[0] ?? null)}
+                    />
+                    {assetFile && (
+                      <div style={{ marginTop: 6, fontSize: 13, color: "var(--muted)" }}>
+                        {assetFile.name} ({(assetFile.size / 1024).toFixed(0)} KB)
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="fieldLabel">Notes</div>
                 <textarea

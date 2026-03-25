@@ -1,6 +1,7 @@
 // app/api/portal/[token]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { applyPortalAction, getPortalBundleByToken } from "@/lib/portal/server";
+import { sendEventNotification } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,6 +36,28 @@ export async function POST(
     const { token } = await getParams(ctx);
     const body = await req.json();
     const result = await applyPortalAction(token, body);
+
+    // Fire notification for client-side actions
+    if (result.ok && result.data) {
+      const actionType = body?.type;
+      const eventMap: Record<string, string> = {
+        revision_add: "revision_submitted",
+        asset_add: "asset_submitted",
+      };
+      const event = eventMap[actionType];
+      if (event) {
+        const data = result.data as any;
+        sendEventNotification({
+          event,
+          quoteId: data.quote?.id || "",
+          leadName: data.lead?.name || "",
+          leadEmail: data.lead?.email || "",
+        }).catch((err) => {
+          console.error("[portal] notification error:", err);
+        });
+      }
+    }
+
     return NextResponse.json(result, { status: result.ok ? 200 : 400 });
   } catch (err: any) {
     return NextResponse.json(
