@@ -28,6 +28,31 @@ type PortalRevision = {
   createdAt: string;
 };
 
+type ScopeVersion = {
+  id: string;
+  createdAt: string;
+  label: string;
+  summary: string;
+  tierLabel: string;
+  platform: string;
+  timeline: string;
+  revisionPolicy: string;
+  pagesIncluded: string[];
+  featuresIncluded: string[];
+  exclusions: string[];
+};
+
+type ChangeOrder = {
+  id: string;
+  createdAt: string;
+  title: string;
+  summary: string;
+  priceImpact: string;
+  timelineImpact: string;
+  scopeImpact: string;
+  status: string;
+};
+
 type PortalBundle = {
   quote: {
     id: string;
@@ -71,6 +96,10 @@ type PortalBundle = {
     timeline: string;
     revisionPolicy: string;
     exclusions: string[];
+  };
+  history: {
+    scopeVersions: ScopeVersion[];
+    changeOrders: ChangeOrder[];
   };
   callRequest: {
     status: string | null;
@@ -116,6 +145,7 @@ type PortalBundle = {
     model: string;
     ownershipModel: string;
     publishedAt: string | null;
+    publishedText: string;
   };
   launch: {
     status: string;
@@ -193,6 +223,61 @@ function statusTone(status?: string | null) {
   };
 }
 
+function isReadyState(value?: string | null) {
+  const v = String(value || "").toLowerCase();
+  return v === "ready" || v === "complete";
+}
+
+function computeClientLaunchReadiness(bundle: PortalBundle) {
+  const checks = [
+    {
+      key: "agreement",
+      label: "Agreement published",
+      done:
+        !!bundle.agreement.publishedText?.trim() ||
+        ["published to client", "signed", "kickoff ready"].includes(
+          String(bundle.agreement.status || "").toLowerCase()
+        ),
+    },
+    {
+      key: "preview",
+      label: "Preview published",
+      done: !!bundle.preview.url,
+    },
+    {
+      key: "domain",
+      label: "Domain ready",
+      done: isReadyState(bundle.launch.domainStatus),
+    },
+    {
+      key: "analytics",
+      label: "Analytics ready",
+      done: isReadyState(bundle.launch.analyticsStatus),
+    },
+    {
+      key: "forms",
+      label: "Forms ready",
+      done: isReadyState(bundle.launch.formsStatus),
+    },
+    {
+      key: "seo",
+      label: "SEO basics ready",
+      done: isReadyState(bundle.launch.seoStatus),
+    },
+    {
+      key: "handoff",
+      label: "Handoff ready",
+      done: isReadyState(bundle.launch.handoffStatus),
+    },
+  ];
+
+  const completed = checks.filter((item) => item.done).length;
+  const percent = Math.round((completed / checks.length) * 100);
+  const blockers = checks.filter((item) => !item.done).map((item) => item.label);
+
+  return { checks, percent, blockers };
+}
+
 function getCurrentPhase(bundle: PortalBundle) {
   const quoteStatus = String(bundle.quote.status || "").toLowerCase();
   const depositStatus = String(bundle.quote.deposit.status || "").toLowerCase();
@@ -253,6 +338,10 @@ export default function PortalClient({
   const phase = useMemo(() => getCurrentPhase(bundle), [bundle]);
   const nextAction = useMemo(() => getNextAction(bundle), [bundle]);
   const quoteTone = useMemo(() => statusTone(bundle.quote.status), [bundle]);
+  const launchReadiness = useMemo(
+    () => computeClientLaunchReadiness(bundle),
+    [bundle]
+  );
 
   async function applyAction(body: any) {
     setSaving(true);
@@ -413,12 +502,8 @@ export default function PortalClient({
         <MiniCard label="Next Action" value={nextAction} />
         <MiniCard label="Waiting On" value={bundle.portalState.waitingOn} />
         <MiniCard
-          label="Target Investment"
-          value={
-            bundle.quote.estimate.target != null
-              ? money(bundle.quote.estimate.target)
-              : `${money(bundle.quote.estimate.min)} - ${money(bundle.quote.estimate.max)}`
-          }
+          label="Launch Readiness"
+          value={`${launchReadiness.percent}%`}
         />
       </section>
 
@@ -566,6 +651,38 @@ export default function PortalClient({
                 </div>
               ) : null}
 
+              {bundle.agreement.publishedText ? (
+                <div
+                  style={{
+                    marginTop: 14,
+                    border: "1px solid var(--stroke)",
+                    borderRadius: 14,
+                    background: "var(--panel2)",
+                    padding: 14,
+                  }}
+                >
+                  <div
+                    style={{
+                      color: "var(--fg)",
+                      fontWeight: 800,
+                      marginBottom: 8,
+                    }}
+                  >
+                    Published Agreement
+                  </div>
+                  <div
+                    style={{
+                      color: "var(--muted)",
+                      fontSize: 14,
+                      lineHeight: 1.7,
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {bundle.agreement.publishedText}
+                  </div>
+                </div>
+              ) : null}
+
               <div className="row" style={{ marginTop: 14 }}>
                 {bundle.quote.deposit.link ? (
                   <a
@@ -670,6 +787,7 @@ export default function PortalClient({
             <div className="panelBody">
               <div style={{ display: "grid", gap: 12 }}>
                 <InfoBlock label="Launch Status" value={bundle.launch.status} />
+                <InfoBlock label="Launch Readiness" value={`${launchReadiness.percent}%`} />
                 <InfoBlock label="Domain" value={bundle.launch.domainStatus} />
                 <InfoBlock label="Analytics" value={bundle.launch.analyticsStatus} />
                 <InfoBlock label="Forms" value={bundle.launch.formsStatus} />
@@ -701,6 +819,147 @@ export default function PortalClient({
                   </p>
                 </div>
               ) : null}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section style={{ marginTop: 28 }}>
+        <div className="panel fadeUp">
+          <div className="panelHeader">
+            <h2 className="h2">Launch Readiness Checklist</h2>
+          </div>
+          <div className="panelBody">
+            <div style={{ display: "grid", gap: 10 }}>
+              {launchReadiness.checks.map((item) => (
+                <div
+                  key={item.key}
+                  style={{
+                    border: "1px solid var(--stroke)",
+                    borderRadius: 14,
+                    background: "var(--panel2)",
+                    padding: 14,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 12,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div style={{ fontWeight: 800, color: "var(--fg)" }}>{item.label}</div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 800,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                      color: item.done ? "#b7f5c4" : "var(--muted)",
+                    }}
+                  >
+                    {item.done ? "Ready" : "Pending"}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {launchReadiness.blockers.length > 0 ? (
+              <div
+                style={{
+                  marginTop: 14,
+                  border: "1px solid var(--stroke)",
+                  borderRadius: 14,
+                  background: "var(--panel2)",
+                  padding: 14,
+                }}
+              >
+                <div
+                  style={{
+                    color: "var(--fg)",
+                    fontWeight: 800,
+                    marginBottom: 8,
+                  }}
+                >
+                  Remaining blockers
+                </div>
+                <ul style={{ margin: 0, paddingLeft: 18, color: "var(--muted)", lineHeight: 1.7 }}>
+                  {launchReadiness.blockers.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <div
+                style={{
+                  marginTop: 14,
+                  border: "1px solid rgba(46, 160, 67, 0.28)",
+                  borderRadius: 14,
+                  background: "rgba(46, 160, 67, 0.08)",
+                  padding: 14,
+                  color: "#b7f5c4",
+                  fontWeight: 800,
+                }}
+              >
+                All launch readiness items are complete.
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section style={{ marginTop: 28 }}>
+        <div className="panel fadeUp">
+          <div className="panelHeader">
+            <h2 className="h2">Scope History & Change Orders</h2>
+          </div>
+          <div className="panelBody">
+            <div style={{ display: "grid", gap: 12 }}>
+              {bundle.history.scopeVersions.length === 0 ? (
+                <InfoBlock label="Scope History" value="No saved scope versions yet." />
+              ) : (
+                <ListBlock
+                  title="Saved Scope Versions"
+                  items={bundle.history.scopeVersions.map(
+                    (item) => `${item.label} — ${fmtDate(item.createdAt)}`
+                  )}
+                />
+              )}
+
+              {bundle.history.changeOrders.length === 0 ? (
+                <InfoBlock label="Change Orders" value="No change orders have been logged yet." />
+              ) : (
+                <div style={{ display: "grid", gap: 12 }}>
+                  {bundle.history.changeOrders.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        border: "1px solid var(--stroke)",
+                        borderRadius: 14,
+                        background: "var(--panel2)",
+                        padding: 14,
+                      }}
+                    >
+                      <div style={{ fontWeight: 800 }}>{item.title}</div>
+                      <div className="smallNote" style={{ marginTop: 4 }}>
+                        {fmtDate(item.createdAt)} • {pretty(item.status)}
+                      </div>
+                      <p className="p" style={{ marginTop: 8, marginBottom: 0, fontSize: 14 }}>
+                        {item.summary}
+                      </p>
+                      {(item.priceImpact || item.timelineImpact || item.scopeImpact) && (
+                        <div className="smallNote" style={{ marginTop: 8 }}>
+                          {item.priceImpact ? `Price: ${item.priceImpact}` : ""}
+                          {item.priceImpact && item.timelineImpact ? " • " : ""}
+                          {item.timelineImpact ? `Timeline: ${item.timelineImpact}` : ""}
+                          {(item.priceImpact || item.timelineImpact) && item.scopeImpact
+                            ? " • "
+                            : ""}
+                          {item.scopeImpact ? `Scope: ${item.scopeImpact}` : ""}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

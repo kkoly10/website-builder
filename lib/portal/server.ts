@@ -27,6 +27,31 @@ type PortalRevision = {
   createdAt: string;
 };
 
+type ScopeVersion = {
+  id: string;
+  createdAt: string;
+  label: string;
+  summary: string;
+  tierLabel: string;
+  platform: string;
+  timeline: string;
+  revisionPolicy: string;
+  pagesIncluded: string[];
+  featuresIncluded: string[];
+  exclusions: string[];
+};
+
+type ChangeOrder = {
+  id: string;
+  createdAt: string;
+  title: string;
+  summary: string;
+  priceImpact: string;
+  timelineImpact: string;
+  scopeImpact: string;
+  status: string;
+};
+
 type PortalStateRow = {
   quote_id: string;
   client_status?: string | null;
@@ -440,11 +465,14 @@ export async function getPortalBundleByToken(token: string) {
   const scopeSnapshotRaw = asObj((quote as any).scope_snapshot);
   const debug = asObj((quote as any).debug);
   const portalAdmin = asObj(debug.portalAdmin);
+  const workspaceHistory = asObj(debug.workspaceHistory);
   const pie = parsePieReport(pieRes.data);
 
   const savedAssets = asArray<PortalAsset>(portalState?.assets);
   const savedMilestones = asArray<PortalMilestone>(portalState?.milestones);
   const savedRevisions = asArray<PortalRevision>(portalState?.revision_requests);
+  const scopeVersions = asArray<ScopeVersion>(workspaceHistory.scopeVersions);
+  const changeOrders = asArray<ChangeOrder>(workspaceHistory.changeOrders);
 
   const defaults = buildDefaultMilestones({
     quoteStatus: String((quote as any).status || ""),
@@ -583,6 +611,11 @@ export async function getPortalBundleByToken(token: string) {
         exclusions,
       },
 
+      history: {
+        scopeVersions,
+        changeOrders,
+      },
+
       callRequest: callRes.data
         ? {
             status: str((callRes.data as any).status),
@@ -628,6 +661,7 @@ export async function getPortalBundleByToken(token: string) {
           portalState?.agreement_published_at,
           portalAdmin.agreementPublishedAt
         ),
+        publishedText: str(debug.publishedAgreementText) || "",
       },
 
       launch: {
