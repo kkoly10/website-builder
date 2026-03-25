@@ -182,6 +182,101 @@ function parsePages(value: unknown): string[] {
   return [raw];
 }
 
+function normalizePortalAssetStatus(value: unknown): PortalAsset["status"] {
+  const v = String(value || "").toLowerCase();
+  if (v === "approved") return "approved";
+  if (v === "received") return "received";
+  return "submitted";
+}
+
+function setMilestoneDone(
+  milestones: PortalMilestone[],
+  key: string,
+  label: string,
+  done: boolean
+): PortalMilestone[] {
+  const now = isoNow();
+  const found = milestones.some((m) => m.key === key);
+
+  if (!found) {
+    return [...milestones, { key, label, done, updatedAt: now }];
+  }
+
+  return milestones.map((m) =>
+    m.key === key ? { ...m, label: m.label || label, done, updatedAt: now } : m
+  );
+}
+
+function mergePortalAssets(
+  uploadedAssets: PortalAsset[],
+  savedAssets: PortalAsset[]
+): PortalAsset[] {
+  const out: PortalAsset[] = [];
+  const seen = new Set<string>();
+
+  for (const asset of [...uploadedAssets, ...savedAssets]) {
+    const key = `${asset.label}__${asset.createdAt}__${asset.category}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(asset);
+  }
+
+  return out.sort((a, b) => {
+    const aTime = new Date(a.createdAt).getTime() || 0;
+    const bTime = new Date(b.createdAt).getTime() || 0;
+    return bTime - aTime;
+  });
+}
+
+async function listUploadedAssetsForQuote(quoteId: string): Promise<PortalAsset[]> {
+  const { data, error } = await supabaseAdmin
+    .from("portal_assets")
+    .select(
+      "id, asset_type, label, url, notes, status, created_at, storage_bucket, storage_path, file_name"
+    )
+    .eq("quote_id", quoteId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    if (String(error.message || "").toLowerCase().includes("portal_assets")) {
+      return [];
+    }
+    throw new Error(error.message);
+  }
+
+  const assets = await Promise.all(
+    (data ?? []).map(async (row: any): Promise<PortalAsset | null> => {
+      let resolvedUrl = String(row?.url || "").trim();
+
+      if (!resolvedUrl && row?.storage_bucket && row?.storage_path) {
+        const signed = await supabaseAdmin.storage
+          .from(row.storage_bucket)
+          .createSignedUrl(row.storage_path, 60 * 60);
+
+        if (!signed.error && signed.data?.signedUrl) {
+          resolvedUrl = signed.data.signedUrl;
+        }
+      }
+
+      if (!resolvedUrl) {
+        return null;
+      }
+
+      return {
+        id: String(row?.id || makeId()),
+        category: String(row?.asset_type || "File"),
+        label: String(row?.label || row?.file_name || "Client file"),
+        url: resolvedUrl,
+        notes: String(row?.notes || ""),
+        status: normalizePortalAssetStatus(row?.status),
+        createdAt: String(row?.created_at || isoNow()),
+      };
+    })
+  );
+
+  return assets.filter(Boolean) as PortalAsset[];
+}
+
 function parsePieReport(rawPie: any) {
   const report = asObj(rawPie?.report);
   const pricing = asObj(report.pricing);
@@ -433,7 +528,7 @@ export async function getPortalBundleByToken(token: string) {
 
   const quoteId = String((quote as any).id);
 
-  const [leadRes, callRes, pieRes, portalState] = await Promise.all([
+  const [leadRes, callRes, pieRes, portalState, uploadedAssets] = await Promise.all([
     (quote as any).lead_id
       ? supabaseAdmin
           .from("leads")
@@ -459,6 +554,7 @@ export async function getPortalBundleByToken(token: string) {
       .maybeSingle(),
 
     getPortalState(quoteId),
+    listUploadedAssetsForQuote(quoteId),
   ]);
 
   const intake = asObj((quote as any).intake_normalized);
@@ -469,6 +565,7 @@ export async function getPortalBundleByToken(token: string) {
   const pie = parsePieReport(pieRes.data);
 
   const savedAssets = asArray<PortalAsset>(portalState?.assets);
+  const mergedAssets = mergePortalAssets(uploadedAssets, savedAssets);
   const savedMilestones = asArray<PortalMilestone>(portalState?.milestones);
   const savedRevisions = asArray<PortalRevision>(portalState?.revision_requests);
   const scopeVersions = asArray<ScopeVersion>(workspaceHistory.scopeVersions);
@@ -477,7 +574,7 @@ export async function getPortalBundleByToken(token: string) {
   const defaults = buildDefaultMilestones({
     quoteStatus: String((quote as any).status || ""),
     depositStatus: String((quote as any).deposit_status || ""),
-    assetsCount: savedAssets.length,
+    assetsCount: mergedAssets.length,
   });
 
   const mergedMilestones = mergeMilestones(defaults, savedMilestones);
@@ -689,11 +786,11 @@ export async function getPortalBundleByToken(token: string) {
         clientNotes: str(portalState?.client_notes) || "",
         adminPublicNote: str(portalState?.admin_public_note),
         milestones: mergedMilestones,
-        assets: savedAssets,
+        assets: mergedAssets,
         revisions: savedRevisions,
         waitingOn: deriveWaitingOn({
           depositStatus: String((quote as any).deposit_status || ""),
-          assetsCount: savedAssets.length,
+          assetsCount: mergedAssets.length,
           previewUrl,
           clientReviewStatus,
         }),
@@ -774,6 +871,14 @@ export async function applyPortalAction(token: string, body: PortalActionBody) {
         return { ok: false as const, error: "Asset label and URL are required." };
       }
 
+      let nextMilestones = [...milestones];
+      nextMilestones = setMilestoneDone(
+        nextMilestones,
+        "assets_submitted",
+        "Content/assets submitted",
+        true
+      );
+
       const next: PortalAsset[] = [
         {
           id: makeId(),
@@ -788,6 +893,7 @@ export async function applyPortalAction(token: string, body: PortalActionBody) {
       ];
 
       patch.assets = next;
+      patch.milestones = nextMilestones;
       patch.client_status = "content_submitted";
       patch.client_updated_at = isoNow();
       break;
@@ -822,12 +928,32 @@ export async function applyPortalAction(token: string, body: PortalActionBody) {
     }
 
     case "deposit_mark_paid": {
-      patch.client_status = "deposit_sent";
+      const now = isoNow();
+
+      patch.milestones = setMilestoneDone(
+        milestones,
+        "deposit_paid",
+        "Deposit paid",
+        true
+      );
       patch.client_notes = [patch.client_notes, body.note || "Client marked deposit as paid."]
         .filter(Boolean)
         .join("\n")
         .trim();
-      patch.client_updated_at = isoNow();
+      patch.client_updated_at = now;
+
+      const { error: quoteUpdateError } = await supabaseAdmin
+        .from("quotes")
+        .update({
+          deposit_status: "paid",
+          deposit_paid_at: now,
+        })
+        .eq("id", quoteId);
+
+      if (quoteUpdateError) {
+        return { ok: false as const, error: quoteUpdateError.message };
+      }
+
       break;
     }
 
