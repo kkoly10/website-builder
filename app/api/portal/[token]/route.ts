@@ -37,21 +37,33 @@ export async function POST(
     const body = await req.json();
     const result = await applyPortalAction(token, body);
 
-    // Fire notification for client-side actions
     if (result.ok && result.data) {
       const actionType = body?.type;
       const eventMap: Record<string, string> = {
         revision_add: "revision_submitted",
         asset_add: "asset_submitted",
+        deposit_notice_sent: "deposit_notice_sent",
       };
+
       const event = eventMap[actionType];
       if (event) {
         const data = result.data as any;
+        const portalPath = data.quote?.publicToken
+          ? `/portal/${data.quote.publicToken}`
+          : undefined;
+        const base = process.env.NEXT_PUBLIC_BASE_URL || "";
+        const workspaceUrl = portalPath
+          ? base
+            ? `${base}${portalPath}`
+            : portalPath
+          : undefined;
+
         sendEventNotification({
           event,
           quoteId: data.quote?.id || "",
           leadName: data.lead?.name || "",
           leadEmail: data.lead?.email || "",
+          workspaceUrl,
         }).catch((err) => {
           console.error("[portal] notification error:", err);
         });
