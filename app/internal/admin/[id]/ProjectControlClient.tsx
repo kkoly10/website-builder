@@ -267,6 +267,11 @@ export default function ProjectControlClient({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [messageIsError, setMessageIsError] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{
+    title: string;
+    description: string;
+    onConfirm: () => void;
+  } | null>(null);
   const [newChangeOrder, setNewChangeOrder] = useState({
     title: "",
     summary: "",
@@ -362,12 +367,23 @@ export default function ProjectControlClient({
     setMessage("Pre-contract copied into published agreement.");
   }
 
-  async function publishAgreementToClient() {
+  function requestPublishAgreement() {
     if (!data.publishedAgreementText.trim()) {
       setMessageIsError(true);
       setMessage("Add published agreement text first.");
       return;
     }
+
+    setConfirmAction({
+      title: "Publish Agreement to Client",
+      description:
+        "This will make the agreement visible in the client workspace. The client will be able to see the full agreement text immediately.",
+      onConfirm: executePublishAgreement,
+    });
+  }
+
+  async function executePublishAgreement() {
+    setConfirmAction(null);
 
     const nextPortalAdmin = {
       ...data.portalAdmin,
@@ -384,17 +400,29 @@ export default function ProjectControlClient({
       {
         publishedAgreementText: data.publishedAgreementText,
         portalAdmin: nextPortalAdmin,
+        _event: "agreement_published",
       },
       "Agreement published to client."
     );
   }
 
-  async function markLaunchReady() {
+  function requestMarkLaunchReady() {
     if (!readiness.canMarkLaunchReady) {
       setMessageIsError(true);
       setMessage("Complete all launch readiness items first.");
       return;
     }
+
+    setConfirmAction({
+      title: "Mark Ready for Launch",
+      description:
+        "This will update the client workspace to show the project is ready for launch. Build and review milestones will be marked complete.",
+      onConfirm: executeMarkLaunchReady,
+    });
+  }
+
+  async function executeMarkLaunchReady() {
+    setConfirmAction(null);
 
     const nextPortalAdmin = {
       ...data.portalAdmin,
@@ -431,17 +459,29 @@ export default function ProjectControlClient({
       {
         portalAdmin: nextPortalAdmin,
         portalStateAdmin: nextPortalStateAdmin,
+        _event: "launch_ready",
       },
       "Launch status marked ready."
     );
   }
 
-  async function markLive() {
+  function requestMarkLive() {
     if (!readiness.canMarkLive) {
       setMessageIsError(true);
       setMessage("Add a production URL and complete all launch items first.");
       return;
     }
+
+    setConfirmAction({
+      title: "Mark Project Live",
+      description:
+        "This will mark the website as live. The client workspace will update to show the project is launched. This is the final lifecycle step.",
+      onConfirm: executeMarkLive,
+    });
+  }
+
+  async function executeMarkLive() {
+    setConfirmAction(null);
 
     const nextPortalAdmin = {
       ...data.portalAdmin,
@@ -486,8 +526,65 @@ export default function ProjectControlClient({
       {
         portalAdmin: nextPortalAdmin,
         portalStateAdmin: nextPortalStateAdmin,
+        _event: "site_live",
       },
       "Project marked live."
+    );
+  }
+
+  async function unpublishAgreement() {
+    const nextPortalAdmin = {
+      ...data.portalAdmin,
+      agreementStatus: "Pre-draft / agreement stage",
+      agreementPublishedAt: "",
+    };
+
+    setData((prev) => ({
+      ...prev,
+      portalAdmin: nextPortalAdmin,
+      publishedAgreementText: "",
+    }));
+
+    await savePatch(
+      {
+        publishedAgreementText: "",
+        portalAdmin: nextPortalAdmin,
+      },
+      "Agreement unpublished. Client can no longer see agreement text."
+    );
+  }
+
+  async function revertLaunchStatus(targetStatus: string, targetClientStatus: string) {
+    const nextPortalAdmin = {
+      ...data.portalAdmin,
+      launchStatus: targetStatus,
+      previewStatus: targetStatus === "Not ready" ? "Awaiting published preview" : data.portalAdmin.previewStatus,
+      clientReviewStatus: targetStatus === "Not ready" ? "Preview pending" : data.portalAdmin.clientReviewStatus,
+    };
+
+    let nextMilestones = [...data.portalStateAdmin.milestones];
+    if (targetStatus !== "Live") {
+      nextMilestones = setMilestoneDone(nextMilestones, "launch", "Launch completed", false);
+    }
+
+    const nextPortalStateAdmin = {
+      ...data.portalStateAdmin,
+      clientStatus: targetClientStatus,
+      milestones: nextMilestones,
+    };
+
+    setData((prev) => ({
+      ...prev,
+      portalAdmin: nextPortalAdmin,
+      portalStateAdmin: nextPortalStateAdmin,
+    }));
+
+    await savePatch(
+      {
+        portalAdmin: nextPortalAdmin,
+        portalStateAdmin: nextPortalStateAdmin,
+      },
+      `Launch status reverted to "${targetStatus}".`
     );
   }
 
@@ -1669,10 +1766,24 @@ export default function ProjectControlClient({
             <button
               className="btn btnPrimary"
               disabled={busy || !data.publishedAgreementText.trim()}
-              onClick={publishAgreementToClient}
+              onClick={requestPublishAgreement}
             >
               Publish To Client →
             </button>
+
+            {isAgreementPublished({
+              agreementStatus: data.portalAdmin.agreementStatus,
+              publishedAgreementText: data.publishedAgreementText,
+            }) && (
+              <button
+                className="btn btnGhost"
+                disabled={busy}
+                onClick={unpublishAgreement}
+                style={{ color: "#ff6b6b" }}
+              >
+                Unpublish Agreement
+              </button>
+            )}
           </div>
 
           <label style={{ display: "block" }}>
@@ -1757,11 +1868,11 @@ export default function ProjectControlClient({
             </div>
           ) : null}
 
-          <div className="row" style={{ marginTop: 14 }}>
+          <div className="row" style={{ marginTop: 14, flexWrap: "wrap" }}>
             <button
               className="btn btnGhost"
               disabled={busy || !readiness.canMarkLaunchReady}
-              onClick={markLaunchReady}
+              onClick={requestMarkLaunchReady}
             >
               Mark Ready For Launch
             </button>
@@ -1769,10 +1880,33 @@ export default function ProjectControlClient({
             <button
               className="btn btnPrimary"
               disabled={busy || !readiness.canMarkLive}
-              onClick={markLive}
+              onClick={requestMarkLive}
             >
               Mark Live →
             </button>
+
+            {(data.portalAdmin.launchStatus === "Ready for launch" ||
+              data.portalAdmin.launchStatus === "Live") && (
+              <button
+                className="btn btnGhost"
+                disabled={busy}
+                onClick={() => revertLaunchStatus("Not ready", "preview_ready")}
+                style={{ color: "#ff6b6b" }}
+              >
+                Revert to Not Ready
+              </button>
+            )}
+
+            {data.portalAdmin.launchStatus === "Live" && (
+              <button
+                className="btn btnGhost"
+                disabled={busy}
+                onClick={() => revertLaunchStatus("Ready for launch", "launch_ready")}
+                style={{ color: "#ff6b6b" }}
+              >
+                Revert to Ready
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -2229,6 +2363,55 @@ export default function ProjectControlClient({
           </div>
         </div>
       </div>
+      {confirmAction && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(0, 0, 0, 0.6)",
+            backdropFilter: "blur(4px)",
+          }}
+          onClick={() => setConfirmAction(null)}
+        >
+          <div
+            style={{
+              background: "var(--panel)",
+              border: "1px solid var(--stroke)",
+              borderRadius: 18,
+              padding: "28px 28px 22px",
+              maxWidth: 460,
+              width: "90%",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontWeight: 900, fontSize: 18 }}>
+              {confirmAction.title}
+            </div>
+            <p className="pDark" style={{ marginTop: 10, lineHeight: 1.6 }}>
+              {confirmAction.description}
+            </p>
+            <div className="row" style={{ marginTop: 18 }}>
+              <button
+                className="btn btnGhost"
+                onClick={() => setConfirmAction(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btnPrimary"
+                disabled={busy}
+                onClick={confirmAction.onConfirm}
+              >
+                Confirm →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

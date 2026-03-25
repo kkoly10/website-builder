@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import ScrollReveal from "@/components/site/ScrollReveal";
 import TrackLink from "@/components/site/TrackLink";
+import LaneGuide from "@/components/site/LaneGuide";
 import { OPS_TIER_CONFIG, WEBSITE_TIER_CONFIG, money } from "@/lib/pricing";
 import styles from "./home.module.css";
 
@@ -12,7 +13,7 @@ const opsFrom = money(OPS_TIER_CONFIG.quick_workflow_fix.min);
 
 const services = [
   {
-    label: "Service 1",
+    label: "Grow",
     title: "Website Building",
     description:
       "Premium conversion websites for service brands that need stronger trust, sharper positioning, and more effective lead flow.",
@@ -26,7 +27,7 @@ const services = [
     startEvent: "cta_home_website_start",
   },
   {
-    label: "Service 2",
+    label: "Sell",
     title: "E-Commerce Systems",
     description:
       "Storefront, checkout, and post-purchase systems built to reduce friction and support cleaner online selling.",
@@ -40,7 +41,7 @@ const services = [
     startEvent: "cta_home_ecom_start",
   },
   {
-    label: "Service 3",
+    label: "Streamline",
     title: "Workflow Systems",
     description:
       "Operational systems for intake, routing, handoffs, status updates, and admin work that should not be manual anymore.",
@@ -52,33 +53,6 @@ const services = [
     startLabel: "Start Workflow Audit",
     learnEvent: "cta_home_ops_learn",
     startEvent: "cta_home_ops_start",
-  },
-] as const;
-
-const comparison = [
-  {
-    title: "Choose Websites if...",
-    text:
-      "your biggest problem is trust, credibility, positioning, or lead conversion.",
-    learnMoreHref: "/websites",
-    startHref: "/build/intro",
-    startLabel: "Start Website Quote",
-  },
-  {
-    title: "Choose E-Commerce if...",
-    text:
-      "your biggest problem is online selling flow, checkout friction, product-page clarity, or store operations.",
-    learnMoreHref: "/ecommerce",
-    startHref: "/ecommerce/intake",
-    startLabel: "Start E-Commerce Intake",
-  },
-  {
-    title: "Choose Workflow Systems if...",
-    text:
-      "your biggest problem is admin drag, routing, status updates, manual handoffs, or disconnected tools.",
-    learnMoreHref: "/systems",
-    startHref: "/ops-intake",
-    startLabel: "Start Workflow Audit",
   },
 ] as const;
 
@@ -103,7 +77,7 @@ export default function Home() {
 
         <div className={`container ${styles.heroContainer}`}>
           <div className={styles.heroShell}>
-            <div className={styles.heroCopy}>
+            <div className={`${styles.heroCopy} heroFadeUp`}>
               <div className="kicker">Unified Growth System</div>
 
               <h1 className={`h1 ${styles.heroTitle}`}>
@@ -122,7 +96,7 @@ export default function Home() {
                   event="cta_home_hero_start_here"
                   className="btn btnPrimary btnLg"
                 >
-                  Start Here <span className="btnArrow">→</span>
+                  Explore Services <span className="btnArrow">→</span>
                 </TrackLink>
 
                 <TrackLink
@@ -135,36 +109,36 @@ export default function Home() {
               </div>
             </div>
 
-            <aside className={styles.heroPanel}>
+            <aside className={`${styles.heroPanel} heroFadeUp`}>
               <div className={styles.panelEyebrow}>Start with the right lane</div>
               <div className={styles.panelTitle}>
                 Pick the problem you need solved first.
               </div>
 
               <div className={styles.laneList}>
-                <div className={styles.laneItem}>
+                <Link href="/websites" className={styles.laneItem}>
                   <div className={styles.laneDot} />
                   <div>
-                    <strong>Websites</strong>
+                    <strong>Grow</strong>
                     <span>Trust, credibility, and lead conversion.</span>
                   </div>
-                </div>
+                </Link>
 
-                <div className={styles.laneItem}>
+                <Link href="/ecommerce" className={styles.laneItem}>
                   <div className={styles.laneDot} />
                   <div>
-                    <strong>E-Commerce</strong>
+                    <strong>Sell</strong>
                     <span>Storefront flow, checkout, and order experience.</span>
                   </div>
-                </div>
+                </Link>
 
-                <div className={styles.laneItem}>
+                <Link href="/systems" className={styles.laneItem}>
                   <div className={styles.laneDot} />
                   <div>
-                    <strong>Workflow Systems</strong>
+                    <strong>Streamline</strong>
                     <span>Internal operations, routing, and automation.</span>
                   </div>
-                </div>
+                </Link>
               </div>
             </aside>
           </div>
@@ -176,7 +150,7 @@ export default function Home() {
           <div className={`${styles.sectionHead} fadeUp`}>
             <div className={styles.eyebrow}>Services</div>
             <h2 className={`h2 ${styles.sectionTitle}`}>
-              Learn more first, then start the right flow
+              Pick the lane that matches your biggest problem
             </h2>
           </div>
 
@@ -210,20 +184,12 @@ export default function Home() {
                   <p className={styles.cardDesc}>{service.description}</p>
 
                   <div className={styles.whoBox}>
-                    <span>Who it’s for:</span> {service.who}
+                    <span>Who it's for:</span> {service.who}
                   </div>
 
                   <div className={styles.pricing}>{service.pricing}</div>
 
                   <div className={styles.cardActions}>
-                    <TrackLink
-                      href={service.learnMoreHref}
-                      event={service.learnEvent}
-                      className={`btn btnGhost ${styles.learnButton}`}
-                    >
-                      Learn More
-                    </TrackLink>
-
                     <TrackLink
                       href={service.startHref}
                       event={service.startEvent}
@@ -231,6 +197,14 @@ export default function Home() {
                     >
                       {service.startLabel} <span className="btnArrow">→</span>
                     </TrackLink>
+
+                    <TrackLink
+                      href={service.learnMoreHref}
+                      event={service.learnEvent}
+                      className={`btn btnGhost ${styles.learnButton}`}
+                    >
+                      Learn More
+                    </TrackLink>
                   </div>
                 </div>
               </article>
@@ -239,67 +213,10 @@ export default function Home() {
         </div>
       </section>
 
-      <section className={`section ${styles.compareSection}`}>
+      <section id="guide" className={`section ${styles.guideSection}`}>
         <div className="container">
-          <div className={`${styles.sectionHead} fadeUp`}>
-            <div className={styles.eyebrow}>Comparison</div>
-            <h2 className={`h2 ${styles.sectionTitle}`}>
-              Not sure which lane fits your problem?
-            </h2>
-          </div>
-
-          <div className={styles.compareGrid}>
-            {comparison.map((item, i) => (
-              <article
-                key={item.title}
-                className={`${styles.compareCard} card fadeUp stagger-${Math.min(i + 1, 4)}`}
-              >
-                <h3 className={styles.compareTitle}>{item.title}</h3>
-                <p className={styles.compareText}>{item.text}</p>
-
-                <div className={styles.compareActions}>
-                  <Link href={item.learnMoreHref} className="btn btnGhost">
-                    Learn More
-                  </Link>
-                  <Link href={item.startHref} className="btn btnPrimary">
-                    {item.startLabel} <span className="btnArrow">→</span>
-                  </Link>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className={`section ${styles.bottomCta}`}>
-        <div className="container">
-          <div className={`${styles.bottomPanel} card scaleIn`}>
-            <div className={styles.bottomEyebrow}>Ready to move?</div>
-            <h2 className={`h2 ${styles.bottomTitle}`}>
-              Start with the right lane — not the wrong form.
-            </h2>
-            <p className={styles.bottomText}>
-              Use the service pages to understand what each lane does, then move
-              into the quote or intake flow that actually matches your business.
-            </p>
-
-            <div className={styles.bottomActions}>
-              <TrackLink
-                href="/#services"
-                event="cta_home_bottom_start_here"
-                className="btn btnPrimary"
-              >
-                Start Here <span className="btnArrow">→</span>
-              </TrackLink>
-
-              <TrackLink
-                href="/process"
-                event="cta_home_bottom_process"
-                className="btn btnGhost"
-              >
-                See the Process
-              </TrackLink>
-            </div>
+          <div className={`${styles.guideWrapper} card scaleIn`}>
+            <LaneGuide />
           </div>
         </div>
       </section>
