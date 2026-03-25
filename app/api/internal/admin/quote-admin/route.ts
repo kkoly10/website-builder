@@ -318,6 +318,7 @@ export async function POST(req: NextRequest) {
       typeof body?.publicNote === "string" ||
       typeof body?.depositNotes === "string" ||
       body?.depositAmount != null ||
+      (body?.portalAdmin && typeof body.portalAdmin === "object") ||
       (body?.portalStateAdmin && typeof body.portalStateAdmin === "object") ||
       (body?.clientSync && typeof body.clientSync === "object");
 
@@ -370,6 +371,45 @@ export async function POST(req: NextRequest) {
         }
 
         portalStatePatch.client_updated_at = new Date().toISOString();
+      }
+
+      if (body?.portalAdmin && typeof body.portalAdmin === "object") {
+        portalStatePatch.preview_url = cleanString(body.portalAdmin.previewUrl);
+        portalStatePatch.production_url = cleanString(body.portalAdmin.productionUrl);
+        portalStatePatch.preview_status =
+          cleanString(body.portalAdmin.previewStatus) || "Awaiting published preview";
+        portalStatePatch.preview_notes =
+          typeof body.portalAdmin.previewNotes === "string"
+            ? body.portalAdmin.previewNotes
+            : "";
+        portalStatePatch.preview_updated_at = new Date().toISOString();
+        portalStatePatch.client_review_status =
+          cleanString(body.portalAdmin.clientReviewStatus) || "Preview pending";
+        portalStatePatch.agreement_status =
+          cleanString(body.portalAdmin.agreementStatus) || "Not published yet";
+        portalStatePatch.agreement_model =
+          cleanString(body.portalAdmin.agreementModel) || "Managed build agreement";
+        portalStatePatch.ownership_model =
+          cleanString(body.portalAdmin.ownershipModel) ||
+          "Managed with project handoff options";
+        portalStatePatch.agreement_published_at =
+          cleanString(body.portalAdmin.agreementPublishedAt);
+        portalStatePatch.launch_status =
+          cleanString(body.portalAdmin.launchStatus) || "Not ready";
+        portalStatePatch.domain_status =
+          cleanString(body.portalAdmin.domainStatus) || "Pending";
+        portalStatePatch.analytics_status =
+          cleanString(body.portalAdmin.analyticsStatus) || "Pending";
+        portalStatePatch.forms_status =
+          cleanString(body.portalAdmin.formsStatus) || "Pending";
+        portalStatePatch.seo_status =
+          cleanString(body.portalAdmin.seoStatus) || "Pending";
+        portalStatePatch.handoff_status =
+          cleanString(body.portalAdmin.handoffStatus) || "Pending";
+        portalStatePatch.launch_notes =
+          typeof body.portalAdmin.launchNotes === "string"
+            ? body.portalAdmin.launchNotes
+            : "";
       }
 
       if (body?.clientSync && typeof body.clientSync === "object") {

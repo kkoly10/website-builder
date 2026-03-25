@@ -266,6 +266,7 @@ export default function ProjectControlClient({
   const [data, setData] = useState<ProjectControlData>(initialData);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageIsError, setMessageIsError] = useState(false);
   const [newChangeOrder, setNewChangeOrder] = useState({
     title: "",
     summary: "",
@@ -280,6 +281,7 @@ export default function ProjectControlClient({
   async function savePatch(payload: Record<string, any>, successMessage: string) {
     setBusy(true);
     setMessage("Saving...");
+    setMessageIsError(false);
 
     try {
       const res = await fetch("/api/internal/admin/quote-admin", {
@@ -298,8 +300,10 @@ export default function ProjectControlClient({
         throw new Error(json?.error || "Failed to save changes.");
       }
 
+      setMessageIsError(false);
       setMessage(successMessage);
     } catch (err) {
+      setMessageIsError(true);
       setMessage(err instanceof Error ? err.message : "Failed to save changes.");
     } finally {
       setBusy(false);
@@ -309,6 +313,7 @@ export default function ProjectControlClient({
   async function generatePreContract() {
     setBusy(true);
     setMessage("Generating pre-contract draft...");
+    setMessageIsError(false);
 
     try {
       const res = await fetch("/api/internal/admin/pre-contract", {
@@ -330,8 +335,10 @@ export default function ProjectControlClient({
         ...prev,
         preContractDraft: String(json.draft || ""),
       }));
+      setMessageIsError(false);
       setMessage("Pre-contract draft generated.");
     } catch (err) {
+      setMessageIsError(true);
       setMessage(
         err instanceof Error ? err.message : "Failed to generate pre-contract draft."
       );
@@ -342,6 +349,7 @@ export default function ProjectControlClient({
 
   function copyDraftToPublishedAgreement() {
     if (!data.preContractDraft.trim()) {
+      setMessageIsError(true);
       setMessage("Generate or write a pre-contract draft first.");
       return;
     }
@@ -350,11 +358,13 @@ export default function ProjectControlClient({
       ...prev,
       publishedAgreementText: prev.preContractDraft,
     }));
+    setMessageIsError(false);
     setMessage("Pre-contract copied into published agreement.");
   }
 
   async function publishAgreementToClient() {
     if (!data.publishedAgreementText.trim()) {
+      setMessageIsError(true);
       setMessage("Add published agreement text first.");
       return;
     }
@@ -381,6 +391,7 @@ export default function ProjectControlClient({
 
   async function markLaunchReady() {
     if (!readiness.canMarkLaunchReady) {
+      setMessageIsError(true);
       setMessage("Complete all launch readiness items first.");
       return;
     }
@@ -427,6 +438,7 @@ export default function ProjectControlClient({
 
   async function markLive() {
     if (!readiness.canMarkLive) {
+      setMessageIsError(true);
       setMessage("Add a production URL and complete all launch items first.");
       return;
     }
@@ -524,7 +536,7 @@ export default function ProjectControlClient({
     "proposal",
     "deposit",
     "active",
-    "closed",
+    "closed_won",
   ];
 
   const workspaceStatusOptions = [
@@ -599,11 +611,13 @@ export default function ProjectControlClient({
         scopeVersions: [nextVersion, ...prev.workspaceHistory.scopeVersions],
       },
     }));
+    setMessageIsError(false);
     setMessage("Current scope captured locally. Save history to persist it.");
   }
 
   function addChangeOrder() {
     if (!newChangeOrder.title.trim() || !newChangeOrder.summary.trim()) {
+      setMessageIsError(true);
       setMessage("Add at least a change-order title and summary.");
       return;
     }
@@ -635,6 +649,7 @@ export default function ProjectControlClient({
       scopeImpact: "",
       status: "draft",
     });
+    setMessageIsError(false);
     setMessage("Change order added locally. Save history to persist it.");
   }
 
@@ -706,7 +721,7 @@ export default function ProjectControlClient({
             <div
               style={{
                 marginTop: 14,
-                color: "var(--accent2)",
+                color: messageIsError ? "#ff6b6b" : "#b7f5c4",
                 fontWeight: 800,
               }}
             >

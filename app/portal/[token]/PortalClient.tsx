@@ -194,7 +194,7 @@ function statusTone(status?: string | null) {
   const s = String(status || "").toLowerCase();
 
   if (
-    ["active", "approved", "live", "paid", "closed_won", "kickoff_ready"].includes(
+    ["active", "approved", "live", "paid", "closed_won", "kickoff_ready", "launch_ready"].includes(
       s
     )
   ) {
@@ -206,7 +206,7 @@ function statusTone(status?: string | null) {
     };
   }
 
-  if (["proposal", "deposit", "reviewing", "evaluating", "pending"].includes(s)) {
+  if (["proposal", "deposit", "reviewing", "evaluating", "pending", "preview_ready", "revision_requested", "content_submitted"].includes(s)) {
     return {
       bg: "rgba(201, 168, 76, 0.14)",
       border: "rgba(201, 168, 76, 0.34)",
@@ -282,14 +282,18 @@ function getCurrentPhase(bundle: PortalBundle) {
   const quoteStatus = String(bundle.quote.status || "").toLowerCase();
   const depositStatus = String(bundle.quote.deposit.status || "").toLowerCase();
   const assetsCount = bundle.portalState.assets.length;
-  const previewStatus = String(bundle.preview.status || "").toLowerCase();
   const launchStatus = String(bundle.launch.status || "").toLowerCase();
+  const clientStatus = String(bundle.portalState.clientStatus || "").toLowerCase();
 
-  if (launchStatus === "live") return "Live";
-  if (depositStatus === "paid") return "Kickoff Ready";
-  if (previewStatus.includes("review")) return "Preview Review";
-  if (quoteStatus === "active") return "Build In Progress";
+  if (launchStatus === "live" || clientStatus === "live") return "Live";
+  if (launchStatus === "ready for launch" || clientStatus === "launch_ready")
+    return "Ready for Launch";
+  if (bundle.preview.url && bundle.preview.clientReviewStatus === "Pending review")
+    return "Preview Review";
+  if (quoteStatus === "active" || clientStatus === "preview_ready")
+    return "Build In Progress";
   if (assetsCount > 0) return "Assets Submitted";
+  if (depositStatus === "paid") return "Kickoff Ready";
   if (["proposal", "deposit"].includes(quoteStatus)) return "Pre-Start";
   return "Intake / Estimate";
 }
@@ -698,6 +702,19 @@ export default function PortalClient({
                     Deposit Link Pending
                   </button>
                 )}
+
+                {bundle.quote.deposit.status !== "paid" ? (
+                  <button
+                    className="btn btnGhost"
+                    type="button"
+                    disabled={saving}
+                    onClick={() =>
+                      applyAction({ type: "deposit_mark_paid", note: "Client confirmed deposit." })
+                    }
+                  >
+                    {saving ? "Saving..." : "Mark Deposit as Paid"}
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>
@@ -1314,11 +1331,11 @@ export default function PortalClient({
 
           <div className="panel fadeUp">
             <div className="panelHeader">
-              <h2 className="h2">Public Notes</h2>
+              <h2 className="h2">Notes & Updates</h2>
             </div>
             <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-              <InfoBlock label="Admin Note" value={bundle.portalState.adminPublicNote || "No public update yet"} />
-              <InfoBlock label="Client Notes" value={bundle.portalState.clientNotes || "No client notes yet"} />
+              <InfoBlock label="Studio Update" value={bundle.portalState.adminPublicNote || "No updates from the studio yet."} />
+              <InfoBlock label="Project Notes" value={bundle.portalState.clientNotes || "No project notes yet."} />
               <InfoBlock
                 label="Best Time to Call"
                 value={
