@@ -109,7 +109,7 @@ export default async function OpsIntakesMiniPanel() {
         </div>
 
         <Link
-          href="/internal/ops"
+          href="/internal/admin/ops"
           style={{
             color: "white",
             textDecoration: "none",

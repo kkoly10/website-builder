@@ -103,7 +103,7 @@ export default async function InternalHomePage() {
           <div className="cardInner">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div style={{ fontWeight: 900, color: "var(--fg)", fontSize: 18 }}>Workflow Ops Pipeline</div>
-              <Link href="/internal/ops" className="btn btnPrimary" style={{ padding: "6px 12px", fontSize: 13 }}>
+              <Link href="/internal/admin/ops" className="btn btnPrimary" style={{ padding: "6px 12px", fontSize: 13 }}>
                 Open Ops Pipeline <span className="btnArrow">→</span>
               </Link>
             </div>
