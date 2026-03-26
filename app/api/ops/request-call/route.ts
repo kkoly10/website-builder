@@ -95,7 +95,7 @@ export async function POST(req: Request) {
       pieError = e instanceof Error ? e.message : "PIE generation failed";
     }
 
-    const nextUrl = `/portal?opsIntakeId=${encodeURIComponent(opsIntakeId)}`;
+    const nextUrl = `/portal/ops/${encodeURIComponent(opsIntakeId)}`;
 
     await recordServerEvent({
       event: "ops_call_requested",

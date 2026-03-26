@@ -675,11 +675,11 @@ export default async function PortalPage() {
                     </div>
 
                     <div className="row" style={{ marginTop: 18 }}>
-                      <Link href="/ops-intake" className="btn btnPrimary">
-                        Book / Update Call <span className="btnArrow">→</span>
+                      <Link href={`/portal/ops/${o.id}`} className="btn btnPrimary">
+                        Open Workspace <span className="btnArrow">→</span>
                       </Link>
-                      <Link href="/systems" className="btn btnGhost">
-                        View Workflow Service
+                      <Link href="/ops-intake" className="btn btnGhost">
+                        Book / Update Call
                       </Link>
                     </div>
                   </div>

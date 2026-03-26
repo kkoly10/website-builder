@@ -77,7 +77,7 @@ export default async function OpsIntakesMiniPanel() {
       pieSummary: latestPie?.summary || null,
       booked: !!latestCall,
       callStatus: latestCall?.status || null,
-      link: `/internal/ops/${id}`,
+      link: `/internal/admin/ops/${id}`,
     };
   });
 

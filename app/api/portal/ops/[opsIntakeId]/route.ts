@@ -58,7 +58,20 @@ export async function GET(
       return NextResponse.json({ ok: false, error: "Workspace not found." }, { status: 404 });
     }
 
-    return NextResponse.json({ ok: true, data: bundle });
+    // Filter out admin-only fields for client portal
+    const clientSafe = {
+      ...bundle,
+      ghostAdmin: {
+        ...bundle.ghostAdmin,
+        starterPrompts: [], // admin-only
+      },
+      intake: {
+        ...bundle.intake,
+        notes: "", // internal intake notes
+      },
+    };
+
+    return NextResponse.json({ ok: true, data: admin ? bundle : clientSafe });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected error";
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
