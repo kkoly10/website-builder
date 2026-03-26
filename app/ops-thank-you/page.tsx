@@ -73,7 +73,7 @@ export default function OpsThankYouPage({
               <Link href="/systems" className="btn btnGhost">
                 Submit Another Intake
               </Link>
-              <Link href="/internal/ops" className="btn btnGhost">
+              <Link href="/internal/admin/ops" className="btn btnGhost">
                 Internal Ops Dashboard
               </Link>
             </div>

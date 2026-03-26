@@ -45,7 +45,7 @@ export default async function InternalLayout({ children }: { children: ReactNode
               📦 E-Commerce
             </Link>
 
-            <Link href="/internal/ops" className="btn btnPrimary" style={{ background: "linear-gradient(180deg, #ff7a18, #e66a00)", borderColor: "#cc5e00" }}>
+            <Link href="/internal/admin/ops" className="btn btnPrimary" style={{ background: "linear-gradient(180deg, #ff7a18, #e66a00)", borderColor: "#cc5e00" }}>
               ⚙️ Ops Pipeline
             </Link>
 
