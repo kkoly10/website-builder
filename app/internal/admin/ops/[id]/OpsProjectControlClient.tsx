@@ -1,10 +1,43 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
-import type { OpsWorkspaceBundle } from "@/lib/opsWorkspace/server";
+import { useMemo, useState } from "react";
+import type {
+  EnrichedOpsWorkspaceBundle,
+  WorkspaceApproval,
+  WorkspaceAutomation,
+  WorkspaceChangeRequest,
+  WorkspaceIncident,
+  WorkspaceKpi,
+  WorkspaceQaItem,
+  WorkspaceRisk,
+  WorkspaceSop,
+  WorkspaceSystem,
+} from "@/lib/opsWorkspace/state";
 
-/* ── helpers ── */
+type TabKey =
+  | "overview"
+  | "workflow"
+  | "systems"
+  | "backlog"
+  | "operations"
+  | "chat";
+
+const TABS: Array<{ key: TabKey; label: string }> = [
+  { key: "overview", label: "Overview" },
+  { key: "workflow", label: "Workflow" },
+  { key: "systems", label: "Systems" },
+  { key: "backlog", label: "Backlog" },
+  { key: "operations", label: "Ops Control" },
+  { key: "chat", label: "Ghost Admin" },
+];
+
+type ChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+};
 
 function fmtDate(value?: string | null) {
   if (!value) return "—";
@@ -18,171 +51,456 @@ function pretty(value?: string | null) {
   return value.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
-function statusTone(status?: string | null) {
+function tone(status?: string | null) {
   const s = String(status || "").toLowerCase();
   if (["active", "approved", "live", "completed", "ready"].includes(s)) {
-    return { bg: "rgba(46,160,67,0.14)", border: "rgba(46,160,67,0.34)", color: "#b7f5c4", label: pretty(status) };
+    return {
+      bg: "rgba(46,160,67,0.14)",
+      border: "rgba(46,160,67,0.34)",
+      color: "#b7f5c4",
+      label: pretty(status),
+    };
   }
-  if (["requested", "review", "new", "pending"].includes(s)) {
-    return { bg: "rgba(201,168,76,0.14)", border: "rgba(201,168,76,0.34)", color: "#f1d98a", label: pretty(status) };
+  if (
+    ["requested", "review", "new", "pending", "scoped", "planning", "process mapping", "discovery"].includes(
+      s
+    )
+  ) {
+    return {
+      bg: "rgba(201,168,76,0.14)",
+      border: "rgba(201,168,76,0.34)",
+      color: "#f1d98a",
+      label: pretty(status),
+    };
   }
-  return { bg: "rgba(141,164,255,0.12)", border: "rgba(141,164,255,0.26)", color: "#d8e0ff", label: pretty(status || "new") };
+  return {
+    bg: "rgba(141,164,255,0.12)",
+    border: "rgba(141,164,255,0.26)",
+    color: "#d8e0ff",
+    label: pretty(status || "new"),
+  };
 }
 
-/* ── tab definitions ── */
+function linesToList(value: string) {
+  return value
+    .split(/\n+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
 
-const TABS = [
-  { key: "diagnosis", label: "Ops Diagnosis" },
-  { key: "discovery", label: "Discovery" },
-  { key: "callpie", label: "Call + PIE" },
-  { key: "workflow", label: "Workflow Map" },
-  { key: "systems", label: "Systems" },
-  { key: "backlog", label: "Backlog" },
-  { key: "quickwins", label: "Quick Wins" },
-  { key: "plan", label: "Impl Plan" },
-  { key: "sops", label: "SOPs" },
-  { key: "kpis", label: "KPIs & Risks" },
-  { key: "chat", label: "Ghost Admin" },
-] as const;
+function toJson<T>(value: T) {
+  return JSON.stringify(value, null, 2);
+}
 
-type TabKey = (typeof TABS)[number]["key"];
-
-/* ── main component ── */
+function parseArrayJson<T>(value: string, fieldLabel: string): T[] {
+  if (!value.trim()) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed)) {
+      throw new Error(`${fieldLabel} must be a JSON array.`);
+    }
+    return parsed as T[];
+  } catch (err) {
+    throw new Error(err instanceof Error ? err.message : `${fieldLabel} is invalid JSON.`);
+  }
+}
 
 export default function OpsProjectControlClient({
   initialData,
 }: {
-  initialData: OpsWorkspaceBundle;
+  initialData: EnrichedOpsWorkspaceBundle;
 }) {
-  const [activeTab, setActiveTab] = useState<TabKey>("diagnosis");
-  const [notes, setNotes] = useState<Record<string, string>>({});
-  const [saving, setSaving] = useState(false);
+  const [bundle, setBundle] = useState(initialData);
+  const [activeTab, setActiveTab] = useState<TabKey>("overview");
+
+  const [phase, setPhase] = useState(initialData.workspace.phase);
+  const [waitingOn, setWaitingOn] = useState(initialData.workspace.waitingOn);
+  const [adminPublicNote, setAdminPublicNote] = useState(
+    initialData.workspace.adminPublicNote
+  );
+  const [internalDiagnosisNote, setInternalDiagnosisNote] = useState(
+    initialData.workspace.internalDiagnosisNote
+  );
+  const [currentProcessText, setCurrentProcessText] = useState(
+    initialData.workspace.currentProcess.join("\n")
+  );
+  const [futureProcessText, setFutureProcessText] = useState(
+    initialData.workspace.futureProcess.join("\n")
+  );
+  const [nextActionsText, setNextActionsText] = useState(
+    initialData.workspace.nextActions.join("\n")
+  );
+
+  const [systemsJson, setSystemsJson] = useState(toJson(initialData.workspace.systems));
+  const [backlogJson, setBacklogJson] = useState(
+    toJson(initialData.workspace.automationBacklog)
+  );
+  const [sopsJson, setSopsJson] = useState(toJson(initialData.workspace.sops));
+  const [approvalsJson, setApprovalsJson] = useState(
+    toJson(initialData.workspace.approvals)
+  );
+  const [incidentsJson, setIncidentsJson] = useState(
+    toJson(initialData.workspace.incidents)
+  );
+  const [changeRequestsJson, setChangeRequestsJson] = useState(
+    toJson(initialData.workspace.changeRequests)
+  );
+  const [kpisJson, setKpisJson] = useState(toJson(initialData.workspace.kpis));
+  const [risksJson, setRisksJson] = useState(toJson(initialData.workspace.risks));
+  const [qaJson, setQaJson] = useState(toJson(initialData.workspace.qa));
+
   const [saveMsg, setSaveMsg] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  const intakeTone = useMemo(() => statusTone(initialData.intake.status), [initialData.intake.status]);
-  const callTone = useMemo(() => statusTone(initialData.callRequest.status), [initialData.callRequest.status]);
+  const intakeTone = useMemo(() => tone(bundle.intake.status), [bundle.intake.status]);
+  const phaseTone = useMemo(() => tone(phase), [phase]);
 
-  const handleNoteChange = useCallback((key: string, value: string) => {
-    setNotes((prev) => ({ ...prev, [key]: value }));
-  }, []);
-
-  const handleSave = useCallback(async () => {
+  async function handleSave() {
     setSaving(true);
     setSaveMsg("");
+
     try {
+      const workspace = {
+        phase,
+        waitingOn,
+        adminPublicNote,
+        internalDiagnosisNote,
+        currentProcess: linesToList(currentProcessText),
+        futureProcess: linesToList(futureProcessText),
+        nextActions: linesToList(nextActionsText),
+        systems: parseArrayJson<WorkspaceSystem>(systemsJson, "Systems"),
+        automationBacklog: parseArrayJson<WorkspaceAutomation>(
+          backlogJson,
+          "Automation backlog"
+        ),
+        sops: parseArrayJson<WorkspaceSop>(sopsJson, "SOPs"),
+        approvals: parseArrayJson<WorkspaceApproval>(approvalsJson, "Approvals"),
+        incidents: parseArrayJson<WorkspaceIncident>(incidentsJson, "Incidents"),
+        changeRequests: parseArrayJson<WorkspaceChangeRequest>(
+          changeRequestsJson,
+          "Change requests"
+        ),
+        kpis: parseArrayJson<WorkspaceKpi>(kpisJson, "KPIs"),
+        risks: parseArrayJson<WorkspaceRisk>(risksJson, "Risks"),
+        qa: parseArrayJson<WorkspaceQaItem>(qaJson, "QA"),
+      };
+
       const res = await fetch("/api/internal/admin/ops/workspace", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ opsIntakeId: initialData.intake.id, adminNotes: notes }),
+        body: JSON.stringify({ opsIntakeId: bundle.intake.id, workspace }),
       });
+
       const json = await res.json();
-      setSaveMsg(json.ok ? "Saved" : json.error || "Save failed");
-    } catch {
-      setSaveMsg("Save failed");
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Save failed");
+      }
+
+      setBundle((prev) => ({
+        ...prev,
+        workspace: {
+          ...prev.workspace,
+          ...workspace,
+          liveAutomations: workspace.automationBacklog.filter(
+            (item) => String(item.status || "").toLowerCase() === "live"
+          ),
+          lastSavedAt: new Date().toISOString(),
+          lastSavedBy: "admin",
+        },
+      }));
+
+      setSaveMsg("Saved");
+    } catch (err) {
+      setSaveMsg(err instanceof Error ? err.message : "Save failed");
     } finally {
       setSaving(false);
     }
-  }, [notes, initialData.intake.id]);
+  }
 
   return (
     <main className="section" style={{ paddingTop: 0 }}>
-      {/* Header */}
       <div className="card">
         <div className="cardInner">
-          <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+          <div
+            className="row"
+            style={{
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              gap: 12,
+              flexWrap: "wrap",
+            }}
+          >
             <div>
-              <div className="kicker"><span className="kickerDot" />Ops Project Control</div>
-              <h1 className="h2" style={{ marginTop: 10 }}>{initialData.intake.companyName}</h1>
+              <div className="kicker">
+                <span className="kickerDot" />
+                Ops Project Control
+              </div>
+              <h1 className="h2" style={{ marginTop: 10 }}>
+                {bundle.intake.companyName}
+              </h1>
               <p className="pDark" style={{ marginTop: 6 }}>
-                {initialData.intake.contactName} &bull; {initialData.intake.email}
+                {bundle.intake.contactName} • {bundle.intake.email}
               </p>
               <p className="pDark" style={{ marginTop: 6 }}>
-                ID <code>{initialData.intake.id}</code> &bull; Created {fmtDate(initialData.intake.createdAt)}
+                Intake {bundle.intake.id} • Created {fmtDate(bundle.intake.createdAt)}
               </p>
             </div>
+
             <div className="row" style={{ gap: 8 }}>
-              <Link href="/internal/admin/ops" className="btn btnGhost">Back to Ops HQ</Link>
-              <Link href={`/portal/ops/${initialData.intake.id}`} className="btn btnPrimary">Client Workspace →</Link>
+              <Link href="/internal/admin/ops" className="btn btnGhost">
+                Back to Ops HQ
+              </Link>
+              <Link href={`/portal/ops/${bundle.intake.id}`} className="btn btnPrimary">
+                Client Workspace →
+              </Link>
             </div>
           </div>
 
           <div className="grid4" style={{ marginTop: 18 }}>
-            <StatCard label="Project Status" value={pretty(initialData.intake.status)} />
-            <StatCard label="Recommendation" value={initialData.intake.recommendationTier} />
-            <StatCard label="Best Tool" value={initialData.ghostAdmin.bestTool} />
-            <StatCard label="Automation Readiness" value={initialData.ghostAdmin.automationReadiness} />
+            <StatCard label="Project Status" value={pretty(bundle.intake.status)} />
+            <StatCard label="Phase" value={phase} />
+            <StatCard label="Best Tool" value={bundle.ghostAdmin.bestTool} />
+            <StatCard label="Waiting On" value={waitingOn} />
           </div>
 
-          <div className="row" style={{ gap: 6, marginTop: 18 }}>
-            <span style={{ ...badgeStyle(intakeTone) }}>Intake {intakeTone.label}</span>
-            <span style={{ ...badgeStyle(callTone) }}>Call {callTone.label}</span>
+          <div className="row" style={{ gap: 8, marginTop: 18, flexWrap: "wrap" }}>
+            <StatusBadge toneValue={intakeTone}>Intake {intakeTone.label}</StatusBadge>
+            <StatusBadge toneValue={phaseTone}>Phase {phaseTone.label}</StatusBadge>
+            <span className="badge">Readiness {bundle.ghostAdmin.automationReadiness}</span>
+            <span className="badge">Risk {bundle.ghostAdmin.riskLevel}</span>
+            {bundle.workspace.lastSavedAt ? (
+              <span className="badge">Saved {fmtDate(bundle.workspace.lastSavedAt)}</span>
+            ) : null}
           </div>
         </div>
       </div>
 
-      {/* Tab bar */}
-      <div style={{ display: "flex", gap: 4, marginTop: 18, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 6, marginTop: 18, flexWrap: "wrap" }}>
         {TABS.map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
+            type="button"
             className="btn"
             style={{
               background: activeTab === tab.key ? "var(--accent)" : "var(--panel2)",
               color: activeTab === tab.key ? "#000" : "var(--fg)",
-              fontWeight: activeTab === tab.key ? 900 : 600,
+              border: "none",
               fontSize: 13,
               padding: "8px 14px",
-              borderRadius: 8,
-              border: "none",
-              cursor: "pointer",
             }}
+            onClick={() => setActiveTab(tab.key)}
           >
             {tab.label}
           </button>
         ))}
       </div>
 
-      {/* Save bar */}
       <div className="row" style={{ marginTop: 12, gap: 10 }}>
         <button className="btn btnPrimary" onClick={handleSave} disabled={saving}>
-          {saving ? "Saving..." : "Save Notes"}
+          {saving ? "Saving..." : "Save Workspace"}
         </button>
-        {saveMsg && <span className="smallNote">{saveMsg}</span>}
+        {saveMsg ? <span className="smallNote">{saveMsg}</span> : null}
       </div>
 
-      {/* Tab content */}
       <div style={{ marginTop: 18 }}>
-        {activeTab === "diagnosis" && <DiagnosisTab data={initialData} notes={notes} onNote={handleNoteChange} />}
-        {activeTab === "discovery" && <DiscoveryTab data={initialData} notes={notes} onNote={handleNoteChange} />}
-        {activeTab === "callpie" && <CallPieTab data={initialData} notes={notes} onNote={handleNoteChange} />}
-        {activeTab === "workflow" && <WorkflowTab data={initialData} notes={notes} onNote={handleNoteChange} />}
-        {activeTab === "systems" && <SystemsTab data={initialData} notes={notes} onNote={handleNoteChange} />}
-        {activeTab === "backlog" && <BacklogTab data={initialData} notes={notes} onNote={handleNoteChange} />}
-        {activeTab === "quickwins" && <QuickWinsTab data={initialData} />}
-        {activeTab === "plan" && <ImplPlanTab data={initialData} />}
-        {activeTab === "sops" && <SopsTab data={initialData} />}
-        {activeTab === "kpis" && <KpisRisksTab data={initialData} />}
-        {activeTab === "chat" && <GhostAdminChat opsIntakeId={initialData.intake.id} starterPrompts={initialData.ghostAdmin.starterPrompts} />}
+        {activeTab === "overview" ? (
+          <div className="grid2stretch">
+            <Panel title="Diagnosis" note="Core ops framing and notes.">
+              <ReadOnly label="Business Objective" value={bundle.ghostAdmin.businessObjective} />
+              <ReadOnly label="Main Bottleneck" value={bundle.ghostAdmin.mainBottleneck} />
+              <ReadOnly label="Root Cause" value={bundle.ghostAdmin.rootCause} />
+              <ReadOnly label="Best First Fix" value={bundle.ghostAdmin.bestFirstFix} />
+              <Editable label="Phase" value={phase} onChange={setPhase} rows={2} />
+              <Editable label="Waiting On" value={waitingOn} onChange={setWaitingOn} rows={2} />
+              <Editable
+                label="Public Note (client-safe)"
+                value={adminPublicNote}
+                onChange={setAdminPublicNote}
+                rows={4}
+              />
+              <Editable
+                label="Internal Diagnosis Note"
+                value={internalDiagnosisNote}
+                onChange={setInternalDiagnosisNote}
+                rows={5}
+              />
+            </Panel>
+
+            <Panel title="Discovery Snapshot" note="Intake context and ask.">
+              <ReadOnly label="Industry" value={bundle.intake.industry} />
+              <ReadOnly label="Team Size" value={bundle.intake.teamSize} />
+              <ReadOnly label="Job Volume" value={bundle.intake.jobVolume} />
+              <ReadOnly label="Urgency" value={bundle.intake.urgency} />
+              <ReadOnly label="Recommendation" value={bundle.intake.recommendationTier} />
+              <ReadOnly label="Range" value={bundle.intake.recommendationPriceRange} />
+              <SubList
+                title="Pain Points"
+                items={bundle.intake.painPoints}
+                emptyLabel="No pain points listed."
+              />
+              <SubList
+                title="Requested Workflows"
+                items={bundle.intake.workflowsNeeded}
+                emptyLabel="No workflows listed."
+              />
+            </Panel>
+          </div>
+        ) : null}
+
+        {activeTab === "workflow" ? (
+          <div className="grid2stretch">
+            <Panel title="Current Process" note="One step per line.">
+              <Editable
+                label="Current Process"
+                value={currentProcessText}
+                onChange={setCurrentProcessText}
+                rows={12}
+              />
+            </Panel>
+
+            <Panel title="Future Process + Next Actions" note="Map the target flow and sequence.">
+              <Editable
+                label="Future Process"
+                value={futureProcessText}
+                onChange={setFutureProcessText}
+                rows={10}
+              />
+              <Editable
+                label="Next Actions"
+                value={nextActionsText}
+                onChange={setNextActionsText}
+                rows={8}
+              />
+            </Panel>
+          </div>
+        ) : null}
+
+        {activeTab === "systems" ? (
+          <div className="grid2stretch">
+            <Panel title="Systems Preview" note="Current systems list.">
+              <ObjectCards
+                items={bundle.workspace.systems.map((item) => ({
+                  title: item.name,
+                  subtitle: `${item.role} • ${item.status}`,
+                  body: item.notes,
+                }))}
+                emptyLabel="No systems saved."
+              />
+            </Panel>
+
+            <Panel title="Systems JSON Editor" note="Edit as a JSON array.">
+              <Editable
+                label="Systems JSON"
+                value={systemsJson}
+                onChange={setSystemsJson}
+                rows={24}
+                mono
+              />
+            </Panel>
+          </div>
+        ) : null}
+
+        {activeTab === "backlog" ? (
+          <div className="grid2stretch">
+            <Panel title="Backlog Preview" note="Current automation backlog.">
+              <ObjectCards
+                items={bundle.workspace.automationBacklog.map((item) => ({
+                  title: item.name,
+                  subtitle: `${item.status} • ${item.priority} • ${item.toolRecommendation}`,
+                  body: item.purpose,
+                }))}
+                emptyLabel="No backlog items saved."
+              />
+            </Panel>
+
+            <Panel title="Backlog JSON Editor" note="Edit as a JSON array.">
+              <Editable
+                label="Backlog JSON"
+                value={backlogJson}
+                onChange={setBacklogJson}
+                rows={24}
+                mono
+              />
+            </Panel>
+          </div>
+        ) : null}
+
+        {activeTab === "operations" ? (
+          <div className="grid2stretch">
+            <Panel title="Approvals, Incidents, Change Requests" note="Edit these as JSON arrays.">
+              <Editable
+                label="Approvals JSON"
+                value={approvalsJson}
+                onChange={setApprovalsJson}
+                rows={7}
+                mono
+              />
+              <Editable
+                label="Incidents JSON"
+                value={incidentsJson}
+                onChange={setIncidentsJson}
+                rows={7}
+                mono
+              />
+              <Editable
+                label="Change Requests JSON"
+                value={changeRequestsJson}
+                onChange={setChangeRequestsJson}
+                rows={7}
+                mono
+              />
+            </Panel>
+
+            <Panel title="SOPs, KPIs, Risks, QA" note="Edit these as JSON arrays.">
+              <Editable label="SOPs JSON" value={sopsJson} onChange={setSopsJson} rows={7} mono />
+              <Editable label="KPIs JSON" value={kpisJson} onChange={setKpisJson} rows={6} mono />
+              <Editable
+                label="Risks JSON"
+                value={risksJson}
+                onChange={setRisksJson}
+                rows={6}
+                mono
+              />
+              <Editable label="QA JSON" value={qaJson} onChange={setQaJson} rows={6} mono />
+            </Panel>
+          </div>
+        ) : null}
+
+        {activeTab === "chat" ? (
+          <GhostAdminChat
+            opsIntakeId={bundle.intake.id}
+            starterPrompts={bundle.ghostAdmin.starterPrompts}
+          />
+        ) : null}
       </div>
     </main>
   );
 }
 
-/* ── shared sub-components ── */
-
-function badgeStyle(tone: { bg: string; border: string; color: string }) {
-  return {
-    padding: "8px 12px",
-    borderRadius: 999,
-    background: tone.bg,
-    border: `1px solid ${tone.border}`,
-    color: tone.color,
-    fontSize: 12,
-    fontWeight: 800,
-    textTransform: "uppercase" as const,
-    letterSpacing: "0.08em",
-  };
+function StatusBadge({
+  toneValue,
+  children,
+}: {
+  toneValue: { bg: string; border: string; color: string };
+  children: any;
+}) {
+  return (
+    <span
+      style={{
+        padding: "8px 12px",
+        borderRadius: 999,
+        background: toneValue.bg,
+        border: `1px solid ${toneValue.border}`,
+        color: toneValue.color,
+        fontSize: 12,
+        fontWeight: 800,
+        textTransform: "uppercase",
+        letterSpacing: "0.08em",
+      }}
+    >
+      {children}
+    </span>
+  );
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {
@@ -190,7 +508,31 @@ function StatCard({ label, value }: { label: string; value: string }) {
     <div className="panel" style={{ background: "var(--panel2)" }}>
       <div className="panelBody">
         <div className="smallNote">{label}</div>
-        <div style={{ marginTop: 8, fontWeight: 900, fontSize: 24 }}>{value}</div>
+        <div style={{ marginTop: 8, fontWeight: 900, fontSize: 22, lineHeight: 1.2 }}>
+          {value}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Panel({
+  title,
+  note,
+  children,
+}: {
+  title: string;
+  note: string;
+  children: any;
+}) {
+  return (
+    <div className="panel">
+      <div className="panelHeader">
+        <div>{title}</div>
+        <div className="smallNote">{note}</div>
+      </div>
+      <div className="panelBody" style={{ display: "grid", gap: 12 }}>
+        {children}
       </div>
     </div>
   );
@@ -205,404 +547,124 @@ function ReadOnly({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Editable({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function Editable({
+  label,
+  value,
+  onChange,
+  rows = 4,
+  mono = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  rows?: number;
+  mono?: boolean;
+}) {
   return (
     <div>
       <div className="fieldLabel">{label}</div>
       <textarea
         className="input"
+        rows={rows}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        rows={3}
-        style={{ resize: "vertical", width: "100%" }}
+        style={{
+          resize: "vertical",
+          width: "100%",
+          fontFamily: mono ? "ui-monospace, SFMono-Regular, Menlo, monospace" : undefined,
+          fontSize: mono ? 12 : undefined,
+          minHeight: rows * 22,
+        }}
       />
     </div>
   );
 }
 
-function ListBlock({ items, emptyLabel }: { items: string[]; emptyLabel: string }) {
+function SubList({
+  title,
+  items,
+  emptyLabel,
+}: {
+  title: string;
+  items: string[];
+  emptyLabel: string;
+}) {
+  return (
+    <div>
+      <div className="fieldLabel">{title}</div>
+      {items.length === 0 ? (
+        <div className="smallNote">{emptyLabel}</div>
+      ) : (
+        <ul style={{ margin: 0, paddingLeft: 18, color: "var(--muted)", lineHeight: 1.7 }}>
+          {items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function ObjectCards({
+  items,
+  emptyLabel,
+}: {
+  items: Array<{ title: string; subtitle: string; body: string }>;
+  emptyLabel: string;
+}) {
   if (!items.length) return <div className="smallNote">{emptyLabel}</div>;
+
   return (
-    <ul style={{ margin: 0, paddingLeft: 18, color: "var(--muted)", lineHeight: 1.7 }}>
-      {items.map((item) => <li key={item}>{item}</li>)}
-    </ul>
-  );
-}
-
-type TabProps = { data: OpsWorkspaceBundle; notes: Record<string, string>; onNote: (key: string, value: string) => void };
-
-/* ── Tab 1: Ops Diagnosis ── */
-
-function DiagnosisTab({ data, notes, onNote }: TabProps) {
-  return (
-    <div className="grid2stretch">
-      <div className="panel">
-        <div className="panelHeader"><div>Ghost Admin Diagnosis</div><div className="smallNote">Automated analysis from intake + PIE.</div></div>
-        <div className="panelBody">
-          <div className="grid2">
-            <ReadOnly label="Business Objective" value={data.ghostAdmin.businessObjective} />
-            <ReadOnly label="Main Bottleneck" value={data.ghostAdmin.mainBottleneck} />
-            <ReadOnly label="Root Cause" value={data.ghostAdmin.rootCause} />
-            <ReadOnly label="Best First Fix" value={data.ghostAdmin.bestFirstFix} />
-            <ReadOnly label="Risk Level" value={data.ghostAdmin.riskLevel} />
-            <ReadOnly label="Tool Recommendation" value={data.ghostAdmin.bestTool} />
-          </div>
-          <div style={{ marginTop: 18 }}>
-            <div className="fieldLabel">Missing Discovery Info</div>
-            <ListBlock items={data.ghostAdmin.missingInfo} emptyLabel="No missing info listed yet." />
-          </div>
-          <div style={{ marginTop: 18 }}>
-            <Editable label="Admin Notes — Diagnosis" value={notes["diagnosis"] ?? ""} onChange={(v) => onNote("diagnosis", v)} />
-          </div>
-        </div>
-      </div>
-      <div className="panel">
-        <div className="panelHeader"><div>Starter Prompts</div><div className="smallNote">Use these in the Ghost Admin chat tab.</div></div>
-        <div className="panelBody">
-          <ListBlock items={data.ghostAdmin.starterPrompts} emptyLabel="No prompts listed yet." />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Tab 2: Discovery ── */
-
-function DiscoveryTab({ data, notes, onNote }: TabProps) {
-  return (
-    <div className="panel">
-      <div className="panelHeader"><div>Discovery Snapshot</div><div className="smallNote">Core intake information and workflow request context.</div></div>
-      <div className="panelBody">
-        <div className="grid2">
-          <ReadOnly label="Industry" value={data.intake.industry} />
-          <ReadOnly label="Team Size" value={data.intake.teamSize} />
-          <ReadOnly label="Job Volume" value={data.intake.jobVolume} />
-          <ReadOnly label="Urgency" value={data.intake.urgency} />
-          <ReadOnly label="Readiness" value={data.intake.readiness} />
-          <ReadOnly label="Recommendation Range" value={data.intake.recommendationPriceRange} />
-        </div>
-        <div style={{ marginTop: 18 }}>
-          <div className="fieldLabel">Current Tools</div>
-          <ListBlock items={data.intake.currentTools} emptyLabel="No tools listed in intake." />
-        </div>
-        <div style={{ marginTop: 18 }}>
-          <div className="fieldLabel">Pain Points</div>
-          <ListBlock items={data.intake.painPoints} emptyLabel="No pain points listed." />
-        </div>
-        <div style={{ marginTop: 18 }}>
-          <div className="fieldLabel">Requested Workflows</div>
-          <ListBlock items={data.intake.workflowsNeeded} emptyLabel="No workflow requests listed." />
-        </div>
-        <div style={{ marginTop: 18 }}>
-          <div className="fieldLabel">Intake Notes</div>
-          <div className="panel" style={{ background: "var(--panel2)" }}>
-            <div className="panelBody"><div className="pDark" style={{ whiteSpace: "pre-wrap" }}>{data.intake.notes || "No intake notes yet."}</div></div>
-          </div>
-        </div>
-        <div style={{ marginTop: 18 }}>
-          <Editable label="Admin Notes — Discovery" value={notes["discovery"] ?? ""} onChange={(v) => onNote("discovery", v)} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Tab 3: Call + PIE ── */
-
-function CallPieTab({ data, notes, onNote }: TabProps) {
-  return (
-    <div className="grid2stretch">
-      <div className="panel">
-        <div className="panelHeader"><div>Call + PIE Intelligence</div><div className="smallNote">Discovery progress and operations intelligence.</div></div>
-        <div className="panelBody">
-          <div className="grid2">
-            <ReadOnly label="Best Time" value={data.callRequest.bestTime} />
-            <ReadOnly label="Timezone" value={data.callRequest.timezone} />
-            <ReadOnly label="PIE Confidence" value={pretty(data.pie.confidence)} />
-            <ReadOnly label="Recommended Package" value={data.pie.recommendedOffer.primaryPackage} />
-            <ReadOnly label="Project Range" value={data.pie.recommendedOffer.projectRange} />
-            <ReadOnly label="Retainer Range" value={data.pie.recommendedOffer.retainerRange} />
-          </div>
-          <div style={{ marginTop: 18 }}>
-            <div className="fieldLabel">PIE Summary</div>
-            <div className="panel" style={{ background: "var(--panel2)" }}>
-              <div className="panelBody"><div className="pDark" style={{ whiteSpace: "pre-wrap" }}>{data.pie.summary}</div></div>
+    <div style={{ display: "grid", gap: 10 }}>
+      {items.map((item, index) => (
+        <div key={`${item.title}-${index}`} className="panel" style={{ background: "var(--panel2)" }}>
+          <div className="panelBody">
+            <div style={{ fontWeight: 800 }}>{item.title}</div>
+            <div className="smallNote" style={{ marginTop: 4 }}>
+              {item.subtitle}
+            </div>
+            <div className="pDark" style={{ marginTop: 8 }}>
+              {item.body}
             </div>
           </div>
-          <div style={{ marginTop: 18 }}>
-            <div className="fieldLabel">Offer Rationale</div>
-            <div className="pDark">{data.pie.recommendedOffer.why}</div>
-          </div>
-          <div style={{ marginTop: 18 }}>
-            <Editable label="Admin Notes — Call/PIE" value={notes["callpie"] ?? ""} onChange={(v) => onNote("callpie", v)} />
-          </div>
         </div>
-      </div>
-      <div className="panel">
-        <div className="panelHeader"><div>Client Questions</div><div className="smallNote">Follow-up questions from PIE.</div></div>
-        <div className="panelBody">
-          <ListBlock items={data.pie.clientQuestions} emptyLabel="No follow-up questions generated yet." />
-        </div>
-      </div>
+      ))}
     </div>
   );
 }
 
-/* ── Tab 4: Workflow Map ── */
-
-function WorkflowTab({ data, notes, onNote }: TabProps) {
-  return (
-    <div className="panel">
-      <div className="panelHeader"><div>Workflow Map</div><div className="smallNote">Current-state versus future-state process.</div></div>
-      <div className="panelBody">
-        <div className="grid2">
-          <div>
-            <div className="fieldLabel">Current Process</div>
-            <ListBlock items={data.workflowMap.currentState} emptyLabel="Current process not mapped yet." />
-          </div>
-          <div>
-            <div className="fieldLabel">Future Process</div>
-            <ListBlock items={data.workflowMap.futureState} emptyLabel="Future process not mapped yet." />
-          </div>
-        </div>
-        <div style={{ marginTop: 18 }}>
-          <Editable label="Admin Notes — Workflow" value={notes["workflow"] ?? ""} onChange={(v) => onNote("workflow", v)} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Tab 5: Systems ── */
-
-function SystemsTab({ data, notes, onNote }: TabProps) {
-  return (
-    <div className="panel">
-      <div className="panelHeader"><div>Systems & Access</div><div className="smallNote">Connected tools and source-of-truth mapping.</div></div>
-      <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-        {data.systems.length === 0 ? (
-          <div className="smallNote">No systems mapped yet.</div>
-        ) : (
-          data.systems.map((system, index) => (
-            <div key={`${system.name}-${index}`} className="panel" style={{ background: "var(--panel2)" }}>
-              <div className="panelBody">
-                <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div>
-                    <div style={{ fontWeight: 800 }}>{system.name}</div>
-                    <div className="smallNote" style={{ marginTop: 4 }}>{system.role}</div>
-                  </div>
-                  <span className="badge">{system.status}</span>
-                </div>
-                <div className="pDark" style={{ marginTop: 10 }}>{system.notes}</div>
-              </div>
-            </div>
-          ))
-        )}
-        <div style={{ marginTop: 12 }}>
-          <Editable label="Admin Notes — Systems" value={notes["systems"] ?? ""} onChange={(v) => onNote("systems", v)} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Tab 6: Backlog ── */
-
-function BacklogTab({ data, notes, onNote }: TabProps) {
-  return (
-    <div className="panel">
-      <div className="panelHeader"><div>Automation Backlog</div><div className="smallNote">Build board and automation blueprint.</div></div>
-      <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-        {data.backlog.length === 0 ? (
-          <div className="smallNote">No backlog cards generated yet.</div>
-        ) : (
-          data.backlog.map((item) => (
-            <div key={item.id} className="panel" style={{ background: "var(--panel2)" }}>
-              <div className="panelBody">
-                <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div>
-                    <div style={{ fontWeight: 800 }}>{item.name}</div>
-                    <div className="smallNote" style={{ marginTop: 4 }}>{item.status} &bull; {item.priority} priority &bull; {item.toolRecommendation}</div>
-                  </div>
-                  <span className="badge">{item.trigger}</span>
-                </div>
-                <div className="pDark" style={{ marginTop: 10 }}>{item.purpose}</div>
-                <div style={{ marginTop: 12 }}>
-                  <div className="fieldLabel">Actions</div>
-                  <ListBlock items={item.actions} emptyLabel="No actions listed yet." />
-                </div>
-                <div style={{ marginTop: 12 }}>
-                  <div className="fieldLabel">Fallback</div>
-                  <div className="pDark">{item.fallback}</div>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-        <div style={{ marginTop: 12 }}>
-          <Editable label="Admin Notes — Backlog" value={notes["backlog"] ?? ""} onChange={(v) => onNote("backlog", v)} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Tab 7: Quick Wins ── */
-
-function QuickWinsTab({ data }: { data: OpsWorkspaceBundle }) {
-  return (
-    <div className="panel">
-      <div className="panelHeader"><div>Quick Wins</div><div className="smallNote">Low-effort, high-impact automations to start with.</div></div>
-      <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-        {data.pie.quickWins.length === 0 ? (
-          <div className="smallNote">No quick wins generated yet.</div>
-        ) : (
-          data.pie.quickWins.map((win, index) => (
-            <div key={`${win.title}-${index}`} className="panel" style={{ background: "var(--panel2)" }}>
-              <div className="panelBody">
-                <div style={{ fontWeight: 800 }}>{win.title}</div>
-                <div className="pDark" style={{ marginTop: 8 }}>{win.why}</div>
-                <div className="smallNote" style={{ marginTop: 8 }}>Owner: {win.owner} &bull; ETA: {win.eta}</div>
-                <div style={{ marginTop: 10 }}><ListBlock items={win.steps} emptyLabel="No steps listed." /></div>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ── Tab 8: Implementation Plan ── */
-
-function ImplPlanTab({ data }: { data: OpsWorkspaceBundle }) {
-  return (
-    <div className="panel">
-      <div className="panelHeader"><div>Implementation Plan</div><div className="smallNote">Phased build roadmap.</div></div>
-      <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-        {data.pie.implementationPlan.length === 0 ? (
-          <div className="smallNote">No implementation plan generated yet.</div>
-        ) : (
-          data.pie.implementationPlan.map((phase, index) => (
-            <div key={`${phase.phase}-${index}`} className="panel" style={{ background: "var(--panel2)" }}>
-              <div className="panelBody">
-                <div style={{ fontWeight: 800 }}>{phase.phase}</div>
-                <div className="pDark" style={{ marginTop: 8 }}>{phase.goal}</div>
-                <div className="smallNote" style={{ marginTop: 8 }}>Estimated days: {phase.estimateDays}</div>
-                <div className="grid2" style={{ marginTop: 12 }}>
-                  <div><div className="fieldLabel">Deliverables</div><ListBlock items={phase.deliverables} emptyLabel="No deliverables listed." /></div>
-                  <div><div className="fieldLabel">Automations</div><ListBlock items={phase.automations} emptyLabel="No automations listed." /></div>
-                  <div><div className="fieldLabel">Tech Stack</div><ListBlock items={phase.techStack} emptyLabel="No stack listed." /></div>
-                  <div><div className="fieldLabel">Acceptance Criteria</div><ListBlock items={phase.acceptanceCriteria} emptyLabel="No criteria listed." /></div>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ── Tab 9: SOPs ── */
-
-function SopsTab({ data }: { data: OpsWorkspaceBundle }) {
-  return (
-    <div className="panel">
-      <div className="panelHeader"><div>SOP Drafts</div><div className="smallNote">Standard operating procedures generated from PIE.</div></div>
-      <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-        {data.pie.sops.length === 0 ? (
-          <div className="smallNote">No SOP drafts generated yet.</div>
-        ) : (
-          data.pie.sops.map((sop, index) => (
-            <div key={`${sop.workflow}-${index}`} className="panel" style={{ background: "var(--panel2)" }}>
-              <div className="panelBody">
-                <div style={{ fontWeight: 800 }}>{sop.workflow}</div>
-                <div className="smallNote" style={{ marginTop: 4 }}>Trigger: {sop.trigger}</div>
-                <div className="grid2" style={{ marginTop: 12 }}>
-                  <div><div className="fieldLabel">Steps</div><ListBlock items={sop.steps} emptyLabel="No steps listed." /></div>
-                  <div><div className="fieldLabel">Exceptions</div><ListBlock items={sop.exceptions} emptyLabel="No exceptions listed." /></div>
-                </div>
-                <div style={{ marginTop: 12 }}><div className="fieldLabel">Metrics</div><ListBlock items={sop.metrics} emptyLabel="No metrics listed." /></div>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ── Tab 10: KPIs & Risks ── */
-
-function KpisRisksTab({ data }: { data: OpsWorkspaceBundle }) {
-  return (
-    <div className="grid2stretch">
-      <div className="panel">
-        <div className="panelHeader"><div>KPIs</div><div className="smallNote">Measurement targets.</div></div>
-        <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-          {data.pie.kpis.length === 0 ? (
-            <div className="smallNote">No KPIs generated yet.</div>
-          ) : (
-            data.pie.kpis.map((kpi, index) => (
-              <div key={`${kpi.name}-${index}`} className="panel" style={{ background: "var(--panel2)" }}>
-                <div className="panelBody">
-                  <div style={{ fontWeight: 800 }}>{kpi.name}</div>
-                  <div className="smallNote" style={{ marginTop: 4 }}>Target: {kpi.target}</div>
-                  <div className="pDark" style={{ marginTop: 8 }}>{kpi.why}</div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-      <div className="panel">
-        <div className="panelHeader"><div>Risk Log</div><div className="smallNote">Known risks and mitigations.</div></div>
-        <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-          {data.pie.risks.length === 0 ? (
-            <div className="smallNote">No risks logged yet.</div>
-          ) : (
-            data.pie.risks.map((risk, index) => (
-              <div key={`${risk.risk}-${index}`} className="panel" style={{ background: "var(--panel2)" }}>
-                <div className="panelBody">
-                  <div style={{ fontWeight: 800 }}>{risk.risk}</div>
-                  <div className="pDark" style={{ marginTop: 8 }}>{risk.mitigation}</div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Tab 11: Ghost Admin Chat ── */
-
-type ChatMsg = { id: string; role: "user" | "assistant"; content: string; timestamp: string };
-
-function GhostAdminChat({ opsIntakeId, starterPrompts }: { opsIntakeId: string; starterPrompts: string[] }) {
-  const [messages, setMessages] = useState<ChatMsg[]>([]);
+function GhostAdminChat({
+  opsIntakeId,
+  starterPrompts,
+}: {
+  opsIntakeId: string;
+  starterPrompts: string[];
+}) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
-  const loadHistory = useCallback(async () => {
+  async function loadHistory() {
+    if (loaded) return;
+    setLoaded(true);
     try {
-      const res = await fetch(`/api/internal/admin/ops/chat?opsIntakeId=${encodeURIComponent(opsIntakeId)}`);
+      const res = await fetch(
+        `/api/internal/admin/ops/chat?opsIntakeId=${encodeURIComponent(opsIntakeId)}`
+      );
       const json = await res.json();
-      if (json.ok && json.messages) setMessages(json.messages);
-      setLoaded(true);
+      if (res.ok && json?.ok && Array.isArray(json.messages)) {
+        setMessages(json.messages as ChatMessage[]);
+      }
     } catch {
-      setLoaded(true);
+      // ignore
     }
-  }, [opsIntakeId]);
+  }
 
-  if (!loaded) loadHistory();
+  async function send(text?: string) {
+    const value = (text ?? input).trim();
+    if (!value || loading) return;
 
-  const send = useCallback(async (text?: string) => {
-    const msg = (text ?? input).trim();
-    if (!msg || loading) return;
     setInput("");
     setLoading(true);
 
@@ -610,84 +672,93 @@ function GhostAdminChat({ opsIntakeId, starterPrompts }: { opsIntakeId: string; 
       const res = await fetch("/api/internal/admin/ops/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ opsIntakeId, message: msg }),
+        body: JSON.stringify({ opsIntakeId, message: value }),
       });
       const json = await res.json();
-      if (json.ok) {
-        setMessages((prev) => [...prev, json.userMessage, json.assistantMessage]);
+      if (res.ok && json?.ok) {
+        setMessages((prev) => [
+          ...prev,
+          json.userMessage as ChatMessage,
+          json.assistantMessage as ChatMessage,
+        ]);
       }
-    } catch {
-      // silent
     } finally {
       setLoading(false);
     }
-  }, [input, loading, opsIntakeId]);
+  }
+
+  if (!loaded) {
+    void loadHistory();
+  }
 
   return (
-    <div className="panel">
-      <div className="panelHeader"><div>Ghost Admin Chat</div><div className="smallNote">Project-aware AI operations advisor.</div></div>
-      <div className="panelBody">
-        {/* Starter prompts */}
-        {messages.length === 0 && (
-          <div style={{ marginBottom: 18 }}>
-            <div className="fieldLabel">Quick Prompts</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {starterPrompts.map((prompt) => (
-                <button
-                  key={prompt}
-                  className="btn btnGhost"
-                  style={{ fontSize: 13 }}
-                  onClick={() => send(prompt)}
-                  disabled={loading}
-                >
-                  {prompt}
-                </button>
-              ))}
+    <Panel title="Ghost Admin Chat" note="Project-aware AI operations advisor.">
+      {messages.length === 0 ? (
+        <div>
+          <div className="fieldLabel">Starter Prompts</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {starterPrompts.map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                className="btn btnGhost"
+                style={{ fontSize: 13 }}
+                onClick={() => send(prompt)}
+                disabled={loading}
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <div style={{ display: "grid", gap: 10, maxHeight: 520, overflowY: "auto" }}>
+        {messages.map((msg) => (
+          <div
+            key={msg.id}
+            style={{
+              padding: 14,
+              borderRadius: 12,
+              background:
+                msg.role === "user"
+                  ? "rgba(141,164,255,0.12)"
+                  : "rgba(46,160,67,0.08)",
+              border:
+                msg.role === "user"
+                  ? "1px solid rgba(141,164,255,0.22)"
+                  : "1px solid rgba(46,160,67,0.20)",
+            }}
+          >
+            <div className="smallNote" style={{ marginBottom: 6 }}>
+              {msg.role === "user" ? "You" : "Ghost Admin"} • {fmtDate(msg.timestamp)}
+            </div>
+            <div className="pDark" style={{ whiteSpace: "pre-wrap" }}>
+              {msg.content}
             </div>
           </div>
-        )}
+        ))}
 
-        {/* Messages */}
-        <div style={{ display: "grid", gap: 12, maxHeight: 500, overflowY: "auto", marginBottom: 18 }}>
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              style={{
-                padding: 14,
-                borderRadius: 12,
-                background: msg.role === "user" ? "rgba(141,164,255,0.1)" : "rgba(46,160,67,0.08)",
-                border: `1px solid ${msg.role === "user" ? "rgba(141,164,255,0.2)" : "rgba(46,160,67,0.2)"}`,
-              }}
-            >
-              <div className="smallNote" style={{ marginBottom: 6 }}>
-                {msg.role === "user" ? "You" : "Ghost Admin"} &bull; {new Date(msg.timestamp).toLocaleTimeString()}
-              </div>
-              <div className="pDark" style={{ whiteSpace: "pre-wrap" }}>{msg.content}</div>
-            </div>
-          ))}
-          {loading && (
-            <div style={{ padding: 14, borderRadius: 12, background: "rgba(46,160,67,0.08)", border: "1px solid rgba(46,160,67,0.2)" }}>
-              <div className="smallNote">Ghost Admin is thinking...</div>
-            </div>
-          )}
-        </div>
-
-        {/* Input */}
-        <div className="row" style={{ gap: 8 }}>
-          <textarea
-            className="input"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-            placeholder="Ask Ghost Admin about this project..."
-            rows={2}
-            style={{ flex: 1, resize: "vertical" }}
-          />
-          <button className="btn btnPrimary" onClick={() => send()} disabled={loading || !input.trim()}>
-            Send
-          </button>
-        </div>
+        {loading ? <div className="smallNote">Ghost Admin is thinking...</div> : null}
       </div>
-    </div>
+
+      <div className="row" style={{ gap: 8 }}>
+        <textarea
+          className="input"
+          rows={3}
+          style={{ flex: 1, resize: "vertical" }}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Ask Ghost Admin about workflow fixes, tool selection, SOPs, risks, or testing."
+        />
+        <button
+          className="btn btnPrimary"
+          onClick={() => send()}
+          disabled={loading || !input.trim()}
+        >
+          Send
+        </button>
+      </div>
+    </Panel>
   );
 }
