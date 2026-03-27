@@ -6,6 +6,11 @@ import {
 } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getOpsWorkspaceBundle } from "@/lib/opsWorkspace/server";
+import {
+  enrichOpsBundle,
+  getWorkspaceState,
+  makeClientSafeOpsBundle,
+} from "@/lib/opsWorkspace/state";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,25 +58,19 @@ export async function GET(
       return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
 
-    const bundle = await getOpsWorkspaceBundle(opsIntakeId);
+    const [bundle, state] = await Promise.all([
+      getOpsWorkspaceBundle(opsIntakeId),
+      getWorkspaceState(opsIntakeId),
+    ]);
+
     if (!bundle) {
       return NextResponse.json({ ok: false, error: "Workspace not found." }, { status: 404 });
     }
 
-    // Filter out admin-only fields for client portal
-    const clientSafe = {
-      ...bundle,
-      ghostAdmin: {
-        ...bundle.ghostAdmin,
-        starterPrompts: [], // admin-only
-      },
-      intake: {
-        ...bundle.intake,
-        notes: "", // internal intake notes
-      },
-    };
+    const enriched = enrichOpsBundle(bundle, state);
+    const data = makeClientSafeOpsBundle(enriched, { isAdmin: !!admin });
 
-    return NextResponse.json({ ok: true, data: admin ? bundle : clientSafe });
+    return NextResponse.json({ ok: true, data });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected error";
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
