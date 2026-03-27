@@ -6,6 +6,11 @@ import {
 } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getOpsWorkspaceBundle } from "@/lib/opsWorkspace/server";
+import {
+  enrichOpsBundle,
+  getWorkspaceState,
+  makeClientSafeOpsBundle,
+} from "@/lib/opsWorkspace/state";
 import OpsPortalClient from "./OpsPortalClient";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +41,7 @@ export default async function OpsPortalWorkspacePage({
 
   const { data: intake, error: intakeError } = await supabaseAdmin
     .from("ops_intakes")
-    .select("id, auth_user_id, email")
+    .select("id, auth_user_id")
     .eq("id", opsIntakeId)
     .maybeSingle();
 
@@ -52,10 +57,17 @@ export default async function OpsPortalWorkspacePage({
     redirect("/portal");
   }
 
-  const bundle = await getOpsWorkspaceBundle(opsIntakeId);
+  const [bundle, state] = await Promise.all([
+    getOpsWorkspaceBundle(opsIntakeId),
+    getWorkspaceState(opsIntakeId),
+  ]);
+
   if (!bundle) {
     notFound();
   }
 
-  return <OpsPortalClient initialData={bundle} />;
+  const enriched = enrichOpsBundle(bundle, state);
+  const safeBundle = makeClientSafeOpsBundle(enriched, { isAdmin: !!admin });
+
+  return <OpsPortalClient initialData={safeBundle} />;
 }
