@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import PortalClient from "./PortalClient";
+import ScrollReveal from "@/components/site/ScrollReveal";
 import { getPortalBundleByToken } from "@/lib/portal/server";
 
 export const dynamic = "force-dynamic";
@@ -22,5 +23,10 @@ export default async function PortalTokenPage({
     notFound();
   }
 
-  return <PortalClient token={token} initialData={result.data} />;
+  return (
+    <>
+      <PortalClient token={token} initialData={result.data} />
+      <ScrollReveal />
+    </>
+  );
 }
