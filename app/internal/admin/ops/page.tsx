@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 import { getOpsAdminRows } from "@/lib/opsWorkspace/server";
 import OpsPipelineClient from "./OpsPipelineClient";
+import ScrollReveal from "@/components/site/ScrollReveal";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,7 @@ export default async function OpsAdminPage() {
       </div>
 
       <OpsPipelineClient initialRows={rows} />
+      <ScrollReveal />
     </section>
   );
 }
