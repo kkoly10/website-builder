@@ -238,10 +238,8 @@ async function listUploadedAssetsForQuote(quoteId: string): Promise<PortalAsset[
     .order("created_at", { ascending: false });
 
   if (error) {
-    if (String(error.message || "").toLowerCase().includes("portal_assets")) {
-      return [];
-    }
-    throw new Error(error.message);
+    console.error("[listUploadedAssetsForQuote] DB error:", error.message);
+    return [];
   }
 
   const assets = await Promise.all(
@@ -465,20 +463,23 @@ function deriveWaitingOn(input: {
 }
 
 async function getPortalState(quoteId: string): Promise<PortalStateRow | null> {
-  const { data, error } = await supabaseAdmin
-    .from("quote_portal_state")
-    .select("*")
-    .eq("quote_id", quoteId)
-    .maybeSingle();
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("quote_portal_state")
+      .select("*")
+      .eq("quote_id", quoteId)
+      .maybeSingle();
 
-  if (error) {
-    if (error.message?.toLowerCase().includes("quote_portal_state")) {
-      throw new Error('Missing table "quote_portal_state". Run the SQL migration first.');
+    if (error) {
+      console.error("[getPortalState] DB error:", error.message);
+      return null;
     }
-    throw new Error(error.message);
-  }
 
-  return (data as PortalStateRow | null) ?? null;
+    return (data as PortalStateRow | null) ?? null;
+  } catch (err) {
+    console.error("[getPortalState] Unexpected error:", err);
+    return null;
+  }
 }
 
 async function upsertPortalState(row: PortalStateRow) {
@@ -487,15 +488,16 @@ async function upsertPortalState(row: PortalStateRow) {
     updated_at: isoNow(),
   };
 
-  const { error } = await supabaseAdmin
-    .from("quote_portal_state")
-    .upsert(payload, { onConflict: "quote_id" });
+  try {
+    const { error } = await supabaseAdmin
+      .from("quote_portal_state")
+      .upsert(payload, { onConflict: "quote_id" });
 
-  if (error) {
-    if (error.message?.toLowerCase().includes("quote_portal_state")) {
-      throw new Error('Missing table "quote_portal_state". Run the SQL migration first.');
+    if (error) {
+      console.error("[upsertPortalState] DB error:", error.message);
     }
-    throw new Error(error.message);
+  } catch (err) {
+    console.error("[upsertPortalState] Unexpected error:", err);
   }
 }
 
