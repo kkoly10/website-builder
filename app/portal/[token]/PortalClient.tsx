@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+/* ═══════════════════════════════════
+   TYPES
+   ═══════════════════════════════════ */
+
 type PortalMilestone = {
   key: string;
   label: string;
@@ -169,6 +173,10 @@ type PortalBundle = {
   };
 };
 
+/* ═══════════════════════════════════
+   UTILITY FUNCTIONS
+   ═══════════════════════════════════ */
+
 function money(value?: number | null) {
   if (value == null || !Number.isFinite(Number(value))) return "—";
   return new Intl.NumberFormat("en-US", {
@@ -182,7 +190,7 @@ function fmtDate(value?: string | null) {
   if (!value) return "—";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString();
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 function pretty(value?: string | null) {
@@ -190,153 +198,219 @@ function pretty(value?: string | null) {
   return value.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
-function statusTone(status?: string | null) {
-  const s = String(status || "").toLowerCase();
-
-  if (
-    ["active", "approved", "live", "paid", "closed_won", "kickoff_ready", "launch_ready"].includes(
-      s
-    )
-  ) {
-    return {
-      bg: "rgba(46, 160, 67, 0.14)",
-      border: "rgba(46, 160, 67, 0.34)",
-      color: "#b7f5c4",
-      label: pretty(status),
-    };
-  }
-
-  if (
-    [
-      "proposal",
-      "deposit",
-      "deposit_sent",
-      "reviewing",
-      "evaluating",
-      "pending",
-      "preview_ready",
-      "revision_requested",
-      "content_submitted",
-    ].includes(s)
-  ) {
-    return {
-      bg: "rgba(201, 168, 76, 0.14)",
-      border: "rgba(201, 168, 76, 0.34)",
-      color: "#f1d98a",
-      label: pretty(status),
-    };
-  }
-
-  return {
-    bg: "rgba(141, 164, 255, 0.12)",
-    border: "rgba(141, 164, 255, 0.28)",
-    color: "#d8e0ff",
-    label: pretty(status || "new"),
-  };
-}
-
 function isReadyState(value?: string | null) {
   const v = String(value || "").toLowerCase();
   return v === "ready" || v === "complete";
 }
 
+/* ═══════════════════════════════════
+   COMPUTED STATE
+   ═══════════════════════════════════ */
+
 function computeClientLaunchReadiness(bundle: PortalBundle) {
   const checks = [
     {
       key: "agreement",
-      label: "Agreement published",
+      label: "Agreement",
       done:
         !!bundle.agreement.publishedText?.trim() ||
         ["published to client", "signed", "kickoff ready"].includes(
           String(bundle.agreement.status || "").toLowerCase()
         ),
     },
-    {
-      key: "preview",
-      label: "Preview published",
-      done: !!bundle.preview.url,
-    },
-    {
-      key: "domain",
-      label: "Domain ready",
-      done: isReadyState(bundle.launch.domainStatus),
-    },
-    {
-      key: "analytics",
-      label: "Analytics ready",
-      done: isReadyState(bundle.launch.analyticsStatus),
-    },
-    {
-      key: "forms",
-      label: "Forms ready",
-      done: isReadyState(bundle.launch.formsStatus),
-    },
-    {
-      key: "seo",
-      label: "SEO basics ready",
-      done: isReadyState(bundle.launch.seoStatus),
-    },
-    {
-      key: "handoff",
-      label: "Handoff ready",
-      done: isReadyState(bundle.launch.handoffStatus),
-    },
+    { key: "preview", label: "Preview", done: !!bundle.preview.url },
+    { key: "domain", label: "Domain", done: isReadyState(bundle.launch.domainStatus) },
+    { key: "analytics", label: "Analytics", done: isReadyState(bundle.launch.analyticsStatus) },
+    { key: "forms", label: "Forms", done: isReadyState(bundle.launch.formsStatus) },
+    { key: "seo", label: "SEO", done: isReadyState(bundle.launch.seoStatus) },
+    { key: "handoff", label: "Handoff", done: isReadyState(bundle.launch.handoffStatus) },
   ];
-
-  const completed = checks.filter((item) => item.done).length;
+  const completed = checks.filter((c) => c.done).length;
   const percent = Math.round((completed / checks.length) * 100);
-  const blockers = checks.filter((item) => !item.done).map((item) => item.label);
-
-  return { checks, percent, blockers };
+  return { checks, percent, completed };
 }
 
-function getCurrentPhase(bundle: PortalBundle) {
+function getPhaseKey(bundle: PortalBundle) {
   const quoteStatus = String(bundle.quote.status || "").toLowerCase();
   const depositStatus = String(bundle.quote.deposit.status || "").toLowerCase();
-  const assetsCount = bundle.portalState.assets.length;
   const launchStatus = String(bundle.launch.status || "").toLowerCase();
   const clientStatus = String(bundle.portalState.clientStatus || "").toLowerCase();
 
-  if (launchStatus === "live" || clientStatus === "live") return "Live";
-  if (launchStatus === "ready for launch" || clientStatus === "launch_ready") {
-    return "Ready for Launch";
-  }
-  if (bundle.preview.url && bundle.preview.clientReviewStatus === "Pending review") {
-    return "Preview Review";
-  }
-  if (quoteStatus === "active" || clientStatus === "preview_ready") {
-    return "Build In Progress";
-  }
-  if (depositStatus === "paid") return "Kickoff Ready";
-  if (clientStatus === "deposit_sent") return "Deposit Sent";
-  if (assetsCount > 0) return "Assets Submitted";
-  if (["proposal", "deposit"].includes(quoteStatus)) return "Pre-Start";
-  return "Intake / Estimate";
+  if (launchStatus === "live" || clientStatus === "live") return "live";
+  if (launchStatus === "ready for launch" || clientStatus === "launch_ready") return "launch_ready";
+  if (bundle.preview.url && bundle.preview.clientReviewStatus === "Pending review") return "preview_review";
+  if (quoteStatus === "active" || clientStatus === "preview_ready") return "build";
+  if (depositStatus === "paid") return "kickoff";
+  if (clientStatus === "deposit_sent") return "deposit_sent";
+  if (bundle.portalState.assets.length > 0) return "assets_submitted";
+  if (["proposal", "deposit"].includes(quoteStatus)) return "pre_start";
+  return "intake";
 }
 
-function getNextAction(bundle: PortalBundle) {
-  const depositStatus = String(bundle.quote.deposit.status || "").toLowerCase();
-  const clientStatus = String(bundle.portalState.clientStatus || "").toLowerCase();
-  const revisions = bundle.portalState.revisions.length;
-  const assetsCount = bundle.portalState.assets.length;
-
-  if (depositStatus !== "paid" && clientStatus === "deposit_sent") {
-    return "Await payment verification";
+function getStoryContent(phase: string) {
+  switch (phase) {
+    case "live":
+      return { headline: "live", body: "Your website is live and serving visitors. You can still submit feedback or upload new content at any time." };
+    case "launch_ready":
+      return { headline: "ready to launch", body: "Everything is in place. We're preparing your site for launch — you'll be notified as soon as it goes live." };
+    case "preview_review":
+      return { headline: "ready for review", body: "We've published a preview of your website. Take your time looking through every page — when you're ready, leave feedback below or open the preview to see it live." };
+    case "build":
+      return { headline: "being built", body: "We're building your website right now. You can track progress here, upload content, and submit feedback as things take shape." };
+    case "kickoff":
+      return { headline: "about to begin", body: "Your deposit has been received and the project is queued for kickoff. We'll start building shortly." };
+    case "deposit_sent":
+      return { headline: "awaiting verification", body: "We received your deposit notice and are verifying the payment. Work begins as soon as it clears." };
+    case "assets_submitted":
+      return { headline: "getting organized", body: "Thanks for submitting your content. We're reviewing your assets and preparing to start the build." };
+    case "pre_start":
+      return { headline: "in early planning", body: "Your project has been scoped. Review the agreement and deposit details below to get things moving." };
+    default:
+      return { headline: "taking shape", body: "Your project workspace is ready. Review the details below, upload your content, and we'll take it from there." };
   }
-  if (depositStatus !== "paid" && bundle.quote.deposit.link) {
-    return "Review deposit step";
-  }
-  if (bundle.preview.url && bundle.preview.clientReviewStatus === "Pending review") {
-    return "Review current preview";
-  }
-  if (assetsCount === 0) {
-    return "Upload content and assets";
-  }
-  if (revisions > 0) {
-    return "Review revision queue";
-  }
-  return "Review project workspace";
 }
+
+/* ═══════════════════════════════════
+   SUB-COMPONENTS
+   ═══════════════════════════════════ */
+
+function JourneyMap({ milestones }: { milestones: PortalMilestone[] }) {
+  const doneCount = milestones.filter((m) => m.done).length;
+  const fillPercent = milestones.length > 1
+    ? ((doneCount - 0.5) / (milestones.length - 1)) * 100
+    : 0;
+
+  return (
+    <div className="portalJourney">
+      <div className="portalSectionLabel">Your project journey</div>
+      <div className="portalJourneyTrack">
+        <div className="portalJourneyLine">
+          <div
+            className="portalJourneyLineFill"
+            style={{ width: `${Math.max(0, Math.min(100, fillPercent))}%` }}
+          />
+        </div>
+        {milestones.map((m) => {
+          const isActive = !m.done && milestones.filter((x) => x.done).length ===
+            milestones.indexOf(m);
+          return (
+            <div key={m.key} className="portalJourneyStep">
+              <div
+                className={`portalJourneyDot ${
+                  m.done
+                    ? "portalJourneyDotDone"
+                    : isActive
+                    ? "portalJourneyDotActive"
+                    : "portalJourneyDotPending"
+                }`}
+              >
+                {m.done ? (
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M2.5 6.5L5 9L9.5 3.5" stroke="#0a0c14" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                ) : isActive ? (
+                  <div className="portalJourneyDotInner" />
+                ) : null}
+              </div>
+              <div
+                className={`portalJourneyLabel ${
+                  m.done
+                    ? "portalJourneyLabelDone"
+                    : isActive
+                    ? "portalJourneyLabelActive"
+                    : "portalJourneyLabelPending"
+                }`}
+              >
+                {m.label}
+              </div>
+              <div className="portalJourneyDate">
+                {m.updatedAt ? fmtDate(m.updatedAt) : "—"}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function LaunchSummary({ checks, percent, completed }: {
+  checks: { key: string; label: string; done: boolean }[];
+  percent: number;
+  completed: number;
+}) {
+  const remaining = checks.filter((c) => !c.done);
+  const circumference = 188;
+  const offset = circumference - (circumference * percent) / 100;
+
+  return (
+    <div className="portalLaunchSummary">
+      <div style={{ flexShrink: 0 }}>
+        <svg width="66" height="66" viewBox="0 0 66 66">
+          <circle className="portalLaunchRingBg" cx="33" cy="33" r="30" />
+          <circle
+            className="portalLaunchRingFg"
+            cx="33" cy="33" r="30"
+            style={{ strokeDashoffset: offset }}
+          />
+          <text x="33" y="37" textAnchor="middle" fill="var(--fg)"
+            fontFamily="DM Sans" fontSize="16" fontWeight="600">
+            {percent}%
+          </text>
+        </svg>
+      </div>
+      <div className="portalLaunchInfo">
+        <h4>
+          {remaining.length === 0
+            ? "Ready to launch"
+            : `${remaining.length} thing${remaining.length > 1 ? "s" : ""} left before launch`}
+        </h4>
+        <p>{completed} of {checks.length} checks passed</p>
+        <div className="portalLaunchItems">
+          {checks.map((c) => (
+            <span
+              key={c.key}
+              className={`portalLaunchChip ${c.done ? "portalLaunchChipDone" : "portalLaunchChipPending"}`}
+            >
+              {c.label}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Drawer({
+  label, value, children, defaultOpen = false,
+}: {
+  label: string;
+  value: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <>
+      <button className="portalDrawerToggle" onClick={() => setOpen(!open)}>
+        <span className="portalDrawerToggleLabel">{label}</span>
+        <span className="portalDrawerToggleValue">
+          {value}
+          <span className={`portalDrawerArrow ${open ? "portalDrawerArrowOpen" : ""}`}>
+            ▾
+          </span>
+        </span>
+      </button>
+      <div className={`portalDrawerContent ${open ? "portalDrawerContentOpen" : ""}`}>
+        {children}
+      </div>
+    </>
+  );
+}
+
+/* ═══════════════════════════════════
+   MAIN COMPONENT
+   ═══════════════════════════════════ */
 
 export default function PortalClient({
   token,
@@ -349,6 +423,8 @@ export default function PortalClient({
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
+  /* ── Upload form state ── */
+  const [showUploadForm, setShowUploadForm] = useState(false);
   const [assetLabel, setAssetLabel] = useState("");
   const [assetCategory, setAssetCategory] = useState("Brand");
   const [assetUrl, setAssetUrl] = useState("");
@@ -357,11 +433,11 @@ export default function PortalClient({
   const [assetFile, setAssetFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  /* ── Feedback form state ── */
   const [revisionMessage, setRevisionMessage] = useState("");
-  const [revisionPriority, setRevisionPriority] = useState<"low" | "normal" | "high">(
-    "normal"
-  );
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [revisionPriority, setRevisionPriority] = useState<"low" | "normal" | "high">("normal");
+
+  /* ── Polling ── */
   const [refreshing, setRefreshing] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -373,10 +449,9 @@ export default function PortalClient({
         const json = await res.json();
         if (res.ok && json?.data) {
           setBundle(json.data as PortalBundle);
-          setLastRefresh(new Date());
         }
       } catch {
-        // silent fail on poll
+        /* silent */
       } finally {
         if (!silent) setRefreshing(false);
       }
@@ -391,35 +466,24 @@ export default function PortalClient({
     };
   }, [refreshBundle]);
 
-  const phase = useMemo(() => getCurrentPhase(bundle), [bundle]);
-  const nextAction = useMemo(() => getNextAction(bundle), [bundle]);
-  const quoteTone = useMemo(() => statusTone(bundle.quote.status), [bundle]);
-  const workspaceTone = useMemo(
-    () => statusTone(bundle.portalState.clientStatus),
-    [bundle]
-  );
-  const launchReadiness = useMemo(
-    () => computeClientLaunchReadiness(bundle),
-    [bundle]
-  );
+  /* ── Computed ── */
+  const phase = useMemo(() => getPhaseKey(bundle), [bundle]);
+  const story = useMemo(() => getStoryContent(phase), [phase]);
+  const launchReadiness = useMemo(() => computeClientLaunchReadiness(bundle), [bundle]);
+  const depositPaid = String(bundle.quote.deposit.status || "").toLowerCase() === "paid";
 
-  async function applyAction(body: any) {
+  /* ── Actions ── */
+  async function applyAction(body: Record<string, unknown>) {
     setSaving(true);
     setError("");
-
     try {
       const res = await fetch(`/api/portal/${token}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-
       const json = await res.json();
-
-      if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to update workspace.");
-      }
-
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to update workspace.");
       setBundle(json.data as PortalBundle);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update workspace.");
@@ -442,15 +506,9 @@ export default function PortalClient({
         form.append("label", assetLabel.trim());
         form.append("assetType", assetCategory);
         form.append("notes", assetNotes.trim());
-
-        const res = await fetch("/api/portal/assets", {
-          method: "POST",
-          body: form,
-        });
+        const res = await fetch("/api/portal/assets", { method: "POST", body: form });
         const json = await res.json();
-        if (!res.ok || !json?.ok) {
-          throw new Error(json?.error || "Upload failed.");
-        }
+        if (!res.ok || !json?.ok) throw new Error(json?.error || "Upload failed.");
         await refreshBundle(true);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Upload failed.");
@@ -474,730 +532,309 @@ export default function PortalClient({
     setAssetUrl("");
     setAssetNotes("");
     setAssetFile(null);
+    setShowUploadForm(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   async function submitRevision(e: React.FormEvent) {
     e.preventDefault();
     if (!revisionMessage.trim()) return;
-
     await applyAction({
       type: "revision_add",
-      revision: {
-        message: revisionMessage.trim(),
-        priority: revisionPriority,
-      },
+      revision: { message: revisionMessage.trim(), priority: revisionPriority },
     });
-
     setRevisionMessage("");
     setRevisionPriority("normal");
   }
 
+  /* ═══════════════════════════════════
+     RENDER
+     ═══════════════════════════════════ */
+
   return (
-    <main className="container section" style={{ paddingBottom: 84 }}>
-      <div className="heroFadeUp">
-        <div className="kicker">
-          <span className="kickerDot" aria-hidden="true" />
-          Website Project Studio
+    <div className="container" style={{ paddingBottom: 48 }}>
+
+      {/* ── Story Hero ── */}
+      <div className="portalStory heroFadeUp">
+        <div className="portalStoryKicker">
+          <span className="portalStoryKickerDot" />
+          Website project
         </div>
 
-        <div style={{ height: 12 }} />
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) auto",
-            gap: 16,
-            alignItems: "start",
-          }}
-        >
-          <div>
-            <h1 className="h1">{bundle.lead.name || "Website Project"}</h1>
+        <h1 className="portalStoryHeadline">
+          Your website is <em>{story.headline}</em>
+        </h1>
 
-            <p className="p" style={{ maxWidth: 860, marginTop: 12 }}>
-              This is your website workspace. It shows what is being built,
-              where the project stands, what we need from you, and what happens next.
-            </p>
+        <p className="portalStoryBody">{story.body}</p>
 
-            <div className="row" style={{ marginTop: 16, alignItems: "center" }}>
-              <span
-                style={{
-                  padding: "8px 12px",
-                  borderRadius: 999,
-                  background: quoteTone.bg,
-                  border: `1px solid ${quoteTone.border}`,
-                  color: quoteTone.color,
-                  fontSize: 12,
-                  fontWeight: 800,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
-                {quoteTone.label}
-              </span>
-
-              <span
-                style={{
-                  padding: "8px 12px",
-                  borderRadius: 999,
-                  background: workspaceTone.bg,
-                  border: `1px solid ${workspaceTone.border}`,
-                  color: workspaceTone.color,
-                  fontSize: 12,
-                  fontWeight: 800,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
-                {workspaceTone.label}
-              </span>
-
-              <span
-                style={{
-                  color: "var(--muted)",
-                  fontSize: 14,
-                  fontWeight: 700,
-                }}
-              >
-                Project ID #{String(bundle.quote.id).slice(0, 8)}
-              </span>
-
-              <span
-                style={{
-                  color: "var(--muted)",
-                  fontSize: 14,
-                  fontWeight: 700,
-                }}
-              >
-                Created {fmtDate(bundle.quote.createdAt)}
-              </span>
-
-              <span
-                style={{
-                  color: "var(--muted)",
-                  fontSize: 13,
-                  fontWeight: 600,
-                }}
-              >
-                Refreshed {lastRefresh.toLocaleTimeString()}
-              </span>
-            </div>
-          </div>
-
-          <div className="row" style={{ justifyContent: "flex-end", gap: 10 }}>
-            <button
-              className="btn btnGhost"
-              disabled={refreshing}
-              onClick={() => refreshBundle(false)}
-              style={{ fontSize: 13 }}
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          {bundle.preview.url ? (
+            <a
+              href={bundle.preview.url}
+              target="_blank"
+              rel="noreferrer"
+              className="portalStoryCta"
             >
-              {refreshing ? "Refreshing..." : "Refresh"}
-            </button>
-            <Link href="/portal" className="btn btnGhost">
-              Back to Portal
-            </Link>
-          </div>
+              Open your preview
+              <span className="portalStoryCtaArrow">→</span>
+            </a>
+          ) : null}
+
+          {bundle.preview.productionUrl ? (
+            <a
+              href={bundle.preview.productionUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="btn btnGhost"
+            >
+              Open live site
+            </a>
+          ) : null}
+
+          <button
+            className="btn btnGhost"
+            disabled={refreshing}
+            onClick={() => refreshBundle(false)}
+            style={{ fontSize: 13 }}
+          >
+            {refreshing ? "Refreshing..." : "Refresh"}
+          </button>
+
+          <Link href="/portal" className="btn btnGhost" style={{ fontSize: 13 }}>
+            Back to portal
+          </Link>
+        </div>
+
+        <div className="portalStoryMeta">
+          <span className="portalStoryMetaItem">
+            Project #{String(bundle.quote.id).slice(0, 8)}
+          </span>
+          <span className="portalStoryMetaItem">
+            Started {fmtDate(bundle.quote.createdAt)}
+          </span>
+          <span className="portalStoryMetaItem">
+            {bundle.scopeSnapshot.tierLabel} tier
+          </span>
         </div>
       </div>
 
-      {error ? (
-        <div
-          style={{
-            marginTop: 18,
-            border: "1px solid rgba(255,0,0,0.35)",
-            background: "rgba(255,0,0,0.08)",
-            borderRadius: 14,
-            padding: 14,
-            fontWeight: 700,
-          }}
-        >
-          {error}
+      {/* ── Error ── */}
+      {error ? <div className="portalError">{error}</div> : null}
+
+      {/* ── Deposit Banner (only if unpaid) ── */}
+      {!depositPaid && (
+        <div className="portalDepositBanner">
+          <div>
+            <h3>Your deposit is waiting</h3>
+            <p>
+              Work begins as soon as the deposit clears. Pay securely via the link — we&apos;ll
+              confirm receipt within 24 hours.
+            </p>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+            {bundle.quote.deposit.amount ? (
+              <span className="portalDepositAmount">
+                {money(bundle.quote.deposit.amount)}
+              </span>
+            ) : null}
+
+            {bundle.quote.deposit.link ? (
+              <a
+                href={bundle.quote.deposit.link}
+                target="_blank"
+                rel="noreferrer"
+                className="portalStoryCta"
+                style={{ whiteSpace: "nowrap" }}
+              >
+                Pay deposit <span className="portalStoryCtaArrow">→</span>
+              </a>
+            ) : null}
+
+            {bundle.quote.deposit.status !== "paid" &&
+            bundle.portalState.clientStatus !== "deposit_sent" ? (
+              <button
+                className="btn btnGhost"
+                type="button"
+                disabled={saving}
+                onClick={() =>
+                  applyAction({
+                    type: "deposit_notice_sent",
+                    note: "Client reported that the deposit was sent and is awaiting verification.",
+                  })
+                }
+              >
+                {saving ? "Sending..." : "I sent the deposit"}
+              </button>
+            ) : null}
+
+            {bundle.portalState.clientStatus === "deposit_sent" ? (
+              <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
+                Deposit notice sent — awaiting verification
+              </span>
+            ) : null}
+          </div>
+        </div>
+      )}
+
+      {/* ── Journey Map ── */}
+      {bundle.portalState.milestones.length > 0 ? (
+        <JourneyMap milestones={bundle.portalState.milestones} />
+      ) : null}
+
+      {/* ── Studio Note ── */}
+      {bundle.portalState.adminPublicNote ? (
+        <div className="portalNote fadeUp">
+          <div className="portalNoteIcon">C</div>
+          <div>
+            <div className="portalNoteLabel">Note from the studio</div>
+            <div className="portalNoteText">{bundle.portalState.adminPublicNote}</div>
+          </div>
         </div>
       ) : null}
 
-      <section
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-          gap: 16,
-          marginTop: 26,
-        }}
-      >
-        <MiniCard label="Current Phase" value={phase} />
-        <MiniCard label="Next Action" value={nextAction} />
-        <MiniCard label="Waiting On" value={bundle.portalState.waitingOn} />
-        <MiniCard label="Launch Readiness" value={`${launchReadiness.percent}%`} />
-      </section>
-
-      <section style={{ marginTop: 28 }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 1.16fr) minmax(320px, 0.84fr)",
-            gap: 16,
-          }}
-        >
-          <div className="panel fadeUp">
-            <div className="panelHeader">
-              <h2 className="h2">Overview</h2>
-            </div>
-            <div className="panelBody">
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                  gap: 12,
-                }}
-              >
-                <InfoBlock label="Website Type" value={pretty(bundle.scope.websiteType)} />
-                <InfoBlock label="Pages" value={pretty(bundle.scope.pages)} />
-                <InfoBlock label="Timeline" value={pretty(bundle.scope.timeline)} />
-                <InfoBlock
-                  label="Content Readiness"
-                  value={pretty(bundle.scope.contentReady)}
-                />
-                <InfoBlock
-                  label="Domain / Hosting"
-                  value={pretty(bundle.scope.domainHosting)}
-                />
-                <InfoBlock
-                  label="Integrations"
-                  value={
-                    bundle.scope.integrations.length
-                      ? bundle.scope.integrations.join(", ")
-                      : "None listed yet"
-                  }
-                />
-              </div>
-
-              {bundle.scope.notes ? (
-                <div
-                  style={{
-                    marginTop: 14,
-                    border: "1px solid var(--stroke)",
-                    borderRadius: 14,
-                    background: "var(--panel2)",
-                    padding: 14,
-                  }}
-                >
-                  <div
-                    style={{
-                      color: "var(--fg)",
-                      fontWeight: 800,
-                      marginBottom: 6,
-                    }}
-                  >
-                    Intake Notes
-                  </div>
-                  <p className="p" style={{ margin: 0, fontSize: 14 }}>
-                    {bundle.scope.notes}
-                  </p>
-                </div>
-              ) : null}
-            </div>
+      {/* ── Preview + Launch ── */}
+      <div className="portalGrid2 portalGrid2Wide">
+        <div className="portalPanel fadeUp" style={{ animationDelay: "0.1s" }}>
+          <div className="portalPanelHeader">
+            <h2 className="portalPanelTitle">Preview</h2>
           </div>
 
-          <div className="panel fadeUp">
-            <div className="panelHeader">
-              <h2 className="h2">Project Health</h2>
-            </div>
-            <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-              <CompactStatus
-                label="Workspace Status"
-                value={pretty(bundle.portalState.clientStatus || "new")}
-              />
-              <CompactStatus label="Agreement Layer" value={bundle.agreement.status} />
-              <CompactStatus
-                label="Ownership Model"
-                value={bundle.agreement.ownershipModel}
-              />
-              <CompactStatus
-                label="Preview Review"
-                value={bundle.preview.clientReviewStatus}
-              />
-              <CompactStatus label="Launch Status" value={bundle.launch.status} />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section style={{ marginTop: 28 }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
-            gap: 16,
-          }}
-        >
-          <div className="panel fadeUp">
-            <div className="panelHeader">
-              <h2 className="h2">Scope Snapshot</h2>
-            </div>
-            <div className="panelBody">
-              <div style={{ display: "grid", gap: 12 }}>
-                <InfoBlock label="Tier" value={bundle.scopeSnapshot.tierLabel} />
-                <InfoBlock label="Platform" value={bundle.scopeSnapshot.platform} />
-                <InfoBlock label="Timeline" value={bundle.scopeSnapshot.timeline} />
-                <InfoBlock
-                  label="Revision Policy"
-                  value={bundle.scopeSnapshot.revisionPolicy}
-                />
-              </div>
-
-              <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
-                <ListBlock
-                  title="Pages Included"
-                  items={bundle.scopeSnapshot.pagesIncluded}
-                />
-                <ListBlock
-                  title="Features Included"
-                  items={bundle.scopeSnapshot.featuresIncluded}
-                />
-                <ListBlock title="Exclusions" items={bundle.scopeSnapshot.exclusions} />
-              </div>
-            </div>
-          </div>
-
-          <div className="panel fadeUp">
-            <div className="panelHeader">
-              <h2 className="h2">Agreement</h2>
-            </div>
-            <div className="panelBody">
-              <div style={{ display: "grid", gap: 12 }}>
-                <InfoBlock label="Agreement Status" value={bundle.agreement.status} />
-                <InfoBlock label="Agreement Model" value={bundle.agreement.model} />
-                <InfoBlock
-                  label="Ownership Model"
-                  value={bundle.agreement.ownershipModel}
-                />
-                <InfoBlock label="Published" value={fmtDate(bundle.agreement.publishedAt)} />
-                <InfoBlock
-                  label="Deposit Status"
-                  value={pretty(bundle.quote.deposit.status)}
-                />
-                <InfoBlock
-                  label="Deposit Amount"
-                  value={money(bundle.quote.deposit.amount)}
-                />
-              </div>
-
-              {bundle.quote.deposit.notes ? (
-                <div
-                  style={{
-                    marginTop: 14,
-                    border: "1px solid var(--stroke)",
-                    borderRadius: 14,
-                    background: "var(--panel2)",
-                    padding: 14,
-                  }}
-                >
-                  <div
-                    style={{
-                      color: "var(--fg)",
-                      fontWeight: 800,
-                      marginBottom: 6,
-                    }}
-                  >
-                    Deposit Notes
-                  </div>
-                  <p className="p" style={{ margin: 0, fontSize: 14 }}>
-                    {bundle.quote.deposit.notes}
-                  </p>
-                </div>
-              ) : null}
-
-              {bundle.agreement.publishedText ? (
-                <div
-                  style={{
-                    marginTop: 14,
-                    border: "1px solid var(--stroke)",
-                    borderRadius: 14,
-                    background: "var(--panel2)",
-                    padding: 14,
-                  }}
-                >
-                  <div
-                    style={{
-                      color: "var(--fg)",
-                      fontWeight: 800,
-                      marginBottom: 8,
-                    }}
-                  >
-                    Published Agreement
-                  </div>
-                  <div
-                    style={{
-                      color: "var(--muted)",
-                      fontSize: 14,
-                      lineHeight: 1.7,
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {bundle.agreement.publishedText}
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="row" style={{ marginTop: 14 }}>
-                {bundle.quote.deposit.link ? (
-                  <a
-                    href={bundle.quote.deposit.link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn btnPrimary"
-                  >
-                    Open Deposit Link <span className="btnArrow">→</span>
-                  </a>
-                ) : (
-                  <button className="btn btnGhost" type="button" disabled>
-                    Deposit Link Pending
-                  </button>
-                )}
-
-                {bundle.quote.deposit.status !== "paid" &&
-                bundle.portalState.clientStatus !== "deposit_sent" ? (
-                  <button
-                    className="btn btnGhost"
-                    type="button"
-                    disabled={saving}
-                    onClick={() =>
-                      applyAction({
-                        type: "deposit_notice_sent",
-                        note: "Client reported that the deposit was sent and is awaiting verification.",
-                      })
-                    }
-                  >
-                    {saving ? "Sending..." : "I Sent the Deposit"}
-                  </button>
-                ) : null}
-
-                {bundle.quote.deposit.status !== "paid" &&
-                bundle.portalState.clientStatus === "deposit_sent" ? (
-                  <button className="btn btnGhost" type="button" disabled>
-                    Deposit Notice Sent
-                  </button>
-                ) : null}
-              </div>
-
-              {bundle.quote.deposit.status !== "paid" ? (
-                <div
-                  style={{
-                    marginTop: 12,
-                    border: "1px solid var(--stroke)",
-                    borderRadius: 12,
-                    background: "var(--panel2)",
-                    padding: 12,
-                    color: "var(--muted)",
-                    fontSize: 13,
-                    lineHeight: 1.55,
-                  }}
-                >
-                  {bundle.portalState.clientStatus === "deposit_sent"
-                    ? "Your deposit notice has been sent to the studio. Payment will be marked paid only after verification."
-                    : "Use “I Sent the Deposit” only after you have actually submitted payment. This does not mark the deposit as paid automatically — the studio verifies it separately."}
-                </div>
+          <div className="portalPreviewCard">
+            <div className="portalPreviewImg">
+              <span className="portalPreviewImgLabel">
+                {bundle.preview.url
+                  ? new URL(bundle.preview.url).hostname
+                  : "Preview not published yet"}
+              </span>
+              {bundle.preview.url ? (
+                <span className="portalPreviewLiveBadge">
+                  <span className="portalPreviewLiveDot" />
+                  Preview live
+                </span>
               ) : null}
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section style={{ marginTop: 28 }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
-            gap: 16,
-          }}
-        >
-          <div className="panel fadeUp">
-            <div className="panelHeader">
-              <h2 className="h2">Preview & Review</h2>
-            </div>
-            <div className="panelBody">
-              <div style={{ display: "grid", gap: 12 }}>
-                <InfoBlock label="Preview Status" value={bundle.preview.status} />
-                <InfoBlock
-                  label="Client Review Status"
-                  value={bundle.preview.clientReviewStatus}
-                />
-                <InfoBlock
-                  label="Latest Preview"
-                  value={bundle.preview.url || "Preview not published yet"}
-                />
-                <InfoBlock
-                  label="Production URL"
-                  value={bundle.preview.productionUrl || "Not live yet"}
-                />
-                <InfoBlock label="Last Updated" value={fmtDate(bundle.preview.updatedAt)} />
+            <div className="portalPreviewBody">
+              <div className="portalPreviewUrl">
+                {bundle.preview.url || "Pending"}
               </div>
-
-              {bundle.preview.notes ? (
-                <div
-                  style={{
-                    marginTop: 14,
-                    border: "1px solid var(--stroke)",
-                    borderRadius: 14,
-                    background: "var(--panel2)",
-                    padding: 14,
-                  }}
-                >
-                  <div
-                    style={{
-                      color: "var(--fg)",
-                      fontWeight: 800,
-                      marginBottom: 6,
-                    }}
-                  >
-                    Preview Notes
-                  </div>
-                  <p className="p" style={{ margin: 0, fontSize: 14 }}>
-                    {bundle.preview.notes}
-                  </p>
-                </div>
-              ) : null}
-
-              <div className="row" style={{ marginTop: 14 }}>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {bundle.preview.url ? (
                   <a
                     href={bundle.preview.url}
                     target="_blank"
                     rel="noreferrer"
                     className="btn btnPrimary"
+                    style={{ fontSize: 13 }}
                   >
-                    Open Preview <span className="btnArrow">→</span>
+                    Open preview <span className="btnArrow">→</span>
                   </a>
                 ) : (
-                  <button className="btn btnGhost" type="button" disabled>
-                    Preview Pending
+                  <button className="btn btnGhost" disabled>
+                    Preview pending
                   </button>
                 )}
-
                 {bundle.preview.productionUrl ? (
                   <a
                     href={bundle.preview.productionUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="btn btnGhost"
+                    style={{ fontSize: 13 }}
                   >
-                    Open Live Site
+                    Open live site
                   </a>
                 ) : null}
               </div>
             </div>
           </div>
 
-          <div className="panel fadeUp">
-            <div className="panelHeader">
-              <h2 className="h2">Launch & Handoff</h2>
-            </div>
-            <div className="panelBody">
-              <div style={{ display: "grid", gap: 12 }}>
-                <InfoBlock label="Launch Status" value={bundle.launch.status} />
-                <InfoBlock
-                  label="Launch Readiness"
-                  value={`${launchReadiness.percent}%`}
-                />
-                <InfoBlock label="Domain" value={bundle.launch.domainStatus} />
-                <InfoBlock label="Analytics" value={bundle.launch.analyticsStatus} />
-                <InfoBlock label="Forms" value={bundle.launch.formsStatus} />
-                <InfoBlock label="SEO Basics" value={bundle.launch.seoStatus} />
-                <InfoBlock label="Handoff" value={bundle.launch.handoffStatus} />
+          {bundle.preview.notes ? (
+            <div style={{
+              border: "1px solid var(--stroke)",
+              borderRadius: 12,
+              padding: 14,
+              background: "var(--panel2)",
+              marginTop: 8,
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+                Preview notes
               </div>
-
-              {bundle.launch.notes ? (
-                <div
-                  style={{
-                    marginTop: 14,
-                    border: "1px solid var(--stroke)",
-                    borderRadius: 14,
-                    background: "var(--panel2)",
-                    padding: 14,
-                  }}
-                >
-                  <div
-                    style={{
-                      color: "var(--fg)",
-                      fontWeight: 800,
-                      marginBottom: 6,
-                    }}
-                  >
-                    Launch Notes
-                  </div>
-                  <p className="p" style={{ margin: 0, fontSize: 14 }}>
-                    {bundle.launch.notes}
-                  </p>
-                </div>
-              ) : null}
+              <p className="p" style={{ margin: 0, fontSize: 14 }}>{bundle.preview.notes}</p>
             </div>
-          </div>
+          ) : null}
         </div>
-      </section>
 
-      <section style={{ marginTop: 28 }}>
-        <div className="panel fadeUp">
-          <div className="panelHeader">
-            <h2 className="h2">Launch Readiness Checklist</h2>
+        <div className="portalPanel fadeUp" style={{ animationDelay: "0.15s" }}>
+          <div className="portalPanelHeader">
+            <h2 className="portalPanelTitle">Launch</h2>
           </div>
-          <div className="panelBody">
-            <div style={{ display: "grid", gap: 10 }}>
-              {launchReadiness.checks.map((item) => (
-                <div
-                  key={item.key}
-                  style={{
-                    border: "1px solid var(--stroke)",
-                    borderRadius: 14,
-                    background: "var(--panel2)",
-                    padding: 14,
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: 12,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div style={{ fontWeight: 800, color: "var(--fg)" }}>{item.label}</div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 800,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                      color: item.done ? "#b7f5c4" : "var(--muted)",
-                    }}
-                  >
-                    {item.done ? "Ready" : "Pending"}
-                  </div>
-                </div>
-              ))}
-            </div>
+          <LaunchSummary
+            checks={launchReadiness.checks}
+            percent={launchReadiness.percent}
+            completed={launchReadiness.completed}
+          />
+          <div style={{
+            marginTop: 16,
+            fontSize: 13,
+            color: "var(--muted2)",
+            lineHeight: 1.6,
+          }}>
+            We&apos;re handling the remaining items behind the scenes. You&apos;ll be notified
+            when everything&apos;s ready to go live.
+          </div>
 
-            {launchReadiness.blockers.length > 0 ? (
-              <div
-                style={{
-                  marginTop: 14,
-                  border: "1px solid var(--stroke)",
-                  borderRadius: 14,
-                  background: "var(--panel2)",
-                  padding: 14,
-                }}
-              >
-                <div
-                  style={{
-                    color: "var(--fg)",
-                    fontWeight: 800,
-                    marginBottom: 8,
-                  }}
-                >
-                  Remaining blockers
-                </div>
-                <ul
-                  style={{
-                    margin: 0,
-                    paddingLeft: 18,
-                    color: "var(--muted)",
-                    lineHeight: 1.7,
-                  }}
-                >
-                  {launchReadiness.blockers.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
+          {bundle.launch.notes ? (
+            <div style={{
+              border: "1px solid var(--stroke)",
+              borderRadius: 12,
+              padding: 14,
+              background: "var(--panel2)",
+              marginTop: 12,
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+                Launch notes
               </div>
-            ) : (
-              <div
-                style={{
-                  marginTop: 14,
-                  border: "1px solid rgba(46, 160, 67, 0.28)",
-                  borderRadius: 14,
-                  background: "rgba(46, 160, 67, 0.08)",
-                  padding: 14,
-                  color: "#b7f5c4",
-                  fontWeight: 800,
-                }}
-              >
-                All launch readiness items are complete.
+              <p className="p" style={{ margin: 0, fontSize: 14 }}>{bundle.launch.notes}</p>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      {/* ── Content & Assets + Feedback ── */}
+      <div className="portalGrid2">
+        {/* Assets */}
+        <div className="portalPanel fadeUp" style={{ animationDelay: "0.2s" }}>
+          <div className="portalPanelHeader">
+            <h2 className="portalPanelTitle">Your content</h2>
+            <span className="portalPanelCount">
+              {bundle.portalState.assets.length} item{bundle.portalState.assets.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+
+          {!showUploadForm ? (
+            <div
+              className="portalUploadZone"
+              onClick={() => setShowUploadForm(true)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === "Enter" && setShowUploadForm(true)}
+            >
+              <div className="portalUploadIcon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M9 2v10M5 6l4-4 4 4" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M2 12v3a1 1 0 001 1h12a1 1 0 001-1v-3" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section style={{ marginTop: 28 }}>
-        <div className="panel fadeUp">
-          <div className="panelHeader">
-            <h2 className="h2">Scope History & Change Orders</h2>
-          </div>
-          <div className="panelBody">
-            <div style={{ display: "grid", gap: 12 }}>
-              {bundle.history.scopeVersions.length === 0 ? (
-                <InfoBlock label="Scope History" value="No saved scope versions yet." />
-              ) : (
-                <ListBlock
-                  title="Saved Scope Versions"
-                  items={bundle.history.scopeVersions.map(
-                    (item) => `${item.label} — ${fmtDate(item.createdAt)}`
-                  )}
-                />
-              )}
-
-              {bundle.history.changeOrders.length === 0 ? (
-                <InfoBlock
-                  label="Change Orders"
-                  value="No change orders have been logged yet."
-                />
-              ) : (
-                <div style={{ display: "grid", gap: 12 }}>
-                  {bundle.history.changeOrders.map((item) => (
-                    <div
-                      key={item.id}
-                      style={{
-                        border: "1px solid var(--stroke)",
-                        borderRadius: 14,
-                        background: "var(--panel2)",
-                        padding: 14,
-                      }}
-                    >
-                      <div style={{ fontWeight: 800 }}>{item.title}</div>
-                      <div className="smallNote" style={{ marginTop: 4 }}>
-                        {fmtDate(item.createdAt)} • {pretty(item.status)}
-                      </div>
-                      <p className="p" style={{ marginTop: 8, marginBottom: 0, fontSize: 14 }}>
-                        {item.summary}
-                      </p>
-                      {(item.priceImpact || item.timelineImpact || item.scopeImpact) && (
-                        <div className="smallNote" style={{ marginTop: 8 }}>
-                          {item.priceImpact ? `Price: ${item.priceImpact}` : ""}
-                          {item.priceImpact && item.timelineImpact ? " • " : ""}
-                          {item.timelineImpact ? `Timeline: ${item.timelineImpact}` : ""}
-                          {(item.priceImpact || item.timelineImpact) && item.scopeImpact
-                            ? " • "
-                            : ""}
-                          {item.scopeImpact ? `Scope: ${item.scopeImpact}` : ""}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="portalUploadText">
+                Drop files here or <b>browse</b>
+              </div>
+              <div className="portalUploadHint">
+                Logos, copy, photos, credentials — we&apos;ll sort them
+              </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section style={{ marginTop: 28 }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
-            gap: 16,
-          }}
-        >
-          <div className="panel fadeUp">
-            <div className="panelHeader">
-              <h2 className="h2">Content & Assets</h2>
-            </div>
-            <div className="panelBody">
-              <form onSubmit={submitAsset} style={{ display: "grid", gap: 12 }}>
+          ) : (
+            <form onSubmit={submitAsset} className="portalUploadForm">
+              <div>
                 <div className="fieldLabel">Asset label</div>
                 <input
                   className="input"
@@ -1205,541 +842,432 @@ export default function PortalClient({
                   onChange={(e) => setAssetLabel(e.target.value)}
                   placeholder="Homepage copy, logo file, service photos..."
                 />
+              </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "minmax(0, 180px) minmax(0, 1fr)",
-                    gap: 12,
-                  }}
-                >
-                  <div>
-                    <div className="fieldLabel">Category</div>
-                    <select
-                      className="select"
-                      value={assetCategory}
-                      onChange={(e) => setAssetCategory(e.target.value)}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <div className="fieldLabel">Category</div>
+                  <select
+                    className="select"
+                    value={assetCategory}
+                    onChange={(e) => setAssetCategory(e.target.value)}
+                  >
+                    <option>Brand</option>
+                    <option>Copy</option>
+                    <option>Images</option>
+                    <option>Access</option>
+                    <option>Legal</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div>
+                  <div className="fieldLabel">Submit as</div>
+                  <div className="row" style={{ gap: 6 }}>
+                    <button
+                      type="button"
+                      className={`btn ${assetMode === "link" ? "btnPrimary" : "btnGhost"}`}
+                      style={{ fontSize: 12, padding: "6px 12px" }}
+                      onClick={() => setAssetMode("link")}
                     >
-                      <option>Brand</option>
-                      <option>Copy</option>
-                      <option>Images</option>
-                      <option>Access</option>
-                      <option>Legal</option>
-                      <option>Other</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <div className="fieldLabel">Submit as</div>
-                    <div className="row" style={{ gap: 8 }}>
-                      <button
-                        type="button"
-                        className={`btn ${assetMode === "link" ? "btnPrimary" : "btnGhost"}`}
-                        style={{ fontSize: 12, padding: "6px 14px" }}
-                        onClick={() => setAssetMode("link")}
-                      >
-                        Link
-                      </button>
-                      <button
-                        type="button"
-                        className={`btn ${assetMode === "file" ? "btnPrimary" : "btnGhost"}`}
-                        style={{ fontSize: 12, padding: "6px 14px" }}
-                        onClick={() => setAssetMode("file")}
-                      >
-                        File Upload
-                      </button>
-                    </div>
+                      Link
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn ${assetMode === "file" ? "btnPrimary" : "btnGhost"}`}
+                      style={{ fontSize: 12, padding: "6px 12px" }}
+                      onClick={() => setAssetMode("file")}
+                    >
+                      File
+                    </button>
                   </div>
                 </div>
+              </div>
 
-                {assetMode === "link" ? (
-                  <div>
-                    <div className="fieldLabel">URL</div>
-                    <input
-                      className="input"
-                      value={assetUrl}
-                      onChange={(e) => setAssetUrl(e.target.value)}
-                      placeholder="Google Drive / Dropbox / direct file link"
-                    />
-                  </div>
-                ) : (
-                  <div>
-                    <div className="fieldLabel">Choose file</div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      className="input"
-                      style={{ padding: 8 }}
-                      onChange={(e) => setAssetFile(e.target.files?.[0] ?? null)}
-                    />
-                    {assetFile && (
-                      <div style={{ marginTop: 6, fontSize: 13, color: "var(--muted)" }}>
-                        {assetFile.name} ({(assetFile.size / 1024).toFixed(0)} KB)
-                      </div>
-                    )}
-                  </div>
-                )}
+              {assetMode === "link" ? (
+                <div>
+                  <div className="fieldLabel">URL</div>
+                  <input
+                    className="input"
+                    value={assetUrl}
+                    onChange={(e) => setAssetUrl(e.target.value)}
+                    placeholder="Google Drive / Dropbox / direct link"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <div className="fieldLabel">Choose file</div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="input"
+                    style={{ padding: 8 }}
+                    onChange={(e) => setAssetFile(e.target.files?.[0] ?? null)}
+                  />
+                  {assetFile && (
+                    <div style={{ marginTop: 4, fontSize: 12, color: "var(--muted2)" }}>
+                      {assetFile.name} ({(assetFile.size / 1024).toFixed(0)} KB)
+                    </div>
+                  )}
+                </div>
+              )}
 
+              <div>
                 <div className="fieldLabel">Notes</div>
                 <textarea
                   className="textarea"
                   value={assetNotes}
                   onChange={(e) => setAssetNotes(e.target.value)}
-                  placeholder="Anything we should know about this asset?"
+                  placeholder="Anything we should know?"
+                  style={{ minHeight: 60 }}
                 />
-
-                <div className="row">
-                  <button type="submit" className="btn btnPrimary" disabled={saving}>
-                    {saving ? "Saving..." : "Submit Asset"} <span className="btnArrow">→</span>
-                  </button>
-                </div>
-              </form>
-
-              <div style={{ marginTop: 18, display: "grid", gap: 10 }}>
-                {bundle.portalState.assets.length === 0 ? (
-                  <div
-                    style={{
-                      border: "1px dashed var(--stroke)",
-                      borderRadius: 14,
-                      padding: 14,
-                      color: "var(--muted)",
-                    }}
-                  >
-                    No assets submitted yet.
-                  </div>
-                ) : (
-                  bundle.portalState.assets.map((asset) => (
-                    <div
-                      key={asset.id}
-                      style={{
-                        border: "1px solid var(--stroke)",
-                        borderRadius: 14,
-                        background: "var(--panel2)",
-                        padding: 14,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          gap: 12,
-                          alignItems: "center",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <div
-                          style={{
-                            color: "var(--fg)",
-                            fontWeight: 800,
-                            fontSize: 16,
-                          }}
-                        >
-                          {asset.label}
-                        </div>
-                        <span
-                          style={{
-                            padding: "6px 10px",
-                            borderRadius: 999,
-                            border: "1px solid var(--stroke)",
-                            background: "rgba(255,255,255,0.03)",
-                            fontSize: 12,
-                            fontWeight: 800,
-                            color: "var(--fg)",
-                          }}
-                        >
-                          {pretty(asset.status)}
-                        </span>
-                      </div>
-
-                      <div
-                        style={{
-                          marginTop: 6,
-                          color: "var(--muted)",
-                          fontSize: 13,
-                        }}
-                      >
-                        {asset.category} • {fmtDate(asset.createdAt)}
-                      </div>
-
-                      {asset.notes ? (
-                        <p className="p" style={{ marginTop: 8, marginBottom: 0, fontSize: 14 }}>
-                          {asset.notes}
-                        </p>
-                      ) : null}
-
-                      <div className="row" style={{ marginTop: 10 }}>
-                        <a
-                          href={asset.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="btn btnGhost"
-                        >
-                          Open Asset
-                        </a>
-                      </div>
-                    </div>
-                  ))
-                )}
               </div>
+
+              <div className="row" style={{ gap: 8 }}>
+                <button type="submit" className="btn btnPrimary" disabled={saving}>
+                  {saving ? "Saving..." : "Submit asset"} <span className="btnArrow">→</span>
+                </button>
+                <button
+                  type="button"
+                  className="btn btnGhost"
+                  onClick={() => setShowUploadForm(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+
+          {bundle.portalState.assets.length === 0 && !showUploadForm ? (
+            <div style={{
+              border: "1px dashed var(--stroke)",
+              borderRadius: 14,
+              padding: 14,
+              color: "var(--muted2)",
+              textAlign: "center",
+              fontSize: 14,
+            }}>
+              No assets submitted yet
             </div>
+          ) : (
+            bundle.portalState.assets.map((asset) => (
+              <div key={asset.id} className="portalAsset">
+                <div>
+                  <div className="portalAssetName">{asset.label}</div>
+                  <div className="portalAssetMeta">
+                    {asset.category} · {fmtDate(asset.createdAt)}
+                    {asset.notes ? ` · ${asset.notes}` : ""}
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span
+                    className={`portalPill ${
+                      asset.status === "approved"
+                        ? "portalPillApproved"
+                        : asset.status === "received"
+                        ? "portalPillReceived"
+                        : "portalPillSubmitted"
+                    }`}
+                  >
+                    {pretty(asset.status)}
+                  </span>
+                  <a
+                    href={asset.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600 }}
+                  >
+                    Open
+                  </a>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Feedback */}
+        <div className="portalPanel fadeUp" style={{ animationDelay: "0.25s" }}>
+          <div className="portalPanelHeader">
+            <h2 className="portalPanelTitle">Feedback</h2>
+            <span className="portalPanelCount">
+              {bundle.portalState.revisions.length} item{bundle.portalState.revisions.length !== 1 ? "s" : ""}
+            </span>
           </div>
 
-          <div className="panel fadeUp">
-            <div className="panelHeader">
-              <h2 className="h2">Timeline</h2>
+          <form onSubmit={submitRevision} style={{ marginBottom: 18 }}>
+            <textarea
+              className="portalFeedbackArea"
+              placeholder="What should change? What feels off?"
+              value={revisionMessage}
+              onChange={(e) => setRevisionMessage(e.target.value)}
+            />
+            <div className="portalFeedbackRow">
+              <select
+                className="portalFeedbackSelect"
+                value={revisionPriority}
+                onChange={(e) => setRevisionPriority(e.target.value as "low" | "normal" | "high")}
+              >
+                <option value="low">Low priority</option>
+                <option value="normal">Normal</option>
+                <option value="high">High priority</option>
+              </select>
+              <button type="submit" className="portalFeedbackBtn" disabled={saving}>
+                {saving ? "Sending..." : "Submit feedback"}
+              </button>
             </div>
-            <div className="panelBody" style={{ display: "grid", gap: 10 }}>
-              {bundle.portalState.milestones.map((m) => (
-                <div
-                  key={m.key}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "16px minmax(0, 1fr) auto",
-                    gap: 12,
-                    alignItems: "center",
-                    padding: "12px 0",
-                    borderTop: "1px solid var(--stroke)",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 14,
-                      height: 14,
-                      borderRadius: 999,
-                      background: m.done ? "var(--accent)" : "transparent",
-                      border: `2px solid ${m.done ? "var(--accent)" : "var(--stroke2)"}`,
-                      boxShadow: m.done
-                        ? "0 0 0 4px rgba(201,168,76,0.12)"
-                        : "none",
-                    }}
-                  />
-                  <div>
-                    <div
-                      style={{
-                        color: "var(--fg)",
-                        fontWeight: 800,
-                        fontSize: 15,
-                      }}
-                    >
-                      {m.label}
-                    </div>
-                    <div
-                      style={{
-                        color: "var(--muted)",
-                        fontSize: 12,
-                        marginTop: 2,
-                      }}
-                    >
-                      {m.updatedAt ? `Updated ${fmtDate(m.updatedAt)}` : "Waiting"}
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      color: m.done ? "#b7f5c4" : "var(--muted)",
-                      fontSize: 12,
-                      fontWeight: 800,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                    }}
+          </form>
+
+          {bundle.portalState.revisions.length === 0 ? (
+            <div style={{
+              border: "1px dashed var(--stroke)",
+              borderRadius: 14,
+              padding: 14,
+              color: "var(--muted2)",
+              textAlign: "center",
+              fontSize: 14,
+            }}>
+              No revision requests yet
+            </div>
+          ) : (
+            bundle.portalState.revisions.map((rev) => (
+              <div
+                key={rev.id}
+                className={`portalRev ${
+                  rev.priority === "high"
+                    ? "portalRevHigh"
+                    : rev.status === "new"
+                    ? "portalRevNew"
+                    : ""
+                }`}
+              >
+                <div className="portalRevTop">
+                  <span className="portalRevStatus">{pretty(rev.status)}</span>
+                  <span
+                    className={`portalRevPriority ${
+                      rev.priority === "high"
+                        ? "portalRevPriorityHigh"
+                        : "portalRevPriorityNormal"
+                    }`}
                   >
-                    {m.done ? "Done" : "Pending"}
-                  </div>
+                    {rev.priority}
+                  </span>
                 </div>
+                <div className="portalRevMsg">{rev.message}</div>
+                <div className="portalRevDate">Submitted {fmtDate(rev.createdAt)}</div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* ── Project Details (Drawers) ── */}
+      <div className="portalSectionLabel fadeUp" style={{ marginTop: 8 }}>
+        Project details
+      </div>
+
+      <Drawer
+        label="Scope & features"
+        value={`${bundle.scopeSnapshot.pagesIncluded.length} pages · ${bundle.scopeSnapshot.featuresIncluded.length} features`}
+      >
+        <div className="portalDrawerRow">
+          <span className="portalDrawerKey">Tier</span>
+          <span className="portalDrawerVal">{bundle.scopeSnapshot.tierLabel}</span>
+        </div>
+        <div className="portalDrawerRow">
+          <span className="portalDrawerKey">Platform</span>
+          <span className="portalDrawerVal">{bundle.scopeSnapshot.platform}</span>
+        </div>
+        <div className="portalDrawerRow">
+          <span className="portalDrawerKey">Website type</span>
+          <span className="portalDrawerVal">{pretty(bundle.scope.websiteType)}</span>
+        </div>
+        <div className="portalDrawerRow">
+          <span className="portalDrawerKey">Timeline</span>
+          <span className="portalDrawerVal">{bundle.scopeSnapshot.timeline}</span>
+        </div>
+        <div className="portalDrawerRow">
+          <span className="portalDrawerKey">Revision policy</span>
+          <span className="portalDrawerVal">{bundle.scopeSnapshot.revisionPolicy}</span>
+        </div>
+        <div className="portalDrawerRow">
+          <span className="portalDrawerKey">Content readiness</span>
+          <span className="portalDrawerVal">{pretty(bundle.scope.contentReady)}</span>
+        </div>
+        <div className="portalDrawerRow">
+          <span className="portalDrawerKey">Domain / hosting</span>
+          <span className="portalDrawerVal">{pretty(bundle.scope.domainHosting)}</span>
+        </div>
+        <div className="portalDrawerRow">
+          <span className="portalDrawerKey">Integrations</span>
+          <span className="portalDrawerVal">
+            {bundle.scope.integrations.length ? bundle.scope.integrations.join(", ") : "None listed"}
+          </span>
+        </div>
+        {bundle.scopeSnapshot.pagesIncluded.length > 0 && (
+          <div className="portalDrawerRow" style={{ borderBottom: "none", flexWrap: "wrap" }}>
+            <span className="portalDrawerKey">Pages</span>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {bundle.scopeSnapshot.pagesIncluded.map((p) => (
+                <span key={p} className="portalFeatureTag">{p}</span>
               ))}
             </div>
           </div>
-        </div>
-      </section>
-
-      <section style={{ marginTop: 28 }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
-            gap: 16,
-          }}
-        >
-          <div className="panel fadeUp">
-            <div className="panelHeader">
-              <h2 className="h2">Revisions & Feedback</h2>
-            </div>
-            <div className="panelBody">
-              <form onSubmit={submitRevision} style={{ display: "grid", gap: 12 }}>
-                <div className="fieldLabel">Request a revision or leave feedback</div>
-                <textarea
-                  className="textarea"
-                  value={revisionMessage}
-                  onChange={(e) => setRevisionMessage(e.target.value)}
-                  placeholder="Tell us what should change, what feels off, or what needs attention."
-                />
-
-                <div style={{ maxWidth: 220 }}>
-                  <div className="fieldLabel">Priority</div>
-                  <select
-                    className="select"
-                    value={revisionPriority}
-                    onChange={(e) =>
-                      setRevisionPriority(e.target.value as "low" | "normal" | "high")
-                    }
-                  >
-                    <option value="low">Low</option>
-                    <option value="normal">Normal</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
-
-                <div className="row">
-                  <button type="submit" className="btn btnPrimary" disabled={saving}>
-                    {saving ? "Saving..." : "Submit Feedback"} <span className="btnArrow">→</span>
-                  </button>
-                </div>
-              </form>
-
-              <div style={{ marginTop: 18, display: "grid", gap: 10 }}>
-                {bundle.portalState.revisions.length === 0 ? (
-                  <div
-                    style={{
-                      border: "1px dashed var(--stroke)",
-                      borderRadius: 14,
-                      padding: 14,
-                      color: "var(--muted)",
-                    }}
-                  >
-                    No revision requests yet.
-                  </div>
-                ) : (
-                  bundle.portalState.revisions.map((rev) => (
-                    <div
-                      key={rev.id}
-                      style={{
-                        border: "1px solid var(--stroke)",
-                        borderRadius: 14,
-                        background: "var(--panel2)",
-                        padding: 14,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          gap: 12,
-                          flexWrap: "wrap",
-                          alignItems: "center",
-                        }}
-                      >
-                        <div
-                          style={{
-                            color: "var(--fg)",
-                            fontWeight: 800,
-                            fontSize: 15,
-                          }}
-                        >
-                          {pretty(rev.status)}
-                        </div>
-                        <span
-                          style={{
-                            padding: "6px 10px",
-                            borderRadius: 999,
-                            border: "1px solid var(--stroke)",
-                            background: "rgba(255,255,255,0.03)",
-                            fontSize: 12,
-                            fontWeight: 800,
-                            color: "var(--fg)",
-                          }}
-                        >
-                          {pretty(rev.priority)}
-                        </span>
-                      </div>
-
-                      <p className="p" style={{ marginTop: 10, marginBottom: 0, fontSize: 14 }}>
-                        {rev.message}
-                      </p>
-
-                      <div
-                        style={{
-                          marginTop: 8,
-                          color: "var(--muted)",
-                          fontSize: 12,
-                        }}
-                      >
-                        Submitted {fmtDate(rev.createdAt)}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+        )}
+        {bundle.scopeSnapshot.featuresIncluded.length > 0 && (
+          <div className="portalDrawerRow" style={{ borderBottom: "none", flexWrap: "wrap", paddingTop: 4 }}>
+            <span className="portalDrawerKey">Features</span>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {bundle.scopeSnapshot.featuresIncluded.map((f) => (
+                <span key={f} className="portalFeatureTag">{f}</span>
+              ))}
             </div>
           </div>
-
-          <div className="panel fadeUp">
-            <div className="panelHeader">
-              <h2 className="h2">Notes & Updates</h2>
-            </div>
-            <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-              <InfoBlock
-                label="Studio Update"
-                value={bundle.portalState.adminPublicNote || "No updates from the studio yet."}
-              />
-              <InfoBlock
-                label="Project Notes"
-                value={bundle.portalState.clientNotes || "No project notes yet."}
-              />
-              <InfoBlock
-                label="Best Time to Call"
-                value={
-                  bundle.callRequest?.bestTime
-                    ? `${bundle.callRequest.bestTime}${
-                        bundle.callRequest.timezone ? ` (${bundle.callRequest.timezone})` : ""
-                      }`
-                    : "Not provided"
-                }
-              />
-              <InfoBlock label="PIE Summary" value={bundle.pie.summary || "No PIE summary yet"} />
+        )}
+        {bundle.scopeSnapshot.exclusions.length > 0 && (
+          <div className="portalDrawerRow" style={{ borderBottom: "none", flexWrap: "wrap", paddingTop: 4 }}>
+            <span className="portalDrawerKey">Exclusions</span>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {bundle.scopeSnapshot.exclusions.map((x) => (
+                <span key={x} className="portalFeatureTag">{x}</span>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
-    </main>
-  );
-}
+        )}
+        {bundle.scope.notes ? (
+          <div style={{
+            marginTop: 8, padding: 12, borderRadius: 10,
+            background: "var(--panel2)", border: "1px solid var(--stroke)",
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+              Intake notes
+            </div>
+            <p className="p" style={{ margin: 0, fontSize: 14 }}>{bundle.scope.notes}</p>
+          </div>
+        ) : null}
+      </Drawer>
 
-function MiniCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="panel" style={{ background: "var(--panel2)" }}>
-      <div className="panelBody">
-        <div
-          style={{
-            color: "var(--muted)",
-            fontSize: 12,
-            fontWeight: 800,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            marginBottom: 8,
-          }}
+      <Drawer
+        label="Agreement & payment"
+        value={pretty(bundle.agreement.status)}
+      >
+        <div className="portalDrawerRow">
+          <span className="portalDrawerKey">Agreement status</span>
+          <span className="portalDrawerVal">{pretty(bundle.agreement.status)}</span>
+        </div>
+        <div className="portalDrawerRow">
+          <span className="portalDrawerKey">Agreement model</span>
+          <span className="portalDrawerVal">{bundle.agreement.model}</span>
+        </div>
+        <div className="portalDrawerRow">
+          <span className="portalDrawerKey">Ownership model</span>
+          <span className="portalDrawerVal">{bundle.agreement.ownershipModel}</span>
+        </div>
+        <div className="portalDrawerRow">
+          <span className="portalDrawerKey">Published</span>
+          <span className="portalDrawerVal">{fmtDate(bundle.agreement.publishedAt)}</span>
+        </div>
+        <div className="portalDrawerRow">
+          <span className="portalDrawerKey">Deposit status</span>
+          <span className="portalDrawerVal" style={depositPaid ? { color: "#5DCAA5" } : undefined}>
+            {depositPaid ? `Paid — ${money(bundle.quote.deposit.amount)}` : pretty(bundle.quote.deposit.status)}
+          </span>
+        </div>
+        {!depositPaid && bundle.quote.deposit.amount ? (
+          <div className="portalDrawerRow">
+            <span className="portalDrawerKey">Deposit amount</span>
+            <span className="portalDrawerVal">{money(bundle.quote.deposit.amount)}</span>
+          </div>
+        ) : null}
+        {bundle.quote.deposit.notes ? (
+          <div style={{
+            marginTop: 8, padding: 12, borderRadius: 10,
+            background: "var(--panel2)", border: "1px solid var(--stroke)",
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+              Deposit notes
+            </div>
+            <p className="p" style={{ margin: 0, fontSize: 14 }}>{bundle.quote.deposit.notes}</p>
+          </div>
+        ) : null}
+        {bundle.agreement.publishedText ? (
+          <div style={{
+            marginTop: 8, padding: 12, borderRadius: 10,
+            background: "var(--panel2)", border: "1px solid var(--stroke)",
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
+              Published agreement
+            </div>
+            <div style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+              {bundle.agreement.publishedText}
+            </div>
+          </div>
+        ) : null}
+      </Drawer>
+
+      {(bundle.history.scopeVersions.length > 0 || bundle.history.changeOrders.length > 0) && (
+        <Drawer
+          label="Scope history & change orders"
+          value={`${bundle.history.scopeVersions.length} versions · ${bundle.history.changeOrders.length} changes`}
         >
-          {label}
-        </div>
-        <div
-          style={{
-            color: "var(--fg)",
-            fontWeight: 900,
-            fontSize: 22,
-            lineHeight: 1.1,
-            letterSpacing: "-0.03em",
-          }}
-        >
-          {value}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function InfoBlock({ label, value }: { label: string; value: string }) {
-  return (
-    <div
-      style={{
-        border: "1px solid var(--stroke)",
-        borderRadius: 14,
-        background: "var(--panel2)",
-        padding: 14,
-      }}
-    >
-      <div
-        style={{
-          color: "var(--muted)",
-          fontSize: 12,
-          fontWeight: 800,
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-          marginBottom: 6,
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          color: "var(--fg)",
-          fontWeight: 800,
-          fontSize: 15,
-          lineHeight: 1.45,
-          whiteSpace: "pre-wrap",
-        }}
-      >
-        {value}
-      </div>
-    </div>
-  );
-}
-
-function CompactStatus({ label, value }: { label: string; value: string }) {
-  return (
-    <div
-      style={{
-        border: "1px solid var(--stroke)",
-        borderRadius: 14,
-        background: "var(--panel2)",
-        padding: 14,
-      }}
-    >
-      <div
-        style={{
-          color: "var(--muted)",
-          fontSize: 12,
-          fontWeight: 800,
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-          marginBottom: 6,
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          color: "var(--fg)",
-          fontWeight: 800,
-          fontSize: 15,
-          lineHeight: 1.35,
-        }}
-      >
-        {value}
-      </div>
-    </div>
-  );
-}
-
-function ListBlock({ title, items }: { title: string; items: string[] }) {
-  return (
-    <div
-      style={{
-        border: "1px solid var(--stroke)",
-        borderRadius: 14,
-        background: "var(--panel2)",
-        padding: 14,
-      }}
-    >
-      <div
-        style={{
-          color: "var(--fg)",
-          fontWeight: 800,
-          fontSize: 15,
-          marginBottom: 8,
-        }}
-      >
-        {title}
-      </div>
-
-      {items.length === 0 ? (
-        <div className="p" style={{ margin: 0, fontSize: 14 }}>
-          None listed yet.
-        </div>
-      ) : (
-        <ul style={{ margin: 0, paddingLeft: 18, color: "var(--muted)", lineHeight: 1.7 }}>
-          {items.map((item) => (
-            <li key={item}>{item}</li>
+          {bundle.history.scopeVersions.map((sv) => (
+            <div key={sv.id} className="portalDrawerRow">
+              <span className="portalDrawerKey">{sv.label}</span>
+              <span className="portalDrawerVal">{fmtDate(sv.createdAt)}</span>
+            </div>
           ))}
-        </ul>
+          {bundle.history.changeOrders.map((co) => (
+            <div key={co.id} style={{
+              marginTop: 8, padding: 12, borderRadius: 10,
+              background: "var(--panel2)", border: "1px solid var(--stroke)",
+            }}>
+              <div style={{ fontWeight: 700, color: "var(--fg)" }}>{co.title}</div>
+              <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 4 }}>
+                {fmtDate(co.createdAt)} · {pretty(co.status)}
+              </div>
+              <p className="p" style={{ margin: "8px 0 0", fontSize: 14 }}>{co.summary}</p>
+              {(co.priceImpact || co.timelineImpact || co.scopeImpact) && (
+                <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 8 }}>
+                  {co.priceImpact ? `Price: ${co.priceImpact}` : ""}
+                  {co.priceImpact && co.timelineImpact ? " · " : ""}
+                  {co.timelineImpact ? `Timeline: ${co.timelineImpact}` : ""}
+                  {(co.priceImpact || co.timelineImpact) && co.scopeImpact ? " · " : ""}
+                  {co.scopeImpact ? `Scope: ${co.scopeImpact}` : ""}
+                </div>
+              )}
+            </div>
+          ))}
+        </Drawer>
       )}
+
+      <Drawer
+        label="Notes & contact"
+        value={bundle.callRequest?.bestTime || "Details"}
+      >
+        <div className="portalDrawerRow">
+          <span className="portalDrawerKey">Project notes</span>
+          <span className="portalDrawerVal">{bundle.portalState.clientNotes || "None"}</span>
+        </div>
+        <div className="portalDrawerRow">
+          <span className="portalDrawerKey">Best time to call</span>
+          <span className="portalDrawerVal">
+            {bundle.callRequest?.bestTime
+              ? `${bundle.callRequest.bestTime}${bundle.callRequest.timezone ? ` (${bundle.callRequest.timezone})` : ""}`
+              : "Not provided"}
+          </span>
+        </div>
+        {bundle.pie.summary ? (
+          <div className="portalDrawerRow" style={{ borderBottom: "none" }}>
+            <span className="portalDrawerKey">PIE summary</span>
+            <span className="portalDrawerVal" style={{ maxWidth: 300, textAlign: "right" }}>
+              {bundle.pie.summary}
+            </span>
+          </div>
+        ) : null}
+      </Drawer>
+
+      {/* ── Footer ── */}
+      <div className="portalFooter">
+        Powered by <a href="/">Crecy Studio</a> · Your website, your ownership
+      </div>
     </div>
   );
 }
