@@ -6,6 +6,7 @@ import {
   createSupabaseServerClient,
   isAdminUser,
 } from "@/lib/supabase/server";
+import ScrollReveal from "@/components/site/ScrollReveal";
 
 export const dynamic = "force-dynamic";
 
@@ -235,6 +236,7 @@ export default async function PortalPage() {
 
   return (
     <main className="container section" style={{ paddingBottom: 84 }}>
+      <ScrollReveal />
       <div className="heroFadeUp">
         <div className="kicker">
           <span className="kickerDot" aria-hidden="true" />
