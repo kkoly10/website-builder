@@ -12,6 +12,7 @@ import {
   makeClientSafeOpsBundle,
 } from "@/lib/opsWorkspace/state";
 import OpsPortalClient from "./OpsPortalClient";
+import ScrollReveal from "@/components/site/ScrollReveal";
 
 export const dynamic = "force-dynamic";
 
@@ -45,11 +46,7 @@ export default async function OpsPortalWorkspacePage({
     .eq("id", opsIntakeId)
     .maybeSingle();
 
-  if (intakeError) {
-    throw new Error(intakeError.message);
-  }
-
-  if (!intake) {
+  if (intakeError || !intake) {
     notFound();
   }
 
@@ -69,5 +66,10 @@ export default async function OpsPortalWorkspacePage({
   const enriched = enrichOpsBundle(bundle, state);
   const safeBundle = makeClientSafeOpsBundle(enriched, { isAdmin: !!admin });
 
-  return <OpsPortalClient initialData={safeBundle} />;
+  return (
+    <>
+      <OpsPortalClient initialData={safeBundle} />
+      <ScrollReveal />
+    </>
+  );
 }
