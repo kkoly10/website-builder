@@ -23,11 +23,7 @@ type QuoteRow = {
   deposit_status?: string | null;
 };
 
-type LeadRow = {
-  id: string;
-  email: string | null;
-  name: string | null;
-};
+type LeadRow = { id: string; email: string | null; name: string | null };
 
 type OpsIntakeRow = {
   id: string;
@@ -39,830 +35,396 @@ type OpsIntakeRow = {
   status: string | null;
   recommendation_tier: string | null;
   recommendation_price_range: string | null;
-  recommendation_score: number | null;
 };
 
-type OpsCallRow = {
+type EcomIntakeRow = {
   id: string;
-  ops_intake_id: string;
   created_at: string | null;
+  business_name: string | null;
+  contact_name: string | null;
+  email: string | null;
   status: string | null;
+  store_url: string | null;
 };
 
-type OpsPieRow = {
-  id: string;
-  ops_intake_id: string;
-  created_at: string | null;
-  status: string | null;
-  summary: string | null;
-};
+type OpsCallRow = { id: string; ops_intake_id: string; status: string | null };
+type OpsPieRow = { id: string; ops_intake_id: string; summary: string | null };
 
-function fmtDate(value?: string | null) {
-  if (!value) return "—";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString();
+function fmtDate(v?: string | null) {
+  if (!v) return "—";
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? v : d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function money(value?: number | null) {
-  if (value == null || !Number.isFinite(Number(value))) return "—";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(Number(value));
+function money(v?: number | null) {
+  if (v == null || !Number.isFinite(Number(v))) return "—";
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(Number(v));
 }
 
-function statusTone(status?: string | null) {
-  const s = String(status || "").toLowerCase();
-
-  if (["closed_won", "active", "approved", "live", "paid"].includes(s)) {
-    return {
-      bg: "rgba(46, 160, 67, 0.14)",
-      border: "rgba(46, 160, 67, 0.34)",
-      color: "#b7f5c4",
-      label: status || "Active",
-    };
-  }
-
-  if (["proposal", "reviewing", "evaluating", "deposit", "pending"].includes(s)) {
-    return {
-      bg: "rgba(201, 168, 76, 0.14)",
-      border: "rgba(201, 168, 76, 0.34)",
-      color: "#f1d98a",
-      label: status || "Pending",
-    };
-  }
-
-  return {
-    bg: "rgba(141, 164, 255, 0.12)",
-    border: "rgba(141, 164, 255, 0.26)",
-    color: "#d8e0ff",
-    label: status || "New",
-  };
+function pretty(v?: string | null) {
+  if (!v) return "—";
+  return v.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
 function estimateLabel(q: QuoteRow) {
   if (q.estimate_total != null) return money(q.estimate_total);
-  if (q.estimate_low != null || q.estimate_high != null) {
-    return `${money(q.estimate_low)} - ${money(q.estimate_high)}`;
-  }
+  if (q.estimate_low != null || q.estimate_high != null) return `${money(q.estimate_low)} – ${money(q.estimate_high)}`;
   return "Scoped after review";
 }
 
-function laneMetaForQuote(q: QuoteRow) {
-  const status = String(q.status || "").toLowerCase();
-  const deposit = String(q.deposit_status || "").toLowerCase();
-
-  if (deposit === "paid") {
-    return {
-      phase: "Kickoff Ready",
-      nextAction: "Open Project Studio",
-    };
-  }
-
-  if (["proposal", "deposit"].includes(status)) {
-    return {
-      phase: "Pre-Start",
-      nextAction: "Review workspace and confirm next step",
-    };
-  }
-
-  if (["active", "closed_won"].includes(status)) {
-    return {
-      phase: "In Progress",
-      nextAction: "Review latest project status",
-    };
-  }
-
-  return {
-    phase: "Intake / Estimate",
-    nextAction: q.public_token ? "Open workspace" : "Continue booking",
-  };
+function quotePhase(q: QuoteRow) {
+  const s = String(q.status || "").toLowerCase();
+  const dep = String(q.deposit_status || "").toLowerCase();
+  if (dep === "paid") return "Kickoff ready";
+  if (["active", "closed_won"].includes(s)) return "In progress";
+  if (["proposal", "deposit"].includes(s)) return "Pre-start";
+  return "Intake";
 }
+
+const LANE_COLORS = {
+  website: { accent: "#c9a84c", bg: "rgba(201,168,76,0.06)", border: "rgba(201,168,76,0.18)", dot: "#c9a84c" },
+  ops: { accent: "#5DCAA5", bg: "rgba(46,160,67,0.06)", border: "rgba(46,160,67,0.18)", dot: "#5DCAA5" },
+  ecom: { accent: "#8da4ff", bg: "rgba(141,164,255,0.06)", border: "rgba(141,164,255,0.18)", dot: "#8da4ff" },
+};
 
 export default async function PortalPage() {
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/login?next=${encodeURIComponent("/portal")}`);
 
-  const claimResult = await claimCustomerRecordsForUser({
-    userId: user.id,
-    email: user.email,
-  });
+  await claimCustomerRecordsForUser({ userId: user.id, email: user.email });
+  const admin = await isAdminUser({ userId: user.id, email: user.email });
 
-  const admin = await isAdminUser({
-    userId: user.id,
-    email: user.email,
-  });
-
-  const [{ data: quotes }, { data: opsIntakes }] = await Promise.all([
-    supabaseAdmin
-      .from("quotes")
-      .select(
-        "id, lead_id, created_at, status, tier_recommended, estimate_total, estimate_low, estimate_high, public_token, deposit_status"
-      )
-      .eq("auth_user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(25),
-
-    supabaseAdmin
-      .from("ops_intakes")
-      .select(
-        "id, created_at, company_name, contact_name, email, industry, status, recommendation_tier, recommendation_price_range, recommendation_score"
-      )
-      .eq("auth_user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(25),
+  const [{ data: quotes }, { data: opsIntakes }, { data: ecomIntakes }] = await Promise.all([
+    supabaseAdmin.from("quotes")
+      .select("id, lead_id, created_at, status, tier_recommended, estimate_total, estimate_low, estimate_high, public_token, deposit_status")
+      .eq("auth_user_id", user.id).order("created_at", { ascending: false }).limit(25),
+    supabaseAdmin.from("ops_intakes")
+      .select("id, created_at, company_name, contact_name, email, industry, status, recommendation_tier, recommendation_price_range")
+      .eq("auth_user_id", user.id).order("created_at", { ascending: false }).limit(25),
+    supabaseAdmin.from("ecom_intakes")
+      .select("id, created_at, business_name, contact_name, email, status, store_url")
+      .eq("auth_user_id", user.id).order("created_at", { ascending: false }).limit(25),
   ]);
 
   const quoteRows = (quotes ?? []) as QuoteRow[];
   const opsRows = (opsIntakes ?? []) as OpsIntakeRow[];
+  const ecomRows = (ecomIntakes ?? []) as EcomIntakeRow[];
 
-  const leadIds = Array.from(
-    new Set(quoteRows.map((q) => q.lead_id).filter(Boolean) as string[])
-  );
-  const opsIntakeIds = opsRows.map((r) => r.id);
+  const leadIds = Array.from(new Set(quoteRows.map((q) => q.lead_id).filter(Boolean) as string[]));
+  const opsIds = opsRows.map((r) => r.id);
 
-  const [leadRowsRes, opsCallsRes, opsPiesRes] = await Promise.all([
-    leadIds.length
-      ? supabaseAdmin.from("leads").select("id, email, name").in("id", leadIds)
-      : Promise.resolve({ data: [] as LeadRow[] }),
-
-    opsIntakeIds.length
-      ? supabaseAdmin
-          .from("ops_call_requests")
-          .select("id, ops_intake_id, created_at, status")
-          .in("ops_intake_id", opsIntakeIds)
-          .order("created_at", { ascending: false })
-      : Promise.resolve({ data: [] as OpsCallRow[] }),
-
-    opsIntakeIds.length
-      ? supabaseAdmin
-          .from("ops_pie_reports")
-          .select("id, ops_intake_id, created_at, status, summary")
-          .in("ops_intake_id", opsIntakeIds)
-          .order("created_at", { ascending: false })
-      : Promise.resolve({ data: [] as OpsPieRow[] }),
+  const [leadRes, opsCallRes, opsPieRes] = await Promise.all([
+    leadIds.length ? supabaseAdmin.from("leads").select("id, email, name").in("id", leadIds) : Promise.resolve({ data: [] as LeadRow[] }),
+    opsIds.length ? supabaseAdmin.from("ops_call_requests").select("id, ops_intake_id, status").in("ops_intake_id", opsIds).order("created_at", { ascending: false }) : Promise.resolve({ data: [] as OpsCallRow[] }),
+    opsIds.length ? supabaseAdmin.from("ops_pie_reports").select("id, ops_intake_id, summary").in("ops_intake_id", opsIds).order("created_at", { ascending: false }) : Promise.resolve({ data: [] as OpsPieRow[] }),
   ]);
 
-  const leadRows = (leadRowsRes.data ?? []) as LeadRow[];
-  const opsCalls = (opsCallsRes.data ?? []) as OpsCallRow[];
-  const opsPies = (opsPiesRes.data ?? []) as OpsPieRow[];
-
   const leadById = new Map<string, LeadRow>();
-  for (const l of leadRows) leadById.set(l.id, l);
+  for (const l of (leadRes.data ?? []) as LeadRow[]) leadById.set(l.id, l);
 
-  const latestCallByOpsIntakeId = new Map<string, OpsCallRow>();
-  for (const c of opsCalls) {
-    if (!latestCallByOpsIntakeId.has(c.ops_intake_id)) {
-      latestCallByOpsIntakeId.set(c.ops_intake_id, c);
-    }
-  }
+  const callByOps = new Map<string, OpsCallRow>();
+  for (const c of (opsCallRes.data ?? []) as OpsCallRow[]) { if (!callByOps.has(c.ops_intake_id)) callByOps.set(c.ops_intake_id, c); }
 
-  const latestPieByOpsIntakeId = new Map<string, OpsPieRow>();
-  for (const p of opsPies) {
-    if (!latestPieByOpsIntakeId.has(p.ops_intake_id)) {
-      latestPieByOpsIntakeId.set(p.ops_intake_id, p);
-    }
-  }
+  const pieByOps = new Map<string, OpsPieRow>();
+  for (const p of (opsPieRes.data ?? []) as OpsPieRow[]) { if (!pieByOps.has(p.ops_intake_id)) pieByOps.set(p.ops_intake_id, p); }
 
-  const websiteCount = quoteRows.length;
-  const opsCount = opsRows.length;
-  const signedInAs = user.email || "your account";
+  const totalProjects = quoteRows.length + opsRows.length + ecomRows.length;
+  const userName = quoteRows[0]?.lead_id ? leadById.get(quoteRows[0].lead_id)?.name : null;
 
   return (
-    <main className="container section" style={{ paddingBottom: 84 }}>
+    <div className="container" style={{ paddingBottom: 48 }}>
       <ScrollReveal />
-      <div className="heroFadeUp">
-        <div className="kicker">
-          <span className="kickerDot" aria-hidden="true" />
-          Client Portal
+
+      {/* ── Hero ── */}
+      <div className="portalStory heroFadeUp">
+        <div className="portalStoryKicker">
+          <span className="portalStoryKickerDot" />
+          Client portal
         </div>
 
-        <div style={{ height: 14 }} />
-        <h1 className="h1">Welcome back</h1>
-        <p className="p" style={{ maxWidth: 840, marginTop: 10 }}>
-          This is your project hub across all service lanes. Start with the
-          active lane, see what is moving, and open the right workspace without
-          digging through emails.
+        <h1 className="portalStoryHeadline">
+          Welcome back{userName ? <>, <em>{userName}</em></> : null}
+        </h1>
+
+        <p className="portalStoryBody">
+          {totalProjects === 0
+            ? "You don't have any projects yet. Start a website quote, workflow audit, or e-commerce intake to get going."
+            : `You have ${totalProjects} active project${totalProjects !== 1 ? "s" : ""} across your service lanes. Open any workspace to check status, upload content, or leave feedback.`}
         </p>
 
-        <div className="row" style={{ marginTop: 18, alignItems: "center" }}>
-          <span
-            style={{
-              color: "var(--fg)",
-              fontWeight: 800,
-              fontSize: 14,
-            }}
-          >
-            Signed in as {signedInAs}
-          </span>
-
-          {claimResult.ok && !claimResult.skipped ? (
-            <span
-              style={{
-                padding: "8px 10px",
-                borderRadius: 999,
-                background: "rgba(46, 160, 67, 0.12)",
-                border: "1px solid rgba(46, 160, 67, 0.26)",
-                color: "#b7f5c4",
-                fontSize: 12,
-                fontWeight: 800,
-              }}
-            >
-              Records synced
-            </span>
-          ) : null}
-        </div>
-
-        <div className="row" style={{ marginTop: 18 }}>
-          <Link href="/build/intro" className="btn btnPrimary">
-            New Website Quote <span className="btnArrow">→</span>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <Link href="/build/intro" className="portalStoryCta">
+            New website quote <span className="portalStoryCtaArrow">→</span>
           </Link>
-          <Link href="/ops-intake" className="btn btnGhost">
-            New Ops Intake
+          <Link href="/ops-intake" className="btn btnGhost" style={{ fontSize: 13 }}>
+            New workflow audit
           </Link>
-          <Link href="/ecommerce/intake" className="btn btnGhost">
-            New E-Commerce Intake
+          <Link href="/ecommerce/intake" className="btn btnGhost" style={{ fontSize: 13 }}>
+            New e-commerce intake
           </Link>
-          {admin ? (
-            <Link href="/internal/admin" className="btn btnGhost">
+          {admin && (
+            <Link href="/internal/admin" className="btn btnGhost" style={{ fontSize: 13 }}>
               Admin HQ
             </Link>
-          ) : null}
+          )}
+        </div>
+
+        <div className="portalStoryMeta">
+          <span className="portalStoryMetaItem">Signed in as {user.email}</span>
         </div>
       </div>
 
-      <section
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          gap: 16,
-          marginTop: 28,
-        }}
-      >
-        <LaneCard
-          title="Website Project Studio"
-          desc="Your flagship client workspace for website quotes, scope, assets, preview review, milestones, and launch readiness."
-          countLabel={`${websiteCount} website project${websiteCount === 1 ? "" : "s"}`}
-          primaryHref={websiteCount > 0 ? "/#website-projects" : "/build/intro"}
-          primaryLabel={websiteCount > 0 ? "Open Website Lane" : "Start Website Quote"}
-          secondaryHref="/websites"
-          secondaryLabel="Learn More"
-          tone="gold"
+      {/* ── Lane Summary Cards ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12, marginBottom: 36 }}>
+        <LaneSummaryCard
+          lane="website"
+          title="Websites"
+          count={quoteRows.length}
+          href={quoteRows.length > 0 ? "#website-projects" : "/build/intro"}
+          cta={quoteRows.length > 0 ? "View projects" : "Start a quote"}
         />
-
-        <LaneCard
-          title="Systems Lab"
-          desc="Track workflow audits, call status, recommendations, and the operational lane for backend systems and automation."
-          countLabel={`${opsCount} ops request${opsCount === 1 ? "" : "s"}`}
-          primaryHref={opsCount > 0 ? "/#ops-projects" : "/ops-intake"}
-          primaryLabel={opsCount > 0 ? "Open Ops Lane" : "Start Workflow Audit"}
-          secondaryHref="/systems"
-          secondaryLabel="Learn More"
-          tone="blue"
+        <LaneSummaryCard
+          lane="ops"
+          title="Automation"
+          count={opsRows.length}
+          href={opsRows.length > 0 ? "#ops-projects" : "/ops-intake"}
+          cta={opsRows.length > 0 ? "View projects" : "Start an audit"}
         />
-
-        <LaneCard
-          title="Seller Command Center"
-          desc="The e-commerce lane is the next workspace to be expanded after Website Studio and Systems Lab are fully staged."
-          countLabel="Lane staging"
-          primaryHref="/ecommerce/intake"
-          primaryLabel="Start E-Commerce Intake"
-          secondaryHref="/ecommerce"
-          secondaryLabel="Learn More"
-          tone="neutral"
+        <LaneSummaryCard
+          lane="ecom"
+          title="E-commerce"
+          count={ecomRows.length}
+          href={ecomRows.length > 0 ? "#ecom-projects" : "/ecommerce/intake"}
+          cta={ecomRows.length > 0 ? "View projects" : "Start an intake"}
         />
-      </section>
+      </div>
 
-      <section style={{ marginTop: 28 }}>
-        <div className="panel fadeUp">
-          <div className="panelBody">
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-                gap: 14,
-              }}
-            >
-              <MiniStat label="Website Projects" value={String(websiteCount)} />
-              <MiniStat label="Ops Requests" value={String(opsCount)} />
-              <MiniStat
-                label="Website Workspaces"
-                value={String(quoteRows.filter((q) => !!q.public_token).length)}
-              />
-              <MiniStat
-                label="Ready for Next Step"
-                value={String(
-                  quoteRows.filter((q) =>
-                    ["proposal", "deposit", "active", "closed_won"].includes(
-                      String(q.status || "").toLowerCase()
-                    )
-                  ).length
-                )}
-              />
-            </div>
+      {/* ── Website Projects ── */}
+      {quoteRows.length > 0 && (
+        <section id="website-projects" style={{ marginBottom: 36 }}>
+          <div className="portalSectionLabel" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: LANE_COLORS.website.dot }} />
+            Website projects
           </div>
-        </div>
-      </section>
 
-      <section id="website-projects" style={{ marginTop: 28 }}>
-        <div className="heroFadeUp">
-          <div className="kicker">
-            <span className="kickerDot" aria-hidden="true" />
-            Website Lane
-          </div>
-          <div style={{ height: 10 }} />
-          <h2 className="h2">Website Project Studio</h2>
-          <p className="p" style={{ maxWidth: 760, marginTop: 8 }}>
-            This is the flagship lane. Each project should eventually route into
-            a full client workspace with scope, assets, preview review,
-            agreement status, and milestones.
-          </p>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gap: 16,
-            marginTop: 18,
-          }}
-        >
-          {quoteRows.length === 0 ? (
-            <div className="panel fadeUp">
-              <div className="panelBody">
-                <div
-                  style={{
-                    color: "var(--fg)",
-                    fontWeight: 800,
-                    fontSize: 20,
-                    marginBottom: 8,
-                  }}
-                >
-                  No website projects yet
-                </div>
-                <p className="p" style={{ margin: 0 }}>
-                  Start the website intake and estimate flow first. Once a quote
-                  exists, the project can route into its workspace.
-                </p>
-                <div className="row" style={{ marginTop: 16 }}>
-                  <Link href="/build/intro" className="btn btnPrimary">
-                    Start Website Quote <span className="btnArrow">→</span>
-                  </Link>
-                  <Link href="/websites" className="btn btnGhost">
-                    Explore Website Service
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ) : (
-            quoteRows.map((q, i) => {
+          <div style={{ display: "grid", gap: 10 }}>
+            {quoteRows.map((q) => {
               const lead = q.lead_id ? leadById.get(q.lead_id) : null;
-              const tone = statusTone(q.status);
-              const laneMeta = laneMetaForQuote(q);
-
+              const lc = LANE_COLORS.website;
               return (
-                <article
-                  key={q.id}
-                  className={`panel fadeUp stagger-${Math.min(i + 1, 4)}`}
-                >
-                  <div className="panelBody">
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "minmax(0, 1fr) auto",
-                        gap: 16,
-                        alignItems: "start",
-                      }}
-                    >
-                      <div>
-                        <div
-                          style={{
-                            color: "var(--fg)",
-                            fontWeight: 900,
-                            fontSize: 24,
-                            lineHeight: 1.1,
-                          }}
-                        >
-                          {lead?.name || "Website Project"}
-                        </div>
-
-                        <div
-                          style={{
-                            marginTop: 8,
-                            display: "flex",
-                            gap: 10,
-                            flexWrap: "wrap",
-                            alignItems: "center",
-                            color: "var(--muted)",
-                            fontSize: 14,
-                          }}
-                        >
-                          <span>ID: #{String(q.id).slice(0, 8)}</span>
-                          <span>•</span>
-                          <span>{fmtDate(q.created_at)}</span>
-                          <span>•</span>
-                          <span>{q.tier_recommended || "Website Scope"}</span>
-                        </div>
-
-                        <div
-                          style={{
-                            marginTop: 14,
-                            display: "grid",
-                            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                            gap: 12,
-                          }}
-                        >
-                          <InfoTile
-                            label="Investment"
-                            value={estimateLabel(q)}
-                          />
-                          <InfoTile label="Phase" value={laneMeta.phase} />
-                          <InfoTile
-                            label="Next Action"
-                            value={laneMeta.nextAction}
-                          />
-                        </div>
-                      </div>
-
-                      <div
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          padding: "8px 12px",
-                          borderRadius: 999,
-                          background: tone.bg,
-                          border: `1px solid ${tone.border}`,
-                          color: tone.color,
-                          fontWeight: 800,
-                          fontSize: 12,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.08em",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {tone.label}
-                      </div>
+                <div key={q.id} style={{
+                  background: "var(--panel)", border: `1px solid ${lc.border}`,
+                  borderRadius: 16, padding: "18px 22px",
+                  display: "grid", gridTemplateColumns: "minmax(0,1fr) auto",
+                  gap: 16, alignItems: "center",
+                }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                      <span style={{
+                        fontFamily: "'Playfair Display', Georgia, serif",
+                        fontSize: 18, fontWeight: 500, color: "var(--fg)", letterSpacing: "-0.02em",
+                      }}>
+                        {lead?.name || "Website Project"}
+                      </span>
+                      <StatusPill status={q.status} lane="website" />
                     </div>
-
-                    <div className="row" style={{ marginTop: 18 }}>
-                      {q.public_token ? (
-                        <Link
-                          href={`/portal/${q.public_token}`}
-                          className="btn btnPrimary"
-                        >
-                          Open Project Studio <span className="btnArrow">→</span>
-                        </Link>
-                      ) : (
-                        <Link href="/book" className="btn btnPrimary">
-                          Continue Booking <span className="btnArrow">→</span>
-                        </Link>
-                      )}
-
-                      <Link href="/process" className="btn btnGhost">
-                        View Process
-                      </Link>
+                    <div style={{ display: "flex", gap: 14, marginTop: 6, flexWrap: "wrap", fontSize: 12, color: "var(--muted2)" }}>
+                      <span>{fmtDate(q.created_at)}</span>
+                      <span>{q.tier_recommended || "Website scope"}</span>
+                      <span>{estimateLabel(q)}</span>
+                      <span>{quotePhase(q)}</span>
                     </div>
                   </div>
-                </article>
+                  <div>
+                    {q.public_token ? (
+                      <Link href={`/portal/${q.public_token}`} className="btn btnPrimary" style={{ fontSize: 12, padding: "8px 16px" }}>
+                        Open workspace →
+                      </Link>
+                    ) : (
+                      <Link href="/build/intro" className="btn btnGhost" style={{ fontSize: 12, padding: "8px 16px" }}>
+                        Continue →
+                      </Link>
+                    )}
+                  </div>
+                </div>
               );
-            })
-          )}
-        </div>
-      </section>
-
-      <section id="ops-projects" style={{ marginTop: 34 }}>
-        <div className="heroFadeUp">
-          <div className="kicker">
-            <span className="kickerDot" aria-hidden="true" />
-            Workflow Lane
+            })}
           </div>
-          <div style={{ height: 10 }} />
-          <h2 className="h2">Systems Lab</h2>
-          <p className="p" style={{ maxWidth: 760, marginTop: 8 }}>
-            This lane stays visible in the hub, but the website workspace is the
-            first dashboard being deepened.
-          </p>
-        </div>
+        </section>
+      )}
 
-        <div
-          style={{
-            display: "grid",
-            gap: 16,
-            marginTop: 18,
-          }}
-        >
-          {opsRows.length === 0 ? (
-            <div className="panel fadeUp">
-              <div className="panelBody">
-                <div
-                  style={{
-                    color: "var(--fg)",
-                    fontWeight: 800,
-                    fontSize: 20,
-                    marginBottom: 8,
-                  }}
-                >
-                  No ops requests yet
-                </div>
-                <p className="p" style={{ margin: 0 }}>
-                  Once a workflow audit is submitted, this lane will show call
-                  status, recommendation state, and the next operational step.
-                </p>
-                <div className="row" style={{ marginTop: 16 }}>
-                  <Link href="/ops-intake" className="btn btnPrimary">
-                    Start Workflow Audit <span className="btnArrow">→</span>
-                  </Link>
-                  <Link href="/systems" className="btn btnGhost">
-                    Explore Workflow Systems
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ) : (
-            opsRows.map((o, i) => {
-              const latestCall = latestCallByOpsIntakeId.get(o.id) ?? null;
-              const latestPie = latestPieByOpsIntakeId.get(o.id) ?? null;
-              const tone = statusTone(o.status);
+      {/* ── Ops Projects ── */}
+      {opsRows.length > 0 && (
+        <section id="ops-projects" style={{ marginBottom: 36 }}>
+          <div className="portalSectionLabel" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: LANE_COLORS.ops.dot }} />
+            Workflow automation projects
+          </div>
 
+          <div style={{ display: "grid", gap: 10 }}>
+            {opsRows.map((o) => {
+              const call = callByOps.get(o.id);
+              const pie = pieByOps.get(o.id);
+              const lc = LANE_COLORS.ops;
               return (
-                <article
-                  key={o.id}
-                  className={`panel fadeUp stagger-${Math.min(i + 1, 4)}`}
-                >
-                  <div className="panelBody">
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "minmax(0, 1fr) auto",
-                        gap: 16,
-                        alignItems: "start",
-                      }}
-                    >
-                      <div>
-                        <div
-                          style={{
-                            color: "var(--fg)",
-                            fontWeight: 900,
-                            fontSize: 24,
-                            lineHeight: 1.1,
-                          }}
-                        >
-                          {o.company_name || "Ops Request"}
-                        </div>
-
-                        <div
-                          style={{
-                            marginTop: 8,
-                            display: "flex",
-                            gap: 10,
-                            flexWrap: "wrap",
-                            alignItems: "center",
-                            color: "var(--muted)",
-                            fontSize: 14,
-                          }}
-                        >
-                          <span>ID: #{String(o.id).slice(0, 8)}</span>
-                          <span>•</span>
-                          <span>{fmtDate(o.created_at)}</span>
-                          <span>•</span>
-                          <span>{o.industry || "Workflow Systems"}</span>
-                        </div>
-
-                        <div
-                          style={{
-                            marginTop: 14,
-                            display: "grid",
-                            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                            gap: 12,
-                          }}
-                        >
-                          <InfoTile
-                            label="Call Request"
-                            value={latestCall?.status || "Not requested"}
-                          />
-                          <InfoTile
-                            label="Recommendation"
-                            value={o.recommendation_tier || "Pending"}
-                          />
-                          <InfoTile
-                            label="Next Step"
-                            value={latestPie?.summary || "Continue ops flow"}
-                          />
-                        </div>
-                      </div>
-
-                      <div
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          padding: "8px 12px",
-                          borderRadius: 999,
-                          background: tone.bg,
-                          border: `1px solid ${tone.border}`,
-                          color: tone.color,
-                          fontWeight: 800,
-                          fontSize: 12,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.08em",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {tone.label}
-                      </div>
+                <div key={o.id} style={{
+                  background: "var(--panel)", border: `1px solid ${lc.border}`,
+                  borderRadius: 16, padding: "18px 22px",
+                  display: "grid", gridTemplateColumns: "minmax(0,1fr) auto",
+                  gap: 16, alignItems: "center",
+                }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                      <span style={{
+                        fontFamily: "'Playfair Display', Georgia, serif",
+                        fontSize: 18, fontWeight: 500, color: "var(--fg)", letterSpacing: "-0.02em",
+                      }}>
+                        {o.company_name || "Workflow Request"}
+                      </span>
+                      <StatusPill status={o.status} lane="ops" />
                     </div>
+                    <div style={{ display: "flex", gap: 14, marginTop: 6, flexWrap: "wrap", fontSize: 12, color: "var(--muted2)" }}>
+                      <span>{fmtDate(o.created_at)}</span>
+                      <span>{o.industry || "Workflow systems"}</span>
+                      <span>{o.recommendation_tier || "Pending"}</span>
+                      <span>Call: {pretty(call?.status) || "Not requested"}</span>
+                    </div>
+                    {pie?.summary && (
+                      <div style={{ marginTop: 8, fontSize: 13, color: "var(--muted)", lineHeight: 1.5, maxWidth: 500 }}>
+                        {pie.summary.length > 120 ? pie.summary.slice(0, 120) + "…" : pie.summary}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <Link href={`/portal/ops/${o.id}`} className="btn btnPrimary" style={{ fontSize: 12, padding: "8px 16px" }}>
+                      Open workspace →
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
-                    <div className="row" style={{ marginTop: 18 }}>
-                      <Link href={`/portal/ops/${o.id}`} className="btn btnPrimary">
-                        Open Workspace <span className="btnArrow">→</span>
-                      </Link>
-                      <Link href="/ops-intake" className="btn btnGhost">
-                        Book / Update Call
-                      </Link>
+      {/* ── E-Commerce Projects ── */}
+      {ecomRows.length > 0 && (
+        <section id="ecom-projects" style={{ marginBottom: 36 }}>
+          <div className="portalSectionLabel" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: LANE_COLORS.ecom.dot }} />
+            E-commerce projects
+          </div>
+
+          <div style={{ display: "grid", gap: 10 }}>
+            {ecomRows.map((e) => {
+              const lc = LANE_COLORS.ecom;
+              return (
+                <div key={e.id} style={{
+                  background: "var(--panel)", border: `1px solid ${lc.border}`,
+                  borderRadius: 16, padding: "18px 22px",
+                  display: "grid", gridTemplateColumns: "minmax(0,1fr) auto",
+                  gap: 16, alignItems: "center",
+                }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                      <span style={{
+                        fontFamily: "'Playfair Display', Georgia, serif",
+                        fontSize: 18, fontWeight: 500, color: "var(--fg)", letterSpacing: "-0.02em",
+                      }}>
+                        {e.business_name || "E-Commerce Request"}
+                      </span>
+                      <StatusPill status={e.status} lane="ecom" />
+                    </div>
+                    <div style={{ display: "flex", gap: 14, marginTop: 6, flexWrap: "wrap", fontSize: 12, color: "var(--muted2)" }}>
+                      <span>{fmtDate(e.created_at)}</span>
+                      <span>{e.store_url || "No store URL"}</span>
                     </div>
                   </div>
-                </article>
+                  <div>
+                    <Link href={`/portal/ecommerce/${e.id}`} className="btn btnPrimary" style={{ fontSize: 12, padding: "8px 16px" }}>
+                      Open workspace →
+                    </Link>
+                  </div>
+                </div>
               );
-            })
-          )}
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ── Empty state ── */}
+      {totalProjects === 0 && (
+        <div style={{
+          textAlign: "center", padding: 56, border: "1px dashed var(--stroke)",
+          borderRadius: 16, color: "var(--muted2)", marginTop: 8,
+        }}>
+          <div style={{
+            fontFamily: "'Playfair Display', Georgia, serif",
+            fontSize: 22, fontWeight: 500, color: "var(--fg)", marginBottom: 10,
+          }}>
+            No projects yet
+          </div>
+          <div style={{ fontSize: 14, lineHeight: 1.6, maxWidth: 400, margin: "0 auto" }}>
+            Start a website quote, workflow audit, or e-commerce intake. Your projects will appear here with their own workspaces.
+          </div>
         </div>
-      </section>
-    </main>
+      )}
+
+      {/* ── Footer ── */}
+      <div className="portalFooter">
+        Powered by <a href="/">Crecy Studio</a>
+      </div>
+    </div>
   );
 }
 
-function LaneCard({
-  title,
-  desc,
-  countLabel,
-  primaryHref,
-  primaryLabel,
-  secondaryHref,
-  secondaryLabel,
-  tone,
-}: {
-  title: string;
-  desc: string;
-  countLabel: string;
-  primaryHref: string;
-  primaryLabel: string;
-  secondaryHref: string;
-  secondaryLabel: string;
-  tone: "gold" | "blue" | "neutral";
+/* ═══════════════════════════════════
+   SUB-COMPONENTS
+   ═══════════════════════════════════ */
+
+function LaneSummaryCard({ lane, title, count, href, cta }: {
+  lane: "website" | "ops" | "ecom"; title: string; count: number; href: string; cta: string;
 }) {
-  const toneMap =
-    tone === "gold"
-      ? {
-          border: "rgba(201,168,76,0.28)",
-          glow: "rgba(201,168,76,0.12)",
-        }
-      : tone === "blue"
-      ? {
-          border: "rgba(141,164,255,0.24)",
-          glow: "rgba(141,164,255,0.10)",
-        }
-      : {
-          border: "rgba(255,255,255,0.12)",
-          glow: "rgba(255,255,255,0.04)",
-        };
-
+  const lc = LANE_COLORS[lane];
   return (
-    <article
-      className="panel fadeUp"
-      style={{
-        borderColor: toneMap.border,
-        boxShadow: `0 0 0 1px ${toneMap.border}, 0 16px 40px ${toneMap.glow}`,
-      }}
-    >
-      <div className="panelBody">
-        <div
-          style={{
-            color: "var(--accent)",
-            fontSize: 12,
-            fontWeight: 800,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            marginBottom: 10,
-          }}
-        >
-          Service lane
-        </div>
-
-        <div
-          style={{
-            color: "var(--fg)",
-            fontWeight: 900,
-            fontSize: 24,
-            lineHeight: 1.08,
-          }}
-        >
+    <Link href={href} style={{
+      display: "block", textDecoration: "none",
+      background: lc.bg, border: `1px solid ${lc.border}`,
+      borderRadius: 16, padding: "20px 22px",
+      transition: "transform 0.2s, border-color 0.2s",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <span style={{ width: 8, height: 8, borderRadius: "50%", background: lc.dot }} />
+        <span style={{ fontSize: 11, fontWeight: 600, color: lc.accent, textTransform: "uppercase", letterSpacing: "0.08em" }}>
           {title}
-        </div>
-
-        <p className="p" style={{ marginTop: 10, marginBottom: 0 }}>
-          {desc}
-        </p>
-
-        <div
-          style={{
-            marginTop: 16,
-            display: "inline-flex",
-            padding: "8px 10px",
-            borderRadius: 999,
-            border: "1px solid var(--stroke)",
-            background: "var(--panel2)",
-            color: "var(--fg)",
-            fontSize: 12,
-            fontWeight: 800,
-          }}
-        >
-          {countLabel}
-        </div>
-
-        <div className="row" style={{ marginTop: 16 }}>
-          <Link href={primaryHref} className="btn btnPrimary">
-            {primaryLabel} <span className="btnArrow">→</span>
-          </Link>
-          <Link href={secondaryHref} className="btn btnGhost">
-            {secondaryLabel}
-          </Link>
-        </div>
+        </span>
       </div>
-    </article>
+      <div style={{
+        fontFamily: "'Playfair Display', Georgia, serif",
+        fontSize: 28, fontWeight: 600, color: "var(--fg)", letterSpacing: "-0.02em",
+      }}>
+        {count}
+      </div>
+      <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 4 }}>
+        project{count !== 1 ? "s" : ""}
+      </div>
+      <div style={{ marginTop: 12, fontSize: 13, fontWeight: 600, color: lc.accent }}>
+        {cta} →
+      </div>
+    </Link>
   );
 }
 
-function MiniStat({ label, value }: { label: string; value: string }) {
+function StatusPill({ status, lane }: { status: string | null; lane: "website" | "ops" | "ecom" }) {
+  const lc = LANE_COLORS[lane];
   return (
-    <div
-      style={{
-        border: "1px solid var(--stroke)",
-        borderRadius: 16,
-        background: "var(--panel2)",
-        padding: 18,
-      }}
-    >
-      <div
-        style={{
-          color: "var(--fg)",
-          fontWeight: 900,
-          fontSize: 28,
-          lineHeight: 1,
-          letterSpacing: "-0.04em",
-        }}
-      >
-        {value}
-      </div>
-      <div
-        style={{
-          marginTop: 8,
-          color: "var(--muted)",
-          fontSize: 13,
-          fontWeight: 700,
-        }}
-      >
-        {label}
-      </div>
-    </div>
-  );
-}
-
-function InfoTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div
-      style={{
-        border: "1px solid var(--stroke)",
-        borderRadius: 14,
-        background: "var(--panel2)",
-        padding: 14,
-      }}
-    >
-      <div
-        style={{
-          color: "var(--muted)",
-          fontSize: 12,
-          fontWeight: 800,
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-          marginBottom: 6,
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          color: "var(--fg)",
-          fontWeight: 800,
-          fontSize: 15,
-          lineHeight: 1.35,
-        }}
-      >
-        {value}
-      </div>
-    </div>
+    <span style={{
+      padding: "3px 10px", borderRadius: 999, fontSize: 10, fontWeight: 600,
+      textTransform: "uppercase", letterSpacing: "0.06em",
+      background: lc.bg, border: `1px solid ${lc.border}`, color: lc.accent,
+    }}>
+      {pretty(status)}
+    </span>
   );
 }
