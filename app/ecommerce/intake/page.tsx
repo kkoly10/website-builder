@@ -3,42 +3,80 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
+/* ═══════════════════════════════════
+   TYPES
+   ═══════════════════════════════════ */
+
+type EntryPath = "build" | "run" | "fix" | null;
+
 type EcomFormState = {
+  entryPath: EntryPath;
   businessName: string;
   contactName: string;
   email: string;
   phone: string;
   storeUrl: string;
+  platform: string;
   salesChannels: string[];
   serviceTypes: string[];
   skuCount: string;
-  unitsInStock: string;
-  productSize: string;
-  fragile: string;
-  storageType: string;
   monthlyOrders: string;
   peakOrders: string;
-  avgItemsPerOrder: string;
-  monthlyReturns: string;
-  readinessStage: string;
+  storageType: string;
   budgetRange: string;
   timeline: string;
-  decisionMaker: string;
   notes: string;
 };
 
-const STORAGE_KEY = "ecom-intake-draft-v1";
-const CHANNELS = ["Amazon", "eBay", "Shopify", "Etsy", "Walmart", "Other"];
-const SERVICES = ["Website only", "Hosting / maintenance", "Product listing help", "Inventory storage", "Fulfillment", "Returns handling", "Marketplace management", "Virtual assistant support"];
+const STORAGE_KEY = "ecom-intake-draft-v2";
+
+const CHANNELS = ["Shopify", "Amazon", "Etsy", "eBay", "WooCommerce", "Walmart", "Own website", "Other"];
+
+const BUILD_SERVICES = [
+  "Full store build (design + setup)",
+  "Product page design",
+  "Checkout flow optimization",
+  "Payment gateway setup",
+  "Shipping rate configuration",
+  "Post-purchase email flow",
+];
+
+const RUN_SERVICES = [
+  "Product listing management",
+  "Order processing & fulfillment coordination",
+  "Customer service & returns",
+  "Inventory tracking",
+  "Marketplace management (Amazon, Etsy, etc.)",
+  "Monthly performance reporting",
+  "Promotional campaigns & pricing updates",
+];
+
+const FIX_SERVICES = [
+  "Checkout abandonment audit",
+  "Conversion rate optimization",
+  "Shipping & fulfillment restructure",
+  "Product page overhaul",
+  "Post-purchase flow fix",
+  "Payment & tax configuration",
+];
+
+const PLATFORMS = ["Shopify", "WooCommerce", "BigCommerce", "Squarespace", "Wix", "Amazon Seller Central", "Etsy", "Custom / other", "Don't have one yet"];
 
 const EMPTY_FORM: EcomFormState = {
-  businessName: "", contactName: "", email: "", phone: "", storeUrl: "", salesChannels: [], serviceTypes: [],
-  skuCount: "", unitsInStock: "", productSize: "", fragile: "No", storageType: "Shelf", monthlyOrders: "", peakOrders: "", avgItemsPerOrder: "", monthlyReturns: "",
-  readinessStage: "already selling", budgetRange: "", timeline: "", decisionMaker: "", notes: "",
+  entryPath: null,
+  businessName: "", contactName: "", email: "", phone: "",
+  storeUrl: "", platform: "", salesChannels: [], serviceTypes: [],
+  skuCount: "", monthlyOrders: "", peakOrders: "",
+  storageType: "Shelf", budgetRange: "", timeline: "", notes: "",
 };
+
+/* ═══════════════════════════════════
+   COMPONENT
+   ═══════════════════════════════════ */
 
 export default function EcommerceIntakePage() {
   const router = useRouter();
+  const [step, setStep] = useState(0);
   const [form, setForm] = useState<EcomFormState>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -46,7 +84,11 @@ export default function EcommerceIntakePage() {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setForm({ ...EMPTY_FORM, ...JSON.parse(raw) });
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setForm({ ...EMPTY_FORM, ...parsed });
+        if (parsed.entryPath) setStep(1);
+      }
     } catch {}
   }, []);
 
@@ -56,25 +98,72 @@ export default function EcommerceIntakePage() {
 
   const emailValid = useMemo(() => /^\S+@\S+\.\S+$/.test(form.email), [form.email]);
 
-  const toggle = (field: "salesChannels" | "serviceTypes", value: string) => {
+  const serviceOptions = useMemo(() => {
+    if (form.entryPath === "build") return BUILD_SERVICES;
+    if (form.entryPath === "run") return RUN_SERVICES;
+    if (form.entryPath === "fix") return FIX_SERVICES;
+    return [];
+  }, [form.entryPath]);
+
+  function toggleList(field: "salesChannels" | "serviceTypes", value: string) {
     setForm((prev) => ({
       ...prev,
-      [field]: prev[field].includes(value) ? prev[field].filter((v) => v !== value) : [...prev[field], value],
+      [field]: prev[field].includes(value)
+        ? prev[field].filter((v) => v !== value)
+        : [...prev[field], value],
     }));
-  };
+  }
 
-  const submit = async () => {
-    if (!form.businessName || !form.contactName || !emailValid) {
+  function selectPath(path: EntryPath) {
+    setForm((prev) => ({ ...prev, entryPath: path, serviceTypes: [] }));
+    setStep(1);
+  }
+
+  function next() { setStep((s) => Math.min(s + 1, totalSteps)); }
+  function back() { setStep((s) => Math.max(s - 1, 0)); }
+
+  const totalSteps = form.entryPath === "build" ? 5 : 4;
+  const showInventoryStep = form.entryPath !== "build";
+
+  async function submit() {
+    if (!form.businessName.trim() || !form.contactName.trim() || !emailValid) {
       setError("Please complete business name, contact name, and a valid email.");
       return;
     }
     setError("");
     setSubmitting(true);
     try {
+      const payload = {
+        businessName: form.businessName,
+        contactName: form.contactName,
+        email: form.email,
+        phone: form.phone,
+        storeUrl: form.storeUrl,
+        salesChannels: form.salesChannels,
+        serviceTypes: form.serviceTypes,
+        skuCount: form.skuCount,
+        monthlyOrders: form.monthlyOrders,
+        peakOrders: form.peakOrders,
+        storageType: form.storageType,
+        budgetRange: form.budgetRange,
+        timeline: form.timeline,
+        notes: form.notes,
+        readinessStage: form.entryPath === "build" ? "need website first"
+          : form.entryPath === "fix" ? "already selling"
+          : "already selling",
+        // Pass the entry path as metadata
+        unitsInStock: "",
+        productSize: "",
+        fragile: "No",
+        monthlyReturns: "",
+        avgItemsPerOrder: "",
+        decisionMaker: "",
+      };
+
       const res = await fetch("/api/ecommerce/submit-intake", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok || !data?.ok) throw new Error(data?.error || "Submission failed");
@@ -84,95 +173,485 @@ export default function EcommerceIntakePage() {
       setError(err.message || "Something went wrong.");
       setSubmitting(false);
     }
+  }
+
+  const pathMeta = {
+    build: {
+      label: "Build my store",
+      color: "#c9a84c",
+      description: "You need a new online store designed, built, and launched.",
+    },
+    run: {
+      label: "Run my existing store",
+      color: "#5DCAA5",
+      description: "You have a working store and need someone to handle operations.",
+    },
+    fix: {
+      label: "Fix my broken store",
+      color: "#8da4ff",
+      description: "Your store exists but something isn't working right.",
+    },
   };
 
   return (
-    <main className="container" style={{ paddingBottom: 80 }}>
-      <section className="section" style={{ maxWidth: 840, margin: "0 auto" }}>
-        <div className="kicker">E-Commerce Intake</div>
-        <h1 className="h1" style={{ marginTop: 10 }}>Tell us about your seller operation</h1>
-        <p className="p" style={{ marginTop: 10 }}>Complete this guided intake to receive a custom e-commerce recommendation and quote.</p>
-      </section>
+    <main className="container" style={{ paddingBottom: 64 }}>
+      <div style={{ maxWidth: 780, margin: "0 auto" }}>
 
-      <section className="section" style={{ maxWidth: 840, margin: "0 auto", paddingTop: 0 }}>
-        <FormCard title="Section A — Business basics">
-          <Field label="Business name *"><input className="input" value={form.businessName} onChange={(e) => setForm({ ...form, businessName: e.target.value })} /></Field>
-          <div className="grid2">
-            <Field label="Contact name *"><input className="input" value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} /></Field>
-            <Field label="Email *"><input className="input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /><div style={{ fontSize: 12, color: form.email ? (emailValid ? "#22c55e" : "#ef4444") : "var(--muted)", marginTop: 4 }}>{form.email ? (emailValid ? "Email looks valid" : "Enter a valid email") : "We validate email before submission."}</div></Field>
+        {/* Header */}
+        <div className="portalStory heroFadeUp" style={{ paddingBottom: 24 }}>
+          <div className="portalStoryKicker">
+            <span className="portalStoryKickerDot" />
+            E-commerce intake
           </div>
-          <div className="grid2">
-            <Field label="Phone"><input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
-            <Field label="Website/store URL"><input className="input" value={form.storeUrl} onChange={(e) => setForm({ ...form, storeUrl: e.target.value })} /></Field>
-          </div>
-        </FormCard>
 
-        <FormCard title="Section B — Where you sell"><CheckboxGrid values={CHANNELS} checked={form.salesChannels} onChange={(v) => toggle("salesChannels", v)} /></FormCard>
-        <FormCard title="Section C — What you need"><CheckboxGrid values={SERVICES} checked={form.serviceTypes} onChange={(v) => toggle("serviceTypes", v)} /></FormCard>
+          <h1 className="portalStoryHeadline" style={{ fontSize: "clamp(28px, 5vw, 42px)" }}>
+            {step === 0
+              ? <>What do you need <em>help with?</em></>
+              : form.entryPath
+              ? <>{pathMeta[form.entryPath].label}</>
+              : <>E-commerce intake</>}
+          </h1>
 
-        <FormCard title="Section D — Inventory profile">
-          <div className="grid2">
-            <Field label="Approximate SKU count"><input className="input" value={form.skuCount} onChange={(e) => setForm({ ...form, skuCount: e.target.value })} /></Field>
-            <Field label="Units currently in stock"><input className="input" value={form.unitsInStock} onChange={(e) => setForm({ ...form, unitsInStock: e.target.value })} /></Field>
-          </div>
-          <div className="grid2">
-            <Field label="Product size"><input className="input" value={form.productSize} onChange={(e) => setForm({ ...form, productSize: e.target.value })} /></Field>
-            <Field label="Fragile?"><select className="select" value={form.fragile} onChange={(e) => setForm({ ...form, fragile: e.target.value })}><option>Yes</option><option>No</option></select></Field>
-          </div>
-          <Field label="Storage type"><select className="select" value={form.storageType} onChange={(e) => setForm({ ...form, storageType: e.target.value })}><option>Shelf</option><option>Bin</option><option>Pallet</option></select></Field>
-        </FormCard>
-
-        <FormCard title="Section E — Order volume">
-          <div className="grid2">
-            <Field label="Orders per month"><input className="input" value={form.monthlyOrders} onChange={(e) => setForm({ ...form, monthlyOrders: e.target.value })} /></Field>
-            <Field label="Peak season volume"><input className="input" value={form.peakOrders} onChange={(e) => setForm({ ...form, peakOrders: e.target.value })} /></Field>
-          </div>
-          <div className="grid2">
-            <Field label="Average items per order"><input className="input" value={form.avgItemsPerOrder} onChange={(e) => setForm({ ...form, avgItemsPerOrder: e.target.value })} /></Field>
-            <Field label="Returns per month"><input className="input" value={form.monthlyReturns} onChange={(e) => setForm({ ...form, monthlyReturns: e.target.value })} /></Field>
-          </div>
-        </FormCard>
-
-        <FormCard title="Section F — Readiness">
-          <Field label="Current stage"><select className="select" value={form.readinessStage} onChange={(e) => setForm({ ...form, readinessStage: e.target.value })}><option>already selling</option><option>launching soon</option><option>need website first</option><option>need storage first</option><option>need full-service help</option></select></Field>
-        </FormCard>
-
-        <FormCard title="Section G — Budget and timeline">
-          <div className="grid2">
-            <Field label="Budget range"><input className="input" value={form.budgetRange} onChange={(e) => setForm({ ...form, budgetRange: e.target.value })} /></Field>
-            <Field label="Timeline"><input className="input" value={form.timeline} onChange={(e) => setForm({ ...form, timeline: e.target.value })} /></Field>
-          </div>
-          <Field label="Decision maker"><input className="input" value={form.decisionMaker} onChange={(e) => setForm({ ...form, decisionMaker: e.target.value })} /></Field>
-          <Field label="Notes"><textarea className="input" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} style={{ minHeight: 120, resize: "vertical" }} /></Field>
-        </FormCard>
-
-        {error ? <p style={{ color: "#ef4444", marginTop: 10 }}>{error}</p> : null}
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 20, alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-          <p className="pDark" style={{ margin: 0, fontSize: 14 }}>Draft auto-saves in your browser.</p>
-          <button className="btn btnPrimary" onClick={submit} disabled={submitting}>{submitting ? "Submitting..." : "Submit E-Commerce Intake"}</button>
+          {step === 0 && (
+            <p className="portalStoryBody">
+              Pick the option that best describes your situation. This determines
+              what questions we ask and what kind of proposal you&apos;ll get.
+            </p>
+          )}
         </div>
-      </section>
+
+        {/* Progress bar */}
+        {step > 0 && (
+          <div style={{
+            height: 3, background: "var(--stroke)", borderRadius: 99,
+            marginBottom: 24, overflow: "hidden",
+          }}>
+            <div style={{
+              width: `${(step / totalSteps) * 100}%`,
+              height: "100%", background: form.entryPath ? pathMeta[form.entryPath].color : "var(--accent)",
+              transition: "width 0.3s ease",
+            }} />
+          </div>
+        )}
+
+        {/* ═══ STEP 0 — Entry Path Selection ═══ */}
+        {step === 0 && (
+          <div style={{ display: "grid", gap: 12 }}>
+            {(["build", "run", "fix"] as const).map((path) => {
+              const meta = pathMeta[path];
+              const selected = form.entryPath === path;
+              return (
+                <button
+                  key={path}
+                  type="button"
+                  onClick={() => selectPath(path)}
+                  style={{
+                    display: "grid", gridTemplateColumns: "12px 1fr auto",
+                    gap: 16, alignItems: "center",
+                    padding: "22px 24px", borderRadius: 16,
+                    border: `1px solid ${selected ? meta.color : "var(--stroke)"}`,
+                    background: selected ? `${meta.color}08` : "var(--panel)",
+                    cursor: "pointer", textAlign: "left",
+                    transition: "border-color 0.2s, background 0.2s, transform 0.2s",
+                  }}
+                >
+                  <div style={{
+                    width: 12, height: 12, borderRadius: "50%",
+                    background: meta.color, opacity: selected ? 1 : 0.4,
+                  }} />
+                  <div>
+                    <div style={{
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      fontSize: 20, fontWeight: 500, color: "var(--fg)",
+                      letterSpacing: "-0.02em",
+                    }}>
+                      {meta.label}
+                    </div>
+                    <div style={{
+                      fontSize: 14, color: "var(--muted)", marginTop: 4, lineHeight: 1.5,
+                    }}>
+                      {meta.description}
+                    </div>
+                  </div>
+                  <div style={{
+                    fontSize: 18, color: meta.color, opacity: 0.6,
+                  }}>→</div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ═══ STEP 1 — Business Basics ═══ */}
+        {step === 1 && (
+          <div className="portalPanel fadeUp">
+            <div className="portalPanelHeader">
+              <h2 className="portalPanelTitle">Tell us about your business</h2>
+            </div>
+            <div style={{ display: "grid", gap: 14 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <div className="fieldLabel">Business name *</div>
+                  <input className="input" value={form.businessName}
+                    onChange={(e) => setForm({ ...form, businessName: e.target.value })}
+                    placeholder="Acme Store" />
+                </div>
+                <div>
+                  <div className="fieldLabel">Contact name *</div>
+                  <input className="input" value={form.contactName}
+                    onChange={(e) => setForm({ ...form, contactName: e.target.value })}
+                    placeholder="Jane Smith" />
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <div className="fieldLabel">Email *</div>
+                  <input className="input" type="email" value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    placeholder="you@business.com" />
+                  {form.email && (
+                    <div style={{ fontSize: 11, marginTop: 4, color: emailValid ? "#5DCAA5" : "#F09595" }}>
+                      {emailValid ? "Valid email" : "Enter a valid email"}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <div className="fieldLabel">Phone</div>
+                  <input className="input" value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    placeholder="(555) 555-5555" />
+                </div>
+              </div>
+
+              {form.entryPath !== "build" && (
+                <>
+                  <div>
+                    <div className="fieldLabel">Store URL</div>
+                    <input className="input" value={form.storeUrl}
+                      onChange={(e) => setForm({ ...form, storeUrl: e.target.value })}
+                      placeholder="https://yourstore.com or Amazon seller page" />
+                  </div>
+                  <div>
+                    <div className="fieldLabel">What platform is your store on?</div>
+                    <select className="select" value={form.platform}
+                      onChange={(e) => setForm({ ...form, platform: e.target.value })}>
+                      <option value="">Select platform</option>
+                      {PLATFORMS.filter((p) => p !== "Don't have one yet").map((p) => (
+                        <option key={p}>{p}</option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {form.entryPath === "build" && (
+                <div>
+                  <div className="fieldLabel">Preferred platform</div>
+                  <select className="select" value={form.platform}
+                    onChange={(e) => setForm({ ...form, platform: e.target.value })}>
+                    <option value="">Not sure yet</option>
+                    {PLATFORMS.map((p) => (
+                      <option key={p}>{p}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ═══ STEP 2 — What you need (services) ═══ */}
+        {step === 2 && (
+          <div className="portalPanel fadeUp">
+            <div className="portalPanelHeader">
+              <h2 className="portalPanelTitle">
+                {form.entryPath === "build" ? "What should the store include?"
+                  : form.entryPath === "run" ? "What do you need us to handle?"
+                  : "What needs fixing?"}
+              </h2>
+            </div>
+            <div style={{ display: "grid", gap: 8 }}>
+              {serviceOptions.map((svc) => {
+                const checked = form.serviceTypes.includes(svc);
+                const accentColor = form.entryPath ? pathMeta[form.entryPath].color : "var(--accent)";
+                return (
+                  <label key={svc} style={{
+                    display: "flex", gap: 10, alignItems: "center",
+                    padding: "12px 14px", borderRadius: 10,
+                    border: `1px solid ${checked ? accentColor + "40" : "var(--stroke)"}`,
+                    background: checked ? accentColor + "08" : "var(--panel2)",
+                    cursor: "pointer", transition: "all 0.15s",
+                  }}>
+                    <input type="checkbox" checked={checked}
+                      onChange={() => toggleList("serviceTypes", svc)}
+                      style={{ accentColor }} />
+                    <span style={{ fontSize: 14, color: "var(--fg)" }}>{svc}</span>
+                  </label>
+                );
+              })}
+            </div>
+
+            <div style={{ marginTop: 16 }}>
+              <div className="fieldLabel">Where do you sell? (select all)</div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                {CHANNELS.map((ch) => {
+                  const active = form.salesChannels.includes(ch);
+                  return (
+                    <button key={ch} type="button"
+                      onClick={() => toggleList("salesChannels", ch)}
+                      style={{
+                        padding: "6px 14px", borderRadius: 999, fontSize: 13, fontWeight: 600,
+                        border: `1px solid ${active ? "var(--accent)" : "var(--stroke)"}`,
+                        background: active ? "rgba(201,168,76,0.08)" : "transparent",
+                        color: active ? "var(--accent)" : "var(--muted)",
+                        cursor: "pointer", transition: "all 0.15s",
+                      }}>
+                      {ch}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ STEP 3 — Volume & Operations (run/fix only) OR Budget (build) ═══ */}
+        {step === 3 && form.entryPath === "build" && (
+          <div className="portalPanel fadeUp">
+            <div className="portalPanelHeader">
+              <h2 className="portalPanelTitle">Budget & timeline</h2>
+            </div>
+            <div style={{ display: "grid", gap: 14 }}>
+              <div>
+                <div className="fieldLabel">Approximate number of products</div>
+                <input className="input" value={form.skuCount}
+                  onChange={(e) => setForm({ ...form, skuCount: e.target.value })}
+                  placeholder="e.g., 25, 100, 500+" />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <div className="fieldLabel">Budget range</div>
+                  <input className="input" value={form.budgetRange}
+                    onChange={(e) => setForm({ ...form, budgetRange: e.target.value })}
+                    placeholder="e.g., $2,000–$5,000" />
+                </div>
+                <div>
+                  <div className="fieldLabel">Timeline</div>
+                  <input className="input" value={form.timeline}
+                    onChange={(e) => setForm({ ...form, timeline: e.target.value })}
+                    placeholder="e.g., 3–4 weeks" />
+                </div>
+              </div>
+              <div>
+                <div className="fieldLabel">Anything else we should know?</div>
+                <textarea className="textarea" rows={3} value={form.notes}
+                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  placeholder="Design preferences, must-have features, competitor examples..." />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && form.entryPath !== "build" && (
+          <div className="portalPanel fadeUp">
+            <div className="portalPanelHeader">
+              <h2 className="portalPanelTitle">Your store&apos;s current volume</h2>
+            </div>
+            <div style={{ display: "grid", gap: 14 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <div className="fieldLabel">Orders per month</div>
+                  <input className="input" value={form.monthlyOrders}
+                    onChange={(e) => setForm({ ...form, monthlyOrders: e.target.value })}
+                    placeholder="e.g., 50, 200, 1000+" />
+                </div>
+                <div>
+                  <div className="fieldLabel">Peak season volume</div>
+                  <input className="input" value={form.peakOrders}
+                    onChange={(e) => setForm({ ...form, peakOrders: e.target.value })}
+                    placeholder="e.g., 2x normal, holiday surge" />
+                </div>
+              </div>
+              <div>
+                <div className="fieldLabel">Approximate SKU count</div>
+                <input className="input" value={form.skuCount}
+                  onChange={(e) => setForm({ ...form, skuCount: e.target.value })}
+                  placeholder="e.g., 25, 100, 500+" />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <div className="fieldLabel">Budget range (monthly)</div>
+                  <input className="input" value={form.budgetRange}
+                    onChange={(e) => setForm({ ...form, budgetRange: e.target.value })}
+                    placeholder="e.g., $500–$2,000/mo" />
+                </div>
+                <div>
+                  <div className="fieldLabel">When do you need this?</div>
+                  <input className="input" value={form.timeline}
+                    onChange={(e) => setForm({ ...form, timeline: e.target.value })}
+                    placeholder="e.g., ASAP, next month" />
+                </div>
+              </div>
+              <div>
+                <div className="fieldLabel">Anything else we should know?</div>
+                <textarea className="textarea" rows={3} value={form.notes}
+                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  placeholder="Current pain points, what's been tried before, specific problems..." />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ STEP 4 (build) / STEP 4 (run/fix) — Review ═══ */}
+        {((step === 4 && form.entryPath !== "build") || (step === 4 && form.entryPath === "build")) && (
+          <div className="portalPanel fadeUp">
+            <div className="portalPanelHeader">
+              <h2 className="portalPanelTitle">Review your intake</h2>
+            </div>
+
+            {form.entryPath && (
+              <div style={{
+                display: "flex", alignItems: "center", gap: 10,
+                padding: "12px 16px", borderRadius: 12,
+                border: `1px solid ${pathMeta[form.entryPath].color}30`,
+                background: `${pathMeta[form.entryPath].color}08`,
+                marginBottom: 16,
+              }}>
+                <div style={{
+                  width: 10, height: 10, borderRadius: "50%",
+                  background: pathMeta[form.entryPath].color,
+                }} />
+                <span style={{
+                  fontSize: 14, fontWeight: 600, color: pathMeta[form.entryPath].color,
+                }}>
+                  {pathMeta[form.entryPath].label}
+                </span>
+              </div>
+            )}
+
+            <div style={{ display: "grid", gap: 8 }}>
+              <ReviewRow label="Business" value={form.businessName || "—"} />
+              <ReviewRow label="Contact" value={`${form.contactName} · ${form.email}`} />
+              {form.storeUrl && <ReviewRow label="Store URL" value={form.storeUrl} />}
+              {form.platform && <ReviewRow label="Platform" value={form.platform} />}
+              {form.salesChannels.length > 0 && (
+                <ReviewRow label="Channels" value={form.salesChannels.join(", ")} />
+              )}
+              {form.serviceTypes.length > 0 && (
+                <ReviewRow label="Services" value={form.serviceTypes.join(", ")} />
+              )}
+              {form.skuCount && <ReviewRow label="SKUs" value={form.skuCount} />}
+              {form.monthlyOrders && <ReviewRow label="Monthly orders" value={form.monthlyOrders} />}
+              {form.budgetRange && <ReviewRow label="Budget" value={form.budgetRange} />}
+              {form.timeline && <ReviewRow label="Timeline" value={form.timeline} />}
+              {form.notes && <ReviewRow label="Notes" value={form.notes} />}
+            </div>
+
+            {error && (
+              <div style={{
+                marginTop: 14, padding: 12, borderRadius: 10,
+                border: "1px solid rgba(240,149,149,0.3)",
+                background: "rgba(240,149,149,0.06)",
+                color: "#F09595", fontWeight: 600, fontSize: 14,
+              }}>
+                {error}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══ STEP 5 (build only) — Review for build path ═══ */}
+        {step === 5 && form.entryPath === "build" && (
+          <div className="portalPanel fadeUp">
+            <div className="portalPanelHeader">
+              <h2 className="portalPanelTitle">Review your intake</h2>
+            </div>
+
+            <div style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "12px 16px", borderRadius: 12,
+              border: `1px solid ${pathMeta.build.color}30`,
+              background: `${pathMeta.build.color}08`,
+              marginBottom: 16,
+            }}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: pathMeta.build.color }} />
+              <span style={{ fontSize: 14, fontWeight: 600, color: pathMeta.build.color }}>
+                Build my store
+              </span>
+            </div>
+
+            <div style={{ display: "grid", gap: 8 }}>
+              <ReviewRow label="Business" value={form.businessName || "—"} />
+              <ReviewRow label="Contact" value={`${form.contactName} · ${form.email}`} />
+              {form.platform && <ReviewRow label="Platform" value={form.platform} />}
+              {form.serviceTypes.length > 0 && (
+                <ReviewRow label="Includes" value={form.serviceTypes.join(", ")} />
+              )}
+              {form.skuCount && <ReviewRow label="Products" value={form.skuCount} />}
+              {form.budgetRange && <ReviewRow label="Budget" value={form.budgetRange} />}
+              {form.timeline && <ReviewRow label="Timeline" value={form.timeline} />}
+              {form.notes && <ReviewRow label="Notes" value={form.notes} />}
+            </div>
+
+            {error && (
+              <div style={{
+                marginTop: 14, padding: 12, borderRadius: 10,
+                border: "1px solid rgba(240,149,149,0.3)",
+                background: "rgba(240,149,149,0.06)",
+                color: "#F09595", fontWeight: 600, fontSize: 14,
+              }}>
+                {error}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Navigation */}
+        {step > 0 && (
+          <div style={{
+            display: "flex", justifyContent: "space-between",
+            marginTop: 20, alignItems: "center",
+          }}>
+            <button className="btn btnGhost" onClick={back}>← Back</button>
+
+            {step < totalSteps ? (
+              <button className="btn btnPrimary" onClick={next}
+                disabled={step === 1 && (!form.businessName.trim() || !form.contactName.trim() || !emailValid)}>
+                Continue <span className="btnArrow">→</span>
+              </button>
+            ) : (
+              <button className="btn btnPrimary" onClick={submit} disabled={submitting}>
+                {submitting ? "Submitting..." : "Submit intake"} <span className="btnArrow">→</span>
+              </button>
+            )}
+          </div>
+        )}
+
+        {step > 0 && (
+          <div style={{
+            marginTop: 12, fontSize: 12, color: "var(--muted2)", textAlign: "center",
+          }}>
+            Draft auto-saves in your browser
+          </div>
+        )}
+      </div>
     </main>
   );
 }
 
-function FormCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div className="card" style={{ marginBottom: 12 }}><div className="cardInner" style={{ display: "grid", gap: 10 }}><h2 className="h3">{title}</h2>{children}</div></div>;
-}
+/* ═══════════════════════════════════
+   SUB-COMPONENTS
+   ═══════════════════════════════════ */
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label className="fieldLabel">{label}</label>{children}</div>;
-}
-
-function CheckboxGrid({ values, checked, onChange }: { values: string[]; checked: string[]; onChange: (v: string) => void }) {
+function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="grid2">
-      {values.map((value) => (
-        <label key={value} style={{ display: "flex", gap: 10, alignItems: "center", border: "1px solid var(--stroke)", borderRadius: 10, padding: "10px 12px", background: "var(--panel2)" }}>
-          <input type="checkbox" checked={checked.includes(value)} onChange={() => onChange(value)} />
-          <span>{value}</span>
-        </label>
-      ))}
+    <div style={{
+      display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+      padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)",
+      gap: 16,
+    }}>
+      <span style={{ fontSize: 13, color: "var(--muted)", flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--fg)", textAlign: "right", maxWidth: "60%" }}>{value}</span>
     </div>
   );
 }
