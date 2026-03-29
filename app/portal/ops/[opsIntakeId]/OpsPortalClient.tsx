@@ -4,419 +4,472 @@ import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import type { EnrichedOpsWorkspaceBundle } from "@/lib/opsWorkspace/state";
 
-function pretty(value?: string | null) {
-  if (!value) return "—";
-  return value.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+/* ═══════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════ */
+
+function pretty(v?: string | null) {
+  if (!v) return "—";
+  return v.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
-function fmtDate(value?: string | null) {
-  if (!value) return "—";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleString();
+function fmtDate(v?: string | null) {
+  if (!v) return "—";
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? v : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function tone(status?: string | null) {
-  const s = String(status || "").toLowerCase();
-  if (["active", "approved", "live", "completed", "ready"].includes(s)) {
-    return {
-      bg: "rgba(46,160,67,0.14)",
-      border: "rgba(46,160,67,0.34)",
-      color: "#b7f5c4",
-      label: pretty(status),
-    };
+function getOpsPhase(bundle: EnrichedOpsWorkspaceBundle) {
+  const phase = String(bundle.workspace.phase || "").toLowerCase();
+  const hasLive = bundle.workspace.liveAutomations.length > 0;
+  const backlogTotal = bundle.workspace.automationBacklog.length;
+  const building = bundle.workspace.automationBacklog.filter((a) => ["building", "testing", "scoped"].includes(String(a.status).toLowerCase())).length;
+
+  if (hasLive && building === 0) return "live";
+  if (hasLive) return "partially_live";
+  if (building > 0) return "building";
+  if (phase.includes("process") || phase.includes("mapping")) return "process_mapping";
+  if (phase.includes("discovery") || bundle.callRequest.exists) return "discovery";
+  return "intake";
+}
+
+function getOpsStory(phase: string) {
+  switch (phase) {
+    case "live": return { headline: "live and running", body: "Your automations are active. Check the results dashboard below to see how they're performing, or submit feedback if something needs adjusting." };
+    case "partially_live": return { headline: "going live", body: "Some of your automations are already running. We're building the rest — you can track each one below." };
+    case "building": return { headline: "being built", body: "We've mapped out your workflows and we're building the automations now. You can see what's being worked on and what's coming next." };
+    case "process_mapping": return { headline: "being mapped out", body: "We're documenting your current process and designing the automated version. Once the map is confirmed, we start building." };
+    case "discovery": return { headline: "in discovery", body: "We're learning how your business runs so we can find the right things to automate. Your input on pain points and priorities helps us move faster." };
+    default: return { headline: "getting started", body: "We've received your workflow request. Next step is understanding your process so we can recommend the right automation approach." };
   }
-  if (
-    ["requested", "review", "new", "pending", "scoped", "planning", "process mapping", "discovery"].includes(
-      s
-    )
-  ) {
-    return {
-      bg: "rgba(201,168,76,0.14)",
-      border: "rgba(201,168,76,0.34)",
-      color: "#f1d98a",
-      label: pretty(status),
-    };
-  }
-  return {
-    bg: "rgba(141,164,255,0.12)",
-    border: "rgba(141,164,255,0.26)",
-    color: "#d8e0ff",
-    label: pretty(status || "new"),
-  };
 }
 
-export default function OpsPortalClient({
-  initialData,
-}: {
-  initialData: EnrichedOpsWorkspaceBundle;
+const AUTOMATION_STATUS_META: Record<string, { color: string; bg: string; border: string }> = {
+  live: { color: "#5DCAA5", bg: "rgba(46,160,67,0.08)", border: "rgba(46,160,67,0.2)" },
+  completed: { color: "#5DCAA5", bg: "rgba(46,160,67,0.08)", border: "rgba(46,160,67,0.2)" },
+  testing: { color: "#c9a84c", bg: "rgba(201,168,76,0.08)", border: "rgba(201,168,76,0.2)" },
+  building: { color: "#c9a84c", bg: "rgba(201,168,76,0.08)", border: "rgba(201,168,76,0.2)" },
+  scoped: { color: "#8da4ff", bg: "rgba(141,164,255,0.08)", border: "rgba(141,164,255,0.2)" },
+  discovery: { color: "#8da4ff", bg: "rgba(141,164,255,0.08)", border: "rgba(141,164,255,0.2)" },
+};
+
+function autoMeta(status: string) {
+  const s = status.toLowerCase();
+  for (const key of Object.keys(AUTOMATION_STATUS_META)) {
+    if (s.includes(key)) return AUTOMATION_STATUS_META[key];
+  }
+  return { color: "var(--muted)", bg: "rgba(255,255,255,0.03)", border: "var(--stroke)" };
+}
+
+/* ═══════════════════════════════════
+   SUB-COMPONENTS
+   ═══════════════════════════════════ */
+
+function Drawer({ label, value, children, defaultOpen = false }: {
+  label: string; value: string; children: React.ReactNode; defaultOpen?: boolean;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <>
+      <button className="portalDrawerToggle" onClick={() => setOpen(!open)}>
+        <span className="portalDrawerToggleLabel">{label}</span>
+        <span className="portalDrawerToggleValue">
+          {value}
+          <span className={`portalDrawerArrow ${open ? "portalDrawerArrowOpen" : ""}`}>▾</span>
+        </span>
+      </button>
+      <div className={`portalDrawerContent ${open ? "portalDrawerContentOpen" : ""}`}>{children}</div>
+    </>
+  );
+}
+
+function ProgressRing({ percent, size = 66 }: { percent: number; size?: number }) {
+  const r = (size - 8) / 2;
+  const c = Math.PI * 2 * r;
+  const offset = c - (c * percent) / 100;
+  const color = percent >= 80 ? "#5DCAA5" : percent >= 40 ? "#c9a84c" : "var(--muted)";
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--stroke)" strokeWidth="4" />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth="4"
+        strokeLinecap="round" strokeDasharray={c} strokeDashoffset={offset}
+        style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%", transition: "stroke-dashoffset 0.8s ease" }} />
+      <text x={size / 2} y={size / 2 + 1} textAnchor="middle" dominantBaseline="central"
+        fill={color} fontSize={size > 48 ? 15 : 11} fontWeight="600" fontFamily="DM Sans">{percent}%</text>
+    </svg>
+  );
+}
+
+/* ═══════════════════════════════════
+   MAIN COMPONENT
+   ═══════════════════════════════════ */
+
+export default function OpsPortalClient({ initialData }: { initialData: EnrichedOpsWorkspaceBundle }) {
   const [bundle, setBundle] = useState(initialData);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
-  const intakeTone = useMemo(() => tone(bundle.intake.status), [bundle.intake.status]);
-  const phaseTone = useMemo(() => tone(bundle.workspace.phase), [bundle.workspace.phase]);
+  const phase = useMemo(() => getOpsPhase(bundle), [bundle]);
+  const story = useMemo(() => getOpsStory(phase), [phase]);
+
+  const backlogStats = useMemo(() => {
+    const all = bundle.workspace.automationBacklog;
+    const live = all.filter((a) => String(a.status).toLowerCase() === "live").length;
+    const building = all.filter((a) => ["building", "testing", "scoped"].includes(String(a.status).toLowerCase())).length;
+    const percent = all.length > 0 ? Math.round((live / all.length) * 100) : 0;
+    return { total: all.length, live, building, planned: all.length - live - building, percent };
+  }, [bundle]);
 
   const refreshWorkspace = useCallback(async () => {
-    setRefreshing(true);
-    setError("");
+    setRefreshing(true); setError("");
     try {
       const res = await fetch(`/api/portal/ops/${bundle.intake.id}`);
       const json = await res.json();
-      if (!res.ok || !json?.ok || !json?.data) {
-        throw new Error(json?.error || "Failed to refresh workspace.");
-      }
+      if (!res.ok || !json?.ok || !json?.data) throw new Error(json?.error || "Failed to refresh.");
       setBundle(json.data as EnrichedOpsWorkspaceBundle);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to refresh workspace.");
-    } finally {
-      setRefreshing(false);
-    }
+      setError(err instanceof Error ? err.message : "Failed to refresh.");
+    } finally { setRefreshing(false); }
   }, [bundle.intake.id]);
 
   return (
-    <main className="container section" style={{ paddingBottom: 84 }}>
-      <div className="heroFadeUp">
-        <div className="kicker">
-          <span className="kickerDot" aria-hidden="true" />
-          Systems Lab
-        </div>
-        <div style={{ height: 12 }} />
-        <h1 className="h1">{bundle.intake.companyName}</h1>
-        <p className="p" style={{ maxWidth: 860, marginTop: 10 }}>
-          This workspace shows the operations problem we are solving, the current workflow plan,
-          and what still needs to happen before systems go live.
-        </p>
+    <div className="container" style={{ paddingBottom: 48 }}>
 
-        <div className="row" style={{ marginTop: 16, alignItems: "center", flexWrap: "wrap" }}>
-          <Badge toneValue={intakeTone}>{intakeTone.label}</Badge>
-          <Badge toneValue={phaseTone}>Phase {phaseTone.label}</Badge>
-          <span className="badge">Waiting on {bundle.workspace.waitingOn}</span>
-          <span className="badge">Best tool {bundle.ghostAdmin.bestTool}</span>
+      {/* ── Story Hero ── */}
+      <div className="portalStory heroFadeUp">
+        <div className="portalStoryKicker">
+          <span className="portalStoryKickerDot" />
+          Workflow automation
         </div>
 
-        <div className="row" style={{ marginTop: 16 }}>
-          <button className="btn btnGhost" onClick={refreshWorkspace} disabled={refreshing}>
-            {refreshing ? "Refreshing..." : "Refresh Workspace"}
+        <h1 className="portalStoryHeadline">
+          Your automation is <em>{story.headline}</em>
+        </h1>
+
+        <p className="portalStoryBody">{story.body}</p>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <button className="btn btnGhost" disabled={refreshing} onClick={refreshWorkspace} style={{ fontSize: 13 }}>
+            {refreshing ? "Refreshing..." : "Refresh"}
           </button>
-          <Link href="/portal" className="btn btnGhost">
-            Back to Portal
-          </Link>
+          <Link href="/portal" className="btn btnGhost" style={{ fontSize: 13 }}>Back to portal</Link>
+        </div>
+
+        <div className="portalStoryMeta">
+          <span className="portalStoryMetaItem">{bundle.intake.companyName}</span>
+          <span className="portalStoryMetaItem">Started {fmtDate(bundle.intake.createdAt)}</span>
+          <span className="portalStoryMetaItem">{bundle.intake.recommendationTier}</span>
+          <span className="portalStoryMetaItem">Tool: {bundle.ghostAdmin.bestTool}</span>
         </div>
       </div>
 
-      {error ? (
-        <div
-          style={{
-            marginTop: 16,
-            border: "1px solid rgba(255,0,0,0.35)",
-            background: "rgba(255,0,0,0.08)",
-            borderRadius: 14,
-            padding: 14,
-            fontWeight: 700,
-          }}
-        >
-          {error}
+      {error && <div className="portalError">{error}</div>}
+
+      {/* ── Studio Note ── */}
+      {bundle.workspace.adminPublicNote && (
+        <div className="portalNote fadeUp">
+          <div className="portalNoteIcon">C</div>
+          <div>
+            <div className="portalNoteLabel">Note from the studio</div>
+            <div className="portalNoteText">{bundle.workspace.adminPublicNote}</div>
+          </div>
         </div>
-      ) : null}
-
-      <section className="grid4" style={{ marginTop: 26 }}>
-        <MetricCard label="Current Phase" value={bundle.workspace.phase} />
-        <MetricCard label="Waiting On" value={bundle.workspace.waitingOn} />
-        <MetricCard label="Recommended Service" value={bundle.intake.recommendationTier} />
-        <MetricCard
-          label="Last Saved"
-          value={bundle.workspace.lastSavedAt ? fmtDate(bundle.workspace.lastSavedAt) : "Not saved yet"}
-        />
-      </section>
-
-      <section className="grid2stretch" style={{ marginTop: 28 }}>
-        <Panel title="Problem We’re Solving" note="Business context and the intended outcome.">
-          <Info label="Business Objective" value={bundle.ghostAdmin.businessObjective} />
-          <Info label="Main Bottleneck" value={bundle.ghostAdmin.mainBottleneck} />
-          <Info label="Best First Fix" value={bundle.ghostAdmin.bestFirstFix} />
-          {bundle.workspace.adminPublicNote ? (
-            <Info label="Studio Update" value={bundle.workspace.adminPublicNote} />
-          ) : null}
-        </Panel>
-
-        <Panel title="Current Process vs New Process" note="How the workflow should improve over time.">
-          <SubList
-            title="Current Process"
-            items={bundle.workspace.currentProcess}
-            emptyLabel="Current process not mapped yet."
-          />
-          <SubList
-            title="Future Process"
-            items={bundle.workspace.futureProcess}
-            emptyLabel="Future process not mapped yet."
-          />
-        </Panel>
-      </section>
-
-      <section className="grid2stretch" style={{ marginTop: 18 }}>
-        <Panel title="Connected Systems" note="Tools involved in the workflow build.">
-          <CardList
-            items={bundle.workspace.systems.map((item) => ({
-              title: item.name,
-              subtitle: `${item.role} • ${item.status}`,
-              body: item.notes,
-            }))}
-            emptyLabel="No systems mapped yet."
-          />
-        </Panel>
-
-        <Panel title="Waiting on Client" note="What we still need from you to move forward.">
-          <ul style={{ margin: 0, paddingLeft: 18, color: "var(--muted)", lineHeight: 1.7 }}>
-            <li>{bundle.workspace.waitingOn}</li>
-            {bundle.pie.clientQuestions.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </Panel>
-      </section>
-
-      <section className="grid2stretch" style={{ marginTop: 18 }}>
-        <Panel title="Automation Backlog" note="What we plan to build, in what order, and why.">
-          <CardList
-            items={bundle.workspace.automationBacklog.map((item) => ({
-              title: item.name,
-              subtitle: `${item.status} • ${item.priority} • ${item.toolRecommendation}`,
-              body: item.purpose,
-            }))}
-            emptyLabel="No backlog items saved yet."
-          />
-        </Panel>
-
-        <Panel title="Live Automations" note="Automation items currently marked live.">
-          <CardList
-            items={bundle.workspace.liveAutomations.map((item) => ({
-              title: item.name,
-              subtitle: `${item.status} • ${item.toolRecommendation}`,
-              body: item.purpose,
-            }))}
-            emptyLabel="No live automations yet."
-          />
-        </Panel>
-      </section>
-
-      <section className="grid2stretch" style={{ marginTop: 18 }}>
-        <Panel title="Approvals Needed" note="Items that should be confirmed before launch.">
-          <CardList
-            items={bundle.workspace.approvals.map((item) => ({
-              title: item.label,
-              subtitle: item.status,
-              body: item.notes,
-            }))}
-            emptyLabel="No approvals logged yet."
-          />
-        </Panel>
-
-        <Panel title="SOPs / Training" note="Operational instructions and expectations.">
-          <CardList
-            items={bundle.workspace.sops.map((item) => ({
-              title: item.workflow,
-              subtitle: `Trigger: ${item.trigger}`,
-              body: item.steps.join(" • "),
-            }))}
-            emptyLabel="No SOPs published yet."
-          />
-        </Panel>
-      </section>
-
-      <section className="grid2stretch" style={{ marginTop: 18 }}>
-        <Panel title="Incident / Issue Log" note="Known problems and how they are being handled.">
-          <CardList
-            items={bundle.workspace.incidents.map((item) => ({
-              title: item.title,
-              subtitle: `${item.severity} • ${item.status}`,
-              body: item.summary || item.resolution,
-            }))}
-            emptyLabel="No incidents logged yet."
-          />
-        </Panel>
-
-        <Panel title="Change Requests" note="Requested changes and scope adjustments.">
-          <CardList
-            items={bundle.workspace.changeRequests.map((item) => ({
-              title: item.title,
-              subtitle: `${item.urgency} • ${item.status}`,
-              body: item.reason || item.impact,
-            }))}
-            emptyLabel="No change requests logged yet."
-          />
-        </Panel>
-      </section>
-
-      <section className="grid2stretch" style={{ marginTop: 18 }}>
-        <Panel title="KPI / Results" note="How we will measure whether the system is helping.">
-          <CardList
-            items={bundle.workspace.kpis.map((item) => ({
-              title: item.name,
-              subtitle: `Target: ${item.target}`,
-              body: item.why,
-            }))}
-            emptyLabel="No KPIs configured yet."
-          />
-        </Panel>
-
-        <Panel title="Risk Log" note="What could go wrong and how we plan to reduce risk.">
-          <CardList
-            items={bundle.workspace.risks.map((item) => ({
-              title: item.risk,
-              subtitle: "Mitigation",
-              body: item.mitigation,
-            }))}
-            emptyLabel="No risks logged yet."
-          />
-        </Panel>
-      </section>
-
-      <section className="grid2stretch" style={{ marginTop: 18 }}>
-        <Panel title="Recommended Service" note="Where this project currently fits.">
-          <Info label="Recommended Package" value={bundle.pie.recommendedOffer.primaryPackage} />
-          <Info label="Project Range" value={bundle.pie.recommendedOffer.projectRange} />
-          <Info label="Retainer Range" value={bundle.pie.recommendedOffer.retainerRange} />
-        </Panel>
-
-        <Panel title="Next Actions" note="What happens next in the ops build.">
-          <SubList
-            title="Next Actions"
-            items={bundle.workspace.nextActions}
-            emptyLabel="No next actions yet."
-          />
-        </Panel>
-      </section>
-    </main>
-  );
-}
-
-function Badge({
-  toneValue,
-  children,
-}: {
-  toneValue: { bg: string; border: string; color: string };
-  children: any;
-}) {
-  return (
-    <span
-      style={{
-        padding: "8px 12px",
-        borderRadius: 999,
-        background: toneValue.bg,
-        border: `1px solid ${toneValue.border}`,
-        color: toneValue.color,
-        fontSize: 12,
-        fontWeight: 800,
-        textTransform: "uppercase",
-        letterSpacing: "0.08em",
-      }}
-    >
-      {children}
-    </span>
-  );
-}
-
-function MetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="panel" style={{ background: "var(--panel2)" }}>
-      <div className="panelBody">
-        <div className="smallNote">{label}</div>
-        <div style={{ marginTop: 8, fontWeight: 900, fontSize: 22, lineHeight: 1.2 }}>
-          {value}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Panel({
-  title,
-  note,
-  children,
-}: {
-  title: string;
-  note: string;
-  children: any;
-}) {
-  return (
-    <div className="panel">
-      <div className="panelHeader">
-        <div>{title}</div>
-        <div className="smallNote">{note}</div>
-      </div>
-      <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function Info({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="panel" style={{ background: "var(--panel2)" }}>
-      <div className="panelBody">
-        <div className="fieldLabel">{label}</div>
-        <div style={{ color: "var(--fg)", fontWeight: 800, fontSize: 15, lineHeight: 1.45 }}>
-          {value}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SubList({
-  title,
-  items,
-  emptyLabel,
-}: {
-  title: string;
-  items: string[];
-  emptyLabel: string;
-}) {
-  return (
-    <div>
-      <div className="fieldLabel">{title}</div>
-      {items.length === 0 ? (
-        <div className="smallNote">{emptyLabel}</div>
-      ) : (
-        <ul style={{ margin: 0, paddingLeft: 18, color: "var(--muted)", lineHeight: 1.7 }}>
-          {items.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
       )}
-    </div>
-  );
-}
 
-function CardList({
-  items,
-  emptyLabel,
-}: {
-  items: Array<{ title: string; subtitle: string; body: string }>;
-  emptyLabel: string;
-}) {
-  if (!items.length) {
-    return <div className="smallNote">{emptyLabel}</div>;
-  }
+      {/* ── Diagnosis Summary ── */}
+      <div className="portalGrid2 portalGrid2Wide">
+        <div className="portalPanel fadeUp" style={{ animationDelay: "0.1s" }}>
+          <div className="portalPanelHeader">
+            <h2 className="portalPanelTitle">What we found</h2>
+          </div>
 
-  return (
-    <div style={{ display: "grid", gap: 10 }}>
-      {items.map((item, index) => (
-        <div key={`${item.title}-${index}`} className="panel" style={{ background: "var(--panel2)" }}>
-          <div className="panelBody">
-            <div style={{ fontWeight: 800 }}>{item.title}</div>
-            <div className="smallNote" style={{ marginTop: 4 }}>
-              {item.subtitle}
+          <div style={{ padding: "4px 0", display: "grid", gap: 14 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+              <span style={{ fontSize: 13, color: "var(--muted)" }}>Main bottleneck</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--fg)", maxWidth: 320, textAlign: "right" }}>{bundle.ghostAdmin.mainBottleneck}</span>
             </div>
-            <div className="pDark" style={{ marginTop: 8 }}>
-              {item.body}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+              <span style={{ fontSize: 13, color: "var(--muted)" }}>Business objective</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--fg)", maxWidth: 320, textAlign: "right" }}>{bundle.ghostAdmin.businessObjective}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+              <span style={{ fontSize: 13, color: "var(--muted)" }}>Recommended first fix</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--accent)", maxWidth: 320, textAlign: "right" }}>{bundle.ghostAdmin.bestFirstFix}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0" }}>
+              <span style={{ fontSize: 13, color: "var(--muted)" }}>Best tool for the job</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--fg)" }}>{bundle.ghostAdmin.bestTool}</span>
+            </div>
+          </div>
+
+          {bundle.intake.painPoints.length > 0 && (
+            <div style={{ marginTop: 14, padding: "14px 16px", borderRadius: 12, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Pain points you reported</div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {bundle.intake.painPoints.map((p) => (
+                  <span key={p} className="portalFeatureTag">{p}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Automation Progress */}
+        <div className="portalPanel fadeUp" style={{ animationDelay: "0.15s" }}>
+          <div className="portalPanelHeader">
+            <h2 className="portalPanelTitle">Automation progress</h2>
+          </div>
+
+          <div className="portalLaunchSummary">
+            <ProgressRing percent={backlogStats.percent} />
+            <div className="portalLaunchInfo">
+              <h4>{backlogStats.live === backlogStats.total && backlogStats.total > 0 ? "All automations live" : `${backlogStats.total - backlogStats.live} automation${backlogStats.total - backlogStats.live !== 1 ? "s" : ""} remaining`}</h4>
+              <p>{backlogStats.live} live · {backlogStats.building} building · {backlogStats.planned} planned</p>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 16, fontSize: 13, color: "var(--muted2)", lineHeight: 1.6 }}>
+            Waiting on: <strong style={{ color: "var(--fg)" }}>{bundle.workspace.waitingOn}</strong>
+          </div>
+
+          {bundle.workspace.nextActions.length > 0 && (
+            <div style={{ marginTop: 12, padding: "14px 16px", borderRadius: 12, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Next steps</div>
+              {bundle.workspace.nextActions.slice(0, 3).map((a) => (
+                <div key={a} style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, paddingLeft: 12, borderLeft: "2px solid rgba(201,168,76,0.2)", marginBottom: 6 }}>{a}</div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Before / After Process Map ── */}
+      {(bundle.workspace.currentProcess.length > 0 || bundle.workspace.futureProcess.length > 0) && (
+        <div className="portalGrid2" style={{ marginTop: 0 }}>
+          <div className="portalPanel fadeUp" style={{ animationDelay: "0.2s" }}>
+            <div className="portalPanelHeader">
+              <h2 className="portalPanelTitle">Before — your current process</h2>
+              <span className="portalPanelCount">{bundle.workspace.currentProcess.length} steps</span>
+            </div>
+            <div style={{ display: "grid", gap: 0 }}>
+              {bundle.workspace.currentProcess.map((step, i) => (
+                <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 0", borderBottom: i < bundle.workspace.currentProcess.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", border: "2px solid rgba(226,75,74,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: "#F09595", flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+                  <div style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.5 }}>{step}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="portalPanel fadeUp" style={{ animationDelay: "0.25s" }}>
+            <div className="portalPanelHeader">
+              <h2 className="portalPanelTitle">After — the automated version</h2>
+              <span className="portalPanelCount">{bundle.workspace.futureProcess.length} steps</span>
+            </div>
+            <div style={{ display: "grid", gap: 0 }}>
+              {bundle.workspace.futureProcess.map((step, i) => (
+                <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 0", borderBottom: i < bundle.workspace.futureProcess.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", border: "2px solid rgba(46,160,67,0.3)", background: "rgba(46,160,67,0.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: "#5DCAA5", flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+                  <div style={{ fontSize: 14, color: "var(--fg)", lineHeight: 1.5 }}>{step}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      ))}
+      )}
+
+      {/* ── Automation Tracker ── */}
+      {bundle.workspace.automationBacklog.length > 0 && (
+        <div className="portalPanel fadeUp" style={{ animationDelay: "0.3s", marginBottom: 40 }}>
+          <div className="portalPanelHeader">
+            <h2 className="portalPanelTitle">Automation tracker</h2>
+            <span className="portalPanelCount">{bundle.workspace.automationBacklog.length} automations</span>
+          </div>
+
+          <div style={{ display: "grid", gap: 8 }}>
+            {bundle.workspace.automationBacklog.map((auto) => {
+              const meta = autoMeta(auto.status);
+              return (
+                <div key={auto.id} style={{
+                  display: "grid", gridTemplateColumns: "minmax(0,1fr) auto",
+                  gap: 14, alignItems: "center", padding: "14px 16px",
+                  border: `1px solid ${meta.border}`, borderRadius: 12,
+                  background: meta.bg,
+                }}>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: "var(--fg)" }}>{auto.name}</div>
+                    <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 3, lineHeight: 1.5 }}>{auto.purpose}</div>
+                    <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "rgba(255,255,255,0.04)", border: "1px solid var(--stroke)", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{auto.priority}</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "rgba(255,255,255,0.04)", border: "1px solid var(--stroke)", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{auto.toolRecommendation}</span>
+                    </div>
+                  </div>
+                  <span style={{
+                    padding: "5px 12px", borderRadius: 999, fontSize: 11, fontWeight: 600,
+                    textTransform: "uppercase", letterSpacing: "0.06em",
+                    color: meta.color, background: meta.bg, border: `1px solid ${meta.border}`,
+                  }}>{pretty(auto.status)}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Results + KPIs (when automations are live) ── */}
+      {bundle.workspace.liveAutomations.length > 0 && bundle.workspace.kpis.length > 0 && (
+        <div className="portalGrid2" style={{ marginTop: 0 }}>
+          <div className="portalPanel fadeUp">
+            <div className="portalPanelHeader">
+              <h2 className="portalPanelTitle">Live automations</h2>
+              <span className="portalPanelCount">{bundle.workspace.liveAutomations.length} running</span>
+            </div>
+            {bundle.workspace.liveAutomations.map((auto) => (
+              <div key={auto.id} style={{ padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.04)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)" }}>{auto.name}</div>
+                  <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 2 }}>{auto.toolRecommendation}</div>
+                </div>
+                <span style={{ fontSize: 10, fontWeight: 600, color: "#5DCAA5", textTransform: "uppercase" }}>Live</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="portalPanel fadeUp">
+            <div className="portalPanelHeader">
+              <h2 className="portalPanelTitle">Results we&apos;re tracking</h2>
+            </div>
+            {bundle.workspace.kpis.map((kpi) => (
+              <div key={kpi.name} style={{ padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)" }}>{kpi.name}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)" }}>Target: {kpi.target}</span>
+                </div>
+                <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 3 }}>{kpi.why}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── What we need from you ── */}
+      {(bundle.pie.clientQuestions.length > 0 || bundle.workspace.approvals.length > 0) && (
+        <div className="portalGrid2">
+          {bundle.pie.clientQuestions.length > 0 && (
+            <div className="portalPanel fadeUp">
+              <div className="portalPanelHeader">
+                <h2 className="portalPanelTitle">Questions for you</h2>
+              </div>
+              <div style={{ display: "grid", gap: 8 }}>
+                {bundle.pie.clientQuestions.map((q) => (
+                  <div key={q} style={{ padding: "10px 14px", borderRadius: 10, border: "1px solid var(--stroke)", background: "var(--panel2)", fontSize: 14, color: "var(--muted)", lineHeight: 1.5 }}>{q}</div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {bundle.workspace.approvals.length > 0 && (
+            <div className="portalPanel fadeUp">
+              <div className="portalPanelHeader">
+                <h2 className="portalPanelTitle">Approvals needed</h2>
+              </div>
+              {bundle.workspace.approvals.map((a) => (
+                <div key={a.id} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "10px 14px", borderRadius: 10, border: "1px solid var(--stroke)",
+                  background: a.status.toLowerCase() === "pending" ? "rgba(201,168,76,0.03)" : "rgba(46,160,67,0.03)",
+                  marginBottom: 6,
+                }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)" }}>{a.label}</div>
+                    {a.notes && <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 2 }}>{a.notes}</div>}
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: a.status.toLowerCase() === "pending" ? "var(--accent)" : "#5DCAA5" }}>{a.status}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Project Details (Drawers) ── */}
+      <div className="portalSectionLabel fadeUp" style={{ marginTop: 8 }}>Project details</div>
+
+      <Drawer label="Connected systems" value={`${bundle.workspace.systems.length} tool${bundle.workspace.systems.length !== 1 ? "s" : ""}`}>
+        {bundle.workspace.systems.map((s) => (
+          <div key={s.name} className="portalDrawerRow">
+            <span className="portalDrawerKey">{s.name}</span>
+            <span className="portalDrawerVal">{s.role} · {s.status}</span>
+          </div>
+        ))}
+      </Drawer>
+
+      {bundle.workspace.sops.length > 0 && (
+        <Drawer label="SOPs & training" value={`${bundle.workspace.sops.length} workflow${bundle.workspace.sops.length !== 1 ? "s" : ""}`}>
+          {bundle.workspace.sops.map((sop) => (
+            <div key={sop.workflow} style={{ padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+              <div style={{ fontWeight: 600, fontSize: 14, color: "var(--fg)" }}>{sop.workflow}</div>
+              <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 2 }}>Trigger: {sop.trigger}</div>
+              {sop.steps.length > 0 && (
+                <div style={{ marginTop: 6, display: "grid", gap: 3 }}>
+                  {sop.steps.map((step, i) => (
+                    <div key={i} style={{ fontSize: 13, color: "var(--muted)", paddingLeft: 14, borderLeft: "2px solid var(--stroke)" }}>{step}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </Drawer>
+      )}
+
+      {bundle.workspace.risks.length > 0 && (
+        <Drawer label="Risk log" value={`${bundle.workspace.risks.length} risk${bundle.workspace.risks.length !== 1 ? "s" : ""}`}>
+          {bundle.workspace.risks.map((r) => (
+            <div key={r.risk} className="portalDrawerRow" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+              <span className="portalDrawerVal">{r.risk}</span>
+              <span className="portalDrawerKey">Mitigation: {r.mitigation}</span>
+            </div>
+          ))}
+        </Drawer>
+      )}
+
+      {bundle.workspace.incidents.length > 0 && (
+        <Drawer label="Issues & incidents" value={`${bundle.workspace.incidents.length}`}>
+          {bundle.workspace.incidents.map((inc) => (
+            <div key={inc.id} className="portalDrawerRow" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <span className="portalDrawerVal">{inc.title}</span>
+                <span style={{ fontSize: 10, fontWeight: 600, color: inc.severity.toLowerCase() === "high" ? "#F09595" : "var(--muted2)", textTransform: "uppercase" }}>{inc.severity}</span>
+              </div>
+              <span className="portalDrawerKey">{inc.summary || inc.resolution}</span>
+            </div>
+          ))}
+        </Drawer>
+      )}
+
+      {bundle.workspace.changeRequests.length > 0 && (
+        <Drawer label="Change requests" value={`${bundle.workspace.changeRequests.length}`}>
+          {bundle.workspace.changeRequests.map((cr) => (
+            <div key={cr.id} className="portalDrawerRow" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+              <span className="portalDrawerVal">{cr.title} · {cr.status}</span>
+              <span className="portalDrawerKey">{cr.reason || cr.impact}</span>
+            </div>
+          ))}
+        </Drawer>
+      )}
+
+      <Drawer label="Service & pricing" value={bundle.pie.recommendedOffer.primaryPackage}>
+        <div className="portalDrawerRow"><span className="portalDrawerKey">Package</span><span className="portalDrawerVal">{bundle.pie.recommendedOffer.primaryPackage}</span></div>
+        <div className="portalDrawerRow"><span className="portalDrawerKey">Project range</span><span className="portalDrawerVal">{bundle.pie.recommendedOffer.projectRange}</span></div>
+        <div className="portalDrawerRow"><span className="portalDrawerKey">Retainer range</span><span className="portalDrawerVal">{bundle.pie.recommendedOffer.retainerRange}</span></div>
+        <div className="portalDrawerRow"><span className="portalDrawerKey">Industry</span><span className="portalDrawerVal">{bundle.intake.industry}</span></div>
+        <div className="portalDrawerRow"><span className="portalDrawerKey">Team size</span><span className="portalDrawerVal">{bundle.intake.teamSize}</span></div>
+      </Drawer>
+
+      {/* ── Footer ── */}
+      <div className="portalFooter">
+        Powered by <a href="/">Crecy Studio</a> · Your workflows, your ownership
+      </div>
     </div>
   );
 }
