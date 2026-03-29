@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { generatePieForQuoteId } from "@/lib/pie/ensurePie";
+import { requireAdminRoute } from "@/lib/routeAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,6 +11,9 @@ type BackfillMode = "all_missing" | "single";
 
 export async function GET(req: NextRequest) {
   try {
+    const authErr = await requireAdminRoute();
+    if (authErr) return authErr;
+
     const { searchParams } = new URL(req.url);
 
     const mode = (searchParams.get("mode") || "all_missing") as BackfillMode;
@@ -18,12 +22,6 @@ export async function GET(req: NextRequest) {
       ? Math.max(1, Math.min(500, limitRaw))
       : 100;
     const quoteId = searchParams.get("quoteId");
-
-    // Optional protection if you use an internal key
-    // const key = searchParams.get("key");
-    // if (process.env.INTERNAL_ADMIN_KEY && key !== process.env.INTERNAL_ADMIN_KEY) {
-    //   return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    // }
 
     // Single quote mode
     if (mode === "single" && quoteId) {

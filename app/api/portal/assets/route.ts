@@ -3,11 +3,32 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { resolvePortalAccess } from "@/lib/portalAccess";
 import { sendEventNotification } from "@/lib/notifications";
+import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const ASSET_BUCKET = process.env.PORTAL_ASSETS_BUCKET || "portal-assets";
+
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
+
+const ALLOWED_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/svg+xml",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/plain",
+  "text/csv",
+  "video/mp4",
+  "video/quicktime",
+  "application/zip",
+]);
 
 type PortalMilestone = {
   key: string;
@@ -182,6 +203,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getIpFromHeaders(req.headers);
+    const rl = enforceRateLimit({ key: `portal-assets:${ip}`, limit: 10, windowMs: 60_000 });
+    if (!rl.ok) return rateLimitResponse(rl.resetAt);
+
     const contentType = req.headers.get("content-type") || "";
 
     if (contentType.includes("application/json")) {
@@ -253,6 +278,21 @@ export async function POST(req: NextRequest) {
       if (!maybeFile || !(maybeFile instanceof File)) {
         return NextResponse.json(
           { ok: false, error: "No file received." },
+          { status: 400 }
+        );
+      }
+
+      if (maybeFile.size > MAX_FILE_SIZE) {
+        return NextResponse.json(
+          { ok: false, error: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024} MB.` },
+          { status: 400 }
+        );
+      }
+
+      const mimeType = maybeFile.type || "application/octet-stream";
+      if (!ALLOWED_MIME_TYPES.has(mimeType)) {
+        return NextResponse.json(
+          { ok: false, error: `File type "${mimeType}" is not allowed.` },
           { status: 400 }
         );
       }

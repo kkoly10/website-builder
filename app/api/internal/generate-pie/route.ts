@@ -2,10 +2,14 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { buildPieReport } from "@/lib/pie/buildPieReport";
+import { requireAdminRoute } from "@/lib/routeAuth";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  const authErr = await requireAdminRoute();
+  if (authErr) return authErr;
+
   const body = await req.json().catch(() => ({}));
   const quoteId = String(body?.quoteId || "").trim();
   if (!quoteId) {

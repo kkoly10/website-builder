@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 
 type RequestBody = {
   businessName: string;
@@ -59,6 +60,10 @@ function extractTextFromResponsesAPI(json: any): string {
 
 export async function POST(req: Request) {
   try {
+    const ip = getIpFromHeaders(req.headers);
+    const rl = enforceRateLimit({ key: `ai-generate:${ip}`, limit: 5, windowMs: 60_000 });
+    if (!rl.ok) return rateLimitResponse(rl.resetAt);
+
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
@@ -95,8 +100,9 @@ export async function POST(req: Request) {
 
     if (!response.ok) {
       const errText = await response.text();
+      console.error("[ai/generate] OpenAI API error:", errText);
       return NextResponse.json(
-        { error: `OpenAI error: ${errText}` },
+        { error: "AI generation failed. Please try again." },
         { status: 500 }
       );
     }
