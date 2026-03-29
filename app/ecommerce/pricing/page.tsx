@@ -85,10 +85,12 @@ export default function EcommercePricingPage() {
               </div>
 
               <div style={{ marginTop: "auto", paddingTop: 20 }}>
-                <TrackLink href="/ecommerce/intake" event="cta_ecom_pricing_build"
-                  className="btn btnPrimary" style={{ width: "100%", justifyContent: "center" }}>
-                  Start store build <span className="btnArrow">→</span>
-                </TrackLink>
+                <div style={{ display: "flex" }}>
+                  <TrackLink href="/ecommerce/intake" event="cta_ecom_pricing_build"
+                    className="btn btnPrimary" >
+                    Start store build <span className="btnArrow">→</span>
+                  </TrackLink>
+                </div>
               </div>
             </div>
           </div>
@@ -133,10 +135,12 @@ export default function EcommercePricingPage() {
               </div>
 
               <div style={{ marginTop: "auto", paddingTop: 20 }}>
-                <TrackLink href="/ecommerce/intake" event="cta_ecom_pricing_run"
-                  className="btn btnPrimary" style={{ width: "100%", justifyContent: "center" }}>
-                  Start operations intake <span className="btnArrow">→</span>
-                </TrackLink>
+                <div style={{ display: "flex" }}>
+                  <TrackLink href="/ecommerce/intake" event="cta_ecom_pricing_run"
+                    className="btn btnPrimary">
+                    Start operations intake <span className="btnArrow">→</span>
+                  </TrackLink>
+                </div>
               </div>
             </div>
           </div>
@@ -192,10 +196,12 @@ export default function EcommercePricingPage() {
               </div>
 
               <div style={{ marginTop: "auto", paddingTop: 20 }}>
-                <TrackLink href="/ecommerce/intake" event="cta_ecom_pricing_fix"
-                  className="btn btnPrimary" style={{ width: "100%", justifyContent: "center" }}>
-                  Start store audit <span className="btnArrow">→</span>
-                </TrackLink>
+                <div style={{ display: "flex" }}>
+                  <TrackLink href="/ecommerce/intake" event="cta_ecom_pricing_fix"
+                    className="btn btnPrimary">
+                    Start store audit <span className="btnArrow">→</span>
+                  </TrackLink>
+                </div>
               </div>
             </div>
           </div>
