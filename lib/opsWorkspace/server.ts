@@ -1,22 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-/* ── workspace_state persistence types ── */
-
-export type WorkspaceState = {
-  adminNotes?: Record<string, string>;
-  tabOverrides?: Record<string, unknown>;
-  chatMessages?: ChatMessage[];
-  lastSavedAt?: string;
-  lastSavedBy?: string;
-};
-
-export type ChatMessage = {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: string;
-};
-
 type JsonRecord = Record<string, any>;
 
 type OpsIntakeRow = {
@@ -44,6 +27,7 @@ type OpsIntakeRow = {
   recommendation_price_range: string | null;
   recommendation_score: number | null;
   auth_user_id?: string | null;
+  workspace_state?: unknown;
 };
 
 type OpsCallRow = {
@@ -81,6 +65,8 @@ export type OpsAdminRow = {
   pieStatus: string;
   pieSummary: string;
   bestTool: string;
+  phase: string;
+  waitingOn: string;
   links: {
     detail: string;
     portal: string;
@@ -488,7 +474,7 @@ export async function getOpsAdminRows(): Promise<OpsAdminRow[]> {
     supabaseAdmin
       .from("ops_intakes")
       .select(
-        "id, created_at, company_name, contact_name, email, industry, status, recommendation_tier, recommendation_price_range, recommendation_score, current_tools, workflows_needed"
+        "id, created_at, company_name, contact_name, email, industry, status, recommendation_tier, recommendation_price_range, recommendation_score, current_tools, workflows_needed, workspace_state"
       )
       .order("created_at", { ascending: false }),
     supabaseAdmin
@@ -530,6 +516,10 @@ export async function getOpsAdminRows(): Promise<OpsAdminRow[]> {
       riskCount: asArray(pieReport.risks).length,
     });
 
+    const ws = asObj(intake.workspace_state);
+    const phase = str(ws.phase) || (call && pie ? "Process Mapping" : call ? "Discovery" : "Intake Received");
+    const waitingOn = str(ws.waitingOn) || "CrecyStudio review";
+
     return {
       opsIntakeId: intake.id,
       createdAt: intake.created_at,
@@ -545,6 +535,8 @@ export async function getOpsAdminRows(): Promise<OpsAdminRow[]> {
       pieStatus: pie ? str(pie.status, "completed") : "Pending",
       pieSummary: str(pie?.summary, "PIE summary pending"),
       bestTool,
+      phase,
+      waitingOn,
       links: {
         detail: `/internal/admin/ops/${intake.id}`,
         portal: `/portal/ops/${intake.id}`,
@@ -635,51 +627,3 @@ export async function getOpsWorkspaceBundle(opsIntakeId: string): Promise<OpsWor
   };
 }
 
-/* ── workspace_state persistence ── */
-
-export async function getWorkspaceState(opsIntakeId: string): Promise<WorkspaceState> {
-  const { data, error } = await supabaseAdmin
-    .from("ops_intakes")
-    .select("workspace_state")
-    .eq("id", opsIntakeId)
-    .maybeSingle();
-
-  if (error || !data) return {};
-  const ws = data.workspace_state;
-  if (ws && typeof ws === "object" && !Array.isArray(ws)) return ws as WorkspaceState;
-  return {};
-}
-
-export async function saveWorkspaceState(
-  opsIntakeId: string,
-  patch: Partial<WorkspaceState>,
-  savedBy?: string
-): Promise<{ ok: boolean; error?: string }> {
-  const current = await getWorkspaceState(opsIntakeId);
-  const merged: WorkspaceState = {
-    ...current,
-    ...patch,
-    adminNotes: { ...(current.adminNotes ?? {}), ...(patch.adminNotes ?? {}) },
-    tabOverrides: { ...(current.tabOverrides ?? {}), ...(patch.tabOverrides ?? {}) },
-    chatMessages: patch.chatMessages ?? current.chatMessages ?? [],
-    lastSavedAt: new Date().toISOString(),
-    lastSavedBy: savedBy ?? current.lastSavedBy ?? "admin",
-  };
-
-  const { error } = await supabaseAdmin
-    .from("ops_intakes")
-    .update({ workspace_state: merged as unknown as Record<string, unknown> })
-    .eq("id", opsIntakeId);
-
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
-}
-
-export async function appendChatMessage(
-  opsIntakeId: string,
-  message: ChatMessage
-): Promise<{ ok: boolean; error?: string }> {
-  const current = await getWorkspaceState(opsIntakeId);
-  const messages = [...(current.chatMessages ?? []), message];
-  return saveWorkspaceState(opsIntakeId, { chatMessages: messages });
-}

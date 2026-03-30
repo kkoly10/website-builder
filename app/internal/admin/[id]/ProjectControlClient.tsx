@@ -28,6 +28,7 @@ type ProjectControlData = {
   adminPricing: { discountPercent: number; flatAdjustment: number; hourlyRate: number; notes: string };
   scopeSnapshot: { tierLabel: string; platform: string; timeline: string; revisionPolicy: string; pagesIncluded: string[]; featuresIncluded: string[]; exclusions: string[] };
   portalAdmin: PortalAdminView;
+  depositStatus: string;
   portalStateAdmin: { clientStatus: string; clientNotes: string; adminPublicNote: string; depositAmount: number; depositNotes: string; milestones: Milestone[] };
   clientSync: { lastClientUpdate: string; assets: ClientAsset[]; revisions: ClientRevision[] };
   workspaceHistory: { scopeVersions: ScopeVersion[]; changeOrders: ChangeOrder[] };
@@ -332,6 +333,31 @@ export default function ProjectControlClient({ initialData }: { initialData: Pro
     setData((p) => ({ ...p, portalStateAdmin: { ...p.portalStateAdmin, milestones: p.portalStateAdmin.milestones.map((m) => m.key === key ? { ...m, done: !m.done } : m) } }));
   }
 
+  function requestMarkDepositPaid() {
+    if (data.depositStatus === "paid") return;
+    setConfirmAction({ title: "Mark deposit paid", description: "Use this for payments received outside Stripe (bank transfer, check, etc.). The client workspace will reflect the deposit as paid.", onConfirm: executeMarkDepositPaid });
+  }
+
+  async function executeMarkDepositPaid() {
+    setConfirmAction(null);
+    setBusy(true); setMessage("Marking deposit paid..."); setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/quote-action", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "mark_deposit_paid", quoteId: data.quoteId }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok && res.status !== 303) throw new Error(json?.error || "Failed to mark deposit paid.");
+      setData((p) => ({ ...p, depositStatus: "paid" }));
+      let ms = [...data.portalStateAdmin.milestones];
+      ms = setMilestoneDone(ms, "deposit_paid", "Deposit paid", true);
+      setData((p) => ({ ...p, depositStatus: "paid", portalStateAdmin: { ...p.portalStateAdmin, milestones: ms } }));
+      setMessageIsError(false); setMessage("Deposit marked as paid.");
+    } catch (err) {
+      setMessageIsError(true); setMessage(err instanceof Error ? err.message : "Failed.");
+    } finally { setBusy(false); }
+  }
+
   function updateAssetStatus(id: string, status: string) {
     setData((p) => ({ ...p, clientSync: { ...p.clientSync, assets: p.clientSync.assets.map((a) => a.id === id ? { ...a, status } : a) } }));
   }
@@ -634,6 +660,17 @@ export default function ProjectControlClient({ initialData }: { initialData: Pro
                 <Field label="Quote status"><select className="select" value={data.status} onChange={(e) => setData((p) => ({ ...p, status: e.target.value }))}>{statusOptions.map((o) => <option key={o} value={o}>{o}</option>)}</select></Field>
                 <Field label="Workspace status"><select className="select" value={data.portalStateAdmin.clientStatus} onChange={(e) => setData((p) => ({ ...p, portalStateAdmin: { ...p.portalStateAdmin, clientStatus: e.target.value } }))}>{workspaceStatusOptions.map((o) => <option key={o} value={o}>{o}</option>)}</select></Field>
                 <Field label="Deposit amount"><input className="input" type="number" value={data.portalStateAdmin.depositAmount} onChange={(e) => setData((p) => ({ ...p, portalStateAdmin: { ...p.portalStateAdmin, depositAmount: Number(e.target.value || 0) } }))} /></Field>
+                <div style={{ display: "flex", alignItems: "flex-end" }}>
+                  {data.depositStatus === "paid" ? (
+                    <div style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(46,160,67,0.1)", border: "1px solid rgba(46,160,67,0.3)", color: "#5DCAA5", fontSize: 12, fontWeight: 700 }}>
+                      Deposit paid ✓
+                    </div>
+                  ) : (
+                    <button className="btn btnGhost" disabled={busy} style={{ fontSize: 12, padding: "8px 14px" }} onClick={requestMarkDepositPaid}>
+                      Mark deposit paid
+                    </button>
+                  )}
+                </div>
               </div>
               <div style={{ marginTop: 12 }}><Field label="Admin public note"><textarea className="textarea" rows={3} value={data.portalStateAdmin.adminPublicNote} onChange={(e) => setData((p) => ({ ...p, portalStateAdmin: { ...p.portalStateAdmin, adminPublicNote: e.target.value } }))} placeholder="Client-facing update" /></Field></div>
               <div style={{ marginTop: 12 }}><Field label="Client notes"><textarea className="textarea" rows={2} value={data.portalStateAdmin.clientNotes} onChange={(e) => setData((p) => ({ ...p, portalStateAdmin: { ...p.portalStateAdmin, clientNotes: e.target.value } }))} /></Field></div>

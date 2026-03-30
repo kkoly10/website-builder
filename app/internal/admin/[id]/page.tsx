@@ -295,6 +295,8 @@ export default async function AdminQuoteDetailPage({
       launchNotes: portalAdmin.launchNotes || "",
     },
 
+    depositStatus: quote.deposit_status || "",
+
     portalStateAdmin: {
       clientStatus: portalState?.client_status || "new",
       clientNotes: portalState?.client_notes || "",
