@@ -28,7 +28,7 @@ export async function POST(req: Request) {
         ? `${req.headers.get("x-forwarded-proto")}://${req.headers.get(
             "x-forwarded-host"
           )}`
-        : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+        : process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com";
 
     return NextResponse.json({
       ok: true,

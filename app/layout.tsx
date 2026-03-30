@@ -9,6 +9,22 @@ export const metadata: Metadata = {
   title: "CrecyStudio | Websites, E-Commerce & Workflow Systems",
   description:
     "Premium websites, e-commerce systems, and workflow automation for growth-focused businesses.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com"),
+  openGraph: {
+    title: "CrecyStudio | Websites, E-Commerce & Workflow Systems",
+    description:
+      "Premium websites, e-commerce systems, and workflow automation for growth-focused businesses.",
+    url: "/",
+    siteName: "CrecyStudio",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "CrecyStudio | Websites, E-Commerce & Workflow Systems",
+    description:
+      "Premium websites, e-commerce systems, and workflow automation for growth-focused businesses.",
+  },
 };
 
 export const dynamic = "force-dynamic";
