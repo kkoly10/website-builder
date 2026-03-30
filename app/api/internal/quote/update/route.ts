@@ -83,6 +83,6 @@ export async function POST(req: Request) {
   // Redirect back to quote page
   const url = new URL(req.url);
   url.pathname = "/internal/dashboard";
-  url.search = `token=${encodeURIComponent(token)}&quoteId=${encodeURIComponent(quoteId)}`;
+  url.search = `quoteId=${encodeURIComponent(quoteId)}`;
   return NextResponse.redirect(url, { status: 303 });
 }
