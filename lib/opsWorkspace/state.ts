@@ -80,6 +80,7 @@ export type WorkspaceQaItem = {
 
 export type WorkspaceState = {
   pipelineStatus?: string;
+  proposalDraft?: string;
   phase?: string;
   waitingOn?: string;
   adminPublicNote?: string;
@@ -110,6 +111,7 @@ export type WorkspaceState = {
 export type EnrichedOpsWorkspaceBundle = OpsWorkspaceBundle & {
   workspace: {
     pipelineStatus: string;
+    proposalDraft: string;
     phase: string;
     waitingOn: string;
     adminPublicNote: string;
@@ -247,6 +249,8 @@ function asWorkspaceState(value: unknown): WorkspaceState {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   const raw = value as Record<string, unknown>;
   return {
+    pipelineStatus: str(raw.pipelineStatus),
+    proposalDraft: str(raw.proposalDraft),
     phase: str(raw.phase),
     waitingOn: str(raw.waitingOn),
     adminPublicNote: str(raw.adminPublicNote),
@@ -422,6 +426,7 @@ export function enrichOpsBundle(
     ...bundle,
     workspace: {
       pipelineStatus: state.pipelineStatus || "new",
+      proposalDraft: state.proposalDraft || "",
       phase: state.phase || derivePhase(bundle),
       waitingOn: state.waitingOn || bundle.ghostAdmin.missingInfo[0] || "CrecyStudio internal review",
       adminPublicNote: state.adminPublicNote || "",

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireAdminRoute } from "@/lib/routeAuth";
 import {
   getWorkspaceState,
@@ -51,6 +52,14 @@ export async function POST(req: NextRequest) {
     const result = await saveWorkspaceState(opsIntakeId, patch, "admin");
     if (!result.ok) {
       return NextResponse.json({ ok: false, error: result.error }, { status: 500 });
+    }
+
+    // Sync pipeline status to the intake row so the ops pipeline list reflects it.
+    if (patch.pipelineStatus) {
+      await supabaseAdmin
+        .from("ops_intakes")
+        .update({ status: patch.pipelineStatus })
+        .eq("id", opsIntakeId);
     }
 
     const data = await getWorkspaceState(opsIntakeId);

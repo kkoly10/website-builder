@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getGhostProjectSnapshot } from "@/lib/ghost/snapshot";
 import GhostProjectSidebar from "@/components/internal/ghost/GhostProjectSidebar";
 import EcommerceStatusControls from "./EcommerceStatusControls";
+import EcommerceQuoteEditor from "./EcommerceQuoteEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -231,53 +232,20 @@ export default async function EcommerceAdminDetailPage(props: { params: ParamsPr
               </div>
             </div>
 
-            <div className="card">
-              <div className="cardInner">
-                <div style={{ fontWeight: 900, marginBottom: 10, color: "var(--fg)" }}>
-                  Quote Summary
-                </div>
-
-                {quote ? (
-                  <div className="pDark">
-                    <strong>Status:</strong> <span className="badge">{quoteStatus}</span>
-                    <br />
-                    <strong>Setup fee:</strong> {money(quote.estimate_setup_fee)}
-                    <br />
-                    <strong>Monthly fee:</strong> {money(quote.estimate_monthly_fee)}
-                    <br />
-                    <strong>Fulfillment model:</strong> {quote.estimate_fulfillment_model || "—"}
-                    <br />
-                    <strong>Created:</strong> {fmtDate(quote.created_at)}
-                  </div>
-                ) : (
-                  <div className="pDark">
-                    No e-commerce quote yet. Ghost will flag this as a live admin gap until a quote is
-                    created.
-                  </div>
-                )}
-
-                <div
-                  style={{
-                    marginTop: 12,
-                    padding: 10,
-                    background: "var(--bg2)",
-                    border: "1px solid var(--stroke)",
-                    borderRadius: 10,
-                  }}
-                >
-                  <div style={{ fontWeight: 800, marginBottom: 4 }}>Next operator move</div>
-                  <div className="pDark">
-                    {!call
-                      ? "Confirm the client’s planning call window."
-                      : !quote
-                      ? "Draft the e-commerce quote and service plan."
-                      : quoteStatus === "sent"
-                      ? "Follow up on quote acceptance."
-                      : "Confirm onboarding owner and next milestone."}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <EcommerceQuoteEditor
+              ecomIntakeId={id}
+              initialQuote={
+                quote
+                  ? {
+                      id: quote.id,
+                      status: quoteStatus,
+                      estimate_setup_fee: quote.estimate_setup_fee ?? null,
+                      estimate_monthly_fee: quote.estimate_monthly_fee ?? null,
+                      estimate_fulfillment_model: quote.estimate_fulfillment_model || "",
+                    }
+                  : null
+              }
+            />
           </div>
 
           <div className="card">

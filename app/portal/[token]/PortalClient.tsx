@@ -1193,32 +1193,40 @@ export default function PortalClient({
             marginTop: 8, padding: 12, borderRadius: 10,
             background: "var(--panel2)", border: "1px solid var(--stroke)",
           }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
               Published agreement
             </div>
-            <div style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+
+            {bundle.agreement.status === "accepted" ? (
+              <div style={{
+                marginBottom: 12, padding: 10, borderRadius: 10,
+                background: "rgba(46,160,67,0.10)", border: "1px solid rgba(46,160,67,0.30)",
+                color: "#5DCAA5", fontSize: 13, fontWeight: 700,
+              }}>
+                Agreement accepted
+              </div>
+            ) : (
+              <div style={{ marginBottom: 12 }}>
+                <button
+                  className="btn btnPrimary"
+                  disabled={saving}
+                  onClick={() => applyAction({ type: "agreement_accept" })}
+                >
+                  {saving ? "Saving..." : "Accept Agreement"}
+                </button>
+                <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--muted)" }}>
+                  Scroll through the agreement below, then click Accept to sign.
+                </p>
+              </div>
+            )}
+
+            <div style={{
+              color: "var(--muted)", fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-wrap",
+              maxHeight: 420, overflowY: "auto", padding: "10px 4px",
+              borderTop: "1px solid var(--stroke)",
+            }}>
               {bundle.agreement.publishedText}
             </div>
-          </div>
-        ) : null}
-        {bundle.agreement.publishedText && bundle.agreement.status !== "accepted" ? (
-          <div style={{ marginTop: 12 }}>
-            <button
-              className="btn btnPrimary"
-              disabled={saving}
-              onClick={() => applyAction({ type: "agreement_accept" })}
-            >
-              {saving ? "Saving..." : "Accept Agreement"}
-            </button>
-          </div>
-        ) : null}
-        {bundle.agreement.status === "accepted" ? (
-          <div style={{
-            marginTop: 12, padding: 10, borderRadius: 10,
-            background: "rgba(46,160,67,0.10)", border: "1px solid rgba(46,160,67,0.30)",
-            color: "#5DCAA5", fontSize: 13, fontWeight: 700,
-          }}>
-            Agreement accepted
           </div>
         ) : null}
       </Drawer>
