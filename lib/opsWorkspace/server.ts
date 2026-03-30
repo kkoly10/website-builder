@@ -470,13 +470,33 @@ function normalizePie(report: JsonRecord | null, intake: OpsIntakeRow) {
 }
 
 export async function getOpsAdminRows(): Promise<OpsAdminRow[]> {
-  const [{ data: intakes, error: intakeError }, { data: calls, error: callError }, { data: pies, error: pieError }] = await Promise.all([
-    supabaseAdmin
+  let intakes: OpsIntakeRow[] | null = null;
+  let intakeError: { message: string } | null = null;
+
+  // Try with workspace_state first; fall back without it if the column doesn't exist yet
+  const result = await supabaseAdmin
+    .from("ops_intakes")
+    .select(
+      "id, created_at, company_name, contact_name, email, industry, status, recommendation_tier, recommendation_price_range, recommendation_score, current_tools, workflows_needed, workspace_state"
+    )
+    .order("created_at", { ascending: false });
+
+  if (result.error && /workspace_state/i.test(result.error.message)) {
+    // Column doesn't exist yet — query without it
+    const fallback = await supabaseAdmin
       .from("ops_intakes")
       .select(
-        "id, created_at, company_name, contact_name, email, industry, status, recommendation_tier, recommendation_price_range, recommendation_score, current_tools, workflows_needed, workspace_state"
+        "id, created_at, company_name, contact_name, email, industry, status, recommendation_tier, recommendation_price_range, recommendation_score, current_tools, workflows_needed"
       )
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false });
+    intakes = (fallback.data ?? []) as OpsIntakeRow[];
+    intakeError = fallback.error;
+  } else {
+    intakes = (result.data ?? []) as OpsIntakeRow[];
+    intakeError = result.error;
+  }
+
+  const [{ data: calls, error: callError }, { data: pies, error: pieError }] = await Promise.all([
     supabaseAdmin
       .from("ops_call_requests")
       .select("id, ops_intake_id, created_at, status")
