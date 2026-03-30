@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getGhostProjectSnapshot } from "@/lib/ghost/snapshot";
 import GhostProjectSidebar from "@/components/internal/ghost/GhostProjectSidebar";
+import EcommerceStatusControls from "./EcommerceStatusControls";
 
 export const dynamic = "force-dynamic";
 
@@ -106,6 +107,13 @@ export default async function EcommerceAdminDetailPage(props: { params: ParamsPr
               </div>
             </div>
           </div>
+
+          <EcommerceStatusControls
+            ecomIntakeId={id}
+            initialIntakeStatus={statusText(intake.status, "new")}
+            initialCallStatus={callStatus}
+            initialQuoteStatus={quoteStatus}
+          />
 
           <div
             style={{

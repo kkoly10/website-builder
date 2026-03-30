@@ -120,6 +120,8 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
     return { total: all.length, live, building, planned: all.length - live - building, percent };
   }, [bundle]);
 
+  const [saving, setSaving] = useState(false);
+
   const refreshWorkspace = useCallback(async () => {
     setRefreshing(true); setError("");
     try {
@@ -130,6 +132,22 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to refresh.");
     } finally { setRefreshing(false); }
+  }, [bundle.intake.id]);
+
+  const applyAction = useCallback(async (body: Record<string, unknown>) => {
+    setSaving(true); setError("");
+    try {
+      const res = await fetch(`/api/portal/ops/${bundle.intake.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Action failed.");
+      if (json.data) setBundle(json.data as EnrichedOpsWorkspaceBundle);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Action failed.");
+    } finally { setSaving(false); }
   }, [bundle.intake.id]);
 
   return (
@@ -457,6 +475,63 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
           ))}
         </Drawer>
       )}
+
+      {/* ── Agreement & Deposit ── */}
+      <Drawer
+        label="Agreement & deposit"
+        value={pretty((bundle.workspace as any).agreementStatus || "not_published")}
+      >
+        <div className="portalDrawerRow">
+          <span className="portalDrawerKey">Agreement status</span>
+          <span className="portalDrawerVal">{pretty((bundle.workspace as any).agreementStatus || "not_published")}</span>
+        </div>
+        {(bundle.workspace as any).agreementAcceptedAt ? (
+          <div className="portalDrawerRow">
+            <span className="portalDrawerKey">Accepted</span>
+            <span className="portalDrawerVal">{fmtDate((bundle.workspace as any).agreementAcceptedAt)}</span>
+          </div>
+        ) : null}
+        {(bundle.workspace as any).agreementText ? (
+          <div style={{
+            marginTop: 8, padding: 12, borderRadius: 10,
+            background: "var(--panel2)", border: "1px solid var(--stroke)",
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
+              Agreement
+            </div>
+            <div style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+              {(bundle.workspace as any).agreementText}
+            </div>
+          </div>
+        ) : null}
+        {(bundle.workspace as any).agreementText && (bundle.workspace as any).agreementStatus !== "accepted" ? (
+          <div style={{ marginTop: 12 }}>
+            <button className="btn btnPrimary" disabled={saving} onClick={() => applyAction({ type: "agreement_accept" })}>
+              {saving ? "Saving..." : "Accept Agreement"}
+            </button>
+          </div>
+        ) : null}
+        {(bundle.workspace as any).agreementStatus === "accepted" ? (
+          <div style={{
+            marginTop: 12, padding: 10, borderRadius: 10,
+            background: "rgba(46,160,67,0.10)", border: "1px solid rgba(46,160,67,0.30)",
+            color: "#5DCAA5", fontSize: 13, fontWeight: 700,
+          }}>
+            Agreement accepted
+          </div>
+        ) : null}
+        <div className="portalDrawerRow" style={{ marginTop: 8 }}>
+          <span className="portalDrawerKey">Deposit status</span>
+          <span className="portalDrawerVal">{(bundle.workspace as any).depositNoticeSentAt ? "Client reported sent" : "Pending"}</span>
+        </div>
+        {!(bundle.workspace as any).depositNoticeSentAt ? (
+          <div style={{ marginTop: 8 }}>
+            <button className="btn btnGhost" disabled={saving} onClick={() => applyAction({ type: "deposit_notice_sent", note: "Client reported deposit sent." })}>
+              {saving ? "Saving..." : "I've sent the deposit"}
+            </button>
+          </div>
+        ) : null}
+      </Drawer>
 
       <Drawer label="Service & pricing" value={bundle.pie.recommendedOffer.primaryPackage}>
         <div className="portalDrawerRow"><span className="portalDrawerKey">Package</span><span className="portalDrawerVal">{bundle.pie.recommendedOffer.primaryPackage}</span></div>

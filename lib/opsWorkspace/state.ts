@@ -79,6 +79,7 @@ export type WorkspaceQaItem = {
 };
 
 export type WorkspaceState = {
+  pipelineStatus?: string;
   phase?: string;
   waitingOn?: string;
   adminPublicNote?: string;
@@ -104,6 +105,7 @@ export type WorkspaceState = {
 
 export type EnrichedOpsWorkspaceBundle = OpsWorkspaceBundle & {
   workspace: {
+    pipelineStatus: string;
     phase: string;
     waitingOn: string;
     adminPublicNote: string;
@@ -415,6 +417,7 @@ export function enrichOpsBundle(
   return {
     ...bundle,
     workspace: {
+      pipelineStatus: state.pipelineStatus || "new",
       phase: state.phase || derivePhase(bundle),
       waitingOn: state.waitingOn || bundle.ghostAdmin.missingInfo[0] || "CrecyStudio internal review",
       adminPublicNote: state.adminPublicNote || "",

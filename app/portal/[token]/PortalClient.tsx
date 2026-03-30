@@ -1201,6 +1201,26 @@ export default function PortalClient({
             </div>
           </div>
         ) : null}
+        {bundle.agreement.publishedText && bundle.agreement.status !== "accepted" ? (
+          <div style={{ marginTop: 12 }}>
+            <button
+              className="btn btnPrimary"
+              disabled={saving}
+              onClick={() => applyAction({ type: "agreement_accept" })}
+            >
+              {saving ? "Saving..." : "Accept Agreement"}
+            </button>
+          </div>
+        ) : null}
+        {bundle.agreement.status === "accepted" ? (
+          <div style={{
+            marginTop: 12, padding: 10, borderRadius: 10,
+            background: "rgba(46,160,67,0.10)", border: "1px solid rgba(46,160,67,0.30)",
+            color: "#5DCAA5", fontSize: 13, fontWeight: 700,
+          }}>
+            Agreement accepted
+          </div>
+        ) : null}
       </Drawer>
 
       {(bundle.history.scopeVersions.length > 0 || bundle.history.changeOrders.length > 0) && (
