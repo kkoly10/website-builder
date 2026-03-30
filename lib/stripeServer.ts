@@ -5,7 +5,7 @@ export function getBaseUrl(req: Request) {
 
   const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
   const proto = req.headers.get("x-forwarded-proto") || "https";
-  if (!host) return "http://localhost:3000";
+  if (!host) return "https://crecystudio.com";
   return `${proto}://${host}`;
 }
 

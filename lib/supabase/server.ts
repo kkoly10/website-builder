@@ -41,7 +41,7 @@ export function getSiteUrl() {
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
     process.env.VERCEL_URL ||
-    "http://localhost:3000";
+    "https://crecystudio.com";
 
   if (!siteUrl.startsWith("http://") && !siteUrl.startsWith("https://")) {
     siteUrl = `https://${siteUrl}`;
