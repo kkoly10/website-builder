@@ -33,6 +33,13 @@ type EcomQuote = {
   estimate_setup_fee: number | null;
   estimate_monthly_fee: number | null;
   estimate_fulfillment_model: string | null;
+  quote_json?: {
+    agreement_status?: string;
+    agreement_accepted_at?: string;
+    deposit_notice?: string;
+    deposit_notice_sent_at?: string;
+    [key: string]: unknown;
+  } | null;
 } | null;
 
 type EcomCall = {
@@ -145,6 +152,7 @@ function Drawer({ label, value, children, defaultOpen = false }: {
 export default function EcomPortalClient({ data }: { data: EcomPortalBundle }) {
   const [bundle, setBundle] = useState(data);
   const [refreshing, setRefreshing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   const { intake, quote, call } = bundle;
@@ -166,6 +174,22 @@ export default function EcomPortalClient({ data }: { data: EcomPortalBundle }) {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Refresh failed.");
     } finally { setRefreshing(false); }
+  }, [intake.id]);
+
+  const applyAction = useCallback(async (payload: Record<string, unknown>) => {
+    setSaving(true); setError("");
+    try {
+      const res = await fetch(`/api/portal/ecommerce/${intake.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Action failed.");
+      setBundle(json.data as EcomPortalBundle);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Action failed.");
+    } finally { setSaving(false); }
   }, [intake.id]);
 
   return (
@@ -374,6 +398,78 @@ export default function EcomPortalClient({ data }: { data: EcomPortalBundle }) {
           {call.notes && (
             <div className="portalDrawerRow"><span className="portalDrawerKey">Notes</span><span className="portalDrawerVal">{call.notes}</span></div>
           )}
+        </Drawer>
+      )}
+
+      {quote && (
+        <Drawer label="Agreement & deposit" value={
+          quote.quote_json?.agreement_status === "accepted" ? "Accepted" : "Pending"
+        }>
+          <div style={{ display: "grid", gap: 12 }}>
+            {/* Agreement section */}
+            <div style={{ display: "grid", gap: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Agreement</div>
+              {quote.quote_json?.agreement_status === "accepted" ? (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  padding: "10px 14px", borderRadius: 10,
+                  background: "rgba(93,202,165,0.08)", border: "1px solid rgba(93,202,165,0.2)",
+                }}>
+                  <span style={{ color: "#5DCAA5", fontWeight: 600, fontSize: 13 }}>Agreement accepted</span>
+                  {quote.quote_json?.agreement_accepted_at && (
+                    <span style={{ fontSize: 11, color: "var(--muted2)", marginLeft: "auto" }}>
+                      {fmtDate(quote.quote_json.agreement_accepted_at)}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--muted)", lineHeight: 1.5 }}>
+                    By accepting, you agree to the proposed scope and pricing outlined in the proposal above.
+                  </p>
+                  <button
+                    className="btn btnPrimary"
+                    disabled={saving}
+                    onClick={() => applyAction({ type: "agreement_accept" })}
+                    style={{ justifySelf: "start" }}
+                  >
+                    {saving ? "Saving..." : "Accept Agreement"}
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Deposit section */}
+            <div style={{ display: "grid", gap: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Deposit</div>
+              {quote.quote_json?.deposit_notice_sent_at ? (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  padding: "10px 14px", borderRadius: 10,
+                  background: "rgba(93,202,165,0.08)", border: "1px solid rgba(93,202,165,0.2)",
+                }}>
+                  <span style={{ color: "#5DCAA5", fontWeight: 600, fontSize: 13 }}>Deposit notice sent</span>
+                  <span style={{ fontSize: 11, color: "var(--muted2)", marginLeft: "auto" }}>
+                    {fmtDate(quote.quote_json.deposit_notice_sent_at)}
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--muted)", lineHeight: 1.5 }}>
+                    Once you&apos;ve sent your deposit, let us know so we can begin work.
+                  </p>
+                  <button
+                    className="btn btnGhost"
+                    disabled={saving}
+                    onClick={() => applyAction({ type: "deposit_notice_sent" })}
+                    style={{ justifySelf: "start" }}
+                  >
+                    {saving ? "Saving..." : "I've sent the deposit"}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         </Drawer>
       )}
 

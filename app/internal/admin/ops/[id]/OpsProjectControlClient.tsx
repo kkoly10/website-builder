@@ -32,6 +32,25 @@ const TABS: Array<{ key: TabKey; label: string }> = [
   { key: "chat", label: "Ghost Admin" },
 ];
 
+const OPS_PIPELINE_STAGES = [
+  "new",
+  "discovery",
+  "scoping",
+  "proposal_sent",
+  "agreement_sent",
+  "agreement_accepted",
+  "deposit_sent",
+  "deposit_paid",
+  "in_progress",
+  "process_mapping",
+  "building",
+  "testing",
+  "live",
+  "retainer_active",
+  "completed",
+  "closed_lost",
+];
+
 type ChatMessage = {
   id: string;
   role: "user" | "assistant";
@@ -113,6 +132,9 @@ export default function OpsProjectControlClient({
   const [bundle, setBundle] = useState(initialData);
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
 
+  const [pipelineStatus, setPipelineStatus] = useState(
+    initialData.workspace.pipelineStatus || "new"
+  );
   const [phase, setPhase] = useState(initialData.workspace.phase);
   const [waitingOn, setWaitingOn] = useState(initialData.workspace.waitingOn);
   const [adminPublicNote, setAdminPublicNote] = useState(
@@ -161,6 +183,7 @@ export default function OpsProjectControlClient({
 
     try {
       const workspace = {
+        pipelineStatus,
         phase,
         waitingOn,
         adminPublicNote,
@@ -305,7 +328,22 @@ export default function OpsProjectControlClient({
       <div style={{ marginTop: 18 }}>
         {activeTab === "overview" ? (
           <div className="grid2stretch">
-            <Panel title="Diagnosis" note="Core ops framing and notes.">
+            <Panel title="Pipeline & Diagnosis" note="Stage progression and core ops framing.">
+              <div>
+                <div className="fieldLabel">Pipeline Stage</div>
+                <select
+                  className="select"
+                  value={pipelineStatus}
+                  onChange={(e) => setPipelineStatus(e.target.value)}
+                  style={{ width: "100%" }}
+                >
+                  {OPS_PIPELINE_STAGES.map((s) => (
+                    <option key={s} value={s}>
+                      {s.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase())}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <ReadOnly label="Business Objective" value={bundle.ghostAdmin.businessObjective} />
               <ReadOnly label="Main Bottleneck" value={bundle.ghostAdmin.mainBottleneck} />
               <ReadOnly label="Root Cause" value={bundle.ghostAdmin.rootCause} />

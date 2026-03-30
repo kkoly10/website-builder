@@ -817,7 +817,8 @@ type PortalActionBody =
       asset: { category: string; label: string; url: string; notes?: string };
     }
   | { type: "revision_add"; revision: { message: string; priority?: string } }
-  | { type: "deposit_notice_sent"; note?: string };
+  | { type: "deposit_notice_sent"; note?: string }
+  | { type: "agreement_accept" };
 
 export async function applyPortalAction(token: string, body: PortalActionBody) {
   const portal = await getPortalBundleByToken(token);
@@ -947,6 +948,25 @@ export async function applyPortalAction(token: string, body: PortalActionBody) {
         .join("\n")
         .trim();
       patch.client_updated_at = isoNow();
+      break;
+    }
+
+    case "agreement_accept": {
+      patch.client_updated_at = isoNow();
+
+      // Update agreement status in quote_portal_state
+      await supabaseAdmin
+        .from("quote_portal_state")
+        .upsert(
+          {
+            quote_id: quoteId,
+            agreement_status: "accepted",
+            agreement_accepted_at: isoNow(),
+            updated_at: isoNow(),
+          },
+          { onConflict: "quote_id" }
+        );
+
       break;
     }
 
