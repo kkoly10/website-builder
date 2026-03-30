@@ -1,20 +1,13 @@
 // app/api/internal/update-quote/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireAdminRoute } from "@/lib/routeAuth";
 
 export const runtime = "nodejs";
 
-function requireInternalKey(req: Request) {
-  const key = req.headers.get("x-internal-key") || "";
-  const expected = process.env.INTERNAL_DASH_KEY || "";
-  if (!expected) return { ok: false, error: "Missing INTERNAL_DASH_KEY env var." };
-  if (key !== expected) return { ok: false, error: "Unauthorized." };
-  return { ok: true };
-}
-
 export async function POST(req: Request) {
-  const auth = requireInternalKey(req);
-  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: 401 });
+  const authErr = await requireAdminRoute();
+  if (authErr) return authErr;
 
   try {
     const body = await req.json();

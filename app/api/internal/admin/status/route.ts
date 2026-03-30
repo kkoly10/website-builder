@@ -1,6 +1,7 @@
 // app/api/internal/admin/status/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireAdminRoute } from "@/lib/routeAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,6 +22,9 @@ function toObj(v: any): Record<string, any> {
 
 export async function POST(req: NextRequest) {
   try {
+    const authErr = await requireAdminRoute();
+    if (authErr) return authErr;
+
     const body = (await req.json()) as {
       quoteId?: string;
       pipelineStatus?: string;

@@ -21,9 +21,25 @@ export async function resolvePortalAccess(
 
   if (!raw) return null;
 
-  // Allow direct quote UUID access for internal testing/admin preview links
+  // Direct UUID access requires a valid quote to exist and an active portal_access row.
+  // This prevents enumeration attacks while still supporting admin preview links.
   if (isUuid(raw)) {
-    return { quoteId: raw, via: "quote_id" };
+    const { data: accessRow } = await supabaseAdmin
+      .from("portal_access")
+      .select("*")
+      .eq("quote_id", raw)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+
+    if (!accessRow) return null;
+
+    if (accessRow.expires_at) {
+      const expires = new Date(accessRow.expires_at).getTime();
+      if (!Number.isNaN(expires) && expires < Date.now()) return null;
+    }
+
+    return { quoteId: raw, via: "quote_id", accessRow };
   }
 
   const { data, error } = await supabaseAdmin

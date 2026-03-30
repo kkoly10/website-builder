@@ -1,7 +1,7 @@
 // app/api/internal/quote/run-pie/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { requireInternalToken } from "@/lib/internalToken";
+import { requireAdminRoute } from "@/lib/routeAuth";
 import { evaluatePIE } from "@/lib/pie";
 
 export const runtime = "nodejs";
@@ -11,11 +11,10 @@ function pick(form: FormData, key: string) {
 }
 
 export async function POST(req: Request) {
-  const form = await req.formData();
+  const authErr = await requireAdminRoute();
+  if (authErr) return authErr;
 
-  const token = pick(form, "token");
-  const auth = requireInternalToken(token);
-  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: 401 });
+  const form = await req.formData();
 
   const quoteId = pick(form, "quoteId");
   if (!quoteId) return NextResponse.json({ error: "Missing quoteId" }, { status: 400 });

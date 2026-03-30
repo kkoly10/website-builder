@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { generatePieOpsReport } from "@/lib/pie/ops-agent";
+import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,10 @@ type RequestBody = {
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getIpFromHeaders(req.headers);
+    const rl = enforceRateLimit({ key: `pie-ops:${ip}`, limit: 5, windowMs: 60_000 });
+    if (!rl.ok) return rateLimitResponse(rl.resetAt);
+
     const body = (await req.json()) as RequestBody;
 
     if (!body?.intake || typeof body.intake !== "object") {

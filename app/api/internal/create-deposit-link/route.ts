@@ -1,7 +1,7 @@
 // app/api/internal/create-deposit-link/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { checkInternalAccess } from "@/lib/internalAuth";
+import { requireAdminRoute } from "@/lib/routeAuth";
 import { getBaseUrl, stripeCreateCheckoutSession } from "@/lib/stripeServer";
 
 export const runtime = "nodejs";
@@ -29,10 +29,10 @@ function roundMoney(n: any) {
 
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as Body;
+    const authErr = await requireAdminRoute();
+    if (authErr) return authErr;
 
-    const access = checkInternalAccess(body?.token ?? null);
-    if (!access.ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const body = (await req.json()) as Body;
 
     const quoteId = String(body?.quoteId ?? "").trim();
     if (!quoteId) return NextResponse.json({ error: "quoteId is required" }, { status: 400 });

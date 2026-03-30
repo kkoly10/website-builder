@@ -1,7 +1,7 @@
 // app/api/internal/quote/update/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { requireInternalToken } from "@/lib/internalToken";
+import { requireAdminRoute } from "@/lib/routeAuth";
 
 export const runtime = "nodejs";
 
@@ -23,13 +23,10 @@ const VALID_STATUSES = new Set([
 ]);
 
 export async function POST(req: Request) {
-  const form = await req.formData();
+  const authErr = await requireAdminRoute();
+  if (authErr) return authErr;
 
-  const token = pick(form, "token");
-  const auth = requireInternalToken(token);
-  if (!auth.ok) {
-    return NextResponse.json({ error: auth.error }, { status: 401 });
-  }
+  const form = await req.formData();
 
   const quoteId = pick(form, "quoteId");
   if (!quoteId) {

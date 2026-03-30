@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { ensureCustomerPortalForQuoteId } from "@/lib/customerPortal";
+import { requireAdminRoute } from "@/lib/routeAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +17,9 @@ type MilestoneInput = {
 
 export async function POST(req: Request) {
   try {
+    const authErr = await requireAdminRoute();
+    if (authErr) return authErr;
+
     const body = await req.json();
     const quoteId = String(body?.quoteId || "").trim();
 

@@ -1,6 +1,7 @@
 // app/api/internal/admin/scope/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireAdminRoute } from "@/lib/routeAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -70,6 +71,9 @@ async function getNextVersion(projectId: string): Promise<number> {
 
 export async function POST(req: NextRequest) {
   try {
+    const authErr = await requireAdminRoute();
+    if (authErr) return authErr;
+
     const body = await req.json();
     const action = String(body?.action || "");
 
