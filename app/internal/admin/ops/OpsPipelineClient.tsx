@@ -18,6 +18,8 @@ type OpsAdminRow = {
   pieStatus: string;
   pieSummary: string;
   bestTool: string;
+  phase: string;
+  waitingOn: string;
   links: {
     detail: string;
     portal: string;
@@ -188,12 +190,13 @@ export default function OpsPipelineClient({
                   style={{
                     marginTop: 16,
                     display: "grid",
-                    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                    gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
                     gap: 12,
                   }}
                 >
+                  <InfoTile label="Phase" value={row.phase} />
+                  <InfoTile label="Waiting On" value={row.waitingOn} />
                   <InfoTile label="Recommendation" value={row.recommendationTier} />
-                  <InfoTile label="Price Range" value={row.recommendationPriceRange} />
                   <InfoTile label="Best Tool" value={row.bestTool} />
                   <InfoTile label="PIE" value={row.pieStatus} />
                 </div>
