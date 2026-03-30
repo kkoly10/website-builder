@@ -171,11 +171,34 @@ export default function OpsProjectControlClient({
   const [risksJson, setRisksJson] = useState(toJson(initialData.workspace.risks));
   const [qaJson, setQaJson] = useState(toJson(initialData.workspace.qa));
 
+  const [proposalDraft, setProposalDraft] = useState(initialData.workspace.proposalDraft || "");
+  const [generatingProposal, setGeneratingProposal] = useState(false);
+
   const [saveMsg, setSaveMsg] = useState("");
   const [saving, setSaving] = useState(false);
 
   const intakeTone = useMemo(() => tone(bundle.intake.status), [bundle.intake.status]);
   const phaseTone = useMemo(() => tone(phase), [phase]);
+
+  async function generateProposal() {
+    setGeneratingProposal(true);
+    try {
+      const prompt = `Write a professional automation services proposal for ${bundle.intake.companyName}. Include: project overview, pain points addressed, proposed solution (${bundle.ghostAdmin.bestTool}), key automations, estimated outcomes, and next steps. Keep it clear, concise, and client-ready.`;
+      const res = await fetch("/api/internal/admin/ops/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ opsIntakeId: bundle.intake.id, message: prompt }),
+      });
+      const json = await res.json();
+      if (res.ok && json?.ok && json.assistantMessage?.content) {
+        setProposalDraft(json.assistantMessage.content);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setGeneratingProposal(false);
+    }
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -184,6 +207,7 @@ export default function OpsProjectControlClient({
     try {
       const workspace = {
         pipelineStatus,
+        proposalDraft,
         phase,
         waitingOn,
         adminPublicNote,
@@ -327,6 +351,7 @@ export default function OpsProjectControlClient({
 
       <div style={{ marginTop: 18 }}>
         {activeTab === "overview" ? (
+          <div style={{ display: "grid", gap: 16 }}>
           <div className="grid2stretch">
             <Panel title="Pipeline & Diagnosis" note="Stage progression and core ops framing.">
               <div>
@@ -382,6 +407,40 @@ export default function OpsProjectControlClient({
                 emptyLabel="No workflows listed."
               />
             </Panel>
+          </div>
+
+          <Panel title="Proposal Draft" note="AI-generated proposal for this automation project. Edit before sending.">
+            <div className="row" style={{ gap: 8 }}>
+              <button
+                type="button"
+                className="btn btnPrimary"
+                disabled={generatingProposal || saving}
+                onClick={generateProposal}
+                style={{ fontSize: 13 }}
+              >
+                {generatingProposal ? "Generating..." : proposalDraft ? "Regenerate via Ghost Admin" : "Generate proposal via Ghost Admin"}
+              </button>
+              {proposalDraft ? (
+                <button
+                  type="button"
+                  className="btn btnGhost"
+                  style={{ fontSize: 13 }}
+                  onClick={() => navigator.clipboard.writeText(proposalDraft)}
+                >
+                  Copy
+                </button>
+              ) : null}
+            </div>
+            <Editable
+              label="Proposal text"
+              value={proposalDraft}
+              onChange={setProposalDraft}
+              rows={18}
+            />
+            <div className="smallNote" style={{ marginTop: 4 }}>
+              Saved with "Save Workspace" above. Share with the client when ready.
+            </div>
+          </Panel>
           </div>
         ) : null}
 

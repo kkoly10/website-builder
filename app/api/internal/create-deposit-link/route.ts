@@ -116,6 +116,7 @@ export async function POST(req: Request) {
       .update({
         status: nextStatus,
         debug: nextDebug,
+        deposit_link: session.url,
       })
       .eq("id", quoteId)
       .select("id,status,debug")

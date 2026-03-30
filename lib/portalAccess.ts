@@ -57,7 +57,22 @@ export async function resolvePortalAccess(
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    // Fall back to checking quotes.public_token directly.
+    // This lets clients whose portal was opened via the public_token link
+    // (which never creates a portal_access row) still upload assets.
+    const { data: quoteByToken } = await supabaseAdmin
+      .from("quotes")
+      .select("id")
+      .eq("public_token", raw)
+      .maybeSingle();
+
+    if (quoteByToken) {
+      return { quoteId: quoteByToken.id, via: "portal_token" };
+    }
+
+    return null;
+  }
 
   if (data.expires_at) {
     const expires = new Date(data.expires_at).getTime();
