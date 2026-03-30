@@ -57,6 +57,6 @@ export async function POST(req: Request) {
     .update({ latest_pie_report_id: insert.data.id })
     .eq("id", quoteId);
 
-  const redirectTo = `/internal/quotes/${quoteId}${expected ? `?key=${encodeURIComponent(key)}` : ""}`;
+  const redirectTo = `/internal/quotes/${quoteId}`;
   return NextResponse.redirect(new URL(redirectTo, req.url));
 }
