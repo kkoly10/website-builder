@@ -84,6 +84,10 @@ export type WorkspaceState = {
   waitingOn?: string;
   adminPublicNote?: string;
   internalDiagnosisNote?: string;
+  agreementStatus?: string;
+  agreementAcceptedAt?: string;
+  depositNotice?: string;
+  depositNoticeSentAt?: string;
   currentProcess?: string[];
   futureProcess?: string[];
   systems?: WorkspaceSystem[];
