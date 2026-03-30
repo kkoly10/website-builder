@@ -1,20 +1,17 @@
 // app/api/internal/get-quote/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { checkInternalAccess } from "@/lib/internalAuth";
+import { requireAdminRoute } from "@/lib/routeAuth";
 
 export const runtime = "nodejs";
 
 export async function GET(req: Request) {
   try {
-    const url = new URL(req.url);
-    const token = url.searchParams.get("token");
-    const quoteId = (url.searchParams.get("quoteId") || "").trim();
+    const authErr = await requireAdminRoute();
+    if (authErr) return authErr;
 
-    const access = checkInternalAccess(token);
-    if (!access.ok) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const url = new URL(req.url);
+    const quoteId = (url.searchParams.get("quoteId") || "").trim();
 
     if (!quoteId) {
       return NextResponse.json({ error: "quoteId is required" }, { status: 400 });

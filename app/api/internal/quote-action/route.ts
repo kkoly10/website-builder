@@ -1,13 +1,9 @@
 // app/api/internal/quote-action/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireAdminRoute } from "@/lib/routeAuth";
 
 export const runtime = "nodejs";
-
-function okToken(token: string) {
-  const expected = process.env.INTERNAL_DASH_TOKEN || "";
-  return expected && token && token === expected;
-}
 
 async function readBody(req: Request): Promise<Record<string, any>> {
   const ct = req.headers.get("content-type") || "";
@@ -19,15 +15,13 @@ async function readBody(req: Request): Promise<Record<string, any>> {
 }
 
 export async function POST(req: Request) {
+  const authErr = await requireAdminRoute();
+  if (authErr) return authErr;
+
   const referer = req.headers.get("referer") || "/internal/dashboard";
 
   try {
     const body = await readBody(req);
-
-    const token = String(body.token || "").trim();
-    if (!okToken(token)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const action = String(body.action || "").trim();
     const quoteId = String(body.quoteId || "").trim();

@@ -2,22 +2,16 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { evaluatePIE } from "@/lib/pie";
+import { requireAdminRoute } from "@/lib/routeAuth";
 
 export const runtime = "nodejs";
 
-function cleanKey(v: unknown) {
-  return String(v ?? "").trim();
-}
-
 export async function POST(req: Request) {
+  const authErr = await requireAdminRoute();
+  if (authErr) return authErr;
+
   const form = await req.formData();
   const quoteId = String(form.get("quoteId") ?? "").trim();
-  const key = cleanKey(form.get("key"));
-
-  const expected = process.env.INTERNAL_DASHBOARD_KEY;
-  if (expected && key !== expected) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
 
   if (!quoteId) {
     return NextResponse.json({ error: "Missing quoteId" }, { status: 400 });
