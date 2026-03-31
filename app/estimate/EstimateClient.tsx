@@ -1,3 +1,4 @@
+// app/estimate/EstimateClient.tsx
 "use client";
 
 import Link from "next/link";
@@ -33,6 +34,7 @@ type Normalized = {
 
 const LS_KEY = "crecystudio:intake";
 const LAST_QUOTE_KEY = "crecystudio:lastQuoteId";
+const LAST_QUOTE_TOKEN_KEY = "crecystudio:lastQuoteToken";
 
 const CORE_KEYS = new Set([
   "websiteType",
@@ -55,6 +57,8 @@ const CORE_KEYS = new Set([
   "budget",
   "hasLogo",
   "hasBrandGuide",
+  "quoteId",
+  "quoteToken",
 ]);
 
 function toBool(v: unknown): boolean {
@@ -177,6 +181,9 @@ export default function EstimateClient() {
     };
   }, [merged]);
 
+  const existingQuoteId = useMemo(() => String(merged.quoteId ?? "").trim(), [merged]);
+  const existingQuoteToken = useMemo(() => String(merged.quoteToken ?? merged.token ?? "").trim(), [merged]);
+
   const pricing = useMemo(() => getWebsitePricing(normalized), [normalized]);
   const hasIntake = !!loadedFromLocalStorage || hasMeaningfulQuery;
 
@@ -193,6 +200,8 @@ export default function EstimateClient() {
     try {
       const payload = {
         source: "estimate",
+        quoteId: existingQuoteId || undefined,
+        quoteToken: existingQuoteToken || undefined,
         lead: {
           email,
           phone: normalized.leadPhone || undefined,
@@ -222,9 +231,21 @@ export default function EstimateClient() {
 
       try {
         window.localStorage.setItem(LAST_QUOTE_KEY, String(json.quoteId));
+        if (json?.quoteToken) {
+          window.localStorage.setItem(LAST_QUOTE_TOKEN_KEY, String(json.quoteToken));
+        }
       } catch {}
 
-      router.push(`/book?quoteId=${encodeURIComponent(String(json.quoteId))}`);
+      if (json?.nextUrl) {
+        router.push(String(json.nextUrl));
+        return;
+      }
+
+      const nextUrl = json?.quoteToken
+        ? `/book?quoteId=${encodeURIComponent(String(json.quoteId))}&token=${encodeURIComponent(String(json.quoteToken))}`
+        : `/book?quoteId=${encodeURIComponent(String(json.quoteId))}`;
+
+      router.push(nextUrl);
     } catch (e) {
       setSendError(e instanceof Error ? e.message : "Failed to save estimate.");
     } finally {
