@@ -1,58 +1,147 @@
+// app/book/BookClient.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 
-type Props = { quoteId: string; };
-type SuccessState = { callRequestId?: string; nextUrl?: string; } | null;
+type Props = { quoteId: string; quoteToken?: string };
+type SuccessState = { callRequestId?: string; nextUrl?: string } | null;
 
 const LAST_QUOTE_KEY = "crecystudio:lastQuoteId";
+const LAST_QUOTE_TOKEN_KEY = "crecystudio:lastQuoteToken";
 
-function detectTimezone() { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York"; } catch { return "America/New_York"; } }
-function readQuoteIdFromUrl() { try { const sp = new URLSearchParams(window.location.search); return String(sp.get("quoteId") || sp.get("id") || "").trim(); } catch { return ""; } }
+function detectTimezone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York";
+  } catch {
+    return "America/New_York";
+  }
+}
 
-export default function BookClient({ quoteId }: Props) {
+function readQuoteIdFromUrl() {
+  try {
+    const sp = new URLSearchParams(window.location.search);
+    return String(sp.get("quoteId") || sp.get("id") || "").trim();
+  } catch {
+    return "";
+  }
+}
+
+function readQuoteTokenFromUrl() {
+  try {
+    const sp = new URLSearchParams(window.location.search);
+    return String(sp.get("token") || sp.get("quoteToken") || "").trim();
+  } catch {
+    return "";
+  }
+}
+
+export default function BookClient({ quoteId, quoteToken }: Props) {
   const [effectiveQuoteId, setEffectiveQuoteId] = useState<string>((quoteId || "").trim());
+  const [effectiveQuoteToken, setEffectiveQuoteToken] = useState<string>((quoteToken || "").trim());
   const [bestTimeToCall, setBestTimeToCall] = useState("");
   const [preferredTimes, setPreferredTimes] = useState("");
   const [timezone, setTimezone] = useState("America/New_York");
   const [notes, setNotes] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState<SuccessState>(null);
 
   useEffect(() => {
     const fromProp = (quoteId || "").trim();
-    if (fromProp) { setEffectiveQuoteId(fromProp); try { window.localStorage.setItem(LAST_QUOTE_KEY, fromProp); } catch {}; return; }
+    const tokenFromProp = (quoteToken || "").trim();
+    if (fromProp) {
+      setEffectiveQuoteId(fromProp);
+      try {
+        window.localStorage.setItem(LAST_QUOTE_KEY, fromProp);
+      } catch {}
+    }
+
+    if (tokenFromProp) {
+      setEffectiveQuoteToken(tokenFromProp);
+      try {
+        window.localStorage.setItem(LAST_QUOTE_TOKEN_KEY, tokenFromProp);
+      } catch {}
+    }
+
+    if (fromProp || tokenFromProp) return;
+
     const fromUrl = readQuoteIdFromUrl();
-    if (fromUrl) { setEffectiveQuoteId(fromUrl); try { window.localStorage.setItem(LAST_QUOTE_KEY, fromUrl); } catch {}; return; }
-    try { const fromStorage = String(window.localStorage.getItem(LAST_QUOTE_KEY) || "").trim(); if (fromStorage) setEffectiveQuoteId(fromStorage); } catch {}
-  }, [quoteId]);
+    const tokenFromUrl = readQuoteTokenFromUrl();
+    if (fromUrl) {
+      setEffectiveQuoteId(fromUrl);
+      try {
+        window.localStorage.setItem(LAST_QUOTE_KEY, fromUrl);
+      } catch {}
+    }
 
-  useEffect(() => { setTimezone(detectTimezone()); }, []);
+    if (tokenFromUrl) {
+      setEffectiveQuoteToken(tokenFromUrl);
+      try {
+        window.localStorage.setItem(LAST_QUOTE_TOKEN_KEY, tokenFromUrl);
+      } catch {}
+    }
 
-  const portalPath = useMemo(() => (effectiveQuoteId ? `/portal?quoteId=${encodeURIComponent(effectiveQuoteId)}` : "/portal"), [effectiveQuoteId]);
+    if (fromUrl || tokenFromUrl) return;
+
+    try {
+      const fromStorage = String(window.localStorage.getItem(LAST_QUOTE_KEY) || "").trim();
+      const tokenFromStorage = String(window.localStorage.getItem(LAST_QUOTE_TOKEN_KEY) || "").trim();
+      if (fromStorage) setEffectiveQuoteId(fromStorage);
+      if (tokenFromStorage) setEffectiveQuoteToken(tokenFromStorage);
+    } catch {}
+  }, [quoteId, quoteToken]);
+
+  useEffect(() => {
+    setTimezone(detectTimezone());
+  }, []);
+
+  const portalPath = useMemo(
+    () => (effectiveQuoteToken ? `/portal/${encodeURIComponent(effectiveQuoteToken)}` : "/portal"),
+    [effectiveQuoteToken]
+  );
   const nextUrl = success?.nextUrl || portalPath;
-  
-  // RESTORED: Auth Links
   const loginHref = useMemo(() => `/login?next=${encodeURIComponent(nextUrl)}`, [nextUrl]);
   const signupHref = useMemo(() => `/signup?next=${encodeURIComponent(nextUrl)}`, [nextUrl]);
 
   async function onSubmit(e: React.FormEvent) {
-    e.preventDefault(); setError("");
-    if (!effectiveQuoteId) { setError("Missing quote reference."); return; }
+    e.preventDefault();
+    setError("");
+    if (!effectiveQuoteId) {
+      setError("Missing quote reference.");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const res = await fetch(`/api/request-call?quoteId=${encodeURIComponent(effectiveQuoteId)}`, {
-        method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ quoteId: effectiveQuoteId, bestTimeToCall, preferredTimes, timezone, notes }),
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          quoteId: effectiveQuoteId,
+          quoteToken: effectiveQuoteToken || undefined,
+          bestTimeToCall,
+          preferredTimes,
+          timezone,
+          notes,
+        }),
       });
+
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || "Failed to submit");
       setSuccess({ callRequestId: json?.callRequestId, nextUrl: json?.nextUrl });
-    } catch (err) { setError(err instanceof Error ? err.message : "Failed to submit"); } 
-    finally { setLoading(false); }
+
+      try {
+        window.localStorage.setItem(LAST_QUOTE_KEY, effectiveQuoteId);
+        if (effectiveQuoteToken) {
+          window.localStorage.setItem(LAST_QUOTE_TOKEN_KEY, effectiveQuoteToken);
+        }
+      } catch {}
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to submit");
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (success) {
@@ -62,11 +151,10 @@ export default function BookClient({ quoteId }: Props) {
           <div style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--accentSoft)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", fontSize: 24 }}>✓</div>
           <h2 className="h2" style={{ margin: 0, color: "var(--fg)" }}>Quote Saved & Call Requested</h2>
           <p className="p" style={{ marginTop: 16, color: "var(--muted)" }}>Your quote is saved in your portal. Log in or create a free account using the same email address to track your project status.</p>
-          
+
           <div style={{ marginTop: 32, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <a className="btn btnPrimary" href={nextUrl}>Open Portal <span className="btnArrow">→</span></a>
             <a className="btn btnGhost" href={signupHref}>Create Account</a>
-            {/* RESTORED: Log in button */}
             <a className="btn btnGhost" href={loginHref}>Log in</a>
           </div>
         </section>
@@ -78,12 +166,12 @@ export default function BookClient({ quoteId }: Props) {
     <main className="container" style={{ paddingTop: "var(--sp-32)", paddingBottom: "var(--sp-48)", maxWidth: 760 }}>
       <section className="panel">
         <div className="panelHeader">
-          <h2 className="h2" >Book your discovery call</h2>
+          <h2 className="h2">Book your discovery call</h2>
           <p className="pDark">Let's review the scope and ensure we're aligned before any payment.</p>
         </div>
 
         <div className="panelBody">
-          <form onSubmit={onSubmit} >
+          <form onSubmit={onSubmit}>
             <div>
               <div className="fieldLabel">Best time of day *</div>
               <select className="select" value={bestTimeToCall} onChange={(e) => setBestTimeToCall(e.target.value)} required>
