@@ -1,8 +1,10 @@
+// app/api/submit-estimate/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/server";
-import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
+import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { recordServerEvent } from "@/lib/analytics/server";
+import { resolveQuoteAccess, sameNormalizedEmail } from "@/lib/accessControl";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -131,7 +133,7 @@ async function ensureLeadId(email: string, name: string | null) {
 export async function POST(req: Request) {
   try {
     const ip = getIpFromHeaders(req.headers);
-    const rl = enforceRateLimit({ key: `submit-estimate:${ip}`, limit: 12, windowMs: 60_000 });
+    const rl = await enforceRateLimitDurable({ key: `submit-estimate:${ip}`, limit: 12, windowMs: 60_000 });
     if (!rl.ok) return rateLimitResponse(rl.resetAt);
 
     const body = (await req.json().catch(() => ({}))) as LooseObj;
@@ -153,8 +155,28 @@ export async function POST(req: Request) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const leadId = await ensureLeadId(leadEmail, leadName);
     const quoteId = String(body.quoteId ?? "").trim() || null;
+    const quoteToken = String(body.quoteToken ?? body.token ?? "").trim() || null;
+    const userEmail = normalizeEmail(user?.email);
+
+    if (quoteId) {
+      const access = await resolveQuoteAccess({
+        quoteId,
+        quoteToken,
+        userId: user?.id ?? null,
+        userEmail,
+        leadEmail,
+      });
+
+      if (!access.ok) {
+        return NextResponse.json(
+          { ok: false, error: "You do not have permission to update this quote." },
+          { status: 403 }
+        );
+      }
+    }
+
+    const leadId = await ensureLeadId(leadEmail, leadName);
 
     const quoteJson = {
       ...body,
@@ -163,11 +185,12 @@ export async function POST(req: Request) {
       estimateComputed: { total, low, high },
     };
 
-    const dbPayload = {
+    const shouldAttachAuthUser = !!user?.id && sameNormalizedEmail(userEmail, leadEmail);
+
+    const dbPayload: Record<string, unknown> = {
       lead_id: leadId,
       lead_email: leadEmail,
       owner_email_norm: normalizeEmail(leadEmail),
-      auth_user_id: user?.id ?? null,
       quote_json: quoteJson,
       estimate_total: total,
       estimate_low: low,
@@ -175,27 +198,36 @@ export async function POST(req: Request) {
       status: "submitted",
     };
 
+    if (shouldAttachAuthUser) {
+      dbPayload.auth_user_id = user?.id ?? null;
+    } else if (!quoteId) {
+      dbPayload.auth_user_id = null;
+    }
+
     let savedQuoteId: string;
+    let savedQuoteToken: string | null = quoteToken;
 
     if (quoteId) {
       const { data, error } = await supabaseAdmin
         .from("quotes")
         .update(dbPayload)
         .eq("id", quoteId)
-        .select("id")
+        .select("id, public_token")
         .single();
 
       if (error) throw new Error(error.message);
       savedQuoteId = String(data.id);
+      savedQuoteToken = String(data.public_token ?? "").trim() || savedQuoteToken;
     } else {
       const { data, error } = await supabaseAdmin
         .from("quotes")
         .insert(dbPayload)
-        .select("id")
+        .select("id, public_token")
         .single();
 
       if (error) throw new Error(error.message);
       savedQuoteId = String(data.id);
+      savedQuoteToken = String(data.public_token ?? "").trim() || null;
     }
 
     await recordServerEvent({
@@ -211,10 +243,16 @@ export async function POST(req: Request) {
       },
     });
 
+    const nextUrl =
+      savedQuoteToken
+        ? `/book?quoteId=${encodeURIComponent(savedQuoteId)}&token=${encodeURIComponent(savedQuoteToken)}`
+        : `/book?quoteId=${encodeURIComponent(savedQuoteId)}`;
+
     return NextResponse.json({
       ok: true,
       quoteId: savedQuoteId,
-      nextUrl: `/book?quoteId=${savedQuoteId}`,
+      quoteToken: savedQuoteToken,
+      nextUrl,
     });
   } catch (error: any) {
     return NextResponse.json(
