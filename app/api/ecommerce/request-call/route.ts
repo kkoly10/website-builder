@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
+import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { recordServerEvent } from "@/lib/analytics/server";
+import { maybeAttachEcomIntakeToUser } from "@/lib/accessControl";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ type Payload = {
 export async function POST(req: NextRequest) {
   try {
     const ip = getIpFromHeaders(req.headers);
-    const rl = enforceRateLimit({ key: `ecom-request-call:${ip}`, limit: 10, windowMs: 60_000 });
+    const rl = await enforceRateLimitDurable({ key: `ecom-request-call:${ip}`, limit: 10, windowMs: 60_000 });
     if (!rl.ok) return rateLimitResponse(rl.resetAt);
 
     const body = (await req.json()) as Payload;
@@ -49,17 +50,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: "E-commerce intake not found" }, { status: 404 });
     }
 
-    try {
-      const supabase = await createSupabaseServerClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      if (user?.id && !intake.auth_user_id) {
-        await supabaseAdmin.from("ecom_intakes").update({ auth_user_id: user.id }).eq("id", ecomIntakeId);
-      }
-    } catch {
-      // anonymous request is allowed
+    if (user?.id && user?.email) {
+      await maybeAttachEcomIntakeToUser({
+        ecomIntakeId,
+        userId: user.id,
+        userEmail: user.email,
+      });
     }
 
     const { data: call, error: callErr } = await supabaseAdmin

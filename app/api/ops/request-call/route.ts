@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { generateOpsPieForIntake } from "@/lib/opsPie";
-import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
+import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { recordServerEvent } from "@/lib/analytics/server";
+import { maybeAttachOpsIntakeToUser } from "@/lib/accessControl";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ type Payload = {
 export async function POST(req: Request) {
   try {
     const ip = getIpFromHeaders(req.headers);
-    const rl = enforceRateLimit({ key: `ops-request-call:${ip}`, limit: 10, windowMs: 60_000 });
+    const rl = await enforceRateLimitDurable({ key: `ops-request-call:${ip}`, limit: 10, windowMs: 60_000 });
     if (!rl.ok) return rateLimitResponse(rl.resetAt);
 
     const body = (await req.json()) as Payload;
@@ -37,7 +38,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Select a best time to call" }, { status: 400 });
     }
 
-    // Validate intake exists
     const { data: intake, error: intakeErr } = await supabaseAdmin
       .from("ops_intakes")
       .select("id, email, owner_email_norm, auth_user_id")
@@ -51,21 +51,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Ops intake not found" }, { status: 404 });
     }
 
-    // If signed in, attach this intake to the auth user (safety net)
     const supabase = await createSupabaseServerClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const userEmail = user?.email ? user.email.trim().toLowerCase() : null;
-    if (user?.id) {
-      const updatePatch: Record<string, unknown> = { auth_user_id: user.id };
-      if (userEmail) updatePatch.owner_email_norm = userEmail;
-
-      await supabaseAdmin.from("ops_intakes").update(updatePatch).eq("id", opsIntakeId);
+    if (user?.id && user?.email) {
+      await maybeAttachOpsIntakeToUser({
+        opsIntakeId,
+        userId: user.id,
+        userEmail: user.email,
+      });
     }
 
-    // Create booking request
     const { data: callRow, error: callErr } = await supabaseAdmin
       .from("ops_call_requests")
       .insert({
@@ -83,7 +81,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: callErr.message }, { status: 500 });
     }
 
-    // Kick PIE generation (do NOT block booking success if PIE fails)
     let pieGenerated = false;
     let pieError: string | null = null;
 

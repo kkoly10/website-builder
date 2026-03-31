@@ -1,10 +1,10 @@
-// app/book/RecoverQuoteRedirect.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const LAST_QUOTE_KEY = "crecystudio:lastQuoteId";
+const LAST_QUOTE_TOKEN_KEY = "crecystudio:lastQuoteToken";
 
 export default function RecoverQuoteRedirect() {
   const router = useRouter();
@@ -12,9 +12,13 @@ export default function RecoverQuoteRedirect() {
 
   useEffect(() => {
     try {
-      const last = String(window.localStorage.getItem(LAST_QUOTE_KEY) || "").trim();
-      if (last) {
-        router.replace(`/book?quoteId=${encodeURIComponent(last)}`);
+      const lastId = String(window.localStorage.getItem(LAST_QUOTE_KEY) || "").trim();
+      const lastToken = String(window.localStorage.getItem(LAST_QUOTE_TOKEN_KEY) || "").trim();
+      if (lastId) {
+        const nextUrl = lastToken
+          ? `/book?quoteId=${encodeURIComponent(lastId)}&token=${encodeURIComponent(lastToken)}`
+          : `/book?quoteId=${encodeURIComponent(lastId)}`;
+        router.replace(nextUrl);
         return;
       }
     } catch {

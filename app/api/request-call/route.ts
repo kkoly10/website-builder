@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/server";
-import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
+import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { recordServerEvent } from "@/lib/analytics/server";
+import { maybeAttachQuoteToUser, resolveQuoteAccess, sameNormalizedEmail } from "@/lib/accessControl";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ function escapeHtml(s: string) {
 export async function POST(req: Request) {
   try {
     const ip = getIpFromHeaders(req.headers);
-    const rl = enforceRateLimit({ key: `request-call:${ip}`, limit: 10, windowMs: 60_000 });
+    const rl = await enforceRateLimitDurable({ key: `request-call:${ip}`, limit: 10, windowMs: 60_000 });
     if (!rl.ok) return rateLimitResponse(rl.resetAt);
 
     const url = new URL(req.url);
@@ -39,6 +40,7 @@ export async function POST(req: Request) {
     }
 
     const quoteId = String(body?.quoteId ?? url.searchParams.get("quoteId") ?? "").trim();
+    const quoteToken = String(body?.quoteToken ?? body?.token ?? url.searchParams.get("token") ?? "").trim();
     const notes = String(body?.notes ?? "").trim();
     const bestTimeToCall = String(body?.bestTimeToCall ?? "").trim();
     const preferredTimes = String(body?.preferredTimes ?? "").trim();
@@ -48,9 +50,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing quote reference." }, { status: 400 });
     }
 
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const access = await resolveQuoteAccess({
+      quoteId,
+      quoteToken: quoteToken || null,
+      userId: user?.id ?? null,
+      userEmail: normalizeEmail(user?.email),
+    });
+
+    if (!access.ok || !access.quote) {
+      return NextResponse.json({ error: "Quote not found or access denied." }, { status: 404 });
+    }
+
     const { data: quote, error: qErr } = await supabaseAdmin
       .from("quotes")
-      .select("id, lead_id, lead_email, estimate_total, tier_recommended, status")
+      .select("id, lead_id, lead_email, estimate_total, tier_recommended, status, public_token, auth_user_id, owner_email_norm")
       .eq("id", quoteId)
       .single();
 
@@ -58,7 +76,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: qErr?.message || "Quote not found." }, { status: 404 });
     }
 
-    // Load lead safely (no nested join dependency)
     let leadEmail = quote.lead_email ?? "(missing)";
     let leadPhone = "";
     let leadName = "";
@@ -75,20 +92,12 @@ export async function POST(req: Request) {
       leadName = lead?.name ?? "";
     }
 
-    // Attach quote to signed-in user if present (prevents “where is my quote?”)
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user?.id) {
-      await supabaseAdmin
-        .from("quotes")
-        .update({
-          auth_user_id: user.id,
-          owner_email_norm: normalizeEmail(user.email || leadEmail),
-        })
-        .eq("id", quoteId);
+    if (user?.id && sameNormalizedEmail(user.email, leadEmail)) {
+      await maybeAttachQuoteToUser({
+        quoteId,
+        userId: user.id,
+        userEmail: user.email,
+      });
     }
 
     const { data: callRow, error: crErr } = await supabaseAdmin
@@ -110,7 +119,6 @@ export async function POST(req: Request) {
 
     await supabaseAdmin.from("quotes").update({ status: "call_requested" }).eq("id", quoteId);
 
-    // Email notification (optional)
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
     const FROM = process.env.RESEND_FROM_EMAIL;
     const TO = process.env.ALERT_TO_EMAIL;
@@ -130,17 +138,14 @@ export async function POST(req: Request) {
           <p style="margin:0 0 6px"><strong>Estimate:</strong> $${Number(quote.estimate_total || 0)} • ${escapeHtml(
         String(quote.tier_recommended ?? "—")
       )}</p>
-
           ${bestTimeToCall ? `<p style="margin:0 0 6px"><strong>Best time:</strong> ${escapeHtml(bestTimeToCall)}</p>` : ""}
           ${preferredTimes ? `<p style="margin:0 0 6px"><strong>Preferred times:</strong> ${escapeHtml(preferredTimes)}</p>` : ""}
           ${timezone ? `<p style="margin:0 0 6px"><strong>Timezone:</strong> ${escapeHtml(timezone)}</p>` : ""}
-
           ${
             notes
               ? `<p style="margin:10px 0 0"><strong>Notes:</strong><br/>${escapeHtml(notes).replace(/\n/g, "<br/>")}</p>`
               : ""
           }
-
           ${internalLink ? `<p style="margin:12px 0 0"><a href="${internalLink}">Open internal preview</a></p>` : ""}
         </div>
       `;
@@ -165,10 +170,14 @@ export async function POST(req: Request) {
       },
     });
 
+    const nextUrl = quote.public_token
+      ? `/portal/${encodeURIComponent(String(quote.public_token))}`
+      : `/portal`;
+
     return NextResponse.json({
       ok: true,
       callRequestId: callRow?.id,
-      nextUrl: `/portal?quoteId=${encodeURIComponent(quoteId)}`,
+      nextUrl,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Unknown error" }, { status: 500 });
