@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 import { getOpsWorkspaceBundle } from "@/lib/opsWorkspace/server";
 import { enrichOpsBundle, getWorkspaceState } from "@/lib/opsWorkspace/state";
-import OpsProjectControlClient from "./OpsProjectControlClient";
+import OpsProjectWorkbench from "./OpsProjectWorkbench";
 
 export const dynamic = "force-dynamic";
 
@@ -37,5 +37,5 @@ export default async function OpsAdminDetailPage({
 
   if (!bundle) notFound();
 
-  return <OpsProjectControlClient initialData={enrichOpsBundle(bundle, state)} />;
+  return <OpsProjectWorkbench initialData={enrichOpsBundle(bundle, state)} />;
 }

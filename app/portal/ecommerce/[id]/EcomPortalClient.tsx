@@ -2,74 +2,23 @@
 
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
-
-/* ═══════════════════════════════════
-   TYPES
-   ═══════════════════════════════════ */
-
-type EcomIntake = {
-  id: string;
-  created_at: string | null;
-  business_name: string | null;
-  contact_name: string | null;
-  email: string | null;
-  store_url: string | null;
-  sales_channels: string[] | null;
-  service_types: string[] | null;
-  monthly_orders: string | null;
-  peak_orders: string | null;
-  storage_type: string | null;
-  budget_range: string | null;
-  timeline: string | null;
-  notes: string | null;
-  status: string | null;
-};
-
-type EcomQuote = {
-  id: string;
-  created_at: string | null;
-  updated_at: string | null;
-  status: string | null;
-  estimate_setup_fee: number | null;
-  estimate_monthly_fee: number | null;
-  estimate_fulfillment_model: string | null;
-  quote_json?: {
-    agreement_status?: string;
-    agreement_accepted_at?: string;
-    deposit_notice?: string;
-    deposit_notice_sent_at?: string;
-    [key: string]: unknown;
-  } | null;
-} | null;
-
-type EcomCall = {
-  id: string;
-  created_at: string | null;
-  status: string | null;
-  best_time_to_call: string | null;
-  notes: string | null;
-} | null;
-
-type EcomPortalBundle = {
-  intake: EcomIntake;
-  quote: EcomQuote;
-  call: EcomCall;
-  isAdmin: boolean;
-};
-
-/* ═══════════════════════════════════
-   HELPERS
-   ═══════════════════════════════════ */
+import type { EcommerceWorkspaceBundle } from "@/lib/ecommerce/workspace";
 
 function fmtDate(v?: string | null) {
   if (!v) return "—";
   const d = new Date(v);
-  return Number.isNaN(d.getTime()) ? v : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return Number.isNaN(d.getTime())
+    ? v
+    : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 function money(v?: number | null) {
   if (v == null || !Number.isFinite(Number(v))) return "—";
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(Number(v));
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(Number(v));
 }
 
 function pretty(v?: string | null) {
@@ -77,107 +26,113 @@ function pretty(v?: string | null) {
   return v.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
-function getEntryPath(intake: EcomIntake): "build" | "run" | "fix" {
-  const services = (intake.service_types || []).map((s) => s.toLowerCase());
-  const hasBuildService = services.some((s) => s.includes("build") || s.includes("design") || s.includes("setup"));
-  const hasFixService = services.some((s) => s.includes("audit") || s.includes("optimization") || s.includes("overhaul") || s.includes("fix"));
-  if (hasBuildService) return "build";
-  if (hasFixService) return "fix";
-  return "run";
-}
+function getStory(mode: string, phase: string) {
+  const m = String(mode).toLowerCase();
+  const p = String(phase).toLowerCase();
 
-function getPhase(intake: EcomIntake, quote: EcomQuote, call: EcomCall) {
-  const status = String(intake.status || "").toLowerCase();
-  const quoteStatus = String(quote?.status || "").toLowerCase();
-
-  if (status === "live" || status === "active") return "operations";
-  if (status === "building" || status === "in_progress") return "building";
-  if (quoteStatus === "accepted" || quoteStatus === "paid") return "onboarding";
-  if (quoteStatus === "sent" || quoteStatus === "review") return "quote_review";
-  if (call && call.status) return "discovery";
-  return "intake";
-}
-
-function getStoryContent(phase: string, entryPath: "build" | "run" | "fix") {
-  switch (phase) {
-    case "operations":
-      return { headline: "being managed", body: "Your store operations are active. We're handling your day-to-day operations — check below for current tasks, performance, and anything that needs your input." };
-    case "building":
-      return entryPath === "build"
-        ? { headline: "being built", body: "Your store is under construction. We're building your pages, setting up checkout, and configuring your products. You'll see a preview here when it's ready." }
-        : { headline: "being optimized", body: "We're implementing the fixes from the audit. You'll see progress below as each improvement goes live." };
-    case "onboarding":
-      return { headline: "being set up", body: "Your proposal has been accepted and we're setting up your workspace. Onboarding tasks are being prepared — you'll see them here shortly." };
-    case "quote_review":
-      return { headline: "ready for review", body: "We've put together a proposal based on your intake. Review the pricing and scope below, and let us know if you have questions." };
-    case "discovery":
-      return { headline: "in discovery", body: "We're reviewing your intake and preparing for the planning call. Once we have a clear picture, we'll draft a proposal with pricing and scope." };
-    default:
-      return { headline: "getting started", body: "We've received your intake. Next step is a planning call to understand your store, your challenges, and what you need from us." };
+  if (m === "build") {
+    if (p.includes("launch")) return { headline: "almost ready to launch", body: "Your storefront is in final review. Use this workspace to track approvals, required assets, and launch readiness." };
+    if (p.includes("build")) return { headline: "being built", body: "We’re assembling your storefront, loading products, and preparing launch details. Your milestones and deliverables are below." };
+    if (p.includes("proposal")) return { headline: "ready for proposal review", body: "We’ve scoped the store build and placed the proposal in this workspace so you can review the path to launch." };
+    return { headline: "getting started", body: "We’ve received your build request. Next step is discovery, assets, and final scope alignment." };
   }
+
+  if (m === "fix") {
+    if (p.includes("testing") || p.includes("qa")) return { headline: "being validated", body: "We’ve implemented the highest-priority fixes and are validating the new experience before closing the project." };
+    if (p.includes("build") || p.includes("fix") || p.includes("work")) return { headline: "being repaired", body: "We’re working through the improvement plan. This workspace shows what was found, what is being fixed, and what is next." };
+    return { headline: "under review", body: "We’re diagnosing the store issues and turning them into a clear repair plan." };
+  }
+
+  if (p.includes("active") || p.includes("operations") || p.includes("report")) {
+    return { headline: "being managed", body: "Your e-commerce operations are active. This workspace is where you track current priorities, issues, and monthly performance." };
+  }
+
+  if (p.includes("onboarding")) {
+    return { headline: "being onboarded", body: "We’ve aligned on the service path and are setting up the recurring operating rhythm for your store." };
+  }
+
+  return { headline: "getting set up", body: "We’re defining the operating model, priorities, and reporting structure for your store." };
 }
 
-const PATH_META = {
-  build: { label: "Store build", color: "#c9a84c", icon: "Build" },
-  run: { label: "Managed operations", color: "#5DCAA5", icon: "Run" },
-  fix: { label: "Store optimization", color: "#8da4ff", icon: "Fix" },
-};
+function statusTone(value: string) {
+  const v = String(value || "").toLowerCase();
+  if (["done", "approved", "accepted", "live", "completed"].includes(v)) {
+    return { color: "#5DCAA5", bg: "rgba(46,160,67,0.08)", border: "rgba(46,160,67,0.22)" };
+  }
+  if (["building", "in_progress", "review", "sent", "scheduled", "testing", "planned"].includes(v)) {
+    return { color: "#c9a84c", bg: "rgba(201,168,76,0.08)", border: "rgba(201,168,76,0.22)" };
+  }
+  return { color: "#8da4ff", bg: "rgba(141,164,255,0.08)", border: "rgba(141,164,255,0.22)" };
+}
 
-/* ═══════════════════════════════════
-   SUB-COMPONENTS
-   ═══════════════════════════════════ */
-
-function Drawer({ label, value, children, defaultOpen = false }: {
-  label: string; value: string; children: React.ReactNode; defaultOpen?: boolean;
-}) {
+function Drawer({ label, value, children, defaultOpen = false }: { label: string; value: string; children: React.ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <>
       <button className="portalDrawerToggle" onClick={() => setOpen(!open)}>
         <span className="portalDrawerToggleLabel">{label}</span>
-        <span className="portalDrawerToggleValue">
-          {value}
-          <span className={`portalDrawerArrow ${open ? "portalDrawerArrowOpen" : ""}`}>▾</span>
-        </span>
+        <span className="portalDrawerToggleValue">{value}<span className={`portalDrawerArrow ${open ? "portalDrawerArrowOpen" : ""}`}>▾</span></span>
       </button>
       <div className={`portalDrawerContent ${open ? "portalDrawerContentOpen" : ""}`}>{children}</div>
     </>
   );
 }
 
-/* ═══════════════════════════════════
-   MAIN COMPONENT
-   ═══════════════════════════════════ */
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="portalDrawerRow">
+      <span className="portalDrawerKey">{label}</span>
+      <span className="portalDrawerVal">{value}</span>
+    </div>
+  );
+}
 
-export default function EcomPortalClient({ data }: { data: EcomPortalBundle }) {
+function ItemList({ items }: { items: Array<{ id: string; title: string; status: string; notes: string }> }) {
+  return (
+    <div style={{ display: "grid", gap: 8 }}>
+      {items.map((item) => {
+        const tone = statusTone(item.status);
+        return (
+          <div key={item.id} style={{ border: `1px solid ${tone.border}`, background: tone.bg, borderRadius: 12, padding: "12px 14px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+              <div style={{ color: "var(--fg)", fontWeight: 700, fontSize: 14 }}>{item.title}</div>
+              <span style={{ padding: "4px 8px", borderRadius: 999, border: `1px solid ${tone.border}`, color: tone.color, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700 }}>{pretty(item.status)}</span>
+            </div>
+            {item.notes ? <div style={{ marginTop: 6, color: "var(--muted)", fontSize: 13, lineHeight: 1.55 }}>{item.notes}</div> : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function EcomPortalClient({ data }: { data: EcommerceWorkspaceBundle }) {
   const [bundle, setBundle] = useState(data);
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const { intake, quote, call } = bundle;
-  const entryPath = useMemo(() => getEntryPath(intake), [intake]);
-  const phase = useMemo(() => getPhase(intake, quote, call), [intake, quote, call]);
-  const story = useMemo(() => getStoryContent(phase, entryPath), [phase, entryPath]);
-  const pathInfo = PATH_META[entryPath];
-
-  const callStatus = pretty(call?.status) || "Not requested";
-  const quoteStatus = pretty(quote?.status) || "Not started";
+  const { intake, quote, call, workspace } = bundle;
+  const story = useMemo(() => getStory(workspace.mode, workspace.phase), [workspace.mode, workspace.phase]);
 
   const refreshWorkspace = useCallback(async () => {
-    setRefreshing(true); setError("");
+    setRefreshing(true);
+    setError("");
     try {
       const res = await fetch(`/api/portal/ecommerce/${intake.id}`);
       const json = await res.json();
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Refresh failed.");
-      setBundle(json.data as EcomPortalBundle);
+      setBundle(json.data as EcommerceWorkspaceBundle);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Refresh failed.");
-    } finally { setRefreshing(false); }
+    } finally {
+      setRefreshing(false);
+    }
   }, [intake.id]);
 
   const applyAction = useCallback(async (payload: Record<string, unknown>) => {
-    setSaving(true); setError("");
+    setSaving(true);
+    setError("");
     try {
       const res = await fetch(`/api/portal/ecommerce/${intake.id}`, {
         method: "POST",
@@ -186,34 +141,38 @@ export default function EcomPortalClient({ data }: { data: EcomPortalBundle }) {
       });
       const json = await res.json();
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Action failed.");
-      setBundle(json.data as EcomPortalBundle);
+      setBundle(json.data as EcommerceWorkspaceBundle);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Action failed.");
-    } finally { setSaving(false); }
+    } finally {
+      setSaving(false);
+    }
   }, [intake.id]);
 
   return (
     <div className="container" style={{ paddingBottom: 48 }}>
-
-      {/* ── Story Hero ── */}
       <div className="portalStory heroFadeUp">
         <div className="portalStoryKicker">
           <span className="portalStoryKickerDot" />
-          E-commerce · {pathInfo.label}
+          E-commerce · {pretty(workspace.mode)} lane
         </div>
 
         <h1 className="portalStoryHeadline">
           Your store is <em>{story.headline}</em>
         </h1>
-
         <p className="portalStoryBody">{story.body}</p>
 
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          {intake.store_url && (
-            <a href={intake.store_url} target="_blank" rel="noreferrer" className="portalStoryCta">
-              Visit your store <span className="portalStoryCtaArrow">→</span>
+          {workspace.previewUrl ? (
+            <a href={workspace.previewUrl} target="_blank" rel="noreferrer" className="portalStoryCta">
+              Open preview <span className="portalStoryCtaArrow">→</span>
             </a>
-          )}
+          ) : null}
+          {workspace.productionUrl ? (
+            <a href={workspace.productionUrl} target="_blank" rel="noreferrer" className="btn btnGhost" style={{ fontSize: 13 }}>
+              Visit live store
+            </a>
+          ) : null}
           <button className="btn btnGhost" disabled={refreshing} onClick={refreshWorkspace} style={{ fontSize: 13 }}>
             {refreshing ? "Refreshing..." : "Refresh"}
           </button>
@@ -221,297 +180,204 @@ export default function EcomPortalClient({ data }: { data: EcomPortalBundle }) {
         </div>
 
         <div className="portalStoryMeta">
-          <span className="portalStoryMetaItem">{intake.business_name || "E-Commerce Project"}</span>
+          <span className="portalStoryMetaItem">{intake.business_name || "E-commerce project"}</span>
           <span className="portalStoryMetaItem">Started {fmtDate(intake.created_at)}</span>
-          <span className="portalStoryMetaItem" style={{ color: pathInfo.color }}>{pathInfo.label}</span>
+          <span className="portalStoryMetaItem">Phase: {pretty(workspace.phase)}</span>
+          <span className="portalStoryMetaItem">Waiting on: {workspace.waitingOn}</span>
         </div>
       </div>
 
-      {error && <div className="portalError">{error}</div>}
+      {error ? <div className="portalError">{error}</div> : null}
 
-      {/* ── Entry Path Badge ── */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 10,
-        padding: "14px 18px", borderRadius: 14,
-        border: `1px solid ${pathInfo.color}25`,
-        background: `${pathInfo.color}06`,
-        marginBottom: 32,
-      }}>
-        <div style={{ width: 10, height: 10, borderRadius: "50%", background: pathInfo.color }} />
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: pathInfo.color }}>{pathInfo.label}</div>
-          <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 2 }}>
-            {entryPath === "build" ? "We're building your store from scratch."
-              : entryPath === "run" ? "We're managing your store's daily operations."
-              : "We're auditing and fixing your store's performance issues."}
+      {workspace.adminPublicNote ? (
+        <div className="portalNote fadeUp">
+          <div className="portalNoteIcon">C</div>
+          <div>
+            <div className="portalNoteLabel">Note from the studio</div>
+            <div className="portalNoteText">{workspace.adminPublicNote}</div>
           </div>
         </div>
-      </div>
+      ) : null}
 
-      {/* ── Status Overview ── */}
       <div className="portalGrid2 portalGrid2Wide">
         <div className="portalPanel fadeUp" style={{ animationDelay: "0.1s" }}>
           <div className="portalPanelHeader">
-            <h2 className="portalPanelTitle">Project status</h2>
+            <h2 className="portalPanelTitle">Workspace overview</h2>
           </div>
           <div style={{ display: "grid", gap: 10 }}>
-            <StatusRow label="Intake status" value={pretty(intake.status)} />
-            <StatusRow label="Planning call" value={callStatus} />
-            <StatusRow label="Proposal" value={quoteStatus} />
-            {quote?.estimate_fulfillment_model && (
-              <StatusRow label="Service model" value={quote.estimate_fulfillment_model} />
-            )}
+            <Row label="Service path" value={pretty(workspace.mode)} />
+            <Row label="Current phase" value={pretty(workspace.phase)} />
+            <Row label="Planning call" value={pretty(call?.status || "not requested")} />
+            <Row label="Quote status" value={pretty(quote?.status || "not started")} />
+            <Row label="Waiting on" value={workspace.waitingOn} />
+          </div>
+          <div style={{ marginTop: 14, padding: "14px 16px", borderRadius: 12, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Service summary</div>
+            <div style={{ color: "var(--fg)", fontWeight: 700 }}>{workspace.serviceSummary}</div>
+            {workspace.onboardingSummary ? <div style={{ marginTop: 6, color: "var(--muted)", lineHeight: 1.6, fontSize: 13 }}>{workspace.onboardingSummary}</div> : null}
           </div>
         </div>
 
         <div className="portalPanel fadeUp" style={{ animationDelay: "0.15s" }}>
           <div className="portalPanelHeader">
-            <h2 className="portalPanelTitle">
-              {quote ? "Your proposal" : "Proposal pending"}
-            </h2>
+            <h2 className="portalPanelTitle">Proposal + service pricing</h2>
           </div>
-
-          {quote ? (
-            <div style={{ display: "grid", gap: 12 }}>
-              {quote.estimate_setup_fee != null && (
-                <div style={{
-                  padding: "16px 18px", borderRadius: 12,
-                  border: "1px solid rgba(201,168,76,0.15)",
-                  background: "rgba(201,168,76,0.04)",
-                }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                    {entryPath === "build" ? "Build cost" : "Setup fee"}
-                  </div>
-                  <div style={{
-                    fontFamily: "'Playfair Display', Georgia, serif",
-                    fontSize: 28, fontWeight: 600, color: "var(--fg)", marginTop: 4,
-                  }}>
-                    {money(quote.estimate_setup_fee)}
-                  </div>
-                </div>
-              )}
-
-              {quote.estimate_monthly_fee != null && (
-                <div style={{
-                  padding: "16px 18px", borderRadius: 12,
-                  border: "1px solid rgba(93,202,165,0.15)",
-                  background: "rgba(93,202,165,0.04)",
-                }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "#5DCAA5", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                    Monthly operations
-                  </div>
-                  <div style={{
-                    fontFamily: "'Playfair Display', Georgia, serif",
-                    fontSize: 28, fontWeight: 600, color: "var(--fg)", marginTop: 4,
-                  }}>
-                    {money(quote.estimate_monthly_fee)}<span style={{ fontSize: 14, fontWeight: 400, color: "var(--muted)" }}>/mo</span>
-                  </div>
-                </div>
-              )}
-
-              <div style={{ fontSize: 12, color: "var(--muted2)" }}>
-                Proposal sent {fmtDate(quote.created_at)}
-                {quote.updated_at && quote.updated_at !== quote.created_at
-                  ? ` · Updated ${fmtDate(quote.updated_at)}`
-                  : ""}
-              </div>
-            </div>
-          ) : (
-            <div style={{
-              padding: "20px", borderRadius: 12,
-              border: "1px dashed var(--stroke)", textAlign: "center",
-              color: "var(--muted2)", fontSize: 14,
-            }}>
-              Your proposal is being prepared. We&apos;ll update this workspace
-              once pricing and scope are ready.
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ── What you asked for ── */}
-      {(intake.service_types || []).length > 0 && (
-        <div className="portalPanel fadeUp" style={{ animationDelay: "0.2s" }}>
-          <div className="portalPanelHeader">
-            <h2 className="portalPanelTitle">What you asked for</h2>
-            <span className="portalPanelCount">{(intake.service_types || []).length} services</span>
-          </div>
-          <div style={{ display: "grid", gap: 6 }}>
-            {(intake.service_types || []).map((svc) => (
-              <div key={svc} style={{
-                display: "flex", alignItems: "center", gap: 10,
-                padding: "10px 14px", borderRadius: 10,
-                border: `1px solid ${pathInfo.color}18`,
-                background: `${pathInfo.color}04`,
-              }}>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: pathInfo.color, opacity: 0.5 }} />
-                <span style={{ fontSize: 14, color: "var(--fg)" }}>{svc}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── Next Steps ── */}
-      <div className="portalNote fadeUp" style={{ animationDelay: "0.25s" }}>
-        <div className="portalNoteIcon">C</div>
-        <div>
-          <div className="portalNoteLabel">What happens next</div>
-          <div className="portalNoteText">
-            {phase === "intake" && "We'll review your intake and reach out to schedule a planning call. You'll hear from us within 24 hours."}
-            {phase === "discovery" && "Your planning call is being coordinated. After the call, we'll draft a proposal with pricing, scope, and timeline."}
-            {phase === "quote_review" && "Review the proposal above. Once you approve, we'll begin onboarding and start work immediately."}
-            {phase === "onboarding" && "We're setting up your workspace and preparing the first batch of tasks. You'll see activity here soon."}
-            {phase === "building" && entryPath === "build" && "We're building your store. You'll see a preview link here when the first version is ready for review."}
-            {phase === "building" && entryPath !== "build" && "We're implementing optimizations. Each fix will be noted here as it goes live."}
-            {phase === "operations" && "Operations are running. Check back monthly for performance summaries, or submit a request below if you need something updated."}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Project Details (Drawers) ── */}
-      <div className="portalSectionLabel fadeUp" style={{ marginTop: 8 }}>Project details</div>
-
-      <Drawer label="Intake summary" value={fmtDate(intake.created_at)}>
-        <div className="portalDrawerRow"><span className="portalDrawerKey">Business</span><span className="portalDrawerVal">{intake.business_name || "—"}</span></div>
-        <div className="portalDrawerRow"><span className="portalDrawerKey">Contact</span><span className="portalDrawerVal">{intake.contact_name || "—"}</span></div>
-        <div className="portalDrawerRow"><span className="portalDrawerKey">Email</span><span className="portalDrawerVal">{intake.email || "—"}</span></div>
-        <div className="portalDrawerRow"><span className="portalDrawerKey">Store URL</span><span className="portalDrawerVal">{intake.store_url || "Not provided"}</span></div>
-        <div className="portalDrawerRow"><span className="portalDrawerKey">Sales channels</span><span className="portalDrawerVal">{(intake.sales_channels || []).join(", ") || "—"}</span></div>
-        <div className="portalDrawerRow"><span className="portalDrawerKey">Monthly orders</span><span className="portalDrawerVal">{intake.monthly_orders || "—"}</span></div>
-        <div className="portalDrawerRow"><span className="portalDrawerKey">Peak volume</span><span className="portalDrawerVal">{intake.peak_orders || "—"}</span></div>
-        <div className="portalDrawerRow"><span className="portalDrawerKey">Budget</span><span className="portalDrawerVal">{intake.budget_range || "—"}</span></div>
-        <div className="portalDrawerRow"><span className="portalDrawerKey">Timeline</span><span className="portalDrawerVal">{intake.timeline || "—"}</span></div>
-        {intake.notes && (
-          <div style={{ marginTop: 8, padding: 12, borderRadius: 10, background: "var(--panel2)", border: "1px solid var(--stroke)" }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Notes</div>
-            <p style={{ margin: 0, fontSize: 13, color: "var(--muted)", lineHeight: 1.6 }}>{intake.notes}</p>
-          </div>
-        )}
-      </Drawer>
-
-      {call && (
-        <Drawer label="Planning call" value={pretty(call.status)}>
-          <div className="portalDrawerRow"><span className="portalDrawerKey">Status</span><span className="portalDrawerVal">{pretty(call.status)}</span></div>
-          <div className="portalDrawerRow"><span className="portalDrawerKey">Best time</span><span className="portalDrawerVal">{call.best_time_to_call || "—"}</span></div>
-          <div className="portalDrawerRow"><span className="portalDrawerKey">Requested</span><span className="portalDrawerVal">{fmtDate(call.created_at)}</span></div>
-          {call.notes && (
-            <div className="portalDrawerRow"><span className="portalDrawerKey">Notes</span><span className="portalDrawerVal">{call.notes}</span></div>
-          )}
-        </Drawer>
-      )}
-
-      {quote && (
-        <Drawer label="Agreement & deposit" value={
-          quote.quote_json?.agreement_status === "accepted" ? "Accepted" : "Pending"
-        }>
           <div style={{ display: "grid", gap: 12 }}>
-            {/* Agreement section */}
-            <div style={{ display: "grid", gap: 8 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Agreement</div>
-              {quote.quote_json?.agreement_status === "accepted" ? (
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 8,
-                  padding: "10px 14px", borderRadius: 10,
-                  background: "rgba(93,202,165,0.08)", border: "1px solid rgba(93,202,165,0.2)",
-                }}>
-                  <span style={{ color: "#5DCAA5", fontWeight: 600, fontSize: 13 }}>Agreement accepted</span>
-                  {quote.quote_json?.agreement_accepted_at && (
-                    <span style={{ fontSize: 11, color: "var(--muted2)", marginLeft: "auto" }}>
-                      {fmtDate(quote.quote_json.agreement_accepted_at)}
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <>
-                  <p style={{ margin: 0, fontSize: 13, color: "var(--muted)", lineHeight: 1.5 }}>
-                    By accepting, you agree to the proposed scope and pricing outlined in the proposal above.
-                  </p>
-                  <button
-                    className="btn btnPrimary"
-                    disabled={saving}
-                    onClick={() => applyAction({ type: "agreement_accept" })}
-                    style={{ justifySelf: "start" }}
-                  >
-                    {saving ? "Saving..." : "Accept Agreement"}
-                  </button>
-                </>
-              )}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
+              <MetricCard label={workspace.mode === "run" ? "Setup fee" : "Project fee"} value={money(quote?.estimate_setup_fee)} />
+              <MetricCard label="Monthly fee" value={money(quote?.estimate_monthly_fee)} />
             </div>
+            <div style={{ padding: "14px 16px", borderRadius: 12, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Fulfillment / service model</div>
+              <div style={{ color: "var(--fg)", fontWeight: 700 }}>{quote?.estimate_fulfillment_model || "To be confirmed"}</div>
+            </div>
+            <div style={{ fontSize: 12, color: "var(--muted2)" }}>Last updated {fmtDate(quote?.updated_at || quote?.created_at)}</div>
+          </div>
+        </div>
+      </div>
 
-            {/* Deposit section */}
+      {workspace.deliverables.length > 0 ? (
+        <div className="portalPanel fadeUp" style={{ marginBottom: 24 }}>
+          <div className="portalPanelHeader">
+            <h2 className="portalPanelTitle">Deliverables</h2>
+            <span className="portalPanelCount">{workspace.deliverables.length}</span>
+          </div>
+          <ItemList items={workspace.deliverables} />
+        </div>
+      ) : null}
+
+      <div className="portalGrid2">
+        <div className="portalPanel fadeUp">
+          <div className="portalPanelHeader">
+            <h2 className="portalPanelTitle">Milestones</h2>
+            <span className="portalPanelCount">{workspace.milestones.length}</span>
+          </div>
+          <ItemList items={workspace.milestones} />
+        </div>
+
+        <div className="portalPanel fadeUp">
+          <div className="portalPanelHeader">
+            <h2 className="portalPanelTitle">Current tasks</h2>
+            <span className="portalPanelCount">{workspace.tasks.length}</span>
+          </div>
+          <ItemList items={workspace.tasks} />
+        </div>
+      </div>
+
+      {(workspace.assetsNeeded.length > 0 || workspace.approvals.length > 0) ? (
+        <div className="portalGrid2">
+          <div className="portalPanel fadeUp">
+            <div className="portalPanelHeader">
+              <h2 className="portalPanelTitle">Assets / info needed</h2>
+            </div>
+            <ItemList items={workspace.assetsNeeded} />
+          </div>
+          <div className="portalPanel fadeUp">
+            <div className="portalPanelHeader">
+              <h2 className="portalPanelTitle">Approvals needed</h2>
+            </div>
+            <ItemList items={workspace.approvals} />
+          </div>
+        </div>
+      ) : null}
+
+      {(workspace.metrics.length > 0 || workspace.issues.length > 0) ? (
+        <div className="portalGrid2">
+          <div className="portalPanel fadeUp">
+            <div className="portalPanelHeader">
+              <h2 className="portalPanelTitle">Tracked metrics</h2>
+            </div>
             <div style={{ display: "grid", gap: 8 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Deposit</div>
-              {quote.quote_json?.deposit_notice_sent_at ? (
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 8,
-                  padding: "10px 14px", borderRadius: 10,
-                  background: "rgba(93,202,165,0.08)", border: "1px solid rgba(93,202,165,0.2)",
-                }}>
-                  <span style={{ color: "#5DCAA5", fontWeight: 600, fontSize: 13 }}>Deposit notice sent</span>
-                  <span style={{ fontSize: 11, color: "var(--muted2)", marginLeft: "auto" }}>
-                    {fmtDate(quote.quote_json.deposit_notice_sent_at)}
-                  </span>
+              {workspace.metrics.map((metric) => (
+                <div key={metric.id} style={{ border: "1px solid var(--stroke)", background: "var(--panel2)", borderRadius: 12, padding: "12px 14px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                    <div style={{ color: "var(--fg)", fontWeight: 700 }}>{metric.label}</div>
+                    <div style={{ color: "var(--accent)", fontWeight: 700 }}>{metric.value || "—"}</div>
+                  </div>
+                  <div style={{ marginTop: 4, color: "var(--muted2)", fontSize: 12 }}>Target: {metric.target || "—"}</div>
+                  {metric.notes ? <div style={{ marginTop: 6, color: "var(--muted)", fontSize: 13 }}>{metric.notes}</div> : null}
                 </div>
-              ) : (
-                <>
-                  <p style={{ margin: 0, fontSize: 13, color: "var(--muted)", lineHeight: 1.5 }}>
-                    Once you&apos;ve sent your deposit, let us know so we can begin work.
-                  </p>
-                  <button
-                    className="btn btnGhost"
-                    disabled={saving}
-                    onClick={() => applyAction({ type: "deposit_notice_sent" })}
-                    style={{ justifySelf: "start" }}
-                  >
-                    {saving ? "Saving..." : "I've sent the deposit"}
-                  </button>
-                </>
-              )}
+              ))}
             </div>
           </div>
-        </Drawer>
-      )}
 
-      <Drawer label="Actions" value="Get help">
-        <div style={{ display: "grid", gap: 8, padding: "4px 0" }}>
-          <Link href={`/ecommerce/book?ecomIntakeId=${encodeURIComponent(intake.id)}`}
-            className="btn btnGhost" style={{ justifyContent: "flex-start" }}>
-            Book / update planning call
-          </Link>
-          <Link href="/contact" className="btn btnGhost" style={{ justifyContent: "flex-start" }}>
-            Contact support
-          </Link>
+          <div className="portalPanel fadeUp">
+            <div className="portalPanelHeader">
+              <h2 className="portalPanelTitle">Open issues / requests</h2>
+            </div>
+            <ItemList items={[...workspace.issues, ...workspace.requests]} />
+          </div>
+        </div>
+      ) : null}
+
+      {(workspace.monthlyPlan.length > 0 || workspace.nextActions.length > 0) ? (
+        <div className="portalGrid2">
+          <div className="portalPanel fadeUp">
+            <div className="portalPanelHeader"><h2 className="portalPanelTitle">Monthly plan</h2></div>
+            <SimpleList items={workspace.monthlyPlan} empty="No monthly plan added yet." />
+          </div>
+          <div className="portalPanel fadeUp">
+            <div className="portalPanelHeader"><h2 className="portalPanelTitle">Next actions</h2></div>
+            <SimpleList items={workspace.nextActions} empty="No next actions listed yet." />
+          </div>
+        </div>
+      ) : null}
+
+      <Drawer label="Agreement & deposit" value={pretty(workspace.agreementStatus || "pending")}>
+        <Row label="Agreement status" value={pretty(workspace.agreementStatus || "pending")} />
+        <Row label="Accepted" value={fmtDate(workspace.agreementAcceptedAt)} />
+        <Row label="Deposit notice" value={workspace.depositNoticeSentAt ? "Sent" : "Pending"} />
+        {workspace.agreementText ? (
+          <div style={{ marginTop: 10, padding: 12, borderRadius: 10, border: "1px solid var(--stroke)", background: "var(--panel2)", whiteSpace: "pre-wrap", lineHeight: 1.6, color: "var(--muted)", fontSize: 13 }}>{workspace.agreementText}</div>
+        ) : null}
+        <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {workspace.agreementStatus !== "accepted" ? (
+            <button className="btn btnPrimary" disabled={saving} onClick={() => applyAction({ type: "agreement_accept" })}>
+              {saving ? "Saving..." : "Accept agreement"}
+            </button>
+          ) : null}
+          {!workspace.depositNoticeSentAt ? (
+            <button className="btn btnGhost" disabled={saving} onClick={() => applyAction({ type: "deposit_notice_sent", note: "Client reported deposit sent." })}>
+              {saving ? "Saving..." : "I’ve sent the deposit"}
+            </button>
+          ) : null}
         </div>
       </Drawer>
 
-      {/* ── Footer ── */}
+      <Drawer label="Project details" value={pretty(workspace.mode)}>
+        <Row label="Business" value={intake.business_name || "—"} />
+        <Row label="Contact" value={intake.contact_name || "—"} />
+        <Row label="Email" value={intake.email || "—"} />
+        <Row label="Store URL" value={workspace.productionUrl || intake.store_url || "—"} />
+        <Row label="Sales channels" value={(intake.sales_channels || []).join(", ") || "—"} />
+        <Row label="Monthly orders" value={intake.monthly_orders || "—"} />
+        <Row label="Timeline" value={intake.timeline || "—"} />
+        <Row label="Budget" value={intake.budget_range || "—"} />
+      </Drawer>
+
       <div className="portalFooter">
-        Powered by <a href="/">Crecy Studio</a> · Your store, your ownership
+        Powered by <a href="/">Crecy Studio</a> · Your store, your workspace
       </div>
     </div>
   );
 }
 
-/* ═══════════════════════════════════
-   SUB-COMPONENTS
-   ═══════════════════════════════════ */
-
-function StatusRow({ label, value }: { label: string; value: string }) {
-  const isPositive = ["paid", "accepted", "active", "live", "completed", "scheduled"].includes(value.toLowerCase());
-  const isPending = ["pending", "new", "requested", "sent", "review"].includes(value.toLowerCase());
+function MetricCard({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{
-      display: "flex", justifyContent: "space-between", alignItems: "center",
-      padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)",
-    }}>
-      <span style={{ fontSize: 13, color: "var(--muted)" }}>{label}</span>
-      <span style={{
-        fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em",
-        color: isPositive ? "#5DCAA5" : isPending ? "var(--accent)" : "var(--muted2)",
-      }}>
-        {value}
-      </span>
+    <div style={{ padding: "16px 18px", borderRadius: 12, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</div>
+      <div style={{ marginTop: 4, color: "var(--fg)", fontWeight: 800, fontSize: 24 }}>{value}</div>
+    </div>
+  );
+}
+
+function SimpleList({ items, empty }: { items: string[]; empty: string }) {
+  if (!items.length) return <div className="smallNote">{empty}</div>;
+  return (
+    <div style={{ display: "grid", gap: 8 }}>
+      {items.map((item) => (
+        <div key={item} style={{ padding: "12px 14px", borderRadius: 10, border: "1px solid var(--stroke)", background: "var(--panel2)", color: "var(--muted)", fontSize: 13, lineHeight: 1.55 }}>{item}</div>
+      ))}
     </div>
   );
 }
