@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { recordServerEvent } from "@/lib/analytics/server";
-import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
+import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
     const ip = getIpFromHeaders(req.headers);
-    const rl = enforceRateLimit({ key: `analytics:${ip}`, limit: 120, windowMs: 60_000 });
+    const rl = await enforceRateLimitDurable({ key: `analytics:${ip}`, limit: 120, windowMs: 60_000 });
     if (!rl.ok) return rateLimitResponse(rl.resetAt);
 
     const body = await req.json().catch(() => ({}));

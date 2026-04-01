@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/server";
-import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
+import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { recordServerEvent } from "@/lib/analytics/server";
 
 export const dynamic = "force-dynamic";
@@ -94,7 +94,7 @@ async function insertOpsIntake(
 export async function POST(req: NextRequest) {
   try {
     const ip = getIpFromHeaders(req.headers);
-    const rl = enforceRateLimit({ key: `ops-submit-intake:${ip}`, limit: 8, windowMs: 60_000 });
+    const rl = await enforceRateLimitDurable({ key: `ops-submit-intake:${ip}`, limit: 8, windowMs: 60_000 });
     if (!rl.ok) return rateLimitResponse(rl.resetAt);
 
     const body = await req.json();
@@ -144,13 +144,11 @@ export async function POST(req: NextRequest) {
       pain_points: Array.isArray(body.painPoints) ? body.painPoints : [],
       workflows_needed: Array.isArray(body.workflowsNeeded) ? body.workflowsNeeded : [],
       notes: String(body.notes ?? "").trim() || null,
-
       recommendation_tier: recommendation.tierLabel,
       recommendation_price_range: recommendation.isCustomScope
         ? recommendation.priceRange || "Custom ops scope — strategy call required."
         : recommendation.priceRange,
       recommendation_score: recommendation.score || null,
-
       status: "new",
     };
 

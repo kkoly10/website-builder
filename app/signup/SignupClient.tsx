@@ -40,8 +40,6 @@ export default function SignupClient() {
       });
 
       if (signUpError) throw signUpError;
-      
-      // Successfully created -> push to login with confirmation flag
       router.push(`/login?signup=1&next=${encodeURIComponent(nextPath)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create account.");
@@ -51,21 +49,19 @@ export default function SignupClient() {
 
   return (
     <div className="card" style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.4)", border: "1px solid var(--accentStroke)" }}>
-      <div className="cardInner" >
-        
+      <div className="cardInner">
         <div>
-          {/* RESTORED BRANDING */}
           <div className="kicker">
             <span className="kickerDot" aria-hidden="true" />
             CrecyStudio Registration
           </div>
-          <h1 className="h2" >Create Account</h1>
+          <h1 className="h2">Create Account</h1>
           <p className="pDark" style={{ marginTop: 6 }}>
             Register to view your quotes and project workspaces.
           </p>
         </div>
 
-        <form onSubmit={handleSignup} >
+        <form onSubmit={handleSignup}>
           <div>
             <label className="fieldLabel">Email Address</label>
             <input
@@ -89,8 +85,11 @@ export default function SignupClient() {
               placeholder="••••••••"
               required
               autoComplete="new-password"
-              minLength={6}
+              minLength={8}
             />
+            <div style={{ marginTop: 6, fontSize: 12, color: "var(--muted)" }}>
+              Use at least 8 characters.
+            </div>
           </div>
 
           <button className="btn btnPrimary" type="submit" disabled={submitting} style={{ marginTop: 8, padding: "12px", fontSize: 15, width: "100%", justifyContent: "center" }}>
