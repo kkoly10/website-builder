@@ -1,11 +1,12 @@
-import type { OpsTierKey, WebsiteTierKey } from "@/lib/pricing/types";
+import type { EcommerceTierKey, OpsTierKey, WebsiteTierKey } from "@/lib/pricing/types";
 
-export const PRICING_VERSION = "startup-v1-2026-03";
+export const PRICING_VERSION = "startup-v2-2026-04";
 
 export const PRICING_MESSAGES = {
   depositPolicy: "50% deposit to start, 50% on completion.",
   websiteCustom: "Custom scope — strategy call required.",
   opsCustom: "Custom ops scope — strategy call required.",
+  ecommerceCustom: "Custom e-commerce scope — strategy call required.",
 };
 
 export const WEBSITE_TIER_CONFIG: Record<
@@ -51,6 +52,61 @@ export const OPS_TIER_CONFIG: Record<
   },
 };
 
+export const ECOMMERCE_TIER_CONFIG: Record<
+  Exclude<EcommerceTierKey, "custom_ecommerce_scope">,
+  {
+    label: string;
+    billingModel: "project" | "monthly" | "hybrid";
+    projectMin?: number;
+    projectMax?: number;
+    setupMin?: number;
+    setupMax?: number;
+    monthlyMin?: number;
+    monthlyMax?: number;
+  }
+> = {
+  store_launch_build: {
+    label: "Launch Store Build",
+    billingModel: "project",
+    projectMin: 1800,
+    projectMax: 3200,
+  },
+  growth_store_build: {
+    label: "Growth Store Build",
+    billingModel: "project",
+    projectMin: 3200,
+    projectMax: 5200,
+  },
+  commerce_repair_sprint: {
+    label: "Commerce Repair Sprint",
+    billingModel: "project",
+    projectMin: 1200,
+    projectMax: 2200,
+  },
+  commerce_growth_repair: {
+    label: "Commerce Growth Repair",
+    billingModel: "project",
+    projectMin: 2300,
+    projectMax: 4200,
+  },
+  ecommerce_ops_support: {
+    label: "E-commerce Ops Support",
+    billingModel: "hybrid",
+    setupMin: 500,
+    setupMax: 900,
+    monthlyMin: 900,
+    monthlyMax: 1800,
+  },
+  managed_commerce_partner: {
+    label: "Managed Commerce Partner",
+    billingModel: "hybrid",
+    setupMin: 1200,
+    setupMax: 2200,
+    monthlyMin: 1800,
+    monthlyMax: 3200,
+  },
+};
+
 export function money(n: number) {
   return `$${Math.round(n).toLocaleString()}`;
 }
@@ -58,6 +114,25 @@ export function money(n: number) {
 export function formatRange(min: number, max: number, opts?: { monthly?: boolean }) {
   const suffix = opts?.monthly ? "/mo" : "";
   return `${money(min)} – ${money(max)}${suffix}`;
+}
+
+export function formatSetupAndMonthlyRange(input: {
+  setupMin?: number;
+  setupMax?: number;
+  monthlyMin?: number;
+  monthlyMax?: number;
+}) {
+  const setup =
+    typeof input.setupMin === "number" && typeof input.setupMax === "number"
+      ? `Setup ${formatRange(input.setupMin, input.setupMax)}`
+      : "";
+  const monthly =
+    typeof input.monthlyMin === "number" && typeof input.monthlyMax === "number"
+      ? formatRange(input.monthlyMin, input.monthlyMax, { monthly: true })
+      : "";
+
+  if (setup && monthly) return `${setup} + ${monthly}`;
+  return setup || monthly || "Custom scope — strategy call required.";
 }
 
 export function targetFromBand(
