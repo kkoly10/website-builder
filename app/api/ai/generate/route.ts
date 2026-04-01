@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
+import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 
 type RequestBody = {
   businessName: string;
@@ -39,8 +39,6 @@ Rules:
 }
 
 function extractTextFromResponsesAPI(json: any): string {
-  // Try to find the first text output from the Responses API structure.
-  // Different responses can vary, so we do a safe best-effort extraction.
   try {
     const output = json?.output || [];
     for (const item of output) {
@@ -53,7 +51,6 @@ function extractTextFromResponsesAPI(json: any): string {
   } catch {
     // ignore
   }
-  // Fallback: sometimes there may be a top-level "text"
   if (typeof json?.text === "string") return json.text;
   return "";
 }
@@ -61,7 +58,7 @@ function extractTextFromResponsesAPI(json: any): string {
 export async function POST(req: Request) {
   try {
     const ip = getIpFromHeaders(req.headers);
-    const rl = enforceRateLimit({ key: `ai-generate:${ip}`, limit: 5, windowMs: 60_000 });
+    const rl = await enforceRateLimitDurable({ key: `ai-generate:${ip}`, limit: 5, windowMs: 60_000 });
     if (!rl.ok) return rateLimitResponse(rl.resetAt);
 
     const apiKey = process.env.OPENAI_API_KEY;
@@ -92,7 +89,6 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         model: "gpt-4o-mini",
         input: prompt,
-        // Request structured JSON output (recommended pattern for clean parsing)
         text: { format: { type: "json_object" } },
         max_output_tokens: 900,
       }),
@@ -127,7 +123,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Ensure required keys exist (light validation)
     const draft = {
       businessName: parsed.businessName ?? body.businessName,
       industry: parsed.industry ?? body.industry,

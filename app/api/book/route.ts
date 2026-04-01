@@ -1,14 +1,14 @@
 // app/api/book/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
+import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { recordServerEvent } from "@/lib/analytics/server";
 
 export const runtime = "nodejs";
 
 type Payload = {
   quoteId: string;
-  token: string; // public_token
+  token: string;
   name?: string;
   phone?: string;
   availability?: {
@@ -23,7 +23,7 @@ type Payload = {
 export async function POST(req: Request) {
   try {
     const ip = getIpFromHeaders(req.headers);
-    const rl = enforceRateLimit({ key: `book:${ip}`, limit: 10, windowMs: 60_000 });
+    const rl = await enforceRateLimitDurable({ key: `book:${ip}`, limit: 10, windowMs: 60_000 });
     if (!rl.ok) return rateLimitResponse(rl.resetAt);
 
     const body = (await req.json()) as Payload;
@@ -35,7 +35,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing quoteId or token." }, { status: 400 });
     }
 
-    // verify quote + token match
     const { data: q, error: qErr } = await supabaseAdmin
       .from("quotes")
       .select("id, public_token, lead_id")
@@ -59,7 +58,6 @@ export async function POST(req: Request) {
       submitted_at: new Date().toISOString(),
     };
 
-    // update quote pipeline
     const upd = await supabaseAdmin
       .from("quotes")
       .update({
@@ -73,7 +71,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: upd.error.message }, { status: 400 });
     }
 
-    // optionally update lead details
     if (name || phone) {
       await supabaseAdmin
         .from("leads")
