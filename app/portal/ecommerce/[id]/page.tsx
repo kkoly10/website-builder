@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getEcommerceWorkspaceBundle, makeClientSafeEcommerceBundle } from "@/lib/ecommerce/workspace";
 import EcomPortalClient from "./EcomPortalClient";
 import ScrollReveal from "@/components/site/ScrollReveal";
 
@@ -14,13 +15,15 @@ export default async function EcommercePortalWorkspacePage({
   const { id } = await params;
 
   const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) redirect(`/login?next=${encodeURIComponent(`/portal/ecommerce/${id}`)}`);
 
   const { data: intake } = await supabaseAdmin
     .from("ecom_intakes")
-    .select("*")
+    .select("id, auth_user_id, email")
     .eq("id", id)
     .maybeSingle();
 
@@ -39,33 +42,12 @@ export default async function EcommercePortalWorkspacePage({
     await supabaseAdmin.from("ecom_intakes").update({ auth_user_id: user.id }).eq("id", intake.id);
   }
 
-  const [{ data: call }, { data: quote }] = await Promise.all([
-    supabaseAdmin
-      .from("ecom_call_requests")
-      .select("*")
-      .eq("ecom_intake_id", intake.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabaseAdmin
-      .from("ecom_quotes")
-      .select("*")
-      .eq("ecom_intake_id", intake.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  ]);
+  const bundle = await getEcommerceWorkspaceBundle(id, { isAdmin: false });
+  if (!bundle) notFound();
 
   return (
     <>
-      <EcomPortalClient
-        data={{
-          intake,
-          quote: quote || null,
-          call: call || null,
-          isAdmin: false,
-        }}
-      />
+      <EcomPortalClient data={makeClientSafeEcommerceBundle(bundle, { isAdmin: false })} />
       <ScrollReveal />
     </>
   );
