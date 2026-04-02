@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import StructuredObjectListEditor from "@/components/internal/editors/StructuredObjectListEditor";
+import StructuredStringListEditor from "@/components/internal/editors/StructuredStringListEditor";
+import { getEcommerceRecommendationForIntake, getRecommendedEcommerceQuoteDefaults } from "@/lib/ecommerce/recommendation";
 import type {
   EcommerceWorkspaceBundle,
   EcommerceWorkspaceItem,
@@ -21,25 +24,6 @@ function fmtDate(value?: string | null) {
   return d.toLocaleString();
 }
 
-function toJson(value: unknown) {
-  return JSON.stringify(value, null, 2);
-}
-
-function parseArrayJson<T>(value: string, fieldLabel: string): T[] {
-  if (!value.trim()) return [];
-  try {
-    const parsed = JSON.parse(value);
-    if (!Array.isArray(parsed)) throw new Error(`${fieldLabel} must be a JSON array.`);
-    return parsed as T[];
-  } catch (err) {
-    throw new Error(err instanceof Error ? err.message : `${fieldLabel} is invalid JSON.`);
-  }
-}
-
-function linesToList(value: string) {
-  return value.split(/\n+/).map((item) => item.trim()).filter(Boolean);
-}
-
 const PHASE_OPTIONS = [
   "intake",
   "discovery",
@@ -55,6 +39,9 @@ const PHASE_OPTIONS = [
 ];
 
 export default function EcommerceWorkspaceControlClient({ initialData }: { initialData: EcommerceWorkspaceBundle }) {
+  const recommendation = useMemo(() => getEcommerceRecommendationForIntake(initialData.intake), [initialData.intake]);
+  const recommended = getRecommendedEcommerceQuoteDefaults(recommendation);
+
   const [bundle, setBundle] = useState(initialData);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -63,9 +50,9 @@ export default function EcommerceWorkspaceControlClient({ initialData }: { initi
   const [callStatus, setCallStatus] = useState(String(initialData.call?.status || "new"));
   const [quoteStatus, setQuoteStatus] = useState(String(initialData.quote?.status || "draft"));
 
-  const [setupFee, setSetupFee] = useState<number | null>(initialData.quote?.estimate_setup_fee ?? null);
-  const [monthlyFee, setMonthlyFee] = useState<number | null>(initialData.quote?.estimate_monthly_fee ?? null);
-  const [fulfillmentModel, setFulfillmentModel] = useState(String(initialData.quote?.estimate_fulfillment_model || ""));
+  const [setupFee, setSetupFee] = useState<number | null>(initialData.quote?.estimate_setup_fee ?? recommended.setupFee);
+  const [monthlyFee, setMonthlyFee] = useState<number | null>(initialData.quote?.estimate_monthly_fee ?? recommended.monthlyFee);
+  const [fulfillmentModel, setFulfillmentModel] = useState(String(initialData.quote?.estimate_fulfillment_model || recommended.label || ""));
 
   const [phase, setPhase] = useState(initialData.workspace.phase);
   const [waitingOn, setWaitingOn] = useState(initialData.workspace.waitingOn);
@@ -78,33 +65,50 @@ export default function EcommerceWorkspaceControlClient({ initialData }: { initi
   const [agreementStatus, setAgreementStatus] = useState(initialData.workspace.agreementStatus);
   const [agreementText, setAgreementText] = useState(initialData.workspace.agreementText);
 
-  const [deliverablesJson, setDeliverablesJson] = useState(toJson(initialData.workspace.deliverables));
-  const [milestonesJson, setMilestonesJson] = useState(toJson(initialData.workspace.milestones));
-  const [approvalsJson, setApprovalsJson] = useState(toJson(initialData.workspace.approvals));
-  const [assetsJson, setAssetsJson] = useState(toJson(initialData.workspace.assetsNeeded));
-  const [tasksJson, setTasksJson] = useState(toJson(initialData.workspace.tasks));
-  const [metricsJson, setMetricsJson] = useState(toJson(initialData.workspace.metrics));
-  const [issuesJson, setIssuesJson] = useState(toJson(initialData.workspace.issues));
-  const [requestsJson, setRequestsJson] = useState(toJson(initialData.workspace.requests));
-  const [nextActionsText, setNextActionsText] = useState(initialData.workspace.nextActions.join("\n"));
-  const [monthlyPlanText, setMonthlyPlanText] = useState(initialData.workspace.monthlyPlan.join("\n"));
+  const [deliverables, setDeliverables] = useState<EcommerceWorkspaceItem[]>(initialData.workspace.deliverables);
+  const [milestones, setMilestones] = useState<EcommerceWorkspaceItem[]>(initialData.workspace.milestones);
+  const [approvals, setApprovals] = useState<EcommerceWorkspaceItem[]>(initialData.workspace.approvals);
+  const [assetsNeeded, setAssetsNeeded] = useState<EcommerceWorkspaceItem[]>(initialData.workspace.assetsNeeded);
+  const [tasks, setTasks] = useState<EcommerceWorkspaceItem[]>(initialData.workspace.tasks);
+  const [issues, setIssues] = useState<EcommerceWorkspaceItem[]>(initialData.workspace.issues);
+  const [requests, setRequests] = useState<EcommerceWorkspaceItem[]>(initialData.workspace.requests);
+  const [metrics, setMetrics] = useState<EcommerceWorkspaceMetric[]>(initialData.workspace.metrics);
+  const [nextActions, setNextActions] = useState<string[]>(initialData.workspace.nextActions);
+  const [monthlyPlan, setMonthlyPlan] = useState<string[]>(initialData.workspace.monthlyPlan);
 
   const modeLabel = useMemo(() => pretty(initialData.workspace.mode), [initialData.workspace.mode]);
+
+  function makeItem(prefix: string, title: string): EcommerceWorkspaceItem {
+    return {
+      id: `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      title,
+      status: "pending",
+      notes: "",
+    };
+  }
+
+  function makeMetric(): EcommerceWorkspaceMetric {
+    return {
+      id: `metric-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      label: "New metric",
+      value: "",
+      target: "",
+      notes: "",
+    };
+  }
+
+  function applyRecommendedPricing() {
+    setSetupFee(recommended.setupFee);
+    setMonthlyFee(recommended.monthlyFee);
+    setFulfillmentModel(recommendation.tierLabel);
+    if (!serviceSummary) setServiceSummary(recommendation.summary);
+  }
 
   async function saveAll() {
     setSaving(true);
     setMessage("");
 
     try {
-      const deliverables = parseArrayJson<EcommerceWorkspaceItem>(deliverablesJson, "Deliverables");
-      const milestones = parseArrayJson<EcommerceWorkspaceItem>(milestonesJson, "Milestones");
-      const approvals = parseArrayJson<EcommerceWorkspaceItem>(approvalsJson, "Approvals");
-      const assetsNeeded = parseArrayJson<EcommerceWorkspaceItem>(assetsJson, "Assets needed");
-      const tasks = parseArrayJson<EcommerceWorkspaceItem>(tasksJson, "Tasks");
-      const issues = parseArrayJson<EcommerceWorkspaceItem>(issuesJson, "Issues");
-      const requests = parseArrayJson<EcommerceWorkspaceItem>(requestsJson, "Requests");
-      const metrics = parseArrayJson<EcommerceWorkspaceMetric>(metricsJson, "Metrics");
-
       const statusRes = await fetch("/api/internal/ecommerce/status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -123,6 +127,7 @@ export default function EcommerceWorkspaceControlClient({ initialData }: { initi
           estimateSetupFee: setupFee ?? undefined,
           estimateMonthlyFee: monthlyFee ?? undefined,
           estimateFulfillmentModel: fulfillmentModel || undefined,
+          quoteJson: { pricingRecommendation: recommendation },
         }),
       });
       const quoteJson = await quoteRes.json().catch(() => ({}));
@@ -152,8 +157,8 @@ export default function EcommerceWorkspaceControlClient({ initialData }: { initi
             metrics,
             issues,
             requests,
-            nextActions: linesToList(nextActionsText),
-            monthlyPlan: linesToList(monthlyPlanText),
+            nextActions,
+            monthlyPlan,
           },
         }),
       });
@@ -227,35 +232,45 @@ export default function EcommerceWorkspaceControlClient({ initialData }: { initi
           <TextareaField label="Internal notes" value={internalNotes} onChange={setInternalNotes} rows={5} />
         </Panel>
 
-        <Panel title="Workspace details" note="What the client sees in their lane-specific workspace.">
+        <Panel title="Pricing recommendation" note="Use intake-driven pricing as the baseline, then adjust if needed.">
+          <div style={{ border: "1px solid var(--accentStroke)", background: "var(--accentSoft)", borderRadius: 14, padding: 14 }}>
+            <div className="smallNote">Recommended tier</div>
+            <div style={{ marginTop: 8, fontWeight: 900, fontSize: 22 }}>{recommendation.tierLabel}</div>
+            <div className="pDark" style={{ marginTop: 6 }}>{recommendation.displayRange}</div>
+            <div className="smallNote" style={{ marginTop: 10 }}>{recommendation.summary}</div>
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button type="button" className="btn btnGhost" onClick={applyRecommendedPricing}>Use recommended pricing</button>
+            {recommendation.complexityFlags.map((flag) => <span key={flag} className="pill">{flag}</span>)}
+          </div>
+          <TextareaField label="Onboarding summary" value={onboardingSummary} onChange={setOnboardingSummary} rows={4} />
           <TextField label="Preview URL" value={previewUrl} onChange={setPreviewUrl} />
           <TextField label="Production URL" value={productionUrl} onChange={setProductionUrl} />
-          <TextareaField label="Onboarding summary" value={onboardingSummary} onChange={setOnboardingSummary} rows={4} />
           <TextareaField label="Agreement text" value={agreementText} onChange={setAgreementText} rows={10} />
         </Panel>
       </div>
 
       <div className="grid2stretch" style={{ marginTop: 18 }}>
-        <Panel title="Deliverables + milestones" note="Build / run / fix commitments that should reflect client-side.">
-          <TextareaField label="Deliverables JSON" value={deliverablesJson} onChange={setDeliverablesJson} rows={18} mono />
-          <TextareaField label="Milestones JSON" value={milestonesJson} onChange={setMilestonesJson} rows={18} mono />
+        <Panel title="Deliverables + milestones" note="Structured editor — no JSON required.">
+          <StructuredObjectListEditor label="Deliverables" items={deliverables} onChange={setDeliverables} createItem={() => makeItem("deliverable", "New deliverable")} getItemTitle={(item) => item.title || "Deliverable"} fields={[{ key: "title", label: "Title" }, { key: "status", label: "Status", type: "select", options: ["pending", "planned", "in_progress", "review", "done"] }, { key: "notes", label: "Notes", type: "textarea", rows: 3 }]} />
+          <StructuredObjectListEditor label="Milestones" items={milestones} onChange={setMilestones} createItem={() => makeItem("milestone", "New milestone")} getItemTitle={(item) => item.title || "Milestone"} fields={[{ key: "title", label: "Title" }, { key: "status", label: "Status", type: "select", options: ["pending", "planned", "in_progress", "review", "done"] }, { key: "notes", label: "Notes", type: "textarea", rows: 3 }]} />
         </Panel>
-        <Panel title="Approvals + assets needed" note="Client handoffs and missing items.">
-          <TextareaField label="Approvals JSON" value={approvalsJson} onChange={setApprovalsJson} rows={18} mono />
-          <TextareaField label="Assets needed JSON" value={assetsJson} onChange={setAssetsJson} rows={18} mono />
+        <Panel title="Approvals + assets needed" note="Client handoffs and missing materials.">
+          <StructuredObjectListEditor label="Approvals" items={approvals} onChange={setApprovals} createItem={() => makeItem("approval", "New approval")} getItemTitle={(item) => item.title || "Approval"} fields={[{ key: "title", label: "Title" }, { key: "status", label: "Status", type: "select", options: ["pending", "requested", "approved", "done"] }, { key: "notes", label: "Notes", type: "textarea", rows: 3 }]} />
+          <StructuredObjectListEditor label="Assets needed" items={assetsNeeded} onChange={setAssetsNeeded} createItem={() => makeItem("asset", "New asset request")} getItemTitle={(item) => item.title || "Asset"} fields={[{ key: "title", label: "Title" }, { key: "status", label: "Status", type: "select", options: ["pending", "requested", "received", "done"] }, { key: "notes", label: "Notes", type: "textarea", rows: 3 }]} />
         </Panel>
       </div>
 
       <div className="grid2stretch" style={{ marginTop: 18 }}>
-        <Panel title="Tasks + issues" note="Operational work and current blockers.">
-          <TextareaField label="Tasks JSON" value={tasksJson} onChange={setTasksJson} rows={18} mono />
-          <TextareaField label="Issues JSON" value={issuesJson} onChange={setIssuesJson} rows={12} mono />
-          <TextareaField label="Requests JSON" value={requestsJson} onChange={setRequestsJson} rows={12} mono />
+        <Panel title="Tasks + issues + requests" note="Operational execution without JSON editing.">
+          <StructuredObjectListEditor label="Tasks" items={tasks} onChange={setTasks} createItem={() => makeItem("task", "New task")} getItemTitle={(item) => item.title || "Task"} fields={[{ key: "title", label: "Title" }, { key: "status", label: "Status", type: "select", options: ["planned", "in_progress", "review", "done"] }, { key: "notes", label: "Notes", type: "textarea", rows: 3 }]} />
+          <StructuredObjectListEditor label="Issues" items={issues} onChange={setIssues} createItem={() => makeItem("issue", "New issue")} getItemTitle={(item) => item.title || "Issue"} fields={[{ key: "title", label: "Title" }, { key: "status", label: "Status", type: "select", options: ["open", "investigating", "blocked", "resolved"] }, { key: "notes", label: "Notes", type: "textarea", rows: 3 }]} />
+          <StructuredObjectListEditor label="Requests" items={requests} onChange={setRequests} createItem={() => makeItem("request", "New request")} getItemTitle={(item) => item.title || "Request"} fields={[{ key: "title", label: "Title" }, { key: "status", label: "Status", type: "select", options: ["pending", "review", "approved", "done"] }, { key: "notes", label: "Notes", type: "textarea", rows: 3 }]} />
         </Panel>
-        <Panel title="Metrics + monthly plan" note="Reporting and recurring execution.">
-          <TextareaField label="Metrics JSON" value={metricsJson} onChange={setMetricsJson} rows={18} mono />
-          <TextareaField label="Next actions" value={nextActionsText} onChange={setNextActionsText} rows={6} />
-          <TextareaField label="Monthly plan" value={monthlyPlanText} onChange={setMonthlyPlanText} rows={6} />
+        <Panel title="Metrics + plans" note="Structured reporting and recurring work.">
+          <StructuredObjectListEditor label="Metrics" items={metrics} onChange={setMetrics} createItem={makeMetric} getItemTitle={(item) => item.label || "Metric"} fields={[{ key: "label", label: "Metric" }, { key: "value", label: "Current value" }, { key: "target", label: "Target" }, { key: "notes", label: "Notes", type: "textarea", rows: 3 }]} />
+          <StructuredStringListEditor label="Next actions" items={nextActions} onChange={setNextActions} addLabel="Add next action" />
+          <StructuredStringListEditor label="Monthly plan" items={monthlyPlan} onChange={setMonthlyPlan} addLabel="Add monthly plan item" />
         </Panel>
       </div>
     </main>
@@ -263,62 +278,25 @@ export default function EcommerceWorkspaceControlClient({ initialData }: { initi
 }
 
 function Panel({ title, note, children }: { title: string; note: string; children: React.ReactNode }) {
-  return (
-    <div className="panel">
-      <div className="panelHeader">
-        <div>{title}</div>
-        <div className="smallNote">{note}</div>
-      </div>
-      <div className="panelBody" style={{ display: "grid", gap: 12 }}>{children}</div>
-    </div>
-  );
+  return <div className="panel"><div className="panelHeader"><div>{title}</div><div className="smallNote">{note}</div></div><div className="panelBody" style={{ display: "grid", gap: 12 }}>{children}</div></div>;
 }
 
 function InfoCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="panel" style={{ background: "var(--panel2)" }}>
-      <div className="panelBody">
-        <div className="smallNote">{label}</div>
-        <div style={{ marginTop: 8, fontWeight: 900, fontSize: 20, lineHeight: 1.2 }}>{value}</div>
-      </div>
-    </div>
-  );
+  return <div className="panel" style={{ background: "var(--panel2)" }}><div className="panelBody"><div className="smallNote">{label}</div><div style={{ marginTop: 8, fontWeight: 900, fontSize: 20, lineHeight: 1.2 }}>{value}</div></div></div>;
 }
 
 function FieldSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: string[] }) {
-  return (
-    <div>
-      <div className="fieldLabel">{label}</div>
-      <select className="select" value={value} onChange={(e) => onChange(e.target.value)}>
-        {options.map((option) => <option key={option} value={option}>{pretty(option)}</option>)}
-      </select>
-    </div>
-  );
+  return <div><div className="fieldLabel">{label}</div><select className="select" value={value} onChange={(e) => onChange(e.target.value)}>{options.map((option) => <option key={option} value={option}>{pretty(option)}</option>)}</select></div>;
 }
 
 function TextField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
-  return (
-    <div>
-      <div className="fieldLabel">{label}</div>
-      <input className="input" value={value} onChange={(e) => onChange(e.target.value)} />
-    </div>
-  );
+  return <div><div className="fieldLabel">{label}</div><input className="input" value={value} onChange={(e) => onChange(e.target.value)} /></div>;
 }
 
 function NumberField({ label, value, onChange }: { label: string; value: number | null; onChange: (value: number | null) => void }) {
-  return (
-    <div>
-      <div className="fieldLabel">{label}</div>
-      <input className="input" type="number" min={0} value={value ?? ""} onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))} />
-    </div>
-  );
+  return <div><div className="fieldLabel">{label}</div><input className="input" type="number" min={0} value={value ?? ""} onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))} /></div>;
 }
 
-function TextareaField({ label, value, onChange, rows = 4, mono = false }: { label: string; value: string; onChange: (value: string) => void; rows?: number; mono?: boolean }) {
-  return (
-    <div>
-      <div className="fieldLabel">{label}</div>
-      <textarea className="input" rows={rows} value={value} onChange={(e) => onChange(e.target.value)} style={{ resize: "vertical", width: "100%", fontFamily: mono ? "ui-monospace, SFMono-Regular, Menlo, monospace" : undefined, fontSize: mono ? 12 : undefined, minHeight: rows * 22 }} />
-    </div>
-  );
+function TextareaField({ label, value, onChange, rows = 4 }: { label: string; value: string; onChange: (value: string) => void; rows?: number }) {
+  return <div><div className="fieldLabel">{label}</div><textarea className="input" rows={rows} value={value} onChange={(e) => onChange(e.target.value)} style={{ resize: "vertical", width: "100%", minHeight: rows * 22 }} /></div>;
 }
