@@ -87,6 +87,11 @@ export type WorkspaceState = {
   internalDiagnosisNote?: string;
   agreementStatus?: string;
   agreementAcceptedAt?: string;
+  depositStatus?: string;
+  depositAmount?: number;
+  depositUrl?: string;
+  depositSessionId?: string;
+  depositPaidAt?: string;
   depositNotice?: string;
   depositNoticeSentAt?: string;
   currentProcess?: string[];
@@ -116,6 +121,15 @@ export type EnrichedOpsWorkspaceBundle = OpsWorkspaceBundle & {
     waitingOn: string;
     adminPublicNote: string;
     internalDiagnosisNote: string;
+    agreementStatus: string;
+    agreementAcceptedAt: string;
+    depositStatus: string;
+    depositAmount: number | null;
+    depositUrl: string;
+    depositSessionId: string;
+    depositPaidAt: string;
+    depositNotice: string;
+    depositNoticeSentAt: string;
     currentProcess: string[];
     futureProcess: string[];
     systems: WorkspaceSystem[];
@@ -151,6 +165,11 @@ function asArray<T = unknown>(value: unknown): T[] {
 
 function str(value: unknown, fallback = ""): string {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+function num(value: unknown): number | null {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function normalizeStringList(value: unknown): string[] {
@@ -255,6 +274,15 @@ function asWorkspaceState(value: unknown): WorkspaceState {
     waitingOn: str(raw.waitingOn),
     adminPublicNote: str(raw.adminPublicNote),
     internalDiagnosisNote: str(raw.internalDiagnosisNote),
+    agreementStatus: str(raw.agreementStatus),
+    agreementAcceptedAt: str(raw.agreementAcceptedAt),
+    depositStatus: str(raw.depositStatus),
+    depositAmount: num(raw.depositAmount),
+    depositUrl: str(raw.depositUrl),
+    depositSessionId: str(raw.depositSessionId),
+    depositPaidAt: str(raw.depositPaidAt),
+    depositNotice: str(raw.depositNotice),
+    depositNoticeSentAt: str(raw.depositNoticeSentAt),
     currentProcess: normalizeStringList(raw.currentProcess),
     futureProcess: normalizeStringList(raw.futureProcess),
     systems: normalizeSystems(raw.systems),
@@ -270,10 +298,7 @@ function asWorkspaceState(value: unknown): WorkspaceState {
     adminNotes:
       raw.adminNotes && typeof raw.adminNotes === "object" && !Array.isArray(raw.adminNotes)
         ? Object.fromEntries(
-            Object.entries(raw.adminNotes as Record<string, unknown>).map(([key, item]) => [
-              key,
-              str(item),
-            ])
+            Object.entries(raw.adminNotes as Record<string, unknown>).map(([key, item]) => [key, str(item)])
           )
         : {},
     chatMessages: asArray<any>(raw.chatMessages).map((item) => ({
@@ -431,6 +456,15 @@ export function enrichOpsBundle(
       waitingOn: state.waitingOn || bundle.ghostAdmin.missingInfo[0] || "CrecyStudio internal review",
       adminPublicNote: state.adminPublicNote || "",
       internalDiagnosisNote: state.internalDiagnosisNote || "",
+      agreementStatus: state.agreementStatus || "pending",
+      agreementAcceptedAt: state.agreementAcceptedAt || "",
+      depositStatus: state.depositStatus || "pending",
+      depositAmount: state.depositAmount ?? null,
+      depositUrl: state.depositUrl || "",
+      depositSessionId: state.depositSessionId || "",
+      depositPaidAt: state.depositPaidAt || "",
+      depositNotice: state.depositNotice || "",
+      depositNoticeSentAt: state.depositNoticeSentAt || "",
       currentProcess: state.currentProcess?.length ? state.currentProcess : bundle.workflowMap.currentState,
       futureProcess: state.futureProcess?.length ? state.futureProcess : bundle.workflowMap.futureState,
       systems: state.systems?.length ? state.systems : bundle.systems,

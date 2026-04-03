@@ -32,6 +32,11 @@ export type EcommerceWorkspaceState = {
   agreementStatus: string;
   agreementText: string;
   agreementAcceptedAt: string;
+  depositStatus: string;
+  depositAmount: number | null;
+  depositUrl: string;
+  depositSessionId: string;
+  depositPaidAt: string;
   depositNotice: string;
   depositNoticeSentAt: string;
   deliverables: EcommerceWorkspaceItem[];
@@ -88,6 +93,8 @@ function asObj(value: unknown): JsonRecord {
   return value as JsonRecord;
 }
 
+const safeObj = asObj;
+
 function asArray<T = any>(value: unknown): T[] {
   if (Array.isArray(value)) return value as T[];
   if (typeof value === "string") {
@@ -103,6 +110,11 @@ function asArray<T = any>(value: unknown): T[] {
 
 function str(value: unknown, fallback = ""): string {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+function num(value: unknown): number | null {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function ensureHttpsOrHttp(value: unknown): string {
@@ -383,6 +395,7 @@ export function normalizeEcommerceWorkspaceState(input: { intake: any; quote: an
   const mode = detectEcommerceMode(input.intake);
   const quoteJson = asObj(input.quote?.quote_json);
   const workspace = asObj(quoteJson.workspace);
+  const deposit = asObj(quoteJson.deposit);
   const recommendation = input.recommendation;
 
   return {
@@ -398,8 +411,13 @@ export function normalizeEcommerceWorkspaceState(input: { intake: any; quote: an
     agreementStatus: str(workspace.agreementStatus || quoteJson.agreement_status, "pending"),
     agreementText: str(workspace.agreementText),
     agreementAcceptedAt: str(workspace.agreementAcceptedAt || quoteJson.agreement_accepted_at),
+    depositStatus: str(workspace.depositStatus || deposit.status, "pending"),
+    depositAmount: num(workspace.depositAmount ?? deposit.amount),
+    depositUrl: str(workspace.depositUrl || deposit.url),
+    depositSessionId: str(workspace.depositSessionId || deposit.session_id),
+    depositPaidAt: str(workspace.depositPaidAt || deposit.paid_at),
     depositNotice: str(workspace.depositNotice || quoteJson.deposit_notice),
-    depositNoticeSentAt: str(workspace.depositNoticeSentAt || quoteJson.deposit_notice_sent_at),
+    depositNoticeSentAt: str(workspace.depositNoticeSentAt || quoteJson.deposit_notice_sent_at || deposit.created_at),
     deliverables: normalizeItems(workspace.deliverables).length ? normalizeItems(workspace.deliverables) : defaultDeliverables(mode),
     milestones: normalizeItems(workspace.milestones).length ? normalizeItems(workspace.milestones) : defaultMilestones(mode),
     approvals: normalizeItems(workspace.approvals).length ? normalizeItems(workspace.approvals) : defaultApprovals(mode),
@@ -489,6 +507,14 @@ export async function saveEcommerceWorkspaceState(args: { ecomIntakeId: string; 
     agreement_accepted_at: next.agreementAcceptedAt || null,
     deposit_notice: next.depositNotice || null,
     deposit_notice_sent_at: next.depositNoticeSentAt || null,
+    deposit: {
+      ...safeObj(existingQuoteJson.deposit),
+      session_id: next.depositSessionId || null,
+      url: next.depositUrl || null,
+      amount: next.depositAmount ?? null,
+      paid_at: next.depositPaidAt || null,
+      status: next.depositStatus || null,
+    },
     workspace: next,
   };
 
@@ -524,7 +550,7 @@ export async function getEcommerceAdminRows(): Promise<EcommerceAdminRow[]> {
     if (!latestQuoteByIntake.has(quote.ecom_intake_id)) latestQuoteByIntake.set(quote.ecom_intake_id, quote);
   }
 
-  return (intakes ?? []).map((intake: any) => {
+  return ((intakes ?? []) as any[]).map((intake) => {
     const call = latestCallByIntake.get(intake.id) ?? null;
     const quote = latestQuoteByIntake.get(intake.id) ?? null;
     const recommendation = getEcommerceRecommendationForIntake(intake);

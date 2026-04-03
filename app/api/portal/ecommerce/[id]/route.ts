@@ -11,6 +11,8 @@ import {
   makeClientSafeEcommerceBundle,
   saveEcommerceWorkspaceState,
 } from "@/lib/ecommerce/workspace";
+import { ensureEcommerceDepositLink } from "@/lib/depositPayments";
+import { getBaseUrl } from "@/lib/stripeServer";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -106,6 +108,19 @@ export async function POST(
         if (!save.ok) {
           return NextResponse.json({ ok: false, error: save.error }, { status: 500 });
         }
+
+        await ensureEcommerceDepositLink({
+          ecomIntakeId: id,
+          baseUrl: getBaseUrl(req),
+        });
+        break;
+      }
+
+      case "ensure_deposit_link": {
+        await ensureEcommerceDepositLink({
+          ecomIntakeId: id,
+          baseUrl: getBaseUrl(req),
+        });
         break;
       }
 
