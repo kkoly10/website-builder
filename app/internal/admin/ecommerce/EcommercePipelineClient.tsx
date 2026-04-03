@@ -68,7 +68,7 @@ export default function EcommercePipelineClient({ initialRows }: { initialRows: 
 
       <div style={{ display: "grid", gap: 16, marginTop: 16 }}>
         {filtered.length === 0 ? (
-          <div className="panel"><div className="panelBody"><div style={{ color: "var(--fg)", fontWeight: 900, fontSize: 20 }}>No e-commerce requests found</div><p className="p" style={{ marginBottom: 0 }}>When e-commerce intakes are submitted, they will appear here with service path, phase, waiting-on status, and workspace links.</p></div></div>
+          <div className="panel"><div className="panelBody"><div style={{ color: "var(--fg)", fontWeight: 900, fontSize: 20 }}>No e-commerce requests found</div><p className="p" style={{ marginBottom: 0 }}>When e-commerce intakes are submitted, they will appear here with service path, pricing recommendation, workspace status, and client links.</p></div></div>
         ) : null}
 
         {filtered.map((row) => {
@@ -86,18 +86,25 @@ export default function EcommercePipelineClient({ initialRows }: { initialRows: 
                   <div style={{ display: "inline-flex", alignItems: "center", padding: "8px 12px", borderRadius: 999, background: intakeTone.bg, border: `1px solid ${intakeTone.border}`, color: intakeTone.color, fontWeight: 800, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em" }}>{intakeTone.label}</div>
                 </div>
 
-                <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 12 }}>
+                <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))", gap: 12 }}>
                   <Tile label="Service Path" value={pretty(row.mode)} />
                   <Tile label="Phase" value={pretty(row.phase)} />
                   <Tile label="Waiting On" value={row.waitingOn} />
                   <Tile label="Call" value={pretty(row.callStatus)} />
                   <Tile label="Quote" value={pretty(row.quoteStatus)} />
+                  <Tile label="Monthly Orders" value={row.monthlyOrders} />
                 </div>
 
-                <div style={{ marginTop: 14, border: "1px solid var(--stroke)", background: "var(--panel2)", borderRadius: 14, padding: 14 }}>
-                  <div className="smallNote">Workspace summary</div>
-                  <div style={{ marginTop: 8, color: "var(--fg)", fontWeight: 800 }}>{row.serviceSummary}</div>
-                  <div className="pDark" style={{ marginTop: 6 }}>Monthly orders: {row.monthlyOrders}</div>
+                <div className="grid2stretch" style={{ marginTop: 14 }}>
+                  <div style={{ border: "1px solid var(--stroke)", background: "var(--panel2)", borderRadius: 14, padding: 14 }}>
+                    <div className="smallNote">Workspace summary</div>
+                    <div style={{ marginTop: 8, color: "var(--fg)", fontWeight: 800 }}>{row.serviceSummary}</div>
+                  </div>
+                  <div style={{ border: "1px solid var(--accentStroke)", background: "var(--accentSoft)", borderRadius: 14, padding: 14 }}>
+                    <div className="smallNote">Pricing recommendation</div>
+                    <div style={{ marginTop: 8, color: "var(--fg)", fontWeight: 800 }}>{row.recommendationTier}</div>
+                    <div className="pDark" style={{ marginTop: 6 }}>{row.recommendationRange}</div>
+                  </div>
                 </div>
 
                 <div className="row" style={{ marginTop: 16, justifyContent: "space-between" }}>

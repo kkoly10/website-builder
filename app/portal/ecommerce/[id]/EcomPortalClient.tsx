@@ -56,7 +56,7 @@ function getStory(mode: string, phase: string) {
 
 function statusTone(value: string) {
   const v = String(value || "").toLowerCase();
-  if (["done", "approved", "accepted", "live", "completed"].includes(v)) {
+  if (["done", "approved", "accepted", "live", "completed", "paid"].includes(v)) {
     return { color: "#5DCAA5", bg: "rgba(46,160,67,0.08)", border: "rgba(46,160,67,0.22)" };
   }
   if (["building", "in_progress", "review", "sent", "scheduled", "testing", "planned"].includes(v)) {
@@ -323,10 +323,12 @@ export default function EcomPortalClient({ data }: { data: EcommerceWorkspaceBun
         </div>
       ) : null}
 
-      <Drawer label="Agreement & deposit" value={pretty(workspace.agreementStatus || "pending")}>
+      <Drawer label="Agreement & deposit" value={pretty(workspace.depositStatus || workspace.agreementStatus || "pending")}>
         <Row label="Agreement status" value={pretty(workspace.agreementStatus || "pending")} />
         <Row label="Accepted" value={fmtDate(workspace.agreementAcceptedAt)} />
-        <Row label="Deposit notice" value={workspace.depositNoticeSentAt ? "Sent" : "Pending"} />
+        <Row label="Deposit status" value={pretty(workspace.depositStatus || "pending")} />
+        <Row label="Deposit amount" value={money(workspace.depositAmount)} />
+        <Row label="Paid at" value={fmtDate(workspace.depositPaidAt)} />
         {workspace.agreementText ? (
           <div style={{ marginTop: 10, padding: 12, borderRadius: 10, border: "1px solid var(--stroke)", background: "var(--panel2)", whiteSpace: "pre-wrap", lineHeight: 1.6, color: "var(--muted)", fontSize: 13 }}>{workspace.agreementText}</div>
         ) : null}
@@ -336,10 +338,15 @@ export default function EcomPortalClient({ data }: { data: EcommerceWorkspaceBun
               {saving ? "Saving..." : "Accept agreement"}
             </button>
           ) : null}
-          {!workspace.depositNoticeSentAt ? (
-            <button className="btn btnGhost" disabled={saving} onClick={() => applyAction({ type: "deposit_notice_sent", note: "Client reported deposit sent." })}>
-              {saving ? "Saving..." : "I’ve sent the deposit"}
+          {workspace.agreementStatus === "accepted" && !workspace.depositUrl && workspace.depositStatus !== "paid" ? (
+            <button className="btn btnGhost" disabled={saving} onClick={() => applyAction({ type: "ensure_deposit_link" })}>
+              {saving ? "Preparing..." : "Prepare deposit payment"}
             </button>
+          ) : null}
+          {workspace.depositUrl && workspace.depositStatus !== "paid" ? (
+            <a className="btn btnPrimary" href={workspace.depositUrl} target="_blank" rel="noreferrer">
+              Pay deposit <span className="btnArrow">→</span>
+            </a>
           ) : null}
         </div>
       </Drawer>

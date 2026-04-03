@@ -32,6 +32,18 @@ function withRedactedLead(result: any) {
   };
 }
 
+function sanitizeExternalUrl(value: unknown): string | null {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(
   _req: NextRequest,
   ctx: { params: Promise<{ token: string }> | { token: string } }
@@ -61,6 +73,20 @@ export async function POST(
     const body = await req.json();
     const actionType = String(body?.type || "").trim();
     const sensitiveActions = new Set(["agreement_accept", "deposit_notice_sent"]);
+
+    if (actionType === "asset_add") {
+      const safeUrl = sanitizeExternalUrl(body?.asset?.url);
+      if (!safeUrl) {
+        return NextResponse.json(
+          { ok: false, error: "Asset URL must be a valid http or https link." },
+          { status: 400 }
+        );
+      }
+      body.asset = {
+        ...(body.asset || {}),
+        url: safeUrl,
+      };
+    }
 
     let portal: any = null;
     if (sensitiveActions.has(actionType)) {

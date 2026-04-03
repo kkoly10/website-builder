@@ -1,4 +1,4 @@
-export type PricingLane = "website" | "ops";
+export type PricingLane = "website" | "ops" | "ecommerce";
 
 export type PricingPosition = "low" | "middle" | "high" | "custom";
 
@@ -14,6 +14,15 @@ export type OpsTierKey =
   | "ongoing_systems_partner"
   | "custom_ops_scope";
 
+export type EcommerceTierKey =
+  | "store_launch_build"
+  | "growth_store_build"
+  | "commerce_repair_sprint"
+  | "commerce_growth_repair"
+  | "ecommerce_ops_support"
+  | "managed_commerce_partner"
+  | "custom_ecommerce_scope";
+
 export type PricingReasonImpact = "supporting" | "upward" | "custom" | "fit";
 
 export type PricingReason = {
@@ -28,6 +37,8 @@ export type PricingBand = {
   target: number;
 };
 
+export type PricingBillingModel = "project" | "monthly" | "hybrid";
+
 export type PricingResult<TTier extends string = string> = {
   version: string;
   lane: PricingLane;
@@ -36,6 +47,9 @@ export type PricingResult<TTier extends string = string> = {
   position: PricingPosition;
   isCustomScope: boolean;
   band: PricingBand;
+  setupBand?: PricingBand;
+  monthlyBand?: PricingBand;
+  billingModel?: PricingBillingModel;
   displayRange: string;
   publicMessage: string;
   summary: string;
@@ -78,5 +92,20 @@ export type OpsPricingInput = {
   workflowsNeeded: string[];
   urgency: string;
   readiness: string;
+  notes: string;
+};
+
+export type EcommercePricingInput = {
+  entryPath?: "build" | "run" | "fix" | null;
+  businessName: string;
+  platform: string;
+  salesChannels: string[];
+  serviceTypes: string[];
+  skuCount: string;
+  monthlyOrders: string;
+  peakOrders: string;
+  budgetRange: string;
+  timeline: string;
+  storeUrl: string;
   notes: string;
 };

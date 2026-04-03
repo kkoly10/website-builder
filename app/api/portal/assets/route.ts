@@ -3,14 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { resolvePortalAccess } from "@/lib/portalAccess";
 import { sendEventNotification } from "@/lib/notifications";
-import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
+import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const ASSET_BUCKET = process.env.PORTAL_ASSETS_BUCKET || "portal-assets";
-
-const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
+const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
@@ -42,6 +41,18 @@ function sanitizeFilename(name: string) {
     .replace(/[^\w.\-]+/g, "_")
     .replace(/_+/g, "_")
     .slice(0, 160);
+}
+
+function sanitizeExternalUrl(value: unknown): string | null {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
 }
 
 function setMilestoneDone(
@@ -204,7 +215,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const ip = getIpFromHeaders(req.headers);
-    const rl = enforceRateLimit({ key: `portal-assets:${ip}`, limit: 10, windowMs: 60_000 });
+    const rl = await enforceRateLimitDurable({ key: `portal-assets:${ip}`, limit: 10, windowMs: 60_000 });
     if (!rl.ok) return rateLimitResponse(rl.resetAt);
 
     const contentType = req.headers.get("content-type") || "";
@@ -220,10 +231,10 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const url = String(body?.url || "").trim();
-      if (!url) {
+      const safeUrl = sanitizeExternalUrl(body?.url);
+      if (!safeUrl) {
         return NextResponse.json(
-          { ok: false, error: "Asset URL is required." },
+          { ok: false, error: "Asset URL must be a valid http or https link." },
           { status: 400 }
         );
       }
@@ -235,7 +246,7 @@ export async function POST(req: NextRequest) {
           source: "portal_link",
           asset_type: String(body?.assetType || "link").trim(),
           label: String(body?.label || "Client link").trim(),
-          url,
+          url: safeUrl,
           notes: String(body?.notes || "").trim(),
           status: "submitted",
         })

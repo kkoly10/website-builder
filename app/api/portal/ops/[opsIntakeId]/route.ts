@@ -12,6 +12,8 @@ import {
   saveWorkspaceState,
   makeClientSafeOpsBundle,
 } from "@/lib/opsWorkspace/state";
+import { ensureOpsDepositLink } from "@/lib/depositPayments";
+import { getBaseUrl } from "@/lib/stripeServer";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -87,7 +89,6 @@ export async function POST(
     const body = await req.json();
     const actionType = String(body?.type || "");
 
-    // Auth check
     const supabase = await createSupabaseServerClient();
     const {
       data: { user },
@@ -124,6 +125,19 @@ export async function POST(
           agreementAcceptedAt: now,
           lastSavedAt: now,
         });
+
+        await ensureOpsDepositLink({
+          opsIntakeId,
+          baseUrl: getBaseUrl(req),
+        });
+        break;
+      }
+
+      case "ensure_deposit_link": {
+        await ensureOpsDepositLink({
+          opsIntakeId,
+          baseUrl: getBaseUrl(req),
+        });
         break;
       }
 
@@ -141,7 +155,6 @@ export async function POST(
         return NextResponse.json({ ok: false, error: "Unknown action type." }, { status: 400 });
     }
 
-    // Return refreshed bundle
     const [bundle, freshState] = await Promise.all([
       getOpsWorkspaceBundle(opsIntakeId),
       getWorkspaceState(opsIntakeId),

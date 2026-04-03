@@ -1,3 +1,5 @@
+import { getEcommercePricing } from "@/lib/pricing";
+import type { EcommercePricingInput, PricingResult } from "@/lib/pricing";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export type EcommerceWorkspaceMode = "build" | "run" | "fix";
@@ -30,6 +32,11 @@ export type EcommerceWorkspaceState = {
   agreementStatus: string;
   agreementText: string;
   agreementAcceptedAt: string;
+  depositStatus: string;
+  depositAmount: number | null;
+  depositUrl: string;
+  depositSessionId: string;
+  depositPaidAt: string;
   depositNotice: string;
   depositNoticeSentAt: string;
   deliverables: EcommerceWorkspaceItem[];
@@ -46,10 +53,13 @@ export type EcommerceWorkspaceState = {
   lastSavedBy: string;
 };
 
+export type EcommerceWorkspaceRecommendation = PricingResult<string>;
+
 export type EcommerceWorkspaceBundle = {
   intake: any;
   quote: any | null;
   call: any | null;
+  recommendation: EcommerceWorkspaceRecommendation;
   workspace: EcommerceWorkspaceState;
   isAdmin: boolean;
 };
@@ -68,6 +78,8 @@ export type EcommerceAdminRow = {
   mode: EcommerceWorkspaceMode;
   monthlyOrders: string;
   serviceSummary: string;
+  recommendationTier: string;
+  recommendationRange: string;
   links: {
     detail: string;
     portal: string;
@@ -80,6 +92,8 @@ function asObj(value: unknown): JsonRecord {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   return value as JsonRecord;
 }
+
+const safeObj = asObj;
 
 function asArray<T = any>(value: unknown): T[] {
   if (Array.isArray(value)) return value as T[];
@@ -96,6 +110,11 @@ function asArray<T = any>(value: unknown): T[] {
 
 function str(value: unknown, fallback = ""): string {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+function num(value: unknown): number | null {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function ensureHttpsOrHttp(value: unknown): string {
@@ -138,8 +157,7 @@ function makeId(prefix: string, index: number) {
 }
 
 export function detectEcommerceMode(intake: any): EcommerceWorkspaceMode {
-  const services = (Array.isArray(intake?.service_types) ? intake.service_types : [])
-    .map((item: unknown) => str(item).toLowerCase());
+  const services = (Array.isArray(intake?.service_types) ? intake.service_types : []).map((item: unknown) => str(item).toLowerCase());
 
   if (services.some((item) => item.includes("build") || item.includes("design") || item.includes("setup"))) {
     return "build";
@@ -150,6 +168,53 @@ export function detectEcommerceMode(intake: any): EcommerceWorkspaceMode {
   }
 
   return "run";
+}
+
+export function buildEcommercePricingInputFromIntake(intake: any): EcommercePricingInput {
+  return {
+    entryPath: detectEcommerceMode(intake),
+    businessName: str(intake?.business_name),
+    platform: str(intake?.platform),
+    salesChannels: Array.isArray(intake?.sales_channels) ? intake.sales_channels : [],
+    serviceTypes: Array.isArray(intake?.service_types) ? intake.service_types : [],
+    skuCount: str(intake?.sku_count),
+    monthlyOrders: str(intake?.monthly_orders),
+    peakOrders: str(intake?.peak_orders),
+    budgetRange: str(intake?.budget_range),
+    timeline: str(intake?.timeline),
+    storeUrl: str(intake?.store_url),
+    notes: str(intake?.notes),
+  };
+}
+
+export function getEcommerceRecommendationForIntake(intake: any): EcommerceWorkspaceRecommendation {
+  const recommendationJson = asObj(intake?.recommendation_json);
+  if (recommendationJson && Object.keys(recommendationJson).length) {
+    return recommendationJson as EcommerceWorkspaceRecommendation;
+  }
+
+  const quoteJson = asObj(intake?.quote_json);
+  if (quoteJson?.pricingRecommendation && typeof quoteJson.pricingRecommendation === "object") {
+    return quoteJson.pricingRecommendation as EcommerceWorkspaceRecommendation;
+  }
+
+  return getEcommercePricing(buildEcommercePricingInputFromIntake(intake));
+}
+
+export function getRecommendedEcommerceQuoteDefaults(recommendation: EcommerceWorkspaceRecommendation) {
+  if (recommendation.billingModel === "hybrid") {
+    return {
+      setupFee: recommendation.setupBand?.target ?? null,
+      monthlyFee: recommendation.monthlyBand?.target ?? null,
+      label: recommendation.tierLabel,
+    };
+  }
+
+  return {
+    setupFee: recommendation.band?.target ?? null,
+    monthlyFee: null,
+    label: recommendation.tierLabel,
+  };
 }
 
 function defaultPhase(mode: EcommerceWorkspaceMode, call: any, quote: any) {
@@ -168,9 +233,10 @@ function defaultWaitingOn(mode: EcommerceWorkspaceMode, call: any, quote: any) {
   return "CrecyStudio intake review";
 }
 
-function defaultServiceSummary(mode: EcommerceWorkspaceMode, intake: any) {
+function defaultServiceSummary(mode: EcommerceWorkspaceMode, intake: any, recommendation?: EcommerceWorkspaceRecommendation) {
   const services = (Array.isArray(intake?.service_types) ? intake.service_types : []).map((item: unknown) => str(item)).filter(Boolean);
   if (services.length) return services.join(", ");
+  if (recommendation?.tierLabel) return recommendation.tierLabel;
   if (mode === "build") return "Store build and launch support";
   if (mode === "fix") return "Store optimization and issue resolution";
   return "Managed e-commerce operations";
@@ -325,14 +391,12 @@ function defaultMonthlyPlan(mode: EcommerceWorkspaceMode): string[] {
   return [];
 }
 
-export function normalizeEcommerceWorkspaceState(input: {
-  intake: any;
-  quote: any | null;
-  call: any | null;
-}): EcommerceWorkspaceState {
+export function normalizeEcommerceWorkspaceState(input: { intake: any; quote: any | null; call: any | null; recommendation?: EcommerceWorkspaceRecommendation }): EcommerceWorkspaceState {
   const mode = detectEcommerceMode(input.intake);
   const quoteJson = asObj(input.quote?.quote_json);
   const workspace = asObj(quoteJson.workspace);
+  const deposit = asObj(quoteJson.deposit);
+  const recommendation = input.recommendation;
 
   return {
     mode,
@@ -340,15 +404,20 @@ export function normalizeEcommerceWorkspaceState(input: {
     waitingOn: str(workspace.waitingOn, defaultWaitingOn(mode, input.call, input.quote)),
     adminPublicNote: str(workspace.adminPublicNote),
     internalNotes: str(workspace.internalNotes),
-    serviceSummary: str(workspace.serviceSummary, defaultServiceSummary(mode, input.intake)),
+    serviceSummary: str(workspace.serviceSummary, defaultServiceSummary(mode, input.intake, recommendation)),
     onboardingSummary: str(workspace.onboardingSummary, defaultOnboardingSummary(mode)),
     previewUrl: ensureHttpsOrHttp(workspace.previewUrl),
     productionUrl: ensureHttpsOrHttp(workspace.productionUrl) || ensureHttpsOrHttp(input.intake?.store_url),
     agreementStatus: str(workspace.agreementStatus || quoteJson.agreement_status, "pending"),
     agreementText: str(workspace.agreementText),
     agreementAcceptedAt: str(workspace.agreementAcceptedAt || quoteJson.agreement_accepted_at),
+    depositStatus: str(workspace.depositStatus || deposit.status, "pending"),
+    depositAmount: num(workspace.depositAmount ?? deposit.amount),
+    depositUrl: str(workspace.depositUrl || deposit.url),
+    depositSessionId: str(workspace.depositSessionId || deposit.session_id),
+    depositPaidAt: str(workspace.depositPaidAt || deposit.paid_at),
     depositNotice: str(workspace.depositNotice || quoteJson.deposit_notice),
-    depositNoticeSentAt: str(workspace.depositNoticeSentAt || quoteJson.deposit_notice_sent_at),
+    depositNoticeSentAt: str(workspace.depositNoticeSentAt || quoteJson.deposit_notice_sent_at || deposit.created_at),
     deliverables: normalizeItems(workspace.deliverables).length ? normalizeItems(workspace.deliverables) : defaultDeliverables(mode),
     milestones: normalizeItems(workspace.milestones).length ? normalizeItems(workspace.milestones) : defaultMilestones(mode),
     approvals: normalizeItems(workspace.approvals).length ? normalizeItems(workspace.approvals) : defaultApprovals(mode),
@@ -365,14 +434,7 @@ export function normalizeEcommerceWorkspaceState(input: {
 }
 
 async function getLatestQuote(intakeId: string) {
-  const { data, error } = await supabaseAdmin
-    .from("ecom_quotes")
-    .select("*")
-    .eq("ecom_intake_id", intakeId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
+  const { data, error } = await supabaseAdmin.from("ecom_quotes").select("*").eq("ecom_intake_id", intakeId).order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (error) throw new Error(error.message);
   return data ?? null;
 }
@@ -381,18 +443,7 @@ async function ensureQuote(intakeId: string) {
   const existing = await getLatestQuote(intakeId);
   if (existing) return existing;
 
-  const { data, error } = await supabaseAdmin
-    .from("ecom_quotes")
-    .insert({
-      ecom_intake_id: intakeId,
-      status: "draft",
-      quote_json: {},
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .select("*")
-    .single();
-
+  const { data, error } = await supabaseAdmin.from("ecom_quotes").insert({ ecom_intake_id: intakeId, status: "draft", quote_json: {}, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }).select("*").single();
   if (error) throw new Error(error.message);
   return data;
 }
@@ -408,31 +459,26 @@ export async function getEcommerceWorkspaceBundle(intakeId: string, options?: { 
   if (callError) throw new Error(callError.message);
   if (!intake) return null;
 
+  const recommendation = getEcommerceRecommendationForIntake(intake);
+
   return {
     intake,
     quote,
     call: call ?? null,
-    workspace: normalizeEcommerceWorkspaceState({ intake, quote, call }),
+    recommendation,
+    workspace: normalizeEcommerceWorkspaceState({ intake, quote, call, recommendation }),
     isAdmin: !!options?.isAdmin,
   };
 }
 
-export async function saveEcommerceWorkspaceState(args: {
-  ecomIntakeId: string;
-  patch: Partial<EcommerceWorkspaceState>;
-  savedBy?: string;
-}) {
-  const { data: intake, error: intakeError } = await supabaseAdmin
-    .from("ecom_intakes")
-    .select("*")
-    .eq("id", args.ecomIntakeId)
-    .maybeSingle();
-
+export async function saveEcommerceWorkspaceState(args: { ecomIntakeId: string; patch: Partial<EcommerceWorkspaceState>; savedBy?: string }) {
+  const { data: intake, error: intakeError } = await supabaseAdmin.from("ecom_intakes").select("*").eq("id", args.ecomIntakeId).maybeSingle();
   if (intakeError) return { ok: false as const, error: intakeError.message };
   if (!intake) return { ok: false as const, error: "E-commerce intake not found." };
 
   const quote = await ensureQuote(args.ecomIntakeId);
-  const current = normalizeEcommerceWorkspaceState({ intake, quote, call: null });
+  const recommendation = getEcommerceRecommendationForIntake(intake);
+  const current = normalizeEcommerceWorkspaceState({ intake, quote, call: null, recommendation });
 
   const next: EcommerceWorkspaceState = {
     ...current,
@@ -456,40 +502,31 @@ export async function saveEcommerceWorkspaceState(args: {
   const existingQuoteJson = asObj(quote?.quote_json);
   const nextQuoteJson = {
     ...existingQuoteJson,
+    pricingRecommendation: recommendation,
     agreement_status: next.agreementStatus,
     agreement_accepted_at: next.agreementAcceptedAt || null,
     deposit_notice: next.depositNotice || null,
     deposit_notice_sent_at: next.depositNoticeSentAt || null,
+    deposit: {
+      ...safeObj(existingQuoteJson.deposit),
+      session_id: next.depositSessionId || null,
+      url: next.depositUrl || null,
+      amount: next.depositAmount ?? null,
+      paid_at: next.depositPaidAt || null,
+      status: next.depositStatus || null,
+    },
     workspace: next,
   };
 
-  const payload: Record<string, unknown> = {
-    quote_json: nextQuoteJson,
-    updated_at: new Date().toISOString(),
-  };
-
-  const { error } = await supabaseAdmin
-    .from("ecom_quotes")
-    .update(payload)
-    .eq("id", quote.id);
-
+  const payload: Record<string, unknown> = { quote_json: nextQuoteJson, updated_at: new Date().toISOString() };
+  const { error } = await supabaseAdmin.from("ecom_quotes").update(payload).eq("id", quote.id);
   if (error) return { ok: false as const, error: error.message };
   return { ok: true as const };
 }
 
-export function makeClientSafeEcommerceBundle(
-  bundle: EcommerceWorkspaceBundle,
-  options?: { isAdmin?: boolean }
-): EcommerceWorkspaceBundle {
+export function makeClientSafeEcommerceBundle(bundle: EcommerceWorkspaceBundle, options?: { isAdmin?: boolean }): EcommerceWorkspaceBundle {
   if (options?.isAdmin) return bundle;
-
-  return {
-    ...bundle,
-    workspace: {
-      ...bundle.workspace,
-      internalNotes: "",
-    },
-  };
+  return { ...bundle, workspace: { ...bundle.workspace, internalNotes: "" } };
 }
 
 export async function getEcommerceAdminRows(): Promise<EcommerceAdminRow[]> {
@@ -513,10 +550,11 @@ export async function getEcommerceAdminRows(): Promise<EcommerceAdminRow[]> {
     if (!latestQuoteByIntake.has(quote.ecom_intake_id)) latestQuoteByIntake.set(quote.ecom_intake_id, quote);
   }
 
-  return (intakes ?? []).map((intake: any) => {
+  return ((intakes ?? []) as any[]).map((intake) => {
     const call = latestCallByIntake.get(intake.id) ?? null;
     const quote = latestQuoteByIntake.get(intake.id) ?? null;
-    const workspace = normalizeEcommerceWorkspaceState({ intake, quote, call });
+    const recommendation = getEcommerceRecommendationForIntake(intake);
+    const workspace = normalizeEcommerceWorkspaceState({ intake, quote, call, recommendation });
     return {
       ecomIntakeId: intake.id,
       createdAt: intake.created_at || null,
@@ -531,10 +569,9 @@ export async function getEcommerceAdminRows(): Promise<EcommerceAdminRow[]> {
       mode: workspace.mode,
       monthlyOrders: str(intake.monthly_orders, "—"),
       serviceSummary: workspace.serviceSummary,
-      links: {
-        detail: `/internal/admin/ecommerce/${intake.id}`,
-        portal: `/portal/ecommerce/${intake.id}`,
-      },
+      recommendationTier: recommendation.tierLabel,
+      recommendationRange: recommendation.displayRange,
+      links: { detail: `/internal/admin/ecommerce/${intake.id}`, portal: `/portal/ecommerce/${intake.id}` },
     };
   });
 }
