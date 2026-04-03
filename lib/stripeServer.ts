@@ -12,9 +12,12 @@ export function getBaseUrl(req: Request) {
 export async function stripeCreateCheckoutSession(opts: {
   amountUsdCents: number;
   customerEmail: string;
-  quoteId: string;
+  quoteId?: string;
   successUrl: string;
   cancelUrl: string;
+  productName?: string;
+  productDescription?: string;
+  metadata?: Record<string, string | number | boolean | null | undefined>;
 }) {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) throw new Error("Missing STRIPE_SECRET_KEY");
@@ -29,14 +32,21 @@ export async function stripeCreateCheckoutSession(opts: {
   params.append("line_items[0][quantity]", "1");
   params.append("line_items[0][price_data][currency]", "usd");
   params.append("line_items[0][price_data][unit_amount]", String(opts.amountUsdCents));
-  params.append("line_items[0][price_data][product_data][name]", "CrecyStudio Deposit");
+  params.append("line_items[0][price_data][product_data][name]", opts.productName || "CrecyStudio Deposit");
   params.append(
     "line_items[0][price_data][product_data][description]",
-    `Deposit for quote ${opts.quoteId}`
+    opts.productDescription || `Deposit for quote ${opts.quoteId || "project"}`
   );
 
-  // Metadata so we can confirm payment later
-  params.append("metadata[quoteId]", opts.quoteId);
+  const metadata = {
+    ...(opts.metadata || {}),
+    ...(opts.quoteId ? { quoteId: opts.quoteId } : {}),
+  };
+
+  for (const [key, value] of Object.entries(metadata)) {
+    if (value === null || value === undefined || value === "") continue;
+    params.append(`metadata[${key}]`, String(value));
+  }
 
   const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
     method: "POST",
@@ -83,7 +93,7 @@ export async function stripeGetCheckoutSession(sessionId: string) {
   return json as {
     id: string;
     url?: string;
-    payment_status?: string; // 'paid' when complete
+    payment_status?: string;
     amount_total?: number;
     currency?: string;
     customer_email?: string;
