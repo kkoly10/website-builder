@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CrecyStudio — prototype B</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3ede1;
+    --paper-2: #ebe4d4;
+    --ink: #0c0c0c;
+    --ink-2: #1a1a1a;
+    --muted: #6b6457;
+    --rule: #d8cfba;
+    --accent: #c2381f;       /* brick / signal red — confident, not gold, not cobalt */
+    --accent-soft: #e8c4ba;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper); color: var(--ink); }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  .wrap {
+    width: min(1320px, 92vw);
+    margin: 0 auto;
+  }
+
+  /* ─── NAV ─────────────────────────────── */
+  nav {
+    border-bottom: 1px solid var(--rule);
+    padding: 22px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; }
+  nav .brand { font-family: 'Inter Tight'; font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
+  nav .brand .dot { color: var(--accent); }
+  nav ul { display: flex; gap: 36px; list-style: none; }
+  nav ul a { color: var(--muted); transition: color .2s; }
+  nav ul a:hover { color: var(--ink); }
+  nav .cta {
+    background: var(--ink); color: var(--paper);
+    padding: 10px 18px; border-radius: 2px;
+    font-weight: 500;
+  }
+
+  /* ─── HERO ────────────────────────────── */
+  .hero { padding: 110px 0 90px; position: relative; }
+  .hero .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin-bottom: 38px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .hero .label::before {
+    content: ''; width: 28px; height: 1px; background: var(--accent);
+  }
+  .hero h1 {
+    font-family: 'Inter Tight', sans-serif;
+    font-size: clamp(56px, 9vw, 140px);
+    font-weight: 700;
+    line-height: 0.92;
+    letter-spacing: -0.045em;
+    max-width: 14ch;
+    margin-bottom: 44px;
+  }
+  .hero h1 .swap {
+    display: inline-block;
+    border-bottom: 4px solid var(--accent);
+    padding-bottom: 6px;
+  }
+  .hero .sub {
+    max-width: 56ch;
+    font-size: 21px;
+    line-height: 1.55;
+    color: var(--ink-2);
+    margin-bottom: 48px;
+  }
+  .hero .actions { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--ink); color: var(--paper);
+    padding: 18px 32px; font-size: 16px; font-weight: 500;
+    border: none; cursor: pointer; border-radius: 2px;
+    display: inline-flex; align-items: center; gap: 12px;
+  }
+  .btn-primary .arrow { transition: transform .2s; }
+  .btn-primary:hover .arrow { transform: translateX(4px); }
+  .btn-secondary {
+    padding: 18px 0; font-size: 16px;
+    border-bottom: 1px solid var(--ink);
+    color: var(--ink); font-weight: 500;
+  }
+
+  /* ─── PROOF BAR ───────────────────────── */
+  .proof {
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: 40px 0;
+  }
+  .proof .wrap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 36px; }
+  .proof .item .num {
+    font-family: 'Inter Tight';
+    font-size: 44px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .proof .item .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-top: 10px;
+  }
+
+  /* ─── DIFFERENTIATOR (the system as proof) ─── */
+  .diff { padding: 130px 0 110px; }
+  .diff .head {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 80px;
+    margin-bottom: 64px;
+    align-items: end;
+  }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .section-label::before { content: '/ '; color: var(--accent); }
+  .diff h2 {
+    font-family: 'Inter Tight';
+    font-size: clamp(36px, 5vw, 72px);
+    font-weight: 600;
+    line-height: 1.0;
+    letter-spacing: -0.035em;
+    margin-top: 24px;
+  }
+  .diff .lede {
+    font-size: 19px;
+    line-height: 1.6;
+    color: var(--ink-2);
+    max-width: 52ch;
+  }
+  .diff .lede strong { font-weight: 600; }
+
+  /* Faux portal mockup */
+  .portal-frame {
+    background: var(--ink);
+    border-radius: 6px;
+    padding: 14px 14px 0;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.05) inset,
+      0 30px 60px -20px rgba(12,12,12,.35),
+      0 60px 100px -40px rgba(12,12,12,.25);
+  }
+  .portal-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 0 14px;
+  }
+  .portal-bar .d { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.13); }
+  .portal-bar .url {
+    margin-left: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,.4);
+  }
+  .portal-body {
+    background: #0a0a0a;
+    padding: 38px 42px 42px;
+    border-radius: 4px 4px 0 0;
+    color: #e8e3d6;
+    font-family: 'Inter';
+  }
+  .portal-body .pkicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    margin-bottom: 18px;
+  }
+  .portal-body h3 {
+    font-family: 'Inter Tight';
+    font-size: 38px;
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    color: #f3ede1;
+    margin-bottom: 14px;
+  }
+  .portal-body h3 em { font-style: italic; color: var(--accent-soft); }
+  .portal-body .pcta {
+    display: inline-block;
+    color: var(--accent-soft);
+    font-size: 14px;
+    border-bottom: 1px solid var(--accent);
+    padding-bottom: 4px;
+    margin-bottom: 36px;
+  }
+  .journey {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0;
+    margin-bottom: 38px;
+    position: relative;
+  }
+  .journey::before {
+    content: '';
+    position: absolute;
+    top: 6px; left: 6px; right: 6px;
+    height: 1px;
+    background: rgba(255,255,255,.08);
+  }
+  .jstep { position: relative; padding-top: 22px; text-align: left; }
+  .jstep .dot {
+    position: absolute; top: 1px; left: 0;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #1c1c1c; border: 1px solid rgba(255,255,255,.18);
+  }
+  .jstep.done .dot { background: var(--accent); border-color: var(--accent); }
+  .jstep.now .dot {
+    background: #0a0a0a;
+    border: 2px solid var(--accent);
+    width: 14px; height: 14px;
+    box-shadow: 0 0 0 4px rgba(194,56,31,.18);
+  }
+  .jstep .name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: rgba(232,227,214,.5);
+    letter-spacing: 0.04em;
+  }
+  .jstep.now .name, .jstep.done .name { color: rgba(232,227,214,.85); }
+  .pgrid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+  }
+  .pcard {
+    border: 1px solid rgba(255,255,255,.08);
+    padding: 18px 18px 20px;
+    border-radius: 3px;
+    background: rgba(255,255,255,.015);
+  }
+  .pcard .ptitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: rgba(232,227,214,.45);
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+  }
+  .pcard .pval {
+    font-family: 'Inter Tight';
+    font-size: 22px;
+    font-weight: 500;
+    color: #f3ede1;
+    letter-spacing: -0.01em;
+  }
+  .pcard .pmeta {
+    font-size: 12px;
+    color: rgba(232,227,214,.5);
+    margin-top: 6px;
+  }
+  .pcard.live { border-color: rgba(194,56,31,.5); }
+  .pcard.live .pval { color: var(--accent-soft); }
+
+  /* ─── HOW IT WORKS ────────────────────── */
+  .how { padding: 120px 0; border-top: 1px solid var(--rule); }
+  .how .head { margin-bottom: 80px; max-width: 720px; }
+  .how h2 {
+    font-family: 'Inter Tight';
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 600;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    margin-top: 24px;
+  }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+  .step {
+    padding: 0 36px 0 0;
+    border-left: 1px solid var(--rule);
+    padding-left: 36px;
+  }
+  .step:first-child { padding-left: 0; border-left: none; }
+  .step .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 22px;
+  }
+  .step h3 {
+    font-family: 'Inter Tight';
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 14px;
+  }
+  .step p {
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  /* ─── PRICING ────────────────────────── */
+  .pricing { padding: 120px 0; border-top: 1px solid var(--rule); background: var(--paper-2); }
+  .pricing .head { display: grid; grid-template-columns: 1fr 1.2fr; gap: 80px; margin-bottom: 70px; align-items: end; }
+  .pricing h2 {
+    font-family: 'Inter Tight';
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 600;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    margin-top: 24px;
+  }
+  .pricing .lede { font-size: 18px; color: var(--ink-2); line-height: 1.6; max-width: 50ch; }
+  .tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .tier {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    padding: 36px 32px 32px;
+    border-radius: 4px;
+    display: flex; flex-direction: column;
+  }
+  .tier.featured { border: 1px solid var(--ink); position: relative; }
+  .tier.featured::before {
+    content: 'Most projects';
+    position: absolute;
+    top: -11px; left: 32px;
+    background: var(--accent);
+    color: var(--paper);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 5px 10px;
+    letter-spacing: 0.05em;
+  }
+  .tier .name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    margin-bottom: 18px;
+  }
+  .tier .price {
+    font-family: 'Inter Tight';
+    font-size: 48px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .tier .price .from { font-size: 14px; color: var(--muted); font-weight: 400; margin-right: 6px; }
+  .tier .desc {
+    color: var(--muted); font-size: 14px;
+    margin-top: 14px; padding-bottom: 22px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 22px;
+  }
+  .tier ul { list-style: none; font-size: 14px; line-height: 1.7; flex: 1; }
+  .tier ul li { padding-left: 18px; position: relative; }
+  .tier ul li::before {
+    content: '+'; position: absolute; left: 0; color: var(--accent); font-weight: 500;
+  }
+  .tier .pick {
+    margin-top: 28px;
+    padding: 14px 0;
+    text-align: center;
+    border: 1px solid var(--ink);
+    font-weight: 500;
+    cursor: pointer;
+    background: transparent;
+    color: var(--ink);
+    transition: all .2s;
+  }
+  .tier.featured .pick { background: var(--ink); color: var(--paper); }
+  .tier .pick:hover { background: var(--ink); color: var(--paper); }
+
+  /* ─── CLOSING / FOOTER ──────────────── */
+  .closing {
+    padding: 140px 0 100px;
+    border-top: 1px solid var(--rule);
+  }
+  .closing h2 {
+    font-family: 'Inter Tight';
+    font-size: clamp(48px, 7vw, 110px);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    max-width: 14ch;
+    margin-bottom: 56px;
+  }
+  .closing h2 em { font-style: italic; color: var(--accent); }
+  /* ─── ALSO OFFERED ──────────────────── */
+  .also {
+    border-top: 1px solid var(--rule);
+    padding: 56px 0;
+  }
+  .also .wrap {
+    display: grid;
+    grid-template-columns: 1fr 2.4fr;
+    gap: 60px;
+    align-items: start;
+  }
+  .also .heading {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .also .heading::before { content: '/ '; color: var(--accent); }
+  .also .lanes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+  }
+  .also .lane {
+    border-top: 1px solid var(--rule);
+    padding-top: 22px;
+  }
+  .also .lane h4 {
+    font-family: 'Inter Tight';
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+  }
+  .also .lane p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+  .also .lane a.link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 2px;
+  }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding: 36px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+
+  @media (max-width: 900px) {
+    .proof .wrap { grid-template-columns: repeat(2, 1fr); }
+    .diff .head, .pricing .head { grid-template-columns: 1fr; gap: 24px; }
+    .steps, .tiers { grid-template-columns: 1fr; }
+    .step { border-left: none; padding-left: 0; padding-bottom: 40px; border-bottom: 1px solid var(--rule); margin-bottom: 40px; }
+    .pgrid { grid-template-columns: 1fr; }
+    .portal-body { padding: 24px; }
+    .portal-body h3 { font-size: 26px; }
+    .also .wrap { grid-template-columns: 1fr; gap: 32px; }
+    .also .lanes { grid-template-columns: 1fr; gap: 28px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="wrap">
+      <div class="brand">crecy<span class="dot">.</span>studio</div>
+      <ul>
+        <li><a href="#">Work</a></li>
+        <li><a href="#">Process</a></li>
+        <li><a href="#">Pricing</a></li>
+        <li><a href="#">Journal</a></li>
+      </ul>
+      <a href="#" class="cta">Start a project →</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="wrap">
+      <div class="label">A web studio in Northern Virginia · est. 2024</div>
+      <h1>Websites that make your <span class="swap">phone ring.</span></h1>
+      <p class="sub">We build small business websites that earn trust in five seconds and turn visitors into customers — backed by a project workspace so you always know what's happening.</p>
+      <div class="actions">
+        <a href="#" class="btn-primary">Get a free estimate <span class="arrow">→</span></a>
+        <a href="#" class="btn-secondary">See how it works</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- PROOF BAR -->
+  <section class="proof">
+    <div class="wrap">
+      <div class="item"><div class="num">2–3 wk</div><div class="label">Typical delivery</div></div>
+      <div class="item"><div class="num">100%</div><div class="label">You own the code</div></div>
+      <div class="item"><div class="num">$0</div><div class="label">Until scope is approved</div></div>
+      <div class="item"><div class="num">Always</div><div class="label">Live project workspace</div></div>
+    </div>
+  </section>
+
+  <!-- DIFFERENTIATOR -->
+  <section class="diff">
+    <div class="wrap">
+      <div class="head">
+        <div>
+          <div class="section-label">The difference</div>
+          <h2>Your project lives in a workspace.</h2>
+        </div>
+        <p class="lede">Most studios send a PDF and disappear for three weeks. We built an entire client portal so you can <strong>see your milestones, review previews, leave feedback, and pay — all in one place.</strong> No chasing emails. No wondering where things stand.</p>
+      </div>
+
+      <!-- faux portal -->
+      <div class="portal-frame">
+        <div class="portal-bar">
+          <span class="d"></span><span class="d"></span><span class="d"></span>
+          <span class="url">crecy.studio/portal/sunrise-dental</span>
+        </div>
+        <div class="portal-body">
+          <div class="pkicker">▸ Website project</div>
+          <h3>Your website is <em>ready for review.</em></h3>
+          <a class="pcta" href="#">Open your preview →</a>
+
+          <div class="journey">
+            <div class="jstep done"><div class="dot"></div><div class="name">Intake</div></div>
+            <div class="jstep done"><div class="dot"></div><div class="name">Agreement</div></div>
+            <div class="jstep done"><div class="dot"></div><div class="name">Deposit</div></div>
+            <div class="jstep done"><div class="dot"></div><div class="name">Content</div></div>
+            <div class="jstep done"><div class="dot"></div><div class="name">Build</div></div>
+            <div class="jstep now"><div class="dot"></div><div class="name">Review</div></div>
+            <div class="jstep"><div class="dot"></div><div class="name">Launch</div></div>
+          </div>
+
+          <div class="pgrid">
+            <div class="pcard live">
+              <div class="ptitle">CURRENT MILESTONE</div>
+              <div class="pval">Client review</div>
+              <div class="pmeta">2 of 3 revisions used</div>
+            </div>
+            <div class="pcard">
+              <div class="ptitle">DEPOSIT</div>
+              <div class="pval">Paid</div>
+              <div class="pmeta">$1,800 · Mar 28</div>
+            </div>
+            <div class="pcard">
+              <div class="ptitle">EST. LAUNCH</div>
+              <div class="pval">Apr 22</div>
+              <div class="pmeta">on track</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how">
+    <div class="wrap">
+      <div class="head">
+        <div class="section-label">How it works</div>
+        <h2>Three weeks. No surprises.</h2>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="num">/ 01 — WEEK 1</div>
+          <h3>Tell us about your business</h3>
+          <p>You fill out a 10-minute intake. We send back a written scope, a fixed estimate, and a deposit link — usually within 48 hours. No sales calls unless you want one.</p>
+        </div>
+        <div class="step">
+          <div class="num">/ 02 — WEEK 2</div>
+          <h3>We build it</h3>
+          <p>You watch the site come together inside your workspace. Leave comments on any section, any page, any time. We answer in hours, not days.</p>
+        </div>
+        <div class="step">
+          <div class="num">/ 03 — WEEK 3</div>
+          <h3>Launch and own it</h3>
+          <p>We connect your domain, set up analytics, and hand you the keys. The code, the content, the data — all yours. Cancel us anytime, the site is still yours.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="pricing">
+    <div class="wrap">
+      <div class="head">
+        <div>
+          <div class="section-label">Pricing</div>
+          <h2>You see the price before you commit.</h2>
+        </div>
+        <p class="lede">Every project is scoped on what you actually need — no monthly hostage fees, no surprise add-ons. These are starting points.</p>
+      </div>
+      <div class="tiers">
+        <div class="tier">
+          <div class="name">/ STARTER</div>
+          <div class="price"><span class="from">from</span>$1,800</div>
+          <div class="desc">For a clean, credible single-page site that does one job well.</div>
+          <ul>
+            <li>Single-page custom design</li>
+            <li>Mobile + desktop</li>
+            <li>Contact form, click-to-call</li>
+            <li>Analytics + SEO basics</li>
+            <li>2 revision rounds</li>
+          </ul>
+          <button class="pick">Get a quote</button>
+        </div>
+        <div class="tier featured">
+          <div class="name">/ GROWTH</div>
+          <div class="price"><span class="from">from</span>$3,800</div>
+          <div class="desc">For most small businesses ready to look the part and convert.</div>
+          <ul>
+            <li>4–6 page custom site</li>
+            <li>Booking or lead capture</li>
+            <li>Photo direction + light copy</li>
+            <li>Google Business setup</li>
+            <li>3 revision rounds</li>
+          </ul>
+          <button class="pick">Get a quote</button>
+        </div>
+        <div class="tier">
+          <div class="name">/ PREMIUM</div>
+          <div class="price"><span class="from">from</span>$6,500</div>
+          <div class="desc">For businesses that need a real site with depth, content, and moving parts.</div>
+          <ul>
+            <li>8+ pages, full content system</li>
+            <li>E-commerce or member areas</li>
+            <li>Custom integrations</li>
+            <li>Conversion tracking dashboard</li>
+            <li>4 revision rounds</li>
+          </ul>
+          <button class="pick">Get a quote</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLOSING -->
+  <section class="closing">
+    <div class="wrap">
+      <h2>Let's make people <em>actually call you.</em></h2>
+      <a href="#" class="btn-primary">Start your free estimate <span class="arrow">→</span></a>
+    </div>
+  </section>
+
+  <!-- ALSO OFFERED -->
+  <section class="also">
+    <div class="wrap">
+      <div class="heading">Also offered</div>
+      <div class="lanes">
+        <div class="lane">
+          <h4>Workflow systems</h4>
+          <p>Custom automation for businesses drowning in spreadsheets, manual intake, and busywork. Built case by case.</p>
+          <a href="#" class="link">Talk to us about ops →</a>
+        </div>
+        <div class="lane">
+          <h4>E-commerce fixes</h4>
+          <p>Diagnostic and rebuild work for stores that are leaking conversions, broken on mobile, or stuck on the wrong platform.</p>
+          <a href="#" class="link">Talk to us about ecomm →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div>© 2026 CrecyStudio · Leesburg, VA</div>
+      <div>hello@crecy.studio</div>
+    </div>
+  </footer>
+
+</body>
+</html>

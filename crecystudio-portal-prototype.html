@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CrecyStudio portal — prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3ede1;
+    --paper-2: #ebe4d4;
+    --paper-3: #e3dcc8;
+    --ink: #0c0c0c;
+    --ink-2: #1a1a1a;
+    --ink-3: #2a2a2a;
+    --muted: #6b6457;
+    --muted-2: #8a8273;
+    --rule: #d8cfba;
+    --rule-2: #c8bfaa;
+    --accent: #c2381f;
+    --accent-2: #9d2c17;
+    --accent-soft: #e8c4ba;
+    --accent-bg: #f4dfd9;
+    --success: #2d5016;
+    --success-bg: #d9e3c8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper); color: var(--ink); }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; }
+
+  /* ─── TOP BAR ─────────────────────── */
+  .topbar {
+    border-bottom: 1px solid var(--rule);
+    padding: 18px 0;
+    background: var(--paper);
+  }
+  .wrap { width: min(1180px, 92vw); margin: 0 auto; }
+  .topbar .wrap { display: flex; align-items: center; justify-content: space-between; }
+  .brand {
+    font-family: 'Inter Tight';
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.02em;
+  }
+  .brand .dot { color: var(--accent); }
+  .topbar-right {
+    display: flex; align-items: center; gap: 28px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .topbar-right .live {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .topbar-right .live .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ─── PROJECT BREADCRUMB ─────────── */
+  .breadcrumb {
+    padding: 32px 0 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .breadcrumb .sep { color: var(--rule-2); margin: 0 10px; }
+  .breadcrumb .accent { color: var(--accent); }
+
+  /* ─── STORY HERO ──────────────────── */
+  .hero {
+    padding: 28px 0 56px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .hero .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .hero .label::before {
+    content: ''; width: 24px; height: 1px; background: var(--accent);
+  }
+  .hero h1 {
+    font-family: 'Inter Tight';
+    font-size: clamp(40px, 5.5vw, 72px);
+    font-weight: 600;
+    line-height: 1.0;
+    letter-spacing: -0.035em;
+    max-width: 18ch;
+    margin-bottom: 24px;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .hero .sub {
+    max-width: 58ch;
+    font-size: 17px;
+    color: var(--ink-2);
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+  .hero .actions { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .btn-primary {
+    background: var(--ink); color: var(--paper);
+    padding: 14px 26px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-radius: 2px;
+    display: inline-flex; align-items: center; gap: 10px;
+  }
+  .btn-primary .arrow { transition: transform .2s; }
+  .btn-primary:hover .arrow { transform: translateX(3px); }
+  .btn-secondary {
+    padding: 14px 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    border-bottom: 1px solid var(--ink);
+  }
+  .btn-tertiary {
+    padding: 14px 22px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--ink);
+    border-radius: 2px;
+  }
+
+  /* ─── DEPOSIT BANNER ──────────────── */
+  .deposit-banner {
+    margin-top: 32px;
+    padding: 22px 26px;
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .deposit-banner.paid {
+    background: var(--success-bg);
+    border-color: rgba(45, 80, 22, 0.2);
+    border-left-color: var(--success);
+  }
+  .deposit-banner .left h4 {
+    font-family: 'Inter Tight';
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+  .deposit-banner .left p {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .deposit-banner .check {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--success);
+    color: var(--paper);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+
+  /* ─── SECTION FRAME ───────────────── */
+  section.module { padding: 64px 0; border-bottom: 1px solid var(--rule); }
+  section.module:last-child { border-bottom: none; }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .section-label::before { content: '/ '; color: var(--accent); }
+  .section-title {
+    font-family: 'Inter Tight';
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+  .section-sub {
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 60ch;
+    margin-bottom: 36px;
+  }
+
+  /* ─── JOURNEY MAP ─────────────────── */
+  .journey {
+    position: relative;
+    padding: 24px 0 0;
+  }
+  .journey-track {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    position: relative;
+  }
+  .journey-line {
+    position: absolute;
+    top: 12px;
+    left: 6%;
+    right: 6%;
+    height: 1px;
+    background: var(--rule-2);
+  }
+  .journey-line-fill {
+    position: absolute;
+    top: 0; left: 0; height: 100%;
+    background: var(--accent);
+    transition: width .4s ease;
+  }
+  .jstep {
+    position: relative;
+    padding-top: 38px;
+    text-align: center;
+  }
+  .jstep .dot {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 1px solid var(--rule-2);
+    z-index: 2;
+  }
+  .jstep.done .dot {
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+  .jstep.now .dot {
+    background: var(--paper);
+    border: 2px solid var(--accent);
+    width: 16px;
+    height: 16px;
+    box-shadow: 0 0 0 4px var(--accent-bg);
+  }
+  .jstep .step-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted-2);
+    letter-spacing: 0.04em;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .jstep .step-name {
+    font-family: 'Inter Tight';
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .jstep:not(.done):not(.now) .step-name { color: var(--muted-2); }
+  .jstep.now .step-name { color: var(--accent); }
+
+  /* ─── 2-COL GRID ──────────────────── */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 56px;
+  }
+
+  /* ─── CARDS ───────────────────────── */
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 24px 26px;
+  }
+  .card.tight { padding: 18px 20px; }
+
+  /* ─── ASSETS PANEL ────────────────── */
+  .panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .panel-head h3 {
+    font-family: 'Inter Tight';
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .panel-head .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .asset-list { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+  .asset-row {
+    background: var(--paper);
+    padding: 16px 18px;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 16px;
+    align-items: center;
+  }
+  .asset-icon {
+    width: 36px; height: 36px;
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .asset-name {
+    font-family: 'Inter Tight';
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .asset-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+  }
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .badge.received { background: var(--success-bg); color: var(--success); }
+  .badge.submitted { background: var(--accent-bg); color: var(--accent); }
+  .badge.pending { background: var(--paper-2); color: var(--muted); border: 1px solid var(--rule); }
+
+  /* ─── UPLOAD ZONE ─────────────────── */
+  .upload-zone {
+    margin-top: 22px;
+    padding: 36px 24px;
+    border: 1px dashed var(--rule-2);
+    background: var(--paper);
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    border-radius: 2px;
+  }
+  .upload-zone:hover {
+    border-color: var(--accent);
+    background: var(--paper-2);
+  }
+  .upload-zone .icon {
+    width: 36px; height: 36px;
+    margin: 0 auto 12px;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-size: 18px;
+  }
+  .upload-zone .label {
+    font-family: 'Inter Tight';
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .upload-zone .label b { color: var(--accent); }
+  .upload-zone .hint {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* ─── SIDE: LAUNCH READINESS ─────── */
+  .readiness {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 24px 26px;
+  }
+  .readiness h3 {
+    font-family: 'Inter Tight';
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  .readiness .pct {
+    font-family: 'Inter Tight';
+    font-size: 56px;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin: 14px 0 6px;
+  }
+  .readiness .pct .denom {
+    font-size: 18px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .readiness .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin-bottom: 22px;
+  }
+  .progress-bar {
+    height: 4px;
+    background: var(--rule);
+    border-radius: 0;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .progress-bar .fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width .4s ease;
+  }
+  .check-list {
+    display: grid;
+    gap: 14px;
+    list-style: none;
+  }
+  .check-list li {
+    display: grid;
+    grid-template-columns: 18px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    font-size: 13px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .check-list li:last-child { border-bottom: none; padding-bottom: 0; }
+  .check-list .box {
+    width: 14px; height: 14px;
+    border: 1px solid var(--rule-2);
+    border-radius: 1px;
+    display: inline-block;
+  }
+  .check-list .box.done {
+    background: var(--ink);
+    border-color: var(--ink);
+    position: relative;
+  }
+  .check-list .box.done::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 4px;
+    width: 4px; height: 7px;
+    border: solid var(--paper);
+    border-width: 0 1.5px 1.5px 0;
+    transform: rotate(45deg);
+  }
+  .check-list li.done span:nth-child(2) { color: var(--ink); }
+  .check-list li:not(.done) span:nth-child(2) { color: var(--muted); }
+  .check-list .status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    color: var(--muted-2);
+  }
+
+  /* ─── REVISION FORM ───────────────── */
+  .revision-form {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 28px 32px;
+  }
+  .field-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .input, .textarea, .select {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--paper);
+    border: 1px solid var(--rule-2);
+    border-radius: 2px;
+    font-family: 'Inter';
+    font-size: 14px;
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+  .textarea {
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.6;
+    font-family: 'Inter';
+  }
+  .input:focus, .textarea:focus, .select:focus {
+    outline: none;
+    border-color: var(--ink);
+  }
+  .priority-row {
+    display: flex; gap: 8px; margin-bottom: 22px;
+  }
+  .priority-pill {
+    flex: 1;
+    padding: 10px 16px;
+    background: var(--paper);
+    border: 1px solid var(--rule-2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: center;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .priority-pill.active {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  /* ─── REVISION LIST ───────────────── */
+  .revision-list { display: grid; gap: 14px; margin-top: 30px; }
+  .revision-item {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--rule-2);
+    padding: 18px 20px;
+    border-radius: 2px;
+  }
+  .revision-item.priority-high { border-left-color: var(--accent); }
+  .revision-item.priority-normal { border-left-color: var(--ink); }
+  .revision-item .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .revision-item .head .who {
+    font-family: 'Inter Tight';
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .revision-item .head .when {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .revision-item .body {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+
+  /* ─── SCOPE / DETAILS PANEL ───────── */
+  .detail-rows {
+    display: grid;
+    gap: 0;
+  }
+  .detail-row {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 18px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 14px;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-row .k {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .detail-row .v {
+    color: var(--ink);
+    font-family: 'Inter';
+  }
+
+  /* ─── PRICE BLOCK ─────────────────── */
+  .price-block {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 32px 36px;
+    border-radius: 3px;
+  }
+  .price-block .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-soft);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .price-block .amt {
+    font-family: 'Inter Tight';
+    font-size: 48px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--paper);
+  }
+  .price-block .meta {
+    font-size: 13px;
+    color: rgba(243, 237, 225, 0.6);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+  .price-block .split {
+    margin-top: 22px;
+    padding-top: 22px;
+    border-top: 1px solid rgba(243, 237, 225, 0.12);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .price-block .split .col .lab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: rgba(243, 237, 225, 0.5);
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .price-block .split .col .val {
+    font-family: 'Inter Tight';
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--paper);
+  }
+  .price-block .split .col .val.paid { color: var(--accent-soft); }
+
+  /* ─── FOOTER ──────────────────────── */
+  footer {
+    border-top: 1px solid var(--rule);
+    padding: 36px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 24px;
+  }
+  footer .wrap {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  footer a { text-decoration: underline; }
+
+  @media (max-width: 900px) {
+    .grid-2 { grid-template-columns: 1fr; gap: 32px; }
+    .journey-track { grid-template-columns: 1fr; gap: 18px; }
+    .journey-line { display: none; }
+    .jstep { padding-top: 0; padding-left: 32px; text-align: left; }
+    .jstep .dot { left: 0; transform: none; top: 4px; }
+    .deposit-banner { flex-direction: column; align-items: flex-start; }
+    .topbar-right { display: none; }
+    .detail-row { grid-template-columns: 1fr; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="wrap">
+      <div class="brand">crecy<span class="dot">.</span>studio</div>
+      <div class="topbar-right">
+        <div class="live"><span class="dot"></span>Live · auto-updates every 30s</div>
+        <span>signed in · maria@sunrisedental.com</span>
+        <a href="#">Sign out</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- BREADCRUMB -->
+  <div class="wrap breadcrumb">
+    Portal <span class="sep">/</span> Website projects <span class="sep">/</span> <span class="accent">Sunrise Dental</span>
+  </div>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="wrap">
+      <div class="label">Website project · Growth tier · Started Mar 28</div>
+      <h1>Your website is <em>ready for review.</em></h1>
+      <p class="sub">We finished the first build of all six pages. Take your time looking through everything — when you're ready, leave feedback below or jump straight into the live preview to see it in your browser.</p>
+      <div class="actions">
+        <a href="#" class="btn-primary">Open your preview <span class="arrow">→</span></a>
+        <a href="#feedback" class="btn-tertiary">Leave feedback</a>
+        <a href="#" class="btn-secondary">Download contract</a>
+      </div>
+
+      <!-- DEPOSIT BANNER -->
+      <div class="deposit-banner paid">
+        <div class="left">
+          <h4><span class="check">✓</span>Deposit received · $1,800 USD</h4>
+          <p>Paid March 28, 2026 via Stripe · Project officially in motion</p>
+        </div>
+        <div class="meta" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--success); letter-spacing: 0.04em;">
+          REF · ch_3OK4T8
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- JOURNEY MAP -->
+  <section class="module">
+    <div class="wrap">
+      <div class="section-label">Your project journey</div>
+      <h2 class="section-title">Where we are right now</h2>
+      <p class="section-sub">Five of seven milestones complete. Currently in client review — once you approve, we move to launch prep.</p>
+
+      <div class="journey">
+        <div class="journey-track">
+          <div class="journey-line">
+            <div class="journey-line-fill" style="width: 78%;"></div>
+          </div>
+          <div class="jstep done">
+            <span class="dot"></span>
+            <span class="step-num">/ 01</span>
+            <div class="step-name">Intake</div>
+          </div>
+          <div class="jstep done">
+            <span class="dot"></span>
+            <span class="step-num">/ 02</span>
+            <div class="step-name">Agreement</div>
+          </div>
+          <div class="jstep done">
+            <span class="dot"></span>
+            <span class="step-num">/ 03</span>
+            <div class="step-name">Deposit</div>
+          </div>
+          <div class="jstep done">
+            <span class="dot"></span>
+            <span class="step-num">/ 04</span>
+            <div class="step-name">Content</div>
+          </div>
+          <div class="jstep done">
+            <span class="dot"></span>
+            <span class="step-num">/ 05</span>
+            <div class="step-name">Build</div>
+          </div>
+          <div class="jstep now">
+            <span class="dot"></span>
+            <span class="step-num">/ 06</span>
+            <div class="step-name">Review</div>
+          </div>
+          <div class="jstep">
+            <span class="dot"></span>
+            <span class="step-num">/ 07</span>
+            <div class="step-name">Launch</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCOPE + LAUNCH READINESS -->
+  <section class="module">
+    <div class="wrap">
+      <div class="grid-2">
+        <div>
+          <div class="section-label">Project details</div>
+          <h2 class="section-title">What we're building</h2>
+          <p class="section-sub">Your approved scope. If anything here doesn't match what you expected, leave feedback below and we'll discuss a change order.</p>
+
+          <div class="card">
+            <div class="detail-rows">
+              <div class="detail-row"><div class="k">Tier</div><div class="v">Growth — 6 page custom site</div></div>
+              <div class="detail-row"><div class="k">Platform</div><div class="v">Next.js (custom build)</div></div>
+              <div class="detail-row"><div class="k">Pages</div><div class="v">Home · About · Services · Team · Insurance · Contact</div></div>
+              <div class="detail-row"><div class="k">Features</div><div class="v">Online booking · Insurance form · Contact form · Click-to-call · Google Business setup</div></div>
+              <div class="detail-row"><div class="k">Timeline</div><div class="v">3 weeks · launch target Apr 22</div></div>
+              <div class="detail-row"><div class="k">Revisions</div><div class="v">3 rounds · 2 used</div></div>
+            </div>
+          </div>
+
+          <div class="price-block" style="margin-top: 18px;">
+            <div class="label">Project investment</div>
+            <div class="amt">$3,800</div>
+            <div class="meta">Fixed price · no surprises · includes build, revisions, launch, and 30 days post-launch support</div>
+            <div class="split">
+              <div class="col">
+                <div class="lab">DEPOSIT</div>
+                <div class="val paid">$1,800 paid</div>
+              </div>
+              <div class="col">
+                <div class="lab">REMAINING</div>
+                <div class="val">$2,000 due at launch</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="readiness">
+            <h3>Launch readiness</h3>
+            <div class="meta">5 of 7 checks complete</div>
+            <div class="pct">71<span class="denom">%</span></div>
+            <div class="progress-bar">
+              <div class="fill" style="width: 71%;"></div>
+            </div>
+            <ul class="check-list">
+              <li class="done">
+                <span class="box done"></span>
+                <span>Agreement signed</span>
+                <span class="status">DONE</span>
+              </li>
+              <li class="done">
+                <span class="box done"></span>
+                <span>Preview published</span>
+                <span class="status">DONE</span>
+              </li>
+              <li class="done">
+                <span class="box done"></span>
+                <span>Domain ready</span>
+                <span class="status">READY</span>
+              </li>
+              <li class="done">
+                <span class="box done"></span>
+                <span>Forms tested</span>
+                <span class="status">READY</span>
+              </li>
+              <li class="done">
+                <span class="box done"></span>
+                <span>SEO basics</span>
+                <span class="status">READY</span>
+              </li>
+              <li>
+                <span class="box"></span>
+                <span>Analytics installed</span>
+                <span class="status">PENDING</span>
+              </li>
+              <li>
+                <span class="box"></span>
+                <span>Final handoff doc</span>
+                <span class="status">PENDING</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ASSETS -->
+  <section class="module">
+    <div class="wrap">
+      <div class="section-label">Your content</div>
+      <h2 class="section-title">Files and brand assets</h2>
+      <p class="section-sub">Everything you've sent us. If you spot something missing, drop it in below.</p>
+
+      <div class="panel-head">
+        <h3>5 assets received</h3>
+        <div class="meta">LAST UPLOAD · 6 DAYS AGO</div>
+      </div>
+
+      <div class="asset-list">
+        <div class="asset-row">
+          <div class="asset-icon">PNG</div>
+          <div>
+            <div class="asset-name">Sunrise Dental logo (final)</div>
+            <div class="asset-meta">BRAND · 2.4 MB · Mar 29</div>
+          </div>
+          <div></div>
+          <span class="badge received">Received</span>
+        </div>
+        <div class="asset-row">
+          <div class="asset-icon">DOC</div>
+          <div>
+            <div class="asset-name">Homepage copy v3</div>
+            <div class="asset-meta">COPY · 18 KB · Mar 30</div>
+          </div>
+          <div></div>
+          <span class="badge received">Received</span>
+        </div>
+        <div class="asset-row">
+          <div class="asset-icon">JPG</div>
+          <div>
+            <div class="asset-name">Office photos (12 images)</div>
+            <div class="asset-meta">IMAGES · 48 MB · Apr 1</div>
+          </div>
+          <div></div>
+          <span class="badge received">Received</span>
+        </div>
+        <div class="asset-row">
+          <div class="asset-icon">URL</div>
+          <div>
+            <div class="asset-name">Insurance providers list</div>
+            <div class="asset-meta">COPY · Google Doc · Apr 2</div>
+          </div>
+          <div></div>
+          <span class="badge received">Received</span>
+        </div>
+        <div class="asset-row">
+          <div class="asset-icon">TXT</div>
+          <div>
+            <div class="asset-name">Team bios &amp; headshots</div>
+            <div class="asset-meta">COPY + IMAGES · 22 MB · Apr 3</div>
+          </div>
+          <div></div>
+          <span class="badge received">Received</span>
+        </div>
+      </div>
+
+      <div class="upload-zone">
+        <div class="icon">↑</div>
+        <div class="label">Drop files here or <b>browse</b></div>
+        <div class="hint">Logos, copy, photos, credentials — we'll sort them</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEEDBACK / REVISIONS -->
+  <section class="module" id="feedback">
+    <div class="wrap">
+      <div class="section-label">Feedback &amp; revisions</div>
+      <h2 class="section-title">Tell us what to change</h2>
+      <p class="section-sub">Anything from "the headline is too long" to "I don't love the photo on the about page." Be specific — we'll handle the rest.</p>
+
+      <div class="revision-form">
+        <label class="field-label">Your feedback</label>
+        <textarea class="textarea" placeholder="On the home page, the hero photo feels too dark. Can we try a brighter version?"></textarea>
+
+        <label class="field-label">Priority</label>
+        <div class="priority-row">
+          <button class="priority-pill">Low</button>
+          <button class="priority-pill active">Normal</button>
+          <button class="priority-pill">High</button>
+        </div>
+
+        <button class="btn-primary">Submit feedback <span class="arrow">→</span></button>
+      </div>
+
+      <div class="revision-list">
+        <div class="revision-item priority-high">
+          <div class="head">
+            <span class="who">Maria · 2 days ago</span>
+            <span class="when">REVISION ROUND 2 · HIGH PRIORITY</span>
+          </div>
+          <div class="body">The team page looks great but Dr. Patel's bio is missing her board certification line. Can you add "Board-certified by the American Board of Pediatric Dentistry" right after her name?</div>
+        </div>
+        <div class="revision-item priority-normal">
+          <div class="head">
+            <span class="who">Maria · 4 days ago</span>
+            <span class="when">REVISION ROUND 1 · NORMAL</span>
+          </div>
+          <div class="body">Love the homepage. One small thing — the "Book an appointment" button on mobile is a little hard to tap. Could we make it slightly bigger?</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div>© 2026 CrecyStudio · Project workspace for Sunrise Dental</div>
+      <div>Need help? <a href="mailto:hello@crecy.studio">hello@crecy.studio</a></div>
+    </div>
+  </footer>
+
+</body>
+</html>
