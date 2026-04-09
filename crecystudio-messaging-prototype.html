@@ -1,0 +1,1033 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CrecyStudio messaging — prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3ede1;
+    --paper-2: #ebe4d4;
+    --paper-3: #e3dcc8;
+    --paper-4: #ddd5be;
+    --ink: #0c0c0c;
+    --ink-2: #1a1a1a;
+    --ink-3: #2a2a2a;
+    --muted: #6b6457;
+    --muted-2: #8a8273;
+    --rule: #d8cfba;
+    --rule-2: #c8bfaa;
+    --accent: #c2381f;
+    --accent-2: #9d2c17;
+    --accent-soft: #e8c4ba;
+    --accent-bg: #f4dfd9;
+    --internal-bg: #ede5cf;
+    --success: #2d5016;
+    --success-bg: #d9e3c8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper); color: var(--ink); }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; }
+
+  .wrap { width: min(1320px, 92vw); margin: 0 auto; }
+
+  /* ─── TOP BAR ─────────────────────── */
+  .topbar {
+    border-bottom: 1px solid var(--rule);
+    padding: 18px 0;
+  }
+  .topbar .wrap { display: flex; align-items: center; justify-content: space-between; }
+  .brand {
+    font-family: 'Inter Tight';
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.02em;
+  }
+  .brand .dot { color: var(--accent); }
+  .topbar-right {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* ─── PAGE INTRO ──────────────────── */
+  .page-intro {
+    padding: 56px 0 36px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .page-intro .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .page-intro .label::before {
+    content: ''; width: 24px; height: 1px; background: var(--accent);
+  }
+  .page-intro h1 {
+    font-family: 'Inter Tight';
+    font-size: clamp(40px, 5vw, 64px);
+    font-weight: 600;
+    line-height: 1.0;
+    letter-spacing: -0.035em;
+    margin-bottom: 18px;
+    max-width: 18ch;
+  }
+  .page-intro h1 em { font-style: italic; color: var(--accent); }
+  .page-intro .sub {
+    max-width: 56ch;
+    font-size: 16px;
+    color: var(--ink-2);
+    line-height: 1.6;
+  }
+
+  /* ─── SECTION DIVIDER ─────────────── */
+  .view-section {
+    padding: 80px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .view-section:last-of-type { border-bottom: none; }
+  .view-head {
+    margin-bottom: 40px;
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 60px;
+    align-items: end;
+  }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .section-label::before { content: '/ '; color: var(--accent); }
+  .view-head h2 {
+    font-family: 'Inter Tight';
+    font-size: clamp(28px, 3.5vw, 42px);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    margin-top: 16px;
+  }
+  .view-head .desc {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 50ch;
+  }
+
+  /* ─── MESSAGING PANEL FRAME ──────── */
+  .panel {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .panel-header {
+    background: var(--paper-2);
+    border-bottom: 1px solid var(--rule);
+    padding: 22px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .panel-header .left .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+  .panel-header .left h3 {
+    font-family: 'Inter Tight';
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .panel-header .right {
+    display: flex; align-items: center; gap: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .phase-badge {
+    background: var(--accent-bg);
+    color: var(--accent);
+    border: 1px solid var(--accent-soft);
+    padding: 6px 12px;
+    border-radius: 2px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  /* ─── THREAD ──────────────────────── */
+  .thread {
+    padding: 36px 32px;
+    display: grid;
+    gap: 24px;
+    background: var(--paper);
+  }
+
+  /* ─── DAY SEPARATOR ───────────────── */
+  .day-sep {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 16px;
+    align-items: center;
+    margin: 8px 0 4px;
+  }
+  .day-sep::before, .day-sep::after {
+    content: '';
+    height: 1px;
+    background: var(--rule);
+  }
+  .day-sep span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted-2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ─── MESSAGE ─────────────────────── */
+  .msg {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 16px;
+  }
+  .msg .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter Tight';
+    font-weight: 600;
+    font-size: 14px;
+    border: 1px solid var(--rule-2);
+    background: var(--paper-2);
+    color: var(--ink);
+    margin-top: 2px;
+  }
+  .msg.from-studio .avatar {
+    background: var(--accent);
+    border-color: var(--accent-2);
+    color: var(--paper);
+  }
+  .msg .body-wrap {
+    display: grid;
+    gap: 6px;
+  }
+  .msg .head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .msg .who {
+    font-family: 'Inter Tight';
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .msg .role {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    padding: 2px 7px;
+    background: var(--paper-3);
+    border-radius: 1px;
+    text-transform: uppercase;
+  }
+  .msg.from-studio .role {
+    color: var(--accent);
+    background: var(--accent-bg);
+  }
+  .msg .when {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted-2);
+    letter-spacing: 0.04em;
+  }
+  .msg .body {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    padding: 14px 18px;
+    border-radius: 2px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink-2);
+    max-width: 62ch;
+  }
+  .msg.from-studio .body {
+    background: var(--paper);
+    border-color: var(--rule-2);
+    border-left: 3px solid var(--accent);
+  }
+  .msg .body p { margin: 0; }
+  .msg .body p + p { margin-top: 10px; }
+
+  /* Attachment chips inside message */
+  .attach-row {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--rule);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .attach {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+  }
+  .attach .ext {
+    font-size: 9px;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+  }
+  .msg .footer {
+    display: flex;
+    gap: 14px;
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted-2);
+    letter-spacing: 0.04em;
+  }
+  .msg .footer .read { color: var(--success); }
+
+  /* ─── INTERNAL NOTE ───────────────── */
+  .msg.internal .body {
+    background: var(--internal-bg);
+    border: 1px dashed var(--rule-2);
+    border-left: 3px solid var(--muted-2);
+  }
+  .msg.internal .role {
+    background: var(--muted);
+    color: var(--paper);
+  }
+  .msg.internal .avatar {
+    background: var(--paper-3);
+    border: 1px dashed var(--muted-2);
+    color: var(--muted);
+  }
+
+  /* ─── UNREAD INDICATOR ───────────── */
+  .msg.unread {
+    position: relative;
+  }
+  .msg.unread::before {
+    content: '';
+    position: absolute;
+    left: -16px;
+    top: 14px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .msg.unread .who::after {
+    content: 'NEW';
+    margin-left: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--accent);
+    background: var(--accent-bg);
+    padding: 2px 6px;
+    border-radius: 1px;
+    letter-spacing: 0.06em;
+  }
+
+  /* ─── COMPOSER ────────────────────── */
+  .composer {
+    border-top: 1px solid var(--rule);
+    background: var(--paper-2);
+    padding: 24px 28px;
+  }
+  .composer.internal-mode {
+    background: var(--internal-bg);
+    border-top: 1px dashed var(--rule-2);
+  }
+  .composer-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .composer-mode {
+    display: flex;
+    gap: 4px;
+  }
+  .mode-btn {
+    padding: 8px 14px;
+    background: transparent;
+    border: 1px solid var(--rule-2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-radius: 1px;
+  }
+  .mode-btn.active {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .mode-btn.internal.active {
+    background: var(--muted);
+    color: var(--paper);
+    border-color: var(--muted);
+  }
+  .composer-warning {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .composer textarea {
+    width: 100%;
+    background: var(--paper);
+    border: 1px solid var(--rule-2);
+    border-radius: 2px;
+    padding: 14px 16px;
+    font-family: 'Inter';
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink);
+    resize: vertical;
+    min-height: 90px;
+  }
+  .composer textarea:focus {
+    outline: none;
+    border-color: var(--ink);
+  }
+  .composer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    gap: 16px;
+  }
+  .composer-actions .left {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .icon-btn {
+    background: transparent;
+    border: 1px solid var(--rule-2);
+    padding: 9px 14px;
+    border-radius: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .icon-btn:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  .send-btn {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 12px 26px;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    border-radius: 2px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .send-btn .arrow { transition: transform .2s; }
+  .send-btn:hover .arrow { transform: translateX(3px); }
+
+  /* ─── ADMIN LAYOUT ────────────────── */
+  .admin-shell {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+  .conv-list {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+    position: sticky;
+    top: 24px;
+  }
+  .conv-list-head {
+    background: var(--paper-2);
+    border-bottom: 1px solid var(--rule);
+    padding: 18px 22px;
+  }
+  .conv-list-head h4 {
+    font-family: 'Inter Tight';
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+  .conv-list-head .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .conv-search {
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .conv-search input {
+    width: 100%;
+    background: var(--paper-2);
+    border: 1px solid var(--rule-2);
+    padding: 9px 12px;
+    border-radius: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+    letter-spacing: 0.02em;
+  }
+  .conv-search input::placeholder { color: var(--muted-2); }
+  .conv-items {
+    display: grid;
+  }
+  .conv-item {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--rule);
+    cursor: pointer;
+    display: grid;
+    gap: 6px;
+    position: relative;
+  }
+  .conv-item:last-child { border-bottom: none; }
+  .conv-item.active {
+    background: var(--paper-2);
+    border-left: 3px solid var(--accent);
+    padding-left: 19px;
+  }
+  .conv-item:hover:not(.active) { background: var(--paper-2); }
+  .conv-item .row1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .conv-item .name {
+    font-family: 'Inter Tight';
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .conv-item .time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--muted-2);
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+  }
+  .conv-item .preview {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.45;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .conv-item.has-unread .name::after {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .conv-item.has-unread .preview {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* ─── ANNOTATION (callout outside frame) ─── */
+  .annotation {
+    margin-top: 20px;
+    padding: 14px 18px;
+    background: transparent;
+    border-left: 2px solid var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+    line-height: 1.6;
+  }
+  .annotation b {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* ─── FOOTER ──────────────────────── */
+  footer {
+    border-top: 1px solid var(--rule);
+    padding: 36px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 24px;
+  }
+  footer .wrap {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  @media (max-width: 1000px) {
+    .view-head { grid-template-columns: 1fr; gap: 16px; }
+    .admin-shell { grid-template-columns: 1fr; }
+    .conv-list { position: static; }
+    .panel-header { flex-wrap: wrap; }
+    .msg { grid-template-columns: 36px 1fr; gap: 12px; }
+    .msg .body { max-width: none; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="wrap">
+      <div class="brand">crecy<span class="dot">.</span>studio</div>
+      <div class="topbar-right">Messaging prototype · v0.1</div>
+    </div>
+  </div>
+
+  <!-- PAGE INTRO -->
+  <div class="wrap">
+    <header class="page-intro">
+      <div class="label">Customer portal · Messaging</div>
+      <h1>A real conversation, <em>not another email thread.</em></h1>
+      <p class="sub">Two views of the same conversation. The client sees a clean, focused channel inside their project workspace. The studio sees a list of active threads with private internal notes for context.</p>
+    </header>
+  </div>
+
+  <!-- ─── CLIENT VIEW ─────────────── -->
+  <section class="view-section">
+    <div class="wrap">
+      <div class="view-head">
+        <div>
+          <div class="section-label">Client view</div>
+          <h2>What Maria sees</h2>
+        </div>
+        <p class="desc">Lives inside the project workspace as one section. Single channel — no folders, no threads, no inbox. Just the conversation with CrecyStudio about her project.</p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="left">
+            <div class="meta">SUNRISE DENTAL · WEBSITE PROJECT</div>
+            <h3>Conversation with CrecyStudio</h3>
+          </div>
+          <div class="right">
+            <span class="phase-badge">In review</span>
+            <span>· 6 messages</span>
+          </div>
+        </div>
+
+        <div class="thread">
+          <div class="day-sep"><span>April 4</span></div>
+
+          <!-- Studio message -->
+          <div class="msg from-studio">
+            <div class="avatar">C</div>
+            <div class="body-wrap">
+              <div class="head">
+                <span class="who">CrecyStudio</span>
+                <span class="role">Studio</span>
+                <span class="when">9:42 AM</span>
+              </div>
+              <div class="body">
+                <p>Hi Maria — your preview is up. I built all six pages including the team page with Dr. Patel, Dr. Chen, and Dr. Rodriguez. Take your time looking through everything, there's no rush.</p>
+                <p>One thing to flag: I used placeholder bios where the content was a bit thin. Happy to swap them out as soon as you have final copy.</p>
+                <div class="attach-row">
+                  <span class="attach"><span class="ext">URL</span>sunrise-dental-preview.crecy.studio</span>
+                </div>
+              </div>
+              <div class="footer">
+                <span class="read">Read · 9:48 AM</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Client message -->
+          <div class="msg from-client">
+            <div class="avatar">M</div>
+            <div class="body-wrap">
+              <div class="head">
+                <span class="who">Maria Chen</span>
+                <span class="role">You</span>
+                <span class="when">10:14 AM</span>
+              </div>
+              <div class="body">
+                <p>Just opened it on my phone — looks amazing! Way better than I was expecting honestly. One question: can we make Dr. Patel's bio a bit longer? She has a board certification I'd really like to highlight.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Studio reply -->
+          <div class="msg from-studio">
+            <div class="avatar">C</div>
+            <div class="body-wrap">
+              <div class="head">
+                <span class="who">CrecyStudio</span>
+                <span class="role">Studio</span>
+                <span class="when">10:31 AM</span>
+              </div>
+              <div class="body">
+                <p>Thank you, glad it landed well! Absolutely — send me the additional content whenever you're ready and I'll get it in. If you can also include the certification body name we'll format it consistently with the rest of the team page.</p>
+              </div>
+              <div class="footer">
+                <span class="read">Read · 10:35 AM</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="day-sep"><span>April 5 · today</span></div>
+
+          <!-- Client message with attachment -->
+          <div class="msg from-client">
+            <div class="avatar">M</div>
+            <div class="body-wrap">
+              <div class="head">
+                <span class="who">Maria Chen</span>
+                <span class="role">You</span>
+                <span class="when">8:22 AM</span>
+              </div>
+              <div class="body">
+                <p>Here's the updated bio for Dr. Patel. Board cert is from the American Board of Pediatric Dentistry.</p>
+                <div class="attach-row">
+                  <span class="attach"><span class="ext">DOCX</span>dr-patel-bio-final.docx</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Studio update -->
+          <div class="msg from-studio">
+            <div class="avatar">C</div>
+            <div class="body-wrap">
+              <div class="head">
+                <span class="who">CrecyStudio</span>
+                <span class="role">Studio</span>
+                <span class="when">11:48 AM</span>
+              </div>
+              <div class="body">
+                <p>Updated. Dr. Patel's expanded bio is live on the preview, board certification line included. While I was in there I also tightened the spacing between the team cards on mobile — let me know if you spot anything else.</p>
+              </div>
+              <div class="footer">
+                <span class="read">Read · 12:02 PM</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Latest client message -->
+          <div class="msg from-client">
+            <div class="avatar">M</div>
+            <div class="body-wrap">
+              <div class="head">
+                <span class="who">Maria Chen</span>
+                <span class="role">You</span>
+                <span class="when">2:14 PM · just sent</span>
+              </div>
+              <div class="body">
+                <p>This is wonderful! I think we're ready. When can we go live?</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Composer (client) -->
+        <div class="composer">
+          <textarea placeholder="Reply to CrecyStudio..."></textarea>
+          <div class="composer-actions">
+            <div class="left">
+              <button class="icon-btn">↑ Attach file</button>
+            </div>
+            <button class="send-btn">Send message <span class="arrow">→</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="annotation">
+        <b>NOTE ·</b> The client never sees internal notes, the conversation list, or any other clients. To them, this is just "the conversation" — one channel, one project, no inbox metaphor.
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── ADMIN VIEW ──────────────── -->
+  <section class="view-section">
+    <div class="wrap">
+      <div class="view-head">
+        <div>
+          <div class="section-label">Admin view</div>
+          <h2>What you see</h2>
+        </div>
+        <p class="desc">Same conversation from your side, with a sidebar showing all active client threads, private internal notes you can leave for context, and the ability to switch between reply mode and internal-note mode.</p>
+      </div>
+
+      <div class="admin-shell">
+
+        <!-- Sidebar -->
+        <aside class="conv-list">
+          <div class="conv-list-head">
+            <h4>All conversations</h4>
+            <div class="meta">5 ACTIVE · 2 UNREAD</div>
+          </div>
+          <div class="conv-search">
+            <input type="text" placeholder="search conversations..." />
+          </div>
+          <div class="conv-items">
+            <div class="conv-item active has-unread">
+              <div class="row1">
+                <span class="name">Sunrise Dental</span>
+                <span class="time">2:14 PM</span>
+              </div>
+              <div class="preview">This is wonderful! I think we're ready. When can we go live?</div>
+            </div>
+            <div class="conv-item has-unread">
+              <div class="row1">
+                <span class="name">Riverside Law</span>
+                <span class="time">11:08 AM</span>
+              </div>
+              <div class="preview">Quick question about the contact form — is there a way to route different inquiries to different attorneys?</div>
+            </div>
+            <div class="conv-item">
+              <div class="row1">
+                <span class="name">Hudson Bakery</span>
+                <span class="time">Yesterday</span>
+              </div>
+              <div class="preview">You: Sounds good, I'll send the updated mockups by Thursday end of day.</div>
+            </div>
+            <div class="conv-item">
+              <div class="row1">
+                <span class="name">Northpoint Coaching</span>
+                <span class="time">Apr 3</span>
+              </div>
+              <div class="preview">Perfect, thanks! Looking forward to launch day.</div>
+            </div>
+            <div class="conv-item">
+              <div class="row1">
+                <span class="name">Cedar &amp; Co.</span>
+                <span class="time">Apr 1</span>
+              </div>
+              <div class="preview">You: Welcome aboard. I'll have the intake summary ready tomorrow morning.</div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Main thread -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="left">
+              <div class="meta">SUNRISE DENTAL · WEBSITE PROJECT · MARIA CHEN</div>
+              <h3>Conversation</h3>
+            </div>
+            <div class="right">
+              <span class="phase-badge">In review</span>
+              <span>· 6 messages · 1 unread</span>
+            </div>
+          </div>
+
+          <div class="thread">
+            <div class="day-sep"><span>April 4</span></div>
+
+            <div class="msg from-studio">
+              <div class="avatar">C</div>
+              <div class="body-wrap">
+                <div class="head">
+                  <span class="who">You</span>
+                  <span class="role">Studio</span>
+                  <span class="when">9:42 AM</span>
+                </div>
+                <div class="body">
+                  <p>Hi Maria — your preview is up. I built all six pages including the team page with Dr. Patel, Dr. Chen, and Dr. Rodriguez. Take your time looking through everything, there's no rush.</p>
+                </div>
+                <div class="footer">
+                  <span class="read">Read · 9:48 AM</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- INTERNAL NOTE example -->
+            <div class="msg internal">
+              <div class="avatar">i</div>
+              <div class="body-wrap">
+                <div class="head">
+                  <span class="who">Internal note</span>
+                  <span class="role">Private</span>
+                  <span class="when">9:43 AM</span>
+                </div>
+                <div class="body">
+                  <p>Maria mentioned in the kickoff call she's nervous about her cousin's reaction to the new design (cousin is a designer). Be ready to defend the typography and color choices if she pushes back.</p>
+                </div>
+                <div class="footer">
+                  <span>Only visible to studio</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="msg from-client">
+              <div class="avatar">M</div>
+              <div class="body-wrap">
+                <div class="head">
+                  <span class="who">Maria Chen</span>
+                  <span class="role">Client</span>
+                  <span class="when">10:14 AM</span>
+                </div>
+                <div class="body">
+                  <p>Just opened it on my phone — looks amazing! Way better than I was expecting honestly. One question: can we make Dr. Patel's bio a bit longer? She has a board certification I'd really like to highlight.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="msg from-studio">
+              <div class="avatar">C</div>
+              <div class="body-wrap">
+                <div class="head">
+                  <span class="who">You</span>
+                  <span class="role">Studio</span>
+                  <span class="when">10:31 AM</span>
+                </div>
+                <div class="body">
+                  <p>Thank you, glad it landed well! Absolutely — send me the additional content whenever you're ready and I'll get it in.</p>
+                </div>
+                <div class="footer">
+                  <span class="read">Read · 10:35 AM</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="day-sep"><span>April 5 · today</span></div>
+
+            <div class="msg from-client">
+              <div class="avatar">M</div>
+              <div class="body-wrap">
+                <div class="head">
+                  <span class="who">Maria Chen</span>
+                  <span class="role">Client</span>
+                  <span class="when">8:22 AM</span>
+                </div>
+                <div class="body">
+                  <p>Here's the updated bio for Dr. Patel. Board cert is from the American Board of Pediatric Dentistry.</p>
+                  <div class="attach-row">
+                    <span class="attach"><span class="ext">DOCX</span>dr-patel-bio-final.docx</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="msg from-studio">
+              <div class="avatar">C</div>
+              <div class="body-wrap">
+                <div class="head">
+                  <span class="who">You</span>
+                  <span class="role">Studio</span>
+                  <span class="when">11:48 AM</span>
+                </div>
+                <div class="body">
+                  <p>Updated. Dr. Patel's expanded bio is live on the preview, board certification line included. While I was in there I also tightened the spacing between the team cards on mobile — let me know if you spot anything else.</p>
+                </div>
+                <div class="footer">
+                  <span class="read">Read · 12:02 PM</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- UNREAD message -->
+            <div class="msg from-client unread">
+              <div class="avatar">M</div>
+              <div class="body-wrap">
+                <div class="head">
+                  <span class="who">Maria Chen</span>
+                  <span class="role">Client</span>
+                  <span class="when">2:14 PM</span>
+                </div>
+                <div class="body">
+                  <p>This is wonderful! I think we're ready. When can we go live?</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Composer with mode toggle -->
+          <div class="composer">
+            <div class="composer-toolbar">
+              <div class="composer-mode">
+                <button class="mode-btn active">Reply to client</button>
+                <button class="mode-btn internal">Internal note</button>
+              </div>
+              <div class="composer-warning">CLIENT WILL RECEIVE EMAIL NOTIFICATION</div>
+            </div>
+            <textarea placeholder="Reply to Maria..."></textarea>
+            <div class="composer-actions">
+              <div class="left">
+                <button class="icon-btn">↑ Attach file</button>
+                <button class="icon-btn">⌖ Reference scope</button>
+                <button class="icon-btn">✓ Mark as resolved</button>
+              </div>
+              <button class="send-btn">Send reply <span class="arrow">→</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="annotation">
+        <b>NOTE ·</b> Internal notes have a dashed border and muted background so they're impossible to confuse with real messages. The composer toggle changes the entire footer color when set to internal mode, making it physically harder to send a private note to the client by mistake.
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div>© 2026 CrecyStudio · Messaging prototype</div>
+      <div>hello@crecy.studio</div>
+    </div>
+  </footer>
+
+</body>
+</html>
