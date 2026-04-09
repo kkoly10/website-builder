@@ -1,0 +1,940 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CrecyStudio — Websites</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3ede1;
+    --paper-2: #ebe4d4;
+    --paper-3: #e3dcc8;
+    --ink: #0c0c0c;
+    --ink-2: #1a1a1a;
+    --muted: #6b6457;
+    --muted-2: #8a8273;
+    --rule: #d8cfba;
+    --rule-2: #c8bfaa;
+    --accent: #c2381f;
+    --accent-soft: #e8c4ba;
+    --accent-bg: #f4dfd9;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper); color: var(--ink); }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; }
+
+  .wrap { width: min(1320px, 92vw); margin: 0 auto; }
+
+  /* ─── NAV ─────────────────────────── */
+  nav {
+    border-bottom: 1px solid var(--rule);
+    padding: 22px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; }
+  nav .brand { font-family: 'Inter Tight'; font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
+  nav .brand .dot { color: var(--accent); }
+  nav ul { display: flex; gap: 36px; list-style: none; }
+  nav ul a { color: var(--muted); transition: color .2s; }
+  nav ul a:hover { color: var(--ink); }
+  nav ul a.active { color: var(--ink); position: relative; }
+  nav ul a.active::after {
+    content: '';
+    position: absolute;
+    bottom: -27px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent);
+  }
+  nav .cta {
+    background: var(--ink); color: var(--paper);
+    padding: 10px 18px; border-radius: 2px;
+    font-weight: 500;
+  }
+
+  /* ─── SHARED SECTION ──────────────── */
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .section-label::before { content: '/ '; color: var(--accent); }
+
+  .h-display {
+    font-family: 'Inter Tight';
+    font-weight: 600;
+    line-height: 1.0;
+    letter-spacing: -0.035em;
+  }
+
+  /* ─── HERO ────────────────────────── */
+  .hero { padding: 100px 0 90px; }
+  .hero .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin-bottom: 36px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .hero .label::before {
+    content: ''; width: 28px; height: 1px; background: var(--accent);
+  }
+  .hero h1 {
+    font-family: 'Inter Tight';
+    font-size: clamp(48px, 7vw, 104px);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    max-width: 16ch;
+    margin-bottom: 36px;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .hero .sub {
+    max-width: 56ch;
+    font-size: 19px;
+    line-height: 1.6;
+    color: var(--ink-2);
+    margin-bottom: 44px;
+  }
+  .hero .actions { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--ink); color: var(--paper);
+    padding: 18px 32px; font-size: 15px; font-weight: 500;
+    border: none; cursor: pointer; border-radius: 2px;
+    display: inline-flex; align-items: center; gap: 12px;
+  }
+  .btn-primary .arrow { transition: transform .2s; }
+  .btn-primary:hover .arrow { transform: translateX(4px); }
+  .btn-secondary {
+    padding: 18px 0; font-size: 15px;
+    border-bottom: 1px solid var(--ink);
+    color: var(--ink); font-weight: 500;
+  }
+  .btn-tertiary {
+    padding: 18px 28px; font-size: 15px; font-weight: 500;
+    color: var(--ink); background: transparent;
+    border: 1px solid var(--ink); border-radius: 2px;
+  }
+
+  /* ─── PROOF BAR ───────────────────── */
+  .proof {
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: 40px 0;
+  }
+  .proof .wrap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 36px; }
+  .proof .item .num {
+    font-family: 'Inter Tight';
+    font-size: 42px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .proof .item .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-top: 10px;
+  }
+
+  /* ─── WHO / NOT SPLIT ─────────────── */
+  .who-section { padding: 120px 0; }
+  .who-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+  }
+  .who-col h3 {
+    font-family: 'Inter Tight';
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    margin-top: 18px;
+    margin-bottom: 32px;
+    max-width: 22ch;
+  }
+  .who-list { list-style: none; display: grid; gap: 18px; }
+  .who-list li {
+    padding-left: 32px;
+    position: relative;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  .who-col.fit .who-list li::before {
+    content: '+';
+    position: absolute;
+    left: 0;
+    top: -2px;
+    color: var(--accent);
+    font-size: 22px;
+    font-weight: 500;
+  }
+  .who-col.notfit .who-list li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--muted-2);
+    font-size: 18px;
+  }
+  .who-col.notfit .who-list li { color: var(--muted); }
+
+  /* ─── PROBLEMS GRID ───────────────── */
+  .problems-section {
+    padding: 120px 0;
+    background: var(--paper-2);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .problems-section .head { margin-bottom: 70px; max-width: 760px; }
+  .problems-section h2 {
+    font-family: 'Inter Tight';
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    margin-top: 24px;
+  }
+  .problems-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .problem {
+    padding: 40px 40px 40px 0;
+    border-bottom: 1px solid var(--rule);
+    border-right: 1px solid var(--rule);
+  }
+  .problem:nth-child(even) {
+    padding-left: 40px;
+    padding-right: 0;
+    border-right: none;
+  }
+  .problem:nth-last-child(-n+2) { border-bottom: none; padding-bottom: 0; }
+  .problem .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 18px;
+  }
+  .problem h4 {
+    font-family: 'Inter Tight';
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 14px;
+    max-width: 26ch;
+  }
+  .problem p {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.65;
+    max-width: 42ch;
+  }
+
+  /* ─── INCLUDES (WHAT YOU GET) ─────── */
+  .includes-section { padding: 120px 0; }
+  .includes-section .head { margin-bottom: 70px; max-width: 760px; }
+  .includes-section h2 {
+    font-family: 'Inter Tight';
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    margin-top: 24px;
+  }
+  .includes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+  .include-col {
+    padding: 0 36px;
+    border-left: 1px solid var(--rule);
+  }
+  .include-col:first-child { padding-left: 0; border-left: none; }
+  .include-col:last-child { padding-right: 0; }
+  .include-col .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 22px;
+  }
+  .include-col h3 {
+    font-family: 'Inter Tight';
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 22px;
+  }
+  .include-col ul {
+    list-style: none;
+    display: grid;
+    gap: 14px;
+  }
+  .include-col ul li {
+    padding-left: 22px;
+    position: relative;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+  .include-col ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10px;
+    width: 12px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  /* ─── PROCESS ─────────────────────── */
+  .process-section {
+    padding: 120px 0;
+    background: var(--ink);
+    color: var(--paper);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .process-section .head { margin-bottom: 70px; max-width: 760px; }
+  .process-section .section-label { color: rgba(243, 237, 225, 0.5); }
+  .process-section .section-label::before { color: var(--accent); }
+  .process-section h2 {
+    font-family: 'Inter Tight';
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    margin-top: 24px;
+    color: var(--paper);
+  }
+  .process-section .lede {
+    font-size: 17px;
+    line-height: 1.6;
+    color: rgba(243, 237, 225, 0.7);
+    max-width: 52ch;
+    margin-top: 18px;
+  }
+  .process-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+  .process-step {
+    padding: 32px 32px 0 0;
+    border-right: 1px solid rgba(243, 237, 225, 0.1);
+    position: relative;
+  }
+  .process-step:last-child { border-right: none; padding-right: 0; }
+  .process-step:not(:first-child) { padding-left: 32px; }
+  .process-step .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-soft);
+    letter-spacing: 0.08em;
+    margin-bottom: 24px;
+  }
+  .process-step h4 {
+    font-family: 'Inter Tight';
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--paper);
+    margin-bottom: 14px;
+    max-width: 18ch;
+  }
+  .process-step p {
+    color: rgba(243, 237, 225, 0.6);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 28ch;
+  }
+
+  /* ─── PRICING ─────────────────────── */
+  .pricing-section { padding: 120px 0; }
+  .pricing-section .head {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 80px;
+    margin-bottom: 70px;
+    align-items: end;
+  }
+  .pricing-section h2 {
+    font-family: 'Inter Tight';
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    margin-top: 24px;
+  }
+  .pricing-section .lede {
+    font-size: 17px;
+    color: var(--ink-2);
+    line-height: 1.6;
+    max-width: 52ch;
+  }
+  .tiers {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  .tier {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    padding: 40px 36px;
+    border-radius: 4px;
+    display: flex; flex-direction: column;
+  }
+  .tier.featured {
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    position: relative;
+  }
+  .tier.featured::before {
+    content: 'Most projects';
+    position: absolute;
+    top: -11px; left: 36px;
+    background: var(--accent);
+    color: var(--paper);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 5px 11px;
+    letter-spacing: 0.05em;
+  }
+  .tier .name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    margin-bottom: 22px;
+  }
+  .tier .price {
+    font-family: 'Inter Tight';
+    font-size: 52px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .tier .price .from {
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 400;
+    margin-right: 6px;
+  }
+  .tier .for {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 16px;
+    padding-bottom: 26px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 26px;
+    line-height: 1.55;
+  }
+  .tier ul {
+    list-style: none;
+    font-size: 14px;
+    line-height: 1.85;
+    flex: 1;
+  }
+  .tier ul li {
+    padding-left: 20px;
+    position: relative;
+  }
+  .tier ul li::before {
+    content: '+';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .tier .pick {
+    margin-top: 32px;
+    padding: 16px 0;
+    text-align: center;
+    border: 1px solid var(--ink);
+    font-weight: 500;
+    background: transparent;
+    color: var(--ink);
+    transition: all .2s;
+    font-size: 14px;
+  }
+  .tier.featured .pick { background: var(--ink); color: var(--paper); }
+  .tier .pick:hover { background: var(--ink); color: var(--paper); }
+
+  /* ─── FAQ ─────────────────────────── */
+  .faq-section {
+    padding: 120px 0;
+    border-top: 1px solid var(--rule);
+    background: var(--paper-2);
+  }
+  .faq-section .head { margin-bottom: 60px; max-width: 760px; }
+  .faq-section h2 {
+    font-family: 'Inter Tight';
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    margin-top: 24px;
+  }
+  .faq-list {
+    display: grid;
+    border-top: 1px solid var(--rule);
+  }
+  .faq-item {
+    padding: 36px 0;
+    border-bottom: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 80px 1fr 1.4fr;
+    gap: 40px;
+    align-items: start;
+  }
+  .faq-item .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    padding-top: 6px;
+  }
+  .faq-item .q {
+    font-family: 'Inter Tight';
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .faq-item .a {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--ink-2);
+  }
+
+  /* ─── CLOSING CTA ─────────────────── */
+  .closing { padding: 140px 0 110px; }
+  .closing h2 {
+    font-family: 'Inter Tight';
+    font-size: clamp(48px, 7vw, 96px);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    max-width: 16ch;
+    margin-bottom: 50px;
+  }
+  .closing h2 em { font-style: italic; color: var(--accent); }
+  .closing .actions { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+
+  /* ─── CROSS LINKS ─────────────────── */
+  .cross-section {
+    border-top: 1px solid var(--rule);
+    padding: 56px 0;
+  }
+  .cross-section .wrap {
+    display: grid;
+    grid-template-columns: 1fr 2.4fr;
+    gap: 60px;
+    align-items: start;
+  }
+  .cross-section .heading {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .cross-section .heading::before { content: '/ '; color: var(--accent); }
+  .cross-section .lanes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+  }
+  .cross-section .lane {
+    border-top: 1px solid var(--rule);
+    padding-top: 22px;
+  }
+  .cross-section .lane h4 {
+    font-family: 'Inter Tight';
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+  }
+  .cross-section .lane p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+  .cross-section .lane a.link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 2px;
+  }
+
+  /* ─── FOOTER ──────────────────────── */
+  footer {
+    border-top: 1px solid var(--rule);
+    padding: 36px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+
+  @media (max-width: 1000px) {
+    .who-grid, .pricing-section .head, .cross-section .wrap { grid-template-columns: 1fr; gap: 40px; }
+    .problems-grid, .includes-grid, .process-grid, .tiers, .cross-section .lanes { grid-template-columns: 1fr; }
+    .problem { padding: 32px 0 !important; border-right: none; }
+    .include-col { padding: 32px 0; border-left: none; border-top: 1px solid var(--rule); }
+    .include-col:first-child { padding-top: 0; border-top: none; }
+    .process-step { padding: 32px 0; border-right: none; border-bottom: 1px solid rgba(243, 237, 225, 0.1); }
+    .process-step:last-child { border-bottom: none; }
+    .process-step:not(:first-child) { padding-left: 0; }
+    .faq-item { grid-template-columns: 1fr; gap: 14px; }
+    .proof .wrap { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="wrap">
+      <div class="brand">crecy<span class="dot">.</span>studio</div>
+      <ul>
+        <li><a href="#" class="active">Websites</a></li>
+        <li><a href="#">Process</a></li>
+        <li><a href="#">Pricing</a></li>
+        <li><a href="#">Journal</a></li>
+      </ul>
+      <a href="#" class="cta">Start a project →</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="wrap">
+      <div class="label">Website building · For small businesses · 2–3 week delivery</div>
+      <h1>A website that makes people <em>trust your business</em> before they even call you.</h1>
+      <p class="sub">Your website is the first thing people check. If it looks outdated, loads slow, or doesn't explain what you do — you're losing customers before they reach out. We build custom websites that look professional, convert visitors, and actually represent how good your business is.</p>
+      <div class="actions">
+        <a href="#" class="btn-primary">Get a free estimate <span class="arrow">→</span></a>
+        <a href="#process" class="btn-tertiary">See how it works</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- PROOF BAR -->
+  <section class="proof">
+    <div class="wrap">
+      <div class="item"><div class="num">2–3 wk</div><div class="label">Typical delivery</div></div>
+      <div class="item"><div class="num">100%</div><div class="label">Custom · no templates</div></div>
+      <div class="item"><div class="num">$0</div><div class="label">Until scope is approved</div></div>
+      <div class="item"><div class="num">Yours</div><div class="label">Code, domain, content</div></div>
+    </div>
+  </section>
+
+  <!-- WHO / NOT SPLIT -->
+  <section class="who-section">
+    <div class="wrap">
+      <div class="who-grid">
+        <div class="who-col fit">
+          <div class="section-label">Who this is for</div>
+          <h3>Best for small businesses that need a credible online presence.</h3>
+          <ul class="who-list">
+            <li>Your current website looks like it was built in 2015 and you know it's hurting you.</li>
+            <li>You get traffic but nobody fills out your form, calls you, or books an appointment.</li>
+            <li>Your competitors' websites look better than yours, even though your service is superior.</li>
+            <li>You've been burned by a freelancer who disappeared, and you want a structured process.</li>
+          </ul>
+        </div>
+        <div class="who-col notfit">
+          <div class="section-label">Probably not the right fit</div>
+          <h3>Don't start here if your real problem is somewhere else.</h3>
+          <ul class="who-list">
+            <li>You mainly need an online store with product listings and checkout.</li>
+            <li>Your biggest problem is internal workflow chaos, not your public website.</li>
+            <li>You want the cheapest possible template site with no strategy behind it.</li>
+            <li>You're not ready to make decisions or share content for the next 30 days.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEMS -->
+  <section class="problems-section">
+    <div class="wrap">
+      <div class="head">
+        <div class="section-label">The real reasons your site isn't working</div>
+        <h2>Most small business websites fail for the same four reasons.</h2>
+      </div>
+      <div class="problems-grid">
+        <div class="problem">
+          <div class="num">/ 01</div>
+          <h4>Your homepage doesn't explain what you do in five seconds.</h4>
+          <p>Visitors land, get confused, and bounce. The first sentence has to do the heavy lifting — and most sites bury it in stock photos and a vague tagline.</p>
+        </div>
+        <div class="problem">
+          <div class="num">/ 02</div>
+          <h4>There's no clear next step for visitors to take.</h4>
+          <p>People want to be told what to do. No call button, no booking link, no obvious form — and you've handed them a reason to leave instead of converting.</p>
+        </div>
+        <div class="problem">
+          <div class="num">/ 03</div>
+          <h4>The site looks broken on phones, where most people browse.</h4>
+          <p>Two-thirds of your visitors are on mobile. If buttons are tiny, text is squished, or images don't load right — they assume your business is sloppy too.</p>
+        </div>
+        <div class="problem">
+          <div class="num">/ 04</div>
+          <h4>You have no idea who visits or where they drop off.</h4>
+          <p>Without analytics, you can't fix what you can't see. We set up tracking from day one so you actually know what's working and what's not.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INCLUDES (WHAT YOU GET) -->
+  <section class="includes-section">
+    <div class="wrap">
+      <div class="head">
+        <div class="section-label">What you get</div>
+        <h2>Strategy, build, and launch — all in one engagement.</h2>
+      </div>
+      <div class="includes-grid">
+        <div class="include-col">
+          <div class="num">/ 01 — STRATEGY</div>
+          <h3>Structure that converts</h3>
+          <ul>
+            <li>Pages planned around one goal: getting visitors to contact you</li>
+            <li>Messaging hierarchy so people understand your offer in seconds</li>
+            <li>Section flow designed around how real visitors scan and decide</li>
+            <li>Competitor research so we know what you're up against</li>
+          </ul>
+        </div>
+        <div class="include-col">
+          <div class="num">/ 02 — DESIGN &amp; BUILD</div>
+          <h3>Custom, fast, and yours</h3>
+          <ul>
+            <li>Custom responsive design — mobile-first, fast-loading</li>
+            <li>Contact forms, click-to-call, booking links — all set up</li>
+            <li>SEO basics, meta tags, and analytics ready at launch</li>
+            <li>Real CMS so you can edit text without breaking anything</li>
+          </ul>
+        </div>
+        <div class="include-col">
+          <div class="num">/ 03 — LAUNCH &amp; HANDOFF</div>
+          <h3>Live, owned, and supported</h3>
+          <ul>
+            <li>Full QA before we push anything live</li>
+            <li>Domain connection, SSL, and analytics setup</li>
+            <li>You own everything — code, domain, content, data</li>
+            <li>30 days post-launch support included</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROCESS -->
+  <section class="process-section" id="process">
+    <div class="wrap">
+      <div class="head">
+        <div class="section-label">How it works</div>
+        <h2>Four steps. No surprises.</h2>
+        <p class="lede">You'll always know where things stand. No disappearing freelancers, no vague timelines, no wondering if we're still working on it.</p>
+      </div>
+      <div class="process-grid">
+        <div class="process-step">
+          <div class="num">/ 01 — DAY 1</div>
+          <h4>Tell us what you need</h4>
+          <p>Fill out a 10-minute intake about your business, goals, and timeline. No sales call required to get started.</p>
+        </div>
+        <div class="process-step">
+          <div class="num">/ 02 — DAY 2</div>
+          <h4>Get a detailed estimate</h4>
+          <p>Our system scores your project and generates a scope with pricing, pages, features, and timeline — usually within 24 hours.</p>
+        </div>
+        <div class="process-step">
+          <div class="num">/ 03 — WEEK 1–3</div>
+          <h4>We build, you review live</h4>
+          <p>You see a live preview, upload content, and submit feedback. Everything happens in your private workspace — no scattered emails.</p>
+        </div>
+        <div class="process-step">
+          <div class="num">/ 04 — LAUNCH DAY</div>
+          <h4>Launch and own it</h4>
+          <p>Domain connected, analytics set up, forms tested, SEO basics done. We hand you the keys. The code is yours.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="pricing-section">
+    <div class="wrap">
+      <div class="head">
+        <div>
+          <div class="section-label">Pricing</div>
+          <h2>You see the price before you commit.</h2>
+        </div>
+        <p class="lede">Every project is scoped on what you actually need — no monthly hostage fees, no surprise add-ons. Pick a starting point and we'll send a fixed estimate within 24 hours.</p>
+      </div>
+      <div class="tiers">
+        <div class="tier">
+          <div class="name">/ STARTER</div>
+          <div class="price"><span class="from">from</span>$1,800</div>
+          <div class="for">For a clean, credible single-page site that does one job well.</div>
+          <ul>
+            <li>Single-page custom design</li>
+            <li>Mobile + desktop responsive</li>
+            <li>Contact form, click-to-call</li>
+            <li>Analytics + SEO basics</li>
+            <li>2 revision rounds</li>
+            <li>30 days post-launch support</li>
+          </ul>
+          <button class="pick">Get a quote</button>
+        </div>
+        <div class="tier featured">
+          <div class="name">/ GROWTH</div>
+          <div class="price"><span class="from">from</span>$3,800</div>
+          <div class="for">For most small businesses ready to look the part and convert.</div>
+          <ul>
+            <li>4–6 page custom site</li>
+            <li>Booking or lead capture</li>
+            <li>Photo direction + light copy</li>
+            <li>Google Business setup</li>
+            <li>Conversion tracking</li>
+            <li>3 revision rounds</li>
+          </ul>
+          <button class="pick">Get a quote</button>
+        </div>
+        <div class="tier">
+          <div class="name">/ PREMIUM</div>
+          <div class="price"><span class="from">from</span>$6,500</div>
+          <div class="for">For businesses that need real depth, content, and moving parts.</div>
+          <ul>
+            <li>8+ pages, full content system</li>
+            <li>E-commerce or member areas</li>
+            <li>Custom integrations</li>
+            <li>Conversion tracking dashboard</li>
+            <li>Advanced SEO + speed optimization</li>
+            <li>4 revision rounds</li>
+          </ul>
+          <button class="pick">Get a quote</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq-section">
+    <div class="wrap">
+      <div class="head">
+        <div class="section-label">Common questions</div>
+        <h2>Everything people ask before signing.</h2>
+      </div>
+      <div class="faq-list">
+        <div class="faq-item">
+          <div class="num">/ 01</div>
+          <div class="q">How long does a website build actually take?</div>
+          <div class="a">Most builds land between 2 and 4 weeks depending on page count, content readiness, and revisions. You'll see a fixed timeline in your estimate before committing — and we hold to it. The biggest variable is how fast you can review and approve work.</div>
+        </div>
+        <div class="faq-item">
+          <div class="num">/ 02</div>
+          <div class="q">Do you write the copy or just design?</div>
+          <div class="a">Either way works. We can build from your existing copy, restructure it, or write it with you from scratch. Full copywriting increases scope but usually improves the result significantly — especially for service businesses where the words do the selling.</div>
+        </div>
+        <div class="faq-item">
+          <div class="num">/ 03</div>
+          <div class="q">Can you redesign my existing site instead of starting from zero?</div>
+          <div class="a">Yes — if the foundation is usable. We can improve structure, visuals, and conversion flow without rebuilding everything from scratch. If your current site is on Wix or Squarespace and you're locked in, we can usually migrate you to something you actually own.</div>
+        </div>
+        <div class="faq-item">
+          <div class="num">/ 04</div>
+          <div class="q">What happens after I submit the estimate form?</div>
+          <div class="a">You get a detailed scope with pricing within 24 hours — no sales call required. If you want to move forward, we schedule a quick planning call, you pay a 50% deposit, and we start building. Everything happens in your private project workspace.</div>
+        </div>
+        <div class="faq-item">
+          <div class="num">/ 05</div>
+          <div class="q">What if I need ongoing changes after launch?</div>
+          <div class="a">You own the code and can edit it yourself or hire anyone to maintain it — no lock-in. We also offer optional monthly support if you want us to handle updates, changes, and new pages on retainer. Most clients start without it and add it later if they need it.</div>
+        </div>
+        <div class="faq-item">
+          <div class="num">/ 06</div>
+          <div class="q">What if I'm not happy with the design?</div>
+          <div class="a">Every tier includes multiple revision rounds. We share early concepts before going deep, so course corrections happen when they're cheap — not after the whole site is built. In four years we've never had a project we couldn't bring across the finish line.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLOSING -->
+  <section class="closing">
+    <div class="wrap">
+      <h2>Let's make people <em>actually call you.</em></h2>
+      <div class="actions">
+        <a href="#" class="btn-primary">Start your free estimate <span class="arrow">→</span></a>
+        <a href="#" class="btn-secondary">Talk to a human first</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CROSS LINKS / ALSO OFFERED -->
+  <section class="cross-section">
+    <div class="wrap">
+      <div class="heading">Also offered</div>
+      <div class="lanes">
+        <div class="lane">
+          <h4>Workflow systems</h4>
+          <p>Custom automation for businesses drowning in spreadsheets, manual intake, and busywork.</p>
+          <a href="#" class="link">Talk to us about ops →</a>
+        </div>
+        <div class="lane">
+          <h4>E-commerce fixes</h4>
+          <p>Diagnostic and rebuild work for stores leaking conversions or stuck on the wrong platform.</p>
+          <a href="#" class="link">Talk to us about ecomm →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div>© 2026 CrecyStudio · Leesburg, VA</div>
+      <div>hello@crecy.studio</div>
+    </div>
+  </footer>
+
+</body>
+</html>
