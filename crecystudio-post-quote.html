@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CrecyStudio — your estimate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3ede1;
+    --paper-2: #ebe4d4;
+    --paper-3: #e3dcc8;
+    --paper-4: #ddd5be;
+    --ink: #0c0c0c;
+    --ink-2: #1a1a1a;
+    --ink-3: #2a2a2a;
+    --muted: #6b6457;
+    --muted-2: #8a8273;
+    --rule: #d8cfba;
+    --rule-2: #c8bfaa;
+    --accent: #c2381f;
+    --accent-2: #9d2c17;
+    --accent-soft: #e8c4ba;
+    --accent-bg: #f4dfd9;
+    --success: #2d5016;
+    --success-bg: #d9e3c8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper); color: var(--ink); }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; }
+
+  .wrap { width: min(1180px, 92vw); margin: 0 auto; }
+
+  /* ─── NAV ─────────────────────────── */
+  nav {
+    border-bottom: 1px solid var(--rule);
+    padding: 22px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; }
+  nav .brand { font-family: 'Inter Tight'; font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
+  nav .brand .dot { color: var(--accent); }
+  nav .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  /* ─── BREADCRUMB ──────────────────── */
+  .breadcrumb {
+    padding: 32px 0 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .breadcrumb .sep { color: var(--rule-2); margin: 0 10px; }
+  .breadcrumb .accent { color: var(--accent); }
+
+  /* ─── HERO ────────────────────────── */
+  .hero {
+    padding: 32px 0 72px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .hero .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin-bottom: 32px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .hero .label::before {
+    content: ''; width: 28px; height: 1px; background: var(--accent);
+  }
+  .hero h1 {
+    font-family: 'Inter Tight';
+    font-size: clamp(48px, 6.5vw, 88px);
+    font-weight: 600;
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    max-width: 18ch;
+    margin-bottom: 28px;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .hero .sub {
+    max-width: 58ch;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  .hero .sub b { font-weight: 600; }
+
+  /* ─── SECTION FRAME ───────────────── */
+  section.module {
+    padding: 72px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  section.module:last-of-type { border-bottom: none; }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .section-label::before { content: '/ '; color: var(--accent); }
+  .section-title {
+    font-family: 'Inter Tight';
+    font-size: clamp(30px, 4vw, 44px);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: 12px;
+  }
+  .section-sub {
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 58ch;
+    line-height: 1.6;
+    margin-bottom: 40px;
+  }
+
+  /* ─── SCOPE OVERVIEW ──────────────── */
+  .scope-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 24px;
+  }
+  .scope-card {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 36px 40px;
+  }
+  .scope-card h3 {
+    font-family: 'Inter Tight';
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .scope-rows { display: grid; gap: 0; }
+  .scope-row {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 20px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 15px;
+  }
+  .scope-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .scope-row .k {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding-top: 2px;
+  }
+  .scope-row .v {
+    color: var(--ink);
+    line-height: 1.55;
+  }
+
+  /* ─── PRICE BLOCK (inverted ink) ─── */
+  .price-block {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 40px 44px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+  }
+  .price-block .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-soft);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .price-block .amt {
+    font-family: 'Inter Tight';
+    font-size: 72px;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    line-height: 0.9;
+    color: var(--paper);
+  }
+  .price-block .meta {
+    font-size: 14px;
+    color: rgba(243, 237, 225, 0.65);
+    margin-top: 14px;
+    line-height: 1.55;
+  }
+  .price-block .meta b { color: var(--paper); font-weight: 500; }
+  .price-block .split {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(243, 237, 225, 0.15);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .price-block .split .col .lab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: rgba(243, 237, 225, 0.5);
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .price-block .split .col .val {
+    font-family: 'Inter Tight';
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--paper);
+    letter-spacing: -0.01em;
+  }
+  .price-block .split .col .val.accent { color: var(--accent-soft); }
+  .price-block .accept {
+    margin-top: auto;
+    padding-top: 28px;
+  }
+  .price-block .btn {
+    width: 100%;
+    background: var(--accent);
+    color: var(--paper);
+    border: none;
+    padding: 18px 22px;
+    border-radius: 2px;
+    font-family: 'Inter';
+    font-size: 15px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .price-block .btn .arrow { transition: transform .2s; }
+  .price-block .btn:hover { background: var(--accent-2); }
+  .price-block .btn:hover .arrow { transform: translateX(4px); }
+  .price-block .fineprint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: rgba(243, 237, 225, 0.45);
+    letter-spacing: 0.04em;
+    text-align: center;
+    margin-top: 6px;
+  }
+
+  /* ─── INCLUDED LIST (3 col) ──────── */
+  .included {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--rule);
+    margin-top: 20px;
+  }
+  .included .col {
+    padding: 32px 32px 0 0;
+    border-right: 1px solid var(--rule);
+  }
+  .included .col:nth-child(2) { padding-left: 32px; padding-right: 32px; }
+  .included .col:last-child { padding-right: 0; padding-left: 32px; border-right: none; }
+  .included .col .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    margin-bottom: 16px;
+  }
+  .included .col h4 {
+    font-family: 'Inter Tight';
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+  .included .col ul {
+    list-style: none;
+    display: grid;
+    gap: 10px;
+  }
+  .included .col ul li {
+    padding-left: 18px;
+    position: relative;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+  .included .col ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 9px;
+    width: 10px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  /* ─── PROCESS (horizontal steps) ─── */
+  .process-section {
+    background: var(--paper-2);
+    border-bottom: 1px solid var(--rule);
+  }
+  .process-steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-top: 24px;
+  }
+  .step {
+    padding: 32px 28px 0 0;
+    border-right: 1px solid var(--rule);
+    position: relative;
+  }
+  .step:last-child { border-right: none; padding-right: 0; }
+  .step:not(:first-child) { padding-left: 28px; }
+  .step .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    margin-bottom: 20px;
+  }
+  .step h4 {
+    font-family: 'Inter Tight';
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+  .step p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 32ch;
+  }
+
+  /* ─── TIER CONTEXT ─────────────── */
+  .context-intro {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 60px;
+    align-items: end;
+    margin-bottom: 44px;
+  }
+  .context-intro h2 {
+    font-family: 'Inter Tight';
+    font-size: 36px;
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-top: 16px;
+  }
+  .context-intro .lede {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: 52ch;
+  }
+
+  .tier-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .tier-mini {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    padding: 28px 28px 32px;
+    border-radius: 3px;
+    position: relative;
+  }
+  .tier-mini.yours {
+    background: var(--paper);
+    border: 2px solid var(--accent);
+    padding: 27px 27px 31px;
+  }
+  .tier-mini.yours::before {
+    content: 'Your tier';
+    position: absolute;
+    top: -11px;
+    left: 28px;
+    background: var(--accent);
+    color: var(--paper);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 5px 11px;
+    letter-spacing: 0.06em;
+  }
+  .tier-mini .name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    margin-bottom: 14px;
+  }
+  .tier-mini .range {
+    font-family: 'Inter Tight';
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .tier-mini.yours .range { color: var(--accent); }
+  .tier-mini .desc {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.55;
+    margin-top: 12px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule);
+  }
+  .tier-mini .details {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted-2);
+    letter-spacing: 0.04em;
+    margin-top: 14px;
+  }
+
+  /* ─── FAQ STRIP ────────────────── */
+  .faq-strip {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 40px 60px;
+    padding-top: 40px;
+    margin-top: 40px;
+    border-top: 1px solid var(--rule);
+  }
+  .faq-item .q {
+    font-family: 'Inter Tight';
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 8px;
+  }
+  .faq-item .a {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.65;
+  }
+
+  /* ─── CLOSING CTA ────────────────── */
+  .closing {
+    padding: 100px 0;
+    background: var(--paper);
+  }
+  .closing .inner {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 60px;
+    align-items: center;
+  }
+  .closing h2 {
+    font-family: 'Inter Tight';
+    font-size: clamp(40px, 5vw, 64px);
+    font-weight: 600;
+    line-height: 1.0;
+    letter-spacing: -0.035em;
+    margin-bottom: 24px;
+    max-width: 16ch;
+  }
+  .closing h2 em { font-style: italic; color: var(--accent); }
+  .closing .sub {
+    font-size: 16px;
+    color: var(--muted);
+    line-height: 1.6;
+    max-width: 52ch;
+  }
+  .closing .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .btn-primary-large {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 22px 36px;
+    font-family: 'Inter';
+    font-size: 15px;
+    font-weight: 500;
+    border: none;
+    border-radius: 2px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+  .btn-primary-large .arrow { transition: transform .2s; }
+  .btn-primary-large:hover .arrow { transform: translateX(4px); }
+  .btn-outline-large {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    padding: 22px 36px;
+    font-family: 'Inter';
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 2px;
+  }
+  .closing .fineprint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted-2);
+    letter-spacing: 0.04em;
+    margin-top: 16px;
+    text-align: center;
+  }
+
+  /* ─── FOOTER ──────────────────────── */
+  footer {
+    border-top: 1px solid var(--rule);
+    padding: 36px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  footer .wrap {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  @media (max-width: 1000px) {
+    .scope-grid { grid-template-columns: 1fr; }
+    .included, .process-steps { grid-template-columns: 1fr; }
+    .included .col, .step {
+      padding: 28px 0 !important;
+      border-right: none;
+      border-bottom: 1px solid var(--rule);
+    }
+    .included .col:last-child, .step:last-child { border-bottom: none; }
+    .tier-row { grid-template-columns: 1fr; }
+    .context-intro { grid-template-columns: 1fr; gap: 20px; }
+    .closing .inner { grid-template-columns: 1fr; gap: 40px; }
+    .faq-strip { grid-template-columns: 1fr; }
+    .price-block .amt { font-size: 52px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="wrap">
+      <div class="brand">crecy<span class="dot">.</span>studio</div>
+      <div class="meta">Est. ref · QT-SUN-0428 · Valid 14 days</div>
+    </div>
+  </nav>
+
+  <!-- BREADCRUMB -->
+  <div class="wrap breadcrumb">
+    Your project <span class="sep">/</span> <span class="accent">Estimate for Sunrise Dental</span>
+  </div>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="wrap">
+      <div class="label">Your personalized estimate · Scoped for Sunrise Dental · March 28, 2026</div>
+      <h1>Here's what we'd build for <em>Sunrise Dental.</em></h1>
+      <p class="sub">Based on your intake, we've scoped a <b>6-page custom website</b> with booking integration, an insurance lookup form, and Google Business setup. Everything below is specific to your project — the pages, the features, the timeline, the price. If anything looks off, you can message us and we'll adjust.</p>
+    </div>
+  </header>
+
+  <!-- SCOPE + PRICE -->
+  <section class="module">
+    <div class="wrap">
+      <div class="section-label">Your project</div>
+      <h2 class="section-title">Scope and investment</h2>
+      <p class="section-sub">This is a fixed-price engagement. No hourly billing, no surprise line items. You pay a 50% deposit to start, the remaining balance at launch.</p>
+
+      <div class="scope-grid">
+        <!-- Scope card -->
+        <div class="scope-card">
+          <h3>What we'll build</h3>
+          <div class="scope-rows">
+            <div class="scope-row">
+              <div class="k">PAGES</div>
+              <div class="v">Home · About · Services · Team · Insurance · Contact</div>
+            </div>
+            <div class="scope-row">
+              <div class="k">FEATURES</div>
+              <div class="v">Online booking (Calendly integration) · Insurance provider lookup form · Click-to-call · Contact form with routing · Google Business Profile setup</div>
+            </div>
+            <div class="scope-row">
+              <div class="k">PLATFORM</div>
+              <div class="v">Next.js — custom build, fully owned by you</div>
+            </div>
+            <div class="scope-row">
+              <div class="k">TIMELINE</div>
+              <div class="v">3 weeks from deposit to launch · target launch date Apr 22</div>
+            </div>
+            <div class="scope-row">
+              <div class="k">REVISIONS</div>
+              <div class="v">3 revision rounds included · unlimited feedback during builds</div>
+            </div>
+            <div class="scope-row">
+              <div class="k">SUPPORT</div>
+              <div class="v">30 days post-launch support included · bug fixes, small edits, questions</div>
+            </div>
+            <div class="scope-row">
+              <div class="k">OWNERSHIP</div>
+              <div class="v">You own the code, domain, content, and data · no lock-in, no monthly hostage fees</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Price block -->
+        <div class="price-block">
+          <div class="label">PROJECT INVESTMENT</div>
+          <div class="amt">$3,800</div>
+          <div class="meta">Fixed price · all-inclusive · <b>Growth tier</b></div>
+
+          <div class="split">
+            <div class="col">
+              <div class="lab">DEPOSIT TODAY</div>
+              <div class="val accent">$1,900</div>
+            </div>
+            <div class="col">
+              <div class="lab">BALANCE AT LAUNCH</div>
+              <div class="val">$1,900</div>
+            </div>
+          </div>
+
+          <div class="accept">
+            <button class="btn">Accept &amp; pay deposit <span class="arrow">→</span></button>
+            <div class="fineprint">SECURE PAYMENT VIA STRIPE</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WHAT'S INCLUDED -->
+      <div class="included">
+        <div class="col">
+          <div class="num">/ 01 — STRATEGY</div>
+          <h4>Planning &amp; structure</h4>
+          <ul>
+            <li>Site plan built around your conversion goals</li>
+            <li>Competitor research (Loudoun dental market)</li>
+            <li>Messaging hierarchy for new-patient flow</li>
+            <li>Content audit of what you already have</li>
+          </ul>
+        </div>
+        <div class="col">
+          <div class="num">/ 02 — DESIGN &amp; BUILD</div>
+          <h4>Custom, fast, and yours</h4>
+          <ul>
+            <li>Mobile-first responsive design</li>
+            <li>Calendly booking integration</li>
+            <li>Insurance provider lookup form</li>
+            <li>Google Business Profile setup</li>
+            <li>Analytics &amp; conversion tracking</li>
+          </ul>
+        </div>
+        <div class="col">
+          <div class="num">/ 03 — LAUNCH</div>
+          <h4>Live, owned, and supported</h4>
+          <ul>
+            <li>Full QA across devices and browsers</li>
+            <li>Domain connection &amp; SSL setup</li>
+            <li>SEO basics &amp; sitemap submission</li>
+            <li>30 days post-launch support</li>
+            <li>Handoff doc with everything you need</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROCESS -->
+  <section class="module process-section">
+    <div class="wrap">
+      <div class="section-label">What happens next</div>
+      <h2 class="section-title">From accept to launch in 3 weeks.</h2>
+      <p class="section-sub">The moment you pay the deposit, your private project workspace goes live. You'll get a login link and can see exactly where things stand, every step of the way.</p>
+
+      <div class="process-steps">
+        <div class="step">
+          <div class="num">/ 01 — TODAY</div>
+          <h4>Accept &amp; pay deposit</h4>
+          <p>Click the button, pay $1,900 securely through Stripe. Your workspace goes live immediately and we kick off planning.</p>
+        </div>
+        <div class="step">
+          <div class="num">/ 02 — DAYS 1–5</div>
+          <h4>Content &amp; kickoff</h4>
+          <p>Upload your logo, copy, photos, and team bios to your workspace. We'll start wireframing while you gather what you need.</p>
+        </div>
+        <div class="step">
+          <div class="num">/ 03 — DAYS 6–18</div>
+          <h4>Build &amp; review</h4>
+          <p>Watch your site come together. Leave comments on any page, any time. We answer in hours, not days. 3 revision rounds included.</p>
+        </div>
+        <div class="step">
+          <div class="num">/ 04 — DAY 21</div>
+          <h4>Launch &amp; handoff</h4>
+          <p>Domain connected, SSL live, forms tested, analytics running. You get the keys — code, domain, data, all yours. Balance paid at launch.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TIER CONTEXT -->
+  <section class="module">
+    <div class="wrap">
+      <div class="context-intro">
+        <div>
+          <div class="section-label">For context</div>
+          <h2>How we tier projects.</h2>
+        </div>
+        <p class="lede">We don't have fixed packages — every project is scoped to what you actually need. But for context, here's how the three tiers break down. Your project fits <b style="color: var(--accent); font-weight: 600;">Growth</b> because it's a multi-page custom build with integrations.</p>
+      </div>
+
+      <div class="tier-row">
+        <div class="tier-mini">
+          <div class="name">/ STARTER</div>
+          <div class="range">$1,800 – $2,400</div>
+          <div class="desc">For single-page or 2–3 page sites that do one job well. Service businesses with a focused offer and no integrations.</div>
+          <div class="details">1–3 PAGES · CONTACT FORM · 2 REVISIONS · 2 WK TIMELINE</div>
+        </div>
+        <div class="tier-mini yours">
+          <div class="name">/ GROWTH</div>
+          <div class="range">$3,500 – $4,500</div>
+          <div class="desc">For most small businesses ready to look the part and convert — multi-page with booking, forms, or integrations.</div>
+          <div class="details">4–6 PAGES · BOOKING · CMS · 3 REVISIONS · 3 WK TIMELINE</div>
+        </div>
+        <div class="tier-mini">
+          <div class="name">/ PREMIUM</div>
+          <div class="range">$6,500 – $10,000+</div>
+          <div class="desc">For businesses with depth — e-commerce, member areas, custom integrations, or 7+ pages with real content systems.</div>
+          <div class="details">7+ PAGES · E-COMM / AUTH · 4 REVISIONS · 4–5 WK</div>
+        </div>
+      </div>
+
+      <!-- FAQ about the quote -->
+      <div class="faq-strip">
+        <div class="faq-item">
+          <div class="q">Can I adjust the scope?</div>
+          <div class="a">Yes. If anything in the scope above feels wrong — too much, too little, wrong priorities — message us before accepting and we'll revise the estimate. No pressure.</div>
+        </div>
+        <div class="faq-item">
+          <div class="q">What if the project grows mid-build?</div>
+          <div class="a">Changes inside the agreed scope are free. Changes that expand scope go through a change order with a small price adjustment. You approve everything in writing before it happens.</div>
+        </div>
+        <div class="faq-item">
+          <div class="q">What's included in the price?</div>
+          <div class="a">Everything on this page — planning, design, build, 3 revision rounds, launch, and 30 days post-launch support. No hidden fees, no surprise charges, no upsells mid-project.</div>
+        </div>
+        <div class="faq-item">
+          <div class="q">What if I change my mind after the deposit?</div>
+          <div class="a">The deposit covers early planning and discovery work. If you cancel before content kickoff, we'll refund a portion based on what's already been done. Details in the agreement.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLOSING CTA -->
+  <section class="closing">
+    <div class="wrap">
+      <div class="inner">
+        <div>
+          <h2>Ready to make this <em>happen?</em></h2>
+          <p class="sub">Accept the estimate and pay the deposit to kick off your project today. Your workspace will be live within 5 minutes and you'll have full access to track everything.</p>
+        </div>
+        <div class="actions">
+          <button class="btn-primary-large">Accept &amp; pay $1,900 deposit <span class="arrow">→</span></button>
+          <button class="btn-outline-large">Message us with questions</button>
+          <div class="fineprint">ESTIMATE VALID FOR 14 DAYS · EXPIRES APR 11</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div>© 2026 CrecyStudio · Estimate for Sunrise Dental</div>
+      <div>hello@crecy.studio</div>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,1121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CrecyStudio project workspace — admin prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3ede1;
+    --paper-2: #ebe4d4;
+    --paper-3: #e3dcc8;
+    --paper-4: #ddd5be;
+    --ink: #0c0c0c;
+    --ink-2: #1a1a1a;
+    --ink-3: #2a2a2a;
+    --muted: #6b6457;
+    --muted-2: #8a8273;
+    --rule: #d8cfba;
+    --rule-2: #c8bfaa;
+    --accent: #c2381f;
+    --accent-2: #9d2c17;
+    --accent-soft: #e8c4ba;
+    --accent-bg: #f4dfd9;
+    --internal-bg: #ede5cf;
+    --success: #2d5016;
+    --success-2: #406820;
+    --success-bg: #d9e3c8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper); color: var(--ink); }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; }
+  input, select, textarea { font-family: inherit; }
+
+  .wrap { width: min(1480px, 96vw); margin: 0 auto; }
+
+  /* ─── TOP BAR (consistent) ────────── */
+  .topbar {
+    border-bottom: 1px solid var(--rule);
+    padding: 18px 0;
+  }
+  .topbar .wrap { display: flex; align-items: center; justify-content: space-between; }
+  .brand { font-family: 'Inter Tight'; font-weight: 700; font-size: 17px; letter-spacing: -0.02em; }
+  .brand .dot { color: var(--accent); }
+  .topbar nav ul { display: flex; gap: 32px; list-style: none; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .topbar nav ul a { color: var(--muted); }
+  .topbar nav ul a:hover { color: var(--ink); }
+  .topbar nav ul a.active { color: var(--ink); position: relative; }
+  .topbar nav ul a.active::after { content: ''; position: absolute; bottom: -27px; left: 0; right: 0; height: 2px; background: var(--accent); }
+  .topbar-right { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+
+  /* ─── PROJECT HEADER ──────────────── */
+  .proj-head {
+    background: var(--paper-2);
+    border-bottom: 1px solid var(--rule);
+    padding: 36px 0;
+  }
+  .proj-head .breadcrumb {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin-bottom: 18px;
+  }
+  .proj-head .breadcrumb .sep { color: var(--rule-2); margin: 0 8px; }
+  .proj-head .breadcrumb .accent { color: var(--accent); }
+  .proj-head .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .proj-head .left h2 {
+    font-family: 'Inter Tight';
+    font-size: 44px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.0;
+    margin-bottom: 12px;
+  }
+  .proj-head .left .contact {
+    display: flex;
+    gap: 18px;
+    font-size: 13px;
+    color: var(--muted);
+    flex-wrap: wrap;
+  }
+  .proj-head .left .contact span b { color: var(--ink); font-weight: 500; }
+  .proj-head .right {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 6px 12px;
+    border-radius: 1px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid var(--rule-2);
+    color: var(--muted);
+    background: var(--paper);
+  }
+  .badge.lane { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .badge.stage { background: var(--accent-bg); color: var(--accent); border-color: var(--accent-soft); }
+  .badge.paid { background: var(--success-bg); color: var(--success); border-color: rgba(45, 80, 22, 0.2); }
+
+  /* ─── TAB BAR ─────────────────────── */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper);
+    padding: 0 0;
+  }
+  .tab {
+    background: transparent;
+    border: none;
+    padding: 18px 0;
+    margin-right: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tab.active { color: var(--ink); border-bottom-color: var(--accent); }
+  .tab:hover:not(.active) { color: var(--ink); }
+  .tab .count { margin-left: 6px; color: var(--muted-2); }
+  .tab.active .count { color: var(--accent); }
+
+  /* ─── PAGE CONTENT ────────────────── */
+  .content { padding: 36px 0 60px; }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .section-label::before { content: '/ '; color: var(--accent); }
+
+  /* ═══ STAGE PROGRESSION CARD ═══ */
+  .stage-card {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 32px 36px;
+    margin-bottom: 28px;
+  }
+  .stage-card .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 22px;
+  }
+  .stage-card .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+  .stage-card .meta .progress { color: var(--accent); }
+
+  .stage-flow {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    gap: 28px;
+    align-items: center;
+    margin-bottom: 28px;
+  }
+  .stage-block .lab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .stage-block.current .lab { color: var(--accent); }
+  .stage-block .name {
+    font-family: 'Inter Tight';
+    font-size: 36px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    margin-bottom: 8px;
+  }
+  .stage-block.current .name { color: var(--ink); }
+  .stage-block.next .name { color: var(--muted-2); font-weight: 500; }
+  .stage-block .sub {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .stage-block .sub .alert { color: var(--accent); font-weight: 500; }
+  .arrow-block {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--rule-2);
+    font-size: 32px;
+    font-family: 'Inter Tight';
+    font-weight: 300;
+  }
+
+  .stage-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    flex-wrap: wrap;
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 16px 28px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-radius: 2px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .btn-primary .arrow { transition: transform .2s; }
+  .btn-primary:hover .arrow { transform: translateX(4px); }
+  .btn-secondary {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    padding: 14px 22px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 2px;
+  }
+  .btn-tertiary {
+    background: transparent;
+    border: 1px solid var(--rule-2);
+    padding: 14px 22px;
+    font-size: 11px;
+    color: var(--muted);
+    border-radius: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .btn-tertiary:hover { color: var(--ink); border-color: var(--ink); }
+
+  /* ═══ TWO-COL LAYOUT ═══ */
+  .row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 28px;
+  }
+  .row-2.weighted {
+    grid-template-columns: 1.3fr 1fr;
+  }
+
+  /* ═══ DATA CARD ═══ */
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 28px 32px;
+  }
+  .card .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 22px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .card h3 {
+    font-family: 'Inter Tight';
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .card .head .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .card .head .meta.warn { color: var(--accent); }
+
+  /* ═══ URL EDITOR ═══ */
+  .url-block { display: grid; gap: 18px; }
+  .url-row .top-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .url-row .lab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .url-row .status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 4px 9px;
+    border-radius: 1px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid var(--rule-2);
+  }
+  .url-row .status.live { background: var(--success-bg); color: var(--success); border-color: rgba(45, 80, 22, 0.2); }
+  .url-row .status.pending { background: var(--paper-2); color: var(--muted); }
+  .url-row .input-row { display: flex; gap: 8px; }
+  .url-row input {
+    flex: 1;
+    background: var(--paper);
+    border: 1px solid var(--rule-2);
+    padding: 12px 14px;
+    border-radius: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+  }
+  .url-row input::placeholder { color: var(--muted-2); }
+  .url-row input:focus { outline: none; border-color: var(--ink); }
+  .url-row .open-btn {
+    padding: 12px 16px;
+    background: transparent;
+    border: 1px solid var(--rule-2);
+    border-radius: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .url-row .open-btn:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+  /* ═══ PUBLIC NOTE EDITOR ═══ */
+  .public-note-card {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 28px 32px;
+  }
+  .public-note-card .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 18px;
+  }
+  .public-note-card h3 {
+    font-family: 'Inter Tight';
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .public-note-card .visibility {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .public-note-card .visibility::before { content: '◉ '; }
+  .public-note-card .preview-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .public-note-card .preview {
+    background: var(--paper-2);
+    border: 1px dashed var(--rule-2);
+    padding: 18px 22px;
+    border-radius: 2px;
+    margin-bottom: 18px;
+  }
+  .public-note-card .preview .what {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .public-note-card .preview .head-line {
+    font-family: 'Inter Tight';
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  .public-note-card .preview .head-line em { color: var(--accent); font-style: italic; }
+  .public-note-card .preview .body-text {
+    font-size: 14px;
+    color: var(--ink-2);
+    line-height: 1.55;
+  }
+  .public-note-card textarea {
+    width: 100%;
+    background: var(--paper-2);
+    border: 1px solid var(--rule-2);
+    padding: 14px 16px;
+    border-radius: 2px;
+    font-family: 'Inter';
+    font-size: 14px;
+    line-height: 1.55;
+    min-height: 90px;
+    resize: vertical;
+    color: var(--ink);
+  }
+  .public-note-card textarea:focus { outline: none; border-color: var(--ink); }
+  .public-note-card .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 14px;
+  }
+  .public-note-card .footer .when {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  /* ═══ MILESTONES ═══ */
+  .milestone-list { display: grid; gap: 0; }
+  .milestone {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: center;
+    cursor: pointer;
+  }
+  .milestone:last-child { border-bottom: none; padding-bottom: 0; }
+  .milestone:first-child { padding-top: 0; }
+  .milestone .checkbox {
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--rule-2);
+    border-radius: 1px;
+    background: var(--paper);
+    position: relative;
+    flex-shrink: 0;
+  }
+  .milestone.done .checkbox {
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+  .milestone.done .checkbox::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 6px;
+    width: 4px;
+    height: 8px;
+    border: solid var(--paper);
+    border-width: 0 1.5px 1.5px 0;
+    transform: rotate(45deg);
+  }
+  .milestone.in-progress .checkbox {
+    background: var(--paper);
+    border: 2px solid var(--accent);
+    box-shadow: inset 0 0 0 3px var(--paper);
+  }
+  .milestone.in-progress .checkbox::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    background: var(--accent);
+    border-radius: 1px;
+  }
+  .milestone .label {
+    font-family: 'Inter Tight';
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+  .milestone.done .label { color: var(--ink); }
+  .milestone:not(.done):not(.in-progress) .label { color: var(--muted); }
+  .milestone .when {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted-2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .milestone.in-progress .when { color: var(--accent); }
+
+  /* ═══ LAUNCH READINESS ═══ */
+  .readiness-top {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .readiness-top .pct {
+    font-family: 'Inter Tight';
+    font-size: 48px;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 0.9;
+  }
+  .readiness-top .pct .denom {
+    font-size: 16px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .progress-bar {
+    height: 4px;
+    background: var(--rule);
+    margin-bottom: 18px;
+  }
+  .progress-bar .fill {
+    height: 100%;
+    background: var(--accent);
+  }
+  .readiness-list { display: grid; gap: 0; }
+  .readiness-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: center;
+  }
+  .readiness-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .readiness-row:first-child { padding-top: 0; }
+  .readiness-row .name {
+    font-size: 13px;
+    color: var(--ink-2);
+  }
+  .readiness-row.done .name { color: var(--ink); }
+  .readiness-row select {
+    background: var(--paper);
+    border: 1px solid var(--rule-2);
+    padding: 6px 10px;
+    border-radius: 1px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .readiness-row.done select { background: var(--success-bg); color: var(--success); border-color: rgba(45, 80, 22, 0.2); }
+  .readiness-row.warn select { background: var(--accent-bg); color: var(--accent); border-color: var(--accent-soft); }
+
+  /* ═══ ASSETS TABLE ═══ */
+  .assets-card { margin-bottom: 28px; }
+  .assets-table { width: 100%; border-collapse: collapse; }
+  .assets-table thead th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 0 14px 14px;
+    border-bottom: 1px solid var(--rule);
+    font-weight: 500;
+  }
+  .assets-table tbody tr { border-bottom: 1px solid var(--rule); }
+  .assets-table tbody tr:last-child { border-bottom: none; }
+  .assets-table td {
+    padding: 16px 14px;
+    font-size: 14px;
+    color: var(--ink-2);
+    vertical-align: middle;
+  }
+  .assets-table td:first-child { padding-left: 0; width: 56px; }
+  .assets-table td:last-child { padding-right: 0; }
+  .file-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .assets-table .asset-name {
+    font-family: 'Inter Tight';
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    color: var(--ink);
+  }
+  .assets-table .asset-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+  }
+  .assets-table .category-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 4px 9px;
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: 1px;
+  }
+  .assets-table .status-select {
+    background: var(--paper);
+    border: 1px solid var(--rule-2);
+    padding: 6px 10px;
+    border-radius: 1px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .assets-table .status-select.approved { background: var(--success-bg); color: var(--success); border-color: rgba(45, 80, 22, 0.2); }
+  .assets-table .status-select.received { background: var(--accent-bg); color: var(--accent); border-color: var(--accent-soft); }
+  .assets-table .actions-cell {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+  }
+  .assets-table .row-action {
+    background: transparent;
+    border: 1px solid var(--rule-2);
+    padding: 6px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 1px;
+  }
+  .assets-table .row-action:hover { color: var(--ink); border-color: var(--ink); }
+
+  /* ═══ REVISIONS LIST ═══ */
+  .revisions-card { margin-bottom: 28px; }
+  .revision { 
+    padding: 22px 0;
+    border-bottom: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 20px;
+    align-items: start;
+  }
+  .revision:last-child { border-bottom: none; padding-bottom: 0; }
+  .revision:first-child { padding-top: 0; }
+  .priority-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 5px 10px;
+    border-radius: 1px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    border: 1px solid var(--rule-2);
+    background: var(--paper);
+    color: var(--muted);
+  }
+  .priority-tag.high { background: var(--accent-bg); color: var(--accent); border-color: var(--accent-soft); }
+  .priority-tag.normal { background: var(--paper-2); color: var(--ink); }
+  .revision .body .who {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .revision .body .who .round { color: var(--accent); }
+  .revision .body .text {
+    font-size: 14px;
+    color: var(--ink-2);
+    line-height: 1.55;
+  }
+  .revision .status-control select {
+    background: var(--paper);
+    border: 1px solid var(--rule-2);
+    padding: 8px 12px;
+    border-radius: 1px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .revision .status-control select.in-progress { background: var(--accent-bg); color: var(--accent); border-color: var(--accent-soft); }
+  .revision .status-control select.done { background: var(--success-bg); color: var(--success); border-color: rgba(45, 80, 22, 0.2); }
+
+  /* ═══ FOOTER ═══ */
+  footer {
+    border-top: 1px solid var(--rule);
+    padding: 28px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+
+  @media (max-width: 1100px) {
+    .row-2, .row-2.weighted { grid-template-columns: 1fr; }
+    .stage-flow { grid-template-columns: 1fr; gap: 14px; }
+    .arrow-block { display: none; }
+    .topbar nav { display: none; }
+    .proj-head .row { flex-direction: column; align-items: stretch; }
+    .stage-actions { flex-direction: column; align-items: stretch; }
+    .stage-actions button { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="wrap">
+      <div class="brand">crecy<span class="dot">.</span>studio</div>
+      <nav>
+        <ul>
+          <li><a href="#" class="active">Pipeline</a></li>
+          <li><a href="#">Dashboard</a></li>
+          <li><a href="#">Messages</a></li>
+          <li><a href="#">Invoices</a></li>
+          <li><a href="#">Settings</a></li>
+        </ul>
+      </nav>
+      <div class="topbar-right">admin · signed in</div>
+    </div>
+  </div>
+
+  <!-- PROJECT HEADER -->
+  <div class="proj-head">
+    <div class="wrap">
+      <div class="breadcrumb">Pipeline <span class="sep">/</span> Website <span class="sep">/</span> <span class="accent">Sunrise Dental</span></div>
+      <div class="row">
+        <div class="left">
+          <h2>Sunrise Dental</h2>
+          <div class="contact">
+            <span><b>Maria Chen</b> · Owner</span>
+            <span>maria@sunrisedental.com</span>
+            <span>(555) 014-2891</span>
+            <span>Created Mar 28 · 12 days in flight</span>
+          </div>
+        </div>
+        <div class="right">
+          <span class="badge lane">WEBSITE</span>
+          <span class="badge stage">In review</span>
+          <span class="badge paid">Deposit paid</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="wrap">
+    <nav class="tabs">
+      <button class="tab">Overview</button>
+      <button class="tab">Scope &amp; build</button>
+      <button class="tab active">Workspace <span class="count">5</span></button>
+      <button class="tab">Agreement</button>
+      <button class="tab">Activity <span class="count">12</span></button>
+    </nav>
+  </div>
+
+  <!-- ─── WORKSPACE TAB CONTENT ─── -->
+  <div class="wrap">
+    <div class="content">
+
+      <!-- ═══ STAGE PROGRESSION ═══ -->
+      <div class="stage-card">
+        <div class="top-row">
+          <div class="section-label" style="margin-bottom: 0;">Where this project is right now</div>
+          <div class="meta">STAGE <span class="progress">06</span> OF 07 · 2 DAYS HERE</div>
+        </div>
+
+        <div class="stage-flow">
+          <div class="stage-block current">
+            <div class="lab">CURRENT</div>
+            <div class="name">Client review</div>
+            <div class="sub">Maria has <span class="alert">1 unread message</span> waiting · 1 revision in progress · preview is live</div>
+          </div>
+          <div class="arrow-block">→</div>
+          <div class="stage-block next">
+            <div class="lab">NEXT UP</div>
+            <div class="name">Launch &amp; handoff</div>
+            <div class="sub">Target launch date: Apr 22 · 2 launch readiness checks remaining</div>
+          </div>
+        </div>
+
+        <div class="stage-actions">
+          <button class="btn-primary">Mark review complete &amp; advance <span class="arrow">→</span></button>
+          <button class="btn-secondary">Send reminder to client</button>
+          <button class="btn-tertiary">Jump to stage ▾</button>
+          <button class="btn-tertiary" style="margin-left: auto;">↶ Back to building</button>
+        </div>
+      </div>
+
+      <!-- ═══ URLS + PUBLIC NOTE ═══ -->
+      <div class="row-2">
+
+        <!-- URL editor -->
+        <div class="card">
+          <div class="head">
+            <h3>Project URLs</h3>
+            <div class="meta">CLIENT-VISIBLE</div>
+          </div>
+          <div class="url-block">
+            <div class="url-row">
+              <div class="top-line">
+                <span class="lab">PREVIEW URL</span>
+                <span class="status live">● LIVE · 5 VIEWS TODAY</span>
+              </div>
+              <div class="input-row">
+                <input type="text" value="https://sunrise-dental-preview.crecy.studio" />
+                <button class="open-btn">OPEN ↗</button>
+              </div>
+            </div>
+            <div class="url-row">
+              <div class="top-line">
+                <span class="lab">PRODUCTION URL</span>
+                <span class="status pending">PENDING</span>
+              </div>
+              <div class="input-row">
+                <input type="text" placeholder="https://www.sunrisedental.com (set at launch)" />
+                <button class="open-btn">SAVE</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Public note (hero text in client portal) -->
+        <div class="public-note-card">
+          <div class="head">
+            <h3>Public note</h3>
+            <span class="visibility">Visible to client</span>
+          </div>
+          <div class="preview-label">PREVIEW · HOW IT APPEARS IN PORTAL</div>
+          <div class="preview">
+            <div class="what">▸ WEBSITE PROJECT</div>
+            <div class="head-line">Your website is <em>ready for review.</em></div>
+            <div class="body-text">We finished the first build of all six pages. Take your time looking through everything — when you're ready, leave feedback below or jump straight into the live preview.</div>
+          </div>
+          <textarea>We finished the first build of all six pages. Take your time looking through everything — when you're ready, leave feedback below or jump straight into the live preview.</textarea>
+          <div class="footer">
+            <div class="when">LAST PUBLISHED · APR 4 · 9:42 AM</div>
+            <button class="btn-tertiary">Update public note</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ MILESTONES + READINESS ═══ -->
+      <div class="row-2 weighted">
+
+        <!-- Milestones -->
+        <div class="card">
+          <div class="head">
+            <h3>Project milestones</h3>
+            <div class="meta">3 DONE · 1 IN PROGRESS · 1 PENDING</div>
+          </div>
+          <div class="milestone-list">
+            <div class="milestone done">
+              <div class="checkbox"></div>
+              <div class="label">Kickoff &amp; scope confirmation</div>
+              <div class="when">DONE · MAR 28</div>
+            </div>
+            <div class="milestone done">
+              <div class="checkbox"></div>
+              <div class="label">Content &amp; assets received</div>
+              <div class="when">DONE · APR 2</div>
+            </div>
+            <div class="milestone done">
+              <div class="checkbox"></div>
+              <div class="label">First build draft delivered</div>
+              <div class="when">DONE · APR 4</div>
+            </div>
+            <div class="milestone in-progress">
+              <div class="checkbox"></div>
+              <div class="label">Revision round</div>
+              <div class="when">IN PROGRESS · APR 5</div>
+            </div>
+            <div class="milestone">
+              <div class="checkbox"></div>
+              <div class="label">Launch &amp; handoff</div>
+              <div class="when">PENDING</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Launch readiness -->
+        <div class="card">
+          <div class="head">
+            <h3>Launch readiness</h3>
+            <div class="meta warn">2 BLOCKERS</div>
+          </div>
+          <div class="readiness-top">
+            <div class="pct">71<span class="denom">%</span></div>
+            <div class="meta" style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.04em;">5 OF 7 READY</div>
+          </div>
+          <div class="progress-bar">
+            <div class="fill" style="width: 71%;"></div>
+          </div>
+          <div class="readiness-list">
+            <div class="readiness-row done">
+              <div class="name">Agreement signed</div>
+              <select class="">
+                <option>Ready</option>
+                <option>In progress</option>
+                <option>Pending</option>
+              </select>
+            </div>
+            <div class="readiness-row done">
+              <div class="name">Preview published</div>
+              <select><option>Ready</option></select>
+            </div>
+            <div class="readiness-row done">
+              <div class="name">Domain ready</div>
+              <select><option>Ready</option></select>
+            </div>
+            <div class="readiness-row done">
+              <div class="name">Forms tested</div>
+              <select><option>Ready</option></select>
+            </div>
+            <div class="readiness-row done">
+              <div class="name">SEO basics</div>
+              <select><option>Ready</option></select>
+            </div>
+            <div class="readiness-row warn">
+              <div class="name">Analytics installed</div>
+              <select><option>Pending</option></select>
+            </div>
+            <div class="readiness-row warn">
+              <div class="name">Final handoff doc</div>
+              <select><option>Pending</option></select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ ASSETS RECEIVED ═══ -->
+      <div class="card assets-card">
+        <div class="head">
+          <h3>Assets received from client</h3>
+          <div class="meta">5 SUBMITTED · 4 APPROVED · 1 PENDING REVIEW</div>
+        </div>
+        <table class="assets-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Asset</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="file-icon">PNG</div></td>
+              <td>
+                <div class="asset-name">Sunrise Dental logo (final)</div>
+                <div class="asset-meta">2.4 MB · MAR 29 · 11:08 AM</div>
+              </td>
+              <td><span class="category-pill">BRAND</span></td>
+              <td><select class="status-select approved"><option>Approved</option><option>Received</option><option>Submitted</option></select></td>
+              <td>
+                <div class="actions-cell">
+                  <button class="row-action">VIEW</button>
+                  <button class="row-action">DOWNLOAD</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><div class="file-icon">DOC</div></td>
+              <td>
+                <div class="asset-name">Homepage copy v3</div>
+                <div class="asset-meta">18 KB · MAR 30 · 9:24 AM</div>
+              </td>
+              <td><span class="category-pill">COPY</span></td>
+              <td><select class="status-select approved"><option>Approved</option></select></td>
+              <td>
+                <div class="actions-cell">
+                  <button class="row-action">VIEW</button>
+                  <button class="row-action">DOWNLOAD</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><div class="file-icon">ZIP</div></td>
+              <td>
+                <div class="asset-name">Office photos (12 images)</div>
+                <div class="asset-meta">48 MB · APR 1 · 3:14 PM</div>
+              </td>
+              <td><span class="category-pill">IMAGES</span></td>
+              <td><select class="status-select received"><option>Received</option><option>Approved</option></select></td>
+              <td>
+                <div class="actions-cell">
+                  <button class="row-action">VIEW</button>
+                  <button class="row-action">DOWNLOAD</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><div class="file-icon">URL</div></td>
+              <td>
+                <div class="asset-name">Insurance providers list</div>
+                <div class="asset-meta">GOOGLE DOC · APR 2 · 6:30 PM</div>
+              </td>
+              <td><span class="category-pill">COPY</span></td>
+              <td><select class="status-select approved"><option>Approved</option></select></td>
+              <td>
+                <div class="actions-cell">
+                  <button class="row-action">VIEW</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><div class="file-icon">DOCX</div></td>
+              <td>
+                <div class="asset-name">Dr. Patel updated bio</div>
+                <div class="asset-meta">14 KB · APR 5 · 8:22 AM</div>
+              </td>
+              <td><span class="category-pill">COPY</span></td>
+              <td><select class="status-select approved"><option>Approved</option></select></td>
+              <td>
+                <div class="actions-cell">
+                  <button class="row-action">VIEW</button>
+                  <button class="row-action">DOWNLOAD</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ═══ REVISION REQUESTS ═══ -->
+      <div class="card revisions-card">
+        <div class="head">
+          <h3>Revision requests from client</h3>
+          <div class="meta">2 OF 3 ROUNDS USED</div>
+        </div>
+        <div class="revisions-list">
+          <div class="revision">
+            <span class="priority-tag high">High priority</span>
+            <div class="body">
+              <div class="who">MARIA · 2 DAYS AGO · <span class="round">REVISION ROUND 2</span></div>
+              <div class="text">The team page looks great but Dr. Patel's bio is missing her board certification line. Can you add "Board-certified by the American Board of Pediatric Dentistry" right after her name?</div>
+            </div>
+            <div class="status-control">
+              <select class="in-progress">
+                <option>In progress</option>
+                <option>New</option>
+                <option>Reviewed</option>
+                <option>Done</option>
+              </select>
+            </div>
+          </div>
+          <div class="revision">
+            <span class="priority-tag normal">Normal</span>
+            <div class="body">
+              <div class="who">MARIA · 4 DAYS AGO · <span class="round">REVISION ROUND 1</span></div>
+              <div class="text">Love the homepage. One small thing — the "Book an appointment" button on mobile is a little hard to tap. Could we make it slightly bigger?</div>
+            </div>
+            <div class="status-control">
+              <select class="done">
+                <option>Done</option>
+                <option>In progress</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      <div>© 2026 CrecyStudio · Project workspace · Sunrise Dental</div>
+      <div>auto-saves every 30 seconds</div>
+    </div>
+  </footer>
+
+</body>
+</html>
