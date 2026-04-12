@@ -1,0 +1,13 @@
+.switcher {
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+  padding: 1.25rem;
+  display: grid;
+  gap: 1rem;
+}
+.tabs { display: grid; gap: 0.5rem; }
+.tab,.tabActive { text-align:left; border:1px solid var(--rule); background:var(--paper); color:var(--ink-2); padding:0.75rem 0.875rem; font:inherit; transition:border-color .2s ease, background-color .2s ease; }
+.tabActive { border-color: var(--accent); background: var(--accent-bg); }
+.panel { border-top: 1px solid var(--rule); padding-top: 1rem; }
+.impact { margin: 0; color: var(--ink-2); }
+.actions { display:flex; gap:.65rem; flex-wrap:wrap; margin-top:1rem; }
