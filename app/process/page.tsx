@@ -20,8 +20,8 @@ export default function ProcessPage() {
           <p className="p maxW860">Every lane uses the same execution rhythm so projects stay predictable and visible.</p>
         </div>
 
-        <section className="panel fadeUp" style={{ marginTop: 20 }}>
-          <div className="panelBody" style={{ display: "grid", gap: 12 }}>
+        <section className="panel fadeUp marketingStackLg">
+          <div className="panelBody">
             {STEPS.map(([title, body], idx) => (
               <article key={title} className="card">
                 <div className="cardInner">
@@ -34,7 +34,7 @@ export default function ProcessPage() {
           </div>
         </section>
 
-        <div className="row" style={{ marginTop: 16 }}>
+        <div className="row marketingActions">
           <Link href="/build/intro" className="btn btnPrimary">Start website estimate</Link>
           <Link href="/faq" className="btn btnGhost">Read FAQs</Link>
         </div>

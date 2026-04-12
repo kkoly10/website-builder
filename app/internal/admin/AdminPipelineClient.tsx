@@ -104,7 +104,7 @@ function statusMeta(status: string) {
 }
 
 function pieTone(score: number | null) {
-  if (score == null) return { color: "var(--muted2)", label: "—" };
+  if (score == null) return { color: "var(--muted-2)", label: "—" };
   if (score >= 80) return { color: "#5DCAA5", label: "Strong" };
   if (score >= 60) return { color: "#c9a84c", label: "Good" };
   if (score >= 40) return { color: "#dfc06a", label: "Fair" };
@@ -124,7 +124,7 @@ function PieRing({ score, size = 40 }: { score: number | null; size?: number }) 
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--stroke)" strokeWidth="3" />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--rule)" strokeWidth="3" />
       {score != null && (
         <circle
           cx={size / 2} cy={size / 2} r={r}
@@ -145,19 +145,19 @@ function PieRing({ score, size = 40 }: { score: number | null; size?: number }) 
 function MetricCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div style={{
-      background: "var(--panel2)", borderRadius: 14, padding: "16px 18px",
-      border: "1px solid var(--stroke)", flex: "1 1 0",
+      background: "var(--paper-2)", borderRadius: 14, padding: "16px 18px",
+      border: "1px solid var(--rule)", flex: "1 1 0",
     }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--muted2)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
         {label}
       </div>
       <div style={{
         fontFamily: "'Playfair Display', Georgia, serif", fontSize: 26, fontWeight: 600,
-        color: "var(--fg)", marginTop: 6, letterSpacing: "-0.02em",
+        color: "var(--ink)", marginTop: 6, letterSpacing: "-0.02em",
       }}>
         {value}
       </div>
-      {sub && <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 2 }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 12, color: "var(--muted-2)", marginTop: 2 }}>{sub}</div>}
     </div>
   );
 }
@@ -196,7 +196,7 @@ function StageCounts({ rows }: { rows: PipelineRow[] }) {
           }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: meta.color }} />
             <span style={{ fontSize: 11, fontWeight: 600, color: meta.color }}>{meta.label}</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--fg)" }}>{c}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--ink)" }}>{c}</span>
           </div>
         );
       }).filter(Boolean)}
@@ -214,7 +214,7 @@ function AdminSection({ title, hint, children, defaultOpen = false }: {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div style={{
-      marginTop: 12, border: "1px solid var(--stroke)", borderRadius: 14,
+      marginTop: 12, border: "1px solid var(--rule)", borderRadius: 14,
       background: "rgba(255,255,255,0.015)", overflow: "hidden",
     }}>
       <button
@@ -222,17 +222,17 @@ function AdminSection({ title, hint, children, defaultOpen = false }: {
         style={{
           width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center",
           padding: "14px 18px", background: "none", border: "none",
-          fontFamily: "'DM Sans', sans-serif", color: "var(--fg)", cursor: "pointer",
+          fontFamily: "'DM Sans', sans-serif", color: "var(--ink)", cursor: "pointer",
         }}
       >
         <div>
           <span style={{ fontSize: 14, fontWeight: 600 }}>{title}</span>
-          {hint && <span style={{ fontSize: 12, color: "var(--muted2)", marginLeft: 10 }}>{hint}</span>}
+          {hint && <span style={{ fontSize: 12, color: "var(--muted-2)", marginLeft: 10 }}>{hint}</span>}
         </div>
-        <span style={{ color: "var(--muted2)", transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none" }}>▾</span>
+        <span style={{ color: "var(--muted-2)", transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none" }}>▾</span>
       </button>
       {open && (
-        <div style={{ padding: "0 18px 18px", borderTop: "1px solid var(--stroke)" }}>
+        <div style={{ padding: "0 18px 18px", borderTop: "1px solid var(--rule)" }}>
           {children}
         </div>
       )}
@@ -359,7 +359,7 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
         gap: 12, flexWrap: "wrap", marginBottom: 16,
       }}>
         <StageCounts rows={rows} />
-        <div style={{ fontSize: 12, color: "var(--muted2)", fontWeight: 600 }}>
+        <div style={{ fontSize: 12, color: "var(--muted-2)", fontWeight: 600 }}>
           Showing {filteredRows.length} of {rows.length}
         </div>
       </div>
@@ -402,8 +402,8 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
             <div
               key={row.quoteId}
               style={{
-                background: "var(--panel)",
-                border: `1px solid ${isExpanded ? "var(--stroke2)" : "var(--stroke)"}`,
+                background: "var(--paper)",
+                border: `1px solid ${isExpanded ? "var(--rule-2)" : "var(--rule)"}`,
                 borderRadius: 16,
                 overflow: "hidden",
                 transition: "border-color 0.2s",
@@ -417,7 +417,7 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     <span style={{
                       fontFamily: "'Playfair Display', Georgia, serif",
-                      fontSize: 19, fontWeight: 500, color: "var(--fg)",
+                      fontSize: 19, fontWeight: 500, color: "var(--ink)",
                       letterSpacing: "-0.02em",
                     }}>
                       {row.leadName}
@@ -427,8 +427,8 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
 
                   <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 6, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 13, color: "var(--muted)" }}>{row.leadEmail}</span>
-                    <span style={{ fontSize: 12, color: "var(--muted2)" }}>{fmtDate(row.createdAt)}</span>
-                    <span style={{ fontSize: 12, color: "var(--muted2)" }}>#{row.quoteId.slice(0, 8)}</span>
+                    <span style={{ fontSize: 12, color: "var(--muted-2)" }}>{fmtDate(row.createdAt)}</span>
+                    <span style={{ fontSize: 12, color: "var(--muted-2)" }}>#{row.quoteId.slice(0, 8)}</span>
                   </div>
 
                   {/* Compact info row */}
@@ -437,32 +437,32 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <PieRing score={row.pie?.score ?? null} size={34} />
                       <div>
-                        <div style={{ fontSize: 10, color: "var(--muted2)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>PIE</div>
+                        <div style={{ fontSize: 10, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>PIE</div>
                         <div style={{ fontSize: 12, fontWeight: 600, color: pt.color }}>{row.pie?.exists ? pt.label : "Missing"}</div>
                       </div>
                     </div>
 
-                    <div style={{ width: 1, height: 28, background: "var(--stroke)" }} />
+                    <div style={{ width: 1, height: 28, background: "var(--rule)" }} />
 
                     {/* Tier */}
                     <div>
-                      <div style={{ fontSize: 10, color: "var(--muted2)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Tier</div>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--fg)" }}>{row.tier || "—"}</div>
+                      <div style={{ fontSize: 10, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Tier</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)" }}>{row.tier || "—"}</div>
                     </div>
 
-                    <div style={{ width: 1, height: 28, background: "var(--stroke)" }} />
+                    <div style={{ width: 1, height: 28, background: "var(--rule)" }} />
 
                     {/* Preview */}
                     <div>
-                      <div style={{ fontSize: 10, color: "var(--muted2)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Preview</div>
+                      <div style={{ fontSize: 10, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Preview</div>
                       <div style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)" }}>{row.portalAdmin.previewStatus.split(" ").slice(0, 2).join(" ")}</div>
                     </div>
 
-                    <div style={{ width: 1, height: 28, background: "var(--stroke)" }} />
+                    <div style={{ width: 1, height: 28, background: "var(--rule)" }} />
 
                     {/* Launch */}
                     <div>
-                      <div style={{ fontSize: 10, color: "var(--muted2)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Launch</div>
+                      <div style={{ fontSize: 10, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Launch</div>
                       <div style={{ fontSize: 12, fontWeight: 600, color: row.portalAdmin.launchStatus === "Live" ? "#5DCAA5" : "var(--muted)" }}>
                         {row.portalAdmin.launchStatus}
                       </div>
@@ -474,13 +474,13 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
                 <div style={{ textAlign: "right", minWidth: 140 }}>
                   <div style={{
                     fontFamily: "'Playfair Display', Georgia, serif",
-                    fontSize: 26, fontWeight: 600, color: "var(--fg)",
+                    fontSize: 26, fontWeight: 600, color: "var(--ink)",
                     letterSpacing: "-0.02em",
                   }}>
                     {money(adj)}
                   </div>
                   {adj !== row.estimate.target && row.estimate.target > 0 && (
-                    <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: "var(--muted-2)", marginTop: 2 }}>
                       Base {row.estimateFormatted.target}
                     </div>
                   )}
@@ -512,7 +512,7 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
                 <div style={{
                   padding: "0 22px 14px",
                   fontSize: 13, color: "var(--muted)", lineHeight: 1.55,
-                  borderTop: "1px solid var(--stroke)",
+                  borderTop: "1px solid var(--rule)",
                   paddingTop: 12,
                 }}>
                   <span style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginRight: 8 }}>
@@ -524,7 +524,7 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
 
               {/* ── Expanded Sections ── */}
               {isExpanded && (
-                <div style={{ padding: "0 22px 22px", borderTop: "1px solid var(--stroke)" }}>
+                <div style={{ padding: "0 22px 22px", borderTop: "1px solid var(--rule)" }}>
 
                   {/* PIE Actions */}
                   <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
@@ -698,8 +698,8 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
 
       {filteredRows.length === 0 && (
         <div style={{
-          textAlign: "center", padding: 48, color: "var(--muted2)",
-          border: "1px dashed var(--stroke)", borderRadius: 16, marginTop: 8,
+          textAlign: "center", padding: 48, color: "var(--muted-2)",
+          border: "1px dashed var(--rule)", borderRadius: 16, marginTop: 8,
         }}>
           No quotes match your current filters
         </div>

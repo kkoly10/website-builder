@@ -353,7 +353,7 @@ function LaunchSummary({ checks, percent, completed }: {
             cx="33" cy="33" r="30"
             style={{ strokeDashoffset: offset }}
           />
-          <text x="33" y="37" textAnchor="middle" fill="var(--fg)"
+          <text x="33" y="37" textAnchor="middle" fill="var(--ink)"
             fontFamily="DM Sans" fontSize="16" fontWeight="600">
             {percent}%
           </text>
@@ -750,10 +750,10 @@ export default function PortalClient({
 
           {bundle.preview.notes ? (
             <div style={{
-              border: "1px solid var(--stroke)",
+              border: "1px solid var(--rule)",
               borderRadius: 12,
               padding: 14,
-              background: "var(--panel2)",
+              background: "var(--paper-2)",
               marginTop: 8,
             }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
@@ -776,7 +776,7 @@ export default function PortalClient({
           <div style={{
             marginTop: 16,
             fontSize: 13,
-            color: "var(--muted2)",
+            color: "var(--muted-2)",
             lineHeight: 1.6,
           }}>
             We&apos;re handling the remaining items behind the scenes. You&apos;ll be notified
@@ -785,10 +785,10 @@ export default function PortalClient({
 
           {bundle.launch.notes ? (
             <div style={{
-              border: "1px solid var(--stroke)",
+              border: "1px solid var(--rule)",
               borderRadius: 12,
               padding: 14,
-              background: "var(--panel2)",
+              background: "var(--paper-2)",
               marginTop: 12,
             }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
@@ -904,7 +904,7 @@ export default function PortalClient({
                     onChange={(e) => setAssetFile(e.target.files?.[0] ?? null)}
                   />
                   {assetFile && (
-                    <div style={{ marginTop: 4, fontSize: 12, color: "var(--muted2)" }}>
+                    <div style={{ marginTop: 4, fontSize: 12, color: "var(--muted-2)" }}>
                       {assetFile.name} ({(assetFile.size / 1024).toFixed(0)} KB)
                     </div>
                   )}
@@ -939,10 +939,10 @@ export default function PortalClient({
 
           {bundle.portalState.assets.length === 0 && !showUploadForm ? (
             <div style={{
-              border: "1px dashed var(--stroke)",
+              border: "1px dashed var(--rule)",
               borderRadius: 14,
               padding: 14,
-              color: "var(--muted2)",
+              color: "var(--muted-2)",
               textAlign: "center",
               fontSize: 14,
             }}>
@@ -1018,10 +1018,10 @@ export default function PortalClient({
 
           {bundle.portalState.revisions.length === 0 ? (
             <div style={{
-              border: "1px dashed var(--stroke)",
+              border: "1px dashed var(--rule)",
               borderRadius: 14,
               padding: 14,
-              color: "var(--muted2)",
+              color: "var(--muted-2)",
               textAlign: "center",
               fontSize: 14,
             }}>
@@ -1135,7 +1135,7 @@ export default function PortalClient({
         {bundle.scope.notes ? (
           <div style={{
             marginTop: 8, padding: 12, borderRadius: 10,
-            background: "var(--panel2)", border: "1px solid var(--stroke)",
+            background: "var(--paper-2)", border: "1px solid var(--rule)",
           }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
               Intake notes
@@ -1180,7 +1180,7 @@ export default function PortalClient({
         {bundle.quote.deposit.notes ? (
           <div style={{
             marginTop: 8, padding: 12, borderRadius: 10,
-            background: "var(--panel2)", border: "1px solid var(--stroke)",
+            background: "var(--paper-2)", border: "1px solid var(--rule)",
           }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
               Deposit notes
@@ -1191,7 +1191,7 @@ export default function PortalClient({
         {bundle.agreement.publishedText ? (
           <div style={{
             marginTop: 8, padding: 12, borderRadius: 10,
-            background: "var(--panel2)", border: "1px solid var(--stroke)",
+            background: "var(--paper-2)", border: "1px solid var(--rule)",
           }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
               Published agreement
@@ -1223,7 +1223,7 @@ export default function PortalClient({
             <div style={{
               color: "var(--muted)", fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-wrap",
               maxHeight: 420, overflowY: "auto", padding: "10px 4px",
-              borderTop: "1px solid var(--stroke)",
+              borderTop: "1px solid var(--rule)",
             }}>
               {bundle.agreement.publishedText}
             </div>
@@ -1245,15 +1245,15 @@ export default function PortalClient({
           {bundle.history.changeOrders.map((co) => (
             <div key={co.id} style={{
               marginTop: 8, padding: 12, borderRadius: 10,
-              background: "var(--panel2)", border: "1px solid var(--stroke)",
+              background: "var(--paper-2)", border: "1px solid var(--rule)",
             }}>
-              <div style={{ fontWeight: 700, color: "var(--fg)" }}>{co.title}</div>
-              <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 4 }}>
+              <div style={{ fontWeight: 700, color: "var(--ink)" }}>{co.title}</div>
+              <div style={{ fontSize: 12, color: "var(--muted-2)", marginTop: 4 }}>
                 {fmtDate(co.createdAt)} · {pretty(co.status)}
               </div>
               <p className="p" style={{ margin: "8px 0 0", fontSize: 14 }}>{co.summary}</p>
               {(co.priceImpact || co.timelineImpact || co.scopeImpact) && (
-                <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 8 }}>
+                <div style={{ fontSize: 12, color: "var(--muted-2)", marginTop: 8 }}>
                   {co.priceImpact ? `Price: ${co.priceImpact}` : ""}
                   {co.priceImpact && co.timelineImpact ? " · " : ""}
                   {co.timelineImpact ? `Timeline: ${co.timelineImpact}` : ""}

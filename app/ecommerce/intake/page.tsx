@@ -234,7 +234,7 @@ export default function EcommerceIntakePage() {
         </div>
 
         {step > 0 && (
-          <div style={{ height: 3, background: "var(--stroke)", borderRadius: 99, marginBottom: 24, overflow: "hidden" }}>
+          <div style={{ height: 3, background: "var(--rule)", borderRadius: 99, marginBottom: 24, overflow: "hidden" }}>
             <div style={{ width: `${(step / totalSteps) * 100}%`, height: "100%", background: form.entryPath ? pathMeta[form.entryPath].color : "var(--accent)", transition: "width 0.3s ease" }} />
           </div>
         )}
@@ -245,10 +245,10 @@ export default function EcommerceIntakePage() {
               const meta = pathMeta[path];
               const selected = form.entryPath === path;
               return (
-                <button key={path} type="button" onClick={() => selectPath(path)} style={{ display: "grid", gridTemplateColumns: "12px 1fr auto", gap: 16, alignItems: "center", padding: "22px 24px", borderRadius: 16, border: `1px solid ${selected ? meta.color : "var(--stroke)"}`, background: selected ? `${meta.color}08` : "var(--panel)", cursor: "pointer", textAlign: "left", transition: "border-color 0.2s, background 0.2s, transform 0.2s" }}>
+                <button key={path} type="button" onClick={() => selectPath(path)} style={{ display: "grid", gridTemplateColumns: "12px 1fr auto", gap: 16, alignItems: "center", padding: "22px 24px", borderRadius: 16, border: `1px solid ${selected ? meta.color : "var(--rule)"}`, background: selected ? `${meta.color}08` : "var(--paper)", cursor: "pointer", textAlign: "left", transition: "border-color 0.2s, background 0.2s, transform 0.2s" }}>
                   <div style={{ width: 12, height: 12, borderRadius: "50%", background: meta.color, opacity: selected ? 1 : 0.4 }} />
                   <div>
-                    <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 500, color: "var(--fg)", letterSpacing: "-0.02em" }}>{meta.label}</div>
+                    <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 500, color: "var(--ink)", letterSpacing: "-0.02em" }}>{meta.label}</div>
                     <div style={{ fontSize: 14, color: "var(--muted)", marginTop: 4, lineHeight: 1.5 }}>{meta.description}</div>
                   </div>
                   <div style={{ fontSize: 18, color: meta.color, opacity: 0.6 }}>→</div>
@@ -283,7 +283,7 @@ export default function EcommerceIntakePage() {
               {serviceOptions.map((svc) => {
                 const checked = form.serviceTypes.includes(svc);
                 const accentColor = form.entryPath ? pathMeta[form.entryPath].color : "var(--accent)";
-                return <label key={svc} style={{ display: "flex", gap: 10, alignItems: "center", padding: "12px 14px", borderRadius: 10, border: `1px solid ${checked ? accentColor + "40" : "var(--stroke)"}`, background: checked ? accentColor + "08" : "var(--panel2)", cursor: "pointer", transition: "all 0.15s" }}><input type="checkbox" checked={checked} onChange={() => toggleList("serviceTypes", svc)} style={{ accentColor }} /><span style={{ fontSize: 14, color: "var(--fg)" }}>{svc}</span></label>;
+                return <label key={svc} style={{ display: "flex", gap: 10, alignItems: "center", padding: "12px 14px", borderRadius: 10, border: `1px solid ${checked ? accentColor + "40" : "var(--rule)"}`, background: checked ? accentColor + "08" : "var(--paper-2)", cursor: "pointer", transition: "all 0.15s" }}><input type="checkbox" checked={checked} onChange={() => toggleList("serviceTypes", svc)} style={{ accentColor }} /><span style={{ fontSize: 14, color: "var(--ink)" }}>{svc}</span></label>;
               })}
             </div>
             <div style={{ marginTop: 16 }}>
@@ -291,7 +291,7 @@ export default function EcommerceIntakePage() {
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
                 {CHANNELS.map((ch) => {
                   const active = form.salesChannels.includes(ch);
-                  return <button key={ch} type="button" onClick={() => toggleList("salesChannels", ch)} style={{ padding: "6px 14px", borderRadius: 999, fontSize: 13, fontWeight: 600, border: `1px solid ${active ? "var(--accent)" : "var(--stroke)"}`, background: active ? "rgba(201,168,76,0.08)" : "transparent", color: active ? "var(--accent)" : "var(--muted)", cursor: "pointer", transition: "all 0.15s" }}>{ch}</button>;
+                  return <button key={ch} type="button" onClick={() => toggleList("salesChannels", ch)} style={{ padding: "6px 14px", borderRadius: 999, fontSize: 13, fontWeight: 600, border: `1px solid ${active ? "var(--accent)" : "var(--rule)"}`, background: active ? "rgba(201,168,76,0.08)" : "transparent", color: active ? "var(--accent)" : "var(--muted)", cursor: "pointer", transition: "all 0.15s" }}>{ch}</button>;
                 })}
               </div>
             </div>
@@ -335,9 +335,9 @@ export default function EcommerceIntakePage() {
             <div className="portalPanelHeader"><h2 className="portalPanelTitle">Review your intake</h2></div>
             {form.entryPath && <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 12, border: `1px solid ${pathMeta[form.entryPath].color}30`, background: `${pathMeta[form.entryPath].color}08`, marginBottom: 16 }}><div style={{ width: 10, height: 10, borderRadius: "50%", background: pathMeta[form.entryPath].color }} /><span style={{ fontSize: 14, fontWeight: 600, color: pathMeta[form.entryPath].color }}>{pathMeta[form.entryPath].label}</span></div>}
 
-            <div style={{ border: "1px solid var(--accentStroke)", background: "var(--accentSoft)", borderRadius: 12, padding: 14, marginBottom: 16 }}>
+            <div style={{ border: "1px solid color-mix(in srgb, var(--accent) 28%, var(--paper))", background: "var(--accent-bg)", borderRadius: 12, padding: 14, marginBottom: 16 }}>
               <div className="smallNote">Recommended pricing lane</div>
-              <div style={{ marginTop: 8, color: "var(--fg)", fontWeight: 800, fontSize: 22 }}>{recommendation.tierLabel}</div>
+              <div style={{ marginTop: 8, color: "var(--ink)", fontWeight: 800, fontSize: 22 }}>{recommendation.tierLabel}</div>
               <div className="pDark" style={{ marginTop: 6 }}>{recommendation.displayRange}</div>
               <div className="smallNote" style={{ marginTop: 8 }}>{recommendation.summary}</div>
             </div>
@@ -377,12 +377,12 @@ export default function EcommerceIntakePage() {
           </div>
         )}
 
-        {step > 0 && <div style={{ marginTop: 12, fontSize: 12, color: "var(--muted2)", textAlign: "center" }}>Draft auto-saves in your browser</div>}
+        {step > 0 && <div style={{ marginTop: 12, fontSize: 12, color: "var(--muted-2)", textAlign: "center" }}>Draft auto-saves in your browser</div>}
       </div>
     </main>
   );
 }
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
-  return <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)", gap: 16 }}><span style={{ fontSize: 13, color: "var(--muted)", flexShrink: 0 }}>{label}</span><span style={{ fontSize: 13, fontWeight: 600, color: "var(--fg)", textAlign: "right", maxWidth: "60%" }}>{value}</span></div>;
+  return <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)", gap: 16 }}><span style={{ fontSize: 13, color: "var(--muted)", flexShrink: 0 }}>{label}</span><span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)", textAlign: "right", maxWidth: "60%" }}>{value}</span></div>;
 }
