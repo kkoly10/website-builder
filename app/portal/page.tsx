@@ -133,7 +133,7 @@ export default async function PortalPage() {
   const userName = quoteRows[0]?.lead_id ? leadById.get(quoteRows[0].lead_id)?.name : null;
 
   return (
-    <div className="container" style={{ paddingBottom: 48 }}>
+    <div className="container productWrap">
       <ScrollReveal />
 
       {/* ── Hero ── */}
@@ -176,7 +176,7 @@ export default async function PortalPage() {
       </div>
 
       {/* ── Lane Summary Cards ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12, marginBottom: 36 }}>
+      <div className="productGrid3">
         <LaneSummaryCard
           lane="website"
           title="Websites"
@@ -202,19 +202,19 @@ export default async function PortalPage() {
 
       {/* ── Website Projects ── */}
       {quoteRows.length > 0 && (
-        <section id="website-projects" style={{ marginBottom: 36 }}>
-          <div className="portalSectionLabel" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <section id="website-projects" className="productSection">
+          <div className="portalSectionLabel productSectionLabel">
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: LANE_COLORS.website.dot }} />
             Website projects
           </div>
 
-          <div style={{ display: "grid", gap: 10 }}>
+          <div className="productList">
             {quoteRows.map((q) => {
               const lead = q.lead_id ? leadById.get(q.lead_id) : null;
               const lc = LANE_COLORS.website;
               return (
                 <div key={q.id} style={{
-                  background: "var(--panel)", border: `1px solid ${lc.border}`,
+                  background: "var(--paper)", border: `1px solid ${lc.border}`,
                   borderRadius: 16, padding: "18px 22px",
                   display: "grid", gridTemplateColumns: "minmax(0,1fr) auto",
                   gap: 16, alignItems: "center",
@@ -223,13 +223,13 @@ export default async function PortalPage() {
                     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                       <span style={{
                         fontFamily: "'Playfair Display', Georgia, serif",
-                        fontSize: 18, fontWeight: 500, color: "var(--fg)", letterSpacing: "-0.02em",
+                        fontSize: 18, fontWeight: 500, color: "var(--ink)", letterSpacing: "-0.02em",
                       }}>
                         {lead?.name || "Website Project"}
                       </span>
                       <StatusPill status={q.status} lane="website" />
                     </div>
-                    <div style={{ display: "flex", gap: 14, marginTop: 6, flexWrap: "wrap", fontSize: 12, color: "var(--muted2)" }}>
+                    <div style={{ display: "flex", gap: 14, marginTop: 6, flexWrap: "wrap", fontSize: 12, color: "var(--muted-2)" }}>
                       <span>{fmtDate(q.created_at)}</span>
                       <span>{q.tier_recommended || "Website scope"}</span>
                       <span>{estimateLabel(q)}</span>
@@ -238,11 +238,11 @@ export default async function PortalPage() {
                   </div>
                   <div>
                     {q.public_token ? (
-                      <Link href={`/portal/${q.public_token}`} className="btn btnPrimary" style={{ fontSize: 12, padding: "8px 16px" }}>
+                      <Link href={`/portal/${q.public_token}`} className="btn btnPrimary productBtnSm">
                         Open workspace →
                       </Link>
                     ) : (
-                      <Link href="/build/intro" className="btn btnGhost" style={{ fontSize: 12, padding: "8px 16px" }}>
+                      <Link href="/build/intro" className="btn btnGhost productBtnSm">
                         Continue →
                       </Link>
                     )}
@@ -256,20 +256,20 @@ export default async function PortalPage() {
 
       {/* ── Ops Projects ── */}
       {opsRows.length > 0 && (
-        <section id="ops-projects" style={{ marginBottom: 36 }}>
-          <div className="portalSectionLabel" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <section id="ops-projects" className="productSection">
+          <div className="portalSectionLabel productSectionLabel">
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: LANE_COLORS.ops.dot }} />
             Workflow automation projects
           </div>
 
-          <div style={{ display: "grid", gap: 10 }}>
+          <div className="productList">
             {opsRows.map((o) => {
               const call = callByOps.get(o.id);
               const pie = pieByOps.get(o.id);
               const lc = LANE_COLORS.ops;
               return (
                 <div key={o.id} style={{
-                  background: "var(--panel)", border: `1px solid ${lc.border}`,
+                  background: "var(--paper)", border: `1px solid ${lc.border}`,
                   borderRadius: 16, padding: "18px 22px",
                   display: "grid", gridTemplateColumns: "minmax(0,1fr) auto",
                   gap: 16, alignItems: "center",
@@ -278,13 +278,13 @@ export default async function PortalPage() {
                     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                       <span style={{
                         fontFamily: "'Playfair Display', Georgia, serif",
-                        fontSize: 18, fontWeight: 500, color: "var(--fg)", letterSpacing: "-0.02em",
+                        fontSize: 18, fontWeight: 500, color: "var(--ink)", letterSpacing: "-0.02em",
                       }}>
                         {o.company_name || "Workflow Request"}
                       </span>
                       <StatusPill status={o.status} lane="ops" />
                     </div>
-                    <div style={{ display: "flex", gap: 14, marginTop: 6, flexWrap: "wrap", fontSize: 12, color: "var(--muted2)" }}>
+                    <div style={{ display: "flex", gap: 14, marginTop: 6, flexWrap: "wrap", fontSize: 12, color: "var(--muted-2)" }}>
                       <span>{fmtDate(o.created_at)}</span>
                       <span>{o.industry || "Workflow systems"}</span>
                       <span>{o.recommendation_tier || "Pending"}</span>
@@ -297,7 +297,7 @@ export default async function PortalPage() {
                     )}
                   </div>
                   <div>
-                    <Link href={`/portal/ops/${o.id}`} className="btn btnPrimary" style={{ fontSize: 12, padding: "8px 16px" }}>
+                    <Link href={`/portal/ops/${o.id}`} className="btn btnPrimary productBtnSm">
                       Open workspace →
                     </Link>
                   </div>
@@ -310,18 +310,18 @@ export default async function PortalPage() {
 
       {/* ── E-Commerce Projects ── */}
       {ecomRows.length > 0 && (
-        <section id="ecom-projects" style={{ marginBottom: 36 }}>
-          <div className="portalSectionLabel" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <section id="ecom-projects" className="productSection">
+          <div className="portalSectionLabel productSectionLabel">
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: LANE_COLORS.ecom.dot }} />
             E-commerce projects
           </div>
 
-          <div style={{ display: "grid", gap: 10 }}>
+          <div className="productList">
             {ecomRows.map((e) => {
               const lc = LANE_COLORS.ecom;
               return (
                 <div key={e.id} style={{
-                  background: "var(--panel)", border: `1px solid ${lc.border}`,
+                  background: "var(--paper)", border: `1px solid ${lc.border}`,
                   borderRadius: 16, padding: "18px 22px",
                   display: "grid", gridTemplateColumns: "minmax(0,1fr) auto",
                   gap: 16, alignItems: "center",
@@ -330,19 +330,19 @@ export default async function PortalPage() {
                     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                       <span style={{
                         fontFamily: "'Playfair Display', Georgia, serif",
-                        fontSize: 18, fontWeight: 500, color: "var(--fg)", letterSpacing: "-0.02em",
+                        fontSize: 18, fontWeight: 500, color: "var(--ink)", letterSpacing: "-0.02em",
                       }}>
                         {e.business_name || "E-Commerce Request"}
                       </span>
                       <StatusPill status={e.status} lane="ecom" />
                     </div>
-                    <div style={{ display: "flex", gap: 14, marginTop: 6, flexWrap: "wrap", fontSize: 12, color: "var(--muted2)" }}>
+                    <div style={{ display: "flex", gap: 14, marginTop: 6, flexWrap: "wrap", fontSize: 12, color: "var(--muted-2)" }}>
                       <span>{fmtDate(e.created_at)}</span>
                       <span>{e.store_url || "No store URL"}</span>
                     </div>
                   </div>
                   <div>
-                    <Link href={`/portal/ecommerce/${e.id}`} className="btn btnPrimary" style={{ fontSize: 12, padding: "8px 16px" }}>
+                    <Link href={`/portal/ecommerce/${e.id}`} className="btn btnPrimary productBtnSm">
                       Open workspace →
                     </Link>
                   </div>
@@ -355,16 +355,8 @@ export default async function PortalPage() {
 
       {/* ── Empty state ── */}
       {totalProjects === 0 && (
-        <div style={{
-          textAlign: "center", padding: 56, border: "1px dashed var(--stroke)",
-          borderRadius: 16, color: "var(--muted2)", marginTop: 8,
-        }}>
-          <div style={{
-            fontFamily: "'Playfair Display', Georgia, serif",
-            fontSize: 22, fontWeight: 500, color: "var(--fg)", marginBottom: 10,
-          }}>
-            No projects yet
-          </div>
+        <div className="productEmpty">
+          <div className="productEmptyTitle">No projects yet</div>
           <div style={{ fontSize: 14, lineHeight: 1.6, maxWidth: 400, margin: "0 auto" }}>
             Start a website quote, workflow audit, or e-commerce intake. Your projects will appear here with their own workspaces.
           </div>
@@ -388,10 +380,9 @@ function LaneSummaryCard({ lane, title, count, href, cta }: {
 }) {
   const lc = LANE_COLORS[lane];
   return (
-    <Link href={href} style={{
+    <Link href={href} className="productCard" style={{
       display: "block", textDecoration: "none",
-      background: lc.bg, border: `1px solid ${lc.border}`,
-      borderRadius: 16, padding: "20px 22px",
+      background: lc.bg, borderColor: lc.border, padding: "20px 22px",
       transition: "transform 0.2s, border-color 0.2s",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
@@ -402,11 +393,11 @@ function LaneSummaryCard({ lane, title, count, href, cta }: {
       </div>
       <div style={{
         fontFamily: "'Playfair Display', Georgia, serif",
-        fontSize: 28, fontWeight: 600, color: "var(--fg)", letterSpacing: "-0.02em",
+        fontSize: 28, fontWeight: 600, color: "var(--ink)", letterSpacing: "-0.02em",
       }}>
         {count}
       </div>
-      <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 4 }}>
+      <div style={{ fontSize: 12, color: "var(--muted-2)", marginTop: 4 }}>
         project{count !== 1 ? "s" : ""}
       </div>
       <div style={{ marginTop: 12, fontSize: 13, fontWeight: 600, color: lc.accent }}>
@@ -419,11 +410,7 @@ function LaneSummaryCard({ lane, title, count, href, cta }: {
 function StatusPill({ status, lane }: { status: string | null; lane: "website" | "ops" | "ecom" }) {
   const lc = LANE_COLORS[lane];
   return (
-    <span style={{
-      padding: "3px 10px", borderRadius: 999, fontSize: 10, fontWeight: 600,
-      textTransform: "uppercase", letterSpacing: "0.06em",
-      background: lc.bg, border: `1px solid ${lc.border}`, color: lc.accent,
-    }}>
+    <span className="productChip" style={{ background: lc.bg, border: `1px solid ${lc.border}`, color: lc.accent }}>
       {pretty(status)}
     </span>
   );

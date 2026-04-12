@@ -20,18 +20,18 @@ export default function FaqPage() {
           <p className="p maxW860">Clear answers on scope, pricing, ownership, and project workflow.</p>
         </div>
 
-        <section className="panel fadeUp" style={{ marginTop: 20 }}>
-          <div className="panelBody" style={{ display: "grid", gap: 10 }}>
+        <section className="panel fadeUp marketingStackLg">
+          <div className="panelBody">
             {FAQS.map(([question, answer]) => (
               <details key={question} className="card">
-                <summary className="cardInner" style={{ cursor: "pointer", fontWeight: 600 }}>{question}</summary>
-                <p className="p" style={{ margin: 0, padding: "0 1rem 1rem" }}>{answer}</p>
+                <summary className="cardInner faqSummary">{question}</summary>
+                <p className="p faqAnswer">{answer}</p>
               </details>
             ))}
           </div>
         </section>
 
-        <div className="row" style={{ marginTop: 16 }}>
+        <div className="row marketingActions">
           <Link href="/websites" className="btn btnPrimary">Explore websites</Link>
           <Link href="/contact" className="btn btnGhost">Contact support</Link>
         </div>
