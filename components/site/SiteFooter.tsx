@@ -4,16 +4,12 @@ export default function SiteFooter() {
   return (
     <footer className="footer">
       <div className="container">
-        <div
-          className="row"
-          style={{ justifyContent: "space-between", alignItems: "flex-start" }}
-        >
-          <div>
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div style={{ maxWidth: 560 }}>
             <div className="brandLogoTitle">CrecyStudio</div>
             <p className="pDark">
-              CrecyStudio builds premium websites, e-commerce systems, and
-              workflow automation for businesses that need cleaner growth,
-              stronger conversion, and less operational friction.
+              Website-first studio for high-trust marketing sites, operational systems,
+              and e-commerce improvements managed through one client workspace.
             </p>
           </div>
 
@@ -21,7 +17,6 @@ export default function SiteFooter() {
             <Link href="/websites">Websites</Link>
             <Link href="/ecommerce">E-Commerce</Link>
             <Link href="/systems">Workflow Systems</Link>
-            <Link href="/#services">Start Here</Link>
             <Link href="/process">How It Works</Link>
             <Link href="/faq">FAQ</Link>
             <Link href="/portal">Client Portal</Link>
@@ -30,17 +25,10 @@ export default function SiteFooter() {
             <Link href="/terms">Terms</Link>
           </div>
         </div>
-
         <hr />
-
-        <div
-          className="row"
-          style={{ justifyContent: "space-between", alignItems: "center" }}
-        >
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
           <div>&copy; {new Date().getFullYear()} CrecyStudio. All rights reserved.</div>
-          <div className="footerLinks">
-            <a href="mailto:hello@crecystudio.com">hello@crecystudio.com</a>
-          </div>
+          <a href="mailto:hello@crecystudio.com">hello@crecystudio.com</a>
         </div>
       </div>
     </footer>
