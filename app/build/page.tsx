@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import ScrollReveal from "@/components/site/ScrollReveal";
 
 type Mode = "chooser" | "guided" | "known";
 type Intent = "Marketing" | "Leads" | "Booking" | "Selling" | "Content" | "Membership" | "Other";
@@ -134,6 +135,7 @@ function BuildFormInner() {
 
   return (
     <div style={{ width: "100%" }}>
+      <ScrollReveal />
       {/* Header */}
       <div className="portalStory heroFadeUp" style={{ paddingBottom: 20 }}>
         <div className="portalStoryKicker">
