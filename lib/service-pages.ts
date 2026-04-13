@@ -1,6 +1,6 @@
 export const commonCrossLinks = [
   { label: "Explore Website Building", href: "/websites" },
-  { label: "Explore E-Commerce Services", href: "/ecommerce" },
+  { label: "Explore E-commerce Services", href: "/ecommerce" },
   { label: "Explore Workflow Automation", href: "/systems" },
 ];
 
@@ -177,7 +177,7 @@ export const ecommercePageData = {
     "Shopify, Amazon, Etsy, WooCommerce",
     "Monthly operations from $500/mo",
   ],
-  primaryCta: { label: "Start E-Commerce Intake", href: "/ecommerce/intake" },
+  primaryCta: { label: "Start E-commerce Intake", href: "/ecommerce/intake" },
   secondaryCta: { label: "See Pricing", href: "/ecommerce/pricing" },
   whoItsForTitle: "Best for online sellers who need more than just a storefront.",
   whoItsFor: [
@@ -308,7 +308,7 @@ export const ecommercePageData = {
   finalTitle: "Ready to stop doing everything yourself?",
   finalText:
     "Tell us what you need in a 2-minute intake. Build, run, or fix — we'll respond within 24 hours with a plan and pricing.",
-  finalPrimaryCta: { label: "Start E-Commerce Intake", href: "/ecommerce/intake" },
+  finalPrimaryCta: { label: "Start E-commerce Intake", href: "/ecommerce/intake" },
   finalSecondaryCta: { label: "See Full Pricing", href: "/ecommerce/pricing" },
 };
 

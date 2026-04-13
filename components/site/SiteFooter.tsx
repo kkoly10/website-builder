@@ -8,15 +8,15 @@ export default function SiteFooter() {
           <div style={{ maxWidth: 560 }}>
             <div className="brandLogoTitle">CrecyStudio</div>
             <p className="pDark">
-              Website-first studio for high-trust marketing sites, operational systems,
+              Website-first studio for high-trust marketing sites, workflow automation,
               and e-commerce improvements managed through one client workspace.
             </p>
           </div>
 
           <div className="footerLinks">
             <Link href="/websites">Websites</Link>
-            <Link href="/ecommerce">E-Commerce</Link>
-            <Link href="/systems">Workflow Systems</Link>
+            <Link href="/ecommerce">E-commerce</Link>
+            <Link href="/systems">Workflow Automation</Link>
             <Link href="/process">How It Works</Link>
             <Link href="/faq">FAQ</Link>
             <Link href="/portal">Client Portal</Link>

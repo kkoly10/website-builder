@@ -25,9 +25,9 @@ export default function ProcessPage() {
         <section className="panel fadeUp marketingStackLg">
           <div className="panelBody supportCardsStack">
             {STEPS.map(([title, body], idx) => (
-              <article key={title} className="card">
-                <div className="cardInner">
-                  <p className="metaLabel">Step 0{idx + 1}</p>
+              <article key={title} className="card supportTimelineItem">
+                <div className="cardInner supportTimelineInner">
+                  <p className="metaLabel supportTimelineStep">Step 0{idx + 1}</p>
                   <h2 className="h3">{title}</h2>
                   <p className="p">{body}</p>
                 </div>

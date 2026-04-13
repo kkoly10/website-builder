@@ -43,7 +43,7 @@ export default function ComingSoonPage() {
   return (
     <main className="container section" >
       <a href="/" className="pDark">Back to home</a>
-      <h1 className="h1">E-Commerce Support <span className="pDark">(Coming Later)</span></h1>
+      <h1 className="h1">E-commerce Support <span className="pDark">(Coming Later)</span></h1>
       <p className="p">We are exploring additional support services for online sellers including fulfillment and marketplace operations.<br /><strong>This is not live yet.</strong> We are currently focused on website projects.</p>
       <p className="p">If this is something you would be interested in, join our early-interest list below. There is no commitment.</p>
 

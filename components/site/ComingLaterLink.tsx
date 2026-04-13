@@ -9,7 +9,7 @@ export default function ComingLaterLink() {
         fontSize: 13,
       }}
     >
-      Exploring E-Commerce Support · Coming Later
+      Exploring E-commerce Support · Coming Later
     </a>
   );
 }

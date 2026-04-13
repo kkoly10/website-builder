@@ -100,16 +100,16 @@ const laneResults: Record<Lane, {
     startLabel: "Get Website Quote",
   },
   ecommerce: {
-    name: "E-Commerce Systems",
+    name: "E-commerce Systems",
     tag: "Sell",
     reason:
       "Your answers point to friction in how people buy from you. A cleaner storefront, better product pages, and smoother checkout will directly impact revenue.",
     href: "/ecommerce",
     startHref: "/ecommerce/intake",
-    startLabel: "Start E-Commerce Intake",
+    startLabel: "Start E-commerce Intake",
   },
   workflows: {
-    name: "Workflow Systems",
+    name: "Workflow Automation",
     tag: "Streamline",
     reason:
       "Your answers point to operational drag. Automating the repetitive work, cleaning up handoffs, and connecting your tools will free up hours every week.",

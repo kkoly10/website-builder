@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 const FAQS = [
   ["How fast do I get an estimate?", "Most website estimates are delivered within 24 hours after intake submission."],
-  ["Do you only build websites?", "Websites are the primary lane. We also support e-commerce and workflow systems when needed."],
+  ["Do you only build websites?", "Websites are the primary lane. We also support e-commerce and workflow automation when needed."],
   ["Will I own the finished project?", "Yes. You keep your domain, code, assets, and production access once payments are complete."],
   ["How does portal access work?", "Clients get secure portal access for milestones, uploads, feedback, and launch tracking."],
 ];

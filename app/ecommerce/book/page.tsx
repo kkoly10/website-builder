@@ -21,7 +21,7 @@ export default function EcommerceBookPage({ searchParams }: { searchParams: { ec
 
             <div style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap" }}>
               <Link href="/contact" className="btn btnPrimary">Request Seller Strategy Call <span className="btnArrow">→</span></Link>
-              <Link href="/ecommerce/pricing" className="btn btnGhost">Book E-Commerce Planning Call</Link>
+              <Link href="/ecommerce/pricing" className="btn btnGhost">Book E-commerce Planning Call</Link>
             </div>
           </div>
         </div>

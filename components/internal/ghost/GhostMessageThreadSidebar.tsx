@@ -119,7 +119,7 @@ export default function GhostMessageThreadSidebar() {
               <option value="global">Global / no project</option>
               <option value="website">Website</option>
               <option value="ops">Ops</option>
-              <option value="ecommerce">E-Commerce</option>
+              <option value="ecommerce">E-commerce</option>
             </select>
 
             <input
