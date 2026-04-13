@@ -1,4 +1,4 @@
-import Link from "next/link";
+import SupportPageShell from "@/components/site/SupportPageShell";
 import ScrollReveal from "@/components/site/ScrollReveal";
 
 export const dynamic = "force-dynamic";
@@ -13,15 +13,17 @@ const FAQS = [
 export default function FaqPage() {
   return (
     <ScrollReveal>
-      <main className="container section marketingPage">
-        <div className="heroFadeUp">
-          <p className="kicker"><span className="kickerDot" />FAQ</p>
-          <h1 className="h1">Answers before you commit</h1>
-          <p className="p maxW860">Clear answers on scope, pricing, ownership, and project workflow.</p>
-        </div>
-
+      <SupportPageShell
+        kicker="FAQ"
+        title="Answers before you commit"
+        description="Clear answers on scope, pricing, ownership, and project workflow."
+        ctas={[
+          { href: "/websites", label: "Explore websites" },
+          { href: "/contact", label: "Contact support", variant: "ghost" },
+        ]}
+      >
         <section className="panel fadeUp marketingStackLg">
-          <div className="panelBody">
+          <div className="panelBody supportCardsStack">
             {FAQS.map(([question, answer]) => (
               <details key={question} className="card">
                 <summary className="cardInner faqSummary">{question}</summary>
@@ -30,12 +32,7 @@ export default function FaqPage() {
             ))}
           </div>
         </section>
-
-        <div className="row marketingActions">
-          <Link href="/websites" className="btn btnPrimary">Explore websites</Link>
-          <Link href="/contact" className="btn btnGhost">Contact support</Link>
-        </div>
-      </main>
+      </SupportPageShell>
     </ScrollReveal>
   );
 }
