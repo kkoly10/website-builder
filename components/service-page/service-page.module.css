@@ -6,6 +6,7 @@
 .heroOverlay { position: absolute; inset: 0; background: linear-gradient(180deg, color-mix(in srgb, var(--paper) 55%, transparent), var(--paper)); }
 .heroContent { position: relative; padding: 5rem 0 3rem; max-width: 880px; }
 .eyebrow,.sectionLabel,.priceLabel { font: 500 11px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 .8rem; }
+.darkLabel { font: 500 11px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: color-mix(in srgb, var(--paper) 70%, var(--muted)); margin: 0 0 .8rem; }
 .heroTitle { margin: 0; font: 700 clamp(2.2rem,6vw,5rem)/.94 var(--font-display); letter-spacing: -.045em; }
 .heroIntro { margin-top: 1rem; color: var(--ink-2); max-width: 60ch; }
 .heroActions,.crossLinks,.finalActions { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1.1rem; }
@@ -17,19 +18,33 @@
 .section { padding: 3.8rem 0; border-bottom: 1px solid var(--rule); }
 .sectionHeading { margin: 0; font: 600 clamp(1.8rem,4vw,3.2rem)/1 var(--font-display); letter-spacing: -.03em; }
 .sectionTitle,.cardTitle,.finalTitle { margin: 0; font: 600 clamp(1.2rem,3vw,2rem)/1.1 var(--font-display); }
+.fitSubheading { margin: 1rem 0 0; font: 500 1rem/1.3 var(--font-display); }
 .sectionText,.cardText,.priceDetail,.faqAnswer,.finalText { color: var(--ink-2); line-height: 1.65; }
 .twoCol,.gridThree,.processGrid { display: grid; gap: .8rem; }
 .twoCol { grid-template-columns: repeat(2,minmax(0,1fr)); }
 .gridThree { grid-template-columns: repeat(3,minmax(0,1fr)); }
 .processGrid { grid-template-columns: repeat(4,minmax(0,1fr)); }
+.fitSplit { display: grid; grid-template-columns: 1.4fr 1fr; gap: .8rem; }
+.fitPanel,.notFitPanel { border: 1px solid var(--rule); padding: 1.25rem; }
+.fitPanel { background: var(--paper-2); }
+.notFitPanel { background: color-mix(in srgb, var(--paper) 84%, var(--ink) 16%); }
+.problemGrid { margin-top: 1rem; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .8rem; }
+.problemCard { border: 1px solid var(--rule); padding: 1rem; background: var(--paper); display: grid; gap: .6rem; }
+.problemIndex,.faqIndex { margin: 0; font: 500 11px/1 var(--font-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
 .card,.processCard,.faqItem,.finalCta { border: 1px solid var(--rule); background: var(--paper); }
 .card,.processCard,.finalCta { padding: 1rem; }
+.pricingCard { border: 1px solid var(--ink); background: color-mix(in srgb, var(--paper) 94%, var(--ink) 6%); padding: 1rem; }
 .list { margin: .85rem 0 0; padding-left: 1rem; color: var(--ink-2); }
 .list li { margin-bottom: .6rem; }
 .pricingHeader,.processHeader { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
 .priceValue { margin: .3rem 0 .6rem; font: 600 clamp(1.5rem,3vw,2.2rem)/1 var(--font-display); }
 .faqList { display: grid; gap: .6rem; margin-top: 1rem; }
-.faqItem summary { cursor: pointer; font-weight: 600; list-style: none; padding: 1rem; }
-.faqAnswer { margin: 0; padding: 0 1rem 1rem; }
+.faqRow { display: grid; grid-template-columns: 56px 1fr; gap: .8rem; border-top: 1px solid var(--rule); padding-top: .85rem; }
+.faqQuestion { margin: 0; font: 600 1.06rem/1.3 var(--font-display); }
+.faqAnswer { margin: .4rem 0 0; }
+.darkBand { padding: 4.2rem 0; background: var(--ink); color: var(--paper); border-bottom: 1px solid var(--rule); }
+.darkBand .sectionHeading,.darkBand .cardTitle { color: var(--paper); }
+.darkBand .sectionText,.darkBand .cardText { color: color-mix(in srgb, var(--paper) 78%, var(--muted)); }
+.darkBand .processCard,.darkBand .stepBadge { border-color: color-mix(in srgb, var(--paper) 28%, transparent); background: color-mix(in srgb, var(--ink) 78%, var(--paper) 22%); color: var(--paper); }
 .finalCta { background: var(--paper-2); }
-@media (max-width: 980px) { .twoCol,.gridThree,.processGrid { grid-template-columns: 1fr; } .pricingHeader,.processHeader { display: grid; } }
+@media (max-width: 980px) { .twoCol,.gridThree,.processGrid,.fitSplit,.problemGrid { grid-template-columns: 1fr; } .pricingHeader,.processHeader { display: grid; } }
