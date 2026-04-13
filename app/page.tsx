@@ -71,7 +71,7 @@ export default function Home() {
             <TrackLink href="/build/intro" event="cta_home_hero_quote" className="btn btnPrimary">
               Get a free estimate <span className="btnArrow">→</span>
             </TrackLink>
-            <TrackLink href="/process" event="cta_home_hero_process" className={styles.heroSecondaryCta}>
+            <TrackLink href="#how-it-works" event="cta_home_hero_process" className={styles.heroSecondaryCta}>
               See how it works
             </TrackLink>
           </div>
