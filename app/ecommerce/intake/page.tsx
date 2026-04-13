@@ -209,8 +209,8 @@ export default function EcommerceIntakePage() {
   const reviewStep = (step === 4 && form.entryPath !== "build") || (step === 5 && form.entryPath === "build");
 
   return (
-    <main className="container" style={{ paddingBottom: 64 }}>
-      <div style={{ maxWidth: 780, margin: "0 auto" }}>
+    <main className="container productWrap">
+      <div className="ecomIntakeShell">
         <div className="portalStory heroFadeUp" style={{ paddingBottom: 24 }}>
           <div className="portalStoryKicker">
             <span className="portalStoryKickerDot" />
@@ -377,12 +377,17 @@ export default function EcommerceIntakePage() {
           </div>
         )}
 
-        {step > 0 && <div style={{ marginTop: 12, fontSize: 12, color: "var(--muted-2)", textAlign: "center" }}>Draft auto-saves in your browser</div>}
+        {step > 0 && <div className="smallNote ecomIntakeDraftNote">Draft auto-saves in your browser</div>}
       </div>
     </main>
   );
 }
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
-  return <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)", gap: 16 }}><span style={{ fontSize: 13, color: "var(--muted)", flexShrink: 0 }}>{label}</span><span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)", textAlign: "right", maxWidth: "60%" }}>{value}</span></div>;
+  return (
+    <div className="ecomReviewRow">
+      <span className="ecomReviewLabel">{label}</span>
+      <span className="ecomReviewValue">{value}</span>
+    </div>
+  );
 }
