@@ -1,4 +1,4 @@
-import Link from "next/link";
+import SupportPageShell from "@/components/site/SupportPageShell";
 import ScrollReveal from "@/components/site/ScrollReveal";
 
 export const dynamic = "force-dynamic";
@@ -13,15 +13,17 @@ const STEPS = [
 export default function ProcessPage() {
   return (
     <ScrollReveal>
-      <main className="container section marketingPage">
-        <div className="heroFadeUp">
-          <p className="kicker"><span className="kickerDot" />How it works</p>
-          <h1 className="h1">A simple process with clear milestones</h1>
-          <p className="p maxW860">Every lane uses the same execution rhythm so projects stay predictable and visible.</p>
-        </div>
-
+      <SupportPageShell
+        kicker="How it works"
+        title="A simple process with clear milestones"
+        description="Every lane uses the same execution rhythm so projects stay predictable and visible."
+        ctas={[
+          { href: "/build/intro", label: "Start website estimate" },
+          { href: "/faq", label: "Read FAQs", variant: "ghost" },
+        ]}
+      >
         <section className="panel fadeUp marketingStackLg">
-          <div className="panelBody">
+          <div className="panelBody supportCardsStack">
             {STEPS.map(([title, body], idx) => (
               <article key={title} className="card">
                 <div className="cardInner">
@@ -33,12 +35,7 @@ export default function ProcessPage() {
             ))}
           </div>
         </section>
-
-        <div className="row marketingActions">
-          <Link href="/build/intro" className="btn btnPrimary">Start website estimate</Link>
-          <Link href="/faq" className="btn btnGhost">Read FAQs</Link>
-        </div>
-      </main>
+      </SupportPageShell>
     </ScrollReveal>
   );
 }
