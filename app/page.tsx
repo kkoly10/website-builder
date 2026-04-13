@@ -71,7 +71,7 @@ export default function Home() {
             <TrackLink href="/build/intro" event="cta_home_hero_quote" className="btn btnPrimary">
               Get a free estimate <span className="btnArrow">→</span>
             </TrackLink>
-            <TrackLink href="/process" event="cta_home_hero_process" className={styles.heroSecondaryCta}>
+            <TrackLink href="#how-it-works" event="cta_home_hero_process" className={styles.heroSecondaryCta}>
               See how it works
             </TrackLink>
           </div>
@@ -175,7 +175,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="services" className={`${styles.pricing} fadeUp`}>
+      <section className={`${styles.pricing} fadeUp`}>
         <div className="container">
           <div className={styles.pricingHead}>
             <div>
@@ -222,12 +222,12 @@ export default function Home() {
           <p className={styles.sectionLabel}>Also offered</p>
           <div className={styles.lanes}>
             <article className={styles.lane}>
-              <h4>Workflow automation</h4>
+              <h4>Workflow systems</h4>
               <p>Custom automation for teams buried in manual handoffs, spreadsheet ops, and repetitive admin tasks.</p>
-              <TrackLink href="/systems" event="cta_home_secondary_systems" className={styles.laneLink}>Explore workflow automation →</TrackLink>
+              <TrackLink href="/systems" event="cta_home_secondary_systems" className={styles.laneLink}>Explore systems →</TrackLink>
             </article>
             <article className={styles.lane}>
-              <h4>E-commerce</h4>
+              <h4>E-commerce fixes</h4>
               <p>Diagnostic and rebuild work for stores that leak conversions or outgrow their current setup.</p>
               <TrackLink href="/ecommerce" event="cta_home_secondary_ecom" className={styles.laneLink}>Explore e-commerce →</TrackLink>
             </article>

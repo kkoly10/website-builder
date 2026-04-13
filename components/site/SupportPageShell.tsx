@@ -17,7 +17,7 @@ export default function SupportPageShell({
   ctas?: Cta[];
 }) {
   return (
-    <section className="container section marketingPage">
+    <main className="container section marketingPage">
       <header className="marketingHero heroFadeUp">
         <p className="kicker">
           <span className="kickerDot" />
@@ -42,6 +42,6 @@ export default function SupportPageShell({
           ))}
         </div>
       ) : null}
-    </section>
+    </main>
   );
 }

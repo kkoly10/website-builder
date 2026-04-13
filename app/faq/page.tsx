@@ -23,18 +23,12 @@ export default function FaqPage() {
         ]}
       >
         <section className="panel fadeUp marketingStackLg">
-          <div className="panelHeader">
-            <p className="metaLabel">Common questions</p>
-          </div>
-          <div className="panelBody supportFaqRows">
-            {FAQS.map(([question, answer], idx) => (
-              <article key={question} className="supportFaqRow">
-                <p className="supportFaqIndex">{String(idx + 1).padStart(2, "0")}</p>
-                <div>
-                  <h2 className="h3 supportFaqQuestion">{question}</h2>
-                  <p className="p faqAnswer">{answer}</p>
-                </div>
-              </article>
+          <div className="panelBody supportCardsStack">
+            {FAQS.map(([question, answer]) => (
+              <details key={question} className="card">
+                <summary className="cardInner faqSummary">{question}</summary>
+                <p className="p faqAnswer">{answer}</p>
+              </details>
             ))}
           </div>
         </section>

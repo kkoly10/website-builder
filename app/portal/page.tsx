@@ -169,7 +169,7 @@ export default async function PortalPage() {
 
       <div className="productGrid3">
         <LaneSummaryCard lane="website" title="Websites" count={quoteRows.length} href={quoteRows.length > 0 ? "#website-projects" : "/build/intro"} cta={quoteRows.length > 0 ? "View projects" : "Start a quote"} />
-        <LaneSummaryCard lane="ops" title="Workflow automation" count={opsRows.length} href={opsRows.length > 0 ? "#ops-projects" : "/ops-intake"} cta={opsRows.length > 0 ? "View projects" : "Start an audit"} />
+        <LaneSummaryCard lane="ops" title="Automation" count={opsRows.length} href={opsRows.length > 0 ? "#ops-projects" : "/ops-intake"} cta={opsRows.length > 0 ? "View projects" : "Start an audit"} />
         <LaneSummaryCard lane="ecom" title="E-commerce" count={ecomRows.length} href={ecomRows.length > 0 ? "#ecom-projects" : "/ecommerce/intake"} cta={ecomRows.length > 0 ? "View projects" : "Start an intake"} />
       </div>
 
@@ -220,12 +220,7 @@ export default async function PortalPage() {
                   lane={lc}
                   title={o.company_name || "Workflow Request"}
                   status={<StatusPill status={o.status} lane="ops" />}
-                  meta={[
-                    fmtDate(o.created_at),
-                    o.industry || "Workflow automation",
-                    o.recommendation_tier || "Pending",
-                    `Call: ${call?.status ? pretty(call.status) : "Not requested"}`,
-                  ]}
+                  meta={[fmtDate(o.created_at), o.industry || "Workflow systems", o.recommendation_tier || "Pending", `Call: ${pretty(call?.status) || "Not requested"}`]}
                   summary={pie?.summary ? (pie.summary.length > 120 ? pie.summary.slice(0, 120) + "…" : pie.summary) : undefined}
                   action={<Link href={`/portal/ops/${o.id}`} className="btn btnPrimary productBtnSm">Open workspace →</Link>}
                 />
@@ -247,7 +242,7 @@ export default async function PortalPage() {
               <ProjectListCard
                 key={e.id}
                 lane={LANE_COLORS.ecom}
-                title={e.business_name || "E-commerce Request"}
+                title={e.business_name || "E-Commerce Request"}
                 status={<StatusPill status={e.status} lane="ecom" />}
                 meta={[fmtDate(e.created_at), e.store_url || "No store URL"]}
                 action={<Link href={`/portal/ecommerce/${e.id}`} className="btn btnPrimary productBtnSm">Open workspace →</Link>}

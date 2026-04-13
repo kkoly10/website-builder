@@ -211,7 +211,7 @@ export default function ServicePage({
               <p className={styles.darkLabel}>How it works</p>
               <h2 className={styles.sectionHeading}>{processTitle}</h2>
             </div>
-            <p className={styles.sectionText}>{processIntro}</p>
+            <p className={styles.sectionText}>{pricingIntro}</p>
           </div>
           <div className={styles.processGrid}>
             {process.map((item) => (
@@ -232,7 +232,7 @@ export default function ServicePage({
               <p className={styles.sectionLabel}>Pricing approach</p>
               <h2 className={styles.sectionHeading}>{pricingTitle}</h2>
             </div>
-            <p className={styles.sectionText}>{pricingIntro}</p>
+            <p className={styles.sectionText}>{processIntro}</p>
           </div>
           <div className={styles.gridThree}>
             {pricingCards.map((card) => (

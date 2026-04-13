@@ -220,7 +220,6 @@ hr { border: none; border-top: 1px solid var(--rule); margin: 1rem 0; }
 
 @media (max-width: 980px) {
   .productProjectCard { grid-template-columns: 1fr; }
-  .supportFaqRow { grid-template-columns: 1fr; }
 }
 
 .ecomIntakeShell { max-width: 780px; margin: 0 auto; }

@@ -11,12 +11,9 @@ export default function BrandLogo({
 }: BrandLogoProps) {
   return (
     <Link href={href} className="brandLogo" aria-label="Crecy Studio home">
-      <span className="brandLogoMark" aria-hidden="true">
-        CS
-      </span>
       <span className="brandLogoText">
         <span className="brandLogoTitle">
-          crecy<span className="brandLogoDot">.</span>studio
+          crecy<span style={{ color: "var(--accent)" }}>.</span>studio
         </span>
         {showTag ? (
           <span className="brandLogoSub">
