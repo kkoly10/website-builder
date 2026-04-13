@@ -78,7 +78,7 @@ export default async function RootLayout({
         <div className="siteShell">
           <header className="topNav">
             <div className="topNavInner">
-              <BrandLogo href="/" showTag />
+              <BrandLogo href="/" />
 
               <nav className="navLinks navDesktop">
                 {navLinks.map((item) => (
