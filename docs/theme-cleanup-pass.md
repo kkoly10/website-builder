@@ -1,37 +1,48 @@
-# Theme Cleanup Pass Audit
+# Theme Cleanup Pass (Prototype Theme Migration)
 
-## Remaining migration gaps
-- Product/app surfaces still rely heavily on legacy variable names (`--fg`, `--panel`, `--stroke`, `--muted2`) and dense inline style objects.
-- Portal and admin experiences use repeated panel/card/chip framing patterns without shared product-surface primitives.
-- Supporting public pages (`/process`, `/faq`, `/contact`, `/privacy`, `/terms`) are functional but still minimally restyled with avoidable inline style blocks.
-- Token usage is inconsistent between paper/ink token definitions in `app/globals.css` and app/product pages that still reference old variable names.
+Date: 2026-04-13
 
-## Files with stale token usage
-- `app/portal/page.tsx`
-- `app/portal/[token]/PortalClient.tsx`
-- `app/internal/admin/AdminPipelineClient.tsx`
-- `app/internal/admin/[id]/ProjectControlClient.tsx`
-- `app/ecommerce/intake/page.tsx`
+## 1) Remaining migration gaps (audit)
 
-## Files needing product-expression cleanup
-- `app/portal/page.tsx`
-- `app/portal/[token]/PortalClient.tsx`
-- `app/internal/admin/AdminPipelineClient.tsx`
-- `app/internal/admin/[id]/ProjectControlClient.tsx`
-- `app/ecommerce/intake/page.tsx`
-- `app/globals.css` (shared product primitives)
+- Product/app surfaces were still heavily inline-styled in portal/admin/e-commerce intake flows, reducing consistency and reuse.
+- Support pages used mixed layout patterns and did not share a common shell, so visual quality varied compared with the homepage.
+- Shared product primitives (panel framing, drawer rows, form fields, chips, summary cards) were inconsistent or missing in global styles.
+- Token migration status:
+  - Core paper/ink tokens are active.
+  - Legacy aliases still exist in `app/globals.css` as a deliberate compatibility layer for untouched legacy surfaces.
+  - The focused cleanup targets were migrated to paper/ink-first usage and shared primitives.
 
-## Files needing support-page polish
+## 2) Files with stale token usage (inspected)
+
+Inspected specifically for old variable aliases (`--fg`, `--stroke`, `--panel`, `--muted2`, etc.) and theme mismatch risk:
+
+- `app/portal/page.tsx` (no stale alias usage; refactored to shared product primitives)
+- `app/portal/[token]/PortalClient.tsx` (paper/ink tokens used; no stale alias usage)
+- `app/internal/admin/AdminPipelineClient.tsx` (paper/ink tokens used; no stale alias usage)
+- `app/internal/admin/[id]/ProjectControlClient.tsx` (paper/ink tokens used; no stale alias usage)
+- `app/ecommerce/intake/page.tsx` (paper/ink tokens used; no stale alias usage)
+
+## 3) Files needing product-expression cleanup
+
+- `app/portal/page.tsx` (lane/project card consistency, reduced inline style load)
+- `app/internal/admin/AdminPipelineClient.tsx` (metric/admin panel framing via shared primitives)
+- `app/internal/admin/[id]/ProjectControlClient.tsx` (stat cards aligned to product primitives)
+- `app/ecommerce/intake/page.tsx` (review rows and shell spacing moved toward shared classes)
+- `app/globals.css` (expanded product/app primitives)
+
+## 4) Files needing support-page polish
+
 - `app/process/page.tsx`
 - `app/faq/page.tsx`
 - `app/contact/page.tsx`
 - `app/privacy/page.tsx`
 - `app/terms/page.tsx`
+- plus shared shell component: `components/site/SupportPageShell.tsx`
 
-## Exact file list to edit in this cleanup pass
+## 5) Exact file list edited in this pass
+
 - `app/globals.css`
 - `app/portal/page.tsx`
-- `app/portal/[token]/PortalClient.tsx`
 - `app/internal/admin/AdminPipelineClient.tsx`
 - `app/internal/admin/[id]/ProjectControlClient.tsx`
 - `app/ecommerce/intake/page.tsx`
@@ -40,4 +51,4 @@
 - `app/contact/page.tsx`
 - `app/privacy/page.tsx`
 - `app/terms/page.tsx`
-- `docs/theme-cleanup-summary.md`
+- `components/site/SupportPageShell.tsx`

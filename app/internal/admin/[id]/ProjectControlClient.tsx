@@ -133,12 +133,9 @@ function PieRing({ score, size = 56 }: { score: number | null; size?: number }) 
 
 function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div style={{ padding: "14px 16px", background: "var(--paper-2)", borderRadius: 12, border: "1px solid var(--rule)", flex: "1 1 0", minWidth: 100 }}>
-      <div style={{ fontSize: 10, fontWeight: 600, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</div>
-      <div style={{
-        fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 600,
-        color: accent ? "var(--accent)" : "var(--ink)", marginTop: 4, letterSpacing: "-0.02em",
-      }}>{value}</div>
+    <div className="productCard productCardPad" style={{ background: "var(--paper-2)", flex: "1 1 0", minWidth: 100 }}>
+      <div className="fieldLabel" style={{ marginBottom: 0 }}>{label}</div>
+      <div className="productLaneCount" style={{ marginTop: 4, fontSize: 22, color: accent ? "var(--accent)" : "var(--ink)" }}>{value}</div>
     </div>
   );
 }
