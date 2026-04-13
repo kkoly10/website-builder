@@ -97,7 +97,7 @@ export default function ServicePage({
   finalSecondaryCta,
 }: ServicePageProps) {
   return (
-    <main className={`marketingPage ${styles.page}`}>
+    <main className={styles.page}>
       <section className={styles.hero}>
         <div className={styles.heroMedia}>
           <Image

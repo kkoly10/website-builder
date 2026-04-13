@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { trackEvent } from "@/lib/analytics/client";
+import ScrollReveal from "@/components/site/ScrollReveal";
 
 type QuizGoal = "more-leads" | "bookings" | "sell-online" | "show-work";
 type QuizTimeline = "fast" | "standard" | "flexible";
@@ -92,6 +93,7 @@ export default function BuildIntroPage() {
 
   return (
     <main className="container" style={{ maxWidth: 780, padding: "48px 0 80px" }}>
+      <ScrollReveal />
 
       {/* Hero */}
       <div className="portalStory heroFadeUp" style={{ paddingBottom: 28 }}>

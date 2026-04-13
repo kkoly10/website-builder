@@ -1,5 +1,5 @@
 .page { background: var(--paper); color: var(--ink); }
-.shell { width: min(1240px, calc(100% - 2rem)); margin: 0 auto; }
+.shell { width: min(1320px, 92vw); margin: 0 auto; }
 .hero { border-bottom: 1px solid var(--rule); position: relative; }
 .heroMedia { position: absolute; inset: 0; opacity: 0.14; }
 .heroImage { object-fit: cover; }
