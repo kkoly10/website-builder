@@ -6,12 +6,12 @@ import SiteFooter from "@/components/site/SiteFooter";
 import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "CrecyStudio | Websites, E-Commerce & Workflow Systems",
+  title: "CrecyStudio | Websites, E-commerce & Workflow Automation",
   description:
     "Premium websites, e-commerce systems, and workflow automation for growth-focused businesses.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com"),
   openGraph: {
-    title: "CrecyStudio | Websites, E-Commerce & Workflow Systems",
+    title: "CrecyStudio | Websites, E-commerce & Workflow Automation",
     description:
       "Premium websites, e-commerce systems, and workflow automation for growth-focused businesses.",
     url: "/",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "CrecyStudio | Websites, E-Commerce & Workflow Systems",
+    title: "CrecyStudio | Websites, E-commerce & Workflow Automation",
     description:
       "Premium websites, e-commerce systems, and workflow automation for growth-focused businesses.",
   },
@@ -61,8 +61,8 @@ export default async function RootLayout({
 
   const navLinks = [
     { href: "/websites", label: "Websites" },
-    { href: "/ecommerce", label: "E-Commerce" },
-    { href: "/systems", label: "Workflow Systems" },
+    { href: "/ecommerce", label: "E-commerce" },
+    { href: "/systems", label: "Workflow Automation" },
     { href: "/process", label: "How It Works" },
     { href: "/faq", label: "FAQ" },
     { href: portalHref, label: "Client Portal" },
@@ -78,7 +78,7 @@ export default async function RootLayout({
         <div className="siteShell">
           <header className="topNav">
             <div className="topNavInner">
-              <BrandLogo href="/" showTag />
+              <BrandLogo href="/" />
 
               <nav className="navLinks navDesktop">
                 {navLinks.map((item) => (

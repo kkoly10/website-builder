@@ -25,7 +25,7 @@ const PROBLEMS: Problem[] = [
     prompt: "My team is stuck in repetitive manual handoffs.",
     impact: "We map bottlenecks, automate routing, and create cleaner operational systems that save hours each week.",
     cta: { label: "Start workflow audit", href: "/ops-intake" },
-    learn: { label: "Explore systems", href: "/systems" },
+    learn: { label: "Explore workflow automation", href: "/systems" },
   },
   {
     key: "ecom",

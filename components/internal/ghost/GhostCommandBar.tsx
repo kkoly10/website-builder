@@ -62,7 +62,7 @@ export default function GhostCommandBar() {
           >
             <option value="website">Website</option>
             <option value="ops">Ops</option>
-            <option value="ecommerce">E-Commerce</option>
+            <option value="ecommerce">E-commerce</option>
           </select>
 
           <input

@@ -144,17 +144,11 @@ function PieRing({ score, size = 40 }: { score: number | null; size?: number }) 
 
 function MetricCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div style={{
-      background: "var(--paper-2)", borderRadius: 14, padding: "16px 18px",
-      border: "1px solid var(--rule)", flex: "1 1 0",
-    }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+    <div className="productCard productCardPad" style={{ background: "var(--paper-2)", flex: "1 1 0" }}>
+      <div className="fieldLabel" style={{ marginBottom: 0 }}>
         {label}
       </div>
-      <div style={{
-        fontFamily: "'Playfair Display', Georgia, serif", fontSize: 26, fontWeight: 600,
-        color: "var(--ink)", marginTop: 6, letterSpacing: "-0.02em",
-      }}>
+      <div className="productLaneCount" style={{ marginTop: 6 }}>
         {value}
       </div>
       {sub && <div style={{ fontSize: 12, color: "var(--muted-2)", marginTop: 2 }}>{sub}</div>}
@@ -213,10 +207,7 @@ function AdminSection({ title, hint, children, defaultOpen = false }: {
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={{
-      marginTop: 12, border: "1px solid var(--rule)", borderRadius: 14,
-      background: "rgba(255,255,255,0.015)", overflow: "hidden",
-    }}>
+    <div className="productCard" style={{ marginTop: 12, overflow: "hidden" }}>
       <button
         onClick={() => setOpen(!open)}
         style={{

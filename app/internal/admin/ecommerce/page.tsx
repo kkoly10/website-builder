@@ -25,7 +25,7 @@ export default async function EcommerceAdminPage() {
         <div className="cardInner">
           <div className="kicker">
             <span className="kickerDot" />
-            E-Commerce HQ
+            E-commerce HQ
           </div>
           <h1 className="h2">Store build, run, and fix pipeline</h1>
           <p className="pDark" style={{ marginTop: 4 }}>

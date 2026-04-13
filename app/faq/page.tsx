@@ -1,11 +1,11 @@
-import Link from "next/link";
+import SupportPageShell from "@/components/site/SupportPageShell";
 import ScrollReveal from "@/components/site/ScrollReveal";
 
 export const dynamic = "force-dynamic";
 
 const FAQS = [
   ["How fast do I get an estimate?", "Most website estimates are delivered within 24 hours after intake submission."],
-  ["Do you only build websites?", "Websites are the primary lane. We also support e-commerce and workflow systems when needed."],
+  ["Do you only build websites?", "Websites are the primary lane. We also support e-commerce and workflow automation when needed."],
   ["Will I own the finished project?", "Yes. You keep your domain, code, assets, and production access once payments are complete."],
   ["How does portal access work?", "Clients get secure portal access for milestones, uploads, feedback, and launch tracking."],
 ];
@@ -13,29 +13,32 @@ const FAQS = [
 export default function FaqPage() {
   return (
     <ScrollReveal>
-      <main className="container section marketingPage">
-        <div className="heroFadeUp">
-          <p className="kicker"><span className="kickerDot" />FAQ</p>
-          <h1 className="h1">Answers before you commit</h1>
-          <p className="p maxW860">Clear answers on scope, pricing, ownership, and project workflow.</p>
-        </div>
-
+      <SupportPageShell
+        kicker="FAQ"
+        title="Answers before you commit"
+        description="Clear answers on scope, pricing, ownership, and project workflow."
+        ctas={[
+          { href: "/websites", label: "Explore websites" },
+          { href: "/contact", label: "Contact support", variant: "ghost" },
+        ]}
+      >
         <section className="panel fadeUp marketingStackLg">
-          <div className="panelBody">
-            {FAQS.map(([question, answer]) => (
-              <details key={question} className="card">
-                <summary className="cardInner faqSummary">{question}</summary>
-                <p className="p faqAnswer">{answer}</p>
-              </details>
+          <div className="panelHeader">
+            <p className="metaLabel">Common questions</p>
+          </div>
+          <div className="panelBody supportFaqRows">
+            {FAQS.map(([question, answer], idx) => (
+              <article key={question} className="supportFaqRow">
+                <p className="supportFaqIndex">{String(idx + 1).padStart(2, "0")}</p>
+                <div>
+                  <h2 className="h3 supportFaqQuestion">{question}</h2>
+                  <p className="p faqAnswer">{answer}</p>
+                </div>
+              </article>
             ))}
           </div>
         </section>
-
-        <div className="row marketingActions">
-          <Link href="/websites" className="btn btnPrimary">Explore websites</Link>
-          <Link href="/contact" className="btn btnGhost">Contact support</Link>
-        </div>
-      </main>
+      </SupportPageShell>
     </ScrollReveal>
   );
 }

@@ -1,6 +1,6 @@
 export const commonCrossLinks = [
   { label: "Explore Website Building", href: "/websites" },
-  { label: "Explore E-Commerce Services", href: "/ecommerce" },
+  { label: "Explore E-commerce Services", href: "/ecommerce" },
   { label: "Explore Workflow Automation", href: "/systems" },
 ];
 
@@ -12,11 +12,12 @@ export const websitesPageData = {
   heroImage: "/images/services/website-hero.webp",
   heroAlt: "Premium website design for small businesses",
   heroStats: [
-    "Custom design — no templates",
-    "2–3 week delivery",
-    "You own the code and domain",
+    "2–3 wk typical delivery",
+    "Custom · no templates",
+    "$0 until scope is approved",
+    "Yours: code, domain, content",
   ],
-  primaryCta: { label: "Get Your Free Estimate", href: "/build/intro" },
+  primaryCta: { label: "Get a free estimate", href: "/build/intro" },
   secondaryCta: { label: "See How It Works", href: "/process" },
   whoItsForTitle: "Best for small businesses that need a credible online presence.",
   whoItsFor: [
@@ -25,87 +26,90 @@ export const websitesPageData = {
     "Your competitors' websites look better than yours, even though your service is superior.",
     "You've been burned by a freelancer who disappeared, and you want a structured process.",
   ],
-  problemsTitle: "The real reasons your website isn't working.",
+  problemsTitle: "Most small business websites fail for the same four reasons.",
   problems: [
-    "Your homepage doesn't explain what you do in the first 5 seconds.",
-    "Visitors can't figure out what to do next — no clear call to action.",
-    "The site doesn't look right on phones, where most people browse.",
-    "You have no idea if anyone visits, how long they stay, or where they drop off.",
+    "Your homepage doesn't explain what you do in five seconds.",
+    "There's no clear next step for visitors to take.",
+    "The site looks broken on phones, where most people browse.",
+    "You have no idea who visits or where they drop off.",
   ],
-  includesTitle: "What you get",
+  includesTitle: "Strategy, build, and launch — all in one engagement.",
   includes: [
     {
-      title: "Strategy + Structure",
+      title: "Structure that converts",
       items: [
-        "We plan your pages around one goal: getting visitors to contact you",
+        "Pages planned around one goal: getting visitors to contact you",
         "Messaging hierarchy so people understand your offer in seconds",
         "Section flow designed around how real visitors scan and decide",
+        "Competitor research so we know what you're up against",
       ],
     },
     {
-      title: "Design + Build",
+      title: "Custom, fast, and yours",
       items: [
         "Custom responsive design — mobile-first, fast-loading",
         "Contact forms, click-to-call, booking links — all set up",
         "SEO basics, meta tags, and analytics ready at launch",
+        "Real CMS so you can edit text without breaking anything",
       ],
     },
     {
-      title: "Launch + Handoff",
+      title: "Live, owned, and supported",
       items: [
         "Full QA before we push anything live",
         "Domain connection, SSL, and analytics setup",
         "You own everything — code, domain, content, data",
+        "30 days post-launch support included",
       ],
     },
   ],
-  pricingTitle: "Transparent pricing based on what you actually need",
+  pricingTitle: "You see the price before you commit.",
   pricingIntro:
-    "Every project is scoped based on page count, features, and complexity. You see the price before you commit — no surprises, no hidden fees.",
+    "Every project is scoped on what you actually need — no monthly hostage fees, no surprise add-ons. Pick a starting point and we'll send a fixed estimate within 24 hours.",
   pricingCards: [
     {
-      label: "Starter Site",
-      value: "$1,500 – $2,200",
-      detail: "1–3 pages. Clean design, contact form, mobile-ready. Perfect for service businesses that need a professional presence fast.",
+      label: "/ STARTER",
+      value: "from $1,800",
+      detail: "For a clean, credible single-page site that does one job well.",
     },
     {
-      label: "Growth Site",
-      value: "$2,300 – $3,400",
-      detail: "4–6 pages. Stronger structure, booking integration, blog or portfolio section. For businesses ready to convert more visitors.",
+      label: "/ GROWTH",
+      value: "from $3,800",
+      detail: "For most small businesses ready to look the part and convert.",
     },
     {
-      label: "Premium Build",
-      value: "$3,500 – $5,200",
-      detail: "7+ pages, payments, membership, or complex integrations. For businesses with bigger scope and specific technical needs.",
+      label: "/ PREMIUM",
+      value: "from $6,500",
+      detail: "For businesses that need a real site with depth, content, and moving parts.",
     },
   ],
-  processTitle: "From 'I need a website' to live in four steps",
+  processTitle: "Four steps. No surprises.",
   processIntro:
-    "You'll always know where things stand. No disappearing freelancers, no vague timelines.",
+    "You'll always know where things stand. No disappearing freelancers, no vague timelines, no wondering if we're still working on it.",
   process: [
     {
-      step: "01",
+      step: "/ 01 — DAY 1",
       title: "Tell us what you need",
       detail:
-        "Fill out a 2-minute form about your business, goals, and timeline. No sales call needed to get started.",
+        "Fill out a 10-minute intake about your business, goals, and timeline. No sales call required to get started.",
     },
     {
-      step: "02",
-      title: "Get a detailed estimate in 24 hours",
+      step: "/ 02 — DAY 2",
+      title: "Get a detailed estimate",
       detail:
-        "Our system scores your project and generates a scope with pricing, pages, features, and timeline. You review it in your private workspace.",
+        "Our system scores your project and generates a scope with pricing, pages, features, and timeline — usually within 24 hours.",
     },
     {
-      step: "03",
-      title: "We build — you review in real time",
+      step: "/ 03 — WEEK 1–3",
+      title: "We build, you review live",
       detail:
-        "You see a live preview, upload content, and submit feedback. Everything happens in one workspace instead of scattered emails.",
+        "You see a live preview, upload content, and submit feedback. Everything happens in your private workspace — no scattered emails.",
     },
     {
-      step: "04",
+      step: "/ 04 — LAUNCH DAY",
       title: "Launch and handoff",
       detail:
-        "Domain connected, analytics set up, forms tested, SEO basics done. We hand you the keys. Your code, your domain, your data.",
+        "Domain connected, analytics set up, forms tested, SEO basics done. We hand you the keys. The code is yours.",
     },
   ],
   bestFitTitle: "Start here if your first impression is the bottleneck.",
@@ -114,46 +118,51 @@ export const websitesPageData = {
     "You want more leads, more calls, or more bookings from your site.",
     "You want a structured build process with a clear scope and price.",
   ],
-  notFitTitle: "Probably not the right first move if…",
+  notFitTitle: "Don't start here if your real problem is somewhere else.",
   notFit: [
-    "You mainly need an online store with product listings and checkout — look at our e-commerce lane instead.",
-    "Your biggest problem is internal workflow chaos, not your public website — look at our automation lane.",
+    "You mainly need an online store with product listings and checkout.",
+    "Your biggest problem is internal workflow chaos, not your public website.",
     "You want the cheapest possible template site with no strategy behind it.",
+    "You're not ready to make decisions or share content for the next 30 days.",
   ],
-  faqTitle: "Website FAQs",
+  faqTitle: "Everything people ask before signing.",
   faqs: [
     {
-      question: "How long does a website build take?",
+      question: "How long does a website build actually take?",
       answer:
-        "Most builds land between 2 and 4 weeks depending on page count, content readiness, and revisions. You'll see a timeline in your estimate before committing.",
+        "Most builds land between 2 and 4 weeks depending on page count, content readiness, and revisions. You'll see a fixed timeline in your estimate before committing — and we hold to it. The biggest variable is how fast you can review and approve work.",
     },
     {
       question: "Do you write the copy or just design?",
       answer:
-        "We can work from your existing copy, restructure it, or write it with you. Full copy support increases scope but usually improves the result significantly.",
+        "Either way works. We can build from your existing copy, restructure it, or write it with you from scratch. Full copywriting increases scope but usually improves the result significantly — especially for service businesses where the words do the selling.",
     },
     {
-      question: "Can you redesign my existing site instead of starting over?",
+      question: "Can you redesign my existing site instead of starting from zero?",
       answer:
-        "Yes. If the foundation is usable, we can improve structure, visuals, and conversion flow without rebuilding everything from zero.",
+        "Yes — if the foundation is usable. We can improve structure, visuals, and conversion flow without rebuilding everything from scratch. If your current site is on Wix or Squarespace and you're locked in, we can usually migrate you to something you actually own.",
     },
     {
       question: "What happens after I submit the estimate form?",
       answer:
-        "You get a detailed scope with pricing within 24 hours. If you want to move forward, we schedule a quick planning call, you pay a 50% deposit, and we start building.",
+        "You get a detailed scope with pricing within 24 hours — no sales call required. If you want to move forward, we schedule a quick planning call, you pay a 50% deposit, and we start building. Everything happens in your private project workspace.",
     },
     {
       question: "What if I need ongoing changes after launch?",
       answer:
-        "You own the code and can edit it yourself or hire anyone to maintain it. We also offer optional monthly support if you want us to handle updates.",
+        "You own the code and can edit it yourself or hire anyone to maintain it — no lock-in. We also offer optional monthly support if you want us to handle updates, changes, and new pages on retainer. Most clients start without it and add it later if they need it.",
+    },
+    {
+      question: "What if I'm not happy with the design?",
+      answer:
+        "Every tier includes multiple revision rounds. We share early concepts before going deep, so course corrections happen when they're cheap — not after the whole site is built. In four years we've never had a project we couldn't bring across the finish line.",
     },
   ],
   crossLinks: commonCrossLinks.filter((item) => item.href !== "/websites"),
   finalTitle: "Ready to stop losing customers to a bad first impression?",
-  finalText:
-    "Get a free estimate in 24 hours. No call needed, no commitment, no pressure. Just tell us what you need and we'll show you what it costs.",
-  finalPrimaryCta: { label: "Get Your Free Estimate", href: "/build/intro" },
-  finalSecondaryCta: { label: "Compare Services", href: "/" },
+  finalText: "Let's make people actually call you.",
+  finalPrimaryCta: { label: "Start your free estimate", href: "/build/intro" },
+  finalSecondaryCta: { label: "Talk to a human first", href: "/contact" },
 };
 
 export const ecommercePageData = {
@@ -168,7 +177,7 @@ export const ecommercePageData = {
     "Shopify, Amazon, Etsy, WooCommerce",
     "Monthly operations from $500/mo",
   ],
-  primaryCta: { label: "Start E-Commerce Intake", href: "/ecommerce/intake" },
+  primaryCta: { label: "Start E-commerce Intake", href: "/ecommerce/intake" },
   secondaryCta: { label: "See Pricing", href: "/ecommerce/pricing" },
   whoItsForTitle: "Best for online sellers who need more than just a storefront.",
   whoItsFor: [
@@ -299,7 +308,7 @@ export const ecommercePageData = {
   finalTitle: "Ready to stop doing everything yourself?",
   finalText:
     "Tell us what you need in a 2-minute intake. Build, run, or fix — we'll respond within 24 hours with a plan and pricing.",
-  finalPrimaryCta: { label: "Start E-Commerce Intake", href: "/ecommerce/intake" },
+  finalPrimaryCta: { label: "Start E-commerce Intake", href: "/ecommerce/intake" },
   finalSecondaryCta: { label: "See Full Pricing", href: "/ecommerce/pricing" },
 };
 

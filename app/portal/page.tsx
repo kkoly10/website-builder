@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
@@ -136,7 +137,6 @@ export default async function PortalPage() {
     <div className="container productWrap">
       <ScrollReveal />
 
-      {/* ── Hero ── */}
       <div className="portalStory heroFadeUp">
         <div className="portalStoryKicker">
           <span className="portalStoryKickerDot" />
@@ -153,21 +153,13 @@ export default async function PortalPage() {
             : `You have ${totalProjects} active project${totalProjects !== 1 ? "s" : ""} across your service lanes. Open any workspace to check status, upload content, or leave feedback.`}
         </p>
 
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+        <div className="row productHeroActions">
           <Link href="/build/intro" className="portalStoryCta">
             New website quote <span className="portalStoryCtaArrow">→</span>
           </Link>
-          <Link href="/ops-intake" className="btn btnGhost" style={{ fontSize: 13 }}>
-            New workflow audit
-          </Link>
-          <Link href="/ecommerce/intake" className="btn btnGhost" style={{ fontSize: 13 }}>
-            New e-commerce intake
-          </Link>
-          {admin && (
-            <Link href="/internal/admin" className="btn btnGhost" style={{ fontSize: 13 }}>
-              Admin HQ
-            </Link>
-          )}
+          <Link href="/ops-intake" className="btn btnGhost productBtnSm">New workflow audit</Link>
+          <Link href="/ecommerce/intake" className="btn btnGhost productBtnSm">New e-commerce intake</Link>
+          {admin && <Link href="/internal/admin" className="btn btnGhost productBtnSm">Admin HQ</Link>}
         </div>
 
         <div className="portalStoryMeta">
@@ -175,90 +167,45 @@ export default async function PortalPage() {
         </div>
       </div>
 
-      {/* ── Lane Summary Cards ── */}
       <div className="productGrid3">
-        <LaneSummaryCard
-          lane="website"
-          title="Websites"
-          count={quoteRows.length}
-          href={quoteRows.length > 0 ? "#website-projects" : "/build/intro"}
-          cta={quoteRows.length > 0 ? "View projects" : "Start a quote"}
-        />
-        <LaneSummaryCard
-          lane="ops"
-          title="Automation"
-          count={opsRows.length}
-          href={opsRows.length > 0 ? "#ops-projects" : "/ops-intake"}
-          cta={opsRows.length > 0 ? "View projects" : "Start an audit"}
-        />
-        <LaneSummaryCard
-          lane="ecom"
-          title="E-commerce"
-          count={ecomRows.length}
-          href={ecomRows.length > 0 ? "#ecom-projects" : "/ecommerce/intake"}
-          cta={ecomRows.length > 0 ? "View projects" : "Start an intake"}
-        />
+        <LaneSummaryCard lane="website" title="Websites" count={quoteRows.length} href={quoteRows.length > 0 ? "#website-projects" : "/build/intro"} cta={quoteRows.length > 0 ? "View projects" : "Start a quote"} />
+        <LaneSummaryCard lane="ops" title="Workflow automation" count={opsRows.length} href={opsRows.length > 0 ? "#ops-projects" : "/ops-intake"} cta={opsRows.length > 0 ? "View projects" : "Start an audit"} />
+        <LaneSummaryCard lane="ecom" title="E-commerce" count={ecomRows.length} href={ecomRows.length > 0 ? "#ecom-projects" : "/ecommerce/intake"} cta={ecomRows.length > 0 ? "View projects" : "Start an intake"} />
       </div>
 
-      {/* ── Website Projects ── */}
       {quoteRows.length > 0 && (
         <section id="website-projects" className="productSection">
           <div className="portalSectionLabel productSectionLabel">
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: LANE_COLORS.website.dot }} />
+            <span className="productSectionDot" style={{ background: LANE_COLORS.website.dot }} />
             Website projects
           </div>
-
           <div className="productList">
             {quoteRows.map((q) => {
               const lead = q.lead_id ? leadById.get(q.lead_id) : null;
               const lc = LANE_COLORS.website;
               return (
-                <div key={q.id} style={{
-                  background: "var(--paper)", border: `1px solid ${lc.border}`,
-                  borderRadius: 16, padding: "18px 22px",
-                  display: "grid", gridTemplateColumns: "minmax(0,1fr) auto",
-                  gap: 16, alignItems: "center",
-                }}>
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                      <span style={{
-                        fontFamily: "'Playfair Display', Georgia, serif",
-                        fontSize: 18, fontWeight: 500, color: "var(--ink)", letterSpacing: "-0.02em",
-                      }}>
-                        {lead?.name || "Website Project"}
-                      </span>
-                      <StatusPill status={q.status} lane="website" />
-                    </div>
-                    <div style={{ display: "flex", gap: 14, marginTop: 6, flexWrap: "wrap", fontSize: 12, color: "var(--muted-2)" }}>
-                      <span>{fmtDate(q.created_at)}</span>
-                      <span>{q.tier_recommended || "Website scope"}</span>
-                      <span>{estimateLabel(q)}</span>
-                      <span>{quotePhase(q)}</span>
-                    </div>
-                  </div>
-                  <div>
-                    {q.public_token ? (
-                      <Link href={`/portal/${q.public_token}`} className="btn btnPrimary productBtnSm">
-                        Open workspace →
-                      </Link>
-                    ) : (
-                      <Link href="/build/intro" className="btn btnGhost productBtnSm">
-                        Continue →
-                      </Link>
-                    )}
-                  </div>
-                </div>
+                <ProjectListCard
+                  key={q.id}
+                  lane={lc}
+                  title={lead?.name || "Website Project"}
+                  status={<StatusPill status={q.status} lane="website" />}
+                  meta={[fmtDate(q.created_at), q.tier_recommended || "Website scope", estimateLabel(q), quotePhase(q)]}
+                  action={q.public_token ? (
+                    <Link href={`/portal/${q.public_token}`} className="btn btnPrimary productBtnSm">Open workspace →</Link>
+                  ) : (
+                    <Link href="/build/intro" className="btn btnGhost productBtnSm">Continue →</Link>
+                  )}
+                />
               );
             })}
           </div>
         </section>
       )}
 
-      {/* ── Ops Projects ── */}
       {opsRows.length > 0 && (
         <section id="ops-projects" className="productSection">
           <div className="portalSectionLabel productSectionLabel">
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: LANE_COLORS.ops.dot }} />
+            <span className="productSectionDot" style={{ background: LANE_COLORS.ops.dot }} />
             Workflow automation projects
           </div>
 
@@ -268,142 +215,99 @@ export default async function PortalPage() {
               const pie = pieByOps.get(o.id);
               const lc = LANE_COLORS.ops;
               return (
-                <div key={o.id} style={{
-                  background: "var(--paper)", border: `1px solid ${lc.border}`,
-                  borderRadius: 16, padding: "18px 22px",
-                  display: "grid", gridTemplateColumns: "minmax(0,1fr) auto",
-                  gap: 16, alignItems: "center",
-                }}>
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                      <span style={{
-                        fontFamily: "'Playfair Display', Georgia, serif",
-                        fontSize: 18, fontWeight: 500, color: "var(--ink)", letterSpacing: "-0.02em",
-                      }}>
-                        {o.company_name || "Workflow Request"}
-                      </span>
-                      <StatusPill status={o.status} lane="ops" />
-                    </div>
-                    <div style={{ display: "flex", gap: 14, marginTop: 6, flexWrap: "wrap", fontSize: 12, color: "var(--muted-2)" }}>
-                      <span>{fmtDate(o.created_at)}</span>
-                      <span>{o.industry || "Workflow systems"}</span>
-                      <span>{o.recommendation_tier || "Pending"}</span>
-                      <span>Call: {pretty(call?.status) || "Not requested"}</span>
-                    </div>
-                    {pie?.summary && (
-                      <div style={{ marginTop: 8, fontSize: 13, color: "var(--muted)", lineHeight: 1.5, maxWidth: 500 }}>
-                        {pie.summary.length > 120 ? pie.summary.slice(0, 120) + "…" : pie.summary}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <Link href={`/portal/ops/${o.id}`} className="btn btnPrimary productBtnSm">
-                      Open workspace →
-                    </Link>
-                  </div>
-                </div>
+                <ProjectListCard
+                  key={o.id}
+                  lane={lc}
+                  title={o.company_name || "Workflow Request"}
+                  status={<StatusPill status={o.status} lane="ops" />}
+                  meta={[
+                    fmtDate(o.created_at),
+                    o.industry || "Workflow automation",
+                    o.recommendation_tier || "Pending",
+                    `Call: ${call?.status ? pretty(call.status) : "Not requested"}`,
+                  ]}
+                  summary={pie?.summary ? (pie.summary.length > 120 ? pie.summary.slice(0, 120) + "…" : pie.summary) : undefined}
+                  action={<Link href={`/portal/ops/${o.id}`} className="btn btnPrimary productBtnSm">Open workspace →</Link>}
+                />
               );
             })}
           </div>
         </section>
       )}
 
-      {/* ── E-Commerce Projects ── */}
       {ecomRows.length > 0 && (
         <section id="ecom-projects" className="productSection">
           <div className="portalSectionLabel productSectionLabel">
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: LANE_COLORS.ecom.dot }} />
+            <span className="productSectionDot" style={{ background: LANE_COLORS.ecom.dot }} />
             E-commerce projects
           </div>
 
           <div className="productList">
-            {ecomRows.map((e) => {
-              const lc = LANE_COLORS.ecom;
-              return (
-                <div key={e.id} style={{
-                  background: "var(--paper)", border: `1px solid ${lc.border}`,
-                  borderRadius: 16, padding: "18px 22px",
-                  display: "grid", gridTemplateColumns: "minmax(0,1fr) auto",
-                  gap: 16, alignItems: "center",
-                }}>
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                      <span style={{
-                        fontFamily: "'Playfair Display', Georgia, serif",
-                        fontSize: 18, fontWeight: 500, color: "var(--ink)", letterSpacing: "-0.02em",
-                      }}>
-                        {e.business_name || "E-Commerce Request"}
-                      </span>
-                      <StatusPill status={e.status} lane="ecom" />
-                    </div>
-                    <div style={{ display: "flex", gap: 14, marginTop: 6, flexWrap: "wrap", fontSize: 12, color: "var(--muted-2)" }}>
-                      <span>{fmtDate(e.created_at)}</span>
-                      <span>{e.store_url || "No store URL"}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <Link href={`/portal/ecommerce/${e.id}`} className="btn btnPrimary productBtnSm">
-                      Open workspace →
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
+            {ecomRows.map((e) => (
+              <ProjectListCard
+                key={e.id}
+                lane={LANE_COLORS.ecom}
+                title={e.business_name || "E-commerce Request"}
+                status={<StatusPill status={e.status} lane="ecom" />}
+                meta={[fmtDate(e.created_at), e.store_url || "No store URL"]}
+                action={<Link href={`/portal/ecommerce/${e.id}`} className="btn btnPrimary productBtnSm">Open workspace →</Link>}
+              />
+            ))}
           </div>
         </section>
       )}
 
-      {/* ── Empty state ── */}
       {totalProjects === 0 && (
         <div className="productEmpty">
           <div className="productEmptyTitle">No projects yet</div>
-          <div style={{ fontSize: 14, lineHeight: 1.6, maxWidth: 400, margin: "0 auto" }}>
+          <div className="productEmptyBody">
             Start a website quote, workflow audit, or e-commerce intake. Your projects will appear here with their own workspaces.
           </div>
         </div>
       )}
 
-      {/* ── Footer ── */}
-      <div className="portalFooter">
-        Powered by <a href="/">Crecy Studio</a>
-      </div>
+      <div className="portalFooter">Powered by <a href="/">Crecy Studio</a></div>
     </div>
   );
 }
-
-/* ═══════════════════════════════════
-   SUB-COMPONENTS
-   ═══════════════════════════════════ */
 
 function LaneSummaryCard({ lane, title, count, href, cta }: {
   lane: "website" | "ops" | "ecom"; title: string; count: number; href: string; cta: string;
 }) {
   const lc = LANE_COLORS[lane];
   return (
-    <Link href={href} className="productCard" style={{
-      display: "block", textDecoration: "none",
-      background: lc.bg, borderColor: lc.border, padding: "20px 22px",
-      transition: "transform 0.2s, border-color 0.2s",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-        <span style={{ width: 8, height: 8, borderRadius: "50%", background: lc.dot }} />
-        <span style={{ fontSize: 11, fontWeight: 600, color: lc.accent, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-          {title}
-        </span>
+    <Link href={href} className="productCard productLaneSummary" style={{ background: lc.bg, borderColor: lc.border }}>
+      <div className="productLaneHead">
+        <span className="productSectionDot" style={{ background: lc.dot }} />
+        <span className="productLaneLabel" style={{ color: lc.accent }}>{title}</span>
       </div>
-      <div style={{
-        fontFamily: "'Playfair Display', Georgia, serif",
-        fontSize: 28, fontWeight: 600, color: "var(--ink)", letterSpacing: "-0.02em",
-      }}>
-        {count}
-      </div>
-      <div style={{ fontSize: 12, color: "var(--muted-2)", marginTop: 4 }}>
-        project{count !== 1 ? "s" : ""}
-      </div>
-      <div style={{ marginTop: 12, fontSize: 13, fontWeight: 600, color: lc.accent }}>
-        {cta} →
-      </div>
+      <div className="productLaneCount">{count}</div>
+      <div className="productLaneMeta">project{count !== 1 ? "s" : ""}</div>
+      <div className="productLaneCta" style={{ color: lc.accent }}>{cta} →</div>
     </Link>
+  );
+}
+
+function ProjectListCard({ lane, title, status, meta, summary, action }: {
+  lane: { border: string };
+  title: string;
+  status: ReactNode;
+  meta: string[];
+  summary?: string;
+  action: ReactNode;
+}) {
+  return (
+    <article className="productCard productProjectCard" style={{ borderColor: lane.border }}>
+      <div>
+        <div className="productTitleRow">
+          <h3 className="productTitle">{title}</h3>
+          {status}
+        </div>
+        <div className="productMetaRow">{meta.map((v) => <span key={v}>{v}</span>)}</div>
+        {summary ? <p className="productSummary">{summary}</p> : null}
+      </div>
+      <div>{action}</div>
+    </article>
   );
 }
 
