@@ -97,7 +97,7 @@ export default function ServicePage({
   finalSecondaryCta,
 }: ServicePageProps) {
   return (
-    <main className={`marketingPage ${styles.page}`}>
+    <main className={styles.page}>
       <section className={styles.hero}>
         <div className={styles.heroMedia}>
           <Image
@@ -139,8 +139,8 @@ export default function ServicePage({
 
       <section className={styles.section}>
         <div className={styles.shell}>
-          <div className={styles.twoCol}>
-            <div className={styles.card}>
+          <div className={styles.fitSplit}>
+            <article className={styles.fitPanel}>
               <p className={styles.sectionLabel}>Who this is for</p>
               <h2 className={styles.sectionTitle}>{whoItsForTitle}</h2>
               <ul className={styles.list}>
@@ -148,17 +148,39 @@ export default function ServicePage({
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-            </div>
-
-            <div className={styles.card}>
-              <p className={styles.sectionLabel}>Problems we solve</p>
-              <h2 className={styles.sectionTitle}>{problemsTitle}</h2>
+              <h3 className={styles.fitSubheading}>{bestFitTitle}</h3>
               <ul className={styles.list}>
-                {problems.map((item) => (
+                {bestFit.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-            </div>
+            </article>
+            <article className={styles.notFitPanel}>
+              <p className={styles.sectionLabel}>Probably not first move</p>
+              <h2 className={styles.sectionTitle}>{notFitTitle}</h2>
+              <ul className={styles.list}>
+                {notFit.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.shell}>
+          <p className={styles.sectionLabel}>Problems we solve</p>
+          <h2 className={styles.sectionHeading}>{problemsTitle}</h2>
+          <div className={styles.problemGrid}>
+            {problems.map((item, index) => (
+              <article key={item} className={styles.problemCard}>
+                <span className={styles.problemIndex}>
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <p className={styles.cardText}>{item}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
@@ -167,7 +189,6 @@ export default function ServicePage({
         <div className={styles.shell}>
           <p className={styles.sectionLabel}>What’s included</p>
           <h2 className={styles.sectionHeading}>{includesTitle}</h2>
-
           <div className={styles.gridThree}>
             {includes.map((group) => (
               <article key={group.title} className={styles.card}>
@@ -183,38 +204,15 @@ export default function ServicePage({
         </div>
       </section>
 
-      <section className={styles.section}>
+      <section className={styles.darkBand}>
         <div className={styles.shell}>
           <div className={styles.pricingHeader}>
             <div>
-              <p className={styles.sectionLabel}>Pricing approach</p>
-              <h2 className={styles.sectionHeading}>{pricingTitle}</h2>
+              <p className={styles.darkLabel}>How it works</p>
+              <h2 className={styles.sectionHeading}>{processTitle}</h2>
             </div>
             <p className={styles.sectionText}>{pricingIntro}</p>
           </div>
-
-          <div className={styles.gridThree}>
-            {pricingCards.map((card) => (
-              <article key={card.label} className={styles.card}>
-                <p className={styles.priceLabel}>{card.label}</p>
-                <p className={styles.priceValue}>{card.value}</p>
-                <p className={styles.priceDetail}>{card.detail}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className={styles.section}>
-        <div className={styles.shell}>
-          <div className={styles.processHeader}>
-            <div>
-              <p className={styles.sectionLabel}>How it works</p>
-              <h2 className={styles.sectionHeading}>{processTitle}</h2>
-            </div>
-            <p className={styles.sectionText}>{processIntro}</p>
-          </div>
-
           <div className={styles.processGrid}>
             {process.map((item) => (
               <article key={item.step} className={styles.processCard}>
@@ -229,26 +227,21 @@ export default function ServicePage({
 
       <section className={styles.section}>
         <div className={styles.shell}>
-          <div className={styles.twoCol}>
-            <div className={styles.card}>
-              <p className={styles.sectionLabel}>Best fit</p>
-              <h2 className={styles.sectionTitle}>{bestFitTitle}</h2>
-              <ul className={styles.list}>
-                {bestFit.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
+          <div className={styles.pricingHeader}>
+            <div>
+              <p className={styles.sectionLabel}>Pricing approach</p>
+              <h2 className={styles.sectionHeading}>{pricingTitle}</h2>
             </div>
-
-            <div className={styles.card}>
-              <p className={styles.sectionLabel}>Probably not first move</p>
-              <h2 className={styles.sectionTitle}>{notFitTitle}</h2>
-              <ul className={styles.list}>
-                {notFit.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </div>
+            <p className={styles.sectionText}>{processIntro}</p>
+          </div>
+          <div className={styles.gridThree}>
+            {pricingCards.map((card) => (
+              <article key={card.label} className={styles.pricingCard}>
+                <p className={styles.priceLabel}>{card.label}</p>
+                <p className={styles.priceValue}>{card.value}</p>
+                <p className={styles.priceDetail}>{card.detail}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
@@ -259,11 +252,14 @@ export default function ServicePage({
           <h2 className={styles.sectionHeading}>{faqTitle}</h2>
 
           <div className={styles.faqList}>
-            {faqs.map((faq) => (
-              <details key={faq.question} className={styles.faqItem}>
-                <summary className={styles.faqQuestion}>{faq.question}</summary>
-                <p className={styles.faqAnswer}>{faq.answer}</p>
-              </details>
+            {faqs.map((faq, index) => (
+              <article key={faq.question} className={styles.faqRow}>
+                <p className={styles.faqIndex}>{String(index + 1).padStart(2, "0")}</p>
+                <div>
+                  <h3 className={styles.faqQuestion}>{faq.question}</h3>
+                  <p className={styles.faqAnswer}>{faq.answer}</p>
+                </div>
+              </article>
             ))}
           </div>
         </div>
