@@ -156,3 +156,60 @@ hr { border: none; border-top: 1px solid var(--rule); margin: 1rem 0; }
   .productGrid3 { grid-template-columns: 1fr; }
   .productSplit { grid-template-columns: 1fr; }
 }
+
+/* shared form + portal/admin product surface primitives */
+.maxW860 { max-width: 860px; }
+.supportCardsStack { display: grid; gap: .75rem; }
+
+.fieldLabel { font: 600 11px/1.2 var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: .45rem; }
+.smallNote { font-size: 12px; color: var(--muted-2); }
+.input,.select,.textarea {
+  width: 100%;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: .62rem .72rem;
+  font: 500 14px/1.35 var(--font-body);
+}
+.textarea { resize: vertical; min-height: 108px; }
+.pills { display: flex; flex-wrap: wrap; gap: .45rem; }
+.pill { border: 1px solid var(--rule); background: var(--paper-2); border-radius: 999px; padding: 4px 10px; font: 600 11px/1.2 var(--font-mono); color: var(--muted); }
+
+.portalPanel { border: 1px solid var(--rule); border-radius: 14px; background: var(--paper); padding: 1rem; }
+.portalPanelHeader { margin-bottom: .9rem; padding-bottom: .7rem; border-bottom: 1px solid var(--rule); }
+.portalPanelTitle { margin: 0; font: 600 1.25rem/1.1 var(--font-display); letter-spacing: -0.02em; }
+
+.portalDrawerToggle { width: 100%; border: 1px solid var(--rule); border-radius: 12px; background: var(--paper-2); display: flex; justify-content: space-between; align-items: center; padding: .75rem .85rem; cursor: pointer; }
+.portalDrawerToggleLabel { font: 600 11px/1.2 var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.portalDrawerToggleValue { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; color: var(--ink); }
+.portalDrawerArrow { display: inline-block; transition: transform .2s ease; }
+.portalDrawerArrowOpen { transform: rotate(180deg); }
+.portalDrawerContent { max-height: 0; overflow: hidden; transition: max-height .25s ease; }
+.portalDrawerContentOpen { max-height: 3000px; }
+.portalDrawerRow { display: flex; justify-content: space-between; align-items: center; gap: .7rem; padding: .62rem 0; border-bottom: 1px solid var(--rule); }
+.portalDrawerKey { font-size: 12px; color: var(--muted); }
+.portalDrawerVal { font-size: 13px; color: var(--ink); font-weight: 600; text-align: right; }
+.portalFooter { margin: 1rem 0 0; padding-top: .8rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: 12px; }
+
+.productHeroActions { margin-top: .8rem; align-items: center; }
+.productLaneSummary { display: block; padding: 20px 22px; transition: border-color .2s ease, transform .2s ease; }
+.productLaneSummary:hover { transform: translateY(-1px); }
+.productLaneHead { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.productLaneLabel { font: 600 11px/1.2 var(--font-mono); text-transform: uppercase; letter-spacing: .08em; }
+.productLaneCount { font: 600 28px/1 var(--font-display); letter-spacing: -0.02em; color: var(--ink); }
+.productLaneMeta { margin-top: 4px; font-size: 12px; color: var(--muted-2); }
+.productLaneCta { margin-top: 12px; font-size: 13px; font-weight: 600; }
+.productProjectCard { padding: 18px 22px; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 16px; }
+.productSummary { margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: var(--muted); max-width: 500px; }
+.productEmptyBody { font-size: 14px; line-height: 1.6; max-width: 400px; margin: 0 auto; }
+
+@media (max-width: 980px) {
+  .productProjectCard { grid-template-columns: 1fr; }
+}
+
+.ecomIntakeShell { max-width: 780px; margin: 0 auto; }
+.ecomIntakeDraftNote { margin-top: 12px; text-align: center; }
+.ecomReviewRow { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.ecomReviewLabel { font-size: 13px; color: var(--muted); flex-shrink: 0; }
+.ecomReviewValue { font-size: 13px; font-weight: 600; color: var(--ink); text-align: right; max-width: 60%; }
