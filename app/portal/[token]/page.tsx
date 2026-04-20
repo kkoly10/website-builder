@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import PortalClient from "./PortalClient";
 import ScrollReveal from "@/components/site/ScrollReveal";
-import { getPortalBundleByToken } from "@/lib/portal/server";
+import { getCustomerPortalViewByToken } from "@/lib/customerPortal";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +37,7 @@ export default async function PortalTokenPage({
   const resolved = await Promise.resolve(params);
   const token = resolved.token;
 
-  const result = await getPortalBundleByToken(token);
+  const result = await getCustomerPortalViewByToken(token);
 
   if (!result.ok) {
     notFound();
