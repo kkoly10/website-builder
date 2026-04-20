@@ -1,8 +1,53 @@
-// lib/customerPortal.ts
 import { randomBytes } from "crypto";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 type AnyObj = Record<string, any>;
+type CustomerPortalMilestoneInput = {
+  key?: string;
+  id?: string;
+  label?: string;
+  title?: string;
+  done?: boolean;
+  status?: string;
+  notes?: string;
+  due_date?: string | null;
+  sort_order?: number;
+};
+
+type CustomerPortalAssetInput = {
+  id?: string;
+  category?: string;
+  assetType?: string;
+  label: string;
+  url?: string;
+  assetUrl?: string;
+  notes?: string;
+  status?: string;
+  source?: string;
+  storageBucket?: string | null;
+  storagePath?: string | null;
+  fileName?: string | null;
+  mimeType?: string | null;
+  fileSize?: number | null;
+  createdAt?: string | null;
+};
+
+type CustomerPortalRevisionInput = {
+  id?: string;
+  message?: string;
+  requestText?: string;
+  priority?: string;
+  status?: string;
+  createdAt?: string | null;
+};
+
+const DEFAULT_MILESTONES = [
+  { title: "Kickoff & scope confirmation", status: "todo", sort_order: 10 },
+  { title: "Content/assets received", status: "todo", sort_order: 20 },
+  { title: "First build draft", status: "todo", sort_order: 30 },
+  { title: "Revision round", status: "todo", sort_order: 40 },
+  { title: "Launch & handoff", status: "todo", sort_order: 50 },
+] as const;
 
 function makeToken() {
   return randomBytes(24).toString("hex");
@@ -12,6 +57,10 @@ function safeObj(value: unknown): AnyObj {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as AnyObj)
     : {};
+}
+
+function safeArray<T = AnyObj>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
 }
 
 function toTitle(input: string) {
@@ -65,6 +114,501 @@ function buildScopeSnapshotFromQuote(quote: AnyObj) {
   };
 }
 
+function cleanString(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function cleanTextList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map((item) => cleanString(item)).filter(Boolean);
+  }
+
+  if (typeof value === "string" && value.trim()) {
+    return value
+      .split(/[,|\n]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function parsePages(value: unknown): string[] {
+  const raw = cleanString(value);
+  if (!raw) return [];
+  if (raw.toLowerCase().includes("one pager")) {
+    return ["Homepage / One-page flow"];
+  }
+
+  const match = raw.match(/\d+/);
+  if (match) {
+    const count = Number(match[0]);
+    if (Number.isFinite(count) && count > 0) {
+      return Array.from({ length: count }, (_, index) => `Page ${index + 1}`);
+    }
+  }
+
+  return [raw];
+}
+
+function centsToDollars(value: unknown) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return null;
+  return Math.round(amount) / 100;
+}
+
+function dollarsToCents(value: unknown) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return null;
+  return Math.round(amount * 100);
+}
+
+function normalizeMilestoneStatus(value: unknown) {
+  const normalized = cleanString(value).toLowerCase();
+  if (normalized === "done") return "done";
+  if (normalized === "in_progress" || normalized === "in progress") return "in_progress";
+  return "todo";
+}
+
+function normalizeAssetStatus(value: unknown): "submitted" | "received" | "approved" {
+  const normalized = cleanString(value).toLowerCase();
+  if (normalized === "approved") return "approved";
+  if (normalized === "received") return "received";
+  return "submitted";
+}
+
+function normalizeRevisionStatus(value: unknown): "new" | "reviewed" | "scheduled" | "done" {
+  const normalized = cleanString(value).toLowerCase();
+  if (normalized === "done") return "done";
+  if (normalized === "reviewed") return "reviewed";
+  if (normalized === "scheduled") return "scheduled";
+  return "new";
+}
+
+function normalizePriority(value: unknown): "low" | "normal" | "high" {
+  const normalized = cleanString(value).toLowerCase();
+  if (normalized === "low" || normalized === "high") return normalized;
+  return "normal";
+}
+
+function safeDate(value: unknown) {
+  const raw = cleanString(value);
+  if (!raw) return null;
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
+
+function buildHistoryFromDebug(debug: AnyObj) {
+  const workspaceHistory = safeObj(debug.workspaceHistory);
+
+  const scopeVersions = safeArray(workspaceHistory.scopeVersions).map((item: AnyObj, index) => ({
+    id: cleanString(item.id) || `scope-${index + 1}`,
+    createdAt: cleanString(item.createdAt) || "",
+    label: cleanString(item.label) || `Scope Version ${index + 1}`,
+    summary: cleanString(item.summary),
+    tierLabel: cleanString(item.tierLabel),
+    platform: cleanString(item.platform),
+    timeline: cleanString(item.timeline),
+    revisionPolicy: cleanString(item.revisionPolicy),
+    pagesIncluded: cleanTextList(item.pagesIncluded),
+    featuresIncluded: cleanTextList(item.featuresIncluded),
+    exclusions: cleanTextList(item.exclusions),
+  }));
+
+  const changeOrders = safeArray(workspaceHistory.changeOrders).map((item: AnyObj, index) => ({
+    id: cleanString(item.id) || `change-${index + 1}`,
+    createdAt: cleanString(item.createdAt) || "",
+    title: cleanString(item.title) || `Change Order ${index + 1}`,
+    summary: cleanString(item.summary),
+    priceImpact: cleanString(item.priceImpact),
+    timelineImpact: cleanString(item.timelineImpact),
+    scopeImpact: cleanString(item.scopeImpact),
+    status: cleanString(item.status) || "draft",
+  }));
+
+  return { scopeVersions, changeOrders };
+}
+
+async function signAssetUrl(asset: AnyObj) {
+  const direct = cleanString(asset.asset_url);
+  if (direct) return direct;
+
+  const bucket = cleanString(asset.storage_bucket);
+  const path = cleanString(asset.storage_path);
+  if (!bucket || !path) return null;
+
+  const signed = await supabaseAdmin.storage.from(bucket).createSignedUrl(path, 60 * 60);
+  if (signed.error) return null;
+  return signed.data?.signedUrl || null;
+}
+
+async function getPortalProjectByToken(token: string) {
+  if (!token) return null;
+
+  const { data, error } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .select("*")
+    .eq("access_token", token)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ?? null;
+}
+
+async function getPortalProjectByQuoteId(quoteId: string) {
+  if (!quoteId) return null;
+
+  const { data, error } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .select("*")
+    .eq("quote_id", quoteId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ?? null;
+}
+
+async function loadPortalBundle(portal: AnyObj | null) {
+  if (!portal) return null;
+
+  const quoteId = cleanString(portal.quote_id);
+  if (!quoteId) return null;
+
+  const [quoteRes, milestonesRes, assetsRes, revisionsRes] = await Promise.all([
+    supabaseAdmin.from("quotes").select("*").eq("id", quoteId).maybeSingle(),
+    supabaseAdmin
+      .from("customer_portal_milestones")
+      .select("*")
+      .eq("portal_project_id", portal.id)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true }),
+    supabaseAdmin
+      .from("customer_portal_assets")
+      .select("*")
+      .eq("portal_project_id", portal.id)
+      .order("created_at", { ascending: false }),
+    supabaseAdmin
+      .from("customer_portal_revisions")
+      .select("*")
+      .eq("portal_project_id", portal.id)
+      .order("created_at", { ascending: false }),
+  ]);
+
+  if (quoteRes.error) throw quoteRes.error;
+  if (milestonesRes.error) throw milestonesRes.error;
+  if (assetsRes.error) throw assetsRes.error;
+  if (revisionsRes.error) throw revisionsRes.error;
+
+  const quote = quoteRes.data ?? null;
+
+  const [leadRes, callRes, pieRes] = await Promise.all([
+    quote?.lead_id
+      ? supabaseAdmin.from("leads").select("*").eq("id", quote.lead_id).maybeSingle()
+      : Promise.resolve({ data: null, error: null } as const),
+    supabaseAdmin
+      .from("call_requests")
+      .select("*")
+      .eq("quote_id", quoteId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("pie_reports")
+      .select("*")
+      .eq("quote_id", quoteId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  if (leadRes.error) throw leadRes.error;
+  if (callRes.error) throw callRes.error;
+  if (pieRes.error) throw pieRes.error;
+
+  const assets = await Promise.all(
+    (assetsRes.data ?? []).map(async (asset) => ({
+      ...asset,
+      resolved_url: await signAssetUrl(asset),
+    }))
+  );
+
+  return {
+    portal,
+    quote,
+    lead: leadRes.data ?? null,
+    callRequest: callRes.data ?? null,
+    pieReport: pieRes.data ?? null,
+    milestones: milestonesRes.data ?? [],
+    assets,
+    revisions: revisionsRes.data ?? [],
+  };
+}
+
+function parsePieReport(rawPie: AnyObj | null) {
+  const payload = safeObj(rawPie?.payload);
+  const report = safeObj(rawPie?.report);
+
+  if (cleanString(payload.version) === "3.0") {
+    const complexity = safeObj(payload.complexity);
+    const tier = safeObj(payload.tier);
+    const capacity = safeObj(payload.capacity);
+    const estimatedHours = safeObj(capacity.estimatedHours);
+    const routing = safeObj(payload.routing);
+    const negotiation = safeObj(payload.negotiation);
+
+    return {
+      exists: true,
+      id: rawPie?.id ?? null,
+      score: Number(complexity.score ?? rawPie?.score ?? 0) || null,
+      tier: cleanString(tier.recommended) || cleanString(rawPie?.tier) || null,
+      confidence: cleanString(complexity.confidence) || cleanString(rawPie?.confidence) || null,
+      summary:
+        cleanString(tier.rationale) ||
+        cleanString(payload.summary) ||
+        cleanString(rawPie?.summary) ||
+        "No PIE summary yet.",
+      risks: safeArray(payload.risks).map((risk: AnyObj) => cleanString(risk.flag || risk)).filter(Boolean),
+      pitch: {
+        emphasize: safeArray(negotiation.priceDefense).map((item) => cleanString(item)).filter(Boolean).slice(0, 3),
+        recommend: cleanString(tier.rationale) || cleanString(payload.summary) || null,
+        objections: safeArray(negotiation.lowerCostOptions).map((item) => cleanString(item)).filter(Boolean).slice(0, 3),
+      },
+      pricing: {
+        target: Number(tier.targetPrice ?? 0) || null,
+        minimum: Number(safeObj(tier.priceBand).min ?? 0) || null,
+        maximum: Number(safeObj(tier.priceBand).max ?? 0) || null,
+      },
+      hours: {
+        min: Number(estimatedHours.min ?? 0) || null,
+        max: Number(estimatedHours.max ?? 0) || null,
+      },
+      timelineText:
+        capacity.estimatedWeeks && safeObj(capacity.estimatedWeeks).target
+          ? `About ${safeObj(capacity.estimatedWeeks).target} week(s)`
+          : null,
+      discoveryQuestions: safeArray(payload.discoveryQuestions).map((question) => cleanString(question)).filter(Boolean),
+      routing: {
+        path: cleanString(routing.finalPath || routing.path) || null,
+        reason: cleanString(routing.reason) || null,
+        triggers: safeArray(routing.triggers).map((trigger) => cleanString(trigger)).filter(Boolean),
+      },
+      payload,
+    };
+  }
+
+  const legacy = Object.keys(payload).length > 0 ? payload : report;
+  const pricing = safeObj(legacy.pricing);
+  const quote = safeObj(pricing.quote);
+  const hours = safeObj(legacy.hours);
+
+  return {
+    exists: !!rawPie,
+    id: rawPie?.id ?? null,
+    score: Number(legacy.score ?? rawPie?.score ?? 0) || null,
+    tier: cleanString(legacy.tier || rawPie?.tier) || null,
+    confidence: cleanString(legacy.confidence || rawPie?.confidence) || null,
+    summary: cleanString(legacy.summary || rawPie?.summary) || "No PIE summary yet.",
+    risks: safeArray(legacy.risks).map((risk) => cleanString(risk)).filter(Boolean),
+    pitch: {
+      emphasize: safeArray(safeObj(legacy.pitch).emphasize).map((item) => cleanString(item)).filter(Boolean),
+      recommend: cleanString(safeObj(legacy.pitch).recommend) || null,
+      objections: safeArray(safeObj(legacy.pitch).objections).map((item) => cleanString(item)).filter(Boolean),
+    },
+    pricing: {
+      target: Number(quote.target ?? pricing.target ?? 0) || null,
+      minimum: Number(quote.minimum ?? pricing.minimum ?? 0) || null,
+      maximum: Number(quote.upper ?? pricing.maximum ?? 0) || null,
+    },
+    hours: {
+      min: Number(hours.min ?? 0) || null,
+      max: Number(hours.max ?? 0) || null,
+    },
+    timelineText: cleanString(safeObj(legacy.timeline).text || legacy.timelineText) || null,
+    discoveryQuestions: safeArray(legacy.discovery_questions || legacy.discoveryQuestions)
+      .map((question) => cleanString(question))
+      .filter(Boolean),
+    routing: null,
+    payload: legacy,
+  };
+}
+
+function buildWorkspaceMilestones(milestones: AnyObj[]) {
+  return milestones.map((milestone) => ({
+    key: cleanString(milestone.id) || cleanString(milestone.title),
+    label: cleanString(milestone.title) || "Milestone",
+    done: cleanString(milestone.status) === "done",
+    updatedAt: cleanString(milestone.updated_at) || cleanString(milestone.completed_at) || null,
+  }));
+}
+
+function deriveWaitingOn(input: {
+  depositStatus: string;
+  assetsCount: number;
+  previewUrl?: string | null;
+  clientReviewStatus?: string | null;
+  clientStatus?: string | null;
+}) {
+  if (input.depositStatus !== "paid") {
+    if (input.clientStatus === "deposit_sent") return "Studio payment verification";
+    return "Client deposit step";
+  }
+
+  if (input.assetsCount === 0) return "Client assets / content";
+  if (input.previewUrl && input.clientReviewStatus === "Pending review") {
+    return "Client preview review";
+  }
+  if (input.clientReviewStatus === "Changes requested") {
+    return "CrecyStudio revisions";
+  }
+  return "CrecyStudio next build step";
+}
+
+function buildWorkspaceView(bundle: AnyObj) {
+  const portal = safeObj(bundle.portal);
+  const quote = safeObj(bundle.quote);
+  const lead = safeObj(bundle.lead);
+  const intake = safeObj(quote.intake_normalized);
+  const scopeSnapshot = safeObj(portal.scope_snapshot);
+  const debug = safeObj(quote.debug);
+  const pie = parsePieReport(bundle.pieReport);
+  const milestones = buildWorkspaceMilestones(safeArray(bundle.milestones));
+  const assets = safeArray(bundle.assets).map((asset: AnyObj) => ({
+    id: cleanString(asset.id),
+    category: cleanString(asset.asset_type) || "General",
+    label: cleanString(asset.label) || "Client file",
+    url: cleanString(asset.resolved_url) || cleanString(asset.asset_url),
+    notes: cleanString(asset.notes) || "",
+    status: normalizeAssetStatus(asset.status),
+    createdAt: cleanString(asset.created_at) || "",
+  }));
+  const revisions = safeArray(bundle.revisions).map((revision: AnyObj) => ({
+    id: cleanString(revision.id),
+    message: cleanString(revision.request_text),
+    priority: normalizePriority(revision.priority),
+    status: normalizeRevisionStatus(revision.status),
+    createdAt: cleanString(revision.created_at) || "",
+  }));
+
+  const pagesIncluded =
+    cleanTextList(scopeSnapshot.pagesIncluded).length > 0
+      ? cleanTextList(scopeSnapshot.pagesIncluded)
+      : parsePages(intake.pages);
+  const featuresIncluded =
+    cleanTextList(scopeSnapshot.featuresIncluded).length > 0
+      ? cleanTextList(scopeSnapshot.featuresIncluded)
+      : cleanTextList(intake.integrations);
+  const exclusions =
+    cleanTextList(scopeSnapshot.exclusions).length > 0
+      ? cleanTextList(scopeSnapshot.exclusions)
+      : ["Third-party fees", "Custom post-launch growth work"];
+
+  const previewStatus = cleanString(portal.preview_status) || "Awaiting published preview";
+  const agreementStatus = cleanString(portal.agreement_status) || "Not published yet";
+  const launchStatus = cleanString(portal.launch_status) || "Not ready";
+  const clientReviewStatus = cleanString(portal.client_review_status) || "Preview pending";
+  const depositStatus =
+    cleanString(portal.deposit_status || quote.deposit_status).toLowerCase() || "pending";
+
+  return {
+    quote: {
+      id: cleanString(quote.id),
+      publicToken: cleanString(portal.access_token),
+      createdAt: cleanString(quote.created_at),
+      status: cleanString(quote.status) || "new",
+      tier: cleanString(quote.tier_recommended) || "growth",
+      estimate: {
+        target: Number(quote.estimate_total ?? 0) || null,
+        min: Number(quote.estimate_low ?? 0) || null,
+        max: Number(quote.estimate_high ?? 0) || null,
+      },
+      deposit: {
+        status: depositStatus,
+        paidAt: cleanString(portal.deposit_paid_at || quote.deposit_paid_at) || null,
+        link: cleanString(portal.deposit_checkout_url || quote.deposit_link) || null,
+        amount:
+          centsToDollars(portal.deposit_amount_cents) ??
+          (Number(quote.estimate_total ?? 0) ? Math.round(Number(quote.estimate_total) * 0.5) : null),
+        notes: cleanString(portal.deposit_notes) || null,
+      },
+    },
+    lead: {
+      email: cleanString(lead.email) || null,
+      phone: cleanString(lead.phone) || null,
+      name: cleanString(lead.name) || null,
+    },
+    scope: {
+      websiteType: cleanString(intake.websiteType) || null,
+      pages: cleanString(intake.pages) || null,
+      intent: cleanString(intake.intent) || null,
+      timeline: cleanString(intake.timeline) || null,
+      contentReady: cleanString(intake.contentReady || intake.contentReadiness) || null,
+      domainHosting: cleanString(intake.domainHosting) || null,
+      integrations: cleanTextList(intake.integrations),
+      notes: cleanString(intake.notes) || null,
+    },
+    scopeSnapshot: {
+      tierLabel: cleanString(scopeSnapshot.tierLabel || scopeSnapshot.packageName) || cleanString(quote.tier_recommended) || "Website Scope",
+      platform: cleanString(scopeSnapshot.platform || scopeSnapshot.stack || intake.domainHosting) || "To be finalized",
+      pagesIncluded,
+      featuresIncluded,
+      timeline: cleanString(scopeSnapshot.timeline || scopeSnapshot.timelineText || intake.timeline) || "Aligned during scoping",
+      revisionPolicy: cleanString(scopeSnapshot.revisionPolicy || scopeSnapshot.revisions) || "Revision structure aligned during scope approval",
+      exclusions,
+    },
+    history: buildHistoryFromDebug(debug),
+    callRequest: bundle.callRequest
+      ? {
+          status: cleanString(bundle.callRequest.status) || null,
+          bestTime: cleanString(bundle.callRequest.best_time_to_call || bundle.callRequest.preferred_times) || null,
+          timezone: cleanString(bundle.callRequest.timezone) || null,
+          notes: cleanString(bundle.callRequest.notes) || null,
+        }
+      : null,
+    pie,
+    preview: {
+      url: cleanString(portal.preview_url) || null,
+      productionUrl: cleanString(portal.production_url) || null,
+      status: previewStatus,
+      updatedAt: cleanString(portal.preview_updated_at) || null,
+      notes: cleanString(portal.preview_notes) || null,
+      clientReviewStatus,
+    },
+    agreement: {
+      status: agreementStatus,
+      model: cleanString(portal.agreement_model) || "Managed build agreement",
+      ownershipModel: cleanString(portal.ownership_model) || "Managed with project handoff options",
+      publishedAt: cleanString(portal.agreement_published_at) || null,
+      publishedText: cleanString(portal.agreement_text || debug.publishedAgreementText) || "",
+    },
+    launch: {
+      status: launchStatus,
+      productionUrl: cleanString(portal.production_url) || null,
+      domainStatus: cleanString(portal.domain_status) || "Pending",
+      analyticsStatus: cleanString(portal.analytics_status) || "Pending",
+      formsStatus: cleanString(portal.forms_status) || "Pending",
+      seoStatus: cleanString(portal.seo_status) || "Pending",
+      handoffStatus: cleanString(portal.handoff_status) || "Pending",
+      notes: cleanString(portal.launch_notes) || null,
+    },
+    portalState: {
+      clientStatus: cleanString(portal.client_status) || "new",
+      clientUpdatedAt: cleanString(portal.client_updated_at) || null,
+      clientNotes: cleanString(portal.client_notes) || "",
+      adminPublicNote: cleanString(portal.admin_public_note) || null,
+      milestones,
+      assets,
+      revisions,
+      waitingOn: deriveWaitingOn({
+        depositStatus,
+        assetsCount: assets.length,
+        previewUrl: cleanString(portal.preview_url) || null,
+        clientReviewStatus,
+        clientStatus: cleanString(portal.client_status).toLowerCase() || null,
+      }),
+    },
+  };
+}
+
 export async function ensureCustomerPortalForQuoteId(quoteId: string) {
   if (!quoteId) throw new Error("quoteId is required");
 
@@ -97,8 +641,10 @@ export async function ensureCustomerPortalForQuoteId(quoteId: string) {
       quote_id: quoteId,
       access_token: makeToken(),
       project_status: "new",
+      client_status: "new",
       deposit_status: "pending",
       deposit_amount_cents: Math.round(Number(quote.estimate_cents ?? 0) * 0.5) || null,
+      deposit_checkout_url: quote.deposit_link ?? null,
       scope_snapshot: scopeSnapshot,
     })
     .select("*")
@@ -106,26 +652,16 @@ export async function ensureCustomerPortalForQuoteId(quoteId: string) {
 
   if (createErr) throw createErr;
 
-  // Seed default milestones
-  const defaultMilestones = [
-    { title: "Kickoff & scope confirmation", status: "todo", sort_order: 10 },
-    { title: "Content/assets received", status: "todo", sort_order: 20 },
-    { title: "First build draft", status: "todo", sort_order: 30 },
-    { title: "Revision round", status: "todo", sort_order: 40 },
-    { title: "Launch & handoff", status: "todo", sort_order: 50 },
-  ];
-
   const { error: milestoneErr } = await supabaseAdmin
     .from("customer_portal_milestones")
     .insert(
-      defaultMilestones.map((m) => ({
+      DEFAULT_MILESTONES.map((m) => ({
         portal_project_id: created.id,
         ...m,
       }))
     );
 
   if (milestoneErr) {
-    // Don't fail portal creation if milestone seed fails
     console.error("Milestone seed error:", milestoneErr);
   }
 
@@ -133,78 +669,26 @@ export async function ensureCustomerPortalForQuoteId(quoteId: string) {
 }
 
 export async function getCustomerPortalBundleByToken(token: string) {
-  if (!token) return null;
+  const portal = await getPortalProjectByToken(token);
+  return loadPortalBundle(portal);
+}
 
-  const { data: portal, error: portalErr } = await supabaseAdmin
-    .from("customer_portal_projects")
-    .select("*")
-    .eq("access_token", token)
-    .maybeSingle();
+export async function getCustomerPortalBundleByQuoteId(quoteId: string) {
+  const existing = await getPortalProjectByQuoteId(quoteId);
+  const portal = existing ?? (await ensureCustomerPortalForQuoteId(quoteId));
+  return loadPortalBundle(portal);
+}
 
-  if (portalErr) throw portalErr;
-  if (!portal) return null;
+export async function getCustomerPortalViewByToken(token: string) {
+  const bundle = await getCustomerPortalBundleByToken(token);
+  if (!bundle) return { ok: false as const, error: "Portal link not found." };
+  return { ok: true as const, data: buildWorkspaceView(bundle) };
+}
 
-  const { data: quote } = await supabaseAdmin
-    .from("quotes")
-    .select("*")
-    .eq("id", portal.quote_id)
-    .maybeSingle();
-
-  let lead: AnyObj | null = null;
-  if (quote?.lead_id) {
-    const { data } = await supabaseAdmin
-      .from("leads")
-      .select("*")
-      .eq("id", quote.lead_id)
-      .maybeSingle();
-    lead = data ?? null;
-  }
-
-  const { data: callRequest } = await supabaseAdmin
-    .from("call_requests")
-    .select("*")
-    .eq("quote_id", portal.quote_id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const { data: pieReport } = await supabaseAdmin
-    .from("pie_reports")
-    .select("*")
-    .eq("quote_id", portal.quote_id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const { data: milestones } = await supabaseAdmin
-    .from("customer_portal_milestones")
-    .select("*")
-    .eq("portal_project_id", portal.id)
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: true });
-
-  const { data: assets } = await supabaseAdmin
-    .from("customer_portal_assets")
-    .select("*")
-    .eq("portal_project_id", portal.id)
-    .order("created_at", { ascending: false });
-
-  const { data: revisions } = await supabaseAdmin
-    .from("customer_portal_revisions")
-    .select("*")
-    .eq("portal_project_id", portal.id)
-    .order("created_at", { ascending: false });
-
-  return {
-    portal,
-    quote: quote ?? null,
-    lead,
-    callRequest: callRequest ?? null,
-    pieReport: pieReport ?? null,
-    milestones: milestones ?? [],
-    assets: assets ?? [],
-    revisions: revisions ?? [],
-  };
+export async function getCustomerPortalViewByQuoteId(quoteId: string) {
+  const bundle = await getCustomerPortalBundleByQuoteId(quoteId);
+  if (!bundle) return { ok: false as const, error: "Portal project not found." };
+  return { ok: true as const, data: buildWorkspaceView(bundle) };
 }
 
 export async function submitAssetByPortalToken(input: {
@@ -213,58 +697,361 @@ export async function submitAssetByPortalToken(input: {
   assetType?: string;
   assetUrl?: string;
   notes?: string;
+  source?: string;
+  status?: string;
+  storageBucket?: string | null;
+  storagePath?: string | null;
+  fileName?: string | null;
+  mimeType?: string | null;
+  fileSize?: number | null;
 }) {
-  const { token, label, assetType, assetUrl, notes } = input;
-
-  const { data: portal, error: portalErr } = await supabaseAdmin
-    .from("customer_portal_projects")
-    .select("id")
-    .eq("access_token", token)
-    .single();
-
-  if (portalErr) throw portalErr;
+  const portal = await getPortalProjectByToken(input.token);
+  if (!portal) throw new Error("Portal not found");
 
   const { data, error } = await supabaseAdmin
     .from("customer_portal_assets")
     .insert({
       portal_project_id: portal.id,
-      label: label.trim(),
-      asset_type: (assetType || "general").trim(),
-      asset_url: assetUrl?.trim() || null,
-      notes: notes?.trim() || null,
-      status: "submitted",
+      label: input.label.trim(),
+      asset_type: cleanString(input.assetType) || "general",
+      asset_url: cleanString(input.assetUrl) || null,
+      notes: cleanString(input.notes) || null,
+      status: normalizeAssetStatus(input.status),
+      source: cleanString(input.source) || "portal_link",
+      storage_bucket: cleanString(input.storageBucket) || null,
+      storage_path: cleanString(input.storagePath) || null,
+      file_name: cleanString(input.fileName) || null,
+      mime_type: cleanString(input.mimeType) || null,
+      file_size: Number(input.fileSize ?? 0) || null,
     })
     .select("*")
     .single();
 
   if (error) throw error;
+
+  await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({
+      client_status: "content_submitted",
+      client_updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", portal.id);
+
   return data;
 }
 
 export async function submitRevisionByPortalToken(input: {
   token: string;
   requestText: string;
+  priority?: string;
 }) {
-  const { token, requestText } = input;
-
-  const { data: portal, error: portalErr } = await supabaseAdmin
-    .from("customer_portal_projects")
-    .select("id")
-    .eq("access_token", token)
-    .single();
-
-  if (portalErr) throw portalErr;
+  const portal = await getPortalProjectByToken(input.token);
+  if (!portal) throw new Error("Portal not found");
 
   const { data, error } = await supabaseAdmin
     .from("customer_portal_revisions")
     .insert({
       portal_project_id: portal.id,
-      request_text: requestText.trim(),
+      request_text: input.requestText.trim(),
+      priority: normalizePriority(input.priority),
       status: "new",
     })
     .select("*")
     .single();
 
   if (error) throw error;
+
+  await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({
+      client_status: "revision_requested",
+      client_updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", portal.id);
+
   return data;
+}
+
+export async function toggleMilestone(token: string, milestoneId: string, done: boolean) {
+  const portal = await getPortalProjectByToken(token);
+  if (!portal) throw new Error("Portal not found");
+
+  const { error } = await supabaseAdmin
+    .from("customer_portal_milestones")
+    .update({
+      status: done ? "done" : "todo",
+      completed_at: done ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("portal_project_id", portal.id)
+    .eq("id", milestoneId);
+
+  if (error) throw error;
+}
+
+export async function updateClientStatus(token: string, status: string, notes?: string) {
+  const portal = await getPortalProjectByToken(token);
+  if (!portal) throw new Error("Portal not found");
+
+  const { error } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({
+      client_status: cleanString(status) || "new",
+      client_notes: typeof notes === "string" ? notes : portal.client_notes || "",
+      client_updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", portal.id);
+
+  if (error) throw error;
+}
+
+export async function updateAdminNote(token: string, note: string) {
+  const portal = await getPortalProjectByToken(token);
+  if (!portal) throw new Error("Portal not found");
+
+  const { error } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({
+      admin_public_note: note,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", portal.id);
+
+  if (error) throw error;
+}
+
+export async function acceptCustomerPortalAgreement(token: string) {
+  const portal = await getPortalProjectByToken(token);
+  if (!portal) throw new Error("Portal not found");
+
+  const now = new Date().toISOString();
+  const { error } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({
+      agreement_status: "accepted",
+      agreement_accepted_at: now,
+      updated_at: now,
+    })
+    .eq("id", portal.id);
+
+  if (error) throw error;
+}
+
+export async function markDepositPaid(
+  token: string,
+  paymentData?: {
+    amountCents?: number | null;
+    checkoutUrl?: string | null;
+    paidAt?: string | null;
+    reference?: string | null;
+  }
+) {
+  const portal = await getPortalProjectByToken(token);
+  if (!portal) throw new Error("Portal not found");
+  await markDepositPaidForQuoteId(cleanString(portal.quote_id), paymentData);
+}
+
+export async function markDepositPaidForQuoteId(
+  quoteId: string,
+  paymentData?: {
+    amountCents?: number | null;
+    checkoutUrl?: string | null;
+    paidAt?: string | null;
+    reference?: string | null;
+  }
+) {
+  const portal = await ensureCustomerPortalForQuoteId(quoteId);
+
+  const paidAt = safeDate(paymentData?.paidAt) || new Date().toISOString();
+  const amountCents =
+    Number(paymentData?.amountCents ?? portal.deposit_amount_cents ?? 0) || null;
+
+  const { error: projectError } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({
+      deposit_status: "paid",
+      deposit_paid_at: paidAt,
+      deposit_amount_cents: amountCents,
+      deposit_checkout_url: cleanString(paymentData?.checkoutUrl) || portal.deposit_checkout_url || null,
+      payment_reference: cleanString(paymentData?.reference) || portal.payment_reference || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", portal.id);
+
+  if (projectError) throw projectError;
+
+  const { error: quoteError } = await supabaseAdmin
+    .from("quotes")
+    .update({
+      deposit_status: "paid",
+      deposit_paid_at: paidAt,
+      deposit_link: cleanString(paymentData?.checkoutUrl) || portal.deposit_checkout_url || null,
+      status: "paid",
+    })
+    .eq("id", quoteId);
+
+  if (quoteError) throw quoteError;
+}
+
+export async function updatePortalAdminByQuoteId(
+  quoteId: string,
+  input: {
+    publicNote?: string;
+    depositNotes?: string;
+    depositAmount?: number | null;
+    portalAdmin?: AnyObj;
+    portalStateAdmin?: AnyObj;
+    publishedAgreementText?: string;
+  }
+) {
+  const portal = await ensureCustomerPortalForQuoteId(quoteId);
+  const portalAdmin = safeObj(input.portalAdmin);
+  const portalStateAdmin = safeObj(input.portalStateAdmin);
+  const patch: AnyObj = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (typeof input.publicNote === "string") patch.admin_public_note = input.publicNote;
+  if (typeof input.depositNotes === "string") patch.deposit_notes = input.depositNotes;
+  if (input.depositAmount != null) patch.deposit_amount_cents = dollarsToCents(input.depositAmount);
+  if (typeof input.publishedAgreementText === "string") patch.agreement_text = input.publishedAgreementText;
+
+  if (typeof portalStateAdmin.clientStatus === "string") patch.client_status = portalStateAdmin.clientStatus;
+  if (typeof portalStateAdmin.clientNotes === "string") patch.client_notes = portalStateAdmin.clientNotes;
+  if (typeof portalStateAdmin.adminPublicNote === "string") patch.admin_public_note = portalStateAdmin.adminPublicNote;
+  if (typeof portalStateAdmin.depositNotes === "string") patch.deposit_notes = portalStateAdmin.depositNotes;
+  if (portalStateAdmin.depositAmount != null) patch.deposit_amount_cents = dollarsToCents(portalStateAdmin.depositAmount);
+  if (typeof portalStateAdmin.depositStatus === "string") patch.deposit_status = portalStateAdmin.depositStatus;
+  if (patch.client_status || patch.client_notes) patch.client_updated_at = new Date().toISOString();
+
+  if (Object.keys(portalAdmin).length > 0) {
+    patch.preview_url = cleanString(portalAdmin.previewUrl) || null;
+    patch.production_url = cleanString(portalAdmin.productionUrl) || null;
+    patch.preview_status = cleanString(portalAdmin.previewStatus) || "Awaiting published preview";
+    patch.preview_notes = typeof portalAdmin.previewNotes === "string" ? portalAdmin.previewNotes : "";
+    patch.preview_updated_at = new Date().toISOString();
+    patch.client_review_status = cleanString(portalAdmin.clientReviewStatus) || "Preview pending";
+    patch.agreement_status = cleanString(portalAdmin.agreementStatus) || "Not published yet";
+    patch.agreement_model = cleanString(portalAdmin.agreementModel) || "Managed build agreement";
+    patch.ownership_model =
+      cleanString(portalAdmin.ownershipModel) || "Managed with project handoff options";
+    patch.agreement_published_at = safeDate(portalAdmin.agreementPublishedAt);
+    patch.launch_status = cleanString(portalAdmin.launchStatus) || "Not ready";
+    patch.domain_status = cleanString(portalAdmin.domainStatus) || "Pending";
+    patch.analytics_status = cleanString(portalAdmin.analyticsStatus) || "Pending";
+    patch.forms_status = cleanString(portalAdmin.formsStatus) || "Pending";
+    patch.seo_status = cleanString(portalAdmin.seoStatus) || "Pending";
+    patch.handoff_status = cleanString(portalAdmin.handoffStatus) || "Pending";
+    patch.launch_notes = typeof portalAdmin.launchNotes === "string" ? portalAdmin.launchNotes : "";
+  }
+
+  const { error } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update(patch)
+    .eq("id", portal.id);
+
+  if (error) throw error;
+}
+
+export async function replacePortalMilestonesByQuoteId(
+  quoteId: string,
+  milestones: CustomerPortalMilestoneInput[]
+) {
+  const portal = await ensureCustomerPortalForQuoteId(quoteId);
+
+  const { error: deleteError } = await supabaseAdmin
+    .from("customer_portal_milestones")
+    .delete()
+    .eq("portal_project_id", portal.id);
+
+  if (deleteError) throw deleteError;
+
+  if (!Array.isArray(milestones) || milestones.length === 0) return;
+
+  const rows = milestones.map((milestone, index) => ({
+    portal_project_id: portal.id,
+    title: cleanString(milestone.label || milestone.title) || `Milestone ${index + 1}`,
+    status:
+      typeof milestone.done === "boolean"
+        ? milestone.done
+          ? "done"
+          : "todo"
+        : normalizeMilestoneStatus(milestone.status),
+    notes: cleanString(milestone.notes) || null,
+    due_date: safeDate(milestone.due_date),
+    sort_order: Number(milestone.sort_order ?? (index + 1) * 10) || (index + 1) * 10,
+    completed_at:
+      typeof milestone.done === "boolean" && milestone.done ? new Date().toISOString() : null,
+  }));
+
+  const { error: insertError } = await supabaseAdmin
+    .from("customer_portal_milestones")
+    .insert(rows);
+
+  if (insertError) throw insertError;
+}
+
+export async function savePortalClientSyncByQuoteId(
+  quoteId: string,
+  input: {
+    assets?: CustomerPortalAssetInput[];
+    revisions?: CustomerPortalRevisionInput[];
+  }
+) {
+  const portal = await ensureCustomerPortalForQuoteId(quoteId);
+
+  if (Array.isArray(input.assets)) {
+    for (const asset of input.assets) {
+      const payload = {
+        portal_project_id: portal.id,
+        asset_type: cleanString(asset.category || asset.assetType) || "general",
+        label: cleanString(asset.label) || "Client asset",
+        asset_url: cleanString(asset.url || asset.assetUrl) || null,
+        notes: cleanString(asset.notes) || null,
+        status: normalizeAssetStatus(asset.status),
+        source: cleanString(asset.source) || "portal_link",
+        storage_bucket: cleanString(asset.storageBucket) || null,
+        storage_path: cleanString(asset.storagePath) || null,
+        file_name: cleanString(asset.fileName) || null,
+        mime_type: cleanString(asset.mimeType) || null,
+        file_size: Number(asset.fileSize ?? 0) || null,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (cleanString(asset.id)) {
+        const { error } = await supabaseAdmin
+          .from("customer_portal_assets")
+          .update(payload)
+          .eq("portal_project_id", portal.id)
+          .eq("id", asset.id);
+
+        if (error) throw error;
+      }
+    }
+  }
+
+  if (Array.isArray(input.revisions)) {
+    for (const revision of input.revisions) {
+      const payload = {
+        portal_project_id: portal.id,
+        request_text: cleanString(revision.message || revision.requestText),
+        priority: normalizePriority(revision.priority),
+        status: normalizeRevisionStatus(revision.status),
+        updated_at: new Date().toISOString(),
+      };
+
+      if (cleanString(revision.id)) {
+        const { error } = await supabaseAdmin
+          .from("customer_portal_revisions")
+          .update(payload)
+          .eq("portal_project_id", portal.id)
+          .eq("id", revision.id);
+
+        if (error) throw error;
+      }
+    }
+  }
 }
