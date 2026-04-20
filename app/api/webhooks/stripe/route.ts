@@ -1,5 +1,6 @@
 // app/api/webhooks/stripe/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { markDepositPaidForQuoteId } from "@/lib/customerPortal";
 import { confirmEcommerceDepositPayment, confirmOpsDepositPayment } from "@/lib/depositPayments";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -74,18 +75,12 @@ async function confirmWebsiteQuotePayment(session: any, quoteId: string) {
 
   await supabaseAdmin.from("quotes").update({ status: "paid", debug: nextDebug }).eq("id", quoteId);
 
-  const { data: portalState } = await supabaseAdmin
-    .from("quote_portal_state")
-    .select("quote_id")
-    .eq("quote_id", quoteId)
-    .maybeSingle();
-
-  if (portalState) {
-    await supabaseAdmin
-      .from("quote_portal_state")
-      .update({ deposit_status: "paid", deposit_paid_at: now, updated_at: now })
-      .eq("quote_id", quoteId);
-  }
+  await markDepositPaidForQuoteId(quoteId, {
+    amountCents: Number(session.amount_total ?? 0) || null,
+    checkoutUrl: null,
+    paidAt: now,
+    reference: String(session.id || ""),
+  });
 }
 
 export async function POST(req: NextRequest) {
