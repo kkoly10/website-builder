@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getCustomerPortalViewByQuoteId } from "@/lib/customerPortal";
 import { requireAdminRoute } from "@/lib/routeAuth";
 
 export const runtime = "nodejs";
@@ -81,123 +82,63 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const [quoteRes, portalStateRes] = await Promise.all([
-      supabaseAdmin
-        .from("quotes")
-        .select("*, leads(name,email)")
-        .eq("id", quoteId)
-        .maybeSingle(),
-
-      supabaseAdmin
-        .from("quote_portal_state")
-        .select("*")
-        .eq("quote_id", quoteId)
-        .maybeSingle(),
-    ]);
-
-    if (quoteRes.error) {
+    const portalView = await getCustomerPortalViewByQuoteId(quoteId);
+    if (!portalView.ok) {
       return NextResponse.json(
-        { ok: false, error: quoteRes.error.message },
-        { status: 500 }
-      );
-    }
-
-    const quote = quoteRes.data;
-    if (!quote) {
-      return NextResponse.json(
-        { ok: false, error: "Quote not found" },
+        { ok: false, error: portalView.error || "Portal project not found" },
         { status: 404 }
       );
     }
 
-    const lead = Array.isArray(quote.leads) ? quote.leads[0] : quote.leads;
-    const portalState = portalStateRes.data || null;
+    const quoteRes = await supabaseAdmin
+      .from("quotes")
+      .select("id, debug")
+      .eq("id", quoteId)
+      .maybeSingle();
 
-    const intake = safeObj(quote.intake_normalized);
-    const scopeSnapshot = safeObj(quote.scope_snapshot);
-    const debug = safeObj(quote.debug);
-    const portalAdmin = safeObj(debug.portalAdmin);
+    if (quoteRes.error || !quoteRes.data) {
+      return NextResponse.json(
+        { ok: false, error: quoteRes.error?.message || "Quote not found" },
+        { status: 404 }
+      );
+    }
 
-    const estimateTarget =
-      quote.estimate_total ||
-      quote.quote_json?.estimateComputed?.total ||
-      quote.quote_json?.estimate?.target ||
-      null;
-
-    const depositAmount =
-      portalState?.deposit_amount ??
-      (estimateTarget ? Math.round(Number(estimateTarget) * 0.5) : null);
-
-    const pagesIncluded =
-      cleanList(scopeSnapshot.pagesIncluded).length > 0
-        ? cleanList(scopeSnapshot.pagesIncluded)
-        : parsePages(intake.pages);
-
-    const featuresIncluded =
-      cleanList(scopeSnapshot.featuresIncluded).length > 0
-        ? cleanList(scopeSnapshot.featuresIncluded)
-        : cleanList(intake.integrations);
-
-    const exclusions =
-      cleanList(scopeSnapshot.exclusions).length > 0
-        ? cleanList(scopeSnapshot.exclusions)
-        : ["Third-party fees", "Custom post-launch growth work"];
-
-    const clientName =
-      lead?.name ||
-      quote.quote_json?.contactName ||
-      "Client";
-
-    const clientEmail =
-      lead?.email ||
-      quote.lead_email ||
-      quote.quote_json?.leadEmail ||
-      "[client email]";
-
-    const platform = textOrFallback(
-      scopeSnapshot.platform || scopeSnapshot.stack || intake.domainHosting,
-      "To be finalized"
-    );
-
+    const workspace = portalView.data;
+    const estimateTarget = workspace.quote.estimate.target;
+    const depositAmount = workspace.quote.deposit.amount;
+    const pagesIncluded = workspace.scopeSnapshot.pagesIncluded;
+    const featuresIncluded = workspace.scopeSnapshot.featuresIncluded;
+    const exclusions = workspace.scopeSnapshot.exclusions;
+    const clientName = workspace.lead.name || "Client";
+    const clientEmail = workspace.lead.email || "[client email]";
+    const platform = textOrFallback(workspace.scopeSnapshot.platform, "To be finalized");
     const timeline = textOrFallback(
-      scopeSnapshot.timeline || scopeSnapshot.timelineText || intake.timeline,
+      workspace.scopeSnapshot.timeline,
       "Timeline to be finalized during project kickoff"
     );
-
     const revisionPolicy = textOrFallback(
-      scopeSnapshot.revisionPolicy || scopeSnapshot.revisions,
+      workspace.scopeSnapshot.revisionPolicy,
       "Revision structure aligned during scope approval"
     );
-
     const agreementModel = textOrFallback(
-      portalAdmin.agreementModel,
+      workspace.agreement.model,
       "Managed build agreement"
     );
-
     const ownershipModel = textOrFallback(
-      portalAdmin.ownershipModel,
+      workspace.agreement.ownershipModel,
       "Managed with project handoff options"
     );
-
-    const previewUrl =
-      typeof portalAdmin.previewUrl === "string" && portalAdmin.previewUrl.trim()
-        ? portalAdmin.previewUrl.trim()
-        : "[preview URL pending]";
-
+    const previewUrl = workspace.preview.url || "[preview URL pending]";
     const productionUrl =
-      typeof portalAdmin.productionUrl === "string" && portalAdmin.productionUrl.trim()
-        ? portalAdmin.productionUrl.trim()
-        : "[production URL pending]";
-
+      workspace.preview.productionUrl || "[production URL pending]";
     const launchNotes =
-      typeof portalAdmin.launchNotes === "string" && portalAdmin.launchNotes.trim()
-        ? portalAdmin.launchNotes.trim()
-        : "Launch readiness items will be completed before go-live.";
-
+      workspace.launch.notes ||
+      "Launch readiness items will be completed before go-live.";
     const depositNotes =
-      typeof portalState?.deposit_notes === "string" && portalState.deposit_notes.trim()
-        ? portalState.deposit_notes.trim()
-        : "Deposit is required before project kickoff unless otherwise agreed in writing.";
+      workspace.quote.deposit.notes ||
+      "Deposit is required before project kickoff unless otherwise agreed in writing.";
+    const tierLabel = workspace.scopeSnapshot.tierLabel || workspace.quote.tier;
+    const websiteType = workspace.scope.websiteType || "To be finalized";
 
     const draft = `WEBSITE PROJECT PRE-CONTRACT DRAFT
 
@@ -209,9 +150,9 @@ Client contact email: ${clientEmail}
 
 2. PROJECT SUMMARY
 Client is engaging Provider for a website project currently categorized as:
-- Tier / package: ${textOrFallback(scopeSnapshot.tierLabel || quote.tier_recommended, "Website Scope")}
+- Tier / package: ${textOrFallback(tierLabel, "Website Scope")}
 - Platform: ${platform}
-- Website type: ${textOrFallback(intake.websiteType, "To be finalized")}
+- Website type: ${textOrFallback(websiteType, "To be finalized")}
 - Timeline: ${timeline}
 
 3. SCOPE OF WORK
@@ -277,7 +218,7 @@ Before sharing this agreement draft externally, confirm:
 
 END OF DRAFT`;
 
-    const currentDebug = safeObj(quote.debug);
+    const currentDebug = safeObj(quoteRes.data.debug);
     const nextDebug = {
       ...currentDebug,
       generatedPreContract: draft,
