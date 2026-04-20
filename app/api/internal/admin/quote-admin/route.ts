@@ -1,4 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  replacePortalMilestonesByQuoteId,
+  savePortalClientSyncByQuoteId,
+  updatePortalAdminByQuoteId,
+} from "@/lib/customerPortal";
+import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireAdminRoute } from "@/lib/routeAuth";
 import { sendEventNotification } from "@/lib/notifications";
@@ -147,19 +153,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const [existingQuoteRes, existingPortalStateRes] = await Promise.all([
-      supabaseAdmin
-        .from("quotes")
-        .select("id, status, debug, scope_snapshot")
-        .eq("id", quoteId)
-        .maybeSingle(),
-
-      supabaseAdmin
-        .from("quote_portal_state")
-        .select("*")
-        .eq("quote_id", quoteId)
-        .maybeSingle(),
-    ]);
+    const existingQuoteRes = await supabaseAdmin
+      .from("quotes")
+      .select("id, status, debug, scope_snapshot")
+      .eq("id", quoteId)
+      .maybeSingle();
 
     if (existingQuoteRes.error) {
       return NextResponse.json(
@@ -176,18 +174,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (
-      existingPortalStateRes.error &&
-      !String(existingPortalStateRes.error.message || "")
-        .toLowerCase()
-        .includes("no rows")
-    ) {
-      return NextResponse.json(
-        { ok: false, error: existingPortalStateRes.error.message },
-        { status: 500 }
-      );
-    }
-
     const currentDebug = safeObj(existing.debug);
     const nextDebug = { ...currentDebug };
 
@@ -198,7 +184,7 @@ export async function POST(req: NextRequest) {
       nextDebug.adminPricing = {
         discountPercent: Number(body.adminPricing.discountPercent || 0),
         flatAdjustment: Number(body.adminPricing.flatAdjustment || 0),
-        hourlyRate: Number(body.adminPricing.hourlyRate || 40),
+        hourlyRate: Number(body.adminPricing.hourlyRate || INTERNAL_HOURLY_RATE),
         notes:
           typeof body.adminPricing.notes === "string"
             ? body.adminPricing.notes
@@ -313,8 +299,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const existingPortalState = existingPortalStateRes.data || { quote_id: quoteId };
-
     const shouldUpdatePortalState =
       typeof body?.publicNote === "string" ||
       typeof body?.depositNotes === "string" ||
@@ -324,120 +308,50 @@ export async function POST(req: NextRequest) {
       (body?.clientSync && typeof body.clientSync === "object");
 
     if (shouldUpdatePortalState) {
-      const portalStatePatch: any = {
-        ...existingPortalState,
-        quote_id: quoteId,
-        updated_at: new Date().toISOString(),
-      };
+      await updatePortalAdminByQuoteId(quoteId, {
+        publicNote:
+          typeof body?.publicNote === "string" ? body.publicNote : undefined,
+        depositNotes:
+          typeof body?.depositNotes === "string" ? body.depositNotes : undefined,
+        depositAmount:
+          body?.depositAmount != null ? Number(body.depositAmount || 0) : undefined,
+        portalAdmin:
+          body?.portalAdmin && typeof body.portalAdmin === "object"
+            ? body.portalAdmin
+            : undefined,
+        portalStateAdmin:
+          body?.portalStateAdmin && typeof body.portalStateAdmin === "object"
+            ? body.portalStateAdmin
+            : undefined,
+        publishedAgreementText:
+          typeof body?.publishedAgreementText === "string"
+            ? body.publishedAgreementText
+            : undefined,
+      });
 
-      if (typeof body?.publicNote === "string") {
-        portalStatePatch.admin_public_note = body.publicNote;
-      }
-
-      if (typeof body?.depositNotes === "string") {
-        portalStatePatch.deposit_notes = body.depositNotes;
-      }
-
-      if (body?.depositAmount != null) {
-        portalStatePatch.deposit_amount = Number(body.depositAmount || 0);
-      }
-
-      if (body?.portalStateAdmin && typeof body.portalStateAdmin === "object") {
-        if (typeof body.portalStateAdmin.clientStatus === "string") {
-          portalStatePatch.client_status = body.portalStateAdmin.clientStatus;
-        }
-
-        if (typeof body.portalStateAdmin.clientNotes === "string") {
-          portalStatePatch.client_notes = body.portalStateAdmin.clientNotes;
-        }
-
-        if (typeof body.portalStateAdmin.adminPublicNote === "string") {
-          portalStatePatch.admin_public_note = body.portalStateAdmin.adminPublicNote;
-        }
-
-        if (typeof body.portalStateAdmin.depositNotes === "string") {
-          portalStatePatch.deposit_notes = body.portalStateAdmin.depositNotes;
-        }
-
-        if (body.portalStateAdmin.depositAmount != null) {
-          portalStatePatch.deposit_amount = Number(
-            body.portalStateAdmin.depositAmount || 0
-          );
-        }
-
-        if (Array.isArray(body.portalStateAdmin.milestones)) {
-          portalStatePatch.milestones = cleanMilestones(
-            body.portalStateAdmin.milestones
-          );
-        }
-
-        portalStatePatch.client_updated_at = new Date().toISOString();
-      }
-
-      if (body?.portalAdmin && typeof body.portalAdmin === "object") {
-        portalStatePatch.preview_url = cleanString(body.portalAdmin.previewUrl);
-        portalStatePatch.production_url = cleanString(body.portalAdmin.productionUrl);
-        portalStatePatch.preview_status =
-          cleanString(body.portalAdmin.previewStatus) || "Awaiting published preview";
-        portalStatePatch.preview_notes =
-          typeof body.portalAdmin.previewNotes === "string"
-            ? body.portalAdmin.previewNotes
-            : "";
-        portalStatePatch.preview_updated_at = new Date().toISOString();
-        portalStatePatch.client_review_status =
-          cleanString(body.portalAdmin.clientReviewStatus) || "Preview pending";
-        portalStatePatch.agreement_status =
-          cleanString(body.portalAdmin.agreementStatus) || "Not published yet";
-        portalStatePatch.agreement_model =
-          cleanString(body.portalAdmin.agreementModel) || "Managed build agreement";
-        portalStatePatch.ownership_model =
-          cleanString(body.portalAdmin.ownershipModel) ||
-          "Managed with project handoff options";
-        portalStatePatch.agreement_published_at =
-          cleanString(body.portalAdmin.agreementPublishedAt);
-        portalStatePatch.launch_status =
-          cleanString(body.portalAdmin.launchStatus) || "Not ready";
-        portalStatePatch.domain_status =
-          cleanString(body.portalAdmin.domainStatus) || "Pending";
-        portalStatePatch.analytics_status =
-          cleanString(body.portalAdmin.analyticsStatus) || "Pending";
-        portalStatePatch.forms_status =
-          cleanString(body.portalAdmin.formsStatus) || "Pending";
-        portalStatePatch.seo_status =
-          cleanString(body.portalAdmin.seoStatus) || "Pending";
-        portalStatePatch.handoff_status =
-          cleanString(body.portalAdmin.handoffStatus) || "Pending";
-        portalStatePatch.launch_notes =
-          typeof body.portalAdmin.launchNotes === "string"
-            ? body.portalAdmin.launchNotes
-            : "";
+      if (
+        body?.portalStateAdmin &&
+        typeof body.portalStateAdmin === "object" &&
+        Array.isArray(body.portalStateAdmin.milestones)
+      ) {
+        await replacePortalMilestonesByQuoteId(
+          quoteId,
+          cleanMilestones(body.portalStateAdmin.milestones)
+        );
       }
 
       if (body?.clientSync && typeof body.clientSync === "object") {
-        if (Array.isArray(body.clientSync.assets)) {
-          portalStatePatch.assets = cleanAssets(body.clientSync.assets);
-        }
-
-        if (Array.isArray(body.clientSync.revisions)) {
-          portalStatePatch.revision_requests = cleanRevisions(
-            body.clientSync.revisions
-          );
-        }
-      }
-
-      const { error: portalStateUpdateError } = await supabaseAdmin
-        .from("quote_portal_state")
-        .upsert(portalStatePatch, { onConflict: "quote_id" });
-
-      if (portalStateUpdateError) {
-        return NextResponse.json(
-          { ok: false, error: portalStateUpdateError.message },
-          { status: 500 }
-        );
+        await savePortalClientSyncByQuoteId(quoteId, {
+          assets: Array.isArray(body.clientSync.assets)
+            ? cleanAssets(body.clientSync.assets)
+            : undefined,
+          revisions: Array.isArray(body.clientSync.revisions)
+            ? cleanRevisions(body.clientSync.revisions)
+            : undefined,
+        });
       }
     }
 
-    // Fire notification if _event was provided
     if (typeof body?._event === "string" && body._event) {
       const leadRow = await supabaseAdmin
         .from("quotes")
