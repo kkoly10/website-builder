@@ -1,6 +1,7 @@
 import type { EcommerceTierKey, OpsTierKey, WebsiteTierKey } from "@/lib/pricing/types";
 
 export const PRICING_VERSION = "startup-v2-2026-04";
+export const INTERNAL_HOURLY_RATE = 85;
 
 export const PRICING_MESSAGES = {
   depositPolicy: "50% deposit to start, 50% on completion.",
@@ -15,18 +16,18 @@ export const WEBSITE_TIER_CONFIG: Record<
 > = {
   starter_site: {
     label: "Starter Site",
-    min: 1500,
-    max: 2200,
+    min: 1800,
+    max: 2400,
   },
   growth_site: {
     label: "Growth Site",
-    min: 2300,
-    max: 3400,
+    min: 3500,
+    max: 4500,
   },
   premium_build: {
     label: "Premium Build",
-    min: 3500,
-    max: 5200,
+    min: 6500,
+    max: 10000,
   },
 };
 
