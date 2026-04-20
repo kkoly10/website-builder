@@ -69,17 +69,17 @@ export const websitesPageData = {
   pricingCards: [
     {
       label: "/ STARTER",
-      value: "from $1,800",
+      value: "$1,800 - $2,400",
       detail: "For a clean, credible single-page site that does one job well.",
     },
     {
       label: "/ GROWTH",
-      value: "from $3,800",
+      value: "$3,500 - $4,500",
       detail: "For most small businesses ready to look the part and convert.",
     },
     {
       label: "/ PREMIUM",
-      value: "from $6,500",
+      value: "$6,500 - $10,000+",
       detail: "For businesses that need a real site with depth, content, and moving parts.",
     },
   ],
