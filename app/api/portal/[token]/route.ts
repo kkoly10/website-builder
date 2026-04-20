@@ -1,7 +1,14 @@
 // app/api/portal/[token]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { applyPortalAction, getPortalBundleByToken } from "@/lib/portal/server";
+import {
+  acceptCustomerPortalAgreement,
+  getCustomerPortalViewByToken,
+  submitAssetByPortalToken,
+  submitRevisionByPortalToken,
+  toggleMilestone,
+  updateClientStatus,
+} from "@/lib/customerPortal";
 import { sendEventNotification } from "@/lib/notifications";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
@@ -50,7 +57,7 @@ export async function GET(
 ) {
   try {
     const { token } = await getParams(ctx);
-    const result = await getPortalBundleByToken(token);
+    const result = await getCustomerPortalViewByToken(token);
     return NextResponse.json(withRedactedLead(result), { status: result.ok ? 200 : 404 });
   } catch (err: any) {
     return NextResponse.json(
@@ -90,7 +97,7 @@ export async function POST(
 
     let portal: any = null;
     if (sensitiveActions.has(actionType)) {
-      portal = await getPortalBundleByToken(token);
+      portal = await getCustomerPortalViewByToken(token);
       if (!portal?.ok || !portal?.data?.quote?.id) {
         return NextResponse.json({ ok: false, error: "Portal not found." }, { status: 404 });
       }
@@ -120,7 +127,74 @@ export async function POST(
       };
     }
 
-    const result = await applyPortalAction(token, body);
+    if (actionType === "revision_add") {
+      const message = String(body?.revision?.message || "").trim();
+      if (!message) {
+        return NextResponse.json(
+          { ok: false, error: "Revision request message is required." },
+          { status: 400 }
+        );
+      }
+
+      await submitRevisionByPortalToken({
+        token,
+        requestText: message,
+        priority: body?.revision?.priority,
+      });
+    } else if (actionType === "asset_add") {
+      const safeUrl = sanitizeExternalUrl(body?.asset?.url);
+      if (!safeUrl) {
+        return NextResponse.json(
+          { ok: false, error: "Asset URL must be a valid http or https link." },
+          { status: 400 }
+        );
+      }
+
+      await submitAssetByPortalToken({
+        token,
+        assetType: String(body?.asset?.category || body?.asset?.assetType || "general"),
+        label: String(body?.asset?.label || "Client link"),
+        assetUrl: safeUrl,
+        notes: String(body?.asset?.notes || ""),
+      });
+    } else if (actionType === "deposit_notice_sent") {
+      const note = [
+        typeof body?.clientNotes === "string" ? body.clientNotes : "",
+        typeof body?.note === "string"
+          ? body.note
+          : "Client reported that the deposit was sent and is awaiting verification.",
+      ]
+        .filter(Boolean)
+        .join("\n")
+        .trim();
+
+      await updateClientStatus(token, "deposit_sent", note);
+    } else if (actionType === "agreement_accept") {
+      await acceptCustomerPortalAgreement(token);
+    } else if (actionType === "client_status") {
+      await updateClientStatus(
+        token,
+        String(body?.clientStatus || "new"),
+        typeof body?.clientNotes === "string" ? body.clientNotes : undefined
+      );
+    } else if (actionType === "milestone_toggle") {
+      const milestoneId = String(body?.key || "").trim();
+      if (!milestoneId) {
+        return NextResponse.json(
+          { ok: false, error: "Milestone id is required." },
+          { status: 400 }
+        );
+      }
+
+      await toggleMilestone(token, milestoneId, !!body?.done);
+    } else {
+      return NextResponse.json(
+        { ok: false, error: "Unknown portal action." },
+        { status: 400 }
+      );
+    }
+
+    const result = await getCustomerPortalViewByToken(token);
 
     if (result.ok && result.data) {
       if (actionType === "agreement_accept") {
