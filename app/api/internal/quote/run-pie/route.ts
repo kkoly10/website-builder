@@ -1,8 +1,7 @@
 // app/api/internal/quote/run-pie/route.ts
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { generatePieForQuoteId } from "@/lib/pie/ensurePie";
 import { requireAdminRoute } from "@/lib/routeAuth";
-import { evaluatePIE } from "@/lib/pie";
 
 export const runtime = "nodejs";
 
@@ -19,32 +18,12 @@ export async function POST(req: Request) {
   const quoteId = pick(form, "quoteId");
   if (!quoteId) return NextResponse.json({ error: "Missing quoteId" }, { status: 400 });
 
-  const { data, error } = await supabaseAdmin
-    .from("quotes")
-    .select("id, intake_normalized, estimate_total, tier_recommended")
-    .eq("id", quoteId)
-    .single();
-
-  if (error || !data) {
-    return NextResponse.json({ error: error?.message ?? "Quote not found" }, { status: 404 });
-  }
-
-  // Generate PIE from intake_normalized
-  const payload = {
-    intake: (data as any).intake_normalized ?? {},
-    estimate_total: (data as any).estimate_total ?? null,
-    tier_recommended: (data as any).tier_recommended ?? null,
-  };
-
-  const report = evaluatePIE(payload as any);
-
-  const ins = await supabaseAdmin.from("pie_reports").insert({
-    quote_id: quoteId,
-    report,
-  });
-
-  if (ins.error) {
-    return NextResponse.json({ error: ins.error.message }, { status: 400 });
+  const result = await generatePieForQuoteId(quoteId, { force: true });
+  if (!result.ok) {
+    return NextResponse.json(
+      { error: result.error ?? "Failed to generate PIE report" },
+      { status: 400 }
+    );
   }
 
   const url = new URL(req.url);
