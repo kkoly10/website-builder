@@ -1,9 +1,15 @@
-// app/api/portal/assets/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { resolvePortalAccess } from "@/lib/portalAccess";
+import {
+  getCustomerPortalBundleByToken,
+  submitAssetByPortalToken,
+} from "@/lib/customerPortal";
 import { sendEventNotification } from "@/lib/notifications";
-import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
+import {
+  enforceRateLimitDurable,
+  getIpFromHeaders,
+  rateLimitResponse,
+} from "@/lib/rateLimit";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,13 +35,6 @@ const ALLOWED_MIME_TYPES = new Set([
   "application/zip",
 ]);
 
-type PortalMilestone = {
-  key: string;
-  label: string;
-  done: boolean;
-  updatedAt?: string | null;
-};
-
 function sanitizeFilename(name: string) {
   return (name || "file")
     .replace(/[^\w.\-]+/g, "_")
@@ -55,155 +54,32 @@ function sanitizeExternalUrl(value: unknown): string | null {
   }
 }
 
-function setMilestoneDone(
-  milestones: PortalMilestone[],
-  key: string,
-  label: string,
-  done: boolean
-): PortalMilestone[] {
-  const now = new Date().toISOString();
-  const found = milestones.some((m) => m.key === key);
-
-  if (!found) {
-    return [...milestones, { key, label, done, updatedAt: now }];
-  }
-
-  return milestones.map((m) =>
-    m.key === key ? { ...m, label: m.label || label, done, updatedAt: now } : m
-  );
-}
-
-async function listAssetsForQuote(quoteId: string) {
-  const { data, error } = await supabaseAdmin
-    .from("portal_assets")
-    .select("*")
-    .eq("quote_id", quoteId)
-    .order("created_at", { ascending: false });
-
-  if (error) throw new Error(error.message);
-
-  const rows = await Promise.all(
-    (data ?? []).map(async (row: any) => {
-      let signedUrl: string | null = null;
-
-      if (row.storage_bucket && row.storage_path) {
-        try {
-          const signed = await supabaseAdmin.storage
-            .from(row.storage_bucket)
-            .createSignedUrl(row.storage_path, 60 * 60);
-
-          if (!signed.error) {
-            signedUrl = signed.data.signedUrl;
-          }
-        } catch {
-          // ignore signing failures
-        }
-      }
-
-      return {
-        ...row,
-        signed_url: signedUrl,
-      };
-    })
-  );
-
-  return rows;
-}
-
-async function syncPortalStateForAsset(quoteId: string) {
-  const { data: existing, error: existingError } = await supabaseAdmin
-    .from("quote_portal_state")
-    .select("*")
-    .eq("quote_id", quoteId)
-    .maybeSingle();
-
-  if (
-    existingError &&
-    !String(existingError.message || "").toLowerCase().includes("no rows")
-  ) {
-    throw new Error(existingError.message);
-  }
-
-  const milestones = Array.isArray(existing?.milestones) ? existing.milestones : [];
-  const nextMilestones = setMilestoneDone(
-    milestones,
-    "assets_submitted",
-    "Content/assets submitted",
-    true
-  );
-
-  const currentStatus = String(existing?.client_status || "").trim();
-  const nextStatus =
-    !currentStatus || currentStatus === "new" || currentStatus === "intake_review"
-      ? "content_submitted"
-      : currentStatus;
-
-  const patch = {
-    ...(existing || {}),
-    quote_id: quoteId,
-    client_status: nextStatus,
-    client_updated_at: new Date().toISOString(),
-    milestones: nextMilestones,
-    updated_at: new Date().toISOString(),
-  };
-
-  const { error: upsertError } = await supabaseAdmin
-    .from("quote_portal_state")
-    .upsert(patch, { onConflict: "quote_id" });
-
-  if (upsertError) {
-    throw new Error(upsertError.message);
-  }
-}
-
-async function getNotificationContext(quoteId: string) {
-  const { data: quote, error: quoteError } = await supabaseAdmin
-    .from("quotes")
-    .select("id, public_token, lead_id")
-    .eq("id", quoteId)
-    .maybeSingle();
-
-  if (quoteError || !quote) {
-    return null;
-  }
-
-  let leadName = "";
-  let leadEmail = "";
-
-  if (quote.lead_id) {
-    const { data: lead } = await supabaseAdmin
-      .from("leads")
-      .select("name, email")
-      .eq("id", quote.lead_id)
-      .maybeSingle();
-
-    leadName = String(lead?.name || "");
-    leadEmail = String(lead?.email || "");
-  }
+async function getNotificationContext(token: string) {
+  const bundle = await getCustomerPortalBundleByToken(token);
+  if (!bundle?.quote) return null;
 
   return {
     event: "asset_submitted",
-    quoteId,
-    leadName,
-    leadEmail,
-    workspaceUrl: quote.public_token ? `/portal/${quote.public_token}` : undefined,
+    quoteId: String(bundle.quote.id || ""),
+    leadName: String(bundle.lead?.name || ""),
+    leadEmail: String(bundle.lead?.email || ""),
+    workspaceUrl: token ? `/portal/${token}` : undefined,
   } as const;
 }
 
 export async function GET(req: NextRequest) {
   try {
     const token = req.nextUrl.searchParams.get("token") || "";
-    const resolved = await resolvePortalAccess(token);
+    const bundle = await getCustomerPortalBundleByToken(token);
 
-    if (!resolved) {
+    if (!bundle) {
       return NextResponse.json(
         { ok: false, error: "Invalid or expired portal token." },
         { status: 404 }
       );
     }
 
-    const rows = await listAssetsForQuote(resolved.quoteId);
-    return NextResponse.json({ ok: true, assets: rows });
+    return NextResponse.json({ ok: true, assets: bundle.assets ?? [] });
   } catch (err: any) {
     return NextResponse.json(
       { ok: false, error: err?.message || "Unexpected error" },
@@ -215,23 +91,27 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const ip = getIpFromHeaders(req.headers);
-    const rl = await enforceRateLimitDurable({ key: `portal-assets:${ip}`, limit: 10, windowMs: 60_000 });
+    const rl = await enforceRateLimitDurable({
+      key: `portal-assets:${ip}`,
+      limit: 10,
+      windowMs: 60_000,
+    });
     if (!rl.ok) return rateLimitResponse(rl.resetAt);
 
     const contentType = req.headers.get("content-type") || "";
 
     if (contentType.includes("application/json")) {
       const body = await req.json();
-      const resolved = await resolvePortalAccess(body?.token || "");
+      const token = String(body?.token || "");
+      const safeUrl = sanitizeExternalUrl(body?.url);
 
-      if (!resolved) {
+      if (!token) {
         return NextResponse.json(
-          { ok: false, error: "Invalid or expired portal token." },
-          { status: 404 }
+          { ok: false, error: "Portal token is required." },
+          { status: 400 }
         );
       }
 
-      const safeUrl = sanitizeExternalUrl(body?.url);
       if (!safeUrl) {
         return NextResponse.json(
           { ok: false, error: "Asset URL must be a valid http or https link." },
@@ -239,49 +119,32 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const { data, error } = await supabaseAdmin
-        .from("portal_assets")
-        .insert({
-          quote_id: resolved.quoteId,
-          source: "portal_link",
-          asset_type: String(body?.assetType || "link").trim(),
-          label: String(body?.label || "Client link").trim(),
-          url: safeUrl,
-          notes: String(body?.notes || "").trim(),
-          status: "submitted",
-        })
-        .select("*")
-        .single();
+      const asset = await submitAssetByPortalToken({
+        token,
+        assetType: String(body?.assetType || "general"),
+        label: String(body?.label || "Client link"),
+        assetUrl: safeUrl,
+        notes: String(body?.notes || ""),
+      });
 
-      if (error) {
-        return NextResponse.json(
-          { ok: false, error: error.message },
-          { status: 500 }
-        );
-      }
-
-      await syncPortalStateForAsset(resolved.quoteId);
-
-      const notificationCtx = await getNotificationContext(resolved.quoteId);
+      const notificationCtx = await getNotificationContext(token);
       if (notificationCtx) {
         sendEventNotification(notificationCtx).catch((err) => {
           console.error("[portal/assets] notification error:", err);
         });
       }
 
-      return NextResponse.json({ ok: true, asset: data });
+      return NextResponse.json({ ok: true, asset });
     }
 
     if (contentType.includes("multipart/form-data")) {
       const form = await req.formData();
-
       const token = String(form.get("token") || "");
-      const resolved = await resolvePortalAccess(token);
 
-      if (!resolved) {
+      if (!token) {
         return NextResponse.json(
-          { ok: false, error: "Invalid or expired portal token." },
-          { status: 404 }
+          { ok: false, error: "Portal token is required." },
+          { status: 400 }
         );
       }
 
@@ -295,7 +158,12 @@ export async function POST(req: NextRequest) {
 
       if (maybeFile.size > MAX_FILE_SIZE) {
         return NextResponse.json(
-          { ok: false, error: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024} MB.` },
+          {
+            ok: false,
+            error: `File too large. Maximum size is ${
+              MAX_FILE_SIZE / 1024 / 1024
+            } MB.`,
+          },
           { status: 400 }
         );
       }
@@ -308,66 +176,49 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      const bundle = await getCustomerPortalBundleByToken(token);
+      if (!bundle?.portal?.id) {
+        return NextResponse.json(
+          { ok: false, error: "Invalid or expired portal token." },
+          { status: 404 }
+        );
+      }
+
       const bytes = await maybeFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
-
       const safeName = sanitizeFilename(maybeFile.name || "upload.bin");
-      const storagePath = `${resolved.quoteId}/${Date.now()}_${safeName}`;
+      const storagePath = `${bundle.portal.id}/${Date.now()}_${safeName}`;
 
-      const upload = await supabaseAdmin.storage
-        .from(ASSET_BUCKET)
-        .upload(storagePath, buffer, {
-          contentType: maybeFile.type || "application/octet-stream",
-          upsert: false,
-        });
-
-      if (upload.error) {
+      const upload = await bundleStorageUpload(storagePath, buffer, mimeType);
+      if (!upload.ok) {
         return NextResponse.json(
-          {
-            ok: false,
-            error:
-              upload.error.message ||
-              `Storage upload failed. Make sure bucket "${ASSET_BUCKET}" exists.`,
-          },
+          { ok: false, error: upload.error },
           { status: 500 }
         );
       }
 
-      const { data, error } = await supabaseAdmin
-        .from("portal_assets")
-        .insert({
-          quote_id: resolved.quoteId,
-          source: "portal_file",
-          asset_type: String(form.get("assetType") || "file"),
-          label: String(form.get("label") || maybeFile.name || "Client file"),
-          notes: String(form.get("notes") || ""),
-          storage_bucket: ASSET_BUCKET,
-          storage_path: storagePath,
-          file_name: maybeFile.name || safeName,
-          mime_type: maybeFile.type || "application/octet-stream",
-          file_size: maybeFile.size || null,
-          status: "submitted",
-        })
-        .select("*")
-        .single();
+      const asset = await submitAssetByPortalToken({
+        token,
+        source: "portal_file",
+        assetType: String(form.get("assetType") || "file"),
+        label: String(form.get("label") || maybeFile.name || "Client file"),
+        notes: String(form.get("notes") || ""),
+        status: "submitted",
+        storageBucket: ASSET_BUCKET,
+        storagePath,
+        fileName: maybeFile.name || safeName,
+        mimeType,
+        fileSize: maybeFile.size || null,
+      });
 
-      if (error) {
-        return NextResponse.json(
-          { ok: false, error: error.message },
-          { status: 500 }
-        );
-      }
-
-      await syncPortalStateForAsset(resolved.quoteId);
-
-      const notificationCtx = await getNotificationContext(resolved.quoteId);
+      const notificationCtx = await getNotificationContext(token);
       if (notificationCtx) {
         sendEventNotification(notificationCtx).catch((err) => {
           console.error("[portal/assets] notification error:", err);
         });
       }
 
-      return NextResponse.json({ ok: true, asset: data });
+      return NextResponse.json({ ok: true, asset });
     }
 
     return NextResponse.json(
@@ -380,4 +231,26 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+async function bundleStorageUpload(
+  storagePath: string,
+  buffer: Buffer,
+  mimeType: string
+) {
+  const upload = await supabaseAdmin.storage.from(ASSET_BUCKET).upload(storagePath, buffer, {
+      contentType: mimeType,
+      upsert: false,
+    });
+
+  if (upload.error) {
+    return {
+      ok: false as const,
+      error:
+        upload.error.message ||
+        `Storage upload failed. Make sure bucket "${ASSET_BUCKET}" exists.`,
+    };
+  }
+
+  return { ok: true as const };
 }
