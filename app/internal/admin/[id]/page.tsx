@@ -1,100 +1,26 @@
 import { notFound, redirect } from "next/navigation";
-import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
+import {
+  createSupabaseServerClient,
+  isAdminUser,
+} from "@/lib/supabase/server";
+import { getCustomerPortalViewByQuoteId } from "@/lib/customerPortal";
+import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import ProjectControlClient from "./ProjectControlClient";
 
 export const dynamic = "force-dynamic";
 
-function safeObj(v: any) {
-  if (!v) return {};
-  if (typeof v === "object") return v;
-  if (typeof v === "string") {
+function safeObj(value: any) {
+  if (!value) return {};
+  if (typeof value === "object") return value;
+  if (typeof value === "string") {
     try {
-      return JSON.parse(v);
+      return JSON.parse(value);
     } catch {
       return {};
     }
   }
   return {};
-}
-
-function cleanList(values: unknown): string[] {
-  if (Array.isArray(values)) {
-    return values.map((v) => String(v || "").trim()).filter(Boolean);
-  }
-
-  if (typeof values === "string" && values.trim()) {
-    return values
-      .split(/[,|\n]/)
-      .map((v) => v.trim())
-      .filter(Boolean);
-  }
-
-  return [];
-}
-
-function parsePages(value: unknown): string[] {
-  const raw = String(value || "").trim();
-  if (!raw) return [];
-
-  if (raw.toLowerCase().includes("one pager")) {
-    return ["Homepage / One-page flow"];
-  }
-
-  const match = raw.match(/\d+/);
-  if (match) {
-    const count = Number(match[0]);
-    if (Number.isFinite(count) && count > 0) {
-      return Array.from({ length: count }, (_, i) => `Page ${i + 1}`);
-    }
-  }
-
-  return [raw];
-}
-
-type Milestone = {
-  key: string;
-  label: string;
-  done: boolean;
-  updatedAt?: string | null;
-};
-
-function buildDefaultMilestones(input: {
-  quoteStatus: string;
-  depositStatus: string;
-  assetsCount: number;
-}): Milestone[] {
-  const s = String(input.quoteStatus || "").toLowerCase();
-  const isDepositPaid = String(input.depositStatus || "").toLowerCase() === "paid";
-
-  const afterCall = ["call", "proposal", "deposit", "active", "closed_won"].includes(s);
-  const scopeLocked = ["proposal", "deposit", "active", "closed_won"].includes(s);
-  const buildStarted = ["active", "closed_won"].includes(s);
-  const launched = ["closed_won"].includes(s);
-
-  return [
-    { key: "quote_submitted", label: "Quote submitted", done: true },
-    { key: "discovery_call", label: "Discovery call completed", done: afterCall },
-    { key: "scope_confirmed", label: "Scope confirmed", done: scopeLocked },
-    { key: "deposit_paid", label: "Deposit paid", done: isDepositPaid },
-    { key: "assets_submitted", label: "Content/assets submitted", done: input.assetsCount > 0 },
-    { key: "build_in_progress", label: "Build in progress", done: buildStarted },
-    { key: "review_round", label: "Review / revisions", done: false },
-    { key: "launch", label: "Launch completed", done: launched },
-  ];
-}
-
-function mergeMilestones(defaults: Milestone[], saved: Milestone[]): Milestone[] {
-  const savedMap = new Map(saved.map((m) => [m.key, m]));
-  return defaults.map((d) => {
-    const s = savedMap.get(d.key);
-    if (!s) return d;
-    return {
-      ...d,
-      done: typeof s.done === "boolean" ? s.done : d.done,
-      updatedAt: s.updatedAt ?? d.updatedAt ?? null,
-    };
-  });
 }
 
 type Params = {
@@ -114,214 +40,106 @@ export default async function AdminQuoteDetailPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect(`/login?next=${encodeURIComponent(`/internal/admin/${quoteId}`)}`);
+  if (!user) {
+    redirect(`/login?next=${encodeURIComponent(`/internal/admin/${quoteId}`)}`);
+  }
 
   const admin = await isAdminUser({ userId: user.id, email: user.email });
   if (!admin) redirect("/portal");
 
-  const [quoteRes, pieRes, callRes, portalStateRes] = await Promise.all([
-    supabaseAdmin
-      .from("quotes")
-      .select("*, leads(email, name)")
-      .eq("id", quoteId)
-      .maybeSingle(),
+  const quoteRes = await supabaseAdmin
+    .from("quotes")
+    .select("id, debug")
+    .eq("id", quoteId)
+    .maybeSingle();
 
-    supabaseAdmin
-      .from("pie_reports")
-      .select("*")
-      .eq("quote_id", quoteId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-
-    supabaseAdmin
-      .from("call_requests")
-      .select("*")
-      .eq("quote_id", quoteId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-
-    supabaseAdmin
-      .from("quote_portal_state")
-      .select("*")
-      .eq("quote_id", quoteId)
-      .maybeSingle(),
-  ]);
-
-  if (quoteRes.error) {
-    throw new Error(quoteRes.error.message);
+  if (quoteRes.error || !quoteRes.data) {
+    notFound();
   }
 
-  const quote = quoteRes.data;
-  if (!quote) notFound();
+  const portalView = await getCustomerPortalViewByQuoteId(quoteId);
+  if (!portalView.ok) notFound();
 
-  const lead = Array.isArray(quote.leads) ? quote.leads[0] : quote.leads;
-  const debug = safeObj(quote.debug);
-  const intake = safeObj(quote.intake_normalized);
-  const portalAdmin = safeObj(debug.portalAdmin);
-  const scopeSnapshotRaw = safeObj(quote.scope_snapshot);
-  const historyRaw = safeObj(debug.workspaceHistory);
-  const portalState = portalStateRes.data || null;
-  const pie = pieRes.data || null;
-  const call = callRes.data || null;
-
-  const baseTarget =
-    quote.estimate_total ||
-    quote.quote_json?.estimateComputed?.total ||
-    quote.quote_json?.estimate?.target ||
-    0;
-
-  const baseMin =
-    quote.estimate_low ||
-    quote.quote_json?.estimateComputed?.low ||
-    quote.quote_json?.estimate?.min ||
-    0;
-
-  const baseMax =
-    quote.estimate_high ||
-    quote.quote_json?.estimateComputed?.high ||
-    quote.quote_json?.estimate?.max ||
-    0;
-
-  const assets = Array.isArray(portalState?.assets) ? portalState.assets : [];
-  const revisions = Array.isArray(portalState?.revision_requests)
-    ? portalState.revision_requests
-    : [];
-  const savedMilestones = Array.isArray(portalState?.milestones)
-    ? portalState.milestones
-    : [];
-
-  const mergedMilestones = mergeMilestones(
-    buildDefaultMilestones({
-      quoteStatus: quote.status || "",
-      depositStatus: quote.deposit_status || "",
-      assetsCount: assets.length,
-    }),
-    savedMilestones
-  );
+  const debug = safeObj(quoteRes.data.debug);
+  const workspace = portalView.data;
 
   const initialData = {
-    quoteId: quote.id,
-    publicToken: quote.public_token || "",
-    workspaceUrl: quote.public_token ? `/portal/${quote.public_token}` : "",
-    createdAt: quote.created_at,
-    status: quote.status || "new",
-    tier: quote.tier_recommended || quote.quote_json?.estimate?.tierRecommended || "—",
-
-    leadName: lead?.name || quote.quote_json?.contactName || "Unknown Lead",
-    leadEmail: quote.lead_email || lead?.email || quote.quote_json?.leadEmail || "No Email",
-
+    quoteId: workspace.quote.id,
+    publicToken: workspace.quote.publicToken,
+    workspaceUrl: workspace.quote.publicToken
+      ? `/portal/${workspace.quote.publicToken}`
+      : "",
+    createdAt: workspace.quote.createdAt,
+    status: workspace.quote.status,
+    tier: workspace.quote.tier,
+    leadName: workspace.lead.name || "Unknown Lead",
+    leadEmail: workspace.lead.email || "No Email",
     estimate: {
-      target: baseTarget,
-      min: baseMin,
-      max: baseMax,
+      target: workspace.quote.estimate.target || 0,
+      min: workspace.quote.estimate.min || 0,
+      max: workspace.quote.estimate.max || 0,
     },
-
     pie: {
-      exists: !!pie,
-      score: pie?.score || pie?.report?.lead_score || null,
-      tier: pie?.tier || pie?.report?.recommended_tier || null,
-      summary: pie?.summary || pie?.report?.summary || "",
+      exists: !!workspace.pie.exists,
+      score: workspace.pie.score,
+      tier: workspace.pie.tier,
+      summary: workspace.pie.summary || "",
     },
-
-    callRequest: call
+    callRequest: workspace.callRequest
       ? {
-          status: call.status || "new",
-          bestTime: call.best_time_to_call || call.preferred_times || "",
-          timezone: call.timezone || "",
-          notes: call.notes || "",
+          status: workspace.callRequest.status || "new",
+          bestTime: workspace.callRequest.bestTime || "",
+          timezone: workspace.callRequest.timezone || "",
+          notes: workspace.callRequest.notes || "",
         }
       : null,
-
     adminPricing: {
       discountPercent: debug?.adminPricing?.discountPercent || 0,
       flatAdjustment: debug?.adminPricing?.flatAdjustment || 0,
-      hourlyRate: debug?.adminPricing?.hourlyRate || 40,
+      hourlyRate: debug?.adminPricing?.hourlyRate || INTERNAL_HOURLY_RATE,
       notes: debug?.adminPricing?.notes || "",
     },
-
-    scopeSnapshot: {
-      tierLabel:
-        scopeSnapshotRaw.tierLabel ||
-        scopeSnapshotRaw.packageName ||
-        quote.tier_recommended ||
-        "Website Scope",
-      platform:
-        scopeSnapshotRaw.platform ||
-        scopeSnapshotRaw.stack ||
-        intake.domainHosting ||
-        "To be finalized",
-      timeline:
-        scopeSnapshotRaw.timeline ||
-        scopeSnapshotRaw.timelineText ||
-        intake.timeline ||
-        "Aligned during scoping",
-      revisionPolicy:
-        scopeSnapshotRaw.revisionPolicy ||
-        scopeSnapshotRaw.revisions ||
-        "Revision structure aligned during scope approval",
-      pagesIncluded:
-        cleanList(scopeSnapshotRaw.pagesIncluded).length > 0
-          ? cleanList(scopeSnapshotRaw.pagesIncluded)
-          : parsePages(intake.pages),
-      featuresIncluded:
-        cleanList(scopeSnapshotRaw.featuresIncluded).length > 0
-          ? cleanList(scopeSnapshotRaw.featuresIncluded)
-          : cleanList(intake.integrations),
-      exclusions:
-        cleanList(scopeSnapshotRaw.exclusions).length > 0
-          ? cleanList(scopeSnapshotRaw.exclusions)
-          : ["Third-party fees", "Custom post-launch growth work"],
-    },
-
+    scopeSnapshot: workspace.scopeSnapshot,
     portalAdmin: {
-      previewUrl: portalAdmin.previewUrl || "",
-      productionUrl: portalAdmin.productionUrl || "",
-      previewStatus: portalAdmin.previewStatus || "Awaiting published preview",
-      previewNotes: portalAdmin.previewNotes || "",
-      previewUpdatedAt: portalAdmin.previewUpdatedAt || "",
-      clientReviewStatus: portalAdmin.clientReviewStatus || "Preview pending",
-      agreementStatus: portalAdmin.agreementStatus || "Not published yet",
-      agreementModel: portalAdmin.agreementModel || "Managed build agreement",
-      ownershipModel: portalAdmin.ownershipModel || "Managed with project handoff options",
-      agreementPublishedAt: portalAdmin.agreementPublishedAt || "",
-      launchStatus: portalAdmin.launchStatus || "Not ready",
-      domainStatus: portalAdmin.domainStatus || "Pending",
-      analyticsStatus: portalAdmin.analyticsStatus || "Pending",
-      formsStatus: portalAdmin.formsStatus || "Pending",
-      seoStatus: portalAdmin.seoStatus || "Pending",
-      handoffStatus: portalAdmin.handoffStatus || "Pending",
-      launchNotes: portalAdmin.launchNotes || "",
+      previewUrl: workspace.preview.url || "",
+      productionUrl: workspace.preview.productionUrl || "",
+      previewStatus: workspace.preview.status || "Awaiting published preview",
+      previewNotes: workspace.preview.notes || "",
+      previewUpdatedAt: workspace.preview.updatedAt || "",
+      clientReviewStatus: workspace.preview.clientReviewStatus || "Preview pending",
+      agreementStatus: workspace.agreement.status || "Not published yet",
+      agreementModel: workspace.agreement.model || "Managed build agreement",
+      ownershipModel:
+        workspace.agreement.ownershipModel ||
+        "Managed with project handoff options",
+      agreementPublishedAt: workspace.agreement.publishedAt || "",
+      launchStatus: workspace.launch.status || "Not ready",
+      domainStatus: workspace.launch.domainStatus || "Pending",
+      analyticsStatus: workspace.launch.analyticsStatus || "Pending",
+      formsStatus: workspace.launch.formsStatus || "Pending",
+      seoStatus: workspace.launch.seoStatus || "Pending",
+      handoffStatus: workspace.launch.handoffStatus || "Pending",
+      launchNotes: workspace.launch.notes || "",
     },
-
-    depositStatus: quote.deposit_status || "",
-
+    depositStatus: workspace.quote.deposit.status || "",
     portalStateAdmin: {
-      clientStatus: portalState?.client_status || "new",
-      clientNotes: portalState?.client_notes || "",
-      adminPublicNote: portalState?.admin_public_note || "",
-      depositAmount:
-        portalState?.deposit_amount ??
-        (baseTarget ? Math.round(baseTarget * 0.5) : 0),
-      depositNotes: portalState?.deposit_notes || "",
-      milestones: mergedMilestones,
+      clientStatus: workspace.portalState.clientStatus || "new",
+      clientNotes: workspace.portalState.clientNotes || "",
+      adminPublicNote: workspace.portalState.adminPublicNote || "",
+      depositAmount: workspace.quote.deposit.amount || 0,
+      depositNotes: workspace.quote.deposit.notes || "",
+      milestones: workspace.portalState.milestones,
     },
-
     clientSync: {
-      lastClientUpdate: portalState?.client_updated_at || "",
-      assets,
-      revisions,
+      lastClientUpdate: workspace.portalState.clientUpdatedAt || "",
+      assets: workspace.portalState.assets,
+      revisions: workspace.portalState.revisions,
     },
-
-    workspaceHistory: {
-      scopeVersions: Array.isArray(historyRaw.scopeVersions) ? historyRaw.scopeVersions : [],
-      changeOrders: Array.isArray(historyRaw.changeOrders) ? historyRaw.changeOrders : [],
-    },
-
+    workspaceHistory: workspace.history,
     proposalText: debug?.generatedProposal || "",
     preContractDraft: debug?.generatedPreContract || "",
-    publishedAgreementText: debug?.publishedAgreementText || "",
+    publishedAgreementText:
+      workspace.agreement.publishedText || debug?.publishedAgreementText || "",
   };
 
   return <ProjectControlClient initialData={initialData} />;
