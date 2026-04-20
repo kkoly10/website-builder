@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
+import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import AdminPipelineClient from "./AdminPipelineClient";
 
@@ -48,6 +49,15 @@ export default async function WebPipelinePage() {
   const quotes = quotesRes.data || [];
   const pies = piesRes.data || [];
   const calls = callsRes.data || [];
+  const quoteIds = quotes.map((quote) => quote.id);
+
+  const portalProjectsRes = quoteIds.length
+    ? await supabaseAdmin
+        .from("customer_portal_projects")
+        .select("*")
+        .in("quote_id", quoteIds)
+    : { data: [], error: null };
+  if (portalProjectsRes.error) throw new Error(portalProjectsRes.error.message);
 
   const pieMap = new Map();
   for (const p of pies) {
@@ -59,6 +69,11 @@ export default async function WebPipelinePage() {
     if (!callMap.has(c.quote_id)) callMap.set(c.quote_id, c);
   }
 
+  const portalMap = new Map();
+  for (const portal of portalProjectsRes.data || []) {
+    portalMap.set(portal.quote_id, portal);
+  }
+
   const rows = quotes.map((q) => {
     const lead = Array.isArray(q.leads) ? q.leads[0] : q.leads;
     const pieRecord = pieMap.get(q.id);
@@ -66,7 +81,7 @@ export default async function WebPipelinePage() {
     const callRecord = callMap.get(q.id);
 
     const debug = safeObj(q.debug);
-    const portalAdmin = safeObj(debug.portalAdmin);
+    const portalProject = safeObj(portalMap.get(q.id));
 
     const baseTarget =
       q.estimate_total ||
@@ -113,28 +128,31 @@ export default async function WebPipelinePage() {
       adminPricing: {
         discountPercent: debug?.adminPricing?.discountPercent || 0,
         flatAdjustment: debug?.adminPricing?.flatAdjustment || 0,
-        hourlyRate: debug?.adminPricing?.hourlyRate || 40,
+        hourlyRate: debug?.adminPricing?.hourlyRate || INTERNAL_HOURLY_RATE,
         notes: debug?.adminPricing?.notes || "",
       },
 
       portalAdmin: {
-        previewUrl: portalAdmin.previewUrl || "",
-        productionUrl: portalAdmin.productionUrl || "",
-        previewStatus: portalAdmin.previewStatus || "Awaiting published preview",
-        previewNotes: portalAdmin.previewNotes || "",
-        previewUpdatedAt: portalAdmin.previewUpdatedAt || "",
-        clientReviewStatus: portalAdmin.clientReviewStatus || "Preview pending",
-        agreementStatus: portalAdmin.agreementStatus || "Not published yet",
-        agreementModel: portalAdmin.agreementModel || "Managed build agreement",
-        ownershipModel: portalAdmin.ownershipModel || "Managed with project handoff options",
-        agreementPublishedAt: portalAdmin.agreementPublishedAt || "",
-        launchStatus: portalAdmin.launchStatus || "Not ready",
-        domainStatus: portalAdmin.domainStatus || "Pending",
-        analyticsStatus: portalAdmin.analyticsStatus || "Pending",
-        formsStatus: portalAdmin.formsStatus || "Pending",
-        seoStatus: portalAdmin.seoStatus || "Pending",
-        handoffStatus: portalAdmin.handoffStatus || "Pending",
-        launchNotes: portalAdmin.launchNotes || "",
+        previewUrl: portalProject.preview_url || "",
+        productionUrl: portalProject.production_url || "",
+        previewStatus: portalProject.preview_status || "Awaiting published preview",
+        previewNotes: portalProject.preview_notes || "",
+        previewUpdatedAt: portalProject.preview_updated_at || "",
+        clientReviewStatus:
+          portalProject.client_review_status || "Preview pending",
+        agreementStatus: portalProject.agreement_status || "Not published yet",
+        agreementModel:
+          portalProject.agreement_model || "Managed build agreement",
+        ownershipModel:
+          portalProject.ownership_model || "Managed with project handoff options",
+        agreementPublishedAt: portalProject.agreement_published_at || "",
+        launchStatus: portalProject.launch_status || "Not ready",
+        domainStatus: portalProject.domain_status || "Pending",
+        analyticsStatus: portalProject.analytics_status || "Pending",
+        formsStatus: portalProject.forms_status || "Pending",
+        seoStatus: portalProject.seo_status || "Pending",
+        handoffStatus: portalProject.handoff_status || "Pending",
+        launchNotes: portalProject.launch_notes || "",
       },
 
       proposalText: debug?.generatedProposal || "",
