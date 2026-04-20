@@ -1,6 +1,7 @@
-// lib/pie/ensurePie.ts
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
+import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
+import { TIER_CONFIG, type TierName } from "@/lib/pricing/tiers";
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -48,6 +49,7 @@ type PieReportRow = {
   score: number | null;
   tier: string | null;
   confidence: string | null;
+  summary?: string | null;
 };
 
 type EnsureResult = {
@@ -58,87 +60,78 @@ type EnsureResult = {
   error?: string;
 };
 
-type PiePayloadV2 = {
-  version: "2.0";
-  tier: "Essential" | "Growth" | "Premium";
-  confidence: "Low" | "Medium" | "High";
-  score: number;
-  summary: string;
-  admin_readout: {
-    complexity_label: string;
-    recommended_build_path: string;
-    priority: "low" | "normal" | "high";
-    lead_quality_score: number;
+type PiePayloadV3 = {
+  version: "3.0";
+  complexity: {
+    score: number;
+    label: "Low" | "Moderate" | "High" | "Very High";
+    drivers: Array<{
+      label: string;
+      impact: "low" | "medium" | "high";
+      points: number;
+      note: string;
+    }>;
+    confidence: "Low" | "Medium" | "High";
   };
-  pricing: {
-    quote: {
-      minimum: number;
-      target: number;
-      upper: number;
-      tier: string;
-    };
-    labor_model_40hr: {
-      min_hours: number;
-      target_hours: number;
-      max_hours: number;
-      min_amount: number;
-      target_amount: number;
-      max_amount: number;
-      hourly_rate: number;
-    };
-    pricing_signal: {
-      status: "underpriced" | "healthy" | "premium";
-      message: string;
-      suggested_floor: number;
-      suggested_target: number;
-    };
+  tier: {
+    recommended: TierName;
+    priceBand: { min: number; max: number };
+    targetPrice: number;
+    rationale: string;
+    upsellNote?: string;
+    downsellNote?: string;
   };
-  timeline: {
-    estimated_build_days: {
-      min: number;
-      target: number;
-      max: number;
+  capacity: {
+    estimatedHours: { min: number; target: number; max: number };
+    breakdown: {
+      discovery: number;
+      build: number;
+      revisions: number;
+      qa: number;
+      launch: number;
     };
-    estimated_calendar_weeks: {
-      min: number;
-      target: number;
-      max: number;
-    };
-    assumptions: string[];
+    estimatedWeeks: { min: number; target: number; max: number };
+    effectiveHourlyRate: number;
+    profitSignal: "healthy" | "tight" | "unprofitable";
+    profitMessage: string;
   };
-  scope: {
-    pages_estimate: number;
-    feature_count: number;
-    features: string[];
-    scope_assumptions: string[];
-    suggested_deliverables: string[];
-    exclusions_to_confirm: string[];
+  lead: {
+    score: number;
+    priority: "high" | "normal" | "low";
+    signals: Array<{ label: string; weight: number; note: string }>;
+    notes: string;
   };
-  complexity_drivers: {
-    label: string;
+  risks: Array<{
+    flag: string;
     impact: "low" | "medium" | "high";
-    points: number;
-    note: string;
-  }[];
-  discovery_questions: string[];
-  risks: string[];
-  negotiation_playbook: {
-    lower_cost_options: string[];
-    upsell_options: string[];
-    price_defense_points: string[];
+    mitigation: string;
+  }>;
+  scope: {
+    pagesIncluded: string[];
+    featuresIncluded: string[];
+    assumptions: string[];
+    exclusions: string[];
+    deliverables: string[];
+    revisionRounds: number;
   };
-  pitch: {
-    emphasize: string[];
-    recommend: string;
-    objections: string[];
+  discoveryQuestions: string[];
+  negotiation: {
+    lowerCostOptions: string[];
+    upsellOptions: string[];
+    priceDefense: string[];
   };
-  next_actions: string[];
-  ai_enhancement?: {
-    enabled: boolean;
-    provider: "none" | "openai";
-    notes?: string[];
-    sales_script?: string[];
-    added_questions?: string[];
+  routing: {
+    path: "fast" | "warm" | "deep";
+    reason: string;
+    triggers: string[];
+    triggerDetails: Array<{
+      rule: string;
+      matched: string;
+      note: string;
+    }>;
+    recommendedCallLength: null | 15 | 30;
+    manualOverride: null;
+    finalPath: "fast" | "warm" | "deep";
   };
 };
 
@@ -146,642 +139,853 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !serviceKey) {
-  throw new Error("Missing Supabase env vars: NEXT_PUBLIC_SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY");
+  throw new Error(
+    "Missing Supabase env vars: NEXT_PUBLIC_SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY"
+  );
 }
 
 export const pieDb = createClient(supabaseUrl, serviceKey, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
-function safeObj(v: unknown): Record<string, any> {
-  if (v && typeof v === "object" && !Array.isArray(v)) return v as Record<string, any>;
-  return {};
+function safeObj(value: unknown): Record<string, any> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, any>)
+    : {};
 }
 
-function safeArray(v: unknown): string[] {
-  if (Array.isArray(v)) {
-    return v
-      .map((x) => String(x ?? "").trim())
-      .filter(Boolean);
+function cleanString(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function safeArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map((item) => cleanString(item)).filter(Boolean);
   }
-  if (typeof v === "string") {
-    return v
+  if (typeof value === "string" && value.trim()) {
+    return value
       .split(",")
-      .map((x) => x.trim())
+      .map((item) => item.trim())
       .filter(Boolean);
   }
   return [];
 }
 
-function titleCase(s: string) {
-  return s
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function titleCase(value: string) {
+  return value
     .replace(/[_-]+/g, " ")
     .replace(/\s+/g, " ")
     .trim()
-    .replace(/\w\S*/g, (m) => m.charAt(0).toUpperCase() + m.slice(1).toLowerCase());
+    .replace(/\w\S*/g, (part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase());
 }
 
-function parseMoneyBand(text?: string | null): { min?: number; max?: number } {
-  if (!text) return {};
-  const nums = (text.match(/\d+/g) || []).map((n) => Number(n));
-  if (!nums.length) return {};
-  if (nums.length === 1) return { min: nums[0], max: nums[0] };
-  return { min: Math.min(...nums), max: Math.max(...nums) };
+function parsePagesWanted(value?: string | null) {
+  const raw = cleanString(value);
+  if (!raw) return 3;
+  const lower = raw.toLowerCase();
+  if (lower.includes("one pager")) return 1;
+  const numbers = (lower.match(/\d+/g) || []).map(Number);
+  if (!numbers.length) return 3;
+  if (lower.includes("+")) return numbers[0];
+  if (numbers.length >= 2) return Math.round((numbers[0] + numbers[1]) / 2);
+  return numbers[0];
 }
 
-function parsePagesWanted(v?: string | null): number {
-  if (!v) return 3;
-  const t = v.toLowerCase();
-  // Examples: "1-3", "4-6", "7+", "10+"
-  const nums = (t.match(/\d+/g) || []).map(Number);
-  if (!nums.length) return 3;
-  if (t.includes("+")) return nums[0];
-  if (nums.length >= 2) return Math.round((nums[0] + nums[1]) / 2);
-  return nums[0];
+function normalizeTier(value?: string | null): TierName {
+  const normalized = cleanString(value).toLowerCase();
+  if (normalized.includes("premium")) return "Premium";
+  if (normalized.includes("growth")) return "Growth";
+  if (normalized.includes("starter")) return "Starter";
+  return "Growth";
 }
 
-function normalizeTier(t?: string | null): "Essential" | "Growth" | "Premium" {
-  const x = (t || "").toLowerCase();
-  if (x.includes("premium")) return "Premium";
-  if (x.includes("growth")) return "Growth";
-  return "Essential";
+function parseMoneyBand(value?: string | null): { min?: number; max?: number } {
+  if (!value) return {};
+  const numbers = (value.match(/\d+/g) || []).map((part) => Number(part));
+  if (!numbers.length) return {};
+  if (numbers.length === 1) return { min: numbers[0], max: numbers[0] };
+  return { min: Math.min(...numbers), max: Math.max(...numbers) };
 }
 
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
+function hasTruthy(value: unknown) {
+  if (typeof value === "boolean") return value;
+  const normalized = cleanString(value).toLowerCase();
+  return ["yes", "true", "1", "on"].includes(normalized);
 }
 
-function hasTruthy(v: unknown): boolean {
-  if (typeof v === "boolean") return v;
-  if (typeof v === "string") return ["yes", "true", "1"].includes(v.trim().toLowerCase());
-  return Boolean(v);
+function extractFeatures(intake: Record<string, any>) {
+  const features = new Set<string>();
+
+  for (const feature of safeArray(intake.neededFeatures)) {
+    features.add(titleCase(feature));
+  }
+
+  for (const feature of safeArray(intake.integrations)) {
+    features.add(titleCase(feature));
+  }
+
+  for (const feature of safeArray(intake.automationTypes)) {
+    features.add(titleCase(feature));
+  }
+
+  if (cleanString(intake.integrationOther)) {
+    features.add(titleCase(intake.integrationOther));
+  }
+  if (hasTruthy(intake.booking)) features.add("Booking");
+  if (hasTruthy(intake.payments)) features.add("Payments");
+  if (hasTruthy(intake.blog)) features.add("Blog / CMS");
+  if (hasTruthy(intake.membership)) features.add("Member Area");
+  if (hasTruthy(intake.needCopywriting)) features.add("Copywriting");
+  if (hasTruthy(intake.needLogoBranding)) features.add("Branding");
+  if (hasTruthy(intake.wantsAutomation)) features.add("Automation");
+
+  return Array.from(features);
 }
 
-function keywordPoints(features: string[]) {
+function analyzeFeatures(features: string[]) {
   let points = 0;
-  const drivers: PiePayloadV2["complexity_drivers"] = [];
+  const drivers: PiePayloadV3["complexity"]["drivers"] = [];
 
-  const f = features.map((x) => x.toLowerCase());
-
-  const add = (label: string, impact: "low" | "medium" | "high", pts: number, note: string) => {
-    points += pts;
-    drivers.push({ label, impact, points: pts, note });
+  const add = (
+    label: string,
+    impact: "low" | "medium" | "high",
+    driverPoints: number,
+    note: string
+  ) => {
+    points += driverPoints;
+    drivers.push({ label, impact, points: driverPoints, note });
   };
 
-  if (f.length) add("Requested features", f.length >= 4 ? "high" : "medium", Math.min(16, f.length * 3), `${f.length} feature(s) selected`);
+  if (features.length) {
+    add(
+      "Requested features",
+      features.length >= 5 ? "high" : "medium",
+      Math.min(24, features.length * 4),
+      `${features.length} feature(s) requested.`
+    );
+  }
 
-  if (f.some((x) => /booking|calendar|appointment/.test(x))) {
-    add("Booking flow", "medium", 8, "Scheduling and appointment UX usually adds logic and testing.");
+  if (features.some((feature) => /booking|calendar|appointment/i.test(feature))) {
+    add(
+      "Booking flow",
+      "medium",
+      10,
+      "Scheduling UX adds setup, testing, and integration work."
+    );
   }
-  if (f.some((x) => /payment|checkout|e-?commerce|store|shop/.test(x))) {
-    add("Commerce / payments", "high", 16, "Payments and checkout introduce higher build + QA complexity.");
+
+  if (features.some((feature) => /payment|checkout|ecommerce|commerce|store/i.test(feature))) {
+    add(
+      "Commerce / payments",
+      "high",
+      18,
+      "Payments and checkout increase QA, policy, and implementation load."
+    );
   }
-  if (f.some((x) => /portal|dashboard|login|member/.test(x))) {
-    add("Auth / portal", "high", 18, "Member areas and logins add auth, permissions, and support complexity.");
+
+  if (features.some((feature) => /portal|dashboard|login|member|auth/i.test(feature))) {
+    add(
+      "Auth / portal",
+      "high",
+      20,
+      "Login-protected work introduces permissions and ongoing support complexity."
+    );
   }
-  if (f.some((x) => /blog|cms|admin/.test(x))) {
-    add("CMS / content system", "medium", 8, "CMS setup improves handoff but adds setup time.");
+
+  if (features.some((feature) => /cms|blog|content/i.test(feature))) {
+    add(
+      "CMS / content system",
+      "medium",
+      8,
+      "A content system improves handoff but adds setup time."
+    );
   }
-  if (f.some((x) => /form|lead/.test(x))) {
-    add("Lead capture forms", "low", 4, "Forms are lightweight but still need validation + notification setup.");
+
+  if (features.some((feature) => /integration|crm|api|automation/i.test(feature))) {
+    add(
+      "Integrations",
+      "high",
+      12,
+      "External systems expand testing and edge cases."
+    );
   }
 
   return { points, drivers };
 }
 
-function estimateTimelineFromHours(targetHours: number, contentReady: boolean, urgent: boolean) {
-  // Assume ~18 focused build hours/week solo + overhead.
-  const baseWeeks = Math.max(1, Math.round((targetHours / 18) * 10) / 10);
-  const contentPenalty = contentReady ? 0 : 0.6;
-  const urgentPenalty = urgent ? 0.3 : 0;
+function buildComplexity(args: {
+  intake: Record<string, any>;
+  features: string[];
+  pagesEstimate: number;
+  call: CallRequestRow | null;
+}) {
+  const featureAnalysis = analyzeFeatures(args.features);
+  const drivers = [...featureAnalysis.drivers];
+  let score = 8;
 
-  const target = baseWeeks + contentPenalty + urgentPenalty;
-  const min = Math.max(0.8, target - 0.7);
-  const max = target + 1.2;
-
-  return {
-    weeks: {
-      min: Math.ceil(min),
-      target: Math.ceil(target),
-      max: Math.ceil(max),
-    },
-    days: {
-      min: Math.max(4, Math.round(min * 5)),
-      target: Math.round(target * 5),
-      max: Math.round(max * 5),
-    },
-  };
-}
-
-function complexityLabel(score: number) {
-  if (score < 30) return "Low";
-  if (score < 55) return "Moderate";
-  if (score < 75) return "High";
-  return "Very High";
-}
-
-function buildMarkdownSummary(payload: PiePayloadV2): string {
-  return [
-    `# PIE Report (${payload.tier})`,
-    ``,
-    `**Summary:** ${payload.summary}`,
-    `**Complexity:** ${payload.score}/100 (${payload.admin_readout.complexity_label})`,
-    `**Confidence:** ${payload.confidence}`,
-    ``,
-    `## Pricing`,
-    `- Quote target: $${payload.pricing.quote.target}`,
-    `- 40/hr labor target: $${payload.pricing.labor_model_40hr.target_amount} (${payload.pricing.labor_model_40hr.target_hours}h)`,
-    `- Signal: ${payload.pricing.pricing_signal.status} — ${payload.pricing.pricing_signal.message}`,
-    ``,
-    `## Timeline`,
-    `- Build time: ${payload.timeline.estimated_build_days.target} days (~${payload.timeline.estimated_calendar_weeks.target} weeks)`,
-    ``,
-    `## Risks`,
-    ...payload.risks.map((r) => `- ${r}`),
-    ``,
-    `## Discovery Questions`,
-    ...payload.discovery_questions.slice(0, 8).map((q) => `- ${q}`),
-  ].join("\n");
-}
-
-function scoreLead(intake: Record<string, any>) {
-  let score = 45;
-  const contentReady = String(intake.contentReadiness || "").toLowerCase();
-  const budgetRange = String(intake.budgetRange || "");
-  const timeline = String(intake.timeline || "").toLowerCase();
-
-  if (contentReady.includes("ready")) score += 12;
-  if (contentReady.includes("some")) score += 6;
-  if (contentReady.includes("none") || contentReady.includes("not")) score -= 8;
-
-  const budget = parseMoneyBand(budgetRange);
-  if ((budget.max ?? 0) >= 1200) score += 10;
-  else if ((budget.max ?? 0) >= 700) score += 6;
-  else if ((budget.max ?? 0) > 0) score -= 4;
-
-  if (timeline.includes("asap") || timeline.includes("urgent")) score += 3; // urgency can be good but risky
-  if (timeline.includes("no rush") || timeline.includes("flex")) score += 4;
-
-  if (safeArray(intake.neededFeatures).length >= 4) score += 4;
-  if (String(intake.businessName || "").trim()) score += 4;
-
-  return clamp(score, 0, 100);
-}
-
-function buildPiePayload(args: {
-  quote: QuoteRow;
-  lead?: LeadRow | null;
-  call?: CallRequestRow | null;
-}): PiePayloadV2 {
-  const { quote, lead, call } = args;
-
-  const intake = safeObj(quote.intake_normalized);
-  const features = safeArray(intake.neededFeatures).map(titleCase);
-  const pagesEstimate = parsePagesWanted(String(intake.pagesWanted || "") || null);
-  const tier = normalizeTier(quote.tier_recommended);
-
-  const contentReadyText = String(intake.contentReadiness || "");
-  const contentReady = /ready|mostly ready|have content/i.test(contentReadyText) && !/none|not/i.test(contentReadyText);
-  const timelineText = String(intake.timeline || "");
-  const urgent = /asap|urgent|1 week|few days|this week/i.test(timelineText);
-
-  const budgetRange = String(intake.budgetRange || "");
-  const budget = parseMoneyBand(budgetRange);
-
-  const kw = keywordPoints(features);
-
-  let score = 12;
-  const drivers: PiePayloadV2["complexity_drivers"] = [...kw.drivers];
-
-  const pagePoints = clamp((pagesEstimate - 1) * 3, 0, 24);
+  const pagePoints = clamp((args.pagesEstimate - 1) * 4, 0, 28);
   score += pagePoints;
   drivers.push({
     label: "Page count",
-    impact: pagesEstimate >= 6 ? "high" : pagesEstimate >= 4 ? "medium" : "low",
+    impact: args.pagesEstimate >= 7 ? "high" : args.pagesEstimate >= 4 ? "medium" : "low",
     points: pagePoints,
-    note: `${pagesEstimate} page(s) estimated from intake.`,
+    note: `${args.pagesEstimate} page(s) estimated from intake.`,
   });
 
-  score += kw.points;
+  score += featureAnalysis.points;
 
-  if (hasTruthy(intake.needCopywriting)) {
-    score += 8;
-    drivers.push({
-      label: "Copywriting support",
-      impact: "medium",
-      points: 8,
-      note: "Writing/rewriting content adds strategy and revision time.",
-    });
-  }
-
-  if (hasTruthy(intake.needLogoBranding)) {
-    score += 8;
-    drivers.push({
-      label: "Logo / branding help",
-      impact: "medium",
-      points: 8,
-      note: "Brand work can expand scope beyond web build.",
-    });
-  }
-
-  if (hasTruthy(intake.domainHosting) || /need|don't have|none/i.test(String(intake.domainHosting || ""))) {
-    score += 4;
-    drivers.push({
-      label: "Domain/hosting setup",
-      impact: "low",
-      points: 4,
-      note: "Technical setup and DNS launch support required.",
-    });
-  }
-
-  if (!contentReady) {
+  if (hasTruthy(args.intake.needCopywriting) || args.intake.contentReady === "not_ready") {
     score += 10;
     drivers.push({
-      label: "Content readiness",
+      label: "Content support",
       impact: "high",
       points: 10,
-      note: "Missing or incomplete content usually delays launch.",
+      note: "Copy and content gaps add coordination and revision time.",
     });
   }
 
-  if (urgent) {
-    score += 10;
+  if (hasTruthy(args.intake.needLogoBranding) || args.intake.hasBrandGuide === "no") {
+    score += 8;
+    drivers.push({
+      label: "Brand direction",
+      impact: "medium",
+      points: 8,
+      note: "Brand-definition work expands the design phase.",
+    });
+  }
+
+  if (/asap|urgent|under 14|this week/i.test(cleanString(args.intake.timeline))) {
+    score += 8;
     drivers.push({
       label: "Timeline pressure",
       impact: "medium",
-      points: 10,
-      note: "Rush requests increase coordination and revision overhead.",
+      points: 8,
+      note: "Rush requests increase coordination overhead.",
     });
   }
 
-  if (call?.status === "new" || quote.status === "call_requested") {
+  if (hasTruthy(args.intake.domainHosting === "no") || /need|none|don't have/i.test(cleanString(args.intake.domainHosting))) {
+    score += 4;
+    drivers.push({
+      label: "Domain / hosting setup",
+      impact: "low",
+      points: 4,
+      note: "Launch coordination includes domain and hosting support.",
+    });
+  }
+
+  if (args.call?.status === "new") {
     score += 2;
     drivers.push({
       label: "Call requested",
       impact: "low",
       points: 2,
-      note: "Good buying signal, but requires discovery time.",
+      note: "Discovery is already part of this deal flow.",
     });
   }
 
   score = clamp(score, 10, 98);
-
-  // Hours model
-  const baseMin = 6 + pagesEstimate * 2 + features.length * 1.5;
-  const baseTarget = 10 + pagesEstimate * 3 + features.length * 2.5 + score * 0.35;
-  const baseMax = 14 + pagesEstimate * 4 + features.length * 3 + score * 0.45;
-
-  const hours = {
-    min: Math.round(clamp(baseMin, 6, 120)),
-    target: Math.round(clamp(baseTarget, 10, 180)),
-    max: Math.round(clamp(baseMax, 14, 260)),
-  };
-
-  const hourlyRate = 40;
-  const labor = {
-    min_amount: hours.min * hourlyRate,
-    target_amount: hours.target * hourlyRate,
-    max_amount: hours.max * hourlyRate,
-  };
-
-  const quotePricing = {
-    minimum: Math.round(quote.estimate_low ?? quote.estimate_total ?? 0),
-    target: Math.round(quote.estimate_total ?? quote.estimate_low ?? 0),
-    upper: Math.round(quote.estimate_high ?? quote.estimate_total ?? 0),
-    tier: tier,
-  };
-
-  // Pricing signal
-  let pricingStatus: "underpriced" | "healthy" | "premium" = "healthy";
-  let pricingMessage = "Quote is in a workable range for the estimated complexity.";
-  const suggestedFloor = Math.round(Math.max(quotePricing.minimum || 0, labor.min_amount * 0.55));
-  const suggestedTarget = Math.round(Math.max(quotePricing.target || 0, labor.target_amount * 0.65));
-
-  if (quotePricing.target < labor.target_amount * 0.45) {
-    pricingStatus = "underpriced";
-    pricingMessage = "Current quote is significantly below the $40/hr effort model. Use scope control or phase delivery.";
-  } else if (quotePricing.target > labor.target_amount * 0.95) {
-    pricingStatus = "premium";
-    pricingMessage = "Quote is close to or above the $40/hr effort model. Defend value with process and deliverables.";
-  }
-
-  // Timeline
-  const timelineEst = estimateTimelineFromHours(hours.target, contentReady, urgent);
-
-  const risks: string[] = [];
-  if (!contentReady) risks.push("Content readiness may delay timeline and expand revision rounds.");
-  if (hasTruthy(intake.needCopywriting)) risks.push("Copywriting scope can drift unless page-by-page deliverables are defined.");
-  if (hasTruthy(intake.needLogoBranding)) risks.push("Branding requests can turn into a separate project if not scoped.");
-  if (features.some((f) => /Payment|E Commerce|Checkout|Store/i.test(f))) risks.push("Commerce/payment setup requires extra QA and policy confirmations.");
-  if (features.some((f) => /Portal|Dashboard|Login|Member/i.test(f))) risks.push("Portal/login features require tighter scope and likely phased delivery.");
-  if (urgent) risks.push("Rush timeline increases revision pressure and communication overhead.");
-
-  const scopeAssumptions: string[] = [
-    `${pagesEstimate} page(s) estimated from intake selection (${String(intake.pagesWanted || "unspecified")}).`,
-    `Estimate assumes up to 2 revision rounds unless otherwise agreed.`,
-    `Estimate assumes the client provides account access for domain/hosting or requests setup assistance.`,
-  ];
-
-  if (!contentReady) {
-    scopeAssumptions.push("Timeline assumes staged content delivery and placeholder copy during build.");
-  }
-  if (hasTruthy(intake.needCopywriting)) {
-    scopeAssumptions.push("Copywriting includes polishing core pages, not full brand messaging strategy.");
-  }
-
-  const exclusions: string[] = [
-    "Custom web app logic / internal portal unless explicitly scoped",
-    "Advanced SEO campaign / backlink work",
-    "Ongoing maintenance plan (if not added separately)",
-  ];
-  if (!features.some((f) => /Payment|E Commerce|Checkout|Store/i.test(f))) {
-    exclusions.push("Payment processing and ecommerce setup");
-  }
-
-  const deliverables: string[] = [
-    "Project kickoff + scope confirmation",
-    `Site build (${pagesEstimate} page target)`,
-    "Mobile responsiveness pass",
-    "Basic forms / CTA setup (if in scope)",
-    "Launch support + handoff",
-  ];
-
-  if (features.length) {
-    deliverables.push(...features.slice(0, 4).map((f) => `${f} implementation`));
-  }
-  if (hasTruthy(intake.needCopywriting)) deliverables.push("Copy polishing / content formatting");
-  if (hasTruthy(intake.domainHosting)) deliverables.push("Domain + hosting connection support");
-
-  // Discovery questions
-  const discoveryQuestions: string[] = [];
-  const ask = (q: string) => {
-    if (!discoveryQuestions.includes(q)) discoveryQuestions.push(q);
-  };
-
-  ask("What are the top 1–2 goals for the site launch (book calls, get leads, sell products, showcase work)?");
-  ask("How many final pages do you want at launch, and what are their names?");
-  ask("Do you already have logo, brand colors, and photos, or should I help create/choose them?");
-  ask("Who will provide the website copy, and when can it be delivered?");
-  ask("What examples of websites do you like (design/style and functionality)?");
-
-  if (!budget.min && !budget.max) ask("What budget range are you comfortable with for phase 1?");
-  if (!timelineText) ask("What launch date are you targeting?");
-  if (features.some((f) => /Booking|Appointment/i.test(f))) {
-    ask("Do you need booking to connect to an existing calendar/tool (Calendly, Google Calendar, etc.)?");
-  }
-  if (features.some((f) => /Payment|E Commerce|Checkout|Store/i.test(f))) {
-    ask("How many products/services will be sold at launch, and do you need shipping, pickup, or digital delivery?");
-    ask("Which payment provider do you prefer (Stripe, Square, PayPal)?");
-  }
-  if (features.some((f) => /Portal|Dashboard|Login|Member/i.test(f))) {
-    ask("How many user roles are needed (admin, staff, customer), and what should each role be able to do?");
-  }
-  if (hasTruthy(intake.domainHosting) || /none|don't have|need/i.test(String(intake.domainHosting || ""))) {
-    ask("Do you already own a domain name, and which registrar is it with?");
-  }
-
-  // Negotiation / price defense
-  const lowerCostOptions: string[] = [
-    `Phase 1 launch with ${Math.min(3, pagesEstimate)} pages, then add the remaining pages after launch.`,
-    "Use a simpler template/layout system now and reserve custom design polish for phase 2.",
-    "Client provides finalized copy and images to reduce build and revision time.",
-  ];
-
-  if (features.length >= 3) {
-    lowerCostOptions.push("Launch without one or two advanced features, then add them after MVP is live.");
-  }
-
-  const upsellOptions: string[] = [
-    "Add monthly maintenance / update plan",
-    "Add SEO setup + Google Business Profile optimization",
-    "Add analytics/dashboard and conversion tracking",
-  ];
-
-  if (hasTruthy(intake.needLogoBranding)) {
-    upsellOptions.push("Brand kit package (logo refinements, colors, typography, usage)");
-  }
-
-  const priceDefensePoints: string[] = [
-    "Pricing includes scoping, build time, testing, revisions, and launch support — not just page design.",
-    "A clean launch-ready build reduces rework and protects your timeline.",
-    "We can phase features to fit budget without breaking the project foundation.",
-  ];
-
-  // Pitch recommendations
-  const tierPitch =
-    tier === "Premium"
-      ? "Recommend Premium because requested scope/complexity suggests stronger build planning and delivery structure."
-      : tier === "Growth"
-      ? "Recommend Growth for a balanced launch with room for better features and polish."
-      : "Recommend Essential for a fast launch path with clear scope and upgrade flexibility.";
-
-  // Lead quality / priority
-  const leadQuality = scoreLead(intake);
-  const priority: "low" | "normal" | "high" =
-    leadQuality >= 70 || (call?.status === "new" && quote.status === "call_requested")
-      ? "high"
-      : leadQuality >= 45
-      ? "normal"
-      : "low";
-
+  const unknownCount = countUnknownAnswers(args.intake);
   const confidence: "Low" | "Medium" | "High" =
-    score < 45 && features.length <= 2 && pagesEstimate <= 4
-      ? "High"
-      : score < 70
-      ? "Medium"
-      : "Medium";
+    unknownCount >= 3 ? "Low" : unknownCount >= 1 || score >= 70 ? "Medium" : "High";
+  const label: PiePayloadV3["complexity"]["label"] =
+    score < 30 ? "Low" : score < 55 ? "Moderate" : score < 75 ? "High" : "Very High";
 
-  const payload: PiePayloadV2 = {
-    version: "2.0",
-    tier,
-    confidence,
+  return {
     score,
-    summary: `Estimated complexity ${score}/100 (${complexityLabel(score)}). ${quotePricing.target ? `Quote target is $${quotePricing.target}. ` : ""}PIE suggests ${hours.target}h build effort (~$${labor.target_amount} at $40/hr).`,
-    admin_readout: {
-      complexity_label: complexityLabel(score),
-      recommended_build_path:
-        score >= 70
-          ? "Use a phased build (MVP + phase 2), tight scope checklist, and milestone approvals."
-          : score >= 40
-          ? "Proceed with a structured scope snapshot and page-by-page deliverables."
-          : "Fast-launch workflow is appropriate. Keep scope tight and move quickly to deposit.",
-      priority,
-      lead_quality_score: leadQuality,
-    },
-    pricing: {
-      quote: quotePricing,
-      labor_model_40hr: {
-        min_hours: hours.min,
-        target_hours: hours.target,
-        max_hours: hours.max,
-        min_amount: labor.min_amount,
-        target_amount: labor.target_amount,
-        max_amount: labor.max_amount,
-        hourly_rate: hourlyRate,
-      },
-      pricing_signal: {
-        status: pricingStatus,
-        message: pricingMessage,
-        suggested_floor: suggestedFloor,
-        suggested_target: suggestedTarget,
-      },
-    },
-    timeline: {
-      estimated_build_days: timelineEst.days,
-      estimated_calendar_weeks: timelineEst.weeks,
-      assumptions: [
-        "Calendar estimate assumes one-person build and normal feedback turnaround.",
-        contentReady
-          ? "Client content appears at least partially ready."
-          : "Content is not fully ready, so timeline includes buffer for content delays.",
-        urgent ? "Rush timeline requested — extra coordination may be needed." : "No rush flag detected.",
-      ],
-    },
-    scope: {
-      pages_estimate: pagesEstimate,
-      feature_count: features.length,
-      features,
-      scope_assumptions: scopeAssumptions,
-      suggested_deliverables: deliverables,
-      exclusions_to_confirm: exclusions,
-    },
-    complexity_drivers: drivers.sort((a, b) => b.points - a.points),
-    discovery_questions: discoveryQuestions,
-    risks,
-    negotiation_playbook: {
-      lower_cost_options: lowerCostOptions,
-      upsell_options: upsellOptions,
-      price_defense_points: priceDefensePoints,
-    },
-    pitch: {
-      emphasize: ["Clear scope", "Timeline clarity", "Upgrade flexibility", "Launch-ready handoff"],
-      recommend: tierPitch,
-      objections: [
-        "Can we start smaller and phase features?",
-        "Can we reduce price by simplifying scope?",
-        "What is included vs excluded in this estimate?",
-      ],
-    },
-    next_actions: [
-      "Confirm page list and feature priorities",
-      "Confirm content ownership and delivery date",
-      "Lock scope snapshot and revision count",
-      "Send proposal/deposit link",
-      "Start build after deposit + assets",
-    ],
+    label,
+    confidence,
+    drivers: drivers.sort((left, right) => right.points - left.points),
+    featurePoints: featureAnalysis.points,
+  };
+}
+
+function targetPriceWithinTier(tier: TierName, complexity: number) {
+  const band = TIER_CONFIG[tier];
+  const ranges: Record<TierName, [number, number]> = {
+    Starter: [0, 30],
+    Growth: [25, 70],
+    Premium: [60, 100],
+  };
+  const [low, high] = ranges[tier];
+  const normalized = clamp((complexity - low) / (high - low), 0, 1);
+  return Math.round(band.min + (band.max - band.min) * normalized);
+}
+
+function recommendTier(args: {
+  features: string[];
+  pagesEstimate: number;
+  complexityScore: number;
+}): TierName {
+  const hasEcomOrAuth = args.features.some((feature) =>
+    /ecommerce|checkout|portal|member|auth|login/i.test(feature)
+  );
+  if (hasEcomOrAuth) return "Premium";
+  if (args.pagesEstimate >= 7) return "Premium";
+  if (args.complexityScore >= 75) return "Premium";
+  if (args.features.length >= 6) return "Premium";
+  if (
+    args.pagesEstimate <= 2 &&
+    args.features.length <= 2 &&
+    args.complexityScore < 30
+  ) {
+    return "Starter";
+  }
+  return "Growth";
+}
+
+function buildTierRationale(args: {
+  tier: TierName;
+  pagesEstimate: number;
+  features: string[];
+  complexityScore: number;
+}) {
+  const featureCallout = args.features.slice(0, 3).join(", ").toLowerCase();
+  const rationale = `${args.pagesEstimate} page(s)${
+    featureCallout ? ` with ${featureCallout}` : ""
+  } lands this solidly in ${args.tier} based on a complexity score of ${
+    args.complexityScore
+  }.`;
+
+  const upsellNote =
+    args.tier !== "Premium"
+      ? "Add e-commerce, auth, or a larger page count and this becomes the next tier up."
+      : "Premium already covers the deeper delivery path this project needs.";
+
+  const downsellNote =
+    args.tier !== "Starter"
+      ? "Strip advanced features or reduce launch scope and this could move down a tier."
+      : "This is already scoped at the lightest boutique tier.";
+
+  return { rationale, upsellNote, downsellNote };
+}
+
+function buildCapacity(args: {
+  featurePoints: number;
+  pagesEstimate: number;
+  complexityScore: number;
+  targetPrice: number;
+  contentReady: boolean;
+}) {
+  const baseBuildHours =
+    args.pagesEstimate * 4 + args.featurePoints + args.complexityScore * 0.25;
+  const discoveryHours = baseBuildHours * 0.18;
+  const revisionHours = baseBuildHours * 0.25;
+  const qaHours = baseBuildHours * 0.15;
+  const commsHours = baseBuildHours * 0.12;
+  const launchHours = baseBuildHours * 0.08;
+  const targetHours =
+    baseBuildHours +
+    discoveryHours +
+    revisionHours +
+    qaHours +
+    commsHours +
+    launchHours;
+
+  const minHours = Math.round(targetHours * 0.85);
+  const maxHours = Math.round(targetHours * 1.35);
+  const effectiveHourlyRate = Math.round(args.targetPrice / targetHours);
+  const estimatedWeeks = {
+    min: Math.max(1, Math.ceil(minHours / 20)),
+    target: Math.max(1, Math.ceil(targetHours / 20 + (args.contentReady ? 0 : 1))),
+    max: Math.max(1, Math.ceil(maxHours / 18)),
   };
 
-  // Optional AI enhancement (safe fallback if no key)
-  // This adds more nuanced notes if you later set OPENAI_API_KEY.
-  // Works fine without it.
-  return payload;
-}
+  let profitSignal: "healthy" | "tight" | "unprofitable" = "healthy";
+  let profitMessage = `Effective rate is about $${effectiveHourlyRate}/hr against an internal $${INTERNAL_HOURLY_RATE}/hr target. Healthy margin.`;
 
-function extractText(obj: any): string {
-  if (!obj) return "";
-  if (typeof obj === "string") return obj;
-  if (Array.isArray(obj)) return obj.map(extractText).join(" ");
-  if (typeof obj === "object") return Object.values(obj).map(extractText).join(" ");
-  return String(obj);
-}
-
-async function maybeEnhanceWithOpenAI(
-  payload: PiePayloadV2,
-  quote: QuoteRow,
-  lead: LeadRow | null,
-  call: CallRequestRow | null
-): Promise<PiePayloadV2> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return {
-      ...payload,
-      ai_enhancement: { enabled: false, provider: "none" },
-    };
+  if (effectiveHourlyRate < INTERNAL_HOURLY_RATE * 0.7) {
+    profitSignal = "unprofitable";
+    profitMessage = `Effective rate is about $${effectiveHourlyRate}/hr against the internal $${INTERNAL_HOURLY_RATE}/hr target. Raise price or phase scope.`;
+  } else if (effectiveHourlyRate < INTERNAL_HOURLY_RATE * 0.9) {
+    profitSignal = "tight";
+    profitMessage = `Effective rate is about $${effectiveHourlyRate}/hr against the internal $${INTERNAL_HOURLY_RATE}/hr target. The project is workable but margin is tight.`;
   }
 
-  try {
-    const intake = safeObj(quote.intake_normalized);
-    const prompt = {
-      quote: {
-        id: quote.id,
-        tier: quote.tier_recommended,
-        estimate_total: quote.estimate_total,
-        estimate_low: quote.estimate_low,
-        estimate_high: quote.estimate_high,
-        status: quote.status,
-      },
-      lead: lead ? { email: lead.email, name: lead.name } : null,
-      call_request: call
-        ? {
-            status: call.status,
-            preferred_times: call.preferred_times,
-            timezone: call.timezone,
-            notes: call.notes,
-          }
-        : null,
-      intake_normalized: intake,
-      pie_base: payload,
-    };
+  return {
+    estimatedHours: {
+      min: Math.round(minHours),
+      target: Math.round(targetHours),
+      max: Math.round(maxHours),
+    },
+    breakdown: {
+      discovery: Math.round(discoveryHours),
+      build: Math.round(baseBuildHours + commsHours),
+      revisions: Math.round(revisionHours),
+      qa: Math.round(qaHours),
+      launch: Math.round(launchHours),
+    },
+    estimatedWeeks,
+    effectiveHourlyRate,
+    profitSignal,
+    profitMessage,
+  };
+}
 
-    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: process.env.PIE_OPENAI_MODEL || "gpt-5-mini",
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content:
-              "You improve an internal website project estimate report for a solo web studio owner. Return strict JSON only with keys: notes (string[]), sales_script (string[]), added_questions (string[]). Keep it practical, short, and admin-focused.",
-          },
-          {
-            role: "user",
-            content: JSON.stringify(prompt),
-          },
-        ],
-      }),
+function countUnknownAnswers(intake: Record<string, any>) {
+  let count = 0;
+  for (const value of Object.values(intake)) {
+    const normalized = cleanString(value).toLowerCase();
+    if (normalized === "unsure" || normalized === "i don't know" || normalized === "not sure") {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+function evaluateRouting(args: {
+  intake: Record<string, any>;
+  features: string[];
+  pagesEstimate: number;
+  complexityScore: number;
+  recommendedTier: TierName;
+  call: CallRequestRow | null;
+  targetPrice: number;
+}) {
+  const deepTriggerDetails: PiePayloadV3["routing"]["triggerDetails"] = [];
+  const warmTriggerDetails: PiePayloadV3["routing"]["triggerDetails"] = [];
+  const textBlob = JSON.stringify(args.intake).toLowerCase();
+  const unknownCount = countUnknownAnswers(args.intake);
+  const budget = parseMoneyBand(cleanString(args.intake.budgetRange || args.intake.budget));
+  const ambiguousCopy = /not sure|depends|maybe|probably|we'?ll see/i.test(textBlob);
+
+  if (args.features.some((feature) => /ecommerce|inventory|shipping/i.test(feature))) {
+    deepTriggerDetails.push({
+      rule: "commerce_scope",
+      matched: "commerce feature set",
+      note: "E-commerce and inventory work usually needs scoped discovery.",
     });
+  }
+  if (args.features.some((feature) => /auth|login|portal|member/i.test(feature))) {
+    deepTriggerDetails.push({
+      rule: "auth_scope",
+      matched: "auth or portal feature",
+      note: "Protected-user systems are deep-path work.",
+    });
+  }
+  if (args.pagesEstimate >= 7) {
+    deepTriggerDetails.push({
+      rule: "large_page_count",
+      matched: `${args.pagesEstimate} pages`,
+      note: "Seven or more pages typically need live discovery before a fixed commitment.",
+    });
+  }
+  if (unknownCount >= 3) {
+    deepTriggerDetails.push({
+      rule: "too_many_unknowns",
+      matched: `${unknownCount} unknown answers`,
+      note: "Too much intake ambiguity for a confident fixed quote.",
+    });
+  }
+  if (!budget.min && !budget.max && args.features.length >= 6) {
+    deepTriggerDetails.push({
+      rule: "no_budget_high_scope",
+      matched: "no budget with high feature count",
+      note: "Large scope without budget context should move to a call.",
+    });
+  }
+  if (/call|discovery/i.test(textBlob)) {
+    deepTriggerDetails.push({
+      rule: "explicit_call_request",
+      matched: "free-text call request",
+      note: "The client explicitly asked to talk before committing.",
+    });
+  }
 
-    if (!resp.ok) {
-      return {
-        ...payload,
-        ai_enhancement: { enabled: false, provider: "none" },
-      };
-    }
+  if (args.pagesEstimate >= 5 && args.pagesEstimate <= 6) {
+    warmTriggerDetails.push({
+      rule: "edge_of_growth",
+      matched: `${args.pagesEstimate} pages`,
+      note: "This is near the upper edge of the Growth tier.",
+    });
+  }
+  if (args.features.length >= 4 && args.features.length <= 5) {
+    warmTriggerDetails.push({
+      rule: "dense_feature_set",
+      matched: `${args.features.length} features`,
+      note: "A dense feature list is workable, but a short alignment call helps.",
+    });
+  }
+  if (/some|partial/i.test(cleanString(args.intake.contentReady || args.intake.contentReadiness))) {
+    warmTriggerDetails.push({
+      rule: "partial_content",
+      matched: "partial content readiness",
+      note: "Partial content often changes the scope conversation.",
+    });
+  }
+  if (hasTruthy(args.intake.needCopywriting)) {
+    warmTriggerDetails.push({
+      rule: "copy_support",
+      matched: "copywriting requested",
+      note: "Copy support adds ambiguity unless confirmed live.",
+    });
+  }
+  if (hasTruthy(args.intake.needLogoBranding) || args.intake.hasBrandGuide === "no") {
+    warmTriggerDetails.push({
+      rule: "branding_support",
+      matched: "brand help requested",
+      note: "Brand direction changes can expand the design phase.",
+    });
+  }
+  if (ambiguousCopy || unknownCount >= 1) {
+    warmTriggerDetails.push({
+      rule: "uncertainty_language",
+      matched: ambiguousCopy ? "uncertain free text" : `${unknownCount} unknown answer(s)`,
+      note: "There is enough uncertainty here to justify a short alignment call.",
+    });
+  }
 
-    const data = await resp.json();
-    const raw = data?.choices?.[0]?.message?.content;
-    const parsed = typeof raw === "string" ? JSON.parse(raw) : {};
-    const notes = Array.isArray(parsed?.notes) ? parsed.notes.map(String) : [];
-    const salesScript = Array.isArray(parsed?.sales_script) ? parsed.sales_script.map(String) : [];
-    const addedQuestions = Array.isArray(parsed?.added_questions) ? parsed.added_questions.map(String) : [];
+  const recommendedBand = TIER_CONFIG[args.recommendedTier];
+  if (
+    (budget.max && budget.max < recommendedBand.min * 0.75) ||
+    (budget.min && budget.min > recommendedBand.max * 1.25)
+  ) {
+    warmTriggerDetails.push({
+      rule: "budget_mismatch",
+      matched: cleanString(args.intake.budgetRange || args.intake.budget),
+      note: "Budget expectations do not match the recommended tier.",
+    });
+  }
 
-    const mergedQuestions = [...payload.discovery_questions];
-    for (const q of addedQuestions) {
-      if (q && !mergedQuestions.includes(q)) mergedQuestions.push(q);
-    }
-
+  if (deepTriggerDetails.length > 0) {
     return {
-      ...payload,
-      discovery_questions: mergedQuestions,
-      ai_enhancement: {
-        enabled: true,
-        provider: "openai",
-        notes: notes.slice(0, 6),
-        sales_script: salesScript.slice(0, 6),
-        added_questions: addedQuestions.slice(0, 6),
-      },
-    };
-  } catch {
-    return {
-      ...payload,
-      ai_enhancement: { enabled: false, provider: "none" },
+      path: "deep" as const,
+      reason: `${deepTriggerDetails.length} deep-path trigger(s) fired`,
+      triggers: deepTriggerDetails.map((detail) => detail.rule),
+      triggerDetails: deepTriggerDetails,
+      recommendedCallLength: 30 as const,
+      manualOverride: null,
+      finalPath: "deep" as const,
     };
   }
+
+  if (warmTriggerDetails.length >= 2) {
+    return {
+      path: "warm" as const,
+      reason: `${warmTriggerDetails.length} warm-path triggers combined`,
+      triggers: warmTriggerDetails.map((detail) => detail.rule),
+      triggerDetails: warmTriggerDetails,
+      recommendedCallLength: 15 as const,
+      manualOverride: null,
+      finalPath: "warm" as const,
+    };
+  }
+
+  return {
+    path: "fast" as const,
+    reason: "Clean scope and confident recommendation",
+    triggers: [],
+    triggerDetails: [],
+    recommendedCallLength: null,
+    manualOverride: null,
+    finalPath: "fast" as const,
+  };
+}
+
+function buildLeadSignals(intake: Record<string, any>) {
+  const signals: Array<{ label: string; weight: number; note: string }> = [];
+  let score = 45;
+
+  const add = (label: string, weight: number, note: string) => {
+    score += weight;
+    signals.push({ label, weight, note });
+  };
+
+  const contentReady = cleanString(intake.contentReady || intake.contentReadiness).toLowerCase();
+  if (contentReady.includes("ready")) add("Content ready", 10, "Fast-moving clients are easier to deliver for.");
+  else if (contentReady.includes("some") || contentReady.includes("partial")) {
+    add("Partial content", 3, "Some prep exists, but follow-up will still be needed.");
+  } else {
+    add("Content gap", -8, "Missing content usually slows sales-to-delivery momentum.");
+  }
+
+  const budget = parseMoneyBand(cleanString(intake.budgetRange || intake.budget));
+  if ((budget.max ?? 0) >= 6500) add("Healthy budget", 12, "Budget can support the recommended build path.");
+  else if ((budget.max ?? 0) >= 3500) add("Viable budget", 7, "Budget is workable for a Growth-tier engagement.");
+  else if ((budget.max ?? 0) > 0) add("Tight budget", -5, "Budget may require phasing or scope reduction.");
+
+  if (cleanString(intake.businessName)) add("Business name supplied", 4, "Signals a more complete intake.");
+  if (/asap|urgent/i.test(cleanString(intake.timeline))) add("Urgency", 3, "Active buying signal, though it adds delivery pressure.");
+  if (safeArray(intake.neededFeatures).length >= 4) add("High intent feature list", 4, "The client is thinking concretely about the outcome.");
+
+  score = clamp(score, 0, 100);
+  const priority: PiePayloadV3["lead"]["priority"] =
+    score >= 70 ? "high" : score >= 45 ? "normal" : "low";
+  return {
+    score,
+    priority,
+    signals,
+    notes:
+      score >= 70
+        ? "Strong lead quality with good buying signals."
+        : score >= 45
+        ? "Worth pursuing with normal follow-up."
+        : "Proceed carefully and protect scope.",
+  };
+}
+
+function buildScope(args: {
+  pagesEstimate: number;
+  features: string[];
+  tier: TierName;
+  intake: Record<string, any>;
+}) {
+  const pagesIncluded =
+    args.pagesEstimate <= 1
+      ? ["Homepage / one-page flow"]
+      : Array.from({ length: args.pagesEstimate }, (_, index) => `Page ${index + 1}`);
+
+  const assumptions = [
+    `${args.pagesEstimate} launch page(s) are included in the current recommendation.`,
+    "Client provides approvals and feedback on time.",
+    "Project includes mobile responsiveness and launch support.",
+  ];
+
+  if (!/ready/i.test(cleanString(args.intake.contentReady || args.intake.contentReadiness))) {
+    assumptions.push("Timeline includes buffer for staged content delivery.");
+  }
+  if (hasTruthy(args.intake.needCopywriting)) {
+    assumptions.push("Copy support covers core launch messaging, not a full brand strategy project.");
+  }
+
+  const exclusions = [
+    "Third-party fees",
+    "Advanced SEO campaigns",
+    "Unscoped web app behavior",
+  ];
+  if (!args.features.some((feature) => /payment|ecommerce|checkout/i.test(feature))) {
+    exclusions.push("Commerce setup and payment processing");
+  }
+
+  const deliverables = [
+    "Kickoff and scope confirmation",
+    `${args.tier} tier website build`,
+    "Responsive QA pass",
+    "Launch coordination and handoff",
+  ];
+  for (const feature of args.features.slice(0, 4)) {
+    deliverables.push(`${feature} implementation`);
+  }
+
+  return {
+    pagesIncluded,
+    featuresIncluded: args.features,
+    assumptions,
+    exclusions,
+    deliverables,
+    revisionRounds: args.tier === "Premium" ? 3 : 2,
+  };
+}
+
+function buildDiscoveryQuestions(args: {
+  intake: Record<string, any>;
+  features: string[];
+  pagesEstimate: number;
+}) {
+  const questions: string[] = [
+    "What are the top one or two outcomes this site needs to drive first?",
+    "What are the final launch pages, by name?",
+    "Who is responsible for copy, images, and approvals?",
+  ];
+
+  if (!cleanString(args.intake.budgetRange || args.intake.budget)) {
+    questions.push("What budget range are you comfortable with for phase one?");
+  }
+  if (!cleanString(args.intake.timeline)) {
+    questions.push("What launch date are you aiming for?");
+  }
+  if (args.features.some((feature) => /booking|calendar/i.test(feature))) {
+    questions.push("Does booking need to connect to an existing scheduling tool?");
+  }
+  if (args.features.some((feature) => /payment|ecommerce|checkout/i.test(feature))) {
+    questions.push("How many products or services will be sold at launch?");
+  }
+  if (args.features.some((feature) => /portal|login|member|auth/i.test(feature))) {
+    questions.push("What user roles are required, and what can each role do?");
+  }
+  if (cleanString(args.intake.domainHosting).toLowerCase() === "no") {
+    questions.push("Do you already own a domain, and where is it registered?");
+  }
+
+  return Array.from(new Set(questions));
+}
+
+function buildRisks(args: {
+  intake: Record<string, any>;
+  features: string[];
+  routing: PiePayloadV3["routing"];
+}) {
+  const risks: PiePayloadV3["risks"] = [];
+
+  if (!/ready/i.test(cleanString(args.intake.contentReady || args.intake.contentReadiness))) {
+    risks.push({
+      flag: "Content readiness",
+      impact: "high",
+      mitigation: "Require page-by-page content deadlines before build starts.",
+    });
+  }
+
+  if (args.features.some((feature) => /payment|ecommerce|checkout/i.test(feature))) {
+    risks.push({
+      flag: "Commerce QA",
+      impact: "high",
+      mitigation: "Confirm payment flows, policies, and test cases before launch.",
+    });
+  }
+
+  if (args.features.some((feature) => /portal|member|auth|login/i.test(feature))) {
+    risks.push({
+      flag: "Access control",
+      impact: "high",
+      mitigation: "Lock user roles and permissions during discovery.",
+    });
+  }
+
+  if (args.routing.path !== "fast") {
+    risks.push({
+      flag: "Scope ambiguity",
+      impact: args.routing.path === "deep" ? "high" : "medium",
+      mitigation: "Use the recommended call to confirm assumptions before commitment.",
+    });
+  }
+
+  return risks;
+}
+
+function buildNegotiation(args: {
+  pagesEstimate: number;
+  features: string[];
+  tier: TierName;
+}) {
+  const lowerCostOptions = [
+    `Launch with ${Math.min(3, args.pagesEstimate)} page(s), then add the rest after launch.`,
+    "Reduce advanced features and keep the first release focused on one conversion goal.",
+    "Have the client provide final copy and imagery to reduce revision overhead.",
+  ];
+
+  const upsellOptions = [
+    "Add ongoing maintenance and support",
+    "Add analytics and conversion tracking",
+    "Add post-launch SEO refinement",
+  ];
+
+  if (args.tier !== "Premium") {
+    upsellOptions.push("Upgrade into a deeper brand and content package");
+  }
+
+  const priceDefense = [
+    "Pricing includes planning, build, revisions, QA, and launch support.",
+    "A stronger tier protects timeline and quality better than a stretched discount.",
+    "We can phase scope without compromising the foundation.",
+  ];
+
+  return { lowerCostOptions, upsellOptions, priceDefense };
+}
+
+function buildMarkdownSummary(payload: PiePayloadV3) {
+  return [
+    `# PIE Report (${payload.tier.recommended})`,
+    "",
+    `Complexity: ${payload.complexity.score}/100 (${payload.complexity.label})`,
+    `Recommended tier: ${payload.tier.recommended}`,
+    `Target price: $${payload.tier.targetPrice.toLocaleString()}`,
+    `Routing: ${payload.routing.finalPath}`,
+    `Capacity: ${payload.capacity.estimatedHours.target}h target (~${payload.capacity.estimatedWeeks.target} weeks)`,
+    "",
+    `## Rationale`,
+    payload.tier.rationale,
+    "",
+    `## Profit signal`,
+    payload.capacity.profitMessage,
+    "",
+    `## Triggers`,
+    ...(payload.routing.triggerDetails.length
+      ? payload.routing.triggerDetails.map(
+          (detail) => `- ${detail.rule}: ${detail.note}`
+        )
+      : ["- Clean scope and confident recommendation."]),
+  ].join("\n");
+}
+
+function buildPiePayload(args: {
+  quote: QuoteRow;
+  lead: LeadRow | null;
+  call: CallRequestRow | null;
+}) {
+  const intake = safeObj(args.quote.intake_normalized);
+  const pagesEstimate = parsePagesWanted(
+    cleanString(intake.pagesWanted || intake.pages)
+  );
+  const features = extractFeatures(intake);
+  const complexity = buildComplexity({
+    intake,
+    features,
+    pagesEstimate,
+    call: args.call,
+  });
+  const tier = recommendTier({
+    features,
+    pagesEstimate,
+    complexityScore: complexity.score,
+  });
+  const targetPrice = targetPriceWithinTier(tier, complexity.score);
+  const capacity = buildCapacity({
+    featurePoints: complexity.featurePoints,
+    pagesEstimate,
+    complexityScore: complexity.score,
+    targetPrice,
+    contentReady: /ready/i.test(cleanString(intake.contentReady || intake.contentReadiness)),
+  });
+  const routing = evaluateRouting({
+    intake,
+    features,
+    pagesEstimate,
+    complexityScore: complexity.score,
+    recommendedTier: tier,
+    call: args.call,
+    targetPrice,
+  });
+  const lead = buildLeadSignals(intake);
+  const scope = buildScope({ pagesEstimate, features, tier, intake });
+  const risks = buildRisks({ intake, features, routing });
+  const tierNotes = buildTierRationale({
+    tier,
+    pagesEstimate,
+    features,
+    complexityScore: complexity.score,
+  });
+
+  return {
+    version: "3.0" as const,
+    complexity: {
+      score: complexity.score,
+      label: complexity.label,
+      drivers: complexity.drivers,
+      confidence: complexity.confidence,
+    },
+    tier: {
+      recommended: tier,
+      priceBand: {
+        min: TIER_CONFIG[tier].min,
+        max: TIER_CONFIG[tier].max,
+      },
+      targetPrice,
+      rationale: tierNotes.rationale,
+      upsellNote: tierNotes.upsellNote,
+      downsellNote: tierNotes.downsellNote,
+    },
+    capacity,
+    lead,
+    risks,
+    scope,
+    discoveryQuestions: buildDiscoveryQuestions({ intake, features, pagesEstimate }),
+    negotiation: buildNegotiation({ pagesEstimate, features, tier }),
+    routing,
+  };
 }
 
 async function loadQuoteBundle(quoteId: string) {
@@ -798,11 +1002,16 @@ async function loadQuoteBundle(quoteId: string) {
   }
 
   const quote = quoteRes.data as QuoteRow;
-
   let lead: LeadRow | null = null;
   if (quote.lead_id) {
-    const leadRes = await pieDb.from("leads").select("id,email,name").eq("id", quote.lead_id).single();
-    if (!leadRes.error && leadRes.data) lead = leadRes.data as LeadRow;
+    const leadRes = await pieDb
+      .from("leads")
+      .select("id,email,name")
+      .eq("id", quote.lead_id)
+      .single();
+    if (!leadRes.error && leadRes.data) {
+      lead = leadRes.data as LeadRow;
+    }
   }
 
   const callRes = await pieDb
@@ -813,15 +1022,14 @@ async function loadQuoteBundle(quoteId: string) {
     .limit(1);
 
   const call = (callRes.data?.[0] as CallRequestRow | undefined) || null;
-
   return { quote, lead, call };
 }
 
-async function getExistingPieByLatestId(latestPieId: string | null): Promise<PieReportRow | null> {
+async function getExistingPieByLatestId(latestPieId: string | null) {
   if (!latestPieId) return null;
   const res = await pieDb
     .from("pie_reports")
-    .select("id,quote_id,project_id,created_at,payload,input,report,score,tier,confidence")
+    .select("id,quote_id,project_id,created_at,payload,input,report,score,tier,confidence,summary")
     .eq("id", latestPieId)
     .single();
 
@@ -829,10 +1037,10 @@ async function getExistingPieByLatestId(latestPieId: string | null): Promise<Pie
   return res.data as PieReportRow;
 }
 
-async function getLatestPieByQuoteId(quoteId: string): Promise<PieReportRow | null> {
+async function getLatestPieByQuoteId(quoteId: string) {
   const res = await pieDb
     .from("pie_reports")
-    .select("id,quote_id,project_id,created_at,payload,input,report,score,tier,confidence")
+    .select("id,quote_id,project_id,created_at,payload,input,report,score,tier,confidence,summary")
     .eq("quote_id", quoteId)
     .order("created_at", { ascending: false })
     .limit(1);
@@ -850,19 +1058,22 @@ export async function ensurePieForQuoteId(
 
     if (!opts?.force) {
       const existing =
-        (await getExistingPieByLatestId(quote.latest_pie_report_id)) || (await getLatestPieByQuoteId(quoteId));
+        (await getExistingPieByLatestId(quote.latest_pie_report_id)) ||
+        (await getLatestPieByQuoteId(quoteId));
       if (existing) {
-        // ensure quotes.latest_pie_report_id is synced
         if (!quote.latest_pie_report_id || quote.latest_pie_report_id !== existing.id) {
-          await pieDb.from("quotes").update({ latest_pie_report_id: existing.id }).eq("id", quoteId);
+          await pieDb
+            .from("quotes")
+            .update({ latest_pie_report_id: existing.id })
+            .eq("id", quoteId);
         }
         return { ok: true, created: false, quoteId, pie: existing };
       }
     }
 
-    let payload = buildPiePayload({ quote, lead, call });
-    payload = await maybeEnhanceWithOpenAI(payload, quote, lead, call);
-
+    const payload = buildPiePayload({ quote, lead, call });
+    const summary = payload.tier.rationale;
+    const report = buildMarkdownSummary(payload);
     const inputSnapshot = {
       quote: {
         id: quote.id,
@@ -888,40 +1099,27 @@ export async function ensurePieForQuoteId(
       intake_raw: quote.intake_raw,
       scope_snapshot: quote.scope_snapshot,
       debug: quote.debug,
-      raw_text_for_ai: extractText(quote.intake_normalized),
     };
 
-    const insertPayload: Record<string, any> = {
-      token: randomUUID(),
-      project_id: null, // Keep null-safe. If your schema later requires project_id, wire it to real projects.id only.
-      created_at: new Date().toISOString(),
-      report: buildMarkdownSummary(payload),
-      expires_at: null,
-      quote_id: quote.id,
-      payload,
-      score: payload.score,
-      tier: payload.tier,
-      confidence: payload.confidence,
-      input: inputSnapshot,
-    };
-
-    let insertRes = await pieDb
+    const insertRes = await pieDb
       .from("pie_reports")
-      .insert(insertPayload)
-      .select("id,quote_id,project_id,created_at,payload,input,report,score,tier,confidence")
+      .insert({
+        token: randomUUID(),
+        project_id: null,
+        created_at: new Date().toISOString(),
+        report,
+        expires_at: null,
+        quote_id: quote.id,
+        payload,
+        score: payload.complexity.score,
+        tier: payload.tier.recommended,
+        confidence: payload.complexity.confidence,
+        summary,
+        input: inputSnapshot,
+        status: "generated",
+      })
+      .select("id,quote_id,project_id,created_at,payload,input,report,score,tier,confidence,summary")
       .single();
-
-    // Fallback if project_id null handling differs
-    if (insertRes.error) {
-      const fallbackPayload = { ...insertPayload };
-      delete fallbackPayload.project_id;
-
-      insertRes = await pieDb
-        .from("pie_reports")
-        .insert(fallbackPayload)
-        .select("id,quote_id,project_id,created_at,payload,input,report,score,tier,confidence")
-        .single();
-    }
 
     if (insertRes.error || !insertRes.data) {
       throw new Error(insertRes.error?.message || "Failed to insert PIE report");
@@ -929,7 +1127,10 @@ export async function ensurePieForQuoteId(
 
     const pie = insertRes.data as PieReportRow;
 
-    await pieDb.from("quotes").update({ latest_pie_report_id: pie.id }).eq("id", quote.id);
+    await pieDb
+      .from("quotes")
+      .update({ latest_pie_report_id: pie.id })
+      .eq("id", quote.id);
 
     return { ok: true, created: true, quoteId, pie };
   } catch (err: any) {
@@ -942,7 +1143,6 @@ export async function ensurePieForQuoteId(
   }
 }
 
-// Compatibility export used by older files/routes
 export async function generatePieForQuoteId(
   quoteId: string,
   opts?: { force?: boolean }
