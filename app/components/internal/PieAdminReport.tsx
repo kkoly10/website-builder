@@ -1,18 +1,36 @@
-// app/components/internal/PieAdminReport.tsx
 type Props = {
   report: any;
 };
 
-function fmtMoney(n: number | null | undefined) {
-  if (n === null || n === undefined || Number.isNaN(Number(n))) return "—";
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(Number(n));
+function fmtMoney(value: number | null | undefined) {
+  if (value == null || Number.isNaN(Number(value))) return "-";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(Number(value));
 }
 
-function Badge({ text }: { text: string }) {
-  return <span className="badge">{text}</span>;
+function safeParse(value: any) {
+  if (!value) return null;
+  if (typeof value === "object") return value;
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="panel">
       <div className="panelHeader">
@@ -23,272 +41,233 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function safeParse(report: any) {
-  if (!report) return null;
-  if (typeof report === "object") return report;
-  if (typeof report === "string") {
-    try {
-      return JSON.parse(report);
-    } catch {
-      return null;
-    }
-  }
-  return null;
+function Stat({
+  label,
+  value,
+  note,
+}: {
+  label: string;
+  value: string;
+  note?: string;
+}) {
+  return (
+    <div className="card">
+      <div className="cardInner">
+        <div className="smallNote">{label}</div>
+        <div>{value}</div>
+        {note ? (
+          <div className="smallNote" style={{ marginTop: 6 }}>
+            {note}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
 export default function PieAdminReport({ report }: Props) {
-  const r = safeParse(report);
+  const payload = safeParse(report);
 
-  if (!r) {
+  if (!payload) {
     return (
-      <div className="panel">
-        <div className="panelHeader"><strong>PIE Report</strong></div>
-        <div className="panelBody">
-          <p className="smallNote">No readable PIE report found.</p>
-          <details>
-            <summary>Raw</summary>
-            <pre style={{ whiteSpace: "pre-wrap", overflowX: "auto" }}>{String(report)}</pre>
-          </details>
-        </div>
-      </div>
+      <Section title="PIE Report">
+        <p className="smallNote">No readable PIE report found.</p>
+      </Section>
     );
   }
 
-  const pg = r.pricing_guardrail || {};
-  const cx = r.complexity || {};
-  const hrs = r.hours || {};
-  const tl = r.timeline || {};
-  const plat = r.platform_recommendation || {};
-  const ai = r.ai_insights || null;
+  const complexity = payload.complexity || {};
+  const tier = payload.tier || {};
+  const capacity = payload.capacity || {};
+  const hours = capacity.estimatedHours || {};
+  const routing = payload.routing || {};
+  const lead = payload.lead || {};
+  const scope = payload.scope || {};
+  const negotiation = payload.negotiation || {};
+  const risks = Array.isArray(payload.risks) ? payload.risks : [];
 
   return (
-    <div>
+    <div style={{ display: "grid", gap: 16 }}>
       <Section title="PIE Overview">
-        <div className="row">
-          <Badge text={r.version || "PIE"} />
-          {r.overview?.tier ? <Badge text={`Tier: ${r.overview.tier}`} /> : null}
-          {cx.level ? <Badge text={`Complexity: ${cx.level}`} /> : null}
-          {typeof cx.score_100 === "number" ? <Badge text={`Score: ${cx.score_100}/100`} /> : null}
-        </div>
-
-        <div >{r.overview?.headline || "PIE Report"}</div>
-        <p className="pDark">{r.overview?.summary || "No summary available."}</p>
-
-        <div className="grid2">
-          <div className="card">
-            <div className="cardInner">
-              <div className="smallNote">Quoted Price</div>
-              <div >{fmtMoney(r.overview?.quoted_price)}</div>
-              <div className="smallNote" style={{ marginTop: 6 }}>Client fit: {r.overview?.fit || "—"}</div>
-            </div>
-          </div>
-          <div className="card">
-            <div className="cardInner">
-              <div className="smallNote">Estimated Hours</div>
-              <div >{hrs.total_hours ?? "—"}h</div>
-              <div className="smallNote" style={{ marginTop: 6 }}>
-                {tl.part_time_weeks ? `Part-time: ${tl.part_time_weeks}` : ""}
-                {tl.full_time_weeks ? ` • Full-time: ${tl.full_time_weeks}` : ""}
-              </div>
-            </div>
-          </div>
-        </div>
-      </Section>
-
-      <Section title="Pricing Guardrail">
-        <div className="grid2">
-          <div>
-            <div className="smallNote">Hourly rate used</div>
-            <div>{fmtMoney(pg.hourly_rate_used)}/hr</div>
-
-            <div className="smallNote">Cost at hourly</div>
-            <div>{fmtMoney(pg.cost_at_hourly)}</div>
-
-            <div className="smallNote">Quoted</div>
-            <div>{fmtMoney(pg.quoted_price)}</div>
-          </div>
-
-          <div>
-            <div className="smallNote">Position</div>
-            <div style={{ fontWeight: 900, textTransform: "capitalize" }}>{pg.pricing_position || "unknown"}</div>
-
-            <div className="smallNote">Recommended range</div>
-            <div>
-              {fmtMoney(pg.recommended_range?.min)} - {fmtMoney(pg.recommended_range?.max)}
-            </div>
-
-            <div className="smallNote">Delta vs hourly guardrail</div>
-            <div>{fmtMoney(pg.delta)}</div>
-          </div>
-        </div>
-
-        <div className="smallNote">
-          Public tier check: {pg.tier_range_check?.tier || "—"}{" "}
-          {pg.tier_range_check?.public_min ? `(${fmtMoney(pg.tier_range_check?.public_min)} - ${fmtMoney(pg.tier_range_check?.public_max)})` : ""}
-          {" • "}
-          {pg.tier_range_check?.within_public_range === null
-            ? "No tier range check"
-            : pg.tier_range_check?.within_public_range
-            ? "within public range"
-            : "outside public range"}
+        <div className="grid2stretch">
+          <Stat
+            label="Recommended Tier"
+            value={tier.recommended || "-"}
+            note={tier.rationale || undefined}
+          />
+          <Stat
+            label="Routing Path"
+            value={routing.finalPath || routing.path || "-"}
+            note={routing.reason || undefined}
+          />
+          <Stat
+            label="Target Price"
+            value={fmtMoney(tier.targetPrice)}
+            note={
+              tier.priceBand
+                ? `${fmtMoney(tier.priceBand.min)} - ${fmtMoney(tier.priceBand.max)}`
+                : undefined
+            }
+          />
+          <Stat
+            label="Complexity"
+            value={
+              typeof complexity.score === "number"
+                ? `${complexity.score}/100`
+                : "-"
+            }
+            note={complexity.label || undefined}
+          />
         </div>
       </Section>
 
-      <Section title="Complexity Drivers">
-        {Array.isArray(cx.drivers) && cx.drivers.length ? (
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
-            {cx.drivers.map((d: string, i: number) => <li key={i}>{d}</li>)}
-          </ul>
-        ) : (
-          <p className="smallNote">No drivers listed.</p>
-        )}
+      <Section title="Capacity">
+        <div className="grid2stretch">
+          <Stat
+            label="Estimated Hours"
+            value={
+              typeof hours.target === "number"
+                ? `${hours.target}h`
+                : "-"
+            }
+            note={
+              typeof hours.min === "number" && typeof hours.max === "number"
+                ? `${hours.min}h - ${hours.max}h`
+                : undefined
+            }
+          />
+          <Stat
+            label="Estimated Weeks"
+            value={
+              capacity.estimatedWeeks?.target
+                ? `${capacity.estimatedWeeks.target} week(s)`
+                : "-"
+            }
+            note={
+              capacity.estimatedWeeks
+                ? `${capacity.estimatedWeeks.min} - ${capacity.estimatedWeeks.max} week(s)`
+                : undefined
+            }
+          />
+          <Stat
+            label="Effective Hourly Rate"
+            value={
+              typeof capacity.effectiveHourlyRate === "number"
+                ? fmtMoney(capacity.effectiveHourlyRate)
+                : "-"
+            }
+            note={capacity.profitMessage || undefined}
+          />
+          <Stat
+            label="Profit Signal"
+            value={capacity.profitSignal || "-"}
+          />
+        </div>
+
+        {capacity.breakdown ? (
+          <div style={{ marginTop: 16 }}>
+            <div className="smallNote" style={{ marginBottom: 8 }}>
+              Capacity Breakdown
+            </div>
+            <div className="grid2stretch">
+              {Object.entries(capacity.breakdown).map(([key, value]) => (
+                <Stat
+                  key={key}
+                  label={key}
+                  value={`${value}h`}
+                />
+              ))}
+            </div>
+          </div>
+        ) : null}
       </Section>
 
-      <Section title="Hours Breakdown">
-        {hrs.by_phase ? (
-          <div className="grid2">
-            {Object.entries(hrs.by_phase).map(([k, v]) => (
-              <div key={k} className="checkRow">
-                <div className="checkLeft">
-                  <div className="checkLabel" style={{ textTransform: "capitalize" }}>
-                    {k.replaceAll("_", " ")}
-                  </div>
-                </div>
-                <div className="checkHint">{String(v)}h</div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="smallNote">No hours breakdown.</p>
-        )}
+      <Section title="Lead + Triggers">
+        <div className="grid2stretch">
+          <Stat
+            label="Lead Score"
+            value={
+              typeof lead.score === "number" ? `${lead.score}/100` : "-"
+            }
+            note={lead.notes || undefined}
+          />
+          <Stat
+            label="Priority"
+            value={lead.priority || "-"}
+            note={
+              routing.recommendedCallLength
+                ? `${routing.recommendedCallLength}-minute call recommended`
+                : "No call required by default"
+            }
+          />
+        </div>
 
-        {Array.isArray(hrs.assumptions) && hrs.assumptions.length ? (
+        {Array.isArray(routing.triggerDetails) && routing.triggerDetails.length ? (
           <>
-            <div className="smallNote">Assumptions</div>
-            <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
-              {hrs.assumptions.map((a: string, i: number) => <li key={i}>{a}</li>)}
+            <div className="smallNote" style={{ marginTop: 16 }}>
+              Routing Triggers
+            </div>
+            <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>
+              {routing.triggerDetails.map((detail: any, index: number) => (
+                <li key={`${detail.rule}-${index}`}>
+                  <strong>{detail.rule}</strong>: {detail.note}
+                </li>
+              ))}
             </ul>
           </>
         ) : null}
       </Section>
 
-      <Section title="Platform Recommendation">
-        <div style={{ fontWeight: 900, textTransform: "uppercase" }}>{plat.recommended || "—"}</div>
-
-        {Array.isArray(plat.why) && plat.why.length ? (
+      <Section title="Scope + Risks">
+        {Array.isArray(scope.featuresIncluded) && scope.featuresIncluded.length ? (
           <>
-            <div className="smallNote">Why</div>
-            <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
-              {plat.why.map((x: string, i: number) => <li key={i}>{x}</li>)}
-            </ul>
+            <div className="smallNote">Included features</div>
+            <div className="pills" style={{ marginTop: 8 }}>
+              {scope.featuresIncluded.map((feature: string) => (
+                <span key={feature} className="pill">
+                  {feature}
+                </span>
+              ))}
+            </div>
           </>
         ) : null}
 
-        {Array.isArray(plat.caution) && plat.caution.length ? (
+        {Array.isArray(risks) && risks.length ? (
           <>
-            <div className="smallNote">Caution</div>
-            <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
-              {plat.caution.map((x: string, i: number) => <li key={i}>{x}</li>)}
+            <div className="smallNote" style={{ marginTop: 16 }}>
+              Risks
+            </div>
+            <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>
+              {risks.map((risk: any, index: number) => (
+                <li key={`${risk.flag}-${index}`}>
+                  <strong>{risk.flag}</strong>: {risk.mitigation}
+                </li>
+              ))}
             </ul>
           </>
         ) : null}
       </Section>
 
-      <Section title="Questions To Ask On Call">
-        {Array.isArray(r.questions_to_ask) && r.questions_to_ask.length ? (
-          <ol style={{ margin: 0, paddingLeft: 18 }}>
-            {r.questions_to_ask.map((q: string, i: number) => <li key={i} style={{ marginBottom: 6 }}>{q}</li>)}
-          </ol>
-        ) : (
-          <p className="smallNote">No questions generated.</p>
-        )}
-      </Section>
-
-      <Section title="Risks and Scope Tradeoffs">
-        <div className="grid2">
+      <Section title="Negotiation Toolkit">
+        <div className="grid2stretch">
           <div>
-            <div className="smallNote">Risks</div>
-            {Array.isArray(r.risks) && r.risks.length ? (
-              <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
-                {r.risks.map((x: string, i: number) => <li key={i}>{x}</li>)}
-              </ul>
-            ) : <p className="smallNote">No risks listed.</p>}
+            <div className="smallNote">Lower-cost options</div>
+            <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>
+              {(negotiation.lowerCostOptions || []).map((option: string) => (
+                <li key={option}>{option}</li>
+              ))}
+            </ul>
           </div>
-
           <div>
-            <div className="smallNote">Tradeoffs (if client needs lower price)</div>
-            {Array.isArray(r.scope_tradeoffs) && r.scope_tradeoffs.length ? (
-              <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
-                {r.scope_tradeoffs.map((x: string, i: number) => <li key={i}>{x}</li>)}
-              </ul>
-            ) : <p className="smallNote">No tradeoffs listed.</p>}
+            <div className="smallNote">Price defense</div>
+            <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>
+              {(negotiation.priceDefense || []).map((point: string) => (
+                <li key={point}>{point}</li>
+              ))}
+            </ul>
           </div>
         </div>
       </Section>
-
-      {ai ? (
-        <Section title="AI Insights">
-          {ai.executive_summary ? (
-            <>
-              <div className="smallNote">Executive summary</div>
-              <p className="pDark" style={{ marginTop: 6 }}>{ai.executive_summary}</p>
-            </>
-          ) : null}
-
-          {ai.client_psychology ? (
-            <>
-              <div className="smallNote">Client psychology</div>
-              <p className="pDark" style={{ marginTop: 6 }}>{ai.client_psychology}</p>
-            </>
-          ) : null}
-
-          {Array.isArray(ai.hidden_risks) && ai.hidden_risks.length ? (
-            <>
-              <div className="smallNote">Hidden risks</div>
-              <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
-                {ai.hidden_risks.map((x: string, i: number) => <li key={i}>{x}</li>)}
-              </ul>
-            </>
-          ) : null}
-
-          {Array.isArray(ai.upsell_opportunities) && ai.upsell_opportunities.length ? (
-            <>
-              <div className="smallNote">Upsell opportunities</div>
-              <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
-                {ai.upsell_opportunities.map((x: string, i: number) => <li key={i}>{x}</li>)}
-              </ul>
-            </>
-          ) : null}
-
-          {Array.isArray(ai.call_strategy) && ai.call_strategy.length ? (
-            <>
-              <div className="smallNote">Call strategy</div>
-              <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
-                {ai.call_strategy.map((x: string, i: number) => <li key={i}>{x}</li>)}
-              </ul>
-            </>
-          ) : null}
-        </Section>
-      ) : null}
-
-      <details>
-        <summary style={{ cursor: "pointer", fontWeight: 800 }}>Raw PIE JSON</summary>
-        <pre
-          style={{
-            marginTop: 10,
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 12,
-            padding: 12,
-            overflowX: "auto",
-            fontSize: 12,
-          }}
-        >
-          {JSON.stringify(r, null, 2)}
-        </pre>
-      </details>
     </div>
   );
 }
