@@ -1,5 +1,6 @@
 // app/api/internal/admin/quote-admin/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireAdminRoute } from "@/lib/routeAuth";
 
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
       nextDebug.adminPricing = {
         discountPercent: Number(body.adminPricing.discountPercent || 0),
         flatAdjustment: Number(body.adminPricing.flatAdjustment || 0),
-        hourlyRate: Number(body.adminPricing.hourlyRate || 40),
+        hourlyRate: Number(body.adminPricing.hourlyRate || INTERNAL_HOURLY_RATE),
         notes:
           typeof body.adminPricing.notes === "string"
             ? body.adminPricing.notes
