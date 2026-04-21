@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
 
 /* ═══════════════════════════════════
@@ -13,6 +13,26 @@ type ClientAsset = { id: string; category: string; label: string; url: string; n
 type ClientRevision = { id: string; message: string; priority: string; status: string; createdAt: string };
 type ScopeVersion = { id: string; createdAt: string; label: string; summary: string; tierLabel: string; platform: string; timeline: string; revisionPolicy: string; pagesIncluded: string[]; featuresIncluded: string[]; exclusions: string[] };
 type ChangeOrder = { id: string; createdAt: string; title: string; summary: string; priceImpact: string; timelineImpact: string; scopeImpact: string; status: string };
+type PortalMessage = {
+  id: string;
+  senderRole: "client" | "studio" | "internal";
+  senderName: string;
+  body: string;
+  readAt: string | null;
+  createdAt: string;
+  attachment: {
+    url: string | null;
+    name: string | null;
+    type: string | null;
+    size: number | null;
+  } | null;
+};
+type MessageSummary = {
+  unreadCount: number;
+  lastPreview: string;
+  lastAt: string;
+  lastRole: "client" | "studio" | "internal" | null;
+};
 
 type ProjectControlData = {
   quoteId: string;
@@ -32,6 +52,8 @@ type ProjectControlData = {
   depositStatus: string;
   portalStateAdmin: { clientStatus: string; clientNotes: string; adminPublicNote: string; depositAmount: number; depositNotes: string; milestones: Milestone[] };
   clientSync: { lastClientUpdate: string; assets: ClientAsset[]; revisions: ClientRevision[] };
+  messages: PortalMessage[];
+  messageSummary: MessageSummary;
   workspaceHistory: { scopeVersions: ScopeVersion[]; changeOrders: ChangeOrder[] };
   proposalText: string;
   preContractDraft: string;
@@ -57,6 +79,18 @@ function fmtDate(v?: string) {
   if (!v) return "—";
   const d = new Date(v);
   return Number.isNaN(d.getTime()) ? v : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+function fmtDateTime(v?: string | null) {
+  if (!v) return "â€”";
+  const d = new Date(v);
+  return Number.isNaN(d.getTime())
+    ? v
+    : d.toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      });
 }
 function pretty(v?: string | null) {
   if (!v) return "—";
@@ -109,6 +143,39 @@ function pieTone(score: number | null) {
 /* ═══════════════════════════════════
    SUB-COMPONENTS
    ═══════════════════════════════════ */
+
+function summarizeMessages(messages: PortalMessage[]): MessageSummary {
+  const lastMessage = messages[messages.length - 1];
+  return {
+    unreadCount: messages.filter((message) => message.senderRole === "client" && !message.readAt).length,
+    lastPreview:
+      lastMessage?.body ||
+      (lastMessage?.attachment?.name ? `Attachment: ${lastMessage.attachment.name}` : ""),
+    lastAt: lastMessage?.createdAt || "",
+    lastRole: lastMessage?.senderRole || null,
+  };
+}
+
+function groupMessagesByDay(messages: PortalMessage[]) {
+  const groups: { key: string; label: string; items: PortalMessage[] }[] = [];
+
+  for (const message of messages) {
+    const date = new Date(message.createdAt || "");
+    const key = Number.isNaN(date.getTime()) ? "unknown" : date.toLocaleDateString("en-CA");
+    const label = Number.isNaN(date.getTime())
+      ? "Unknown day"
+      : date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    const last = groups[groups.length - 1];
+
+    if (!last || last.key !== key) {
+      groups.push({ key, label, items: [message] });
+    } else {
+      last.items.push(message);
+    }
+  }
+
+  return groups;
+}
 
 function PieRing({ score, size = 56 }: { score: number | null; size?: number }) {
   const tone = pieTone(score);
@@ -217,9 +284,11 @@ function LaunchCheckItem({ label, done }: { label: string; done: boolean }) {
 export default function ProjectControlClient({
   initialData,
   embedded = false,
+  onMessageSummaryChange,
 }: {
   initialData: ProjectControlData;
   embedded?: boolean;
+  onMessageSummaryChange?: (summary: MessageSummary) => void;
 }) {
   const [data, setData] = useState<ProjectControlData>(initialData);
   const [busy, setBusy] = useState(false);
@@ -228,12 +297,24 @@ export default function ProjectControlClient({
   const [activeTab, setActiveTab] = useState("overview");
   const [confirmAction, setConfirmAction] = useState<{ title: string; description: string; onConfirm: () => void } | null>(null);
   const [newChangeOrder, setNewChangeOrder] = useState({ title: "", summary: "", priceImpact: "", timelineImpact: "", scopeImpact: "", status: "draft" });
+  const [messageBody, setMessageBody] = useState("");
+  const [messageMode, setMessageMode] = useState<"studio" | "internal">("studio");
+  const [messageFile, setMessageFile] = useState<File | null>(null);
+  const messageFileRef = useRef<HTMLInputElement>(null);
 
   const readiness = useMemo(() => computeLaunchReadiness(data), [data]);
   const adjustedTarget = useMemo(() => {
     const d = Math.round(data.estimate.target * (1 - data.adminPricing.discountPercent / 100));
     return d + data.adminPricing.flatAdjustment;
   }, [data.estimate.target, data.adminPricing]);
+  const groupedMessages = useMemo(() => groupMessagesByDay(data.messages), [data.messages]);
+
+  useEffect(() => {
+    if (activeTab !== "activity") return;
+    refreshMessages(true);
+    const timer = setInterval(() => refreshMessages(true), 30_000);
+    return () => clearInterval(timer);
+  }, [activeTab, data.quoteId]);
 
   /* ── API ── */
   async function savePatch(payload: Record<string, any>, successMsg: string) {
@@ -249,6 +330,93 @@ export default function ProjectControlClient({
     } catch (err) {
       setMessageIsError(true); setMessage(err instanceof Error ? err.message : "Failed to save.");
     } finally { setBusy(false); }
+  }
+
+  async function refreshMessages(silent = true) {
+    try {
+      const res = await fetch(`/api/internal/admin/messages?quoteId=${encodeURIComponent(data.quoteId)}`);
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !Array.isArray(json?.conversation?.messages)) {
+        if (!silent) {
+          setMessageIsError(true);
+          setMessage(json?.error || "Failed to refresh messages.");
+        }
+        return;
+      }
+
+      const messages = json.conversation.messages as PortalMessage[];
+      const summary = summarizeMessages(messages);
+      setData((prev) => ({ ...prev, messages, messageSummary: summary }));
+      onMessageSummaryChange?.(summary);
+    } catch (err) {
+      if (!silent) {
+        setMessageIsError(true);
+        setMessage(err instanceof Error ? err.message : "Failed to refresh messages.");
+      }
+    }
+  }
+
+  async function sendPortalMessage(
+    bodyOverride?: string,
+    roleOverride?: "studio" | "internal",
+    options?: { ignoreAttachment?: boolean }
+  ) {
+    const senderRole = roleOverride || messageMode;
+    const nextBody = typeof bodyOverride === "string" ? bodyOverride.trim() : messageBody.trim();
+    const attachmentToSend = options?.ignoreAttachment ? null : messageFile;
+
+    if (!nextBody && !attachmentToSend) {
+      setMessageIsError(true);
+      setMessage("Add a reply or attach a file first.");
+      return;
+    }
+
+    setBusy(true);
+    setMessage(senderRole === "internal" ? "Saving internal note..." : "Sending reply...");
+    setMessageIsError(false);
+
+    try {
+      let res: Response;
+
+      if (attachmentToSend) {
+        const form = new FormData();
+        form.append("quoteId", data.quoteId);
+        form.append("senderRole", senderRole);
+        form.append("body", nextBody);
+        form.append("file", attachmentToSend);
+        res = await fetch("/api/internal/admin/messages", { method: "POST", body: form });
+      } else {
+        res = await fetch("/api/internal/admin/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            quoteId: data.quoteId,
+            senderRole,
+            body: nextBody,
+          }),
+        });
+      }
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !Array.isArray(json?.messages)) {
+        throw new Error(json?.error || "Failed to send message.");
+      }
+
+      const messages = json.messages as PortalMessage[];
+      const summary = summarizeMessages(messages);
+      setData((prev) => ({ ...prev, messages, messageSummary: summary }));
+      onMessageSummaryChange?.(summary);
+      setMessageIsError(false);
+      setMessage(senderRole === "internal" ? "Internal note saved." : "Reply sent.");
+      setMessageBody("");
+      setMessageFile(null);
+      if (messageFileRef.current) messageFileRef.current.value = "";
+    } catch (err) {
+      setMessageIsError(true);
+      setMessage(err instanceof Error ? err.message : "Failed to send message.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function generatePreContract() {
@@ -408,6 +576,34 @@ export default function ProjectControlClient({
     setData((p) => ({ ...p, workspaceHistory: { ...p.workspaceHistory, changeOrders: p.workspaceHistory.changeOrders.map((c) => c.id === id ? { ...c, status } : c) } }));
   }
 
+  function referenceScopeInComposer() {
+    const scopeLines = [
+      `Scope reference`,
+      `Tier: ${data.scopeSnapshot.tierLabel}`,
+      `Platform: ${data.scopeSnapshot.platform}`,
+      `Timeline: ${data.scopeSnapshot.timeline}`,
+      `Revision policy: ${data.scopeSnapshot.revisionPolicy}`,
+    ];
+
+    if (data.scopeSnapshot.pagesIncluded.length) {
+      scopeLines.push(`Pages: ${data.scopeSnapshot.pagesIncluded.join(", ")}`);
+    }
+
+    if (data.scopeSnapshot.featuresIncluded.length) {
+      scopeLines.push(`Features: ${data.scopeSnapshot.featuresIncluded.join(", ")}`);
+    }
+
+    setMessageBody((current) => [current.trim(), scopeLines.join("\n")].filter(Boolean).join("\n\n"));
+  }
+
+  async function markConversationResolved() {
+    await sendPortalMessage(
+      "Thread marked as resolved. No further action is pending unless the client replies.",
+      "internal",
+      { ignoreAttachment: true }
+    );
+  }
+
   /* ── Options ── */
   const statusOptions = ["new", "call_requested", "call", "proposal", "deposit", "active", "closed_won"];
   const workspaceStatusOptions = ["new", "intake_review", "content_submitted", "preview_ready", "revision_requested", "launch_ready", "live"];
@@ -431,6 +627,7 @@ export default function ProjectControlClient({
       label: "Activity",
       badge:
         readiness.blockers.length +
+        data.messageSummary.unreadCount +
         data.clientSync.assets.length +
         data.clientSync.revisions.length,
     },
@@ -776,7 +973,7 @@ export default function ProjectControlClient({
 
       {/* ═══ TAB: LAUNCH ═══ */}
       {activeTab === "activity" && (
-        <div style={{ maxWidth: 680 }}>
+        <div style={{ maxWidth: 920 }}>
           <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
               <PieRing score={readiness.percent} size={64} />
@@ -805,6 +1002,208 @@ export default function ProjectControlClient({
                 <button className="btn btnGhost" disabled={busy} style={{ fontSize: 12, padding: "8px 16px", color: "#F09595" }}
                   onClick={() => revertLaunchStatus("Ready for launch", "launch_ready")}>Revert to ready</button>
               )}
+            </div>
+          </div>
+
+          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22, marginTop: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", marginBottom: 18 }}>
+              <div>
+                <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Messages</h3>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
+                  {data.messageSummary.unreadCount} unread client message{data.messageSummary.unreadCount === 1 ? "" : "s"}
+                </div>
+              </div>
+              <button className="btn btnGhost" disabled={busy} style={{ fontSize: 12, padding: "8px 14px" }} onClick={() => refreshMessages(false)}>
+                Refresh thread
+              </button>
+            </div>
+
+            <div style={{ display: "grid", gap: 16 }}>
+              <div style={{ display: "grid", gap: 12, maxHeight: 560, overflowY: "auto", paddingRight: 4 }}>
+                {groupedMessages.length === 0 ? (
+                  <div style={{ fontSize: 13, color: "var(--muted-2)", padding: 18, border: "1px dashed var(--rule)", borderRadius: 12, textAlign: "center" }}>
+                    No messages yet.
+                  </div>
+                ) : (
+                  groupedMessages.map((group) => (
+                    <div key={group.key}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                        <div style={{ flex: 1, height: 1, background: "var(--rule)" }} />
+                        <div style={{ fontSize: 11, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{group.label}</div>
+                        <div style={{ flex: 1, height: 1, background: "var(--rule)" }} />
+                      </div>
+
+                      <div style={{ display: "grid", gap: 10 }}>
+                        {group.items.map((entry) => (
+                          <div
+                            key={entry.id}
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "34px minmax(0, 1fr)",
+                              gap: 12,
+                              padding: "14px 16px",
+                              borderRadius: 14,
+                              border:
+                                entry.senderRole === "internal"
+                                  ? "1px dashed color-mix(in srgb, var(--ink) 22%, var(--rule))"
+                                  : "1px solid var(--rule)",
+                              borderLeft:
+                                entry.senderRole === "studio"
+                                  ? "3px solid var(--accent)"
+                                  : entry.senderRole === "client"
+                                  ? "3px solid color-mix(in srgb, var(--accent) 26%, var(--rule))"
+                                  : "3px dashed color-mix(in srgb, var(--ink) 25%, var(--rule))",
+                              background:
+                                entry.senderRole === "studio"
+                                  ? "var(--paper)"
+                                  : entry.senderRole === "client"
+                                  ? "var(--paper-2)"
+                                  : "var(--internal-bg)",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: 34,
+                                height: 34,
+                                borderRadius: "50%",
+                                display: "grid",
+                                placeItems: "center",
+                                background:
+                                  entry.senderRole === "studio"
+                                    ? "var(--accent)"
+                                    : entry.senderRole === "client"
+                                    ? "var(--paper-3)"
+                                    : "var(--ink)",
+                                color:
+                                  entry.senderRole === "studio"
+                                    ? "var(--paper)"
+                                    : entry.senderRole === "client"
+                                    ? "var(--ink)"
+                                    : "var(--paper)",
+                                fontSize: 11,
+                                fontWeight: 700,
+                                textTransform: "uppercase",
+                              }}
+                            >
+                              {entry.senderRole === "internal"
+                                ? "IN"
+                                : entry.senderRole === "studio"
+                                ? "CS"
+                                : (entry.senderName || "C").slice(0, 2)}
+                            </div>
+
+                            <div>
+                              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>{entry.senderName}</div>
+                                <span className="pill" style={{ background: entry.senderRole === "internal" ? "var(--internal-bg)" : undefined }}>
+                                  {pretty(entry.senderRole)}
+                                </span>
+                                <span style={{ fontSize: 11, color: "var(--muted-2)" }}>{fmtDateTime(entry.createdAt)}</span>
+                                {entry.senderRole === "studio" ? (
+                                  <span style={{ fontSize: 11, color: "var(--muted-2)" }}>
+                                    {entry.readAt ? `Seen ${fmtDateTime(entry.readAt)}` : "Unread"}
+                                  </span>
+                                ) : null}
+                              </div>
+
+                              {entry.body ? (
+                                <div style={{ marginTop: 8, fontSize: 14, lineHeight: 1.7, color: "var(--ink-2)", whiteSpace: "pre-wrap" }}>
+                                  {entry.body}
+                                </div>
+                              ) : null}
+
+                              {entry.attachment ? (
+                                <div style={{ marginTop: 10 }}>
+                                  <a
+                                    href={entry.attachment.url || "#"}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="pill"
+                                    style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--ink)" }}
+                                  >
+                                    <span>{entry.attachment.name || "Attachment"}</span>
+                                    {entry.attachment.size ? (
+                                      <span style={{ color: "var(--muted-2)" }}>
+                                        {(entry.attachment.size / 1024).toFixed(0)} KB
+                                      </span>
+                                    ) : null}
+                                  </a>
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div style={{
+                padding: 16,
+                borderRadius: 14,
+                border: "1px solid var(--rule)",
+                background: messageMode === "internal" ? "var(--internal-bg)" : "var(--paper-2)",
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center", marginBottom: 12 }}>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button
+                      type="button"
+                      className={`btn ${messageMode === "studio" ? "btnPrimary" : "btnGhost"}`}
+                      style={{ fontSize: 12, padding: "8px 14px" }}
+                      onClick={() => setMessageMode("studio")}
+                    >
+                      Reply to client
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn ${messageMode === "internal" ? "btnPrimary" : "btnGhost"}`}
+                      style={{ fontSize: 12, padding: "8px 14px" }}
+                      onClick={() => setMessageMode("internal")}
+                    >
+                      Internal note
+                    </button>
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: messageMode === "internal" ? "var(--ink)" : "var(--accent)" }}>
+                    {messageMode === "internal" ? "Only visible to studio" : "Client will receive email notification"}
+                  </div>
+                </div>
+
+                <textarea
+                  className="textarea"
+                  rows={5}
+                  value={messageBody}
+                  onChange={(e) => setMessageBody(e.target.value)}
+                  placeholder={messageMode === "internal" ? "Log a private note for the studio team..." : "Reply to the client..."}
+                />
+
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+                  <button type="button" className="btn btnGhost" style={{ fontSize: 12, padding: "8px 14px" }} onClick={referenceScopeInComposer}>
+                    Reference scope
+                  </button>
+                  <button type="button" className="btn btnGhost" style={{ fontSize: 12, padding: "8px 14px" }} onClick={markConversationResolved}>
+                    Mark as resolved
+                  </button>
+                  <button type="button" className="btn btnGhost" style={{ fontSize: 12, padding: "8px 14px" }} onClick={() => messageFileRef.current?.click()}>
+                    Attach file
+                  </button>
+                  <input
+                    ref={messageFileRef}
+                    type="file"
+                    style={{ display: "none" }}
+                    onChange={(e) => setMessageFile(e.target.files?.[0] ?? null)}
+                  />
+                  <button type="button" className="btn btnPrimary" disabled={busy} style={{ fontSize: 12, padding: "8px 14px" }} onClick={() => sendPortalMessage()}>
+                    {busy ? "Sending..." : messageMode === "internal" ? "Save note" : "Send reply"}
+                  </button>
+                </div>
+
+                {messageFile ? (
+                  <div style={{ marginTop: 10, fontSize: 12, color: "var(--muted-2)" }}>
+                    Attached: {messageFile.name} ({(messageFile.size / 1024).toFixed(0)} KB)
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>

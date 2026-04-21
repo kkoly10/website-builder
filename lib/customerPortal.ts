@@ -41,6 +41,21 @@ type CustomerPortalRevisionInput = {
   createdAt?: string | null;
 };
 
+type CustomerPortalMessageInput = {
+  id?: string;
+  senderRole?: string;
+  senderName?: string;
+  body?: string;
+  attachmentUrl?: string | null;
+  attachmentName?: string | null;
+  attachmentType?: string | null;
+  attachmentSize?: number | null;
+  attachmentStorageBucket?: string | null;
+  attachmentStoragePath?: string | null;
+  readAt?: string | null;
+  createdAt?: string | null;
+};
+
 const DEFAULT_MILESTONES = [
   { title: "Kickoff & scope confirmation", status: "todo", sort_order: 10 },
   { title: "Content/assets received", status: "todo", sort_order: 20 },
@@ -191,6 +206,12 @@ function normalizePriority(value: unknown): "low" | "normal" | "high" {
   return "normal";
 }
 
+function normalizeSenderRole(value: unknown): "client" | "studio" | "internal" {
+  const normalized = cleanString(value).toLowerCase();
+  if (normalized === "studio" || normalized === "internal") return normalized;
+  return "client";
+}
+
 function safeDate(value: unknown) {
   const raw = cleanString(value);
   if (!raw) return null;
@@ -242,6 +263,19 @@ async function signAssetUrl(asset: AnyObj) {
   return signed.data?.signedUrl || null;
 }
 
+async function signMessageAttachment(message: AnyObj) {
+  const direct = cleanString(message.attachment_url);
+  if (direct) return direct;
+
+  const bucket = cleanString(message.attachment_storage_bucket);
+  const path = cleanString(message.attachment_storage_path);
+  if (!bucket || !path) return null;
+
+  const signed = await supabaseAdmin.storage.from(bucket).createSignedUrl(path, 60 * 60);
+  if (signed.error) return null;
+  return signed.data?.signedUrl || null;
+}
+
 async function getPortalProjectByToken(token: string) {
   if (!token) return null;
 
@@ -274,7 +308,7 @@ async function loadPortalBundle(portal: AnyObj | null) {
   const quoteId = cleanString(portal.quote_id);
   if (!quoteId) return null;
 
-  const [quoteRes, milestonesRes, assetsRes, revisionsRes] = await Promise.all([
+  const [quoteRes, milestonesRes, assetsRes, revisionsRes, messagesRes] = await Promise.all([
     supabaseAdmin.from("quotes").select("*").eq("id", quoteId).maybeSingle(),
     supabaseAdmin
       .from("customer_portal_milestones")
@@ -292,12 +326,18 @@ async function loadPortalBundle(portal: AnyObj | null) {
       .select("*")
       .eq("portal_project_id", portal.id)
       .order("created_at", { ascending: false }),
+    supabaseAdmin
+      .from("customer_portal_messages")
+      .select("*")
+      .eq("portal_project_id", portal.id)
+      .order("created_at", { ascending: true }),
   ]);
 
   if (quoteRes.error) throw quoteRes.error;
   if (milestonesRes.error) throw milestonesRes.error;
   if (assetsRes.error) throw assetsRes.error;
   if (revisionsRes.error) throw revisionsRes.error;
+  if (messagesRes.error) throw messagesRes.error;
 
   const quote = quoteRes.data ?? null;
 
@@ -332,6 +372,13 @@ async function loadPortalBundle(portal: AnyObj | null) {
     }))
   );
 
+  const messages = await Promise.all(
+    (messagesRes.data ?? []).map(async (message) => ({
+      ...message,
+      resolved_attachment_url: await signMessageAttachment(message),
+    }))
+  );
+
   return {
     portal,
     quote,
@@ -341,6 +388,7 @@ async function loadPortalBundle(portal: AnyObj | null) {
     milestones: milestonesRes.data ?? [],
     assets,
     revisions: revisionsRes.data ?? [],
+    messages,
   };
 }
 
@@ -463,7 +511,10 @@ function deriveWaitingOn(input: {
   return "CrecyStudio next build step";
 }
 
-function buildWorkspaceView(bundle: AnyObj) {
+function buildWorkspaceView(
+  bundle: AnyObj,
+  options?: { includeInternal?: boolean }
+) {
   const portal = safeObj(bundle.portal);
   const quote = safeObj(bundle.quote);
   const lead = safeObj(bundle.lead);
@@ -488,6 +539,36 @@ function buildWorkspaceView(bundle: AnyObj) {
     status: normalizeRevisionStatus(revision.status),
     createdAt: cleanString(revision.created_at) || "",
   }));
+  const messages = safeArray(bundle.messages)
+    .filter((message: AnyObj) => {
+      if (options?.includeInternal) return true;
+      return cleanString(message.sender_role) !== "internal";
+    })
+    .map((message: AnyObj) => {
+      const attachmentUrl =
+        cleanString(message.resolved_attachment_url) || cleanString(message.attachment_url) || null;
+      const attachmentName = cleanString(message.attachment_name) || null;
+      const attachmentType = cleanString(message.attachment_type) || null;
+      const attachmentSize = Number(message.attachment_size ?? 0) || null;
+
+      return {
+        id: cleanString(message.id),
+        senderRole: normalizeSenderRole(message.sender_role),
+        senderName: cleanString(message.sender_name) || "Studio",
+        body: cleanString(message.body),
+        readAt: safeDate(message.read_at),
+        createdAt: cleanString(message.created_at) || "",
+        attachment:
+          attachmentUrl || attachmentName || attachmentType || attachmentSize
+            ? {
+                url: attachmentUrl,
+                name: attachmentName,
+                type: attachmentType,
+                size: attachmentSize,
+              }
+            : null,
+      };
+    });
 
   const pagesIncluded =
     cleanTextList(scopeSnapshot.pagesIncluded).length > 0
@@ -606,6 +687,7 @@ function buildWorkspaceView(bundle: AnyObj) {
         clientStatus: cleanString(portal.client_status).toLowerCase() || null,
       }),
     },
+    messages,
   };
 }
 
@@ -679,16 +761,262 @@ export async function getCustomerPortalBundleByQuoteId(quoteId: string) {
   return loadPortalBundle(portal);
 }
 
-export async function getCustomerPortalViewByToken(token: string) {
-  const bundle = await getCustomerPortalBundleByToken(token);
-  if (!bundle) return { ok: false as const, error: "Portal link not found." };
-  return { ok: true as const, data: buildWorkspaceView(bundle) };
+async function markPortalMessagesRead(
+  portalProjectId: string,
+  viewerRole: "client" | "studio"
+) {
+  const senderRole = viewerRole === "client" ? "studio" : "client";
+  const readAt = new Date().toISOString();
+
+  const { error } = await supabaseAdmin
+    .from("customer_portal_messages")
+    .update({ read_at: readAt })
+    .eq("portal_project_id", portalProjectId)
+    .eq("sender_role", senderRole)
+    .is("read_at", null);
+
+  if (error) throw error;
+
+  return readAt;
 }
 
-export async function getCustomerPortalViewByQuoteId(quoteId: string) {
+function applyReadReceiptToBundle(
+  bundle: AnyObj | null,
+  senderRole: "client" | "studio",
+  readAt: string
+) {
+  if (!bundle) return bundle;
+  return {
+    ...bundle,
+    messages: safeArray(bundle.messages).map((message: AnyObj) =>
+      normalizeSenderRole(message.sender_role) === senderRole && !safeDate(message.read_at)
+        ? { ...message, read_at: readAt }
+        : message
+    ),
+  };
+}
+
+export async function getCustomerPortalViewByToken(
+  token: string,
+  options?: { includeInternal?: boolean; markReadAs?: "client" | "studio" }
+) {
+  const bundle = await getCustomerPortalBundleByToken(token);
+  if (!bundle) return { ok: false as const, error: "Portal link not found." };
+
+  let nextBundle: AnyObj = bundle;
+  if (options?.markReadAs && cleanString(bundle.portal?.id)) {
+    const senderRole = options.markReadAs === "client" ? "studio" : "client";
+    const readAt = await markPortalMessagesRead(cleanString(bundle.portal.id), options.markReadAs);
+    nextBundle = applyReadReceiptToBundle(bundle, senderRole, readAt);
+  }
+
+  return {
+    ok: true as const,
+    data: buildWorkspaceView(nextBundle, { includeInternal: options?.includeInternal }),
+  };
+}
+
+export async function getCustomerPortalViewByQuoteId(
+  quoteId: string,
+  options?: { includeInternal?: boolean; markReadAs?: "client" | "studio" }
+) {
   const bundle = await getCustomerPortalBundleByQuoteId(quoteId);
   if (!bundle) return { ok: false as const, error: "Portal project not found." };
-  return { ok: true as const, data: buildWorkspaceView(bundle) };
+
+  let nextBundle: AnyObj = bundle;
+  if (options?.markReadAs && cleanString(bundle.portal?.id)) {
+    const senderRole = options.markReadAs === "client" ? "studio" : "client";
+    const readAt = await markPortalMessagesRead(cleanString(bundle.portal.id), options.markReadAs);
+    nextBundle = applyReadReceiptToBundle(bundle, senderRole, readAt);
+  }
+
+  return {
+    ok: true as const,
+    data: buildWorkspaceView(nextBundle, { includeInternal: options?.includeInternal }),
+  };
+}
+
+export async function createCustomerPortalMessageByToken(input: {
+  token: string;
+  senderRole?: string;
+  senderName?: string;
+  body?: string;
+  attachmentUrl?: string | null;
+  attachmentName?: string | null;
+  attachmentType?: string | null;
+  attachmentSize?: number | null;
+  attachmentStorageBucket?: string | null;
+  attachmentStoragePath?: string | null;
+}) {
+  const portal = await getPortalProjectByToken(input.token);
+  if (!portal) throw new Error("Portal not found");
+
+  return createCustomerPortalMessageByPortalId(portal.id, input);
+}
+
+export async function createCustomerPortalMessageByQuoteId(input: {
+  quoteId: string;
+  senderRole?: string;
+  senderName?: string;
+  body?: string;
+  attachmentUrl?: string | null;
+  attachmentName?: string | null;
+  attachmentType?: string | null;
+  attachmentSize?: number | null;
+  attachmentStorageBucket?: string | null;
+  attachmentStoragePath?: string | null;
+}) {
+  const portal = await ensureCustomerPortalForQuoteId(input.quoteId);
+  return createCustomerPortalMessageByPortalId(portal.id, input);
+}
+
+async function createCustomerPortalMessageByPortalId(
+  portalProjectId: string,
+  input: Omit<CustomerPortalMessageInput, "id" | "readAt" | "createdAt">
+) {
+  const body = cleanString(input.body);
+  const senderRole = normalizeSenderRole(input.senderRole);
+  const hasAttachment =
+    !!cleanString(input.attachmentUrl) ||
+    !!cleanString(input.attachmentStorageBucket) ||
+    !!cleanString(input.attachmentStoragePath) ||
+    !!cleanString(input.attachmentName);
+
+  if (!body && !hasAttachment) {
+    throw new Error("Message body or attachment is required.");
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("customer_portal_messages")
+    .insert({
+      portal_project_id: portalProjectId,
+      sender_role: senderRole,
+      sender_name:
+        cleanString(input.senderName) ||
+        (senderRole === "client"
+          ? "Client"
+          : senderRole === "internal"
+          ? "Internal note"
+          : "CrecyStudio"),
+      body,
+      attachment_url: cleanString(input.attachmentUrl) || null,
+      attachment_name: cleanString(input.attachmentName) || null,
+      attachment_type: cleanString(input.attachmentType) || null,
+      attachment_size: Number(input.attachmentSize ?? 0) || null,
+      attachment_storage_bucket: cleanString(input.attachmentStorageBucket) || null,
+      attachment_storage_path: cleanString(input.attachmentStoragePath) || null,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+
+  const patch: AnyObj = {
+    updated_at: new Date().toISOString(),
+  };
+  if (senderRole === "client") {
+    patch.client_updated_at = new Date().toISOString();
+  }
+
+  const { error: projectError } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update(patch)
+    .eq("id", portalProjectId);
+
+  if (projectError) throw projectError;
+
+  return {
+    ...data,
+    resolved_attachment_url: await signMessageAttachment(data),
+  };
+}
+
+export async function listCustomerPortalMessageConversations() {
+  const portalsRes = await supabaseAdmin
+    .from("customer_portal_projects")
+    .select("id, quote_id, access_token, updated_at")
+    .order("updated_at", { ascending: false });
+
+  if (portalsRes.error) throw portalsRes.error;
+
+  const portals = portalsRes.data ?? [];
+  const quoteIds = portals.map((portal) => cleanString(portal.quote_id)).filter(Boolean);
+
+  const [quotesRes, messagesRes] = await Promise.all([
+    quoteIds.length
+      ? supabaseAdmin
+          .from("quotes")
+          .select("id, status, tier_recommended, lead_id")
+          .in("id", quoteIds)
+      : Promise.resolve({ data: [], error: null } as const),
+    portals.length
+      ? supabaseAdmin
+          .from("customer_portal_messages")
+          .select(
+            "id, portal_project_id, sender_role, sender_name, body, attachment_name, read_at, created_at"
+          )
+          .in(
+            "portal_project_id",
+            portals.map((portal) => portal.id)
+          )
+          .order("created_at", { ascending: true })
+      : Promise.resolve({ data: [], error: null } as const),
+  ]);
+
+  if (quotesRes.error) throw quotesRes.error;
+  if (messagesRes.error) throw messagesRes.error;
+
+  const quotes = quotesRes.data ?? [];
+  const leadIds = quotes.map((quote) => cleanString(quote.lead_id)).filter(Boolean);
+  const leadsRes = leadIds.length
+    ? await supabaseAdmin.from("leads").select("id, name, email").in("id", leadIds)
+    : ({ data: [], error: null } as const);
+
+  if (leadsRes.error) throw leadsRes.error;
+
+  const quoteMap = new Map(
+    quotes.map((quote) => [cleanString(quote.id), quote] as const)
+  );
+  const leadMap = new Map(
+    (leadsRes.data ?? []).map((lead) => [cleanString(lead.id), lead] as const)
+  );
+  const messagesByPortal = new Map<string, AnyObj[]>();
+
+  for (const message of messagesRes.data ?? []) {
+    const key = cleanString(message.portal_project_id);
+    const group = messagesByPortal.get(key) ?? [];
+    group.push(message);
+    messagesByPortal.set(key, group);
+  }
+
+  return portals.map((portal) => {
+    const quoteId = cleanString(portal.quote_id);
+    const quote = quoteMap.get(quoteId);
+    const lead = leadMap.get(cleanString(quote?.lead_id));
+    const messages = messagesByPortal.get(cleanString(portal.id)) ?? [];
+    const lastMessage = messages[messages.length - 1];
+    const lastPreview =
+      cleanString(lastMessage?.body) ||
+      (cleanString(lastMessage?.attachment_name)
+        ? `Attachment: ${cleanString(lastMessage.attachment_name)}`
+        : "");
+
+    return {
+      quoteId,
+      portalToken: cleanString(portal.access_token),
+      leadName: cleanString(lead?.name) || "Unknown Lead",
+      leadEmail: cleanString(lead?.email) || "",
+      status: cleanString(quote?.status) || "new",
+      tier: cleanString(quote?.tier_recommended) || "growth",
+      lastMessagePreview: lastPreview,
+      lastMessageAt: cleanString(lastMessage?.created_at) || "",
+      lastMessageRole: lastMessage ? normalizeSenderRole(lastMessage.sender_role) : null,
+      unreadCount: messages.filter(
+        (message) =>
+          normalizeSenderRole(message.sender_role) === "client" && !safeDate(message.read_at)
+      ).length,
+    };
+  });
 }
 
 export async function submitAssetByPortalToken(input: {

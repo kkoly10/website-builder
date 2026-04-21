@@ -124,10 +124,52 @@ export default function AdminPipelineClient({
 }: {
   initialProjects: AdminProjectData[];
 }) {
-  const [projects] = useState(initialProjects ?? []);
+  const [projects, setProjects] = useState(initialProjects ?? []);
   const [selectedId, setSelectedId] = useState(initialProjects[0]?.quoteId ?? "");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("urgency");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function refreshConversations() {
+      try {
+        const res = await fetch("/api/internal/admin/messages");
+        const json = await res.json().catch(() => ({}));
+
+        if (!res.ok || !Array.isArray(json?.conversations) || cancelled) return;
+
+        const summaryByQuote = new Map<string, AdminProjectData["messageSummary"]>(
+          json.conversations.map((conversation: any) => [
+            String(conversation.quoteId || ""),
+            {
+              unreadCount: Number(conversation.unreadCount || 0),
+              lastPreview: String(conversation.lastMessagePreview || ""),
+              lastAt: String(conversation.lastMessageAt || ""),
+              lastRole: conversation.lastMessageRole || null,
+            },
+          ])
+        );
+
+        setProjects((current) =>
+          current.map((project) => {
+            const nextSummary = summaryByQuote.get(project.quoteId);
+            return nextSummary ? { ...project, messageSummary: nextSummary } : project;
+          })
+        );
+      } catch {
+        // Silent polling refresh.
+      }
+    }
+
+    refreshConversations();
+    const timer = setInterval(refreshConversations, 30_000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, []);
 
   const filteredProjects = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -231,7 +273,14 @@ export default function AdminPipelineClient({
                     onClick={() => setSelectedId(project.quoteId)}
                   >
                     <div className="adminProjectRowHead">
-                      <div className="adminProjectName">{project.leadName}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div className="adminProjectName">{project.leadName}</div>
+                        {project.messageSummary.unreadCount > 0 ? (
+                          <span className="adminMessageBadge">
+                            {project.messageSummary.unreadCount} new
+                          </span>
+                        ) : null}
+                      </div>
                       <div className="adminProjectValue">{money(adjustedTarget(project))}</div>
                     </div>
 
@@ -249,6 +298,22 @@ export default function AdminPipelineClient({
                       </span>
                       <span className="adminNextAction">{nextAction(project)}</span>
                     </div>
+
+                    {project.messageSummary.lastPreview ? (
+                      <div className="adminProjectMessagePreview">
+                        <span className="adminProjectMessageRole">
+                          {pretty(project.messageSummary.lastRole)}
+                        </span>
+                        <span className="adminProjectMessageText">
+                          {project.messageSummary.lastPreview}
+                        </span>
+                        {project.messageSummary.lastAt ? (
+                          <span className="adminProjectMessageTime">
+                            {fmtDate(project.messageSummary.lastAt)}
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </button>
                 );
               })}
@@ -308,6 +373,15 @@ export default function AdminPipelineClient({
                 key={selectedProject.quoteId}
                 initialData={selectedProject}
                 embedded
+                onMessageSummaryChange={(summary) => {
+                  setProjects((current) =>
+                    current.map((project) =>
+                      project.quoteId === selectedProject.quoteId
+                        ? { ...project, messageSummary: summary }
+                        : project
+                    )
+                  );
+                }}
               />
             </>
           ) : (

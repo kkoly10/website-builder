@@ -32,6 +32,21 @@ type PortalRevision = {
   createdAt: string;
 };
 
+type PortalMessage = {
+  id: string;
+  senderRole: "client" | "studio" | "internal";
+  senderName: string;
+  body: string;
+  readAt: string | null;
+  createdAt: string;
+  attachment: {
+    url: string | null;
+    name: string | null;
+    type: string | null;
+    size: number | null;
+  } | null;
+};
+
 type ScopeVersion = {
   id: string;
   createdAt: string;
@@ -171,6 +186,7 @@ type PortalBundle = {
     revisions: PortalRevision[];
     waitingOn: string;
   };
+  messages: PortalMessage[];
 };
 
 /* ═══════════════════════════════════
@@ -196,6 +212,43 @@ function fmtDate(value?: string | null) {
 function pretty(value?: string | null) {
   if (!value) return "—";
   return value.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+}
+
+function fmtDateTime(value?: string | null) {
+  if (!value) return "â€”";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function groupMessagesByDay(messages: PortalMessage[]) {
+  const groups: { key: string; label: string; items: PortalMessage[] }[] = [];
+
+  for (const message of messages) {
+    const date = new Date(message.createdAt || "");
+    const key = Number.isNaN(date.getTime()) ? "unknown" : date.toLocaleDateString("en-CA");
+    const label = Number.isNaN(date.getTime())
+      ? "Unknown day"
+      : date.toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        });
+    const last = groups[groups.length - 1];
+
+    if (!last || last.key !== key) {
+      groups.push({ key, label, items: [message] });
+    } else {
+      last.items.push(message);
+    }
+  }
+
+  return groups;
 }
 
 function isReadyState(value?: string | null) {
@@ -456,6 +509,9 @@ export default function PortalClient({
   /* ── Feedback form state ── */
   const [revisionMessage, setRevisionMessage] = useState("");
   const [revisionPriority, setRevisionPriority] = useState<"low" | "normal" | "high">("normal");
+  const [messageBody, setMessageBody] = useState("");
+  const [messageFile, setMessageFile] = useState<File | null>(null);
+  const messageFileRef = useRef<HTMLInputElement>(null);
 
   /* ── Polling ── */
   const [refreshing, setRefreshing] = useState(false);
@@ -491,6 +547,7 @@ export default function PortalClient({
   const story = useMemo(() => getStoryContent(phase), [phase]);
   const launchReadiness = useMemo(() => computeClientLaunchReadiness(bundle), [bundle]);
   const depositPaid = String(bundle.quote.deposit.status || "").toLowerCase() === "paid";
+  const groupedMessages = useMemo(() => groupMessagesByDay(bundle.messages), [bundle.messages]);
 
   /* ── Actions ── */
   async function applyAction(body: Record<string, unknown>) {
@@ -578,6 +635,49 @@ export default function PortalClient({
     });
     setRevisionMessage("");
     setRevisionPriority("normal");
+  }
+
+  async function submitMessage(e: React.FormEvent) {
+    e.preventDefault();
+    if (!messageBody.trim() && !messageFile) return;
+
+    setSaving(true);
+    setError("");
+
+    try {
+      let res: Response;
+
+      if (messageFile) {
+        const form = new FormData();
+        form.append("body", messageBody.trim());
+        form.append("file", messageFile);
+        form.append("senderRole", "client");
+        res = await fetch(`/api/portal/${token}/messages`, {
+          method: "POST",
+          body: form,
+        });
+      } else {
+        res = await fetch(`/api/portal/${token}/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            senderRole: "client",
+            body: messageBody.trim(),
+          }),
+        });
+      }
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to send message.");
+      await refreshBundle(true);
+      setMessageBody("");
+      setMessageFile(null);
+      if (messageFileRef.current) messageFileRef.current.value = "";
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send message.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   /* ═══════════════════════════════════
@@ -819,6 +919,129 @@ export default function PortalClient({
       </div>
 
       {/* ── Content & Assets + Feedback ── */}
+      <div className="portalPanel fadeUp" style={{ animationDelay: "0.18s", marginBottom: "1rem" }}>
+        <div className="portalPanelHeader">
+          <div>
+            <h2 className="portalPanelTitle">Messages</h2>
+            <div className="portalMessageIntro">
+              Ask questions, confirm approvals, or send the studio anything you want us to see.
+            </div>
+          </div>
+          <span className="portalPanelCount">
+            {bundle.messages.length} message{bundle.messages.length === 1 ? "" : "s"}
+          </span>
+        </div>
+
+        <div className="portalMessageThread">
+          {groupedMessages.length === 0 ? (
+            <div className="portalEmptyState">No messages yet</div>
+          ) : (
+            groupedMessages.map((group) => (
+              <div key={group.key}>
+                <div className="portalMessageDay">
+                  <span />
+                  <div>{group.label}</div>
+                  <span />
+                </div>
+
+                <div className="portalMessageGroup">
+                  {group.items.map((entry) => (
+                    <div
+                      key={entry.id}
+                      className={`portalMessageCard ${
+                        entry.senderRole === "studio"
+                          ? "portalMessageCardStudio"
+                          : "portalMessageCardClient"
+                      }`}
+                    >
+                      <div
+                        className={`portalMessageAvatar ${
+                          entry.senderRole === "studio"
+                            ? "portalMessageAvatarStudio"
+                            : "portalMessageAvatarClient"
+                        }`}
+                      >
+                        {entry.senderRole === "studio"
+                          ? "CS"
+                          : (entry.senderName || "CL").slice(0, 2)}
+                      </div>
+
+                      <div className="portalMessageBody">
+                        <div className="portalMessageMeta">
+                          <div className="portalMessageSender">{entry.senderName}</div>
+                          <span className="pill">{pretty(entry.senderRole)}</span>
+                          <span className="portalMessageTime">{fmtDateTime(entry.createdAt)}</span>
+                          {entry.senderRole === "studio" ? (
+                            <span className="portalMessageTime">
+                              {entry.readAt ? `Seen ${fmtDateTime(entry.readAt)}` : "Unread"}
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {entry.body ? <div className="portalMessageText">{entry.body}</div> : null}
+
+                        {entry.attachment ? (
+                          <div className="portalMessageAttachmentRow">
+                            <a
+                              href={entry.attachment.url || "#"}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="portalAttachmentChip"
+                            >
+                              <span>{entry.attachment.name || "Attachment"}</span>
+                              {entry.attachment.size ? (
+                                <span className="portalAttachmentMeta">
+                                  {(entry.attachment.size / 1024).toFixed(0)} KB
+                                </span>
+                              ) : null}
+                            </a>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <form onSubmit={submitMessage} className="portalMessageComposer">
+          <textarea
+            className="portalFeedbackArea"
+            placeholder="Write a message to the studio..."
+            value={messageBody}
+            onChange={(e) => setMessageBody(e.target.value)}
+          />
+          <div className="portalMessageActions">
+            <div className="portalMessageAttachWrap">
+              <button
+                type="button"
+                className="btn btnGhost"
+                style={{ fontSize: 12 }}
+                onClick={() => messageFileRef.current?.click()}
+              >
+                Attach file
+              </button>
+              <input
+                ref={messageFileRef}
+                type="file"
+                style={{ display: "none" }}
+                onChange={(e) => setMessageFile(e.target.files?.[0] ?? null)}
+              />
+              {messageFile ? (
+                <div className="portalAttachmentMeta">
+                  {messageFile.name} ({(messageFile.size / 1024).toFixed(0)} KB)
+                </div>
+              ) : null}
+            </div>
+            <button type="submit" className="portalFeedbackBtn" disabled={saving}>
+              {saving ? "Sending..." : "Send message"}
+            </button>
+          </div>
+        </form>
+      </div>
+
       <div className="portalGrid2">
         {/* Assets */}
         <div className="portalPanel fadeUp" style={{ animationDelay: "0.2s" }}>

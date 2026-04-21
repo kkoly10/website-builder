@@ -57,7 +57,7 @@ export async function GET(
 ) {
   try {
     const { token } = await getParams(ctx);
-    const result = await getCustomerPortalViewByToken(token);
+    const result = await getCustomerPortalViewByToken(token, { markReadAs: "client" });
     return NextResponse.json(withRedactedLead(result), { status: result.ok ? 200 : 404 });
   } catch (err: any) {
     return NextResponse.json(

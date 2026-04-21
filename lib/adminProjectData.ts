@@ -42,6 +42,26 @@ type ChangeOrder = {
   scopeImpact: string;
   status: string;
 };
+type PortalMessage = {
+  id: string;
+  senderRole: "client" | "studio" | "internal";
+  senderName: string;
+  body: string;
+  readAt: string | null;
+  createdAt: string;
+  attachment: {
+    url: string | null;
+    name: string | null;
+    type: string | null;
+    size: number | null;
+  } | null;
+};
+type MessageSummary = {
+  unreadCount: number;
+  lastPreview: string;
+  lastAt: string;
+  lastRole: "client" | "studio" | "internal" | null;
+};
 
 export type AdminProjectData = {
   quoteId: string;
@@ -103,6 +123,8 @@ export type AdminProjectData = {
     assets: ClientAsset[];
     revisions: ClientRevision[];
   };
+  messages: PortalMessage[];
+  messageSummary: MessageSummary;
   workspaceHistory: {
     scopeVersions: ScopeVersion[];
     changeOrders: ChangeOrder[];
@@ -117,7 +139,22 @@ function safeObj(value: unknown) {
   return value as Record<string, any>;
 }
 
+function summarizeMessages(messages: PortalMessage[]): MessageSummary {
+  const lastMessage = messages[messages.length - 1];
+  return {
+    unreadCount: messages.filter(
+      (message) => message.senderRole === "client" && !message.readAt
+    ).length,
+    lastPreview:
+      lastMessage?.body ||
+      (lastMessage?.attachment?.name ? `Attachment: ${lastMessage.attachment.name}` : ""),
+    lastAt: lastMessage?.createdAt || "",
+    lastRole: lastMessage?.senderRole || null,
+  };
+}
+
 function toAdminProjectData(workspace: any, debug: Record<string, any>): AdminProjectData {
+  const messages: PortalMessage[] = Array.isArray(workspace.messages) ? workspace.messages : [];
   return {
     quoteId: workspace.quote.id,
     publicToken: workspace.quote.publicToken,
@@ -187,6 +224,8 @@ function toAdminProjectData(workspace: any, debug: Record<string, any>): AdminPr
       assets: workspace.portalState.assets,
       revisions: workspace.portalState.revisions,
     },
+    messages,
+    messageSummary: summarizeMessages(messages),
     workspaceHistory: workspace.history,
     proposalText: debug.generatedProposal || "",
     preContractDraft: debug.generatedPreContract || "",
@@ -197,7 +236,7 @@ function toAdminProjectData(workspace: any, debug: Record<string, any>): AdminPr
 
 export async function getAdminProjectDataByQuoteId(quoteId: string) {
   const [workspaceRes, quoteRes] = await Promise.all([
-    getCustomerPortalViewByQuoteId(quoteId),
+    getCustomerPortalViewByQuoteId(quoteId, { includeInternal: true }),
     supabaseAdmin.from("quotes").select("id, debug").eq("id", quoteId).maybeSingle(),
   ]);
 
