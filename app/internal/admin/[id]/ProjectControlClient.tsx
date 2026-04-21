@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useMemo } from "react";
+import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
 
 /* ═══════════════════════════════════
    TYPES
@@ -508,8 +509,8 @@ export default function ProjectControlClient({ initialData }: { initialData: Pro
                 onChange={(e) => setData((p) => ({ ...p, adminPricing: { ...p.adminPricing, discountPercent: Number(e.target.value || 0) } }))} /></Field>
               <Field label="Flat adjustment"><input className="input" type="number" value={data.adminPricing.flatAdjustment}
                 onChange={(e) => setData((p) => ({ ...p, adminPricing: { ...p.adminPricing, flatAdjustment: Number(e.target.value || 0) } }))} /></Field>
-              <Field label="Hourly rate"><input className="input" type="number" value={data.adminPricing.hourlyRate}
-                onChange={(e) => setData((p) => ({ ...p, adminPricing: { ...p.adminPricing, hourlyRate: Number(e.target.value || 40) } }))} /></Field>
+                <Field label="Hourly rate"><input className="input" type="number" value={data.adminPricing.hourlyRate}
+                  onChange={(e) => setData((p) => ({ ...p, adminPricing: { ...p.adminPricing, hourlyRate: Number(e.target.value || INTERNAL_HOURLY_RATE) } }))} /></Field>
               <ReadOnly label="Adjusted target" value={money(adjustedTarget)} />
             </div>
             <Field label="Pricing notes"><textarea className="textarea" rows={3} value={data.adminPricing.notes}

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
 
 /* ═══════════════════════════════════
    TYPES
@@ -555,9 +556,9 @@ export default function AdminPipelineClient({ initialRows }: { initialRows: Pipe
                       </label>
                       <label>
                         <span className="fieldLabel">Hourly rate</span>
-                        <input className="input" type="number" value={row.adminPricing?.hourlyRate ?? 40}
+                        <input className="input" type="number" value={row.adminPricing?.hourlyRate ?? INTERNAL_HOURLY_RATE}
                           onChange={(e) => updateRowLocal(row.quoteId, (r) => ({
-                            ...r, adminPricing: { ...r.adminPricing, hourlyRate: Number(e.target.value || 40) },
+                            ...r, adminPricing: { ...r.adminPricing, hourlyRate: Number(e.target.value || INTERNAL_HOURLY_RATE) },
                           }))} />
                       </label>
                     </div>

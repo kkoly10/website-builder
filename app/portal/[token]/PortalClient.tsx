@@ -517,15 +517,28 @@ export default function PortalClient({
       }
     } else {
       if (!assetUrl.trim()) return;
-      await applyAction({
-        type: "asset_add",
-        asset: {
-          category: assetCategory,
-          label: assetLabel.trim(),
-          url: assetUrl.trim(),
-          notes: assetNotes.trim(),
-        },
-      });
+      setSaving(true);
+      setError("");
+      try {
+        const res = await fetch("/api/portal/assets", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token,
+            assetType: assetCategory,
+            label: assetLabel.trim(),
+            url: assetUrl.trim(),
+            notes: assetNotes.trim(),
+          }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json?.ok) throw new Error(json?.error || "Upload failed.");
+        await refreshBundle(true);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Upload failed.");
+      } finally {
+        setSaving(false);
+      }
     }
 
     setAssetLabel("");
