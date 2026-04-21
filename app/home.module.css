@@ -1,146 +1,504 @@
-.page { padding-bottom: 2rem; }
+.page {
+  padding-bottom: 2rem;
+}
 
-.hero { padding: 6.6rem 0 5.2rem; }
-.heroLabel {
-  font: 500 12px/1 var(--font-mono);
+.hero {
+  padding: 6rem 0 4rem;
+}
+
+.heroLabel,
+.sectionLabel,
+.proofLabel,
+.portalKicker,
+.portalEyebrow,
+.howStepNum,
+.tierName,
+.portalCardTitle {
+  margin: 0;
+  font: 500 11px/1.3 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.heroLabel,
+.sectionLabel,
+.proofLabel,
+.portalCardTitle {
   color: var(--muted);
-  letter-spacing: .04em;
-  margin: 0 0 2.1rem;
+}
+
+.heroLabel::before,
+.sectionLabel::before {
+  content: "/ ";
+  color: var(--accent);
+}
+
+.heroTitle,
+.sectionTitle,
+.portalHero h3,
+.howStep h3,
+.lane h3,
+.tierPrice,
+.closing h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  letter-spacing: -0.04em;
+}
+
+.heroTitle {
+  margin-top: 1rem;
+  max-width: 12ch;
+  font-size: clamp(3rem, 8vw, 7rem);
+  line-height: 0.92;
+}
+
+.heroTitle span {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.heroSub,
+.diffLede,
+.howStep p,
+.tierDesc,
+.pricingLede,
+.lane p,
+.portalCardMeta {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.heroSub {
+  margin-top: 1.5rem;
+  max-width: 56ch;
+  font-size: clamp(1.02rem, 1.5vw, 1.18rem);
+  line-height: 1.75;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: 2rem;
+}
+
+.heroSecondaryCta {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  padding: 0.95rem 0;
+  border-bottom: 1px solid var(--ink);
+  font-size: 15px;
+  font-weight: 500;
 }
-.heroLabel::before { content: ""; width: 28px; height: 1px; background: var(--accent); }
-.heroTitle {
-  margin: 0;
-  font: 700 clamp(3rem, 9vw, 8rem)/0.92 var(--font-display);
-  letter-spacing: -0.045em;
-  max-width: 13ch;
+
+.proof {
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
 }
-.heroTitle span { border-bottom: 4px solid var(--accent); padding-bottom: .2rem; }
-.heroSub { margin: 2rem 0 0; max-width: 56ch; color: var(--ink-2); font-size: clamp(1.05rem, 1.5vw, 1.3rem); }
-.heroActions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2.1rem; align-items: center; }
-.heroSecondaryCta { padding: 0.95rem 0; border-bottom: 1px solid var(--ink); font-size: 16px; font-weight: 500; }
 
-.proof { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 2rem 0; }
-.proofGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2rem; }
-.proofValue { font: 600 clamp(2rem, 4vw, 2.75rem)/1 var(--font-display); letter-spacing: -0.03em; }
-.proofLabel { margin-top: .55rem; font: 500 11px/1.3 var(--font-mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.proofGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
 
-.diff { padding: 7rem 0 6.2rem; }
-.diffHead { display: grid; grid-template-columns: 1fr 1.4fr; gap: 5rem; margin-bottom: 3rem; align-items: end; }
-.sectionLabel { margin: 0; font: 500 12px/1 var(--font-mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
-.sectionLabel::before { content: "/ "; color: var(--accent); }
-.sectionTitle { margin: 1.1rem 0 0; font: 600 clamp(2rem, 5vw, 4.4rem)/1.02 var(--font-display); letter-spacing: -0.035em; }
-.diffLede { margin: 0; font-size: 1.15rem; line-height: 1.65; color: var(--ink-2); max-width: 52ch; }
+.proofItem {
+  padding: 1.4rem 1rem;
+  border-left: 1px solid var(--rule);
+}
+
+.proofItem:first-child {
+  border-left: none;
+}
+
+.proofValue {
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  line-height: 1;
+}
+
+.proofLabel {
+  margin-top: 0.6rem;
+}
+
+.diff,
+.how,
+.pricing,
+.closing {
+  padding: 4.8rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.diffHead,
+.pricingHead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 2rem;
+  align-items: end;
+  margin-bottom: 2rem;
+}
+
+.sectionTitle {
+  margin-top: 0.8rem;
+  max-width: 14ch;
+  font-size: clamp(2.1rem, 4vw, 4.4rem);
+  line-height: 1.02;
+}
+
+.diffLede,
+.pricingLede {
+  max-width: 52ch;
+  line-height: 1.75;
+}
 
 .portalFrame {
+  border: 1px solid color-mix(in srgb, var(--paper) 16%, transparent);
   background: var(--ink);
-  border-radius: 6px;
-  padding: 14px 14px 0;
-  box-shadow: 0 1px 0 rgba(255,255,255,.05) inset, 0 30px 60px -20px rgba(12,12,12,.35), 0 60px 100px -40px rgba(12,12,12,.25);
+  padding: 1.35rem;
 }
-.portalBar { display: flex; align-items: center; gap: 8px; padding: 4px 0 14px; }
-.portalBar span { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.13); }
-.portalBar .portalUrl {
-  width: auto;
-  height: auto;
-  background: transparent;
-  margin-left: 14px;
-  font: 500 11px/1 var(--font-mono);
-  color: rgba(255,255,255,.45);
+
+.portalHead,
+.portalHero {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
 }
-.portalBody {
-  background: #0a0a0a;
-  color: #e8e3d6;
-  border-radius: 4px 4px 0 0;
-  padding: 2.2rem 2.4rem 2.5rem;
+
+.portalHead {
+  align-items: center;
 }
-.portalKicker { margin: 0 0 1rem; font: 500 11px/1 var(--font-mono); color: var(--accent); letter-spacing: .06em; }
-.portalBody h3 { margin: 0; font: 600 clamp(1.8rem, 4vw, 2.4rem)/1.06 var(--font-display); color: #f3ede1; }
-.portalBody h3 em { color: var(--accent-soft); font-style: italic; }
-.portalCta {
-  display: inline-block;
-  margin-top: .9rem;
-  margin-bottom: 1.8rem;
-  border-bottom: 1px solid var(--accent);
-  padding-bottom: 4px;
+
+.portalKicker {
+  color: color-mix(in srgb, var(--paper) 72%, transparent);
+}
+
+.portalUrl {
+  margin: 0;
+  font: 500 11px/1.3 var(--font-mono);
+  color: color-mix(in srgb, var(--paper) 42%, transparent);
+  letter-spacing: 0.08em;
+}
+
+.portalHero {
+  margin-top: 2rem;
+  align-items: end;
+}
+
+.portalEyebrow {
   color: var(--accent-soft);
-  font-size: 14px;
 }
-.journey { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 1.5rem; position: relative; }
-.journey::before { content: ""; position: absolute; top: 6px; left: 6px; right: 6px; height: 1px; background: rgba(255,255,255,.09); }
-.jstep { position: relative; padding-top: 1.35rem; }
-.jdot { position: absolute; top: 1px; left: 0; width: 12px; height: 12px; border-radius: 50%; background: #1c1c1c; border: 1px solid rgba(255,255,255,.18); }
-.jstepDone .jdot { background: var(--accent); border-color: var(--accent); }
-.jstepNow .jdot { background: #0a0a0a; border: 2px solid var(--accent); width: 14px; height: 14px; box-shadow: 0 0 0 4px rgba(194,56,31,.18); }
-.jname { font: 500 10px/1 var(--font-mono); color: rgba(232,227,214,.55); letter-spacing: .04em; }
-.jstepDone .jname,.jstepNow .jname { color: rgba(232,227,214,.88); }
 
-.portalCards { display: grid; grid-template-columns: repeat(3, 1fr); gap: .85rem; }
-.portalCard { border: 1px solid rgba(255,255,255,.08); border-radius: 3px; background: rgba(255,255,255,.015); padding: 1rem 1rem 1.1rem; }
-.portalCardLive { border-color: rgba(194,56,31,.5); }
-.portalCardTitle { margin: 0 0 .65rem; font: 500 10px/1 var(--font-mono); color: rgba(232,227,214,.45); letter-spacing: .06em; }
-.portalCardValue { margin: 0; font: 500 22px/1 var(--font-display); color: #f3ede1; letter-spacing: -0.01em; }
-.portalCardLive .portalCardValue { color: var(--accent-soft); }
-.portalCardMeta { margin: .4rem 0 0; font-size: 12px; color: rgba(232,227,214,.5); }
-
-.how { padding: 6.6rem 0; border-top: 1px solid var(--rule); }
-.howHead { margin-bottom: 4rem; max-width: 720px; }
-.howSteps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
-.howStep { padding: 0 2.2rem 0 0; border-left: 1px solid var(--rule); padding-left: 2.2rem; }
-.howStep:first-child { border-left: none; padding-left: 0; }
-.howStepNum { margin: 0 0 1rem; font: 500 12px/1 var(--font-mono); color: var(--accent); letter-spacing: .08em; }
-.howStep h3 { margin: 0 0 .8rem; font: 600 1.75rem/1.1 var(--font-display); letter-spacing: -0.02em; }
-.howStep p { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.65; }
-
-.pricing { padding: 6.6rem 0; border-top: 1px solid var(--rule); background: var(--paper-2); }
-.pricingHead { display: grid; grid-template-columns: 1fr 1.2fr; gap: 5rem; margin-bottom: 4rem; align-items: end; }
-.pricingLede { margin: 0; font-size: 18px; color: var(--ink-2); line-height: 1.6; max-width: 50ch; }
-.tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-.tier { background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 2rem; display: flex; flex-direction: column; }
-.tierFeatured { border-color: var(--ink); position: relative; }
-.tierFeatured::before {
-  content: "Most projects";
-  position: absolute;
-  top: -11px;
-  left: 2rem;
-  background: var(--accent);
+.portalHero h3 {
+  margin-top: 0.65rem;
+  max-width: 11ch;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1;
   color: var(--paper);
-  font: 500 10px/1 var(--font-mono);
-  padding: 5px 10px;
-  letter-spacing: .05em;
 }
-.tierName { margin: 0 0 .9rem; font: 500 11px/1 var(--font-mono); color: var(--muted); letter-spacing: .08em; }
-.tierPrice { margin: 0; font: 600 46px/1 var(--font-display); letter-spacing: -0.03em; }
-.tierPrice span { margin-right: 6px; font: 400 14px/1 var(--font-body); color: var(--muted); }
-.tierDesc { margin: .8rem 0 1rem; color: var(--muted); font-size: 14px; border-bottom: 1px solid var(--rule); padding-bottom: 1rem; }
-.tier ul { margin: 0; padding: 0; list-style: none; font-size: 14px; line-height: 1.7; flex: 1; }
-.tier li { position: relative; padding-left: 18px; }
-.tier li::before { content: "+"; position: absolute; left: 0; color: var(--accent); }
-.tierCta { margin-top: 1.3rem; padding: 14px 0; text-align: center; border: 1px solid var(--ink); font-weight: 500; background: transparent; }
-.tierFeatured .tierCta { background: var(--ink); color: var(--paper); }
 
-.closing { padding: 7.5rem 0 5.6rem; border-top: 1px solid var(--rule); }
-.closing h2 { margin: 0 0 2.4rem; font: 700 clamp(2.8rem, 7vw, 6.8rem)/0.95 var(--font-display); letter-spacing: -0.04em; max-width: 14ch; }
-.closing h2 em { color: var(--accent); font-style: italic; }
+.portalHero h3 em {
+  color: var(--accent-soft);
+  font-style: italic;
+}
 
-.also { border-top: 1px solid var(--rule); padding: 3.4rem 0; }
-.alsoGrid { display: grid; grid-template-columns: 1fr 2.4fr; gap: 3.5rem; align-items: start; }
-.lanes { display: grid; grid-template-columns: 1fr 1fr; gap: 2.6rem; }
-.lane { border-top: 1px solid var(--rule); padding-top: 1.1rem; }
-.lane h4 { margin: 0 0 .6rem; font: 600 22px/1.1 var(--font-display); letter-spacing: -0.02em; }
-.lane p { margin: 0 0 .8rem; color: var(--muted); font-size: 14px; line-height: 1.6; }
-.laneLink { font: 500 12px/1 var(--font-mono); border-bottom: 1px solid var(--ink); padding-bottom: 2px; }
+.portalCta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0.8rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--paper) 18%, transparent);
+  background: color-mix(in srgb, var(--ink) 86%, var(--paper) 14%);
+  color: var(--paper);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.journey {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid color-mix(in srgb, var(--paper) 14%, transparent);
+}
+
+.jstep {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.jdot {
+  width: 14px;
+  height: 14px;
+  border: 1px solid color-mix(in srgb, var(--paper) 18%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 70%, var(--paper) 30%);
+}
+
+.jname {
+  font: 500 10px/1.3 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--paper) 62%, transparent);
+}
+
+.jstepDone .jdot {
+  background: var(--paper);
+  border-color: var(--paper);
+}
+
+.jstepDone .jname {
+  color: var(--paper);
+}
+
+.jstepActive .jdot {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.jstepActive .jname {
+  color: var(--accent-soft);
+}
+
+.portalCards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-top: 2rem;
+}
+
+.portalCard {
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--paper) 14%, transparent);
+  background: color-mix(in srgb, var(--ink) 82%, var(--paper) 18%);
+}
+
+.portalCardValue {
+  margin: 0.6rem 0 0;
+  font: 600 clamp(1.4rem, 3vw, 2rem)/1 var(--font-display);
+  letter-spacing: -0.03em;
+  color: var(--paper);
+}
+
+.portalCardMeta {
+  margin-top: 0.55rem;
+  color: color-mix(in srgb, var(--paper) 68%, var(--muted));
+  line-height: 1.6;
+}
+
+.howHead {
+  margin-bottom: 2rem;
+}
+
+.howSteps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.howStep {
+  padding: 0 1.5rem;
+  border-left: 1px solid var(--rule);
+}
+
+.howStep:first-child {
+  padding-left: 0;
+  border-left: none;
+}
+
+.howStep:last-child {
+  padding-right: 0;
+}
+
+.howStepNum {
+  color: var(--accent);
+}
+
+.howStep h3 {
+  margin-top: 1rem;
+  font-size: clamp(1.35rem, 2.5vw, 1.9rem);
+  line-height: 1.08;
+}
+
+.howStep p {
+  margin-top: 0.85rem;
+  line-height: 1.75;
+}
+
+.pricing {
+  background: var(--paper-2);
+}
+
+.tiers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.tier {
+  padding: 1.6rem;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  display: grid;
+  gap: 0.9rem;
+}
+
+.tierFeatured {
+  border-color: var(--ink);
+}
+
+.tierName {
+  color: var(--muted);
+}
+
+.tierPrice {
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1;
+}
+
+.tierDesc {
+  line-height: 1.7;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.tier ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.tier li {
+  position: relative;
+  padding-left: 1rem;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+.tier li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.7rem;
+  width: 4px;
+  height: 4px;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.tierCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: 0.5rem;
+  border: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tierFeatured .tierCta {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.closing h2 {
+  margin-top: 0.8rem;
+  max-width: 12ch;
+  font-size: clamp(2.6rem, 6vw, 6rem);
+  line-height: 0.95;
+}
+
+.closing h2 em {
+  color: var(--accent);
+  font-style: italic;
+}
+
+.closing .btn {
+  margin-top: 2rem;
+}
+
+.also {
+  padding: 2.8rem 0 3rem;
+}
+
+.alsoGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 220px) 1fr;
+  gap: 2rem;
+}
+
+.lanes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.lane {
+  padding: 1.1rem 0 0;
+  border-top: 1px solid var(--rule);
+}
+
+.lane h3 {
+  font-size: clamp(1.35rem, 2.4vw, 1.8rem);
+  line-height: 1.08;
+}
+
+.lane p {
+  margin-top: 0.8rem;
+  line-height: 1.7;
+}
+
+.laneLink {
+  display: inline-flex;
+  margin-top: 1rem;
+  font: 500 11px/1.3 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 
 @media (max-width: 980px) {
-  .hero { padding: 4.5rem 0 4rem; }
-  .proofGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-  .diffHead, .pricingHead, .alsoGrid { grid-template-columns: 1fr; gap: 1.2rem; }
-  .portalCards, .tiers, .howSteps, .lanes { grid-template-columns: 1fr; }
-  .journey { grid-template-columns: 1fr 1fr; row-gap: .8rem; }
-  .journey::before { display: none; }
-  .howStep { border-left: none; padding-left: 0; padding-bottom: 1.8rem; margin-bottom: 1.8rem; border-bottom: 1px solid var(--rule); }
-  .howStep:last-child { margin-bottom: 0; }
-  .portalBody { padding: 1.3rem; }
+  .hero {
+    padding: 4.2rem 0 3rem;
+  }
+
+  .proofGrid,
+  .portalCards,
+  .howSteps,
+  .tiers,
+  .alsoGrid,
+  .lanes,
+  .diffHead,
+  .pricingHead,
+  .journey {
+    grid-template-columns: 1fr;
+  }
+
+  .proofItem {
+    border-left: none;
+    border-top: 1px solid var(--rule);
+  }
+
+  .proofItem:first-child {
+    border-top: none;
+  }
+
+  .portalHead,
+  .portalHero {
+    display: grid;
+  }
+
+  .howStep {
+    padding: 1.2rem 0 0;
+    border-left: none;
+    border-top: 1px solid var(--rule);
+  }
+
+  .howStep:first-child {
+    padding-top: 0;
+    border-top: none;
+  }
 }

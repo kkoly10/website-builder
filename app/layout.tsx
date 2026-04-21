@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import "./globals.css";
-import BrandLogo from "@/components/brand/BrandLogo";
 import SiteFooter from "@/components/site/SiteFooter";
+import TopNav from "@/components/site/TopNav";
 import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -50,23 +49,10 @@ export default async function RootLayout({
     admin = false;
   }
 
-  const startHereHref = "/#services";
+  const startProjectHref = "/build/intro";
   const portalHref = userEmail
     ? "/portal"
     : `/login?next=${encodeURIComponent("/portal")}`;
-
-  const mobilePrimaryHref = userEmail ? "/portal" : startHereHref;
-  const mobilePrimaryLabel = userEmail ? "Portal" : "Start";
-  const mobilePrimaryAria = userEmail ? "Open client portal" : "Start Here";
-
-  const navLinks = [
-    { href: "/websites", label: "Websites" },
-    { href: "/ecommerce", label: "E-commerce" },
-    { href: "/systems", label: "Workflow Automation" },
-    { href: "/process", label: "How It Works" },
-    { href: "/faq", label: "FAQ" },
-    { href: portalHref, label: "Client Portal" },
-  ];
 
   return (
     <html lang="en">
@@ -76,86 +62,12 @@ export default async function RootLayout({
         </a>
 
         <div className="siteShell">
-          <header className="topNav">
-            <div className="topNavInner">
-              <BrandLogo href="/" />
-
-              <nav className="navLinks navDesktop">
-                {navLinks.map((item) => (
-                  <Link key={item.label} href={item.href}>
-                    {item.label}
-                  </Link>
-                ))}
-
-                {userEmail ? (
-                  <>
-                    {admin ? <Link href="/internal/admin">Admin Dashboard</Link> : null}
-                    <form action="/auth/signout" method="post" className="navForm">
-                      <button type="submit" className="btn btnGhost">
-                        Sign out
-                      </button>
-                    </form>
-                  </>
-                ) : (
-                  <Link href={startHereHref} className="btn btnPrimary">
-                    Start Here <span className="btnArrow">→</span>
-                  </Link>
-                )}
-              </nav>
-
-              <div className="mobileHeaderActions">
-                <Link
-                  href={mobilePrimaryHref}
-                  className="btn btnPrimary mobilePrimaryCta"
-                  aria-label={mobilePrimaryAria}
-                >
-                  {mobilePrimaryLabel}
-                </Link>
-
-                <details className="mobileMenu">
-                  <summary
-                    className="mobileMenuSummary"
-                    aria-label="Open navigation menu"
-                  >
-                    <span />
-                    <span />
-                    <span />
-                  </summary>
-
-                  <div className="mobileMenuPanel">
-                    <div className="mobileMenuLinks">
-                      {navLinks.map((item) => (
-                        <Link key={item.label} href={item.href}>
-                          {item.label}
-                        </Link>
-                      ))}
-
-                      {admin ? <Link href="/internal/admin">Admin Dashboard</Link> : null}
-
-                      {userEmail ? (
-                        <form
-                          action="/auth/signout"
-                          method="post"
-                          className="mobileMenuForm"
-                        >
-                          <button
-                            type="submit"
-                            className="btn btnGhost mobileMenuSignout"
-                          >
-                            Sign out
-                          </button>
-                        </form>
-                      ) : (
-                        <Link href="/login" className="mobileMenuMutedLink">
-                          Log in
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                </details>
-              </div>
-            </div>
-          </header>
+          <TopNav
+            admin={admin}
+            portalHref={portalHref}
+            startProjectHref={startProjectHref}
+            userEmail={userEmail}
+          />
 
           <main id="main-content" className="mainContent" tabIndex={-1}>
             {children}

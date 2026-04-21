@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import styles from "./service-page.module.css";
 
@@ -67,8 +66,6 @@ export default function ServicePage({
   eyebrow,
   title,
   intro,
-  heroImage,
-  heroAlt,
   heroStats,
   primaryCta,
   secondaryCta,
@@ -99,20 +96,8 @@ export default function ServicePage({
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
-        <div className={styles.heroMedia}>
-          <Image
-            src={heroImage}
-            alt={heroAlt}
-            fill
-            priority
-            sizes="100vw"
-            className={styles.heroImage}
-          />
-          <div className={styles.heroOverlay} />
-        </div>
-
-        <div className={styles.shell}>
-          <div className={styles.heroContent}>
+        <div className="container">
+          <div className={styles.heroInner}>
             <p className={styles.eyebrow}>{eyebrow}</p>
             <h1 className={styles.heroTitle}>{title}</h1>
             <p className={styles.heroIntro}>{intro}</p>
@@ -125,60 +110,72 @@ export default function ServicePage({
                 {secondaryCta.label}
               </Link>
             </div>
-
-            <div className={styles.heroStats}>
-              {heroStats.map((stat) => (
-                <span key={stat} className={styles.statPill}>
-                  {stat}
-                </span>
-              ))}
-            </div>
           </div>
         </div>
       </section>
 
+      <section className={styles.proofBar}>
+        <div className={`container ${styles.proofGrid}`}>
+          {heroStats.map((item) => (
+            <div key={item} className={styles.proofItem}>
+              <p>{item}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className={styles.section}>
-        <div className={styles.shell}>
-          <div className={styles.fitSplit}>
-            <article className={styles.fitPanel}>
-              <p className={styles.sectionLabel}>Who this is for</p>
-              <h2 className={styles.sectionTitle}>{whoItsForTitle}</h2>
-              <ul className={styles.list}>
-                {whoItsFor.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-              <h3 className={styles.fitSubheading}>{bestFitTitle}</h3>
-              <ul className={styles.list}>
+        <div className={`container ${styles.fitSplit}`}>
+          <article className={styles.fitCard}>
+            <p className={styles.sectionLabel}>Good fit</p>
+            <h2 className={styles.sectionTitle}>{whoItsForTitle}</h2>
+            <ul className={styles.markerList}>
+              {whoItsFor.map((item) => (
+                <li key={item}>
+                  <span>+</span>
+                  <p>{item}</p>
+                </li>
+              ))}
+            </ul>
+
+            <div className={styles.fitNote}>
+              <p className={styles.fitNoteLabel}>Best fit</p>
+              <h3>{bestFitTitle}</h3>
+              <ul className={styles.noteList}>
                 {bestFit.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-            </article>
-            <article className={styles.notFitPanel}>
-              <p className={styles.sectionLabel}>Probably not first move</p>
-              <h2 className={styles.sectionTitle}>{notFitTitle}</h2>
-              <ul className={styles.list}>
-                {notFit.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </article>
-          </div>
+            </div>
+          </article>
+
+          <article className={styles.notFitCard}>
+            <p className={styles.sectionLabel}>Not the first move</p>
+            <h2 className={styles.sectionTitle}>{notFitTitle}</h2>
+            <ul className={styles.markerList}>
+              {notFit.map((item) => (
+                <li key={item}>
+                  <span>-</span>
+                  <p>{item}</p>
+                </li>
+              ))}
+            </ul>
+          </article>
         </div>
       </section>
 
       <section className={styles.section}>
-        <div className={styles.shell}>
-          <p className={styles.sectionLabel}>Problems we solve</p>
-          <h2 className={styles.sectionHeading}>{problemsTitle}</h2>
+        <div className="container">
+          <div className={styles.sectionHead}>
+            <p className={styles.sectionLabel}>Problems we solve</p>
+            <h2 className={styles.sectionTitle}>{problemsTitle}</h2>
+          </div>
+
           <div className={styles.problemGrid}>
             {problems.map((item, index) => (
               <article key={item} className={styles.problemCard}>
-                <span className={styles.problemIndex}>
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <p className={styles.cardText}>{item}</p>
+                <p className={styles.problemIndex}>0{index + 1}</p>
+                <p>{item}</p>
               </article>
             ))}
           </div>
@@ -186,14 +183,17 @@ export default function ServicePage({
       </section>
 
       <section className={styles.section}>
-        <div className={styles.shell}>
-          <p className={styles.sectionLabel}>What’s included</p>
-          <h2 className={styles.sectionHeading}>{includesTitle}</h2>
-          <div className={styles.gridThree}>
+        <div className="container">
+          <div className={styles.sectionHead}>
+            <p className={styles.sectionLabel}>What you get</p>
+            <h2 className={styles.sectionTitle}>{includesTitle}</h2>
+          </div>
+
+          <div className={styles.includesGrid}>
             {includes.map((group) => (
-              <article key={group.title} className={styles.card}>
-                <h3 className={styles.cardTitle}>{group.title}</h3>
-                <ul className={styles.list}>
+              <article key={group.title} className={styles.includeCard}>
+                <h3>{group.title}</h3>
+                <ul className={styles.noteList}>
                   {group.items.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
@@ -204,60 +204,42 @@ export default function ServicePage({
         </div>
       </section>
 
-      <section className={styles.darkBand}>
-        <div className={styles.shell}>
-          <div className={styles.pricingHeader}>
-            <div>
-              <p className={styles.darkLabel}>How it works</p>
-              <h2 className={styles.sectionHeading}>{processTitle}</h2>
-            </div>
-            <p className={styles.sectionText}>{pricingIntro}</p>
+      <section className={styles.processBand}>
+        <div className="container">
+          <div className={styles.sectionHead}>
+            <p className={styles.darkLabel}>Process</p>
+            <h2 className={styles.darkTitle}>{processTitle}</h2>
+            <p className={styles.darkIntro}>{processIntro}</p>
           </div>
+
           <div className={styles.processGrid}>
             {process.map((item) => (
               <article key={item.step} className={styles.processCard}>
-                <span className={styles.stepBadge}>{item.step}</span>
-                <h3 className={styles.cardTitle}>{item.title}</h3>
-                <p className={styles.cardText}>{item.detail}</p>
+                <p className={styles.processStep}>{item.step}</p>
+                <h3>{item.title}</h3>
+                <p>{item.detail}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className={styles.section}>
-        <div className={styles.shell}>
-          <div className={styles.pricingHeader}>
-            <div>
-              <p className={styles.sectionLabel}>Pricing approach</p>
-              <h2 className={styles.sectionHeading}>{pricingTitle}</h2>
-            </div>
-            <p className={styles.sectionText}>{processIntro}</p>
+      <section className={`${styles.section} ${styles.pricingSection}`}>
+        <div className="container">
+          <div className={styles.sectionHead}>
+            <p className={styles.sectionLabel}>Pricing</p>
+            <h2 className={styles.sectionTitle}>{pricingTitle}</h2>
+            <p className={styles.sectionIntro}>{pricingIntro}</p>
           </div>
-          <div className={styles.gridThree}>
-            {pricingCards.map((card) => (
+
+          <div className={styles.pricingGrid}>
+            {pricingCards.map((card, index) => (
               <article key={card.label} className={styles.pricingCard}>
-                <p className={styles.priceLabel}>{card.label}</p>
-                <p className={styles.priceValue}>{card.value}</p>
-                <p className={styles.priceDetail}>{card.detail}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className={styles.section}>
-        <div className={styles.shell}>
-          <p className={styles.sectionLabel}>Frequently asked questions</p>
-          <h2 className={styles.sectionHeading}>{faqTitle}</h2>
-
-          <div className={styles.faqList}>
-            {faqs.map((faq, index) => (
-              <article key={faq.question} className={styles.faqRow}>
-                <p className={styles.faqIndex}>{String(index + 1).padStart(2, "0")}</p>
-                <div>
-                  <h3 className={styles.faqQuestion}>{faq.question}</h3>
-                  <p className={styles.faqAnswer}>{faq.answer}</p>
+                <p className={styles.pricingLabel}>{card.label}</p>
+                <p className={styles.pricingValue}>{card.value}</p>
+                <p className={styles.pricingDetail}>{card.detail}</p>
+                <div className={styles.pricingMeta}>
+                  {index === 1 ? "Most common starting point" : "Scoped to your project"}
                 </div>
               </article>
             ))}
@@ -266,31 +248,31 @@ export default function ServicePage({
       </section>
 
       <section className={styles.section}>
-        <div className={styles.shell}>
-          <div className={styles.card}>
-            <p className={styles.sectionLabel}>Compare services</p>
-            <h2 className={styles.sectionHeading}>Need the right lane first?</h2>
-            <div className={styles.crossLinks}>
-              {crossLinks.map((link) => (
-                <Link key={link.href} href={link.href} className={styles.crossLink}>
-                  {link.label}
-                </Link>
-              ))}
-            </div>
+        <div className="container">
+          <div className={styles.sectionHead}>
+            <p className={styles.sectionLabel}>FAQ</p>
+            <h2 className={styles.sectionTitle}>{faqTitle}</h2>
+          </div>
+
+          <div className={styles.faqGrid}>
+            {faqs.map((faq) => (
+              <article key={faq.question} className={styles.faqCard}>
+                <h3>{faq.question}</h3>
+                <p>{faq.answer}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
       <section className={styles.section}>
-        <div className={styles.shell}>
-          <div className={styles.finalCta}>
-            <div>
-              <p className={styles.sectionLabel}>Ready to move?</p>
-              <h2 className={styles.finalTitle}>{finalTitle}</h2>
-              <p className={styles.finalText}>{finalText}</p>
-            </div>
+        <div className="container">
+          <div className={styles.finalCard}>
+            <p className={styles.sectionLabel}>Ready to move?</p>
+            <h2 className={styles.finalTitle}>{finalTitle}</h2>
+            <p className={styles.sectionIntro}>{finalText}</p>
 
-            <div className={styles.finalActions}>
+            <div className={styles.heroActions}>
               <Link href={finalPrimaryCta.href} className={styles.primaryButton}>
                 {finalPrimaryCta.label}
               </Link>
@@ -298,6 +280,20 @@ export default function ServicePage({
                 {finalSecondaryCta.label}
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.alsoStrip}>
+        <div className={`container ${styles.alsoGrid}`}>
+          <p className={styles.sectionLabel}>Also offered</p>
+          <div className={styles.crossLinks}>
+            {crossLinks.map((link) => (
+              <article key={link.href} className={styles.crossLinkCard}>
+                <h3>{link.label}</h3>
+                <Link href={link.href}>Explore -&gt;</Link>
+              </article>
+            ))}
           </div>
         </div>
       </section>

@@ -1,38 +1,86 @@
-import SupportPageShell from "@/components/site/SupportPageShell";
+import Link from "next/link";
 import ScrollReveal from "@/components/site/ScrollReveal";
+import styles from "../marketing.module.css";
 
 export const dynamic = "force-dynamic";
 
 const FAQS = [
-  ["How fast do I get an estimate?", "Most website estimates are delivered within 24 hours after intake submission."],
-  ["Do you only build websites?", "Websites are the primary lane. We also support e-commerce and workflow automation when needed."],
-  ["Will I own the finished project?", "Yes. You keep your domain, code, assets, and production access once payments are complete."],
-  ["How does portal access work?", "Clients get secure portal access for milestones, uploads, feedback, and launch tracking."],
-];
+  {
+    question: "How fast do I get an estimate?",
+    answer:
+      "Most website estimates go out within 24 hours of the intake. Larger e-commerce or systems work may need a quick follow-up before we lock scope.",
+  },
+  {
+    question: "Do you only build websites?",
+    answer:
+      "Websites are the main lane. We also handle e-commerce fixes and workflow automation when the business problem lives there instead.",
+  },
+  {
+    question: "Will I own the finished project?",
+    answer:
+      "Yes. Once the project is paid, you keep the code, content, domain access, and production accounts tied to the work.",
+  },
+  {
+    question: "How does the client portal work?",
+    answer:
+      "Clients get a workspace for milestones, uploads, previews, approvals, notes, and launch tracking so the project does not get buried in email.",
+  },
+  {
+    question: "What if I need ongoing changes later?",
+    answer:
+      "That can be a follow-on project or a support arrangement, depending on the kind of work. We do not trap deliverables behind a maintenance hostage model.",
+  },
+  {
+    question: "What if my problem is not the website?",
+    answer:
+      "Then we will say so. Sometimes the real issue is checkout friction, bad ops, or manual internal routing, and that should change the lane we recommend.",
+  },
+] as const;
 
 export default function FaqPage() {
   return (
-    <ScrollReveal>
-      <SupportPageShell
-        kicker="FAQ"
-        title="Answers before you commit"
-        description="Clear answers on scope, pricing, ownership, and project workflow."
-        ctas={[
-          { href: "/websites", label: "Explore websites" },
-          { href: "/contact", label: "Contact support", variant: "ghost" },
-        ]}
-      >
-        <section className="panel fadeUp marketingStackLg">
-          <div className="panelBody supportCardsStack">
-            {FAQS.map(([question, answer]) => (
-              <details key={question} className="card">
-                <summary className="cardInner faqSummary">{question}</summary>
-                <p className="p faqAnswer">{answer}</p>
-              </details>
+    <main className={styles.page}>
+      <ScrollReveal />
+
+      <section className={`${styles.hero} heroFadeUp`}>
+        <div className="container">
+          <div className={styles.heroInner}>
+            <p className={styles.label}>FAQ</p>
+            <h1 className={styles.title}>Answers before you commit.</h1>
+            <p className={styles.intro}>
+              Clear answers on scope, ownership, timelines, and how the project
+              workspace works before anything is signed.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className="container">
+          <div className={styles.sectionHead}>
+            <p className={styles.sectionLabel}>Common questions</p>
+            <h2 className={styles.sectionTitle}>What people usually ask before signing.</h2>
+          </div>
+
+          <div className={styles.faqGrid}>
+            {FAQS.map((faq) => (
+              <article key={faq.question} className={styles.faqCard}>
+                <h3>{faq.question}</h3>
+                <p>{faq.answer}</p>
+              </article>
             ))}
           </div>
-        </section>
-      </SupportPageShell>
-    </ScrollReveal>
+
+          <div className={styles.ctaRow}>
+            <Link href="/websites" className="btn btnGhost">
+              Explore websites
+            </Link>
+            <Link href="/contact" className="btn btnPrimary">
+              Contact support
+            </Link>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }

@@ -1,7 +1,7 @@
 export const commonCrossLinks = [
-  { label: "Explore Website Building", href: "/websites" },
-  { label: "Explore E-commerce Services", href: "/ecommerce" },
-  { label: "Explore Workflow Automation", href: "/systems" },
+  { label: "Website lane", href: "/websites" },
+  { label: "E-commerce lane", href: "/ecommerce" },
+  { label: "Systems lane", href: "/systems" },
 ];
 
 export const websitesPageData = {
@@ -178,7 +178,7 @@ export const ecommercePageData = {
     "Monthly operations from $500/mo",
   ],
   primaryCta: { label: "Start E-commerce Intake", href: "/ecommerce/intake" },
-  secondaryCta: { label: "See Pricing", href: "/ecommerce/pricing" },
+  secondaryCta: { label: "See Pricing", href: "/pricing" },
   whoItsForTitle: "Best for online sellers who need more than just a storefront.",
   whoItsFor: [
     "You need a store built but don't know where to start with platforms, payments, and shipping.",
@@ -309,7 +309,7 @@ export const ecommercePageData = {
   finalText:
     "Tell us what you need in a 2-minute intake. Build, run, or fix — we'll respond within 24 hours with a plan and pricing.",
   finalPrimaryCta: { label: "Start E-commerce Intake", href: "/ecommerce/intake" },
-  finalSecondaryCta: { label: "See Full Pricing", href: "/ecommerce/pricing" },
+  finalSecondaryCta: { label: "See Full Pricing", href: "/pricing" },
 };
 
 export const systemsPageData = {
