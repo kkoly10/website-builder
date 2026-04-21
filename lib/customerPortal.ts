@@ -87,13 +87,30 @@ function toTitle(input: string) {
 }
 
 function buildScopeSnapshotFromQuote(quote: AnyObj) {
-  const answers = safeObj(quote.answers);
+  const quoteJson = safeObj(quote.quote_json);
+  const pricingTruth = safeObj(quoteJson.pricingTruth);
+  const answers = {
+    ...safeObj(quote.answers),
+    ...safeObj(quote.intake_raw),
+    ...safeObj(quote.intake_normalized),
+    ...safeObj(quoteJson.intakeRaw),
+    ...safeObj(quoteJson.intakeNormalized),
+  };
   const breakdown = Array.isArray(quote.breakdown) ? quote.breakdown : [];
 
   const enabledBooleans = Object.entries(answers)
-    .filter(([, v]) => v === true)
+    .filter(([, v]) => v === true || String(v).trim().toLowerCase() === "yes")
     .map(([k]) => toTitle(k))
     .slice(0, 20);
+
+  const integrations = cleanTextList(answers.integrations);
+  const automationTypes = cleanTextList(answers.automationTypes);
+  const requestedFeatures = [
+    ...enabledBooleans,
+    ...integrations.map((item) => toTitle(item)),
+    ...automationTypes.map((item) => toTitle(item)),
+    typeof answers.integrationOther === "string" ? toTitle(answers.integrationOther) : "",
+  ].filter(Boolean);
 
   const stringFields = Object.entries(answers)
     .filter(([, v]) => typeof v === "string" && String(v).trim().length > 0)
@@ -108,18 +125,38 @@ function buildScopeSnapshotFromQuote(quote: AnyObj) {
       values: (v as unknown[]).map((x) => String(x)),
     }));
 
+  const pagesIncluded = parsePages(answers.pagesWanted ?? answers.pages);
+  const featuresIncluded = requestedFeatures.slice(0, 12);
+
   return {
     quoteId: quote.id,
-    tier: quote.tier ?? null,
-    estimateCents: quote.estimate_cents ?? null,
-    estimateLowCents: quote.estimate_low_cents ?? null,
-    estimateHighCents: quote.estimate_high_cents ?? null,
+    tier: quote.tier ?? quote.tier_recommended ?? pricingTruth.tierLabel ?? null,
+    estimateCents:
+      quote.estimate_cents ??
+      (Number(quote.estimate_total ?? 0) ? Math.round(Number(quote.estimate_total) * 100) : null),
+    estimateLowCents:
+      quote.estimate_low_cents ??
+      (Number(quote.estimate_low ?? 0) ? Math.round(Number(quote.estimate_low) * 100) : null),
+    estimateHighCents:
+      quote.estimate_high_cents ??
+      (Number(quote.estimate_high ?? 0) ? Math.round(Number(quote.estimate_high) * 100) : null),
     status: quote.status ?? null,
     createdAt: quote.created_at ?? null,
     breakdown,
-    requestedFeatures: enabledBooleans,
+    requestedFeatures,
     formSelections: stringFields,
     listSelections: arrayFields,
+    tierLabel: pricingTruth.tierLabel ?? quote.tier_recommended ?? "Website Scope",
+    pagesIncluded,
+    featuresIncluded,
+    platform:
+      cleanString(answers.platform || answers.stack) ||
+      "Next.js custom build, fully owned by you",
+    timeline: cleanString(answers.timeline) || "Aligned during scope approval",
+    revisionPolicy:
+      cleanString(answers.revisionPolicy || answers.revisions) ||
+      "Revision structure aligned during scope approval",
+    exclusions: ["Third-party fees", "Out-of-scope change orders"],
     notes:
       typeof answers.notes === "string"
         ? answers.notes
@@ -725,7 +762,13 @@ export async function ensureCustomerPortalForQuoteId(quoteId: string) {
       project_status: "new",
       client_status: "new",
       deposit_status: "pending",
-      deposit_amount_cents: Math.round(Number(quote.estimate_cents ?? 0) * 0.5) || null,
+      deposit_amount_cents:
+        Math.round(
+          Number(
+            quote.estimate_cents ??
+              (Number(quote.estimate_total ?? 0) ? Number(quote.estimate_total) * 100 : 0)
+          ) * 0.5
+        ) || null,
       deposit_checkout_url: quote.deposit_link ?? null,
       scope_snapshot: scopeSnapshot,
     })

@@ -191,7 +191,14 @@ export async function POST(req: Request) {
       lead_id: leadId,
       lead_email: leadEmail,
       owner_email_norm: normalizeEmail(leadEmail),
+      tier_recommended: pricingTruth.tierLabel,
       quote_json: quoteJson,
+      intake_raw:
+        body?.intakeRaw && typeof body.intakeRaw === "object" ? body.intakeRaw : null,
+      intake_normalized:
+        body?.intakeNormalized && typeof body.intakeNormalized === "object"
+          ? body.intakeNormalized
+          : null,
       estimate_total: total,
       estimate_low: low,
       estimate_high: high,
@@ -245,8 +252,8 @@ export async function POST(req: Request) {
 
     const nextUrl =
       savedQuoteToken
-        ? `/book?quoteId=${encodeURIComponent(savedQuoteId)}&token=${encodeURIComponent(savedQuoteToken)}`
-        : `/book?quoteId=${encodeURIComponent(savedQuoteId)}`;
+        ? `/estimate?quoteId=${encodeURIComponent(savedQuoteId)}&token=${encodeURIComponent(savedQuoteToken)}`
+        : `/estimate?quoteId=${encodeURIComponent(savedQuoteId)}`;
 
     return NextResponse.json({
       ok: true,

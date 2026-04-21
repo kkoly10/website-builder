@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ScrollReveal from "@/components/site/ScrollReveal";
+import { getWebsitePricing } from "@/lib/pricing";
 
 type Mode = "chooser" | "guided" | "known";
 type Intent = "Marketing" | "Leads" | "Booking" | "Selling" | "Content" | "Membership" | "Other";
@@ -39,6 +40,21 @@ const BUDGET_LABELS: Record<Budget, string> = {
 };
 const LS_KEY = "crecystudio:intake";
 const TOTAL_STEPS = 8;
+
+function normalizePagesBucket(pages: Pages) {
+  if (pages === "4-5") return "4-6" as const;
+  return pages as "1" | "1-3" | "4-6" | "6-8" | "9+";
+}
+
+function normalizeYesNo(value: YesNo) {
+  return value === "Yes" ? "yes" : "no";
+}
+
+function normalizeContentReady(value: ContentReady) {
+  if (value === "Ready") return "ready" as const;
+  if (value === "Not ready") return "not_ready" as const;
+  return "some" as const;
+}
 
 const STEP_TITLES = [
   "Choose how you'd like to start",
@@ -114,23 +130,75 @@ function BuildFormInner() {
     });
   }
 
-  function submit() {
+  async function submit() {
     const leadEmail = form.leadEmail.trim();
     if (!leadEmail || !leadEmail.includes("@")) { alert("Please enter a valid email address."); return; }
-    const params = new URLSearchParams({
-      leadEmail, leadPhone: form.leadPhone.trim(), websiteType: form.websiteType, pages: form.pages,
-      booking: String(form.booking), payments: String(form.payments), blog: String(form.blog),
-      membership: String(form.membership), wantsAutomation: form.wantsAutomation,
-      contentReady: form.contentReady, domainHosting: form.domainHosting, design: form.design,
-      timeline: form.timeline, mode: form.mode, intent: form.intent, intentOther: form.intentOther,
-      automationTypes: form.automationTypes.join(","), integrations: form.integrations.join(","),
-      integrationOther: form.integrationOther, hasLogo: form.hasLogo, hasBrandGuide: form.hasBrandGuide,
-      assetsSource: form.assetsSource, referenceWebsite: form.referenceWebsite,
-      currentWebsite: form.currentWebsite, decisionMaker: form.decisionMaker,
-      stakeholdersCount: form.stakeholdersCount, budget: form.budget, notes: form.notes,
-    }).toString();
-    window.localStorage.removeItem(LS_KEY);
-    router.push(`/estimate?${params}`);
+    const pricingInput: Parameters<typeof getWebsitePricing>[0] = {
+      websiteType: form.websiteType.toLowerCase() as "business" | "ecommerce" | "portfolio" | "landing",
+      pages: normalizePagesBucket(form.pages),
+      booking: form.booking,
+      payments: form.payments,
+      blog: form.blog,
+      membership: form.membership,
+      wantsAutomation: normalizeYesNo(form.wantsAutomation),
+      automationTypes: form.automationTypes,
+      integrations: form.integrations,
+      integrationOther: form.integrationOther,
+      contentReady: normalizeContentReady(form.contentReady),
+      domainHosting: normalizeYesNo(form.domainHosting),
+      timeline: form.timeline,
+      intent: form.intent === "Other" && form.intentOther.trim() ? form.intentOther.trim() : form.intent,
+      budget: form.budget,
+      hasLogo: normalizeYesNo(form.hasLogo),
+      hasBrandGuide: normalizeYesNo(form.hasBrandGuide),
+    };
+    const intakeNormalized = {
+      ...pricingInput,
+      leadEmail,
+      leadPhone: form.leadPhone.trim(),
+      notes: form.notes,
+    };
+    const pricing = getWebsitePricing(pricingInput);
+
+    try {
+      const response = await fetch("/api/submit-estimate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: "build",
+          lead: {
+            email: leadEmail,
+            phone: form.leadPhone.trim() || undefined,
+          },
+          intakeRaw: form,
+          intakeNormalized,
+          pricing,
+          estimate: {
+            total: pricing.band.target,
+            low: pricing.band.min,
+            high: pricing.band.max,
+            tierRecommended: pricing.tierLabel,
+            tierKey: pricing.tierKey,
+            isCustomScope: pricing.isCustomScope,
+          },
+        }),
+      });
+
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok || !json?.ok || !json?.nextUrl) {
+        throw new Error(json?.error || "We could not generate the estimate.");
+      }
+
+      try {
+        window.localStorage.removeItem(LS_KEY);
+        if (json?.quoteId) window.localStorage.setItem("crecystudio:lastQuoteId", String(json.quoteId));
+        if (json?.quoteToken) window.localStorage.setItem("crecystudio:lastQuoteToken", String(json.quoteToken));
+      } catch {}
+
+      router.push(String(json.nextUrl));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "We could not generate the estimate.");
+    }
   }
 
   return (

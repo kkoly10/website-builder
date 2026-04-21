@@ -632,3 +632,480 @@ a { color: inherit; text-decoration: none; }
     height: 32px;
   }
 }
+
+/* post-quote estimate */
+.estimatePage { padding-bottom: 4rem; }
+.estimateBreadcrumb {
+  padding: 1.8rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem;
+  font: 500 11px/1.3 var(--font-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.estimateBreadcrumbSep { color: var(--rule-2); }
+.estimateBreadcrumbAccent { color: var(--accent); }
+.estimateHero {
+  padding: 2rem 0 4.4rem;
+  border-bottom: 1px solid var(--rule);
+}
+.estimateHeroLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: .65rem;
+  font: 500 11px/1.2 var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+}
+.estimateHeroLabel::before {
+  content: "";
+  width: 28px;
+  height: 1px;
+  background: var(--accent);
+}
+.estimateHeroTitle {
+  margin: 1.5rem 0 1rem;
+  max-width: 15ch;
+  font: 600 clamp(3rem, 8vw, 5.8rem)/.95 var(--font-display);
+  letter-spacing: -.05em;
+}
+.estimateHeroBody {
+  margin: 0;
+  max-width: 58ch;
+  color: var(--ink-2);
+  font-size: 1.08rem;
+  line-height: 1.75;
+}
+.estimateHeroMeta {
+  margin: 1rem 0 0;
+  font: 500 11px/1.4 var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+}
+.estimateModule {
+  padding: 4.5rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.estimateSectionLabel {
+  font: 500 11px/1.2 var(--font-mono);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.estimateSectionLabel::before {
+  content: "/ ";
+  color: var(--accent);
+}
+.estimateSectionTitle {
+  margin: .8rem 0 .65rem;
+  font: 600 clamp(2rem, 5vw, 3rem)/1 var(--font-display);
+  letter-spacing: -.04em;
+}
+.estimateSectionBody {
+  margin: 0;
+  max-width: 58ch;
+  color: var(--muted);
+  line-height: 1.75;
+}
+.estimateScopeGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, .95fr);
+  gap: 1.25rem;
+  margin-top: 2.5rem;
+  align-items: start;
+}
+.estimateScopeCard,
+.estimatePriceBlock,
+.estimateContextCard,
+.estimateTierCard {
+  border: 1px solid var(--rule);
+  background: var(--paper);
+}
+.estimateScopeCard {
+  padding: 2rem 2.1rem;
+}
+.estimateScopeCard h3,
+.estimateContextCard h3,
+.estimateIncludedColumn h3,
+.estimateProcessStep h3,
+.estimateClosing h2,
+.estimateFaqItem h3 {
+  margin: 0;
+  font: 600 clamp(1.25rem, 2.5vw, 1.7rem)/1.08 var(--font-display);
+  letter-spacing: -.03em;
+}
+.estimateScopeRows { display: grid; gap: 0; margin-top: 1.5rem; }
+.estimateScopeRow {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 1rem;
+  padding: .95rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.estimateScopeRow:last-child { border-bottom: none; padding-bottom: 0; }
+.estimateScopeKey {
+  padding-top: .2rem;
+  font: 500 10px/1.2 var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+}
+.estimateScopeValue {
+  color: var(--ink);
+  line-height: 1.65;
+}
+.estimateScopeCaveat {
+  margin: 1.1rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: .93rem;
+}
+.estimateScopeCaveatInline { color: var(--muted-2); }
+.estimatePriceRail { display: grid; gap: .9rem; }
+.estimateContextCard {
+  padding: 1.1rem 1.2rem;
+  background: var(--paper-2);
+}
+.estimateContextLabel {
+  margin-bottom: .55rem;
+  font: 500 10px/1.2 var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--accent);
+}
+.estimateContextList {
+  margin: .95rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: .6rem;
+  color: var(--ink-2);
+}
+.estimateContextList li {
+  padding-left: 1rem;
+  position: relative;
+  line-height: 1.6;
+}
+.estimateContextList li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: .7rem;
+  width: 8px;
+  height: 1px;
+  background: var(--accent);
+}
+.estimatePriceBlock {
+  padding: 2rem 2.1rem;
+  background: var(--ink);
+  color: var(--paper);
+}
+.estimatePriceLabel {
+  font: 500 10px/1.2 var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--accent-soft);
+}
+.estimatePriceAmount {
+  margin-top: .8rem;
+  font: 600 clamp(3rem, 8vw, 4.8rem)/.92 var(--font-display);
+  letter-spacing: -.05em;
+}
+.estimatePriceMeta,
+.estimatePriceRangeNote,
+.estimateFineprint {
+  color: rgba(243, 237, 225, .72);
+}
+.estimatePriceMeta {
+  margin: .8rem 0 0;
+  line-height: 1.6;
+}
+.estimatePriceRangeNote {
+  margin-top: 1.4rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(243, 237, 225, .14);
+  line-height: 1.65;
+}
+.estimatePriceSplit {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.6rem;
+  padding-top: 1.3rem;
+  border-top: 1px solid rgba(243, 237, 225, .14);
+}
+.estimateSplitLabel {
+  font: 500 10px/1.2 var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: rgba(243, 237, 225, .55);
+}
+.estimateSplitValue {
+  margin-top: .4rem;
+  font: 600 1.35rem/1 var(--font-display);
+  letter-spacing: -.02em;
+}
+.estimateSplitValueAccent { color: var(--accent-soft); }
+.estimatePriceActions { display: grid; gap: .7rem; margin-top: 1.7rem; }
+.estimatePrimaryButton,
+.estimateSecondaryButton,
+.estimateGhostButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  min-height: 54px;
+  padding: 0 1.2rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font: 500 12px/1.2 var(--font-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  transition: background .2s ease, color .2s ease, border-color .2s ease;
+}
+.estimatePrimaryButton {
+  background: var(--accent);
+  color: var(--paper);
+}
+.estimatePrimaryButton:hover { background: var(--accent-2); }
+.estimateSecondaryButton {
+  background: transparent;
+  color: var(--paper);
+  border-color: rgba(243, 237, 225, .34);
+}
+.estimateSecondaryButton:hover { background: rgba(243, 237, 225, .06); }
+.estimateGhostButton {
+  border-color: var(--ink);
+  color: var(--ink);
+  background: transparent;
+}
+.estimateGhostButton:hover { background: var(--paper-2); }
+.estimatePriceButton,
+.estimateClosingButton { width: 100%; }
+.estimateButtonArrow { transform: translateY(-1px); }
+.estimateExistingCallNote {
+  color: rgba(243, 237, 225, .86);
+  font-size: .92rem;
+  line-height: 1.55;
+}
+.estimateActionError {
+  padding: .8rem .9rem;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent-2);
+  font-size: .92rem;
+  line-height: 1.55;
+}
+.estimateIncludedGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.2rem;
+  margin-top: 2.2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--rule);
+}
+.estimateIncludedColumn {
+  padding-right: 1rem;
+}
+.estimateIncludedLabel,
+.estimateProcessLabel,
+.estimateTierName {
+  font: 500 10px/1.2 var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.estimateIncludedLabel,
+.estimateProcessLabel { color: var(--accent); }
+.estimateIncludedColumn h3 { margin-top: .8rem; }
+.estimateIncludedColumn ul {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: .65rem;
+}
+.estimateIncludedColumn li {
+  position: relative;
+  padding-left: 1rem;
+  color: var(--ink-2);
+  line-height: 1.65;
+}
+.estimateIncludedColumn li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: .72rem;
+  width: 8px;
+  height: 1px;
+  background: var(--accent);
+}
+.estimateProcessSection {
+  padding: 4.5rem 0;
+  background: var(--paper-2);
+  border-bottom: 1px solid var(--rule);
+}
+.estimateProcessGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.estimateProcessStep {
+  padding-right: 1rem;
+  border-right: 1px solid var(--rule);
+}
+.estimateProcessStep:last-child {
+  border-right: none;
+  padding-right: 0;
+}
+.estimateProcessStep h3 { margin-top: .9rem; }
+.estimateProcessStep p {
+  margin: .7rem 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.estimateTierIntro {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.2fr);
+  gap: 2rem;
+  align-items: end;
+}
+.estimateTierIntroBody {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.75;
+}
+.estimateTierGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.estimateTierCard {
+  padding: 1.6rem;
+  position: relative;
+}
+.estimateTierCardCurrent {
+  border-width: 2px;
+  border-color: var(--accent);
+  padding: calc(1.6rem - 1px);
+}
+.estimateTierCardCurrent::before {
+  content: "Your tier";
+  position: absolute;
+  top: -11px;
+  left: 1.35rem;
+  padding: 4px 10px;
+  background: var(--accent);
+  color: var(--paper);
+  font: 500 10px/1.2 var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.estimateTierName { color: var(--muted); }
+.estimateTierRange {
+  margin-top: .8rem;
+  font: 600 1.45rem/1 var(--font-display);
+  letter-spacing: -.03em;
+}
+.estimateTierCardCurrent .estimateTierRange { color: var(--accent); }
+.estimateTierDetail {
+  margin: .95rem 0 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+.estimateTierMeta {
+  margin-top: 1rem;
+  padding-top: .9rem;
+  border-top: 1px solid var(--rule);
+  color: var(--muted-2);
+  font: 500 10px/1.4 var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.estimateFaqGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2rem 2.5rem;
+  margin-top: 2.4rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--rule);
+}
+.estimateFaqItem p {
+  margin: .7rem 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.estimateClosing {
+  padding: 5rem 0 1rem;
+}
+.estimateClosingInner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, .95fr);
+  gap: 2rem;
+  align-items: center;
+}
+.estimateClosing h2 {
+  max-width: 14ch;
+  font-size: clamp(2.3rem, 6vw, 4.2rem);
+}
+.estimateClosing p {
+  margin: 1rem 0 0;
+  max-width: 48ch;
+  color: var(--muted);
+  line-height: 1.75;
+}
+.estimateClosingActions { display: grid; gap: .75rem; }
+.estimateEmpty {
+  padding: 3rem 0 5rem;
+}
+.estimateEmptyActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin-top: 1.25rem;
+}
+@media (max-width: 1024px) {
+  .estimateScopeGrid,
+  .estimateClosingInner,
+  .estimateTierIntro,
+  .estimateIncludedGrid,
+  .estimateTierGrid,
+  .estimateFaqGrid,
+  .estimateProcessGrid {
+    grid-template-columns: 1fr;
+  }
+  .estimateProcessStep {
+    padding-right: 0;
+    padding-bottom: 1rem;
+    border-right: none;
+    border-bottom: 1px solid var(--rule);
+  }
+  .estimateProcessStep:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+}
+@media (max-width: 720px) {
+  .estimateScopeCard,
+  .estimatePriceBlock,
+  .estimateContextCard,
+  .estimateTierCard {
+    padding: 1.35rem;
+  }
+  .estimateScopeRow {
+    grid-template-columns: 1fr;
+    gap: .45rem;
+  }
+  .estimatePriceSplit {
+    grid-template-columns: 1fr;
+  }
+  .estimateHero {
+    padding-bottom: 3rem;
+  }
+}

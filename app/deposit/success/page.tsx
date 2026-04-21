@@ -1,4 +1,5 @@
 // app/deposit/success/page.tsx
+import { ensureCustomerPortalForQuoteId, markDepositPaidForQuoteId } from "@/lib/customerPortal";
 import { confirmEcommerceDepositPayment, confirmOpsDepositPayment } from "@/lib/depositPayments";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { stripeGetCheckoutSession } from "@/lib/stripeServer";
@@ -18,7 +19,11 @@ function safeObj(v: any) {
 }
 
 async function confirmWebsiteQuotePayment(session: any, quoteId: string) {
-  const existing = await supabaseAdmin.from("quotes").select("id,debug,status").eq("id", quoteId).single();
+  const existing = await supabaseAdmin
+    .from("quotes")
+    .select("id,debug,status")
+    .eq("id", quoteId)
+    .single();
   const prevDebug = safeObj(existing.data?.debug);
   const prevInternal = safeObj((prevDebug as any).internal);
 
@@ -40,6 +45,11 @@ async function confirmWebsiteQuotePayment(session: any, quoteId: string) {
 
   const nextDebug = { ...prevDebug, internal: nextInternal };
   await supabaseAdmin.from("quotes").update({ status: "paid", debug: nextDebug }).eq("id", quoteId);
+  await markDepositPaidForQuoteId(quoteId, {
+    amountCents: Number(session.amount_total ?? 0) || null,
+    paidAt: now,
+    reference: String(session.id || ""),
+  });
 }
 
 export default async function DepositSuccessPage({ searchParams }: { searchParams: SearchParams }) {
@@ -99,6 +109,10 @@ export default async function DepositSuccessPage({ searchParams }: { searchParam
       } else if (quoteId) {
         await confirmWebsiteQuotePayment(session, quoteId);
         label = "Website";
+        const portal = await ensureCustomerPortalForQuoteId(quoteId);
+        if (portal?.access_token) {
+          backHref = `/portal/${encodeURIComponent(String(portal.access_token))}`;
+        }
       }
 
       message = "Deposit received ✅";

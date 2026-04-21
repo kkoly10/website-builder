@@ -1,427 +1,330 @@
-// app/estimate/EstimateClient.tsx
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { getWebsitePricing, money, PRICING_MESSAGES } from "@/lib/pricing";
+import { useState } from "react";
+import type { EstimatePresentation } from "@/lib/estimatePresentation";
 
-type YesNo = "yes" | "no";
-type PagesBucket = "1" | "1-3" | "4-6" | "6-8" | "9+";
-
-type Normalized = {
-  websiteType: "business" | "ecommerce" | "portfolio" | "landing";
-  pages: PagesBucket;
-  booking: boolean;
-  payments: boolean;
-  blog: boolean;
-  membership: boolean;
-  wantsAutomation: YesNo;
-  automationTypes: string[];
-  integrations: string[];
-  integrationOther: string;
-  contentReady: "ready" | "some" | "not_ready";
-  domainHosting: YesNo;
-  timeline: string;
-  intent: string;
-  leadEmail: string;
-  leadPhone: string;
-  notes: string;
-  budget: string;
-  hasLogo: YesNo;
-  hasBrandGuide: YesNo;
+type Props = {
+  view: EstimatePresentation | null;
 };
 
-const LS_KEY = "crecystudio:intake";
-const LAST_QUOTE_KEY = "crecystudio:lastQuoteId";
-const LAST_QUOTE_TOKEN_KEY = "crecystudio:lastQuoteToken";
-
-const CORE_KEYS = new Set([
-  "websiteType",
-  "pages",
-  "booking",
-  "payments",
-  "blog",
-  "membership",
-  "wantsAutomation",
-  "automationTypes",
-  "integrations",
-  "integrationOther",
-  "contentReady",
-  "domainHosting",
-  "timeline",
-  "intent",
-  "leadEmail",
-  "leadPhone",
-  "notes",
-  "budget",
-  "hasLogo",
-  "hasBrandGuide",
-  "quoteId",
-  "quoteToken",
-]);
-
-function toBool(v: unknown): boolean {
-  if (typeof v === "boolean") return v;
-  const s = String(v ?? "").trim().toLowerCase();
-  return s === "1" || s === "true" || s === "yes" || s === "on";
+function money(value: number | null) {
+  if (value == null || !Number.isFinite(value)) return "Scoped after review";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
-function normYesNo(v: unknown, fallback: YesNo = "no"): YesNo {
-  const s = String(v ?? "").trim().toLowerCase();
-  if (s === "yes" || s === "true" || s === "1" || s === "on") return "yes";
-  if (s === "no" || s === "false" || s === "0" || s === "off") return "no";
-  return fallback;
-}
-
-function normWebsiteType(v: unknown): Normalized["websiteType"] {
-  const s = String(v ?? "").trim().toLowerCase();
-  if (s.includes("ecom")) return "ecommerce";
-  if (s.includes("port")) return "portfolio";
-  if (s.includes("land")) return "landing";
-  return "business";
-}
-
-function normContentReady(v: unknown): Normalized["contentReady"] {
-  const s = String(v ?? "").trim().toLowerCase();
-  if (s.includes("not")) return "not_ready";
-  if (s.includes("ready")) return "ready";
-  return "some";
-}
-
-function splitList(v: unknown): string[] {
-  if (Array.isArray(v)) return v.map(String).map((x) => x.trim()).filter(Boolean);
-  const s = String(v ?? "").trim();
-  if (!s) return [];
-  return s.split(",").map((x) => x.trim()).filter(Boolean);
-}
-
-function parsePagesMax(raw: unknown): { max: number } {
-  const s = String(raw ?? "").trim();
-  if (!s) return { max: 3 };
-  if (s.includes("+")) {
-    const n = parseInt(s.replace("+", ""), 10);
-    return { max: Number.isFinite(n) ? n : 9 };
+function buildPriceDisplay(view: EstimatePresentation) {
+  if (view.variant === "deep") {
+    return `${money(view.price.min)} - ${money(view.price.max)}`;
   }
-  if (s.includes("-")) {
-    const nums = s.split("-").map((x) => parseInt(x.trim(), 10)).filter(Number.isFinite);
-    const max = nums.length ? nums[nums.length - 1] : 3;
-    return { max };
-  }
-  const n = parseInt(s, 10);
-  return { max: Number.isFinite(n) ? n : 3 };
+
+  return money(view.price.target);
 }
 
-function bucketPages(max: number): PagesBucket {
-  if (max <= 1) return "1";
-  if (max <= 3) return "1-3";
-  if (max <= 6) return "4-6";
-  if (max <= 8) return "6-8";
-  return "9+";
-}
+export default function EstimateClient({ view }: Props) {
+  const [accepting, setAccepting] = useState(false);
+  const [acceptError, setAcceptError] = useState("");
 
-export default function EstimateClient() {
-  const sp = useSearchParams();
-  const router = useRouter();
+  async function onAccept() {
+    if (!view?.acceptUrl) return;
 
-  const [loadedFromLocalStorage, setLoadedFromLocalStorage] = useState<Record<string, unknown> | null>(null);
-  const [sending, setSending] = useState(false);
-  const [sendError, setSendError] = useState("");
-
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(LS_KEY);
-      if (raw) setLoadedFromLocalStorage(JSON.parse(raw));
-    } catch {
-      setLoadedFromLocalStorage(null);
-    }
-  }, []);
-
-  const parsedQuery = useMemo(() => {
-    const q: Record<string, string> = {};
-    for (const [key, val] of sp.entries()) q[key] = val;
-    return q;
-  }, [sp]);
-
-  const hasMeaningfulQuery = useMemo(() => {
-    for (const k of Object.keys(parsedQuery)) {
-      if (CORE_KEYS.has(k)) return true;
-    }
-    return false;
-  }, [parsedQuery]);
-
-  const merged = useMemo(
-    () => ({ ...(loadedFromLocalStorage || {}), ...parsedQuery }),
-    [loadedFromLocalStorage, parsedQuery]
-  );
-
-  const normalized: Normalized = useMemo(() => {
-    const { max } = parsePagesMax(merged.pages);
-    return {
-      websiteType: normWebsiteType(merged.websiteType),
-      pages: bucketPages(max),
-      booking: toBool(merged.booking),
-      payments: toBool(merged.payments),
-      blog: toBool(merged.blog),
-      membership: toBool(merged.membership),
-      wantsAutomation: normYesNo(merged.wantsAutomation, "no"),
-      automationTypes: splitList(merged.automationTypes),
-      integrations: splitList(merged.integrations),
-      integrationOther: String(merged.integrationOther ?? "").trim(),
-      contentReady: normContentReady(merged.contentReady),
-      domainHosting: normYesNo(merged.domainHosting, "no"),
-      timeline: String(merged.timeline ?? "").trim() || "2-3 weeks",
-      intent: String(merged.intent ?? "").trim() || "business",
-      leadEmail: String(merged.leadEmail ?? "").trim(),
-      leadPhone: String(merged.leadPhone ?? "").trim(),
-      notes: String(merged.notes ?? "").trim(),
-      budget: String(merged.budget ?? "").trim(),
-      hasLogo: normYesNo(merged.hasLogo, "yes"),
-      hasBrandGuide: normYesNo(merged.hasBrandGuide, "no"),
-    };
-  }, [merged]);
-
-  const existingQuoteId = useMemo(() => String(merged.quoteId ?? "").trim(), [merged]);
-  const existingQuoteToken = useMemo(() => String(merged.quoteToken ?? merged.token ?? "").trim(), [merged]);
-
-  const pricing = useMemo(() => getWebsitePricing(normalized), [normalized]);
-  const hasIntake = !!loadedFromLocalStorage || hasMeaningfulQuery;
-
-  async function onSendEstimate() {
-    setSendError("");
-    const email = normalized.leadEmail.trim();
-    if (!email || !email.includes("@")) {
-      setSendError("Missing a valid email. Go back to the questionnaire and add your email first.");
-      return;
-    }
-
-    setSending(true);
+    setAcceptError("");
+    setAccepting(true);
 
     try {
-      const payload = {
-        source: "estimate",
-        quoteId: existingQuoteId || undefined,
-        quoteToken: existingQuoteToken || undefined,
-        lead: {
-          email,
-          phone: normalized.leadPhone || undefined,
-        },
-        intakeRaw: merged,
-        intakeNormalized: normalized,
-        pricing,
-        estimate: {
-          total: pricing.band.target,
-          low: pricing.band.min,
-          high: pricing.band.max,
-          tierRecommended: pricing.tierLabel,
-          tierKey: pricing.tierKey,
-          isCustomScope: pricing.isCustomScope,
-        },
-      };
-
-      const res = await fetch("/api/submit-estimate", {
+      const response = await fetch(view.acceptUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          quoteId: view.quoteId,
+          quoteToken: view.quoteToken || undefined,
+        }),
       });
 
-      const json = await res.json();
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to save estimate.");
-      if (!json?.quoteId) throw new Error("Saved, but missing quoteId.");
-
-      try {
-        window.localStorage.setItem(LAST_QUOTE_KEY, String(json.quoteId));
-        if (json?.quoteToken) {
-          window.localStorage.setItem(LAST_QUOTE_TOKEN_KEY, String(json.quoteToken));
-        }
-      } catch {}
-
-      if (json?.nextUrl) {
-        router.push(String(json.nextUrl));
-        return;
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok || !json?.depositUrl) {
+        throw new Error(json?.error || "Unable to create the deposit session.");
       }
 
-      const nextUrl = json?.quoteToken
-        ? `/book?quoteId=${encodeURIComponent(String(json.quoteId))}&token=${encodeURIComponent(String(json.quoteToken))}`
-        : `/book?quoteId=${encodeURIComponent(String(json.quoteId))}`;
-
-      router.push(nextUrl);
-    } catch (e) {
-      setSendError(e instanceof Error ? e.message : "Failed to save estimate.");
-    } finally {
-      setSending(false);
+      window.location.href = String(json.depositUrl);
+    } catch (error) {
+      setAcceptError(error instanceof Error ? error.message : "Unable to create the deposit session.");
+      setAccepting(false);
     }
   }
 
-  if (!hasIntake) {
+  if (!view) {
     return (
-      <main className="container" style={{ padding: "48px 0 80px" }}>
+      <main className="container estimateEmpty">
         <div className="kicker">
           <span className="kickerDot" aria-hidden="true" />
-          CrecyStudio • Estimate
+          CrecyStudio · Estimate
         </div>
-        <div style={{ height: 14 }} />
-        <h1 className="h1">Start with the questionnaire</h1>
-        <p className="p" style={{ maxWidth: 860, marginTop: 10 }}>
-          To generate an accurate estimate, we need a few details about your pages, features,
-          timeline, and goals.
+        <div style={{ height: 12 }} />
+        <h1 className="h2">We could not find that quote.</h1>
+        <p className="p maxW860">
+          Open the estimate link from your email, sign in with the same email you used on the intake,
+          or start a fresh website quote if you need to rebuild the scope.
         </p>
-        <div style={{ height: 18 }} />
-        <section className="panel" style={{ maxWidth: 760 }}>
-          <div className="panelHeader">
-            <div style={{ fontWeight: 800 }}>No intake found</div>
-            <div className="smallNote">This page only works after the Build questionnaire.</div>
-          </div>
-          <div className="panelBody" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <Link className="btn btnPrimary" href="/build">
-              Start Questionnaire <span className="btnArrow">→</span>
-            </Link>
-            <Link className="btn btnGhost" href="/systems">
-              Fix My Workflow
-            </Link>
-            <Link className="btn btnGhost" href="/">
-              Home
-            </Link>
-          </div>
-        </section>
+        <div className="estimateEmptyActions">
+          <Link href="/build/intro" className="btn btnPrimary">
+            Start a website quote <span className="btnArrow">-&gt;</span>
+          </Link>
+          <Link href="/portal" className="btn btnGhost">
+            Client portal
+          </Link>
+          <Link href="/" className="btn btnGhost">
+            Home
+          </Link>
+        </div>
       </main>
     );
   }
 
+  const priceDisplay = buildPriceDisplay(view);
+  const showRange = view.variant === "deep";
+  const showAccept = !!view.acceptLabel;
+  const primarySchedule = view.variant !== "fast" && view.callToBook;
+
   return (
-    <main className="container" style={{ padding: "48px 0 80px" }}>
-      <div className="kicker">
-        <span className="kickerDot" aria-hidden="true" />
-        CrecyStudio • Instant Estimate
+    <main className="estimatePage">
+      <div className="container estimateBreadcrumb">
+        <span>Your project</span>
+        <span className="estimateBreadcrumbSep">/</span>
+        <span className="estimateBreadcrumbAccent">Estimate for {view.businessName}</span>
       </div>
 
-      <div style={{ height: 12 }} />
-      <h1 className="h1">Your estimate</h1>
-      <p className="p" style={{ maxWidth: 900, marginTop: 10 }}>
-        We now classify your project into a clean pricing tier first, then place it inside a fair
-        startup range based on scope, features, readiness, and launch pressure.
-      </p>
-      <div style={{ height: 18 }} />
-
-      <section className="panel">
-        <div className="panelHeader">
-          <div className="pDark">
-            Type: <strong>{normalized.websiteType}</strong> • Pages:{" "}
-            <strong>{normalized.pages}</strong> • Recommended package:{" "}
-            <strong>{pricing.tierLabel}</strong>
-          </div>
-
-          <div style={{ height: 10 }} />
-
-          {pricing.isCustomScope ? (
-            <div
-              style={{
-                border: "1px solid var(--accentStroke)",
-                background: "var(--accentSoft)",
-                borderRadius: 12,
-                padding: "14px 16px",
-                fontWeight: 800,
-                color: "var(--fg)",
-              }}
-            >
-              {pricing.publicMessage}
-            </div>
-          ) : (
-            <div style={{ display: "flex", gap: 14, alignItems: "baseline", flexWrap: "wrap" }}>
-              <div style={{ fontWeight: 900, fontSize: 34, letterSpacing: "-0.8px" }}>
-                {money(pricing.band.target)}
-              </div>
-              <div className="pDark">Typical range: {pricing.displayRange}</div>
-            </div>
-          )}
+      <header className="estimateHero">
+        <div className="container">
+          <div className="estimateHeroLabel">Your personalized estimate</div>
+          <h1 className="estimateHeroTitle">{view.heroTitle}</h1>
+          <p className="estimateHeroBody">{view.heroBody}</p>
+          {view.heroMeta ? <p className="estimateHeroMeta">{view.heroMeta}</p> : null}
         </div>
+      </header>
 
-        <div className="panelBody" style={{ display: "grid", gap: 14 }}>
-          <div
-            style={{
-              border: "1px solid var(--stroke)",
-              background: "var(--panel2)",
-              borderRadius: 12,
-              padding: "14px 16px",
-            }}
-          >
-            <div style={{ fontWeight: 800, marginBottom: 6 }}>What this means</div>
-            <div className="pDark">{pricing.summary}</div>
-          </div>
+      <section className="estimateModule">
+        <div className="container">
+          <div className="estimateSectionLabel">Your project</div>
+          <h2 className="estimateSectionTitle">Scope and investment</h2>
+          <p className="estimateSectionBody">{view.investmentIntro}</p>
 
-          {pricing.complexityFlags.length > 0 ? (
-            <div>
-              <div style={{ fontWeight: 800, marginBottom: 8 }}>Complexity flags</div>
-              <div className="pills">
-                {pricing.complexityFlags.map((flag) => (
-                  <span key={flag} className="pill">
-                    {flag}
-                  </span>
+          <div className="estimateScopeGrid">
+            <article className="estimateScopeCard">
+              <h3>What we&apos;ll build</h3>
+              <div className="estimateScopeRows">
+                {view.scopeRows.map((row) => (
+                  <div className="estimateScopeRow" key={row.label}>
+                    <div className="estimateScopeKey">{row.label}</div>
+                    <div className="estimateScopeValue">
+                      {row.value}
+                      {view.scopeCaveat ? <span className="estimateScopeCaveatInline"> · To be confirmed</span> : null}
+                    </div>
+                  </div>
                 ))}
               </div>
-            </div>
-          ) : null}
+              {view.scopeCaveat ? <p className="estimateScopeCaveat">{view.scopeCaveat}</p> : null}
+            </article>
 
-          <div>
-            <div style={{ fontWeight: 800, marginBottom: 10 }}>Why it landed here</div>
-            <div style={{ display: "grid", gap: 10 }}>
-              {pricing.reasons.map((reason, idx) => (
-                <div
-                  key={`${reason.label}-${idx}`}
-                  style={{
-                    border: "1px solid var(--stroke)",
-                    background: "var(--panel2)",
-                    borderRadius: 10,
-                    padding: "12px 12px",
-                  }}
-                >
-                  <div style={{ color: "var(--fg)", fontWeight: 800 }}>{reason.label}</div>
-                  <div className="pDark" style={{ marginTop: 4 }}>
-                    {reason.note}
-                  </div>
+            <div className="estimatePriceRail">
+              {view.contextNote ? (
+                <aside className="estimateContextCard">
+                  <div className="estimateContextLabel">Before you commit</div>
+                  <h3>{view.contextNote}</h3>
+                  {view.contextDetails.length ? (
+                    <ul className="estimateContextList">
+                      {view.contextDetails.map((detail) => (
+                        <li key={detail}>{detail}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </aside>
+              ) : null}
+
+              <article className="estimatePriceBlock">
+                <div className="estimatePriceLabel">
+                  {showRange ? "Likely investment" : "Project investment"}
                 </div>
-              ))}
+                <div className="estimatePriceAmount">{priceDisplay}</div>
+                <p className="estimatePriceMeta">{view.price.priceNote}</p>
+
+                {showRange ? (
+                  <div className="estimatePriceRangeNote">
+                    We&apos;ll confirm the final fixed quote on the call before any deposit is taken.
+                  </div>
+                ) : (
+                  <div className="estimatePriceSplit">
+                    <div>
+                      <div className="estimateSplitLabel">Deposit today</div>
+                      <div className="estimateSplitValue estimateSplitValueAccent">
+                        {money(view.price.deposit)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="estimateSplitLabel">Balance at launch</div>
+                      <div className="estimateSplitValue">{money(view.price.balance)}</div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="estimatePriceActions">
+                  {primarySchedule ? (
+                    <a
+                      className="estimatePrimaryButton estimatePriceButton"
+                      href={primarySchedule.url}
+                      target={primarySchedule.external ? "_blank" : undefined}
+                      rel={primarySchedule.external ? "noreferrer" : undefined}
+                    >
+                      {primarySchedule.label} <span className="estimateButtonArrow">-&gt;</span>
+                    </a>
+                  ) : null}
+
+                  {showAccept ? (
+                    <button
+                      type="button"
+                      className={primarySchedule ? "estimateSecondaryButton estimatePriceButton" : "estimatePrimaryButton estimatePriceButton"}
+                      onClick={onAccept}
+                      disabled={accepting}
+                    >
+                      {accepting ? "Creating secure checkout..." : view.acceptLabel}{" "}
+                      <span className="estimateButtonArrow">-&gt;</span>
+                    </button>
+                  ) : null}
+
+                  <div className="estimateFineprint">
+                    {primarySchedule ? primarySchedule.helper : "Secure payment via Stripe"}
+                  </div>
+                  {view.existingCallNote ? (
+                    <div className="estimateExistingCallNote">{view.existingCallNote}</div>
+                  ) : null}
+                  {acceptError ? <div className="estimateActionError">{acceptError}</div> : null}
+                </div>
+              </article>
             </div>
           </div>
 
-          <div className="smallNote">
-            Final scope and price are confirmed on a discovery call before any work begins.{" "}
-            {PRICING_MESSAGES.depositPolicy}
+          <div className="estimateIncludedGrid">
+            {view.included.map((column) => (
+              <article key={column.id} className="estimateIncludedColumn">
+                <div className="estimateIncludedLabel">{column.label}</div>
+                <h3>{column.title}</h3>
+                <ul>
+                  {column.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
-      <div style={{ height: 18 }} />
+      <section className="estimateProcessSection">
+        <div className="container">
+          <div className="estimateSectionLabel">What happens next</div>
+          <h2 className="estimateSectionTitle">
+            {view.variant === "deep"
+              ? "From alignment call to fixed scope."
+              : view.variant === "warm"
+              ? "A quick call, then a clean kickoff."
+              : "From accept to launch."}
+          </h2>
+          <p className="estimateSectionBody">
+            {view.variant === "deep"
+              ? "We use the call to remove ambiguity first, then we move into kickoff with the fixed quote everyone understands."
+              : "The next steps stay visible the whole way through so the project never disappears into email and guesswork."}
+          </p>
 
-      <section className="panel">
-        <div className="panelHeader">
-          <div style={{ fontWeight: 800 }}>Next step</div>
-          <div className="smallNote">
-            Save your quote and book a quick call. Payment happens after the call if you proceed.
+          <div className="estimateProcessGrid">
+            {view.process.map((step) => (
+              <article className="estimateProcessStep" key={step.label}>
+                <div className="estimateProcessLabel">{step.label}</div>
+                <h3>{step.title}</h3>
+                <p>{step.body}</p>
+              </article>
+            ))}
           </div>
         </div>
-        <div className="panelBody" style={{ display: "grid", gap: 12 }}>
-          {sendError ? (
-            <div
-              style={{
-                border: "1px solid rgba(255,0,0,0.35)",
-                background: "rgba(255,0,0,0.08)",
-                borderRadius: 10,
-                padding: 12,
-                fontWeight: 700,
-              }}
-            >
-              {sendError}
-            </div>
-          ) : null}
+      </section>
 
-          <div className="row" style={{ justifyContent: "space-between" }}>
-            <Link className="btn btnGhost" href="/build">
-              Edit answers
-            </Link>
-            <button className="btn btnPrimary" type="button" onClick={onSendEstimate} disabled={sending}>
-              {sending ? "Saving..." : "Save + book call"} <span className="btnArrow">→</span>
-            </button>
+      <section className="estimateModule">
+        <div className="container">
+          <div className="estimateTierIntro">
+            <div>
+              <div className="estimateSectionLabel">For context</div>
+              <h2 className="estimateSectionTitle">How we tier projects.</h2>
+            </div>
+            <p className="estimateTierIntroBody">{view.tierIntro}</p>
+          </div>
+
+          <div className="estimateTierGrid">
+            {view.tierCards.map((tier) => (
+              <article
+                key={tier.key}
+                className={tier.current ? "estimateTierCard estimateTierCardCurrent" : "estimateTierCard"}
+              >
+                <div className="estimateTierName">/ {tier.name}</div>
+                <div className="estimateTierRange">{tier.range}</div>
+                <p className="estimateTierDetail">{tier.detail}</p>
+                <div className="estimateTierMeta">{tier.meta}</div>
+              </article>
+            ))}
+          </div>
+
+          <div className="estimateFaqGrid">
+            {view.faq.map((item) => (
+              <article key={item.question} className="estimateFaqItem">
+                <h3>{item.question}</h3>
+                <p>{item.answer}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="estimateClosing">
+        <div className="container estimateClosingInner">
+          <div>
+            <h2>{view.closing.title}</h2>
+            <p>{view.closing.body}</p>
+          </div>
+
+          <div className="estimateClosingActions">
+            {primarySchedule ? (
+              <a
+                className="estimatePrimaryButton estimateClosingButton"
+                href={primarySchedule.url}
+                target={primarySchedule.external ? "_blank" : undefined}
+                rel={primarySchedule.external ? "noreferrer" : undefined}
+              >
+                {primarySchedule.label} <span className="estimateButtonArrow">-&gt;</span>
+              </a>
+            ) : null}
+
+            {showAccept ? (
+              <button
+                type="button"
+                className={primarySchedule ? "estimateSecondaryButton estimateClosingButton" : "estimatePrimaryButton estimateClosingButton"}
+                onClick={onAccept}
+                disabled={accepting}
+              >
+                {accepting ? "Creating secure checkout..." : view.acceptLabel}{" "}
+                <span className="estimateButtonArrow">-&gt;</span>
+              </button>
+            ) : null}
+
+            {view.messageUrl ? (
+              <Link className="estimateGhostButton estimateClosingButton" href={view.messageUrl}>
+                Message us with questions
+              </Link>
+            ) : null}
+
+            <div className="estimateFineprint">{view.closing.fineprint}</div>
+            {acceptError ? <div className="estimateActionError">{acceptError}</div> : null}
           </div>
         </div>
       </section>

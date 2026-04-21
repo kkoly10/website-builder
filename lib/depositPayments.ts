@@ -3,6 +3,7 @@ import { getWorkspaceState, saveWorkspaceState } from "@/lib/opsWorkspace/state"
 import { getOpsPricing } from "@/lib/pricing/ops";
 import { stripeCreateCheckoutSession } from "@/lib/stripeServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { ensureCustomerPortalForQuoteId } from "@/lib/customerPortal";
 
 function str(value: unknown, fallback = "") {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
@@ -18,6 +19,135 @@ function roundMoney(value: unknown) {
   const num = Number(value);
   if (!Number.isFinite(num)) return 0;
   return Math.max(0, Math.round(num));
+}
+
+export async function ensureWebsiteQuoteDepositLink(args: {
+  quoteId: string;
+  baseUrl: string;
+  quoteToken?: string | null;
+  depositAmount?: number;
+}) {
+  const { data: quote, error: quoteError } = await supabaseAdmin
+    .from("quotes")
+    .select("id, public_token, lead_id, lead_email, estimate_total, tier_recommended, status, deposit_status, deposit_link, debug")
+    .eq("id", args.quoteId)
+    .maybeSingle();
+
+  if (quoteError) throw new Error(quoteError.message);
+  if (!quote) throw new Error("Quote not found.");
+
+  const portal = await ensureCustomerPortalForQuoteId(args.quoteId);
+  if (str(portal?.deposit_checkout_url) && str(portal?.deposit_status) !== "paid") {
+    return {
+      depositUrl: str(portal.deposit_checkout_url),
+      depositAmount: roundMoney(Number(portal.deposit_amount_cents ?? 0) / 100),
+      sessionId: "",
+      reused: true,
+    };
+  }
+
+  let customerEmail = str((quote as any).lead_email);
+  if (!customerEmail && quote.lead_id) {
+    const { data: lead, error: leadError } = await supabaseAdmin
+      .from("leads")
+      .select("email, lead_email")
+      .eq("id", quote.lead_id)
+      .maybeSingle();
+
+    if (leadError) throw new Error(leadError.message);
+    customerEmail = str((lead as any)?.email) || str((lead as any)?.lead_email);
+  }
+
+  if (!customerEmail || !customerEmail.includes("@")) {
+    throw new Error("Lead email missing; cannot create deposit link.");
+  }
+
+  const debug = safeObj((quote as any).debug);
+  const internal = safeObj(debug.internal);
+  const token = str(args.quoteToken) || str((portal as any)?.access_token) || str((quote as any).public_token);
+  const firmPrice =
+    roundMoney(args.depositAmount) * 2 ||
+    roundMoney(Number((portal as any)?.deposit_amount_cents ?? 0) / 50) ||
+    roundMoney(internal.final_price) ||
+    roundMoney((quote as any).estimate_total);
+  const depositAmount =
+    roundMoney(args.depositAmount) ||
+    roundMoney(Number((portal as any)?.deposit_amount_cents ?? 0) / 100) ||
+    Math.max(100, Math.round(firmPrice * 0.5));
+
+  const successUrl = `${args.baseUrl}/deposit/success?session_id={CHECKOUT_SESSION_ID}`;
+  const cancelParams = new URLSearchParams({ quoteId: args.quoteId });
+  if (token) cancelParams.set("token", token);
+  const cancelUrl = `${args.baseUrl}/estimate?${cancelParams.toString()}`;
+
+  const session = await stripeCreateCheckoutSession({
+    amountUsdCents: depositAmount * 100,
+    customerEmail,
+    quoteId: args.quoteId,
+    successUrl,
+    cancelUrl,
+    productName: "CrecyStudio Website Deposit",
+    productDescription: `Deposit for website quote ${args.quoteId}`,
+    metadata: {
+      lane: "website",
+      quoteId: args.quoteId,
+    },
+  });
+
+  const now = new Date().toISOString();
+  const history = Array.isArray(internal.history) ? internal.history : [];
+  history.push({ at: now, action: "create_deposit_link", status: "deposit_sent", depositDollars: depositAmount });
+
+  const nextDebug = {
+    ...debug,
+    internal: {
+      ...internal,
+      final_price: firmPrice || null,
+      deposit_amount: depositAmount,
+      deposit: {
+        session_id: session.id,
+        url: session.url,
+        amount: depositAmount,
+        created_at: now,
+        status: "sent",
+      },
+      history,
+    },
+  };
+
+  const nextStatus = str((quote as any).status) === "paid" ? "paid" : "deposit_sent";
+  const nextDepositStatus = str((quote as any).deposit_status) === "paid" ? "paid" : "pending";
+
+  const { error: projectError } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({
+      deposit_status: nextDepositStatus,
+      deposit_amount_cents: depositAmount * 100,
+      deposit_checkout_url: session.url,
+      updated_at: now,
+    })
+    .eq("id", (portal as any).id);
+
+  if (projectError) throw new Error(projectError.message);
+
+  const { error: updateError } = await supabaseAdmin
+    .from("quotes")
+    .update({
+      status: nextStatus,
+      deposit_status: nextDepositStatus,
+      deposit_link: session.url,
+      debug: nextDebug,
+    })
+    .eq("id", args.quoteId);
+
+  if (updateError) throw new Error(updateError.message);
+
+  return {
+    depositUrl: session.url,
+    depositAmount,
+    sessionId: session.id,
+    reused: false,
+  };
 }
 
 async function getOrCreateEcomQuote(ecomIntakeId: string) {
