@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getCustomerPortalBundleByQuoteId } from "@/lib/customerPortal";
 import type { GhostLane, GhostProjectSnapshot } from "@/lib/ghost/types";
 
 function d(value?: string | null) {
@@ -48,27 +49,20 @@ function formatCurrency(value: unknown) {
 }
 
 async function getWebsiteSnapshot(projectId: string): Promise<GhostProjectSnapshot | null> {
-  const [{ data: quote }, { data: call }, { data: portal }] = await Promise.all([
-    supabaseAdmin.from("quotes").select("*").eq("id", projectId).maybeSingle(),
-    supabaseAdmin
-      .from("call_requests")
-      .select("*")
-      .eq("quote_id", projectId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabaseAdmin.from("quote_portal_state").select("*").eq("quote_id", projectId).maybeSingle(),
-  ]);
+  const bundle = await getCustomerPortalBundleByQuoteId(projectId);
+  const quote = bundle?.quote ?? null;
+  const call = bundle?.callRequest ?? null;
+  const portal = bundle?.portal ?? null;
 
   if (!quote) return null;
 
   const status = text(quote.status, "new");
-  const depositStatus = text(quote.deposit_status, "unpaid");
-  const revisions = asArray(portal?.revision_requests);
-  const milestones = asArray(portal?.milestones);
-  const assets = asArray(portal?.assets);
+  const depositStatus = text(portal?.deposit_status || quote.deposit_status, "unpaid");
+  const revisions = asArray(bundle?.revisions);
+  const milestones = asArray(bundle?.milestones);
+  const assets = asArray(bundle?.assets);
   const previewUrl = extractPreviewUrl(quote, portal);
-  const doneMilestones = milestones.filter((m: any) => !!m?.done).length;
+  const doneMilestones = milestones.filter((m: any) => String(m?.status) === "done").length;
 
   const riskFlags = normalizeRiskFlags([
     depositStatus !== "paid" && ["proposal", "deposit", "active"].includes(status)
