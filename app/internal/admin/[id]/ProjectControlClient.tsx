@@ -214,7 +214,13 @@ function LaunchCheckItem({ label, done }: { label: string; done: boolean }) {
    MAIN COMPONENT
    ═══════════════════════════════════ */
 
-export default function ProjectControlClient({ initialData }: { initialData: ProjectControlData }) {
+export default function ProjectControlClient({
+  initialData,
+  embedded = false,
+}: {
+  initialData: ProjectControlData;
+  embedded?: boolean;
+}) {
   const [data, setData] = useState<ProjectControlData>(initialData);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -420,8 +426,14 @@ export default function ProjectControlClient({ initialData }: { initialData: Pro
     { key: "scope", label: "Scope & build" },
     { key: "workspace", label: "Workspace" },
     { key: "agreement", label: "Agreement" },
-    { key: "launch", label: "Launch", badge: readiness.blockers.length },
-    { key: "client", label: "Client sync", badge: data.clientSync.assets.length + data.clientSync.revisions.length },
+    {
+      key: "activity",
+      label: "Activity",
+      badge:
+        readiness.blockers.length +
+        data.clientSync.assets.length +
+        data.clientSync.revisions.length,
+    },
   ];
 
   const pt = pieTone(data.pie.score);
@@ -431,9 +443,13 @@ export default function ProjectControlClient({ initialData }: { initialData: Pro
      ═══════════════════════════════════ */
 
   return (
-    <main className="container" style={{ paddingTop: 0, paddingBottom: 48 }}>
+    <section
+      className={embedded ? "adminWorkbench adminWorkbenchEmbedded" : "container adminWorkbench"}
+      style={{ paddingTop: 0, paddingBottom: embedded ? 0 : 48 }}
+    >
 
       {/* ── Command Header ── */}
+      {!embedded ? (
       <div style={{
         padding: "28px 0", borderBottom: "1px solid var(--rule)", marginBottom: 24,
         display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: 20, alignItems: "start",
@@ -464,8 +480,10 @@ export default function ProjectControlClient({ initialData }: { initialData: Pro
           )}
         </div>
       </div>
+      ) : null}
 
       {/* ── Stats Row ── */}
+      {!embedded ? (
       <div style={{ display: "flex", gap: 10, marginBottom: 24, flexWrap: "wrap" }}>
         <Stat label="Status" value={pretty(data.status)} />
         <Stat label="Tier" value={data.tier} />
@@ -482,6 +500,7 @@ export default function ProjectControlClient({ initialData }: { initialData: Pro
           </div>
         </div>
       </div>
+      ) : null}
 
       {/* ── Message ── */}
       {message && (
@@ -756,7 +775,7 @@ export default function ProjectControlClient({ initialData }: { initialData: Pro
       )}
 
       {/* ═══ TAB: LAUNCH ═══ */}
-      {activeTab === "launch" && (
+      {activeTab === "activity" && (
         <div style={{ maxWidth: 680 }}>
           <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
@@ -792,7 +811,7 @@ export default function ProjectControlClient({ initialData }: { initialData: Pro
       )}
 
       {/* ═══ TAB: CLIENT SYNC ═══ */}
-      {activeTab === "client" && (
+      {activeTab === "activity" && (
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 16 }}>
           {/* Assets */}
           <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
@@ -878,6 +897,6 @@ export default function ProjectControlClient({ initialData }: { initialData: Pro
           </div>
         </div>
       )}
-    </main>
+    </section>
   );
 }

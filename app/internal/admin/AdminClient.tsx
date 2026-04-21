@@ -1,7 +1,12 @@
 "use client";
 
-import AdminPipelineClient, { PipelineRow } from "./AdminPipelineClient";
+import type { AdminProjectData } from "@/lib/adminProjectData";
+import AdminPipelineClient from "./AdminPipelineClient";
 
-export default function AdminClient({ initialRows }: { initialRows: PipelineRow[] }) {
-  return <AdminPipelineClient initialRows={initialRows} />;
+export default function AdminClient({
+  initialProjects,
+}: {
+  initialProjects: AdminProjectData[];
+}) {
+  return <AdminPipelineClient initialProjects={initialProjects} />;
 }

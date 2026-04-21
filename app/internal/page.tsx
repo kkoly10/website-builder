@@ -52,6 +52,14 @@ export default async function InternalHomePage() {
           <p className="p">
             Welcome to the CEO dashboard. Jump into either your website project pipeline or your ops intake workflow.
           </p>
+          <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <Link href="/internal/dashboard" className="btn btnPrimary">
+              Open Dashboard <span className="btnArrow">â†’</span>
+            </Link>
+            <Link href="/internal/admin" className="btn btnGhost">
+              Open Website Pipeline
+            </Link>
+          </div>
         </div>
       </div>
 

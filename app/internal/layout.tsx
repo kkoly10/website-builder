@@ -33,6 +33,10 @@ export default async function InternalLayout({ children }: { children: ReactNode
               Home
             </Link>
 
+            <Link href="/internal/dashboard" className="btn btnGhost">
+              Dashboard
+            </Link>
+
             <Link
               href="/internal/admin"
               className="btn btnPrimary"
