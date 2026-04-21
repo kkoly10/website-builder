@@ -270,6 +270,12 @@ function getStoryContent(phase: string) {
   }
 }
 
+function getMilestoneState(milestones: PortalMilestone[], index: number) {
+  if (milestones[index]?.done) return "done";
+  const activeIndex = milestones.findIndex((item) => !item.done);
+  return activeIndex === index ? "active" : "pending";
+}
+
 /* ═══════════════════════════════════
    SUB-COMPONENTS
    ═══════════════════════════════════ */
@@ -290,41 +296,60 @@ function JourneyMap({ milestones }: { milestones: PortalMilestone[] }) {
             style={{ width: `${Math.max(0, Math.min(100, fillPercent))}%` }}
           />
         </div>
-        {milestones.map((m) => {
-          const isActive = !m.done && milestones.filter((x) => x.done).length ===
-            milestones.indexOf(m);
+        {milestones.map((m, index) => {
+          const state = getMilestoneState(milestones, index);
           return (
             <div key={m.key} className="portalJourneyStep">
               <div
                 className={`portalJourneyDot ${
-                  m.done
+                  state === "done"
                     ? "portalJourneyDotDone"
-                    : isActive
-                    ? "portalJourneyDotActive"
-                    : "portalJourneyDotPending"
+                    : state === "active"
+                      ? "portalJourneyDotActive"
+                      : "portalJourneyDotPending"
                 }`}
               >
-                {m.done ? (
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M2.5 6.5L5 9L9.5 3.5" stroke="#0a0c14" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                ) : isActive ? (
+                {state !== "pending" ? (
                   <div className="portalJourneyDotInner" />
                 ) : null}
               </div>
               <div
                 className={`portalJourneyLabel ${
-                  m.done
+                  state === "done"
                     ? "portalJourneyLabelDone"
-                    : isActive
-                    ? "portalJourneyLabelActive"
-                    : "portalJourneyLabelPending"
+                    : state === "active"
+                      ? "portalJourneyLabelActive"
+                      : "portalJourneyLabelPending"
                 }`}
               >
                 {m.label}
               </div>
               <div className="portalJourneyDate">
                 {m.updatedAt ? fmtDate(m.updatedAt) : "—"}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="portalMilestoneList">
+        {milestones.map((m, index) => {
+          const state = getMilestoneState(milestones, index);
+          const stateClass = state.charAt(0).toUpperCase() + state.slice(1);
+
+          return (
+            <div
+              key={`${m.key}-detail`}
+              className={`portalMilestoneItem portalMilestoneItem${stateClass}`}
+            >
+              <span className={`portalMilestoneBox portalMilestoneBox${stateClass}`}>
+                <span className="portalMilestoneBoxInner" />
+              </span>
+              <div className="portalMilestoneCopy">
+                <div className="portalMilestoneLabel">{m.label}</div>
+                <div className="portalMilestoneDate">
+                  {m.updatedAt ? fmtDate(m.updatedAt) : "Waiting on this step"}
+                </div>
               </div>
             </div>
           );
@@ -340,42 +365,37 @@ function LaunchSummary({ checks, percent, completed }: {
   completed: number;
 }) {
   const remaining = checks.filter((c) => !c.done);
-  const circumference = 188;
-  const offset = circumference - (circumference * percent) / 100;
 
   return (
     <div className="portalLaunchSummary">
-      <div style={{ flexShrink: 0 }}>
-        <svg width="66" height="66" viewBox="0 0 66 66">
-          <circle className="portalLaunchRingBg" cx="33" cy="33" r="30" />
-          <circle
-            className="portalLaunchRingFg"
-            cx="33" cy="33" r="30"
-            style={{ strokeDashoffset: offset }}
-          />
-          <text x="33" y="37" textAnchor="middle" fill="var(--ink)"
-            fontFamily="DM Sans" fontSize="16" fontWeight="600">
-            {percent}%
-          </text>
-        </svg>
-      </div>
-      <div className="portalLaunchInfo">
-        <h4>
-          {remaining.length === 0
-            ? "Ready to launch"
-            : `${remaining.length} thing${remaining.length > 1 ? "s" : ""} left before launch`}
-        </h4>
-        <p>{completed} of {checks.length} checks passed</p>
-        <div className="portalLaunchItems">
-          {checks.map((c) => (
-            <span
-              key={c.key}
-              className={`portalLaunchChip ${c.done ? "portalLaunchChipDone" : "portalLaunchChipPending"}`}
-            >
-              {c.label}
-            </span>
-          ))}
+      <div className="portalLaunchHero">
+        <div className="portalLaunchPercent">{percent}%</div>
+        <div className="portalLaunchInfo">
+          <h4>
+            {remaining.length === 0
+              ? "Ready to launch"
+              : `${remaining.length} thing${remaining.length > 1 ? "s" : ""} left before launch`}
+          </h4>
+          <p>{completed} of {checks.length} checks passed</p>
         </div>
+      </div>
+
+      <div className="portalLaunchBar">
+        <div className="portalLaunchBarFill" style={{ width: `${percent}%` }} />
+      </div>
+
+      <div className="portalLaunchItems">
+        {checks.map((c) => (
+          <div
+            key={c.key}
+            className={`portalLaunchCheck ${c.done ? "portalLaunchCheckDone" : "portalLaunchCheckPending"}`}
+          >
+            <span className="portalLaunchCheckBox">
+              <span className="portalLaunchCheckBoxInner" />
+            </span>
+            <span>{c.label}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -565,7 +585,7 @@ export default function PortalClient({
      ═══════════════════════════════════ */
 
   return (
-    <div className="container" style={{ paddingBottom: 48 }}>
+    <div className="container portalShell">
 
       {/* ── Story Hero ── */}
       <div className="portalStory heroFadeUp">
@@ -580,7 +600,7 @@ export default function PortalClient({
 
         <p className="portalStoryBody">{story.body}</p>
 
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+        <div className="portalStoryActions">
           {bundle.preview.url ? (
             <a
               href={bundle.preview.url}
@@ -635,36 +655,38 @@ export default function PortalClient({
       {error ? <div className="portalError">{error}</div> : null}
 
       {/* ── Deposit Banner (only if unpaid) ── */}
-      {!depositPaid && (
-        <div className="portalDepositBanner">
-          <div>
-            <h3>Your deposit is waiting</h3>
+      <div
+        className={`portalDepositBanner ${
+          depositPaid ? "portalDepositBannerPaid" : "portalDepositBannerPending"
+        }`}
+      >
+          <div className="portalDepositLead">
+            <h3>{depositPaid ? "Deposit received" : "Your deposit is waiting"}</h3>
             <p>
-              Work begins as soon as the deposit clears. Pay securely via the link — we&apos;ll
-              confirm receipt within 24 hours.
+              {depositPaid
+                ? "Your deposit has been recorded and the project is moving through kickoff. We will keep the workspace updated as build work progresses."
+                : "Work begins as soon as the deposit clears. Pay securely via the link and we will confirm receipt within 24 hours."}
             </p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+          <div className="portalDepositActions">
             {bundle.quote.deposit.amount ? (
               <span className="portalDepositAmount">
                 {money(bundle.quote.deposit.amount)}
               </span>
             ) : null}
 
-            {bundle.quote.deposit.link ? (
+            {!depositPaid && bundle.quote.deposit.link ? (
               <a
                 href={bundle.quote.deposit.link}
                 target="_blank"
                 rel="noreferrer"
                 className="portalStoryCta"
-                style={{ whiteSpace: "nowrap" }}
               >
                 Pay deposit <span className="portalStoryCtaArrow">→</span>
               </a>
             ) : null}
 
-            {bundle.quote.deposit.status !== "paid" &&
-            bundle.portalState.clientStatus !== "deposit_sent" ? (
+            {!depositPaid && bundle.portalState.clientStatus !== "deposit_sent" ? (
               <button
                 className="btn btnGhost"
                 type="button"
@@ -681,13 +703,17 @@ export default function PortalClient({
             ) : null}
 
             {bundle.portalState.clientStatus === "deposit_sent" ? (
-              <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
+              <span className="portalDepositMeta">
                 Deposit notice sent — awaiting verification
+              </span>
+            ) : null}
+            {depositPaid && bundle.quote.deposit.paidAt ? (
+              <span className="portalDepositMeta">
+                Paid {fmtDate(bundle.quote.deposit.paidAt)}
               </span>
             ) : null}
           </div>
         </div>
-      )}
 
       {/* ── Journey Map ── */}
       {bundle.portalState.milestones.length > 0 ? (
@@ -762,17 +788,9 @@ export default function PortalClient({
           </div>
 
           {bundle.preview.notes ? (
-            <div style={{
-              border: "1px solid var(--rule)",
-              borderRadius: 12,
-              padding: 14,
-              background: "var(--paper-2)",
-              marginTop: 8,
-            }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
-                Preview notes
-              </div>
-              <p className="p" style={{ margin: 0, fontSize: 14 }}>{bundle.preview.notes}</p>
+            <div className="portalInfoNote">
+              <div className="portalInfoNoteLabel">Preview notes</div>
+              <p className="portalInfoNoteText">{bundle.preview.notes}</p>
             </div>
           ) : null}
         </div>
@@ -786,28 +804,15 @@ export default function PortalClient({
             percent={launchReadiness.percent}
             completed={launchReadiness.completed}
           />
-          <div style={{
-            marginTop: 16,
-            fontSize: 13,
-            color: "var(--muted-2)",
-            lineHeight: 1.6,
-          }}>
+          <div className="portalLaunchAside">
             We&apos;re handling the remaining items behind the scenes. You&apos;ll be notified
             when everything&apos;s ready to go live.
           </div>
 
           {bundle.launch.notes ? (
-            <div style={{
-              border: "1px solid var(--rule)",
-              borderRadius: 12,
-              padding: 14,
-              background: "var(--paper-2)",
-              marginTop: 12,
-            }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
-                Launch notes
-              </div>
-              <p className="p" style={{ margin: 0, fontSize: 14 }}>{bundle.launch.notes}</p>
+            <div className="portalInfoNote">
+              <div className="portalInfoNoteLabel">Launch notes</div>
+              <p className="portalInfoNoteText">{bundle.launch.notes}</p>
             </div>
           ) : null}
         </div>
@@ -857,7 +862,7 @@ export default function PortalClient({
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div className="portalInlineGrid2">
                 <div>
                   <div className="fieldLabel">Category</div>
                   <select
@@ -951,16 +956,7 @@ export default function PortalClient({
           )}
 
           {bundle.portalState.assets.length === 0 && !showUploadForm ? (
-            <div style={{
-              border: "1px dashed var(--rule)",
-              borderRadius: 14,
-              padding: 14,
-              color: "var(--muted-2)",
-              textAlign: "center",
-              fontSize: 14,
-            }}>
-              No assets submitted yet
-            </div>
+            <div className="portalEmptyState">No assets submitted yet</div>
           ) : (
             bundle.portalState.assets.map((asset) => (
               <div key={asset.id} className="portalAsset">
@@ -1006,7 +1002,7 @@ export default function PortalClient({
             </span>
           </div>
 
-          <form onSubmit={submitRevision} style={{ marginBottom: 18 }}>
+          <form onSubmit={submitRevision} className="portalFeedbackForm">
             <textarea
               className="portalFeedbackArea"
               placeholder="What should change? What feels off?"
@@ -1014,15 +1010,22 @@ export default function PortalClient({
               onChange={(e) => setRevisionMessage(e.target.value)}
             />
             <div className="portalFeedbackRow">
-              <select
-                className="portalFeedbackSelect"
-                value={revisionPriority}
-                onChange={(e) => setRevisionPriority(e.target.value as "low" | "normal" | "high")}
-              >
-                <option value="low">Low priority</option>
-                <option value="normal">Normal</option>
-                <option value="high">High priority</option>
-              </select>
+              <div className="portalPriorityRow">
+                {(["low", "normal", "high"] as const).map((priority) => (
+                  <button
+                    key={priority}
+                    type="button"
+                    className={`portalPriorityPill ${
+                      revisionPriority === priority
+                        ? `portalPriorityPillActive portalPriorityPill${priority.charAt(0).toUpperCase()}${priority.slice(1)}`
+                        : ""
+                    }`}
+                    onClick={() => setRevisionPriority(priority)}
+                  >
+                    {priority} priority
+                  </button>
+                ))}
+              </div>
               <button type="submit" className="portalFeedbackBtn" disabled={saving}>
                 {saving ? "Sending..." : "Submit feedback"}
               </button>
@@ -1030,16 +1033,7 @@ export default function PortalClient({
           </form>
 
           {bundle.portalState.revisions.length === 0 ? (
-            <div style={{
-              border: "1px dashed var(--rule)",
-              borderRadius: 14,
-              padding: 14,
-              color: "var(--muted-2)",
-              textAlign: "center",
-              fontSize: 14,
-            }}>
-              No revision requests yet
-            </div>
+            <div className="portalEmptyState">No revision requests yet</div>
           ) : (
             bundle.portalState.revisions.map((rev) => (
               <div
@@ -1180,7 +1174,7 @@ export default function PortalClient({
         </div>
         <div className="portalDrawerRow">
           <span className="portalDrawerKey">Deposit status</span>
-          <span className="portalDrawerVal" style={depositPaid ? { color: "#5DCAA5" } : undefined}>
+          <span className={`portalDrawerVal ${depositPaid ? "portalDrawerValPaid" : ""}`}>
             {depositPaid ? `Paid — ${money(bundle.quote.deposit.amount)}` : pretty(bundle.quote.deposit.status)}
           </span>
         </div>
