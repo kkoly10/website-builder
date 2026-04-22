@@ -1,4 +1,5 @@
 import { randomBytes } from "crypto";
+import { logProjectActivityByPortalId, logProjectActivityByQuoteId } from "@/lib/projectActivity";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 type AnyObj = Record<string, any>;
@@ -968,6 +969,23 @@ async function createCustomerPortalMessageByPortalId(
 
   if (projectError) throw projectError;
 
+  await logProjectActivityByPortalId({
+    portalProjectId,
+    actorRole: senderRole === "client" ? "client" : "studio",
+    eventType: "message_sent",
+    summary:
+      senderRole === "client"
+        ? "Client sent a message."
+        : senderRole === "internal"
+        ? "Studio saved an internal note."
+        : "Studio sent a message.",
+    payload: {
+      senderRole,
+      hasAttachment,
+    },
+    clientVisible: senderRole !== "internal",
+  });
+
   return {
     ...data,
     resolved_attachment_url: await signMessageAttachment(data),
@@ -1109,6 +1127,18 @@ export async function submitAssetByPortalToken(input: {
     })
     .eq("id", portal.id);
 
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "client",
+    eventType: "asset_uploaded",
+    summary: `Client uploaded "${input.label.trim()}".`,
+    payload: {
+      assetType: cleanString(input.assetType) || "general",
+      source: cleanString(input.source) || "portal_link",
+    },
+    clientVisible: true,
+  });
+
   return data;
 }
 
@@ -1142,12 +1172,32 @@ export async function submitRevisionByPortalToken(input: {
     })
     .eq("id", portal.id);
 
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "client",
+    eventType: "revision_submitted",
+    summary: "Client submitted a revision request.",
+    payload: {
+      priority: normalizePriority(input.priority),
+    },
+    clientVisible: true,
+  });
+
   return data;
 }
 
 export async function toggleMilestone(token: string, milestoneId: string, done: boolean) {
   const portal = await getPortalProjectByToken(token);
   if (!portal) throw new Error("Portal not found");
+
+  const milestoneRes = await supabaseAdmin
+    .from("customer_portal_milestones")
+    .select("id, title")
+    .eq("portal_project_id", portal.id)
+    .eq("id", milestoneId)
+    .maybeSingle();
+
+  if (milestoneRes.error) throw milestoneRes.error;
 
   const { error } = await supabaseAdmin
     .from("customer_portal_milestones")
@@ -1160,16 +1210,32 @@ export async function toggleMilestone(token: string, milestoneId: string, done: 
     .eq("id", milestoneId);
 
   if (error) throw error;
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "client",
+    eventType: "milestone_toggled",
+    summary: `${done ? "Completed" : "Reopened"} milestone "${cleanString(
+      milestoneRes.data?.title
+    ) || "project step"}".`,
+    payload: {
+      milestoneId,
+      done,
+    },
+    clientVisible: true,
+  });
 }
 
 export async function updateClientStatus(token: string, status: string, notes?: string) {
   const portal = await getPortalProjectByToken(token);
   if (!portal) throw new Error("Portal not found");
 
+  const nextStatus = cleanString(status) || "new";
+
   const { error } = await supabaseAdmin
     .from("customer_portal_projects")
     .update({
-      client_status: cleanString(status) || "new",
+      client_status: nextStatus,
       client_notes: typeof notes === "string" ? notes : portal.client_notes || "",
       client_updated_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -1177,6 +1243,20 @@ export async function updateClientStatus(token: string, status: string, notes?: 
     .eq("id", portal.id);
 
   if (error) throw error;
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "client",
+    eventType: nextStatus === "deposit_sent" ? "deposit_notice_sent" : "client_status_updated",
+    summary:
+      nextStatus === "deposit_sent"
+        ? "Client reported that the deposit was sent."
+        : `Client updated project status to "${nextStatus}".`,
+    payload: {
+      status: nextStatus,
+    },
+    clientVisible: true,
+  });
 }
 
 export async function updateAdminNote(token: string, note: string) {
@@ -1209,6 +1289,15 @@ export async function acceptCustomerPortalAgreement(token: string) {
     .eq("id", portal.id);
 
   if (error) throw error;
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "client",
+    eventType: "agreement_accepted",
+    summary: "Client accepted the project agreement.",
+    payload: {},
+    clientVisible: true,
+  });
 }
 
 export async function markDepositPaid(
@@ -1265,6 +1354,18 @@ export async function markDepositPaidForQuoteId(
     .eq("id", quoteId);
 
   if (quoteError) throw quoteError;
+
+  await logProjectActivityByQuoteId({
+    quoteId,
+    actorRole: "system",
+    eventType: "deposit_paid",
+    summary: "Deposit payment was recorded.",
+    payload: {
+      amountCents,
+      reference: cleanString(paymentData?.reference) || null,
+    },
+    clientVisible: true,
+  });
 }
 
 export async function updatePortalAdminByQuoteId(
@@ -1299,11 +1400,23 @@ export async function updatePortalAdminByQuoteId(
   if (patch.client_status || patch.client_notes) patch.client_updated_at = new Date().toISOString();
 
   if (Object.keys(portalAdmin).length > 0) {
+    const nextPreviewUrl = cleanString(portalAdmin.previewUrl) || null;
+    const nextPreviewStatus =
+      cleanString(portalAdmin.previewStatus) || "Awaiting published preview";
+    const nextPreviewNotes =
+      typeof portalAdmin.previewNotes === "string" ? portalAdmin.previewNotes : "";
+    const previewChanged =
+      nextPreviewUrl !== (portal.preview_url || null) ||
+      nextPreviewStatus !== (portal.preview_status || "Awaiting published preview") ||
+      nextPreviewNotes !== (portal.preview_notes || "");
+
     patch.preview_url = cleanString(portalAdmin.previewUrl) || null;
     patch.production_url = cleanString(portalAdmin.productionUrl) || null;
-    patch.preview_status = cleanString(portalAdmin.previewStatus) || "Awaiting published preview";
-    patch.preview_notes = typeof portalAdmin.previewNotes === "string" ? portalAdmin.previewNotes : "";
-    patch.preview_updated_at = new Date().toISOString();
+    patch.preview_status = nextPreviewStatus;
+    patch.preview_notes = nextPreviewNotes;
+    if (previewChanged) {
+      patch.preview_updated_at = new Date().toISOString();
+    }
     patch.client_review_status = cleanString(portalAdmin.clientReviewStatus) || "Preview pending";
     patch.agreement_status = cleanString(portalAdmin.agreementStatus) || "Not published yet";
     patch.agreement_model = cleanString(portalAdmin.agreementModel) || "Managed build agreement";

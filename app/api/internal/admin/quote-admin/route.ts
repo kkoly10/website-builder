@@ -4,6 +4,7 @@ import {
   savePortalClientSyncByQuoteId,
   updatePortalAdminByQuoteId,
 } from "@/lib/customerPortal";
+import { logProjectActivityByQuoteId } from "@/lib/projectActivity";
 import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireAdminRoute } from "@/lib/routeAuth";
@@ -176,6 +177,7 @@ export async function POST(req: NextRequest) {
 
     const currentDebug = safeObj(existing.debug);
     const nextDebug = { ...currentDebug };
+    const previousPortalAdmin = safeObj(currentDebug.portalAdmin);
 
     const currentScopeSnapshot = safeObj(existing.scope_snapshot);
     let nextScopeSnapshot: any = null;
@@ -371,6 +373,72 @@ export async function POST(req: NextRequest) {
             : undefined,
         }).catch((err) => {
           console.error("[quote-admin] notification error:", err);
+        });
+      }
+
+      const eventSummaries: Record<string, string> = {
+        agreement_published: "Studio published the agreement to the client.",
+        preview_ready: "Studio marked the preview ready for review.",
+        launch_ready: "Studio marked the project ready for launch.",
+        site_live: "Studio marked the project live.",
+      };
+
+      await logProjectActivityByQuoteId({
+        quoteId,
+        actorRole: "studio",
+        eventType: body._event,
+        summary: eventSummaries[body._event] || `Studio recorded event "${body._event}".`,
+        payload: {},
+        clientVisible: body._event !== "internal_note",
+      });
+    } else {
+      if (nextScopeSnapshot) {
+        await logProjectActivityByQuoteId({
+          quoteId,
+          actorRole: "studio",
+          eventType: "scope_updated",
+          summary: "Studio updated the scope snapshot.",
+          payload: {},
+          clientVisible: true,
+        });
+      }
+
+      if (body?.workspaceHistory && typeof body.workspaceHistory === "object") {
+        await logProjectActivityByQuoteId({
+          quoteId,
+          actorRole: "studio",
+          eventType: "workspace_history_updated",
+          summary: "Studio updated the scope history or change orders.",
+          payload: {},
+          clientVisible: true,
+        });
+      }
+
+      if (body?.clientSync && typeof body.clientSync === "object") {
+        await logProjectActivityByQuoteId({
+          quoteId,
+          actorRole: "studio",
+          eventType: "client_sync_updated",
+          summary: "Studio updated asset or revision tracking.",
+          payload: {},
+          clientVisible: true,
+        });
+      }
+
+      const nextPreviewUrl = cleanString(body?.portalAdmin?.previewUrl);
+      if (
+        nextPreviewUrl &&
+        nextPreviewUrl !== cleanString(previousPortalAdmin.previewUrl)
+      ) {
+        await logProjectActivityByQuoteId({
+          quoteId,
+          actorRole: "studio",
+          eventType: "preview_ready",
+          summary: "Studio published a new preview for client review.",
+          payload: {
+            previewUrl: nextPreviewUrl,
+          },
+          clientVisible: true,
         });
       }
     }

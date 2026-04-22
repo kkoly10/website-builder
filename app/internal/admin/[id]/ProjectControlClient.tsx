@@ -43,6 +43,16 @@ type ProjectInvoice = {
   updatedAt: string;
   isPayable: boolean;
 };
+type ProjectActivity = {
+  id: string;
+  quoteId: string;
+  actorRole: "client" | "studio" | "system";
+  eventType: string;
+  summary: string;
+  payload: Record<string, any>;
+  createdAt: string;
+  clientVisible: boolean;
+};
 type MessageSummary = {
   unreadCount: number;
   lastPreview: string;
@@ -69,12 +79,19 @@ type ProjectControlData = {
   portalStateAdmin: { clientStatus: string; clientNotes: string; adminPublicNote: string; depositAmount: number; depositNotes: string; milestones: Milestone[] };
   clientSync: { lastClientUpdate: string; assets: ClientAsset[]; revisions: ClientRevision[] };
   invoices: ProjectInvoice[];
+  activityFeed: ProjectActivity[];
   messages: PortalMessage[];
   messageSummary: MessageSummary;
   workspaceHistory: { scopeVersions: ScopeVersion[]; changeOrders: ChangeOrder[] };
   proposalText: string;
   preContractDraft: string;
   publishedAgreementText: string;
+  agreementAcceptance: {
+    acceptedAt: string;
+    acceptedByEmail: string;
+    acceptedFromIp: string;
+    agreementVersionHash: string;
+  } | null;
 };
 
 type PortalAdminView = {
@@ -358,6 +375,9 @@ export default function ProjectControlClient({
   const [messageBody, setMessageBody] = useState("");
   const [messageMode, setMessageMode] = useState<"studio" | "internal">("studio");
   const [messageFile, setMessageFile] = useState<File | null>(null);
+  const [activityActorFilter, setActivityActorFilter] = useState("all");
+  const [activityEventFilter, setActivityEventFilter] = useState("all");
+  const [activityWindow, setActivityWindow] = useState("all");
   const messageFileRef = useRef<HTMLInputElement>(null);
 
   const readiness = useMemo(() => computeLaunchReadiness(data), [data]);
@@ -366,6 +386,26 @@ export default function ProjectControlClient({
     return d + data.adminPricing.flatAdjustment;
   }, [data.estimate.target, data.adminPricing]);
   const groupedMessages = useMemo(() => groupMessagesByDay(data.messages), [data.messages]);
+  const filteredActivity = useMemo(() => {
+    return data.activityFeed.filter((item) => {
+      if (activityActorFilter !== "all" && item.actorRole !== activityActorFilter) {
+        return false;
+      }
+
+      if (activityEventFilter !== "all" && item.eventType !== activityEventFilter) {
+        return false;
+      }
+
+      if (activityWindow !== "all") {
+        const ageHours = (Date.now() - new Date(item.createdAt).getTime()) / (1000 * 60 * 60);
+        if (activityWindow === "24h" && ageHours > 24) return false;
+        if (activityWindow === "7d" && ageHours > 24 * 7) return false;
+        if (activityWindow === "30d" && ageHours > 24 * 30) return false;
+      }
+
+      return true;
+    });
+  }, [activityActorFilter, activityEventFilter, activityWindow, data.activityFeed]);
 
   useEffect(() => {
     if (activeTab !== "activity") return;
@@ -1263,6 +1303,20 @@ export default function ProjectControlClient({
             </div>
             <textarea className="textarea" rows={20} value={data.publishedAgreementText}
               onChange={(e) => setData((p) => ({ ...p, publishedAgreementText: e.target.value }))} placeholder="Agreement text shown to the client once published." />
+
+            {data.agreementAcceptance ? (
+              <div style={{ marginTop: 14, padding: 14, borderRadius: 12, border: "1px solid var(--rule)", background: "var(--paper-2)" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 10 }}>
+                  Acceptance audit
+                </div>
+                <div style={{ display: "grid", gap: 8, fontSize: 13, color: "var(--muted)" }}>
+                  <div><strong style={{ color: "var(--ink)" }}>Accepted:</strong> {fmtDateTime(data.agreementAcceptance.acceptedAt)}</div>
+                  <div><strong style={{ color: "var(--ink)" }}>Email:</strong> {data.agreementAcceptance.acceptedByEmail || "Unknown"}</div>
+                  <div><strong style={{ color: "var(--ink)" }}>IP:</strong> {data.agreementAcceptance.acceptedFromIp || "Unknown"}</div>
+                  <div style={{ wordBreak: "break-all" }}><strong style={{ color: "var(--ink)" }}>Version hash:</strong> {data.agreementAcceptance.agreementVersionHash || "Unknown"}</div>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       )}
@@ -1270,6 +1324,62 @@ export default function ProjectControlClient({
       {/* ═══ TAB: LAUNCH ═══ */}
       {activeTab === "activity" && (
         <div style={{ maxWidth: 920 }}>
+          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22, marginBottom: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 18 }}>
+              <div>
+                <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Project timeline</h3>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
+                  Full event history across client, studio, and system actions.
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <select className="select" style={{ minWidth: 130, fontSize: 12 }} value={activityActorFilter} onChange={(e) => setActivityActorFilter(e.target.value)}>
+                  <option value="all">All actors</option>
+                  <option value="client">Client</option>
+                  <option value="studio">Studio</option>
+                  <option value="system">System</option>
+                </select>
+                <select className="select" style={{ minWidth: 150, fontSize: 12 }} value={activityEventFilter} onChange={(e) => setActivityEventFilter(e.target.value)}>
+                  <option value="all">All events</option>
+                  {Array.from(new Set(data.activityFeed.map((item) => item.eventType))).map((eventType) => (
+                    <option key={eventType} value={eventType}>
+                      {pretty(eventType)}
+                    </option>
+                  ))}
+                </select>
+                <select className="select" style={{ minWidth: 120, fontSize: 12 }} value={activityWindow} onChange={(e) => setActivityWindow(e.target.value)}>
+                  <option value="all">All time</option>
+                  <option value="24h">Last 24h</option>
+                  <option value="7d">Last 7d</option>
+                  <option value="30d">Last 30d</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gap: 10 }}>
+              {filteredActivity.length === 0 ? (
+                <div style={{ fontSize: 13, color: "var(--muted-2)", padding: 18, border: "1px dashed var(--rule)", borderRadius: 12, textAlign: "center" }}>
+                  No activity matches the current filters.
+                </div>
+              ) : (
+                filteredActivity.map((item) => (
+                  <div key={item.id} style={{ display: "grid", gridTemplateColumns: "84px minmax(0,1fr)", gap: 14, padding: "12px 14px", border: "1px solid var(--rule)", borderRadius: 12, background: item.actorRole === "system" ? "var(--paper-2)" : "var(--paper)" }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: item.actorRole === "client" ? "var(--accent)" : item.actorRole === "studio" ? "var(--ink)" : "var(--muted-2)" }}>
+                      {pretty(item.actorRole)}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>{item.summary}</div>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4, fontSize: 11, color: "var(--muted-2)" }}>
+                        <span>{pretty(item.eventType)}</span>
+                        <span>{fmtDateTime(item.createdAt)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
           <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
               <PieRing score={readiness.percent} size={64} />

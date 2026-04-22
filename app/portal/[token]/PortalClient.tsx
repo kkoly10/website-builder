@@ -62,6 +62,16 @@ type ProjectInvoice = {
   updatedAt: string;
   isPayable: boolean;
 };
+type ProjectActivity = {
+  id: string;
+  quoteId: string;
+  actorRole: "client" | "studio" | "system";
+  eventType: string;
+  summary: string;
+  payload: Record<string, any>;
+  createdAt: string;
+  clientVisible: boolean;
+};
 
 type ScopeVersion = {
   id: string;
@@ -203,6 +213,7 @@ type PortalBundle = {
     waitingOn: string;
   };
   invoices: ProjectInvoice[];
+  activityFeed: ProjectActivity[];
   messages: PortalMessage[];
 };
 
@@ -755,7 +766,7 @@ export default function PortalClient({
         <div className="portalStoryActions">
           {bundle.preview.url ? (
             <a
-              href={bundle.preview.url}
+              href={`/api/portal/${token}/preview`}
               target="_blank"
               rel="noreferrer"
               className="portalStoryCta"
@@ -1003,7 +1014,7 @@ export default function PortalClient({
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {bundle.preview.url ? (
                   <a
-                    href={bundle.preview.url}
+                    href={`/api/portal/${token}/preview`}
                     target="_blank"
                     rel="noreferrer"
                     className="btn btnPrimary"
@@ -1184,6 +1195,40 @@ export default function PortalClient({
             </button>
           </div>
         </form>
+      </div>
+
+      <div className="portalPanel fadeUp" style={{ animationDelay: "0.2s", marginBottom: "1rem" }}>
+        <div className="portalPanelHeader">
+          <div>
+            <h2 className="portalPanelTitle">Activity</h2>
+            <div className="portalMessageIntro">
+              A running timeline of the client-facing milestones and updates for your project.
+            </div>
+          </div>
+          <span className="portalPanelCount">
+            {bundle.activityFeed.length} event{bundle.activityFeed.length === 1 ? "" : "s"}
+          </span>
+        </div>
+
+        <div style={{ display: "grid", gap: 10 }}>
+          {bundle.activityFeed.length === 0 ? (
+            <div className="portalEmptyState">No activity yet.</div>
+          ) : (
+            bundle.activityFeed.map((item) => (
+              <div key={item.id} style={{ display: "grid", gridTemplateColumns: "72px minmax(0,1fr)", gap: 14, padding: "14px 16px", borderRadius: 14, border: "1px solid var(--rule)", background: "var(--paper-2)" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: item.actorRole === "client" ? "var(--accent)" : "var(--muted-2)" }}>
+                  {pretty(item.actorRole)}
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>{item.summary}</div>
+                  <div style={{ marginTop: 4, fontSize: 12, color: "var(--muted-2)" }}>
+                    {fmtDateTime(item.createdAt)}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       <div className="portalGrid2">

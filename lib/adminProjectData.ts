@@ -1,5 +1,6 @@
 import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
 import { getCustomerPortalViewByQuoteId } from "@/lib/customerPortal";
+import { listProjectActivityByQuoteId, type ProjectActivityItem } from "@/lib/projectActivity";
 import { listProjectInvoicesByQuoteId, type ProjectInvoiceView } from "@/lib/projectInvoices";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -125,6 +126,7 @@ export type AdminProjectData = {
     revisions: ClientRevision[];
   };
   invoices: ProjectInvoiceView[];
+  activityFeed: ProjectActivityItem[];
   messages: PortalMessage[];
   messageSummary: MessageSummary;
   workspaceHistory: {
@@ -134,6 +136,12 @@ export type AdminProjectData = {
   proposalText: string;
   preContractDraft: string;
   publishedAgreementText: string;
+  agreementAcceptance: {
+    acceptedAt: string;
+    acceptedByEmail: string;
+    acceptedFromIp: string;
+    agreementVersionHash: string;
+  } | null;
 };
 
 function safeObj(value: unknown) {
@@ -227,6 +235,7 @@ function toAdminProjectData(workspace: any, debug: Record<string, any>): AdminPr
       revisions: workspace.portalState.revisions,
     },
     invoices: Array.isArray(workspace.invoices) ? workspace.invoices : [],
+    activityFeed: Array.isArray(workspace.activityFeed) ? workspace.activityFeed : [],
     messages,
     messageSummary: summarizeMessages(messages),
     workspaceHistory: workspace.history,
@@ -234,14 +243,23 @@ function toAdminProjectData(workspace: any, debug: Record<string, any>): AdminPr
     preContractDraft: debug.generatedPreContract || "",
     publishedAgreementText:
       workspace.agreement.publishedText || debug.publishedAgreementText || "",
+    agreementAcceptance: debug.agreementAcceptance
+      ? {
+          acceptedAt: debug.agreementAcceptance.acceptedAt || "",
+          acceptedByEmail: debug.agreementAcceptance.acceptedByEmail || "",
+          acceptedFromIp: debug.agreementAcceptance.acceptedFromIp || "",
+          agreementVersionHash: debug.agreementAcceptance.agreementVersionHash || "",
+        }
+      : null,
   };
 }
 
 export async function getAdminProjectDataByQuoteId(quoteId: string) {
-  const [workspaceRes, quoteRes, invoices] = await Promise.all([
+  const [workspaceRes, quoteRes, invoices, activityFeed] = await Promise.all([
     getCustomerPortalViewByQuoteId(quoteId, { includeInternal: true }),
     supabaseAdmin.from("quotes").select("id, debug").eq("id", quoteId).maybeSingle(),
     listProjectInvoicesByQuoteId(quoteId),
+    listProjectActivityByQuoteId(quoteId, { limit: 80 }),
   ]);
 
   if (!workspaceRes.ok || quoteRes.error || !quoteRes.data) {
@@ -249,7 +267,7 @@ export async function getAdminProjectDataByQuoteId(quoteId: string) {
   }
 
   return toAdminProjectData(
-    { ...workspaceRes.data, invoices },
+    { ...workspaceRes.data, invoices, activityFeed },
     safeObj(quoteRes.data.debug)
   );
 }

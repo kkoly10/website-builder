@@ -1,4 +1,5 @@
 import { ensureCustomerPortalForQuoteId, markDepositPaidForQuoteId } from "@/lib/customerPortal";
+import { logProjectActivityByPortalId } from "@/lib/projectActivity";
 import { sendResendEmail } from "@/lib/resend";
 import { stripeCreateCheckoutSession } from "@/lib/stripeServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
@@ -293,6 +294,19 @@ export async function createProjectInvoiceByQuoteId(args: {
     .single();
 
   if (error) throw new Error(error.message);
+  await logProjectActivityByPortalId({
+    portalProjectId: str(portal.id),
+    actorRole: "studio",
+    eventType: "invoice_created",
+    summary: `Studio created a ${str(args.invoiceType)} invoice for ${amount.toFixed(2)} USD.`,
+    payload: {
+      invoiceId: str(data.id),
+      invoiceType: str(args.invoiceType),
+      amount,
+    },
+    clientVisible: true,
+  });
+
   return serializeInvoice(data, args.quoteId);
 }
 
@@ -370,6 +384,19 @@ export async function sendProjectInvoice(args: {
     notes: str(context.invoice.notes),
   });
 
+  await logProjectActivityByPortalId({
+    portalProjectId: str(context.portal.id),
+    actorRole: "studio",
+    eventType: "invoice_sent",
+    summary: `Studio sent a ${invoiceType} invoice to the client.`,
+    payload: {
+      invoiceId: args.invoiceId,
+      invoiceType,
+      amount,
+    },
+    clientVisible: true,
+  });
+
   return serializeInvoice(data, str(context.quote.id));
 }
 
@@ -410,6 +437,18 @@ export async function markProjectInvoicePaid(args: {
       reference: str(args.session.id) || null,
     });
   }
+
+  await logProjectActivityByPortalId({
+    portalProjectId: str(context.portal.id),
+    actorRole: "system",
+    eventType: "invoice_paid",
+    summary: `A ${str(context.invoice.invoice_type)} invoice was paid.`,
+    payload: {
+      invoiceId: args.invoiceId,
+      invoiceType: str(context.invoice.invoice_type),
+    },
+    clientVisible: true,
+  });
 
   return serializeInvoice(data, str(context.quote.id));
 }

@@ -10,6 +10,7 @@ import {
   updateClientStatus,
 } from "@/lib/customerPortal";
 import { sendEventNotification } from "@/lib/notifications";
+import { listProjectActivityByToken, markClientPortalSeen } from "@/lib/projectActivity";
 import { listProjectInvoicesByToken } from "@/lib/projectInvoices";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
@@ -55,11 +56,16 @@ function sanitizeExternalUrl(value: unknown): string | null {
 async function withInvoices(result: any, token: string) {
   if (!result?.ok || !result?.data) return result;
   const invoices = await listProjectInvoicesByToken(token);
+  const activityFeed = await listProjectActivityByToken(token, {
+    clientOnly: true,
+    limit: 24,
+  });
   return {
     ...result,
     data: {
       ...result.data,
       invoices,
+      activityFeed,
     },
   };
 }
@@ -70,6 +76,7 @@ export async function GET(
 ) {
   try {
     const { token } = await getParams(ctx);
+    await markClientPortalSeen(token);
     const result = await getCustomerPortalViewByToken(token, { markReadAs: "client" });
     const decorated = await withInvoices(result, token);
     return NextResponse.json(withRedactedLead(decorated), { status: result.ok ? 200 : 404 });

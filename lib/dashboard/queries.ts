@@ -1,3 +1,4 @@
+import { listRecentProjectActivity } from "@/lib/projectActivity";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export type DashboardRangeKey = "today" | "week" | "month" | "quarter" | "year";
@@ -107,7 +108,7 @@ export async function getDashboardSnapshot(rangeInput?: string) {
   const rangeStart = startForRange(range);
   const previousStart = previousStartForRange(range);
 
-  const [quotesRes, projectsRes, milestonesRes, pieRes] = await Promise.all([
+  const [quotesRes, projectsRes, milestonesRes, pieRes, recentActivity] = await Promise.all([
     supabaseAdmin
       .from("quotes")
       .select("id, status, created_at, estimate_total, estimate_low, estimate_high")
@@ -121,6 +122,7 @@ export async function getDashboardSnapshot(rangeInput?: string) {
       .from("customer_portal_milestones")
       .select("portal_project_id, status, updated_at"),
     supabaseAdmin.from("pie_reports").select("quote_id, score, created_at"),
+    listRecentProjectActivity(12),
   ]);
 
   if (quotesRes.error) throw new Error(quotesRes.error.message);
@@ -298,30 +300,16 @@ export async function getDashboardSnapshot(rangeInput?: string) {
     .filter((item): item is { title: string; context: string; priority: string } => Boolean(item))
     .slice(0, 5);
 
-  const activityFeed = [
-    ...projects
-      .filter((project) => project.deposit_paid_at)
-      .map((project) => ({
-        at: project.deposit_paid_at as string,
-        tone: "good",
-        label: `Deposit recorded for ${project.quote_id.slice(0, 8)}`,
-      })),
-    ...projects.map((project) => ({
-      at: project.updated_at || project.created_at || new Date().toISOString(),
-      tone:
-        (project.client_review_status || "").toLowerCase() === "changes requested"
-          ? "alert"
-          : "neutral",
-      label: `Workspace updated for ${project.quote_id.slice(0, 8)}`,
-    })),
-    ...pies.map((pie) => ({
-      at: pie.created_at || new Date().toISOString(),
-      tone: "neutral",
-      label: `PIE refreshed for ${pie.quote_id.slice(0, 8)}`,
-    })),
-  ]
-    .sort((left, right) => new Date(right.at).getTime() - new Date(left.at).getTime())
-    .slice(0, 10);
+  const activityFeed = recentActivity.slice(0, 10).map((item) => ({
+    at: item.createdAt,
+    tone:
+      item.eventType.includes("paid") || item.eventType.includes("accepted")
+        ? "good"
+        : item.eventType.includes("nudge") || item.eventType.includes("revision")
+        ? "alert"
+        : "neutral",
+    label: `${item.summary} (${item.quoteId.slice(0, 8)})`,
+  }));
 
   return {
     range,
