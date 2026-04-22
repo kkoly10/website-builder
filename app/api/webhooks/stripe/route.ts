@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { markDepositPaidForQuoteId } from "@/lib/customerPortal";
 import { confirmEcommerceDepositPayment, confirmOpsDepositPayment } from "@/lib/depositPayments";
+import { markProjectInvoicePaid } from "@/lib/projectInvoices";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
@@ -111,12 +112,23 @@ export async function POST(req: NextRequest) {
 
     const metadata = safeObj(session?.metadata);
     const lane = String(metadata.lane || "").trim().toLowerCase();
+    const invoiceId = String(metadata.invoiceId || "").trim();
     const quoteId = String(metadata.quoteId || "").trim();
     const opsIntakeId = String(metadata.opsIntakeId || "").trim();
     const ecomIntakeId = String(metadata.ecomIntakeId || "").trim();
     const ecomQuoteId = String(metadata.ecomQuoteId || "").trim();
 
-    if (lane === "ops" && opsIntakeId) {
+    if (invoiceId) {
+      await markProjectInvoicePaid({
+        invoiceId,
+        session: {
+          id: session.id,
+          amount_total: session.amount_total ?? null,
+          currency: session.currency ?? null,
+          customer_email: session.customer_email ?? null,
+        },
+      });
+    } else if (lane === "ops" && opsIntakeId) {
       await confirmOpsDepositPayment({
         opsIntakeId,
         session: {

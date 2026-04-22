@@ -1,5 +1,6 @@
 import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
 import { getCustomerPortalViewByQuoteId } from "@/lib/customerPortal";
+import { listProjectInvoicesByQuoteId, type ProjectInvoiceView } from "@/lib/projectInvoices";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 type Milestone = { key: string; label: string; done: boolean; updatedAt?: string | null };
@@ -123,6 +124,7 @@ export type AdminProjectData = {
     assets: ClientAsset[];
     revisions: ClientRevision[];
   };
+  invoices: ProjectInvoiceView[];
   messages: PortalMessage[];
   messageSummary: MessageSummary;
   workspaceHistory: {
@@ -224,6 +226,7 @@ function toAdminProjectData(workspace: any, debug: Record<string, any>): AdminPr
       assets: workspace.portalState.assets,
       revisions: workspace.portalState.revisions,
     },
+    invoices: Array.isArray(workspace.invoices) ? workspace.invoices : [],
     messages,
     messageSummary: summarizeMessages(messages),
     workspaceHistory: workspace.history,
@@ -235,16 +238,20 @@ function toAdminProjectData(workspace: any, debug: Record<string, any>): AdminPr
 }
 
 export async function getAdminProjectDataByQuoteId(quoteId: string) {
-  const [workspaceRes, quoteRes] = await Promise.all([
+  const [workspaceRes, quoteRes, invoices] = await Promise.all([
     getCustomerPortalViewByQuoteId(quoteId, { includeInternal: true }),
     supabaseAdmin.from("quotes").select("id, debug").eq("id", quoteId).maybeSingle(),
+    listProjectInvoicesByQuoteId(quoteId),
   ]);
 
   if (!workspaceRes.ok || quoteRes.error || !quoteRes.data) {
     return null;
   }
 
-  return toAdminProjectData(workspaceRes.data, safeObj(quoteRes.data.debug));
+  return toAdminProjectData(
+    { ...workspaceRes.data, invoices },
+    safeObj(quoteRes.data.debug)
+  );
 }
 
 export async function listAdminProjectData() {

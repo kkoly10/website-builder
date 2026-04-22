@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import PortalClient from "./PortalClient";
 import ScrollReveal from "@/components/site/ScrollReveal";
 import { getCustomerPortalViewByToken } from "@/lib/customerPortal";
+import { listProjectInvoicesByToken } from "@/lib/projectInvoices";
 
 export const dynamic = "force-dynamic";
 
@@ -43,9 +44,12 @@ export default async function PortalTokenPage({
     notFound();
   }
 
+  const invoices = await listProjectInvoicesByToken(token);
+  const data = { ...result.data, invoices };
+
   return (
     <>
-      <PortalClient token={token} initialData={redactLead(result.data)} />
+      <PortalClient token={token} initialData={redactLead(data)} />
       <ScrollReveal />
     </>
   );

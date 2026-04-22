@@ -46,6 +46,22 @@ type PortalMessage = {
     size: number | null;
   } | null;
 };
+type ProjectInvoice = {
+  id: string;
+  quoteId: string;
+  invoiceType: "deposit" | "milestone" | "final" | "retainer";
+  amount: number;
+  currency: string;
+  status: "draft" | "sent" | "paid" | "overdue" | "cancelled";
+  dueDate: string | null;
+  paidAt: string | null;
+  notes: string;
+  paymentUrl: string | null;
+  sessionId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  isPayable: boolean;
+};
 
 type ScopeVersion = {
   id: string;
@@ -186,6 +202,7 @@ type PortalBundle = {
     revisions: PortalRevision[];
     waitingOn: string;
   };
+  invoices: ProjectInvoice[];
   messages: PortalMessage[];
 };
 
@@ -254,6 +271,41 @@ function groupMessagesByDay(messages: PortalMessage[]) {
 function isReadyState(value?: string | null) {
   const v = String(value || "").toLowerCase();
   return v === "ready" || v === "complete";
+}
+
+function invoiceTone(status: ProjectInvoice["status"]) {
+  switch (status) {
+    case "paid":
+      return {
+        background: "rgba(46,160,67,0.1)",
+        border: "1px solid rgba(46,160,67,0.3)",
+        color: "#5DCAA5",
+      };
+    case "overdue":
+      return {
+        background: "rgba(240,149,149,0.1)",
+        border: "1px solid rgba(240,149,149,0.3)",
+        color: "#F09595",
+      };
+    case "sent":
+      return {
+        background: "rgba(201,168,76,0.12)",
+        border: "1px solid rgba(201,168,76,0.28)",
+        color: "var(--accent)",
+      };
+    case "cancelled":
+      return {
+        background: "rgba(53,48,41,0.08)",
+        border: "1px solid rgba(53,48,41,0.16)",
+        color: "var(--muted)",
+      };
+    default:
+      return {
+        background: "rgba(53,48,41,0.06)",
+        border: "1px solid rgba(53,48,41,0.12)",
+        color: "var(--muted-2)",
+      };
+  }
 }
 
 /* ═══════════════════════════════════
@@ -819,6 +871,98 @@ export default function PortalClient({
       {bundle.portalState.milestones.length > 0 ? (
         <JourneyMap milestones={bundle.portalState.milestones} />
       ) : null}
+
+      <div className="portalPanel fadeUp" style={{ animationDelay: "0.06s", marginBottom: "1rem" }}>
+        <div className="portalPanelHeader">
+          <div>
+            <h2 className="portalPanelTitle">Invoices</h2>
+            <div className="portalMessageIntro">
+              Every invoice for your project appears here, including paid history and any open balances.
+            </div>
+          </div>
+          <span className="portalPanelCount">
+            {bundle.invoices.length} invoice{bundle.invoices.length === 1 ? "" : "s"}
+          </span>
+        </div>
+
+        <div style={{ display: "grid", gap: 10 }}>
+          {bundle.invoices.length === 0 ? (
+            <div className="portalEmptyState">No invoices have been issued yet.</div>
+          ) : (
+            bundle.invoices.map((invoice) => {
+              const tone = invoiceTone(invoice.status);
+              return (
+                <div
+                  key={invoice.id}
+                  style={{
+                    border: "1px solid var(--rule)",
+                    borderRadius: 14,
+                    background: "var(--paper-2)",
+                    padding: 16,
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "start" }}>
+                    <div>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                        <div style={{ fontSize: 16, fontWeight: 600, color: "var(--ink)" }}>
+                          {pretty(invoice.invoiceType)} invoice
+                        </div>
+                        <span style={{ ...tone, borderRadius: 999, padding: "4px 10px", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                          {pretty(invoice.status)}
+                        </span>
+                      </div>
+                      <div style={{ marginTop: 4, fontSize: 12, color: "var(--muted-2)" }}>
+                        Issued {fmtDate(invoice.createdAt)}
+                        {invoice.dueDate ? ` · Due ${fmtDate(invoice.dueDate)}` : ""}
+                        {invoice.paidAt ? ` · Paid ${fmtDate(invoice.paidAt)}` : ""}
+                      </div>
+                    </div>
+
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: "var(--ink)" }}>
+                        {money(invoice.amount)}
+                      </div>
+                      <div style={{ fontSize: 11, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                        {invoice.currency}
+                      </div>
+                    </div>
+                  </div>
+
+                  {invoice.notes ? (
+                    <div style={{ marginTop: 10, fontSize: 13, color: "var(--muted)", whiteSpace: "pre-wrap" }}>
+                      {invoice.notes}
+                    </div>
+                  ) : null}
+
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
+                    {invoice.isPayable && invoice.paymentUrl ? (
+                      <a
+                        href={invoice.paymentUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="portalStoryCta"
+                      >
+                        Pay now <span className="portalStoryCtaArrow">→</span>
+                      </a>
+                    ) : null}
+                    {invoice.paymentUrl ? (
+                      <a
+                        href={invoice.paymentUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn btnGhost"
+                        style={{ fontSize: 13 }}
+                      >
+                        Open invoice
+                      </a>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
 
       {/* ── Studio Note ── */}
       {bundle.portalState.adminPublicNote ? (

@@ -27,6 +27,22 @@ type PortalMessage = {
     size: number | null;
   } | null;
 };
+type ProjectInvoice = {
+  id: string;
+  quoteId: string;
+  invoiceType: "deposit" | "milestone" | "final" | "retainer";
+  amount: number;
+  currency: string;
+  status: "draft" | "sent" | "paid" | "overdue" | "cancelled";
+  dueDate: string | null;
+  paidAt: string | null;
+  notes: string;
+  paymentUrl: string | null;
+  sessionId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  isPayable: boolean;
+};
 type MessageSummary = {
   unreadCount: number;
   lastPreview: string;
@@ -52,6 +68,7 @@ type ProjectControlData = {
   depositStatus: string;
   portalStateAdmin: { clientStatus: string; clientNotes: string; adminPublicNote: string; depositAmount: number; depositNotes: string; milestones: Milestone[] };
   clientSync: { lastClientUpdate: string; assets: ClientAsset[]; revisions: ClientRevision[] };
+  invoices: ProjectInvoice[];
   messages: PortalMessage[];
   messageSummary: MessageSummary;
   workspaceHistory: { scopeVersions: ScopeVersion[]; changeOrders: ChangeOrder[] };
@@ -138,6 +155,41 @@ function pieTone(score: number | null) {
   if (score >= 60) return { color: "#c9a84c", label: "Good" };
   if (score >= 40) return { color: "#dfc06a", label: "Fair" };
   return { color: "#F09595", label: "Low" };
+}
+
+function invoiceTone(status: ProjectInvoice["status"]) {
+  switch (status) {
+    case "paid":
+      return {
+        background: "rgba(46,160,67,0.1)",
+        border: "1px solid rgba(46,160,67,0.3)",
+        color: "#5DCAA5",
+      };
+    case "overdue":
+      return {
+        background: "rgba(240,149,149,0.1)",
+        border: "1px solid rgba(240,149,149,0.3)",
+        color: "#F09595",
+      };
+    case "sent":
+      return {
+        background: "rgba(201,168,76,0.12)",
+        border: "1px solid rgba(201,168,76,0.28)",
+        color: "var(--accent)",
+      };
+    case "cancelled":
+      return {
+        background: "rgba(53,48,41,0.08)",
+        border: "1px solid rgba(53,48,41,0.16)",
+        color: "var(--muted)",
+      };
+    default:
+      return {
+        background: "rgba(53,48,41,0.06)",
+        border: "1px solid rgba(53,48,41,0.12)",
+        color: "var(--muted-2)",
+      };
+  }
 }
 
 /* ═══════════════════════════════════
@@ -297,6 +349,12 @@ export default function ProjectControlClient({
   const [activeTab, setActiveTab] = useState("overview");
   const [confirmAction, setConfirmAction] = useState<{ title: string; description: string; onConfirm: () => void } | null>(null);
   const [newChangeOrder, setNewChangeOrder] = useState({ title: "", summary: "", priceImpact: "", timelineImpact: "", scopeImpact: "", status: "draft" });
+  const [newInvoice, setNewInvoice] = useState({
+    invoiceType: "milestone" as ProjectInvoice["invoiceType"],
+    amount: initialData.portalStateAdmin.depositAmount || initialData.estimate.target || 0,
+    dueDate: "",
+    notes: "",
+  });
   const [messageBody, setMessageBody] = useState("");
   const [messageMode, setMessageMode] = useState<"studio" | "internal">("studio");
   const [messageFile, setMessageFile] = useState<File | null>(null);
@@ -353,6 +411,89 @@ export default function ProjectControlClient({
         setMessageIsError(true);
         setMessage(err instanceof Error ? err.message : "Failed to refresh messages.");
       }
+    }
+  }
+
+  async function createInvoice() {
+    const amount = Number(newInvoice.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setMessageIsError(true);
+      setMessage("Add an invoice amount greater than zero.");
+      return;
+    }
+
+    setBusy(true);
+    setMessage("Creating invoice...");
+    setMessageIsError(false);
+
+    try {
+      const res = await fetch("/api/internal/admin/invoices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quoteId: data.quoteId,
+          invoiceType: newInvoice.invoiceType,
+          amount,
+          dueDate: newInvoice.dueDate || null,
+          notes: newInvoice.notes,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !Array.isArray(json?.invoices)) {
+        throw new Error(json?.error || "Failed to create invoice.");
+      }
+
+      setData((prev) => ({ ...prev, invoices: json.invoices as ProjectInvoice[] }));
+      setNewInvoice({
+        invoiceType: "milestone",
+        amount: 0,
+        dueDate: "",
+        notes: "",
+      });
+      setMessageIsError(false);
+      setMessage("Invoice created.");
+    } catch (err) {
+      setMessageIsError(true);
+      setMessage(err instanceof Error ? err.message : "Failed to create invoice.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function sendInvoice(invoiceId: string) {
+    setBusy(true);
+    setMessage("Sending invoice...");
+    setMessageIsError(false);
+
+    try {
+      const res = await fetch("/api/internal/admin/invoices/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invoiceId }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !Array.isArray(json?.invoices)) {
+        throw new Error(json?.error || "Failed to send invoice.");
+      }
+
+      setData((prev) => ({
+        ...prev,
+        invoices: json.invoices as ProjectInvoice[],
+        portalStateAdmin:
+          json?.invoice?.invoiceType === "deposit"
+            ? {
+                ...prev.portalStateAdmin,
+                depositAmount: Number(json.invoice.amount || prev.portalStateAdmin.depositAmount),
+              }
+            : prev.portalStateAdmin,
+      }));
+      setMessageIsError(false);
+      setMessage("Invoice sent to the client.");
+    } catch (err) {
+      setMessageIsError(true);
+      setMessage(err instanceof Error ? err.message : "Failed to send invoice.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -931,6 +1072,161 @@ export default function ProjectControlClient({
                 <button className="btn btnPrimary" disabled={busy} style={{ fontSize: 12, padding: "8px 16px" }}
                   onClick={() => savePatch({ status: data.status, portalStateAdmin: data.portalStateAdmin }, "Workspace state saved.")}>Save state →</button>
               </div>
+            </div>
+          </div>
+
+          <div style={{ gridColumn: "1 / -1", background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 16, flexWrap: "wrap", marginBottom: 18 }}>
+              <div>
+                <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Invoices</h3>
+                <div style={{ fontSize: 13, color: "var(--muted-2)", marginTop: 6 }}>
+                  Create milestone, final, retainer, or deposit invoices and send Stripe checkout links to the client.
+                </div>
+              </div>
+              <div style={{ fontSize: 12, color: "var(--muted-2)" }}>
+                {data.invoices.length} invoice{data.invoices.length === 1 ? "" : "s"}
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1fr", gap: 12 }}>
+              <Field label="Invoice type">
+                <select
+                  className="select"
+                  value={newInvoice.invoiceType}
+                  onChange={(e) =>
+                    setNewInvoice((prev) => ({
+                      ...prev,
+                      invoiceType: e.target.value as ProjectInvoice["invoiceType"],
+                    }))
+                  }
+                >
+                  {["deposit", "milestone", "final", "retainer"].map((option) => (
+                    <option key={option} value={option}>
+                      {pretty(option)}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Amount (USD)">
+                <input
+                  className="input"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={newInvoice.amount}
+                  onChange={(e) =>
+                    setNewInvoice((prev) => ({ ...prev, amount: Number(e.target.value || 0) }))
+                  }
+                />
+              </Field>
+              <Field label="Due date">
+                <input
+                  className="input"
+                  type="date"
+                  value={newInvoice.dueDate}
+                  onChange={(e) => setNewInvoice((prev) => ({ ...prev, dueDate: e.target.value }))}
+                />
+              </Field>
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <Field label="Notes">
+                <textarea
+                  className="textarea"
+                  rows={3}
+                  value={newInvoice.notes}
+                  onChange={(e) => setNewInvoice((prev) => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Optional client-facing note for this invoice."
+                />
+              </Field>
+            </div>
+            <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
+              <button className="btn btnPrimary" disabled={busy} style={{ fontSize: 12, padding: "8px 16px" }} onClick={createInvoice}>
+                Create invoice
+              </button>
+              <button
+                className="btn btnGhost"
+                disabled={busy}
+                style={{ fontSize: 12, padding: "8px 16px" }}
+                onClick={() =>
+                  setNewInvoice({
+                    invoiceType: "milestone",
+                    amount: data.portalStateAdmin.depositAmount || data.estimate.target || 0,
+                    dueDate: "",
+                    notes: "",
+                  })
+                }
+              >
+                Reset
+              </button>
+            </div>
+
+            <div style={{ display: "grid", gap: 10, marginTop: 18 }}>
+              {data.invoices.length === 0 ? (
+                <div style={{ padding: "18px 16px", borderRadius: 12, background: "var(--paper-2)", border: "1px solid var(--rule)", color: "var(--muted-2)", fontSize: 13 }}>
+                  No invoices yet. Create the first invoice above.
+                </div>
+              ) : (
+                data.invoices.map((invoice) => {
+                  const tone = invoiceTone(invoice.status);
+                  return (
+                    <div key={invoice.id} style={{ border: "1px solid var(--rule)", borderRadius: 12, background: "var(--paper-2)", padding: 16 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 12, flexWrap: "wrap" }}>
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                            <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)" }}>
+                              {pretty(invoice.invoiceType)} invoice
+                            </div>
+                            <span style={{ ...tone, borderRadius: 999, padding: "4px 10px", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                              {pretty(invoice.status)}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 12, color: "var(--muted-2)", marginTop: 4 }}>
+                            Created {fmtDate(invoice.createdAt)}
+                            {invoice.dueDate ? ` · Due ${fmtDate(invoice.dueDate)}` : ""}
+                            {invoice.paidAt ? ` · Paid ${fmtDate(invoice.paidAt)}` : ""}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)" }}>{money(invoice.amount)}</div>
+                          <div style={{ fontSize: 11, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                            {invoice.currency}
+                          </div>
+                        </div>
+                      </div>
+
+                      {invoice.notes ? (
+                        <div style={{ marginTop: 10, fontSize: 13, color: "var(--muted)", whiteSpace: "pre-wrap" }}>
+                          {invoice.notes}
+                        </div>
+                      ) : null}
+
+                      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
+                        {invoice.status !== "paid" && invoice.status !== "cancelled" ? (
+                          <button
+                            className="btn btnPrimary"
+                            disabled={busy}
+                            style={{ fontSize: 12, padding: "8px 14px" }}
+                            onClick={() => sendInvoice(invoice.id)}
+                          >
+                            {invoice.paymentUrl ? "Resend invoice" : "Send invoice"}
+                          </button>
+                        ) : null}
+                        {invoice.paymentUrl ? (
+                          <a
+                            className="btn btnGhost"
+                            style={{ fontSize: 12, padding: "8px 14px" }}
+                            href={invoice.paymentUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Open payment link
+                          </a>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>

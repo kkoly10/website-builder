@@ -10,6 +10,7 @@ import {
   updateClientStatus,
 } from "@/lib/customerPortal";
 import { sendEventNotification } from "@/lib/notifications";
+import { listProjectInvoicesByToken } from "@/lib/projectInvoices";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { resolveQuoteOwnerAccess } from "@/lib/accessControl";
@@ -51,6 +52,18 @@ function sanitizeExternalUrl(value: unknown): string | null {
   }
 }
 
+async function withInvoices(result: any, token: string) {
+  if (!result?.ok || !result?.data) return result;
+  const invoices = await listProjectInvoicesByToken(token);
+  return {
+    ...result,
+    data: {
+      ...result.data,
+      invoices,
+    },
+  };
+}
+
 export async function GET(
   _req: NextRequest,
   ctx: { params: Promise<{ token: string }> | { token: string } }
@@ -58,7 +71,8 @@ export async function GET(
   try {
     const { token } = await getParams(ctx);
     const result = await getCustomerPortalViewByToken(token, { markReadAs: "client" });
-    return NextResponse.json(withRedactedLead(result), { status: result.ok ? 200 : 404 });
+    const decorated = await withInvoices(result, token);
+    return NextResponse.json(withRedactedLead(decorated), { status: result.ok ? 200 : 404 });
   } catch (err: any) {
     return NextResponse.json(
       { ok: false, error: err?.message || "Failed to load portal" },
@@ -259,7 +273,8 @@ export async function POST(
       }
     }
 
-    return NextResponse.json(withRedactedLead(result), { status: result.ok ? 200 : 400 });
+    const decorated = await withInvoices(result, token);
+    return NextResponse.json(withRedactedLead(decorated), { status: result.ok ? 200 : 400 });
   } catch (err: any) {
     return NextResponse.json(
       { ok: false, error: err?.message || "Failed to update portal" },
