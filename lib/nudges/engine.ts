@@ -2,8 +2,12 @@ import { sendResendEmail } from "@/lib/resend";
 import { logProjectActivityByPortalId } from "@/lib/projectActivity";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-const FROM_EMAIL = process.env.NOTIFICATION_FROM_EMAIL || "studio@10xwebsites.com";
-const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || "";
+const FROM_EMAIL =
+  process.env.NOTIFICATION_FROM_EMAIL ||
+  process.env.RESEND_FROM_EMAIL ||
+  "studio@10xwebsites.com";
+const ADMIN_EMAIL =
+  process.env.ADMIN_NOTIFICATION_EMAIL || process.env.ALERT_TO_EMAIL || "";
 
 type PortalRow = Record<string, any>;
 type QuoteRow = Record<string, any>;
