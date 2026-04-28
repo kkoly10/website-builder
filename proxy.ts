@@ -6,14 +6,14 @@ import { updateSession } from "@/lib/supabase/proxy";
 const intlMiddleware = createIntlMiddleware(routing);
 
 // Routes whose path should NOT be rewritten by the i18n middleware. Anything
-// that lives under app/api, app/internal, app/portal, app/auth, or static
-// asset paths must be left alone — those routes are not under [locale] and
-// must not get a locale prefix added.
+// that lives under app/api, app/internal, app/portal, app/auth, app/dashboard,
+// app/editor, app/pie-lab, app/ai, or static asset paths must be left alone —
+// those routes are not under [locale] and must not get a locale prefix added.
 function isLocaleAgnostic(pathname: string) {
   return (
     pathname.startsWith("/api/") ||
+    pathname === "/api" ||
     pathname.startsWith("/internal/") ||
-    pathname.startsWith("/api") || // exact /api with no trailing slash
     pathname === "/internal" ||
     pathname.startsWith("/portal/") ||
     pathname === "/portal" ||
@@ -22,6 +22,8 @@ function isLocaleAgnostic(pathname: string) {
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/editor") ||
     pathname.startsWith("/pie-lab") ||
+    pathname.startsWith("/ai/") ||
+    pathname === "/ai" ||
     pathname === "/sitemap.xml" ||
     pathname === "/robots.txt"
   );

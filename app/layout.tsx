@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getLocale } from "next-intl/server";
+import { getLocale, getMessages } from "next-intl/server";
 import { NextIntlClientProvider } from "next-intl";
 import "./globals.css";
 import SiteFooter from "@/components/site/SiteFooter";
@@ -42,6 +42,11 @@ export default async function RootLayout({
   // [locale] segment (e.g. /portal, /internal, /api error pages) it falls
   // back to the default locale.
   const locale = await getLocale();
+  // Pass messages explicitly so client components below can call
+  // useTranslations(). Without this, client components only see translations
+  // they read at module import time — which breaks once we start using
+  // useTranslations() in PR 2.
+  const messages = await getMessages();
 
   let userEmail: string | null = null;
   let admin = false;
@@ -71,7 +76,7 @@ export default async function RootLayout({
           Skip to main content
         </a>
 
-        <NextIntlClientProvider locale={locale}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
           <div className="siteShell">
             <TopNav
               admin={admin}
