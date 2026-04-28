@@ -113,8 +113,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    // Single-confirmation guard shared with /deposit/success. A duplicate
-    // session_id means another path already ran the side-effects.
+    // Single-confirmation guard shared with /deposit/success. We claim the
+    // session_id before running side-effects; on failure we roll the claim
+    // back so a Stripe retry can reprocess instead of being silently
+    // swallowed as a duplicate.
     const sessionId = String(session?.id || "").trim();
     if (sessionId) {
       const { error: dedupeError } = await supabaseAdmin
@@ -138,39 +140,50 @@ export async function POST(req: NextRequest) {
     const ecomIntakeId = String(metadata.ecomIntakeId || "").trim();
     const ecomQuoteId = String(metadata.ecomQuoteId || "").trim();
 
-    if (invoiceId) {
-      await markProjectInvoicePaid({
-        invoiceId,
-        session: {
-          id: session.id,
-          amount_total: session.amount_total ?? null,
-          currency: session.currency ?? null,
-          customer_email: session.customer_email ?? null,
-        },
-      });
-    } else if (lane === "ops" && opsIntakeId) {
-      await confirmOpsDepositPayment({
-        opsIntakeId,
-        session: {
-          id: session.id,
-          amount_total: session.amount_total ?? null,
-          currency: session.currency ?? null,
-          customer_email: session.customer_email ?? null,
-        },
-      });
-    } else if (lane === "ecommerce" && ecomIntakeId) {
-      await confirmEcommerceDepositPayment({
-        ecomIntakeId,
-        ecomQuoteId: ecomQuoteId || null,
-        session: {
-          id: session.id,
-          amount_total: session.amount_total ?? null,
-          currency: session.currency ?? null,
-          customer_email: session.customer_email ?? null,
-        },
-      });
-    } else if (quoteId) {
-      await confirmWebsiteQuotePayment(session, quoteId);
+    try {
+      if (invoiceId) {
+        await markProjectInvoicePaid({
+          invoiceId,
+          session: {
+            id: session.id,
+            amount_total: session.amount_total ?? null,
+            currency: session.currency ?? null,
+            customer_email: session.customer_email ?? null,
+          },
+        });
+      } else if (lane === "ops" && opsIntakeId) {
+        await confirmOpsDepositPayment({
+          opsIntakeId,
+          session: {
+            id: session.id,
+            amount_total: session.amount_total ?? null,
+            currency: session.currency ?? null,
+            customer_email: session.customer_email ?? null,
+          },
+        });
+      } else if (lane === "ecommerce" && ecomIntakeId) {
+        await confirmEcommerceDepositPayment({
+          ecomIntakeId,
+          ecomQuoteId: ecomQuoteId || null,
+          session: {
+            id: session.id,
+            amount_total: session.amount_total ?? null,
+            currency: session.currency ?? null,
+            customer_email: session.customer_email ?? null,
+          },
+        });
+      } else if (quoteId) {
+        await confirmWebsiteQuotePayment(session, quoteId);
+      }
+    } catch (sideEffectError) {
+      // Roll back the claim so the next retry can reprocess.
+      if (sessionId) {
+        await supabaseAdmin
+          .from("stripe_processed_sessions")
+          .delete()
+          .eq("session_id", sessionId);
+      }
+      throw sideEffectError;
     }
 
     return NextResponse.json({ received: true });
