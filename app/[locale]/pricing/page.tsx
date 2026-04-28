@@ -1,42 +1,54 @@
+import { useTranslations } from "next-intl";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import ScrollReveal from "@/components/site/ScrollReveal";
 import styles from "../marketing.module.css";
 
 export const dynamic = "force-dynamic";
 
-const WEBSITE_TIERS = [
-  {
-    label: "/ Starter",
-    value: "$1,800 - $2,400",
-    detail: "For a clean, credible single-page site that needs to do one job well.",
-    meta: "Single-page build / mobile-first / fast launch",
-  },
-  {
-    label: "/ Growth",
-    value: "$3,500 - $4,500",
-    detail: "For most service businesses that need a multi-page site and a stronger first impression.",
-    meta: "4-6 pages / lead capture / workspace review",
-  },
-  {
-    label: "/ Premium",
-    value: "$6,500 - $10,000+",
-    detail: "For businesses that need content depth, integrations, and more architectural lift.",
-    meta: "8+ pages / advanced scope / deeper implementation",
-  },
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "pricing" });
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+    openGraph: { title: t("metaTitle"), description: t("metaDescription") },
+    twitter: { title: t("metaTitle"), description: t("metaDescription") },
+  };
+}
+
+const TIER_KEYS = ["starter", "growth", "premium"] as const;
+const OTHER_KEYS = [
+  { id: "ecommerce", anchor: "ecommerce" },
+  { id: "systems", anchor: "systems" },
 ] as const;
 
-const OTHER_WORK = [
-  {
-    title: "E-commerce",
-    body: "Store builds, fixes, and monthly ops work are priced by store complexity, platform, and operational load after intake.",
-  },
-  {
-    title: "Systems",
-    body: "Automation work starts with diagnosis so pricing is based on the process that actually needs fixing, not vague tool promises.",
-  },
-] as const;
+export default async function PricingPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  return <PricingContent />;
+}
 
-export default function PricingPage() {
+function PricingContent() {
+  const t = useTranslations("pricing");
+
+  const tiers = TIER_KEYS.map((key) => ({
+    key,
+    label: t(`${key}.label`),
+    value: t(`${key}.value`),
+    detail: t(`${key}.detail`),
+    meta: t(`${key}.meta`),
+  }));
+
   return (
     <main className={styles.page}>
       <ScrollReveal />
@@ -44,12 +56,9 @@ export default function PricingPage() {
       <section className={`${styles.hero} heroFadeUp`}>
         <div className="container">
           <div className={styles.heroInner}>
-            <p className={styles.label}>Pricing</p>
-            <h1 className={styles.title}>Clear ranges before the work starts.</h1>
-            <p className={styles.intro}>
-              We scope first, send a written estimate, and keep the number tied to the
-              actual project instead of inventing surprise labor later.
-            </p>
+            <p className={styles.label}>{t("label")}</p>
+            <h1 className={styles.title}>{t("title")}</h1>
+            <p className={styles.intro}>{t("intro")}</p>
           </div>
         </div>
       </section>
@@ -57,13 +66,13 @@ export default function PricingPage() {
       <section className={`${styles.section} ${styles.pricingWrap}`}>
         <div className="container">
           <div className={styles.sectionHead}>
-            <p className={styles.sectionLabel}>Website tiers</p>
-            <h2 className={styles.sectionTitle}>Most website projects land in one of these bands.</h2>
+            <p className={styles.sectionLabel}>{t("tiersLabel")}</p>
+            <h2 className={styles.sectionTitle}>{t("tiersTitle")}</h2>
           </div>
 
           <div className={styles.pricingGrid}>
-            {WEBSITE_TIERS.map((tier) => (
-              <article key={tier.label} className={styles.pricingCard}>
+            {tiers.map((tier) => (
+              <article key={tier.key} className={styles.pricingCard}>
                 <p className={styles.cardKicker}>{tier.label}</p>
                 <p className={styles.pricingValue}>{tier.value}</p>
                 <p>{tier.detail}</p>
@@ -77,34 +86,31 @@ export default function PricingPage() {
       <section className={styles.section}>
         <div className="container">
           <div className={styles.sectionHead}>
-            <p className={styles.sectionLabel}>Other engagements</p>
-            <h2 className={styles.sectionTitle}>Not every project is a website build.</h2>
+            <p className={styles.sectionLabel}>{t("otherLabel")}</p>
+            <h2 className={styles.sectionTitle}>{t("otherTitle")}</h2>
           </div>
 
           <div className={styles.gridTwo}>
-            {OTHER_WORK.map((item) => {
-              const slug = item.title.toLowerCase().replace(/[^a-z]+/g, "");
-              return (
-                <article
-                  id={slug}
-                  key={item.title}
-                  className={styles.card}
-                  style={{ scrollMarginTop: 96 }}
-                >
-                  <p className={styles.cardKicker}>How it is scoped</p>
-                  <h3>{item.title}</h3>
-                  <p>{item.body}</p>
-                </article>
-              );
-            })}
+            {OTHER_KEYS.map((item) => (
+              <article
+                id={item.anchor}
+                key={item.id}
+                className={styles.card}
+                style={{ scrollMarginTop: 96 }}
+              >
+                <p className={styles.cardKicker}>{t("otherKicker")}</p>
+                <h3>{t(`${item.id}.title`)}</h3>
+                <p>{t(`${item.id}.body`)}</p>
+              </article>
+            ))}
           </div>
 
           <div className={styles.ctaRow}>
             <Link href="/build/intro" className="btn btnPrimary">
-              Start a website estimate
+              {t("ctaPrimary")}
             </Link>
             <Link href="/process" className="btn btnGhost">
-              See the process
+              {t("ctaSecondary")}
             </Link>
           </div>
         </div>

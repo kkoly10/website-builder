@@ -3,6 +3,7 @@
 import { Link } from "@/i18n/navigation";
 import RawLink from "next/link";
 import { usePathname } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import BrandLogo from "@/components/brand/BrandLogo";
 import LocaleSwitcher from "@/components/site/LocaleSwitcher";
 
@@ -56,20 +57,22 @@ export default function TopNav({
   availableLocales,
 }: TopNavProps) {
   const pathname = usePathname();
+  const t = useTranslations("nav");
+  const tCommon = useTranslations("common");
 
   const navItems: NavItem[] = [
-    { href: "/websites", label: "Websites" },
-    { href: "/ecommerce", label: "E-commerce" },
-    { href: "/systems", label: "Systems" },
-    { href: "/process", label: "Process" },
-    { href: "/pricing", label: "Pricing" },
-    { href: "/faq", label: "FAQ" },
+    { href: "/websites", label: t("websites") },
+    { href: "/ecommerce", label: t("ecommerce") },
+    { href: "/systems", label: t("systems") },
+    { href: "/process", label: t("process") },
+    { href: "/pricing", label: t("pricing") },
+    { href: "/faq", label: t("faq") },
   ];
 
   if (userEmail) {
     navItems.push({
       href: portalHref,
-      label: "Client portal",
+      label: t("clientPortal"),
       matchPrefix: "/portal",
       raw: true,
     });
@@ -78,7 +81,7 @@ export default function TopNav({
   if (admin) {
     navItems.push({
       href: "/internal/admin",
-      label: "Admin",
+      label: t("admin"),
       matchPrefix: "/internal/admin",
       raw: true,
     });
@@ -114,23 +117,23 @@ export default function TopNav({
           {userEmail ? (
             <>
               <RawLink href={portalHref} className="btn btnGhost">
-                Open portal
+                {tCommon("openPortal")}
               </RawLink>
               <form action="/auth/signout" method="post" className="navForm">
                 <button type="submit" className="btn btnGhost">
-                  Sign out
+                  {tCommon("signOut")}
                 </button>
               </form>
             </>
           ) : (
             <Link href={startProjectHref} className="btn btnPrimary">
-              Start a project <span className="btnArrow">-&gt;</span>
+              {tCommon("startProject")} <span className="btnArrow">-&gt;</span>
             </Link>
           )}
         </div>
 
         <details className="mobileMenu">
-          <summary className="mobileMenuSummary" aria-label="Open navigation menu">
+          <summary className="mobileMenuSummary" aria-label={tCommon("openMenu")}>
             <span />
             <span />
             <span />
@@ -159,17 +162,17 @@ export default function TopNav({
               {userEmail ? (
                 <>
                   <RawLink href={portalHref} className="btn btnPrimary mobileMenuPrimary">
-                    Open portal
+                    {tCommon("openPortal")}
                   </RawLink>
                   <form action="/auth/signout" method="post" className="mobileMenuForm">
                     <button type="submit" className="btn btnGhost mobileMenuSignout">
-                      Sign out
+                      {tCommon("signOut")}
                     </button>
                   </form>
                 </>
               ) : (
                 <Link href={startProjectHref} className="btn btnPrimary mobileMenuPrimary">
-                  Start a project <span className="btnArrow">-&gt;</span>
+                  {tCommon("startProject")} <span className="btnArrow">-&gt;</span>
                 </Link>
               )}
             </div>

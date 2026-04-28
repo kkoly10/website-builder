@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { usePathname as useRawPathname, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 
 const LABELS: Record<string, string> = {
@@ -44,6 +45,7 @@ export default function LocaleSwitcher({
   availableLocales: string[];
 }) {
   const router = useRouter();
+  const t = useTranslations("nav");
   // Use the raw (pre-i18n) pathname so we can detect routes that live outside
   // the [locale] segment. The i18n usePathname strips the prefix and would
   // make /portal indistinguishable from /websites.
@@ -77,7 +79,7 @@ export default function LocaleSwitcher({
   }
 
   return (
-    <label className="localeSwitcher" aria-label="Language">
+    <label className="localeSwitcher" aria-label={t("language")}>
       <span className="localeSwitcherLabel" aria-hidden="true">
         {LABELS[locale] ?? locale.toUpperCase()}
       </span>
