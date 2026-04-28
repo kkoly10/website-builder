@@ -6,10 +6,9 @@ import { hasLocale } from "next-intl";
 import type { ReactNode } from "react";
 import { routing } from "@/i18n/routing";
 
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }));
-}
-
+// Pages here are server-rendered on every request (auth state, locale, and
+// per-page metadata all vary). Locale validation happens in LocaleLayout
+// below via hasLocale + notFound, so we don't need generateStaticParams.
 export const dynamic = "force-dynamic";
 
 const OG_LOCALES: Record<string, string> = {
