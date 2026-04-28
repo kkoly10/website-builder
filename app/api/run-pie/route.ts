@@ -1,7 +1,7 @@
 // app/api/run-pie/route.ts
 import { NextResponse } from "next/server";
 import { generatePieForQuoteId } from "@/lib/pie/ensurePie";
-import { enforceRateLimit, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
+import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -19,7 +19,7 @@ function firstLead(leads: any) {
 export async function POST(req: Request) {
   try {
     const ip = getIpFromHeaders(req.headers);
-    const rl = enforceRateLimit({ key: `run-pie:${ip}`, limit: 5, windowMs: 60_000 });
+    const rl = await enforceRateLimitDurable({ key: `run-pie:${ip}`, limit: 5, windowMs: 60_000 });
     if (!rl.ok) return rateLimitResponse(rl.resetAt);
 
     const body = (await req.json()) as Body;

@@ -81,41 +81,79 @@ export default async function DepositSuccessPage({ searchParams }: { searchParam
     if (session.payment_status === "paid") {
       paid = true;
 
-      if (lane === "ops" && opsIntakeId) {
-        await confirmOpsDepositPayment({
-          opsIntakeId,
-          session: {
-            id: session.id,
-            amount_total: session.amount_total ?? null,
-            currency: session.currency ?? null,
-            customer_email: session.customer_email ?? null,
-          },
-        });
-        label = "Ops";
-        backHref = `/portal/ops/${encodeURIComponent(opsIntakeId)}`;
-      } else if (lane === "ecommerce" && ecomIntakeId) {
-        await confirmEcommerceDepositPayment({
-          ecomIntakeId,
-          ecomQuoteId: ecomQuoteId || null,
-          session: {
-            id: session.id,
-            amount_total: session.amount_total ?? null,
-            currency: session.currency ?? null,
-            customer_email: session.customer_email ?? null,
-          },
-        });
-        label = "E-commerce";
-        backHref = `/portal/ecommerce/${encodeURIComponent(ecomIntakeId)}`;
-      } else if (quoteId) {
-        await confirmWebsiteQuotePayment(session, quoteId);
-        label = "Website";
-        const portal = await ensureCustomerPortalForQuoteId(quoteId);
-        if (portal?.access_token) {
-          backHref = `/portal/${encodeURIComponent(String(portal.access_token))}`;
+      // Single-confirmation guard shared with the Stripe webhook. The row
+      // has two states: claimed (processed_at set, completed_at null) and
+      // completed (completed_at set). On a unique-constraint collision we
+      // do NOT run side-effects — the webhook is the canonical writer and
+      // will mark completed_at when its work finishes. We just route the
+      // user; the workspace will catch up shortly.
+      const { error: claimError } = await supabaseAdmin
+        .from("stripe_processed_sessions")
+        .insert({ session_id: session.id, source: "success_page" });
+      const claimedHere = !claimError;
+      const collided =
+        !!claimError && String((claimError as any)?.code || "") === "23505";
+
+      try {
+        if (lane === "ops" && opsIntakeId) {
+          if (claimedHere) {
+            await confirmOpsDepositPayment({
+              opsIntakeId,
+              session: {
+                id: session.id,
+                amount_total: session.amount_total ?? null,
+                currency: session.currency ?? null,
+                customer_email: session.customer_email ?? null,
+              },
+            });
+          }
+          label = "Ops";
+          backHref = `/portal/ops/${encodeURIComponent(opsIntakeId)}`;
+        } else if (lane === "ecommerce" && ecomIntakeId) {
+          if (claimedHere) {
+            await confirmEcommerceDepositPayment({
+              ecomIntakeId,
+              ecomQuoteId: ecomQuoteId || null,
+              session: {
+                id: session.id,
+                amount_total: session.amount_total ?? null,
+                currency: session.currency ?? null,
+                customer_email: session.customer_email ?? null,
+              },
+            });
+          }
+          label = "E-commerce";
+          backHref = `/portal/ecommerce/${encodeURIComponent(ecomIntakeId)}`;
+        } else if (quoteId) {
+          if (claimedHere) {
+            await confirmWebsiteQuotePayment(session, quoteId);
+          }
+          label = "Website";
+          const portal = await ensureCustomerPortalForQuoteId(quoteId);
+          if (portal?.access_token) {
+            backHref = `/portal/${encodeURIComponent(String(portal.access_token))}`;
+          }
         }
+      } catch (sideEffectError) {
+        if (claimedHere) {
+          await supabaseAdmin
+            .from("stripe_processed_sessions")
+            .delete()
+            .eq("session_id", session.id);
+        }
+        throw sideEffectError;
       }
 
-      message = "Deposit received ✅";
+      if (claimedHere) {
+        await supabaseAdmin
+          .from("stripe_processed_sessions")
+          .update({ completed_at: new Date().toISOString() })
+          .eq("session_id", session.id);
+      }
+
+      message = collided
+        ? "Deposit received ✅ — finalizing your workspace, refresh if anything looks delayed."
+        : "Deposit received ✅";
     } else {
       message = "Payment not completed yet.";
     }

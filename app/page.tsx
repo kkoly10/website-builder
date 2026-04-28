@@ -183,8 +183,8 @@ export default function Home() {
               </article>
               <article className={styles.portalCard}>
                 <p className={styles.portalCardTitle}>Launch target</p>
-                <p className={styles.portalCardValue}>Apr 22</p>
-                <p className={styles.portalCardMeta}>Everything on track</p>
+                <p className={styles.portalCardValue}>On track</p>
+                <p className={styles.portalCardMeta}>Within scoped delivery window</p>
               </article>
             </div>
           </div>

@@ -1,31 +1,55 @@
 import Link from "next/link";
+import EcommerceBookClient from "./EcommerceBookClient";
 
 export const dynamic = "force-dynamic";
 
-export default function EcommerceBookPage({ searchParams }: { searchParams: { ecomIntakeId?: string } }) {
-  return (
-    <main className="container" style={{ paddingBottom: 80 }}>
-      <section className="section" style={{ maxWidth: 760, margin: "0 auto" }}>
-        <div className="card">
-          <div className="cardInner" style={{ padding: 30 }}>
-            <div className="kicker">Next Step</div>
-            <h1 className="h1" style={{ marginTop: 10 }}>Book your seller planning call</h1>
-            <p className="pDark">Your intake{searchParams?.ecomIntakeId ? ` (#${searchParams.ecomIntakeId.slice(0, 8)})` : ""} was received. Share your preferred time windows and we&apos;ll coordinate the best next step.</p>
+type SearchParams = Record<string, string | string[] | undefined>;
 
-            <div style={{ display: "grid", gap: 12, marginTop: 20 }}>
-              <div><label className="fieldLabel">Best time to connect</label><input className="input" placeholder="Morning / Afternoon / Evening" /></div>
-              <div><label className="fieldLabel">Preferred days/times</label><input className="input" placeholder="Mon–Wed after 2 PM" /></div>
-              <div><label className="fieldLabel">Timezone</label><input className="input" placeholder="America/New_York" /></div>
-              <div><label className="fieldLabel">Notes</label><textarea className="input" style={{ minHeight: 90 }} placeholder="Anything we should prepare before the call" /></div>
-            </div>
+function pick(sp: SearchParams, key: string) {
+  const v = sp?.[key];
+  return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
+}
 
-            <div style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <Link href="/contact" className="btn btnPrimary">Request Seller Strategy Call <span className="btnArrow">→</span></Link>
-              <Link href="/ecommerce/pricing" className="btn btnGhost">Book E-commerce Planning Call</Link>
+export default async function EcommerceBookPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams> | SearchParams;
+}) {
+  const sp = await Promise.resolve(searchParams);
+  const ecomIntakeId = pick(sp, "ecomIntakeId").trim();
+
+  if (!ecomIntakeId) {
+    return (
+      <main className="container" style={{ paddingBottom: 80 }}>
+        <section className="section" style={{ maxWidth: 760, margin: "0 auto" }}>
+          <div className="card">
+            <div className="cardInner" style={{ padding: 30 }}>
+              <div className="kicker">
+                <span className="kickerDot" aria-hidden="true" />
+                E-commerce Booking
+              </div>
+
+              <div style={{ height: 10 }} />
+              <h1 className="h2">Missing e-commerce intake</h1>
+              <p className="pDark">
+                Start from the e-commerce intake page so we can attach the booking to the right
+                submission.
+              </p>
+
+              <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <Link href="/ecommerce/intake" className="btn btnPrimary">
+                  Start E-commerce Intake <span className="btnArrow">→</span>
+                </Link>
+                <Link href="/" className="btn btnGhost">
+                  Home
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
-    </main>
-  );
+        </section>
+      </main>
+    );
+  }
+
+  return <EcommerceBookClient ecomIntakeId={ecomIntakeId} />;
 }

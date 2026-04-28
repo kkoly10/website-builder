@@ -73,9 +73,14 @@ export default function OpsThankYouPage({
               <Link href="/systems" className="btn btnGhost">
                 Submit Another Intake
               </Link>
-              <Link href="/internal/admin/ops" className="btn btnGhost">
-                Internal Ops Dashboard
-              </Link>
+              {opsIntakeId ? (
+                <Link
+                  href={`/portal/ops/${encodeURIComponent(opsIntakeId)}`}
+                  className="btn btnGhost"
+                >
+                  Open Workflow Workspace
+                </Link>
+              ) : null}
             </div>
           </div>
         </div>

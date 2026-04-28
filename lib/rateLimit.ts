@@ -137,10 +137,6 @@ export async function enforceRateLimitDurable(options: RateLimitOptions): Promis
   }
 }
 
-export function enforceRateLimit(options: RateLimitOptions) {
-  return enforceRateLimitLocal(options);
-}
-
 export function rateLimitResponse(resetAt: number) {
   const retryAfterSeconds = Math.max(1, Math.ceil((resetAt - Date.now()) / 1000));
   return NextResponse.json(

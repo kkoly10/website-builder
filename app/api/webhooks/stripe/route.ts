@@ -101,13 +101,55 @@ export async function POST(req: NextRequest) {
     }
 
     const event = JSON.parse(rawBody);
-    if (String(event?.type || "") !== "checkout.session.completed") {
+    const eventId = String(event?.id || "").trim();
+    const eventType = String(event?.type || "");
+
+    if (eventType !== "checkout.session.completed") {
       return NextResponse.json({ received: true });
     }
 
     const session = event?.data?.object;
     if (!session || String(session?.payment_status || "") !== "paid") {
       return NextResponse.json({ received: true });
+    }
+
+    // Single-confirmation guard shared with /deposit/success. The row has
+    // two states: claimed (processed_at set, completed_at null) and
+    // completed (completed_at set). On a unique-constraint collision we
+    // look at completed_at to distinguish "already done — safe to ack" from
+    // "another worker is in flight — ask Stripe to retry."
+    const sessionId = String(session?.id || "").trim();
+    let claimedHere = false;
+    if (sessionId) {
+      const { error: claimError } = await supabaseAdmin
+        .from("stripe_processed_sessions")
+        .insert({ session_id: sessionId, event_id: eventId || null, source: "webhook" });
+
+      if (!claimError) {
+        claimedHere = true;
+      } else {
+        const code = String((claimError as any)?.code || "");
+        if (code === "23505") {
+          const { data: existing } = await supabaseAdmin
+            .from("stripe_processed_sessions")
+            .select("completed_at")
+            .eq("session_id", sessionId)
+            .maybeSingle();
+
+          if (existing?.completed_at) {
+            return NextResponse.json({ received: true, duplicate: true });
+          }
+          // Row exists but processing isn't complete — another worker is
+          // either still running or has crashed mid-flight. Bounce so Stripe
+          // retries; by then the other path has either committed or rolled
+          // back, and we'll see a definitive completed_at on the next try.
+          return NextResponse.json(
+            { error: "Concurrent confirmation in flight; will retry." },
+            { status: 503 }
+          );
+        }
+        console.error("[stripe-webhook] claim insert error:", claimError);
+      }
     }
 
     const metadata = safeObj(session?.metadata);
@@ -118,39 +160,57 @@ export async function POST(req: NextRequest) {
     const ecomIntakeId = String(metadata.ecomIntakeId || "").trim();
     const ecomQuoteId = String(metadata.ecomQuoteId || "").trim();
 
-    if (invoiceId) {
-      await markProjectInvoicePaid({
-        invoiceId,
-        session: {
-          id: session.id,
-          amount_total: session.amount_total ?? null,
-          currency: session.currency ?? null,
-          customer_email: session.customer_email ?? null,
-        },
-      });
-    } else if (lane === "ops" && opsIntakeId) {
-      await confirmOpsDepositPayment({
-        opsIntakeId,
-        session: {
-          id: session.id,
-          amount_total: session.amount_total ?? null,
-          currency: session.currency ?? null,
-          customer_email: session.customer_email ?? null,
-        },
-      });
-    } else if (lane === "ecommerce" && ecomIntakeId) {
-      await confirmEcommerceDepositPayment({
-        ecomIntakeId,
-        ecomQuoteId: ecomQuoteId || null,
-        session: {
-          id: session.id,
-          amount_total: session.amount_total ?? null,
-          currency: session.currency ?? null,
-          customer_email: session.customer_email ?? null,
-        },
-      });
-    } else if (quoteId) {
-      await confirmWebsiteQuotePayment(session, quoteId);
+    try {
+      if (invoiceId) {
+        await markProjectInvoicePaid({
+          invoiceId,
+          session: {
+            id: session.id,
+            amount_total: session.amount_total ?? null,
+            currency: session.currency ?? null,
+            customer_email: session.customer_email ?? null,
+          },
+        });
+      } else if (lane === "ops" && opsIntakeId) {
+        await confirmOpsDepositPayment({
+          opsIntakeId,
+          session: {
+            id: session.id,
+            amount_total: session.amount_total ?? null,
+            currency: session.currency ?? null,
+            customer_email: session.customer_email ?? null,
+          },
+        });
+      } else if (lane === "ecommerce" && ecomIntakeId) {
+        await confirmEcommerceDepositPayment({
+          ecomIntakeId,
+          ecomQuoteId: ecomQuoteId || null,
+          session: {
+            id: session.id,
+            amount_total: session.amount_total ?? null,
+            currency: session.currency ?? null,
+            customer_email: session.customer_email ?? null,
+          },
+        });
+      } else if (quoteId) {
+        await confirmWebsiteQuotePayment(session, quoteId);
+      }
+    } catch (sideEffectError) {
+      // Roll back the claim so the next retry can reprocess.
+      if (sessionId && claimedHere) {
+        await supabaseAdmin
+          .from("stripe_processed_sessions")
+          .delete()
+          .eq("session_id", sessionId);
+      }
+      throw sideEffectError;
+    }
+
+    if (sessionId && claimedHere) {
+      await supabaseAdmin
+        .from("stripe_processed_sessions")
+        .update({ completed_at: new Date().toISOString() })
+        .eq("session_id", sessionId);
     }
 
     return NextResponse.json({ received: true });

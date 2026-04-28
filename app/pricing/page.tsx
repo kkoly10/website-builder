@@ -82,13 +82,21 @@ export default function PricingPage() {
           </div>
 
           <div className={styles.gridTwo}>
-            {OTHER_WORK.map((item) => (
-              <article key={item.title} className={styles.card}>
-                <p className={styles.cardKicker}>How it is scoped</p>
-                <h3>{item.title}</h3>
-                <p>{item.body}</p>
-              </article>
-            ))}
+            {OTHER_WORK.map((item) => {
+              const slug = item.title.toLowerCase().replace(/[^a-z]+/g, "");
+              return (
+                <article
+                  id={slug}
+                  key={item.title}
+                  className={styles.card}
+                  style={{ scrollMarginTop: 96 }}
+                >
+                  <p className={styles.cardKicker}>How it is scoped</p>
+                  <h3>{item.title}</h3>
+                  <p>{item.body}</p>
+                </article>
+              );
+            })}
           </div>
 
           <div className={styles.ctaRow}>
