@@ -6,6 +6,10 @@
 - Confirm Supabase auth callbacks use production URL.
 - Confirm Stripe secret key and webhook/payment flows in production.
 - Confirm Resend sender domain is verified and outbound alerts are routed.
+- Apply all SQL files in `supabase/migrations/` to the production database
+  in filename order. New migrations land here regularly; if an unfamiliar
+  file is present, run it before deploying the matching code or webhooks
+  will throw on missing tables.
 - Run a production build before every release:
 
 ```bash
@@ -61,3 +65,21 @@ npm run build
 - Use `INTERNAL_ALERT_WEBHOOK` to receive alerts when non-GET internal routes are called.
 - Monitor logs for `[internal-access]` and `[internal-mutation]` events.
 - Escalate repeated unknown IP activity immediately (rotate internal tokens + review auth logs).
+
+## 9) Stripe webhook + deposit confirmation
+
+- Stripe webhook lives at `/api/webhooks/stripe`. Signature verification
+  is HMAC-SHA256 with a 5-minute replay window.
+- Idempotency is enforced via the `stripe_processed_sessions` table
+  (migration `20260428_create_stripe_processed_sessions.sql`). The
+  webhook and `/deposit/success` both insert the Stripe session_id
+  before running side-effects and roll the row back on failure so a
+  retry can reprocess.
+- If a deposit is stuck "pending" after Stripe shows "paid":
+  1. Check `stripe_processed_sessions` for the session_id. If present
+     but the underlying quote/portal is still pending, processing
+     failed mid-flight. Delete the row to release the claim.
+  2. Replay the webhook from the Stripe dashboard, or have the customer
+     refresh `/deposit/success?session_id=cs_...`.
+- The `CRON_SECRET` env var is required. The nudges cron at
+  `/api/internal/nudges/run` fails closed (returns 401) if it is unset.
