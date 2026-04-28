@@ -92,7 +92,7 @@ export default function TopNav({
       <div className="topNavInner">
         <BrandLogo href="/" />
 
-        <nav className="navDesktop" aria-label="Primary">
+        <nav className="navDesktop" aria-label={t("primaryAria")}>
           <div className="navLinks">
             {navItems.map((item) => {
               const active = isActivePath(pathname, item.href, item.matchPrefix);

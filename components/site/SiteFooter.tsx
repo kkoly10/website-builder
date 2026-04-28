@@ -14,7 +14,7 @@ export default function SiteFooter() {
             <p className="footerBlurb">{t("blurb")}</p>
           </div>
 
-          <div className="footerLinks" aria-label="Footer">
+          <div className="footerLinks" aria-label={t("links.aria")}>
             <Link href="/websites">{t("links.websites")}</Link>
             <Link href="/ecommerce">{t("links.ecommerce")}</Link>
             <Link href="/systems">{t("links.systems")}</Link>

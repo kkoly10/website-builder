@@ -16,12 +16,15 @@
     "faq": "FAQ",
     "clientPortal": "Portal del cliente",
     "admin": "Admin",
-    "language": "Idioma"
+    "language": "Idioma",
+    "primaryAria": "Principal",
+    "footerAria": "Pie de página"
   },
   "footer": {
     "blurb": "Estudio enfocado en la web para empresas que necesitan una primera impresión más nítida, operaciones más limpias y un único espacio de trabajo para conducir el proyecto.",
     "rightsReserved": "Todos los derechos reservados.",
     "links": {
+      "aria": "Pie de página",
       "websites": "Sitios web",
       "ecommerce": "E-commerce",
       "systems": "Sistemas",

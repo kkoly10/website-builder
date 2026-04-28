@@ -16,12 +16,15 @@
     "faq": "FAQ",
     "clientPortal": "Client portal",
     "admin": "Admin",
-    "language": "Language"
+    "language": "Language",
+    "primaryAria": "Primary",
+    "footerAria": "Footer"
   },
   "footer": {
     "blurb": "Website-first studio for businesses that need a sharper first impression, cleaner operations, and one workspace to run the project.",
     "rightsReserved": "All rights reserved.",
     "links": {
+      "aria": "Footer",
       "websites": "Websites",
       "ecommerce": "E-commerce",
       "systems": "Systems",

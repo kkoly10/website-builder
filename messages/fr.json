@@ -16,12 +16,15 @@
     "faq": "FAQ",
     "clientPortal": "Portail client",
     "admin": "Admin",
-    "language": "Langue"
+    "language": "Langue",
+    "primaryAria": "Principale",
+    "footerAria": "Pied de page"
   },
   "footer": {
     "blurb": "Studio orienté web pour les entreprises qui ont besoin d'une première impression plus nette, d'opérations plus propres et d'un seul espace de travail pour piloter le projet.",
     "rightsReserved": "Tous droits réservés.",
     "links": {
+      "aria": "Pied de page",
       "websites": "Sites web",
       "ecommerce": "E-commerce",
       "systems": "Systèmes",
