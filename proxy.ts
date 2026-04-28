@@ -1,5 +1,33 @@
 import { NextResponse, type NextRequest } from "next/server";
+import createIntlMiddleware from "next-intl/middleware";
+import { routing } from "@/i18n/routing";
 import { updateSession } from "@/lib/supabase/proxy";
+
+const intlMiddleware = createIntlMiddleware(routing);
+
+// Routes whose path should NOT be rewritten by the i18n middleware. Anything
+// that lives under app/api, app/internal, app/portal, app/auth, app/dashboard,
+// app/editor, app/pie-lab, app/ai, or static asset paths must be left alone —
+// those routes are not under [locale] and must not get a locale prefix added.
+function isLocaleAgnostic(pathname: string) {
+  return (
+    pathname.startsWith("/api/") ||
+    pathname === "/api" ||
+    pathname.startsWith("/internal/") ||
+    pathname === "/internal" ||
+    pathname.startsWith("/portal/") ||
+    pathname === "/portal" ||
+    pathname.startsWith("/auth/") ||
+    pathname === "/auth" ||
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/editor") ||
+    pathname.startsWith("/pie-lab") ||
+    pathname.startsWith("/ai/") ||
+    pathname === "/ai" ||
+    pathname === "/sitemap.xml" ||
+    pathname === "/robots.txt"
+  );
+}
 
 // ── CORS Configuration ──────────────────────────────────────────────
 // Only these origins can make API requests.
@@ -100,7 +128,40 @@ export async function proxy(request: NextRequest) {
   }
 
   // ── Session refresh + response ──────────────────────────────────
-  const response = await updateSession(request);
+  // For locale-bearing public pages, run next-intl first so its rewrite +
+  // locale headers stay on the response we return. Then run Supabase
+  // session refresh and copy any auth cookies it sets onto the intl
+  // response (so we keep both the rewrite and the refreshed session).
+  // API/internal/portal/auth routes skip the i18n step entirely — they
+  // are not under [locale].
+  // Stamp the original pathname onto downstream request headers so server
+  // components (e.g. the [locale] layout's metadata helper) can read it via
+  // headers(). Next 16 does not expose the path in Server Components by
+  // default, so we use the official x-middleware-* protocol to propagate it.
+  const stampHeaders = (response: NextResponse) => {
+    const existing = response.headers.get("x-middleware-override-headers");
+    response.headers.set(
+      "x-middleware-override-headers",
+      existing ? `${existing},x-pathname` : "x-pathname"
+    );
+    response.headers.set("x-middleware-request-x-pathname", pathname);
+  };
+
+  let response: NextResponse;
+  if (isLocaleAgnostic(pathname)) {
+    response = await updateSession(request);
+    stampHeaders(response);
+  } else {
+    response = intlMiddleware(request);
+    if (response.headers.get("location")) {
+      return response;
+    }
+    const sessionResponse = await updateSession(request);
+    sessionResponse.cookies.getAll().forEach((cookie) => {
+      response.cookies.set(cookie);
+    });
+    stampHeaders(response);
+  }
 
   // Add security headers and CORS headers to API responses
   if (pathname.startsWith("/api/")) {

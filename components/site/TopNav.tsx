@@ -1,20 +1,28 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link } from "@/i18n/navigation";
+import RawLink from "next/link";
+import { usePathname } from "@/i18n/navigation";
 import BrandLogo from "@/components/brand/BrandLogo";
+import LocaleSwitcher from "@/components/site/LocaleSwitcher";
 
 type TopNavProps = {
   admin: boolean;
   portalHref: string;
   startProjectHref: string;
   userEmail: string | null;
+  locale: string;
+  availableLocales: string[];
 };
 
 type NavItem = {
   href: string;
   label: string;
   matchPrefix?: string;
+  // Locale-agnostic destinations live outside app/[locale] (portal, internal,
+  // dashboard, auth, etc). The i18n Link would prefix them (e.g. /fr/portal)
+  // and 404, so we render those with a raw next/link instead.
+  raw?: boolean;
 };
 
 function isActivePath(pathname: string, href: string, matchPrefix?: string) {
@@ -29,11 +37,23 @@ function isActivePath(pathname: string, href: string, matchPrefix?: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function NavLink({
+  raw,
+  ...props
+}: { raw?: boolean } & React.ComponentProps<typeof Link>) {
+  if (raw) {
+    return <RawLink {...(props as React.ComponentProps<typeof RawLink>)} />;
+  }
+  return <Link {...props} />;
+}
+
 export default function TopNav({
   admin,
   portalHref,
   startProjectHref,
   userEmail,
+  locale,
+  availableLocales,
 }: TopNavProps) {
   const pathname = usePathname();
 
@@ -47,11 +67,21 @@ export default function TopNav({
   ];
 
   if (userEmail) {
-    navItems.push({ href: portalHref, label: "Client portal", matchPrefix: "/portal" });
+    navItems.push({
+      href: portalHref,
+      label: "Client portal",
+      matchPrefix: "/portal",
+      raw: true,
+    });
   }
 
   if (admin) {
-    navItems.push({ href: "/internal/admin", label: "Admin", matchPrefix: "/internal/admin" });
+    navItems.push({
+      href: "/internal/admin",
+      label: "Admin",
+      matchPrefix: "/internal/admin",
+      raw: true,
+    });
   }
 
   return (
@@ -65,25 +95,27 @@ export default function TopNav({
               const active = isActivePath(pathname, item.href, item.matchPrefix);
 
               return (
-                <Link
+                <NavLink
                   key={item.label}
                   href={item.href}
+                  raw={item.raw}
                   className={`topNavLink ${active ? "topNavLinkActive" : ""}`}
                   aria-current={active ? "page" : undefined}
                 >
                   {item.label}
-                </Link>
+                </NavLink>
               );
             })}
           </div>
         </nav>
 
         <div className="navDesktop navDesktopCta">
+          <LocaleSwitcher locale={locale} availableLocales={availableLocales} />
           {userEmail ? (
             <>
-              <Link href={portalHref} className="btn btnGhost">
+              <RawLink href={portalHref} className="btn btnGhost">
                 Open portal
-              </Link>
+              </RawLink>
               <form action="/auth/signout" method="post" className="navForm">
                 <button type="submit" className="btn btnGhost">
                   Sign out
@@ -110,22 +142,25 @@ export default function TopNav({
                 const active = isActivePath(pathname, item.href, item.matchPrefix);
 
                 return (
-                  <Link
+                  <NavLink
                     key={item.label}
                     href={item.href}
+                    raw={item.raw}
                     className={active ? "mobileMenuLinkActive" : undefined}
                     aria-current={active ? "page" : undefined}
                   >
                     {item.label}
-                  </Link>
+                  </NavLink>
                 );
               })}
 
+              <LocaleSwitcher locale={locale} availableLocales={availableLocales} />
+
               {userEmail ? (
                 <>
-                  <Link href={portalHref} className="btn btnPrimary mobileMenuPrimary">
+                  <RawLink href={portalHref} className="btn btnPrimary mobileMenuPrimary">
                     Open portal
-                  </Link>
+                  </RawLink>
                   <form action="/auth/signout" method="post" className="mobileMenuForm">
                     <button type="submit" className="btn btnGhost mobileMenuSignout">
                       Sign out
