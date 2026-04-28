@@ -6,8 +6,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function isAuthorized(req: NextRequest) {
-  const secret = process.env.CRON_SECRET || process.env.INTERNAL_DASHBOARD_TOKEN || "";
-  if (!secret) return true;
+  const secret = (process.env.CRON_SECRET || "").trim();
+  if (!secret) return false;
   return req.headers.get("authorization") === `Bearer ${secret}`;
 }
 

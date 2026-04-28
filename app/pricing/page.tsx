@@ -74,7 +74,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className={styles.section}>
+      <section id="ecommerce" className={styles.section}>
         <div className="container">
           <div className={styles.sectionHead}>
             <p className={styles.sectionLabel}>Other engagements</p>

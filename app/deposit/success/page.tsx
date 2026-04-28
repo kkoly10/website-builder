@@ -81,33 +81,48 @@ export default async function DepositSuccessPage({ searchParams }: { searchParam
     if (session.payment_status === "paid") {
       paid = true;
 
+      // Single-confirmation guard shared with the Stripe webhook. If the
+      // webhook already processed this session, skip the side-effects but
+      // still show the user a paid status and route them to their workspace.
+      const { error: dedupeError } = await supabaseAdmin
+        .from("stripe_processed_sessions")
+        .insert({ session_id: session.id, source: "success_page" });
+      const alreadyProcessed =
+        !!dedupeError && String((dedupeError as any)?.code || "") === "23505";
+
       if (lane === "ops" && opsIntakeId) {
-        await confirmOpsDepositPayment({
-          opsIntakeId,
-          session: {
-            id: session.id,
-            amount_total: session.amount_total ?? null,
-            currency: session.currency ?? null,
-            customer_email: session.customer_email ?? null,
-          },
-        });
+        if (!alreadyProcessed) {
+          await confirmOpsDepositPayment({
+            opsIntakeId,
+            session: {
+              id: session.id,
+              amount_total: session.amount_total ?? null,
+              currency: session.currency ?? null,
+              customer_email: session.customer_email ?? null,
+            },
+          });
+        }
         label = "Ops";
         backHref = `/portal/ops/${encodeURIComponent(opsIntakeId)}`;
       } else if (lane === "ecommerce" && ecomIntakeId) {
-        await confirmEcommerceDepositPayment({
-          ecomIntakeId,
-          ecomQuoteId: ecomQuoteId || null,
-          session: {
-            id: session.id,
-            amount_total: session.amount_total ?? null,
-            currency: session.currency ?? null,
-            customer_email: session.customer_email ?? null,
-          },
-        });
+        if (!alreadyProcessed) {
+          await confirmEcommerceDepositPayment({
+            ecomIntakeId,
+            ecomQuoteId: ecomQuoteId || null,
+            session: {
+              id: session.id,
+              amount_total: session.amount_total ?? null,
+              currency: session.currency ?? null,
+              customer_email: session.customer_email ?? null,
+            },
+          });
+        }
         label = "E-commerce";
         backHref = `/portal/ecommerce/${encodeURIComponent(ecomIntakeId)}`;
       } else if (quoteId) {
-        await confirmWebsiteQuotePayment(session, quoteId);
+        if (!alreadyProcessed) {
+          await confirmWebsiteQuotePayment(session, quoteId);
+        }
         label = "Website";
         const portal = await ensureCustomerPortalForQuoteId(quoteId);
         if (portal?.access_token) {

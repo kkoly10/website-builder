@@ -101,13 +101,33 @@ export async function POST(req: NextRequest) {
     }
 
     const event = JSON.parse(rawBody);
-    if (String(event?.type || "") !== "checkout.session.completed") {
+    const eventId = String(event?.id || "").trim();
+    const eventType = String(event?.type || "");
+
+    if (eventType !== "checkout.session.completed") {
       return NextResponse.json({ received: true });
     }
 
     const session = event?.data?.object;
     if (!session || String(session?.payment_status || "") !== "paid") {
       return NextResponse.json({ received: true });
+    }
+
+    // Single-confirmation guard shared with /deposit/success. A duplicate
+    // session_id means another path already ran the side-effects.
+    const sessionId = String(session?.id || "").trim();
+    if (sessionId) {
+      const { error: dedupeError } = await supabaseAdmin
+        .from("stripe_processed_sessions")
+        .insert({ session_id: sessionId, event_id: eventId || null, source: "webhook" });
+
+      if (dedupeError) {
+        const code = String((dedupeError as any)?.code || "");
+        if (code === "23505") {
+          return NextResponse.json({ received: true, duplicate: true });
+        }
+        console.error("[stripe-webhook] dedupe insert error:", dedupeError);
+      }
     }
 
     const metadata = safeObj(session?.metadata);
