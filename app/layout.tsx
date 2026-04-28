@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
+import { getLocale } from "next-intl/server";
+import { NextIntlClientProvider } from "next-intl";
 import "./globals.css";
 import SiteFooter from "@/components/site/SiteFooter";
 import TopNav from "@/components/site/TopNav";
 import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
+import { routing } from "@/i18n/routing";
 
+// Page-level alternates.languages live in app/[locale]/layout.tsx so they
+// reflect the current path (e.g. /websites <-> /fr/websites <-> /es/websites)
+// rather than always pointing at the homepage.
 export const metadata: Metadata = {
   title: "CrecyStudio | Websites, E-commerce & Workflow Automation",
   description:
@@ -15,7 +21,6 @@ export const metadata: Metadata = {
       "Premium websites, e-commerce systems, and workflow automation for growth-focused businesses.",
     url: "/",
     siteName: "CrecyStudio",
-    locale: "en_US",
     type: "website",
   },
   twitter: {
@@ -33,6 +38,11 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Locale is resolved by the next-intl middleware. For routes outside the
+  // [locale] segment (e.g. /portal, /internal, /api error pages) it falls
+  // back to the default locale.
+  const locale = await getLocale();
+
   let userEmail: string | null = null;
   let admin = false;
 
@@ -55,26 +65,30 @@ export default async function RootLayout({
     : `/login?next=${encodeURIComponent("/portal")}`;
 
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body>
         <a href="#main-content" className="skipLink">
           Skip to main content
         </a>
 
-        <div className="siteShell">
-          <TopNav
-            admin={admin}
-            portalHref={portalHref}
-            startProjectHref={startProjectHref}
-            userEmail={userEmail}
-          />
+        <NextIntlClientProvider locale={locale}>
+          <div className="siteShell">
+            <TopNav
+              admin={admin}
+              portalHref={portalHref}
+              startProjectHref={startProjectHref}
+              userEmail={userEmail}
+              locale={locale}
+              availableLocales={routing.locales as unknown as string[]}
+            />
 
-          <main id="main-content" className="mainContent" tabIndex={-1}>
-            {children}
-          </main>
+            <main id="main-content" className="mainContent" tabIndex={-1}>
+              {children}
+            </main>
 
-          <SiteFooter />
-        </div>
+            <SiteFooter />
+          </div>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

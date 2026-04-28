@@ -1,14 +1,17 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link } from "@/i18n/navigation";
+import { usePathname } from "@/i18n/navigation";
 import BrandLogo from "@/components/brand/BrandLogo";
+import LocaleSwitcher from "@/components/site/LocaleSwitcher";
 
 type TopNavProps = {
   admin: boolean;
   portalHref: string;
   startProjectHref: string;
   userEmail: string | null;
+  locale: string;
+  availableLocales: string[];
 };
 
 type NavItem = {
@@ -34,6 +37,8 @@ export default function TopNav({
   portalHref,
   startProjectHref,
   userEmail,
+  locale,
+  availableLocales,
 }: TopNavProps) {
   const pathname = usePathname();
 
@@ -79,6 +84,7 @@ export default function TopNav({
         </nav>
 
         <div className="navDesktop navDesktopCta">
+          <LocaleSwitcher locale={locale} availableLocales={availableLocales} />
           {userEmail ? (
             <>
               <Link href={portalHref} className="btn btnGhost">
@@ -120,6 +126,8 @@ export default function TopNav({
                   </Link>
                 );
               })}
+
+              <LocaleSwitcher locale={locale} availableLocales={availableLocales} />
 
               {userEmail ? (
                 <>

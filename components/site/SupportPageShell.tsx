@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import type { ReactNode } from "react";
 
 type Cta = { href: string; label: string; variant?: "primary" | "ghost" };

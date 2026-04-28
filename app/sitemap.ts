@@ -1,22 +1,54 @@
 import type { MetadataRoute } from "next";
+import { routing } from "@/i18n/routing";
+
+type Page = {
+  path: string;
+  priority: number;
+  changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
+};
+
+const PAGES: Page[] = [
+  { path: "/", priority: 1.0, changeFrequency: "weekly" },
+  { path: "/websites", priority: 0.9, changeFrequency: "monthly" },
+  { path: "/ecommerce", priority: 0.9, changeFrequency: "monthly" },
+  { path: "/systems", priority: 0.9, changeFrequency: "monthly" },
+  { path: "/process", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/faq", priority: 0.7, changeFrequency: "monthly" },
+  { path: "/contact", priority: 0.6, changeFrequency: "yearly" },
+  { path: "/pricing", priority: 0.7, changeFrequency: "monthly" },
+  { path: "/build/intro", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/ops-intake", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/ecommerce/intake", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/privacy", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/terms", priority: 0.3, changeFrequency: "yearly" },
+];
+
+function localizedHref(siteUrl: string, locale: string, path: string) {
+  // Default locale stays at the root (no prefix). Other locales get a prefix.
+  const prefix = locale === routing.defaultLocale ? "" : `/${locale}`;
+  if (path === "/") return `${siteUrl}${prefix || "/"}`;
+  return `${siteUrl}${prefix}${path}`;
+}
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com";
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com").replace(/\/$/, "");
   const now = new Date().toISOString();
 
-  return [
-    { url: siteUrl, lastModified: now, changeFrequency: "weekly", priority: 1.0 },
-    { url: `${siteUrl}/websites`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
-    { url: `${siteUrl}/ecommerce`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
-    { url: `${siteUrl}/systems`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
-    { url: `${siteUrl}/process`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${siteUrl}/faq`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${siteUrl}/contact`, lastModified: now, changeFrequency: "yearly", priority: 0.6 },
-    { url: `${siteUrl}/ecommerce/pricing`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${siteUrl}/build/intro`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${siteUrl}/ops-intake`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${siteUrl}/ecommerce/intake`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${siteUrl}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${siteUrl}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
-  ];
+  return PAGES.flatMap((page) => {
+    // One sitemap entry per (locale × page). Each carries alternates.languages
+    // so search engines learn the hreflang relationships in a single fetch.
+    const languages: Record<string, string> = {};
+    for (const locale of routing.locales) {
+      languages[locale] = localizedHref(siteUrl, locale, page.path);
+    }
+    languages["x-default"] = localizedHref(siteUrl, routing.defaultLocale, page.path);
+
+    return routing.locales.map((locale) => ({
+      url: localizedHref(siteUrl, locale, page.path),
+      lastModified: now,
+      changeFrequency: page.changeFrequency,
+      priority: page.priority,
+      alternates: { languages },
+    }));
+  });
 }
