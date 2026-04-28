@@ -81,19 +81,22 @@ export default async function DepositSuccessPage({ searchParams }: { searchParam
     if (session.payment_status === "paid") {
       paid = true;
 
-      // Single-confirmation guard shared with the Stripe webhook. We claim
-      // the session_id before running side-effects; if processing fails, the
-      // claim is rolled back so a refresh can retry instead of leaving the
-      // payment recorded-but-unprocessed.
+      // Single-confirmation guard shared with the Stripe webhook. The row
+      // has two states: claimed (processed_at set, completed_at null) and
+      // completed (completed_at set). On a unique-constraint collision we
+      // do NOT run side-effects — the webhook is the canonical writer and
+      // will mark completed_at when its work finishes. We just route the
+      // user; the workspace will catch up shortly.
       const { error: claimError } = await supabaseAdmin
         .from("stripe_processed_sessions")
         .insert({ session_id: session.id, source: "success_page" });
-      const alreadyProcessed =
+      const claimedHere = !claimError;
+      const collided =
         !!claimError && String((claimError as any)?.code || "") === "23505";
 
       try {
         if (lane === "ops" && opsIntakeId) {
-          if (!alreadyProcessed) {
+          if (claimedHere) {
             await confirmOpsDepositPayment({
               opsIntakeId,
               session: {
@@ -107,7 +110,7 @@ export default async function DepositSuccessPage({ searchParams }: { searchParam
           label = "Ops";
           backHref = `/portal/ops/${encodeURIComponent(opsIntakeId)}`;
         } else if (lane === "ecommerce" && ecomIntakeId) {
-          if (!alreadyProcessed) {
+          if (claimedHere) {
             await confirmEcommerceDepositPayment({
               ecomIntakeId,
               ecomQuoteId: ecomQuoteId || null,
@@ -122,7 +125,7 @@ export default async function DepositSuccessPage({ searchParams }: { searchParam
           label = "E-commerce";
           backHref = `/portal/ecommerce/${encodeURIComponent(ecomIntakeId)}`;
         } else if (quoteId) {
-          if (!alreadyProcessed) {
+          if (claimedHere) {
             await confirmWebsiteQuotePayment(session, quoteId);
           }
           label = "Website";
@@ -132,7 +135,7 @@ export default async function DepositSuccessPage({ searchParams }: { searchParam
           }
         }
       } catch (sideEffectError) {
-        if (!alreadyProcessed) {
+        if (claimedHere) {
           await supabaseAdmin
             .from("stripe_processed_sessions")
             .delete()
@@ -141,7 +144,16 @@ export default async function DepositSuccessPage({ searchParams }: { searchParam
         throw sideEffectError;
       }
 
-      message = "Deposit received ✅";
+      if (claimedHere) {
+        await supabaseAdmin
+          .from("stripe_processed_sessions")
+          .update({ completed_at: new Date().toISOString() })
+          .eq("session_id", session.id);
+      }
+
+      message = collided
+        ? "Deposit received ✅ — finalizing your workspace, refresh if anything looks delayed."
+        : "Deposit received ✅";
     } else {
       message = "Payment not completed yet.";
     }

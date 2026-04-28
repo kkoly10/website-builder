@@ -113,22 +113,42 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    // Single-confirmation guard shared with /deposit/success. We claim the
-    // session_id before running side-effects; on failure we roll the claim
-    // back so a Stripe retry can reprocess instead of being silently
-    // swallowed as a duplicate.
+    // Single-confirmation guard shared with /deposit/success. The row has
+    // two states: claimed (processed_at set, completed_at null) and
+    // completed (completed_at set). On a unique-constraint collision we
+    // look at completed_at to distinguish "already done — safe to ack" from
+    // "another worker is in flight — ask Stripe to retry."
     const sessionId = String(session?.id || "").trim();
+    let claimedHere = false;
     if (sessionId) {
-      const { error: dedupeError } = await supabaseAdmin
+      const { error: claimError } = await supabaseAdmin
         .from("stripe_processed_sessions")
         .insert({ session_id: sessionId, event_id: eventId || null, source: "webhook" });
 
-      if (dedupeError) {
-        const code = String((dedupeError as any)?.code || "");
+      if (!claimError) {
+        claimedHere = true;
+      } else {
+        const code = String((claimError as any)?.code || "");
         if (code === "23505") {
-          return NextResponse.json({ received: true, duplicate: true });
+          const { data: existing } = await supabaseAdmin
+            .from("stripe_processed_sessions")
+            .select("completed_at")
+            .eq("session_id", sessionId)
+            .maybeSingle();
+
+          if (existing?.completed_at) {
+            return NextResponse.json({ received: true, duplicate: true });
+          }
+          // Row exists but processing isn't complete — another worker is
+          // either still running or has crashed mid-flight. Bounce so Stripe
+          // retries; by then the other path has either committed or rolled
+          // back, and we'll see a definitive completed_at on the next try.
+          return NextResponse.json(
+            { error: "Concurrent confirmation in flight; will retry." },
+            { status: 503 }
+          );
         }
-        console.error("[stripe-webhook] dedupe insert error:", dedupeError);
+        console.error("[stripe-webhook] claim insert error:", claimError);
       }
     }
 
@@ -177,13 +197,20 @@ export async function POST(req: NextRequest) {
       }
     } catch (sideEffectError) {
       // Roll back the claim so the next retry can reprocess.
-      if (sessionId) {
+      if (sessionId && claimedHere) {
         await supabaseAdmin
           .from("stripe_processed_sessions")
           .delete()
           .eq("session_id", sessionId);
       }
       throw sideEffectError;
+    }
+
+    if (sessionId && claimedHere) {
+      await supabaseAdmin
+        .from("stripe_processed_sessions")
+        .update({ completed_at: new Date().toISOString() })
+        .eq("session_id", sessionId);
     }
 
     return NextResponse.json({ received: true });
