@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getLocale, getMessages } from "next-intl/server";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { NextIntlClientProvider } from "next-intl";
 import "./globals.css";
 import SiteFooter from "@/components/site/SiteFooter";
@@ -47,6 +47,7 @@ export default async function RootLayout({
   // they read at module import time — which breaks once we start using
   // useTranslations() in PR 2.
   const messages = await getMessages();
+  const tCommon = await getTranslations("common");
 
   let userEmail: string | null = null;
   let admin = false;
@@ -73,7 +74,7 @@ export default async function RootLayout({
     <html lang={locale}>
       <body>
         <a href="#main-content" className="skipLink">
-          Skip to main content
+          {tCommon("skipToMain")}
         </a>
 
         <NextIntlClientProvider locale={locale} messages={messages}>
