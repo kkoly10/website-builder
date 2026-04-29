@@ -41,8 +41,6 @@ export type ServicePageProps = {
   eyebrow: string;
   title: string;
   intro: string;
-  heroImage: string;
-  heroAlt: string;
   heroStats: string[];
   primaryCta: CTA;
   secondaryCta: CTA;

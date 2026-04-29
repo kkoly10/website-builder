@@ -32,8 +32,6 @@ websitesData.en = {
   title: "A website that makes people trust your business before they even call you.",
   intro:
     "Your website is the first thing people check. If it looks outdated, loads slow, or doesn't explain what you do — you're losing customers before they reach out. We build custom websites that look professional, convert visitors, and actually represent how good your business is.",
-  heroImage: "/images/services/website-hero.webp",
-  heroAlt: "Premium website design for small businesses",
   heroStats: [
     "2–3 wk typical delivery",
     "Custom · no templates",
@@ -137,8 +135,6 @@ websitesData.fr = {
   title: "Un site web qui inspire confiance avant même qu'on vous appelle.",
   intro:
     "Votre site est la première chose qu'on consulte. S'il paraît dépassé, charge lentement ou n'explique pas ce que vous faites — vous perdez des clients avant qu'ils ne vous contactent. Nous concevons des sites sur mesure qui paraissent professionnels, convertissent les visiteurs et reflètent vraiment la qualité de votre entreprise.",
-  heroImage: "/images/services/website-hero.webp",
-  heroAlt: "Conception de sites web premium pour petites entreprises",
   heroStats: [
     "2-3 sem de délai habituel",
     "Sur mesure · pas de modèles",
@@ -242,8 +238,6 @@ websitesData.es = {
   title: "Un sitio web que genera confianza en tu negocio antes de que te llamen.",
   intro:
     "Tu sitio web es lo primero que la gente revisa. Si se ve desactualizado, carga lento o no explica lo que haces — estás perdiendo clientes antes de que te contacten. Construimos sitios a medida que se ven profesionales, convierten visitantes y representan de verdad lo bueno que es tu negocio.",
-  heroImage: "/images/services/website-hero.webp",
-  heroAlt: "Diseño de sitios web premium para pequeñas empresas",
   heroStats: [
     "2-3 sem de entrega habitual",
     "A medida · sin plantillas",
@@ -347,8 +341,6 @@ systemsData.en = {
   title: "Stop doing the same task twice. We build the automation so you don't have to.",
   intro:
     "If you're copying data between tools, sending the same emails manually, or losing track of client requests — your business has an operations problem. We audit what's broken, build the automation that fixes it, and document everything so it doesn't become a mystery.",
-  heroImage: "/images/services/ops-hero.webp",
-  heroAlt: "Workflow automation for small businesses",
   heroStats: [
     "Zapier, Make.com, or custom",
     "Audit first, then build",
@@ -447,8 +439,6 @@ systemsData.fr = {
   title: "Arrêtez de faire la même tâche deux fois. Nous construisons l'automatisation à votre place.",
   intro:
     "Si vous copiez des données entre des outils, envoyez les mêmes e-mails à la main ou perdez la trace des demandes clients — votre entreprise a un problème opérationnel. Nous auditons ce qui est cassé, construisons l'automatisation qui le répare, et tout documentons pour que cela ne devienne pas un mystère.",
-  heroImage: "/images/services/ops-hero.webp",
-  heroAlt: "Automatisation de workflow pour petites entreprises",
   heroStats: [
     "Zapier, Make.com ou sur mesure",
     "Audit d'abord, puis construction",
@@ -547,8 +537,6 @@ systemsData.es = {
   title: "Deja de hacer la misma tarea dos veces. Construimos la automatización por ti.",
   intro:
     "Si copias datos entre herramientas, envías los mismos correos a mano o pierdes el rastro de las solicitudes de los clientes — tu negocio tiene un problema operativo. Auditamos lo que está roto, construimos la automatización que lo arregla y documentamos todo para que no se convierta en un misterio.",
-  heroImage: "/images/services/ops-hero.webp",
-  heroAlt: "Automatización de workflow para pequeñas empresas",
   heroStats: [
     "Zapier, Make.com o a medida",
     "Primero auditoría, luego construcción",
@@ -647,8 +635,6 @@ ecommerceData.en = {
   title: "Build your store, fix what's broken, or let us run the whole thing.",
   intro:
     "Whether you need a new online store built from scratch, a broken checkout fixed, or someone to handle your daily operations — we offer all three. Pick the service that matches where you are right now.",
-  heroImage: "/images/services/ecommerce-hero.webp",
-  heroAlt: "E-commerce store management and operations",
   heroStats: [
     "Build · Run · Fix",
     "Shopify, Amazon, Etsy, WooCommerce",
@@ -739,6 +725,200 @@ ecommerceData.en = {
     "Tell us what you need in a 2-minute intake. Build, run, or fix — we'll respond within 24 hours with a plan and pricing.",
   finalPrimaryCta: { label: "Start E-commerce Intake", href: "/ecommerce/intake" },
   finalSecondaryCta: { label: "See Full Pricing", href: "/pricing" },
+};
+
+ecommerceData.fr = {
+  eyebrow: "Services e-commerce",
+  title: "Construisez votre boutique, réparez ce qui est cassé, ou laissez-nous tout gérer.",
+  intro:
+    "Que vous ayez besoin d'une nouvelle boutique en ligne construite de zéro, d'un paiement défectueux à corriger, ou de quelqu'un pour gérer vos opérations quotidiennes — nous proposons les trois. Choisissez le service qui correspond à là où vous en êtes maintenant.",
+  heroStats: [
+    "Construire · Gérer · Réparer",
+    "Shopify, Amazon, Etsy, WooCommerce",
+    "Opérations mensuelles à partir de 500 $/mois",
+  ],
+  primaryCta: { label: "Démarrer un intake e-commerce", href: "/ecommerce/intake" },
+  secondaryCta: { label: "Voir les tarifs", href: "/pricing" },
+  whoItsForTitle: "Idéal pour les vendeurs en ligne qui ont besoin de plus qu'une vitrine.",
+  whoItsFor: [
+    "Vous avez besoin d'une boutique mais vous ne savez pas par où commencer côté plateformes, paiements et expédition.",
+    "Vous avez déjà une boutique mais vous passez tout votre temps en opérations au lieu de croître.",
+    "Votre paiement perd des ventes et vous ne savez pas pourquoi les clients abandonnent leur panier.",
+    "Vous voulez quelqu'un pour gérer les fiches produits, commandes, retours et service client pour pouvoir vous concentrer sur le produit.",
+  ],
+  problemsTitle: "Les vrais problèmes derrière la plupart des boutiques en difficulté.",
+  problems: [
+    "La boutique existe mais personne ne la gère vraiment — les fiches sont obsolètes, les commandes s'accumulent, les clients attendent.",
+    "La friction au paiement tue les conversions — trop d'étapes, livraison floue, signaux de confiance manquants.",
+    "L'après-achat est un désastre — pas de flux de confirmation de commande, pas de mises à jour d'expédition, pas de suivi.",
+    "Vous faites tout à la main et ce n'est pas scalable au-delà de votre niveau actuel.",
+  ],
+  includesTitle: "Trois façons dont nous aidons",
+  includes: [
+    {
+      title: "Construire — Nouvelle boutique de zéro",
+      items: [
+        "Configuration complète de boutique Shopify ou WooCommerce",
+        "Pages produit, paiement, paiements et expédition configurés",
+        "Design optimisé mobile avec flux d'e-mail post-achat",
+      ],
+    },
+    {
+      title: "Gérer — Gestion opérationnelle continue",
+      items: [
+        "Mises à jour des fiches produits et suivi des stocks",
+        "Traitement des commandes, service client et retours",
+        "Reporting de performance mensuel et optimisation",
+      ],
+    },
+    {
+      title: "Réparer — Audit et sprint d'optimisation",
+      items: [
+        "Audit complet du paiement et du taux de conversion",
+        "5 à 10 correctifs ciblés mis en œuvre en 2 à 3 semaines",
+        "Transition vers des opérations gérées après le sprint",
+      ],
+    },
+  ],
+  pricingTitle: "Tarifs clairs pour chaque type de service",
+  pricingIntro:
+    "Construire est un forfait projet ponctuel. Gérer est un abonnement mensuel. Réparer est un sprint ponctuel. Vous voyez le prix avant de vous engager.",
+  pricingCards: [
+    { label: "Construire une boutique", value: "À partir de 1 800 $", detail: "Forfait projet ponctuel. Boutiques basiques à partir de 1 800 $, standard à 2 500 $ - 3 500 $, premium à 4 000 $+." },
+    { label: "Gérer votre boutique", value: "À partir de 500 $/mois", detail: "Abonnement mensuel. Starter 500 $/mois, Growth 1 000 $/mois, Scale 1 800 $/mois — selon le volume de commandes." },
+    { label: "Réparer votre boutique", value: "1 200 $", detail: "Audit ponctuel + sprint de mise en œuvre. La plupart des clients passent ensuite à un abonnement mensuel." },
+  ],
+  processTitle: "Comment ça marche — quel que soit le service choisi",
+  processIntro:
+    "Chaque prestation commence de la même façon : dites-nous ce dont vous avez besoin, on chiffre, vous validez, on livre.",
+  process: [
+    { step: "01", title: "Dites-nous votre situation", detail: "Remplissez un intake de 2 minutes. Première question : avez-vous besoin d'une boutique construite, de quelqu'un pour gérer la vôtre, ou de quelque chose à réparer ?" },
+    { step: "02", title: "Appel de planification + proposition", detail: "Nous examinons votre intake, planifions un appel et rédigeons une proposition avec tarifs, portée et calendrier." },
+    { step: "03", title: "On livre", detail: "Les clients Construire reçoivent une boutique. Les clients Réparer reçoivent un audit + des correctifs. Les clients Gérer reçoivent des opérations continues dès le premier jour." },
+    { step: "04", title: "Suivez tout dans votre espace", detail: "Chaque client reçoit un espace privé montrant l'état du projet, les tâches et — pour les clients opérations — la performance mensuelle." },
+  ],
+  bestFitTitle: "Commencez ici si votre boutique a besoin d'aide professionnelle.",
+  bestFit: [
+    "Vous avez besoin d'une boutique construite sur une plateforme solide avec paiement, paiements et expédition bien faits.",
+    "Vous êtes noyé sous les commandes, retours et messages clients et vous avez besoin de quelqu'un pour prendre le relais.",
+    "Le taux de conversion de votre boutique est mauvais et vous ne savez pas par où commencer pour le réparer.",
+  ],
+  notFitTitle: "Probablement pas le bon premier pas si…",
+  notFit: [
+    "Vous ne vendez pas de produits en ligne — vous avez besoin d'un site d'entreprise de services.",
+    "Votre principal goulet est le workflow et l'admin internes — regardez notre axe automatisation.",
+    "Vous voulez faire du dropshipping sans aucune implication — nous gérons des boutiques, nous ne dirigeons pas votre entreprise à votre place.",
+  ],
+  faqTitle: "FAQ e-commerce",
+  faqs: [
+    { question: "Dois-je vous donner accès à ma boutique ?", answer: "Oui. Nous aurons besoin d'un accès staff ou collaborateur pour gérer votre boutique en votre nom. Vous restez le propriétaire — nous opérons comme votre équipe." },
+    { question: "Et si j'ai besoin d'une boutique construite ET d'opérations continues ?", answer: "Commencez par la construction. Une fois votre boutique lancée, nous passons à un abonnement mensuel d'opérations. Beaucoup de clients font les deux." },
+    { question: "Quelles plateformes prenez-vous en charge ?", answer: "Shopify est la principale. Nous prenons aussi en charge WooCommerce, Amazon Seller Central, Etsy et eBay. Si vous êtes sur autre chose, parlons-en." },
+    { question: "Gérez-vous l'entreposage et l'expédition ?", answer: "Pas encore. Nous gérons les opérations numériques — fiches, commandes, clients et reporting. Si vous avez besoin de logistique physique, nous pouvons vous aider à vous connecter à un prestataire 3PL." },
+  ],
+  crossLinks: CROSS_LINKS.ecommerce,
+  finalTitle: "Prêt à arrêter de tout faire vous-même ?",
+  finalText:
+    "Dites-nous ce dont vous avez besoin dans un intake de 2 minutes. Construire, gérer ou réparer — nous répondons sous 24 heures avec un plan et des tarifs.",
+  finalPrimaryCta: { label: "Démarrer un intake e-commerce", href: "/ecommerce/intake" },
+  finalSecondaryCta: { label: "Voir les tarifs complets", href: "/pricing" },
+};
+
+ecommerceData.es = {
+  eyebrow: "Servicios de e-commerce",
+  title: "Construye tu tienda, arregla lo que está roto, o déjanos llevar todo.",
+  intro:
+    "Ya sea que necesites una nueva tienda en línea construida desde cero, un checkout roto arreglado, o alguien que se encargue de tus operaciones diarias — ofrecemos las tres. Elige el servicio que coincida con donde estás ahora.",
+  heroStats: [
+    "Construir · Llevar · Arreglar",
+    "Shopify, Amazon, Etsy, WooCommerce",
+    "Operaciones mensuales desde $500/mes",
+  ],
+  primaryCta: { label: "Iniciar intake de e-commerce", href: "/ecommerce/intake" },
+  secondaryCta: { label: "Ver precios", href: "/pricing" },
+  whoItsForTitle: "Ideal para vendedores en línea que necesitan más que una tienda.",
+  whoItsFor: [
+    "Necesitas una tienda construida pero no sabes por dónde empezar con plataformas, pagos y envíos.",
+    "Ya tienes una tienda pero pasas todo tu tiempo en operaciones en lugar de crecer.",
+    "Tu checkout pierde ventas y no sabes por qué los clientes abandonan el carrito.",
+    "Quieres a alguien que gestione fichas, pedidos, devoluciones y atención al cliente para enfocarte en el producto.",
+  ],
+  problemsTitle: "Los problemas reales detrás de la mayoría de las tiendas que sufren.",
+  problems: [
+    "La tienda existe pero nadie la gestiona de verdad — las fichas están desactualizadas, los pedidos se acumulan, los clientes esperan.",
+    "La fricción del checkout mata las conversiones — demasiados pasos, envío poco claro, señales de confianza ausentes.",
+    "El post-compra es un desastre — sin flujo de confirmación de pedido, sin actualizaciones de envío, sin seguimiento.",
+    "Haces todo manualmente y no es escalable más allá de donde estás ahora.",
+  ],
+  includesTitle: "Tres formas en que ayudamos",
+  includes: [
+    {
+      title: "Construir — Tienda nueva desde cero",
+      items: [
+        "Configuración completa de tienda Shopify o WooCommerce",
+        "Páginas de producto, checkout, pagos y envío configurados",
+        "Diseño optimizado para móvil con flujo de correos post-compra",
+      ],
+    },
+    {
+      title: "Llevar — Gestión operativa continua",
+      items: [
+        "Actualizaciones de fichas y monitoreo de inventario",
+        "Procesamiento de pedidos, atención al cliente y devoluciones",
+        "Reporte mensual de desempeño y optimización",
+      ],
+    },
+    {
+      title: "Arreglar — Auditoría y sprint de optimización",
+      items: [
+        "Auditoría completa de checkout y tasa de conversión",
+        "5 a 10 arreglos enfocados implementados en 2 a 3 semanas",
+        "Transición a operaciones gestionadas después del sprint",
+      ],
+    },
+  ],
+  pricingTitle: "Precios claros para cada tipo de servicio",
+  pricingIntro:
+    "Construir es una tarifa única de proyecto. Llevar es un retainer mensual. Arreglar es un sprint único. Ves el precio antes de comprometerte.",
+  pricingCards: [
+    { label: "Construir una tienda", value: "Desde $1.800", detail: "Tarifa única de proyecto. Tiendas básicas desde $1.800, estándar $2.500 - $3.500, premium $4.000+." },
+    { label: "Llevar tu tienda", value: "Desde $500/mes", detail: "Retainer mensual. Starter $500/mes, Growth $1.000/mes, Scale $1.800/mes — según volumen de pedidos." },
+    { label: "Arreglar tu tienda", value: "$1.200", detail: "Auditoría única + sprint de implementación. La mayoría de clientes pasa después a un retainer mensual." },
+  ],
+  processTitle: "Cómo funciona — sin importar qué servicio elijas",
+  processIntro:
+    "Cada contratación empieza igual: cuéntanos qué necesitas, lo cotizamos, tú apruebas, entregamos.",
+  process: [
+    { step: "01", title: "Cuéntanos tu situación", detail: "Llena un intake de 2 minutos. La primera pregunta es: ¿necesitas una tienda construida, alguien que lleve la tuya, o algo arreglado?" },
+    { step: "02", title: "Llamada de planificación + propuesta", detail: "Revisamos tu intake, agendamos una llamada y redactamos una propuesta con precios, alcance y plazos." },
+    { step: "03", title: "Entregamos", detail: "Los clientes Construir reciben una tienda. Los clientes Arreglar reciben una auditoría + arreglos. Los clientes Llevar reciben operaciones continuas desde el primer día." },
+    { step: "04", title: "Sigue todo en tu espacio", detail: "Cada cliente recibe un espacio privado que muestra el estado del proyecto, las tareas y — para clientes de operaciones — el desempeño mensual." },
+  ],
+  bestFitTitle: "Empieza aquí si tu tienda necesita ayuda profesional.",
+  bestFit: [
+    "Necesitas una tienda construida en una plataforma sólida con checkout, pagos y envío bien hechos.",
+    "Estás ahogado en pedidos, devoluciones y mensajes de clientes y necesitas que alguien tome el control.",
+    "La tasa de conversión de tu tienda es mala y no sabes qué arreglar primero.",
+  ],
+  notFitTitle: "Probablemente no sea el primer paso si…",
+  notFit: [
+    "No vendes productos en línea — necesitas un sitio de empresa de servicios.",
+    "Tu mayor cuello de botella es el workflow y la administración interna — mira nuestra vía de automatización.",
+    "Quieres hacer dropshipping sin involucrarte — gestionamos tiendas, no llevamos negocios por ti.",
+  ],
+  faqTitle: "FAQ de e-commerce",
+  faqs: [
+    { question: "¿Tengo que darte acceso a mi tienda?", answer: "Sí. Necesitaremos acceso de staff o colaborador para gestionar tu tienda en tu nombre. Tú sigues siendo el dueño — nosotros operamos como tu equipo." },
+    { question: "¿Y si necesito una tienda construida Y operaciones continuas?", answer: "Empieza por la construcción. Una vez lanzada tu tienda, pasamos a un retainer mensual de operaciones. Muchos clientes hacen ambos." },
+    { question: "¿Qué plataformas soportan?", answer: "Shopify es la principal. También soportamos WooCommerce, Amazon Seller Central, Etsy y eBay. Si estás en otra cosa, hablemos." },
+    { question: "¿Manejan almacenamiento y envío?", answer: "Todavía no. Gestionamos operaciones digitales — fichas, pedidos, clientes y reporting. Si necesitas cumplimiento físico, podemos ayudarte a conectar con un proveedor 3PL." },
+  ],
+  crossLinks: CROSS_LINKS.ecommerce,
+  finalTitle: "¿Listo para dejar de hacer todo tú mismo?",
+  finalText:
+    "Cuéntanos qué necesitas en un intake de 2 minutos. Construir, llevar o arreglar — responderemos dentro de 24 horas con un plan y precios.",
+  finalPrimaryCta: { label: "Iniciar intake de e-commerce", href: "/ecommerce/intake" },
+  finalSecondaryCta: { label: "Ver precios completos", href: "/pricing" },
 };
 
 export function getServicePageData(locale: string, id: ServiceId): ServiceData {
