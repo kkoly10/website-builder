@@ -1,6 +1,377 @@
 {
   "common": {
     "siteName": "CrecyStudio",
-    "skipToMain": "Saltar al contenido principal"
+    "skipToMain": "Saltar al contenido principal",
+    "openPortal": "Abrir el portal",
+    "signOut": "Cerrar sesión",
+    "startProject": "Iniciar un proyecto",
+    "openMenu": "Abrir el menú de navegación"
+  },
+  "nav": {
+    "websites": "Sitios web",
+    "ecommerce": "E-commerce",
+    "systems": "Sistemas",
+    "process": "Proceso",
+    "pricing": "Precios",
+    "faq": "FAQ",
+    "clientPortal": "Portal del cliente",
+    "admin": "Admin",
+    "language": "Idioma",
+    "primaryAria": "Principal",
+    "footerAria": "Pie de página"
+  },
+  "footer": {
+    "blurb": "Estudio enfocado en la web para empresas que necesitan una primera impresión más nítida, operaciones más limpias y un único espacio de trabajo para conducir el proyecto.",
+    "rightsReserved": "Todos los derechos reservados.",
+    "links": {
+      "aria": "Pie de página",
+      "websites": "Sitios web",
+      "ecommerce": "E-commerce",
+      "systems": "Sistemas",
+      "process": "Proceso",
+      "pricing": "Precios",
+      "faq": "FAQ",
+      "contact": "Contacto",
+      "privacy": "Privacidad",
+      "terms": "Términos"
+    }
+  },
+  "home": {
+    "metaTitle": "CrecyStudio | Sitios web que hacen sonar tu teléfono",
+    "metaDescription": "Estudio web del norte de Virginia que crea sitios para pequeñas empresas. Genera confianza rápidamente y ofrece a tus clientes un espacio de trabajo en vivo para seguir el alcance, las vistas previas, los comentarios y el lanzamiento.",
+    "heroLabel": "Estudio web del norte de Virginia / desde 2024",
+    "heroTitle": "Sitios web que hacen sonar <em>tu teléfono.</em>",
+    "heroSub": "Construimos sitios web para pequeñas empresas que generan confianza rápido y le dan a tus clientes un espacio de trabajo en vivo para seguir el alcance, las vistas previas, los comentarios y el lanzamiento.",
+    "ctaStart": "Iniciar un proyecto",
+    "ctaProcess": "Ver el proceso",
+    "proof": {
+      "delivery": "Entrega habitual",
+      "deliveryValue": "2-4 sem",
+      "ownership": "Tú eres dueño del código",
+      "ownershipValue": "100 %",
+      "noUpfront": "Hasta que se apruebe el alcance",
+      "noUpfrontValue": "$0",
+      "workspace": "Espacio del proyecto en vivo",
+      "workspaceValue": "Siempre"
+    },
+    "diff": {
+      "label": "La diferencia",
+      "title": "Tu proyecto vive en un espacio de trabajo.",
+      "lede": "La mayoría de los estudios desaparecen entre la factura y el lanzamiento. Construimos un espacio para clientes para seguir hitos, subir recursos, ver la vista previa en vivo y dejar comentarios en un solo lugar.",
+      "kicker": "Vista previa del espacio",
+      "url": "crecy.studio/portal/tu-proyecto",
+      "eyebrow": "Proyecto de sitio web",
+      "ready": "Tu versión está <em>lista para revisión.</em>",
+      "openPreview": "Abrir vista previa",
+      "currentMilestone": "Hito actual",
+      "currentMilestoneValue": "Revisión del cliente",
+      "currentMilestoneMeta": "2 de 3 revisiones usadas",
+      "deposit": "Depósito",
+      "depositValue": "Pagado",
+      "depositMeta": "50 % recibido antes de construir",
+      "launchTarget": "Objetivo de lanzamiento",
+      "launchTargetValue": "En camino",
+      "launchTargetMeta": "Dentro de la ventana de entrega prevista",
+      "journey": {
+        "intake": "Intake",
+        "agreement": "Acuerdo",
+        "deposit": "Depósito",
+        "content": "Contenido",
+        "build": "Build",
+        "review": "Revisión",
+        "launch": "Lanzamiento"
+      }
+    },
+    "how": {
+      "label": "Proceso",
+      "title": "Tres pasos. Sin sorpresas.",
+      "step1Phase": "/ 01 - Intake",
+      "step1Title": "Cuéntanos qué necesita hacer el sitio",
+      "step1Body": "Nos envías lo esencial: empresa, oferta, páginas, objetivos y urgencia. Trabajamos contra la realidad en lugar de adivinar en una llamada de venta.",
+      "step2Phase": "/ 02 - Construcción",
+      "step2Title": "Sigue todo el proyecto en un solo espacio",
+      "step2Body": "Revisas hitos, vistas previas, archivos y próximos pasos en un solo lugar. Sin cadena de correos dispersa y sin preguntarte qué pasa después.",
+      "step3Phase": "/ 03 - Lanzamiento",
+      "step3Title": "Sal en vivo con la propiedad intacta",
+      "step3Body": "Conectamos el dominio, probamos los formularios y entregamos el sistema terminado. Tu código, contenido y cuentas siguen siendo tuyos."
+    },
+    "tiers": {
+      "label": "Precios",
+      "title": "Ves el precio antes de comprometerte.",
+      "lede": "Estimaciones fijas, ajustadas al proyecto que tenemos delante. Sin contratos rehén, sin extras sorpresa y sin trabajo misterioso después del kickoff.",
+      "starter": {
+        "name": "/ Starter",
+        "price": "$1.800 - $2.400",
+        "desc": "Para un sitio de una página limpio que necesita verse creíble rápido.",
+        "f1": "Diseño a medida de una página",
+        "f2": "Versión móvil y de escritorio",
+        "f3": "Formulario de contacto y clic-para-llamar",
+        "f4": "Bases de analítica y SEO",
+        "f5": "2 rondas de revisión"
+      },
+      "growth": {
+        "name": "/ Growth",
+        "price": "$3.500 - $4.500",
+        "desc": "Para la mayoría de empresas de servicios que necesitan un sitio real y una primera impresión más fuerte.",
+        "f1": "4-6 páginas a medida",
+        "f2": "Captura de leads o flujo de reservas",
+        "f3": "Estructura de mensaje y apoyo ligero de copy",
+        "f4": "Proceso de revisión en el espacio de trabajo",
+        "f5": "3 rondas de revisión"
+      },
+      "premium": {
+        "name": "/ Premium",
+        "price": "$6.500 - $10.000+",
+        "desc": "Para empresas que necesitan profundidad de contenido, arquitectura y más piezas en movimiento.",
+        "f1": "8+ páginas y sistema de contenido más profundo",
+        "f2": "Integraciones avanzadas",
+        "f3": "Configuración de seguimiento de conversiones",
+        "f4": "QA de lanzamiento estructurado",
+        "f5": "4 rondas de revisión"
+      },
+      "ctaQuote": "Pedir una cotización"
+    },
+    "closing": {
+      "label": "¿Listo para avanzar?",
+      "title": "Hagamos que la gente <em>te llame de verdad.</em>",
+      "cta": "Iniciar tu estimación gratuita"
+    },
+    "also": {
+      "label": "También ofrecemos",
+      "systemsTitle": "Sistemas de workflow",
+      "systemsBody": "Automatización para equipos enterrados en operaciones de hoja de cálculo, traspasos repetitivos y seguimiento manual de clientes.",
+      "systemsLink": "Explorar sistemas",
+      "ecomTitle": "Reparaciones de e-commerce",
+      "ecomBody": "Tienda, checkout y limpieza operativa para tiendas en línea que pierden tiempo o conversiones.",
+      "ecomLink": "Explorar e-commerce"
+    }
+  },
+  "pricing": {
+    "metaTitle": "Precios | CrecyStudio",
+    "metaDescription": "Rangos claros antes de empezar el trabajo. Estimaciones fijas ajustadas a tu proyecto, sin contratos rehén ni extras sorpresa.",
+    "label": "Precios",
+    "title": "Rangos claros antes de empezar el trabajo.",
+    "intro": "Primero ajustamos el alcance, enviamos una estimación por escrito y mantenemos el número ligado al proyecto real en lugar de inventar trabajo sorpresa más tarde.",
+    "tiersLabel": "Niveles para sitios web",
+    "tiersTitle": "La mayoría de proyectos web caen en uno de estos rangos.",
+    "starter": {
+      "label": "/ Starter",
+      "value": "$1.800 - $2.400",
+      "detail": "Para un sitio de una página limpio y creíble que necesita hacer una sola cosa bien.",
+      "meta": "Una página / móvil primero / lanzamiento rápido"
+    },
+    "growth": {
+      "label": "/ Growth",
+      "value": "$3.500 - $4.500",
+      "detail": "Para la mayoría de empresas de servicios que necesitan un sitio multipágina y una primera impresión más fuerte.",
+      "meta": "4-6 páginas / captura de leads / revisión en espacio"
+    },
+    "premium": {
+      "label": "/ Premium",
+      "value": "$6.500 - $10.000+",
+      "detail": "Para empresas que necesitan profundidad de contenido, integraciones y más músculo arquitectónico.",
+      "meta": "8+ páginas / alcance avanzado / implementación más profunda"
+    },
+    "otherLabel": "Otros encargos",
+    "otherTitle": "No todo proyecto es construir un sitio web.",
+    "otherKicker": "Cómo se cotiza",
+    "ecommerce": {
+      "title": "E-commerce",
+      "body": "Las construcciones de tienda, los arreglos y las operaciones mensuales se cotizan según la complejidad de la tienda, la plataforma y la carga operativa después del intake."
+    },
+    "systems": {
+      "title": "Sistemas",
+      "body": "El trabajo de automatización empieza con un diagnóstico, así que el precio depende del proceso que realmente necesita arreglarse, no de promesas vagas de herramientas."
+    },
+    "ctaPrimary": "Iniciar una estimación web",
+    "ctaSecondary": "Ver el proceso"
+  },
+  "process": {
+    "metaTitle": "Proceso | CrecyStudio",
+    "metaDescription": "Un proceso simple con hitos claros. Mismo ritmo de ejecución para web, e-commerce y sistemas para que el alcance se mantenga visible.",
+    "label": "Proceso",
+    "title": "Un proceso simple con hitos claros.",
+    "intro": "Cada vía usa el mismo ritmo de ejecución para que el alcance se mantenga visible, el precio entendible, y nadie se pregunte qué pasa después.",
+    "lead": "El objetivo no es que el proceso parezca elegante. El objetivo es que sea difícil que el trabajo desaparezca en silencio.",
+    "step1": {
+      "step": "/ 01 - Intake",
+      "title": "Cuéntanos qué necesita el negocio",
+      "body": "Envías el intake específico de tu vía con objetivos, restricciones, ejemplos y urgencia. Eso nos da lo suficiente para cotizar sin pretender que todos los proyectos son iguales."
+    },
+    "step2": {
+      "step": "/ 02 - Alcance",
+      "title": "Recibe una estimación real",
+      "body": "Revisamos la solicitud, puntuamos la complejidad y enviamos una recomendación por escrito con rango de precio, plazo y siguientes pasos."
+    },
+    "step3": {
+      "step": "/ 03 - Construcción",
+      "title": "Revísalo todo en el espacio de trabajo",
+      "body": "El proyecto corre por un espacio compartido para hitos, archivos, aprobaciones, vistas previas y solicitudes de revisión. Sin traspasos dispersos."
+    },
+    "step4": {
+      "step": "/ 04 - Lanzamiento",
+      "title": "Sal en vivo con un traspaso limpio",
+      "body": "Terminamos QA, lanzamos el trabajo y entregamos los accesos con los archivos finales y el contexto operativo todavía en tus manos."
+    },
+    "byLaneLabel": "Por vía",
+    "byLaneTitle": "El ritmo se mantiene, lo que cambia es el alcance.",
+    "byLaneKicker": "Lo que cambia",
+    "websites": {
+      "title": "Construcciones web",
+      "body": "La mayoría de proyectos están en el rango de 2 a 4 semanas según el número de páginas, la madurez del contenido y la velocidad de revisión."
+    },
+    "ecommerce": {
+      "title": "Trabajo de e-commerce",
+      "body": "Las construcciones de tienda, los arreglos y los retainers de operaciones usan el mismo ritmo, pero el alcance varía según la complejidad de la tienda y la carga operativa."
+    },
+    "systems": {
+      "title": "Trabajo de sistemas",
+      "body": "Los proyectos de automatización siempre comienzan con un diagnóstico para resolver el cuello de botella en lugar de automatizar un proceso roto."
+    },
+    "ctaPrimary": "Iniciar un proyecto web",
+    "ctaSecondary": "Ver precios"
+  },
+  "faq": {
+    "metaTitle": "FAQ | CrecyStudio",
+    "metaDescription": "Respuestas claras sobre alcance, propiedad, plazos y cómo funciona el espacio del proyecto antes de firmar nada.",
+    "label": "FAQ",
+    "title": "Respuestas antes de comprometerte.",
+    "intro": "Respuestas claras sobre alcance, propiedad, plazos y cómo funciona el espacio del proyecto antes de firmar nada.",
+    "sectionLabel": "Preguntas comunes",
+    "sectionTitle": "Lo que la gente suele preguntar antes de firmar.",
+    "items": {
+      "estimate": {
+        "q": "¿Qué tan rápido recibo una estimación?",
+        "a": "La mayoría de las estimaciones de sitios web salen dentro de las 24 horas siguientes al intake. Trabajos más grandes de e-commerce o sistemas pueden necesitar un seguimiento rápido antes de cerrar el alcance."
+      },
+      "scope": {
+        "q": "¿Solo construyen sitios web?",
+        "a": "Los sitios son la vía principal. También gestionamos arreglos de e-commerce y automatización de workflows cuando el problema del negocio vive ahí."
+      },
+      "ownership": {
+        "q": "¿Seré dueño del proyecto terminado?",
+        "a": "Sí. Una vez pagado el proyecto, te quedas con el código, el contenido, el acceso al dominio y las cuentas de producción ligadas al trabajo."
+      },
+      "portal": {
+        "q": "¿Cómo funciona el portal del cliente?",
+        "a": "Los clientes obtienen un espacio para hitos, cargas, vistas previas, aprobaciones, notas y seguimiento del lanzamiento, para que el proyecto no se entierre en correos."
+      },
+      "ongoing": {
+        "q": "¿Qué pasa si necesito cambios continuos después?",
+        "a": "Eso puede ser un proyecto adicional o un acuerdo de soporte, según el tipo de trabajo. No retenemos los entregables tras un modelo rehén de mantenimiento."
+      },
+      "fit": {
+        "q": "¿Qué pasa si mi problema no es el sitio web?",
+        "a": "Entonces lo diremos. A veces el problema real es la fricción en el checkout, operaciones malas o ruteo interno manual, y eso debería cambiar la vía que recomendamos."
+      }
+    },
+    "ctaPrimary": "Contactar soporte",
+    "ctaSecondary": "Explorar sitios web"
+  },
+  "contact": {
+    "metaTitle": "Contacto y soporte | CrecyStudio",
+    "metaDescription": "Contacta al estudio para propuestas, soporte, avisos legales y preguntas del portal.",
+    "kicker": "Contacto",
+    "title": "Contacto y soporte",
+    "description": "Para propuestas, soporte, avisos legales y problemas del portal, usa los datos que aparecen abajo.",
+    "ctaTerms": "Revisar términos",
+    "ctaPortal": "Abrir portal del cliente",
+    "primaryHeading": "Contacto principal",
+    "emailLabel": "Correo",
+    "topicsHeading": "Temas de soporte habituales",
+    "topic1": "Actualizaciones e hitos del proyecto",
+    "topic2": "Facturación y facturas",
+    "topic3": "Recuperación de acceso al portal",
+    "topic4": "Solicitudes legales / privacidad"
+  },
+  "privacy": {
+    "metaTitle": "Política de privacidad | CrecyStudio",
+    "metaDescription": "Cómo CrecyStudio recopila, usa y protege la información de clientes y visitantes.",
+    "kicker": "Legal",
+    "title": "Política de privacidad",
+    "lastUpdated": "Última actualización: 12 de abril de 2026",
+    "ctaContact": "Contactar soporte",
+    "ctaTerms": "Ver términos",
+    "intro": "Solo recopilamos los datos necesarios para cotizar, entregar y dar soporte a los proyectos de cliente.",
+    "collectHeading": "Información que recopilamos",
+    "collect1": "Datos de contacto e información de la empresa.",
+    "collect2": "Detalles del proyecto enviados por formularios.",
+    "collect3": "Metadatos operativos para facturación y seguridad.",
+    "useHeading": "Cómo usamos los datos",
+    "use1": "Preparar cotizaciones y recomendaciones.",
+    "use2": "Entregar hitos y actualizaciones del portal.",
+    "use3": "Procesar pagos y solicitudes de soporte.",
+    "rightsHeading": "Tus derechos",
+    "rightsBody": "Solicita acceso, corrección o eliminación enviando un correo a"
+  },
+  "terms": {
+    "metaTitle": "Términos del servicio | CrecyStudio",
+    "metaDescription": "Términos que rigen el uso de los servicios de CrecyStudio. Las propuestas firmadas controlan el alcance y el precio cuando son más específicas.",
+    "label": "Legal",
+    "title": "Términos del servicio",
+    "intro": "Usar los servicios de CrecyStudio significa que aceptas estos términos. Las propuestas firmadas controlan el alcance, el precio y los entregables siempre que sean más específicas que esta página.",
+    "lastUpdated": "Última actualización: 12 de abril de 2026",
+    "scopeHeading": "Alcance y cambios",
+    "scopeBody": "Las cotizaciones siguen siendo estimaciones hasta que se aprueben por escrito. Las solicitudes fuera del alcance acordado pueden requerir una orden de cambio con precio y plazo revisados.",
+    "paymentsHeading": "Pagos",
+    "payments1": "Generalmente se requiere depósito antes del kickoff.",
+    "payments2": "Los saldos restantes siguen el calendario de hitos de la propuesta.",
+    "payments3": "Los pagos atrasados pueden pausar el trabajo del proyecto hasta regularizar la cuenta.",
+    "ownershipHeading": "Propiedad",
+    "ownershipBody": "Tras el pago completo, los clientes son dueños de los entregables a medida producidos para su proyecto. Los frameworks internos, las utilidades reutilizables y los métodos de operación siguen siendo propiedad de CrecyStudio.",
+    "supportHeading": "Soporte y disputas",
+    "supportBody": "Contacta soporte antes de iniciar disputas de facturación para que tengamos la oportunidad de resolverlo directamente. La mayoría de problemas son más fáciles de resolver en el espacio de trabajo que mediante una reclamación al procesador.",
+    "questionsHeading": "Preguntas",
+    "questionsBody1": "Escríbenos a",
+    "questionsBody2": "o lee la",
+    "questionsLink": "política de privacidad",
+    "questionsBody3": "para información relacionada sobre el manejo de datos."
+  },
+  "problemSwitcher": {
+    "ariaLabel": "Selector de problema",
+    "tabsLabel": "Selecciona tu mayor cuello de botella",
+    "website": {
+      "prompt": "Mi sitio web hace que mi negocio se vea más pequeño de lo que es.",
+      "impact": "La mayoría de los clientes juzgan la confianza en segundos. Rediseñamos tu primera impresión para convertir leads más calificados.",
+      "ctaLabel": "Iniciar estimación web",
+      "learnLabel": "Explorar sitios web"
+    },
+    "ops": {
+      "prompt": "Mi equipo está atrapado en traspasos manuales repetitivos.",
+      "impact": "Mapeamos los cuellos, automatizamos el ruteo y creamos sistemas operativos más limpios que ahorran horas cada semana.",
+      "ctaLabel": "Iniciar auditoría de workflow",
+      "learnLabel": "Explorar automatización"
+    },
+    "ecom": {
+      "prompt": "Nuestro checkout y flujo de tienda están perdiendo ingresos.",
+      "impact": "Diagnosticamos la fricción de conversión y arreglamos el viaje de compra desde la ficha de producto hasta el cumplimiento.",
+      "ctaLabel": "Iniciar intake e-commerce",
+      "learnLabel": "Explorar e-commerce"
+    }
+  },
+  "pricingExplorer": {
+    "ariaLabel": "Niveles de precio para sitios web",
+    "starter": {
+      "title": "Starter Site",
+      "price": "$1.500 – $2.200",
+      "body": "Para empresas que necesitan una primera impresión de alta confianza rápidamente con un flujo de conversión enfocado."
+    },
+    "growth": {
+      "title": "Growth Site",
+      "price": "$2.300 – $3.400",
+      "body": "Añade estructura, integraciones y claridad de mensaje para escalar la calidad y volumen de leads."
+    },
+    "premium": {
+      "title": "Premium Build",
+      "price": "$3.500 – $5.200+",
+      "body": "Alcance complejo con interacciones a medida, integraciones avanzadas y arquitectura estratégica multipágina."
+    }
+  },
+  "workspaceStory": {
+    "kicker": "Hito activo",
+    "step1": { "label": "Intake", "detail": "Envías los detalles del alcance y prioridades. Los traducimos en un camino de ejecución claro." },
+    "step2": { "label": "Estimación", "detail": "Recibes un rango ajustado con plazo, entregables y recomendación dentro de 24 horas." },
+    "step3": { "label": "Espacio de trabajo", "detail": "Sigue el avance, sube recursos, aprueba hitos y mantén cada decisión en un solo lugar." },
+    "step4": { "label": "Lanzamiento", "detail": "QA final, traspaso y soporte de salida en vivo para que el sistema rinda desde el primer día." }
   }
 }

@@ -1,49 +1,36 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import styles from "./problem-switcher.module.css";
 
-type Problem = {
-  key: string;
-  prompt: string;
-  impact: string;
-  cta: { label: string; href: string };
-  learn: { label: string; href: string };
+const KEYS = ["website", "ops", "ecom"] as const;
+type ProblemKey = (typeof KEYS)[number];
+
+const HREFS: Record<ProblemKey, { cta: string; learn: string }> = {
+  website: { cta: "/build/intro", learn: "/websites" },
+  ops: { cta: "/ops-intake", learn: "/systems" },
+  ecom: { cta: "/ecommerce/intake", learn: "/ecommerce" },
 };
 
-const PROBLEMS: Problem[] = [
-  {
-    key: "website",
-    prompt: "My website makes my business look smaller than it is.",
-    impact: "Most clients judge trust in seconds. We redesign your first impression to convert more qualified leads.",
-    cta: { label: "Start website estimate", href: "/build/intro" },
-    learn: { label: "Explore websites", href: "/websites" },
-  },
-  {
-    key: "ops",
-    prompt: "My team is stuck in repetitive manual handoffs.",
-    impact: "We map bottlenecks, automate routing, and create cleaner operational systems that save hours each week.",
-    cta: { label: "Start workflow audit", href: "/ops-intake" },
-    learn: { label: "Explore workflow automation", href: "/systems" },
-  },
-  {
-    key: "ecom",
-    prompt: "Our checkout and store flow are leaking revenue.",
-    impact: "We diagnose conversion friction and fix the purchase journey from product pages to fulfillment.",
-    cta: { label: "Start e-commerce intake", href: "/ecommerce/intake" },
-    learn: { label: "Explore e-commerce", href: "/ecommerce" },
-  },
-];
-
 export default function ProblemSwitcher() {
-  const [activeKey, setActiveKey] = useState<string>("website");
-  const active = PROBLEMS.find((item) => item.key === activeKey) ?? PROBLEMS[0];
+  const t = useTranslations("problemSwitcher");
+  const [activeKey, setActiveKey] = useState<ProblemKey>("website");
+
+  const problems = KEYS.map((key) => ({
+    key,
+    prompt: t(`${key}.prompt`),
+    impact: t(`${key}.impact`),
+    cta: { label: t(`${key}.ctaLabel`), href: HREFS[key].cta },
+    learn: { label: t(`${key}.learnLabel`), href: HREFS[key].learn },
+  }));
+  const active = problems.find((p) => p.key === activeKey) ?? problems[0];
 
   return (
-    <section className={styles.switcher} aria-label="Problem selector">
-      <div className={styles.tabs} role="tablist" aria-label="Select your biggest bottleneck">
-        {PROBLEMS.map((item) => (
+    <section className={styles.switcher} aria-label={t("ariaLabel")}>
+      <div className={styles.tabs} role="tablist" aria-label={t("tabsLabel")}>
+        {problems.map((item) => (
           <button
             key={item.key}
             type="button"

@@ -1,39 +1,26 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import styles from "./workspace-story.module.css";
 
-const STEPS = [
-  {
-    id: 1,
-    label: "Intake",
-    detail: "You submit scope details and priorities. We translate that into a clear execution path.",
-  },
-  {
-    id: 2,
-    label: "Estimate",
-    detail: "You receive a scoped range with timeline, deliverables, and recommendation within 24 hours.",
-  },
-  {
-    id: 3,
-    label: "Workspace",
-    detail: "Track progress, upload assets, approve milestones, and keep every decision in one place.",
-  },
-  {
-    id: 4,
-    label: "Launch",
-    detail: "Final QA, handoff, and go-live support so the finished system performs from day one.",
-  },
-];
+const STEP_IDS = [1, 2, 3, 4] as const;
 
 export default function WorkspaceStory() {
-  const [activeId, setActiveId] = useState(3);
-  const active = useMemo(() => STEPS.find((step) => step.id === activeId) ?? STEPS[0], [activeId]);
+  const t = useTranslations("workspaceStory");
+  const [activeId, setActiveId] = useState<number>(3);
+
+  const steps = STEP_IDS.map((id) => ({
+    id,
+    label: t(`step${id}.label`),
+    detail: t(`step${id}.detail`),
+  }));
+  const active = useMemo(() => steps.find((s) => s.id === activeId) ?? steps[0], [activeId, steps]);
 
   return (
     <div className={styles.story}>
       <div className={styles.track}>
-        {STEPS.map((step) => (
+        {steps.map((step) => (
           <button
             key={step.id}
             type="button"
@@ -48,7 +35,7 @@ export default function WorkspaceStory() {
       </div>
 
       <article className={styles.detail}>
-        <p className={styles.kicker}>Active milestone</p>
+        <p className={styles.kicker}>{t("kicker")}</p>
         <h3>{active.label}</h3>
         <p>{active.detail}</p>
       </article>

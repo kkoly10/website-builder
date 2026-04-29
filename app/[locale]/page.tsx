@@ -1,108 +1,101 @@
+import { useTranslations } from "next-intl";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import type { Metadata } from "next";
 import TrackLink from "@/components/site/TrackLink";
 import ScrollReveal from "@/components/site/ScrollReveal";
 import styles from "./home.module.css";
 
 export const dynamic = "force-dynamic";
 
-const PROOF_ITEMS = [
-  { value: "2-4 wk", label: "Typical delivery" },
-  { value: "100%", label: "You own the code" },
-  { value: "$0", label: "Until scope is approved" },
-  { value: "Always", label: "Live project workspace" },
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "home" });
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+    openGraph: {
+      title: t("metaTitle"),
+      description: t("metaDescription"),
+    },
+    twitter: {
+      title: t("metaTitle"),
+      description: t("metaDescription"),
+    },
+  };
+}
+
+const TIER_KEYS = ["starter", "growth", "premium"] as const;
+const FEATURE_COUNT = 5;
+const JOURNEY_KEYS = [
+  ["intake", "done"],
+  ["agreement", "done"],
+  ["deposit", "done"],
+  ["content", "done"],
+  ["build", "done"],
+  ["review", "active"],
+  ["launch", "pending"],
 ] as const;
 
-const HOW_STEPS = [
-  {
-    phase: "/ 01 - Intake",
-    title: "Tell us what the website needs to do",
-    body: "You send the essentials: business, offer, pages, goals, and urgency. We scope against reality instead of guessing from a sales call.",
-  },
-  {
-    phase: "/ 02 - Build",
-    title: "Track the whole project in one workspace",
-    body: "You review milestones, previews, files, and next steps in one place. No scattered email chain and no wondering what happens next.",
-  },
-  {
-    phase: "/ 03 - Launch",
-    title: "Go live with ownership intact",
-    body: "We connect the domain, test the forms, and hand over the finished system. Your code, content, and accounts stay yours.",
-  },
-] as const;
+export default async function Home({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  return <HomeContent />;
+}
 
-const TIERS = [
-  {
-    name: "/ Starter",
-    price: "$1,800 - $2,400",
-    desc: "For a clean single-page site that needs to look credible fast.",
-    features: [
-      "Single-page custom design",
-      "Mobile and desktop build",
-      "Contact form and click-to-call",
-      "Analytics and SEO basics",
-      "2 revision rounds",
-    ],
-    featured: false,
-  },
-  {
-    name: "/ Growth",
-    price: "$3,500 - $4,500",
-    desc: "For most service businesses that need a real site and a stronger first impression.",
-    features: [
-      "4-6 custom pages",
-      "Lead capture or booking flow",
-      "Messaging structure and light copy support",
-      "Workspace-based review process",
-      "3 revision rounds",
-    ],
-    featured: true,
-  },
-  {
-    name: "/ Premium",
-    price: "$6,500 - $10,000+",
-    desc: "For businesses that need content depth, architecture, and more moving parts.",
-    features: [
-      "8+ pages and deeper content system",
-      "Advanced integrations",
-      "Conversion tracking setup",
-      "Structured launch QA",
-      "4 revision rounds",
-    ],
-    featured: false,
-  },
-] as const;
+function HomeContent() {
+  const t = useTranslations("home");
 
-const JOURNEY_STEPS = [
-  ["Intake", "done"],
-  ["Agreement", "done"],
-  ["Deposit", "done"],
-  ["Content", "done"],
-  ["Build", "done"],
-  ["Review", "active"],
-  ["Launch", "pending"],
-] as const;
+  const proofItems = [
+    { value: t("proof.deliveryValue"), label: t("proof.delivery") },
+    { value: t("proof.ownershipValue"), label: t("proof.ownership") },
+    { value: t("proof.noUpfrontValue"), label: t("proof.noUpfront") },
+    { value: t("proof.workspaceValue"), label: t("proof.workspace") },
+  ];
 
-export default function Home() {
+  const howSteps = [
+    { phase: t("how.step1Phase"), title: t("how.step1Title"), body: t("how.step1Body") },
+    { phase: t("how.step2Phase"), title: t("how.step2Title"), body: t("how.step2Body") },
+    { phase: t("how.step3Phase"), title: t("how.step3Title"), body: t("how.step3Body") },
+  ];
+
+  const tiers = TIER_KEYS.map((key) => ({
+    key,
+    name: t(`tiers.${key}.name`),
+    price: t(`tiers.${key}.price`),
+    desc: t(`tiers.${key}.desc`),
+    features: Array.from(
+      { length: FEATURE_COUNT },
+      (_, i) => t(`tiers.${key}.f${i + 1}`)
+    ),
+    featured: key === "growth",
+  }));
+
   return (
     <main className={styles.page}>
       <ScrollReveal />
 
       <header className={`${styles.hero} heroFadeUp`}>
         <div className="container">
-          <p className={styles.heroLabel}>Northern Virginia web studio / est. 2024</p>
+          <p className={styles.heroLabel}>{t("heroLabel")}</p>
           <h1 className={styles.heroTitle}>
-            Websites that make your <span>phone ring.</span>
+            {t.rich("heroTitle", { em: (chunks) => <span>{chunks}</span> })}
           </h1>
-          <p className={styles.heroSub}>
-            We build small business websites that earn trust fast and give clients a
-            live workspace to track scope, previews, feedback, and launch.
-          </p>
+          <p className={styles.heroSub}>{t("heroSub")}</p>
 
           <div className={styles.heroActions}>
             <TrackLink href="/build/intro" event="cta_home_hero_quote" className="btn btnPrimary">
-              Start a project <span className="btnArrow">-&gt;</span>
+              {t("ctaStart")} <span className="btnArrow">-&gt;</span>
             </TrackLink>
             <TrackLink href="/process" event="cta_home_hero_process" className={styles.heroSecondaryCta}>
-              See the process
+              {t("ctaProcess")}
             </TrackLink>
           </div>
         </div>
@@ -110,7 +103,7 @@ export default function Home() {
 
       <section className={styles.proof}>
         <div className={`container ${styles.proofGrid}`}>
-          {PROOF_ITEMS.map((item) => (
+          {proofItems.map((item) => (
             <article key={item.label} className={styles.proofItem}>
               <p className={styles.proofValue}>{item.value}</p>
               <p className={styles.proofLabel}>{item.label}</p>
@@ -123,39 +116,35 @@ export default function Home() {
         <div className="container">
           <div className={styles.diffHead}>
             <div>
-              <p className={styles.sectionLabel}>The difference</p>
-              <h2 className={styles.sectionTitle}>Your project lives in a workspace.</h2>
+              <p className={styles.sectionLabel}>{t("diff.label")}</p>
+              <h2 className={styles.sectionTitle}>{t("diff.title")}</h2>
             </div>
-            <p className={styles.diffLede}>
-              Most studios disappear between invoice and launch. We built a client
-              workspace so you can track milestones, upload assets, review the live
-              preview, and leave feedback in one place.
-            </p>
+            <p className={styles.diffLede}>{t("diff.lede")}</p>
           </div>
 
           <div className={styles.portalFrame}>
             <div className={styles.portalHead}>
-              <p className={styles.portalKicker}>Workspace preview</p>
-              <p className={styles.portalUrl}>crecy.studio/portal/your-project</p>
+              <p className={styles.portalKicker}>{t("diff.kicker")}</p>
+              <p className={styles.portalUrl}>{t("diff.url")}</p>
             </div>
 
             <div className={styles.portalHero}>
               <div>
-                <p className={styles.portalEyebrow}>Website project</p>
+                <p className={styles.portalEyebrow}>{t("diff.eyebrow")}</p>
                 <h3>
-                  Your build is <em>ready for review.</em>
+                  {t.rich("diff.ready", { em: (chunks) => <em>{chunks}</em> })}
                 </h3>
               </div>
 
               <TrackLink href="/portal" event="cta_home_portal_preview" className={styles.portalCta}>
-                Open preview -&gt;
+                {t("diff.openPreview")} -&gt;
               </TrackLink>
             </div>
 
             <div className={styles.journey}>
-              {JOURNEY_STEPS.map(([step, state]) => (
+              {JOURNEY_KEYS.map(([key, state]) => (
                 <div
-                  key={step}
+                  key={key}
                   className={`${styles.jstep} ${
                     state === "done"
                       ? styles.jstepDone
@@ -165,26 +154,26 @@ export default function Home() {
                   }`}
                 >
                   <span className={styles.jdot} />
-                  <span className={styles.jname}>{step}</span>
+                  <span className={styles.jname}>{t(`diff.journey.${key}`)}</span>
                 </div>
               ))}
             </div>
 
             <div className={styles.portalCards}>
               <article className={styles.portalCard}>
-                <p className={styles.portalCardTitle}>Current milestone</p>
-                <p className={styles.portalCardValue}>Client review</p>
-                <p className={styles.portalCardMeta}>2 of 3 revisions used</p>
+                <p className={styles.portalCardTitle}>{t("diff.currentMilestone")}</p>
+                <p className={styles.portalCardValue}>{t("diff.currentMilestoneValue")}</p>
+                <p className={styles.portalCardMeta}>{t("diff.currentMilestoneMeta")}</p>
               </article>
               <article className={styles.portalCard}>
-                <p className={styles.portalCardTitle}>Deposit</p>
-                <p className={styles.portalCardValue}>Paid</p>
-                <p className={styles.portalCardMeta}>50% received before build</p>
+                <p className={styles.portalCardTitle}>{t("diff.deposit")}</p>
+                <p className={styles.portalCardValue}>{t("diff.depositValue")}</p>
+                <p className={styles.portalCardMeta}>{t("diff.depositMeta")}</p>
               </article>
               <article className={styles.portalCard}>
-                <p className={styles.portalCardTitle}>Launch target</p>
-                <p className={styles.portalCardValue}>On track</p>
-                <p className={styles.portalCardMeta}>Within scoped delivery window</p>
+                <p className={styles.portalCardTitle}>{t("diff.launchTarget")}</p>
+                <p className={styles.portalCardValue}>{t("diff.launchTargetValue")}</p>
+                <p className={styles.portalCardMeta}>{t("diff.launchTargetMeta")}</p>
               </article>
             </div>
           </div>
@@ -194,12 +183,12 @@ export default function Home() {
       <section className={`${styles.how} fadeUp`}>
         <div className="container">
           <div className={styles.howHead}>
-            <p className={styles.sectionLabel}>Process</p>
-            <h2 className={styles.sectionTitle}>Three steps. No surprises.</h2>
+            <p className={styles.sectionLabel}>{t("how.label")}</p>
+            <h2 className={styles.sectionTitle}>{t("how.title")}</h2>
           </div>
 
           <div className={styles.howSteps}>
-            {HOW_STEPS.map((step) => (
+            {howSteps.map((step) => (
               <article key={step.phase} className={styles.howStep}>
                 <p className={styles.howStepNum}>{step.phase}</p>
                 <h3>{step.title}</h3>
@@ -214,19 +203,16 @@ export default function Home() {
         <div className="container">
           <div className={styles.pricingHead}>
             <div>
-              <p className={styles.sectionLabel}>Pricing</p>
-              <h2 className={styles.sectionTitle}>You see the price before you commit.</h2>
+              <p className={styles.sectionLabel}>{t("tiers.label")}</p>
+              <h2 className={styles.sectionTitle}>{t("tiers.title")}</h2>
             </div>
-            <p className={styles.pricingLede}>
-              Fixed estimates, scoped to the project in front of us. No hostage
-              retainers, no surprise add-ons, and no mystery labor after kickoff.
-            </p>
+            <p className={styles.pricingLede}>{t("tiers.lede")}</p>
           </div>
 
           <div className={styles.tiers}>
-            {TIERS.map((tier) => (
+            {tiers.map((tier) => (
               <article
-                key={tier.name}
+                key={tier.key}
                 className={`${styles.tier} ${tier.featured ? styles.tierFeatured : ""}`}
               >
                 <p className={styles.tierName}>{tier.name}</p>
@@ -237,8 +223,12 @@ export default function Home() {
                     <li key={feature}>{feature}</li>
                   ))}
                 </ul>
-                <TrackLink href="/build/intro" event="cta_home_pricing_quote" className={styles.tierCta}>
-                  Get a quote
+                <TrackLink
+                  href="/build/intro"
+                  event="cta_home_pricing_quote"
+                  className={styles.tierCta}
+                >
+                  {t("tiers.ctaQuote")}
                 </TrackLink>
               </article>
             ))}
@@ -248,39 +238,33 @@ export default function Home() {
 
       <section className={`${styles.closing} fadeUp`}>
         <div className="container">
-          <p className={styles.sectionLabel}>Ready to move?</p>
+          <p className={styles.sectionLabel}>{t("closing.label")}</p>
           <h2>
-            Let&apos;s make people <em>actually call you.</em>
+            {t.rich("closing.title", { em: (chunks) => <em>{chunks}</em> })}
           </h2>
           <TrackLink href="/build/intro" event="cta_home_closing_quote" className="btn btnPrimary">
-            Start your free estimate <span className="btnArrow">-&gt;</span>
+            {t("closing.cta")} <span className="btnArrow">-&gt;</span>
           </TrackLink>
         </div>
       </section>
 
       <section className={`${styles.also} fadeUp`}>
         <div className={`container ${styles.alsoGrid}`}>
-          <p className={styles.sectionLabel}>Also offered</p>
+          <p className={styles.sectionLabel}>{t("also.label")}</p>
           <div className={styles.lanes}>
             <article className={styles.lane}>
-              <h3>Workflow systems</h3>
-              <p>
-                Automation for teams buried in spreadsheet ops, repetitive handoffs,
-                and manual client follow-up.
-              </p>
+              <h3>{t("also.systemsTitle")}</h3>
+              <p>{t("also.systemsBody")}</p>
               <TrackLink href="/systems" event="cta_home_secondary_systems" className={styles.laneLink}>
-                Explore systems -&gt;
+                {t("also.systemsLink")} -&gt;
               </TrackLink>
             </article>
 
             <article className={styles.lane}>
-              <h3>E-commerce fixes</h3>
-              <p>
-                Storefront, checkout, and ops cleanup for online shops leaking time or
-                conversions.
-              </p>
+              <h3>{t("also.ecomTitle")}</h3>
+              <p>{t("also.ecomBody")}</p>
               <TrackLink href="/ecommerce" event="cta_home_secondary_ecom" className={styles.laneLink}>
-                Explore e-commerce -&gt;
+                {t("also.ecomLink")} -&gt;
               </TrackLink>
             </article>
           </div>

@@ -1,6 +1,377 @@
 {
   "common": {
     "siteName": "CrecyStudio",
-    "skipToMain": "Skip to main content"
+    "skipToMain": "Skip to main content",
+    "openPortal": "Open portal",
+    "signOut": "Sign out",
+    "startProject": "Start a project",
+    "openMenu": "Open navigation menu"
+  },
+  "nav": {
+    "websites": "Websites",
+    "ecommerce": "E-commerce",
+    "systems": "Systems",
+    "process": "Process",
+    "pricing": "Pricing",
+    "faq": "FAQ",
+    "clientPortal": "Client portal",
+    "admin": "Admin",
+    "language": "Language",
+    "primaryAria": "Primary",
+    "footerAria": "Footer"
+  },
+  "footer": {
+    "blurb": "Website-first studio for businesses that need a sharper first impression, cleaner operations, and one workspace to run the project.",
+    "rightsReserved": "All rights reserved.",
+    "links": {
+      "aria": "Footer",
+      "websites": "Websites",
+      "ecommerce": "E-commerce",
+      "systems": "Systems",
+      "process": "Process",
+      "pricing": "Pricing",
+      "faq": "FAQ",
+      "contact": "Contact",
+      "privacy": "Privacy",
+      "terms": "Terms"
+    }
+  },
+  "home": {
+    "metaTitle": "CrecyStudio | Websites that make your phone ring",
+    "metaDescription": "Northern Virginia web studio that builds small business websites that earn trust fast and give clients a live workspace to track scope, previews, feedback, and launch.",
+    "heroLabel": "Northern Virginia web studio / est. 2024",
+    "heroTitle": "Websites that make your <em>phone ring.</em>",
+    "heroSub": "We build small business websites that earn trust fast and give clients a live workspace to track scope, previews, feedback, and launch.",
+    "ctaStart": "Start a project",
+    "ctaProcess": "See the process",
+    "proof": {
+      "delivery": "Typical delivery",
+      "deliveryValue": "2-4 wk",
+      "ownership": "You own the code",
+      "ownershipValue": "100%",
+      "noUpfront": "Until scope is approved",
+      "noUpfrontValue": "$0",
+      "workspace": "Live project workspace",
+      "workspaceValue": "Always"
+    },
+    "diff": {
+      "label": "The difference",
+      "title": "Your project lives in a workspace.",
+      "lede": "Most studios disappear between invoice and launch. We built a client workspace so you can track milestones, upload assets, review the live preview, and leave feedback in one place.",
+      "kicker": "Workspace preview",
+      "url": "crecy.studio/portal/your-project",
+      "eyebrow": "Website project",
+      "ready": "Your build is <em>ready for review.</em>",
+      "openPreview": "Open preview",
+      "currentMilestone": "Current milestone",
+      "currentMilestoneValue": "Client review",
+      "currentMilestoneMeta": "2 of 3 revisions used",
+      "deposit": "Deposit",
+      "depositValue": "Paid",
+      "depositMeta": "50% received before build",
+      "launchTarget": "Launch target",
+      "launchTargetValue": "On track",
+      "launchTargetMeta": "Within scoped delivery window",
+      "journey": {
+        "intake": "Intake",
+        "agreement": "Agreement",
+        "deposit": "Deposit",
+        "content": "Content",
+        "build": "Build",
+        "review": "Review",
+        "launch": "Launch"
+      }
+    },
+    "how": {
+      "label": "Process",
+      "title": "Three steps. No surprises.",
+      "step1Phase": "/ 01 - Intake",
+      "step1Title": "Tell us what the website needs to do",
+      "step1Body": "You send the essentials: business, offer, pages, goals, and urgency. We scope against reality instead of guessing from a sales call.",
+      "step2Phase": "/ 02 - Build",
+      "step2Title": "Track the whole project in one workspace",
+      "step2Body": "You review milestones, previews, files, and next steps in one place. No scattered email chain and no wondering what happens next.",
+      "step3Phase": "/ 03 - Launch",
+      "step3Title": "Go live with ownership intact",
+      "step3Body": "We connect the domain, test the forms, and hand over the finished system. Your code, content, and accounts stay yours."
+    },
+    "tiers": {
+      "label": "Pricing",
+      "title": "You see the price before you commit.",
+      "lede": "Fixed estimates, scoped to the project in front of us. No hostage retainers, no surprise add-ons, and no mystery labor after kickoff.",
+      "starter": {
+        "name": "/ Starter",
+        "price": "$1,800 - $2,400",
+        "desc": "For a clean single-page site that needs to look credible fast.",
+        "f1": "Single-page custom design",
+        "f2": "Mobile and desktop build",
+        "f3": "Contact form and click-to-call",
+        "f4": "Analytics and SEO basics",
+        "f5": "2 revision rounds"
+      },
+      "growth": {
+        "name": "/ Growth",
+        "price": "$3,500 - $4,500",
+        "desc": "For most service businesses that need a real site and a stronger first impression.",
+        "f1": "4-6 custom pages",
+        "f2": "Lead capture or booking flow",
+        "f3": "Messaging structure and light copy support",
+        "f4": "Workspace-based review process",
+        "f5": "3 revision rounds"
+      },
+      "premium": {
+        "name": "/ Premium",
+        "price": "$6,500 - $10,000+",
+        "desc": "For businesses that need content depth, architecture, and more moving parts.",
+        "f1": "8+ pages and deeper content system",
+        "f2": "Advanced integrations",
+        "f3": "Conversion tracking setup",
+        "f4": "Structured launch QA",
+        "f5": "4 revision rounds"
+      },
+      "ctaQuote": "Get a quote"
+    },
+    "closing": {
+      "label": "Ready to move?",
+      "title": "Let's make people <em>actually call you.</em>",
+      "cta": "Start your free estimate"
+    },
+    "also": {
+      "label": "Also offered",
+      "systemsTitle": "Workflow systems",
+      "systemsBody": "Automation for teams buried in spreadsheet ops, repetitive handoffs, and manual client follow-up.",
+      "systemsLink": "Explore systems",
+      "ecomTitle": "E-commerce fixes",
+      "ecomBody": "Storefront, checkout, and ops cleanup for online shops leaking time or conversions.",
+      "ecomLink": "Explore e-commerce"
+    }
+  },
+  "pricing": {
+    "metaTitle": "Pricing | CrecyStudio",
+    "metaDescription": "Clear pricing ranges before the work starts. Fixed estimates scoped to your project, with no hostage retainers or surprise add-ons.",
+    "label": "Pricing",
+    "title": "Clear ranges before the work starts.",
+    "intro": "We scope first, send a written estimate, and keep the number tied to the actual project instead of inventing surprise labor later.",
+    "tiersLabel": "Website tiers",
+    "tiersTitle": "Most website projects land in one of these bands.",
+    "starter": {
+      "label": "/ Starter",
+      "value": "$1,800 - $2,400",
+      "detail": "For a clean, credible single-page site that needs to do one job well.",
+      "meta": "Single-page build / mobile-first / fast launch"
+    },
+    "growth": {
+      "label": "/ Growth",
+      "value": "$3,500 - $4,500",
+      "detail": "For most service businesses that need a multi-page site and a stronger first impression.",
+      "meta": "4-6 pages / lead capture / workspace review"
+    },
+    "premium": {
+      "label": "/ Premium",
+      "value": "$6,500 - $10,000+",
+      "detail": "For businesses that need content depth, integrations, and more architectural lift.",
+      "meta": "8+ pages / advanced scope / deeper implementation"
+    },
+    "otherLabel": "Other engagements",
+    "otherTitle": "Not every project is a website build.",
+    "otherKicker": "How it is scoped",
+    "ecommerce": {
+      "title": "E-commerce",
+      "body": "Store builds, fixes, and monthly ops work are priced by store complexity, platform, and operational load after intake."
+    },
+    "systems": {
+      "title": "Systems",
+      "body": "Automation work starts with diagnosis so pricing is based on the process that actually needs fixing, not vague tool promises."
+    },
+    "ctaPrimary": "Start a website estimate",
+    "ctaSecondary": "See the process"
+  },
+  "process": {
+    "metaTitle": "Process | CrecyStudio",
+    "metaDescription": "A simple process with clear milestones. Same execution rhythm for websites, e-commerce, and systems work so the scope stays visible.",
+    "label": "Process",
+    "title": "A simple process with clear milestones.",
+    "intro": "Every lane uses the same execution rhythm so the scope stays visible, the pricing stays understandable, and nobody wonders what happens next.",
+    "lead": "The point is not to make the process feel fancy. The point is to make it hard for work to disappear into silence.",
+    "step1": {
+      "step": "/ 01 - Intake",
+      "title": "Tell us what the business needs",
+      "body": "You submit the lane-specific intake with goals, constraints, examples, and urgency. That gives us enough to scope without pretending every project is the same."
+    },
+    "step2": {
+      "step": "/ 02 - Scope",
+      "title": "Get a real estimate",
+      "body": "We review the request, score the complexity, and send back a written recommendation with price range, timeline, and next steps."
+    },
+    "step3": {
+      "step": "/ 03 - Build",
+      "title": "Review everything in the workspace",
+      "body": "The project runs through a shared workspace for milestones, files, approvals, previews, and revision requests. No scattered handoffs."
+    },
+    "step4": {
+      "step": "/ 04 - Launch",
+      "title": "Go live with a clean handoff",
+      "body": "We finish QA, launch the work, and hand over access with the final files and operating context still in your hands."
+    },
+    "byLaneLabel": "By lane",
+    "byLaneTitle": "The rhythm stays the same, the scope changes.",
+    "byLaneKicker": "What changes",
+    "websites": {
+      "title": "Website builds",
+      "body": "Most projects land in the 2-4 week range depending on page count, copy readiness, and revision speed."
+    },
+    "ecommerce": {
+      "title": "E-commerce work",
+      "body": "Store builds, fixes, and ops retainers use the same rhythm, but the scope shifts based on storefront complexity and operational load."
+    },
+    "systems": {
+      "title": "Systems work",
+      "body": "Automation projects always begin with diagnosis first so we solve the bottleneck instead of automating a broken process."
+    },
+    "ctaPrimary": "Start a website project",
+    "ctaSecondary": "See pricing"
+  },
+  "faq": {
+    "metaTitle": "FAQ | CrecyStudio",
+    "metaDescription": "Clear answers on scope, ownership, timelines, and how the project workspace works before anything is signed.",
+    "label": "FAQ",
+    "title": "Answers before you commit.",
+    "intro": "Clear answers on scope, ownership, timelines, and how the project workspace works before anything is signed.",
+    "sectionLabel": "Common questions",
+    "sectionTitle": "What people usually ask before signing.",
+    "items": {
+      "estimate": {
+        "q": "How fast do I get an estimate?",
+        "a": "Most website estimates go out within 24 hours of the intake. Larger e-commerce or systems work may need a quick follow-up before we lock scope."
+      },
+      "scope": {
+        "q": "Do you only build websites?",
+        "a": "Websites are the main lane. We also handle e-commerce fixes and workflow automation when the business problem lives there instead."
+      },
+      "ownership": {
+        "q": "Will I own the finished project?",
+        "a": "Yes. Once the project is paid, you keep the code, content, domain access, and production accounts tied to the work."
+      },
+      "portal": {
+        "q": "How does the client portal work?",
+        "a": "Clients get a workspace for milestones, uploads, previews, approvals, notes, and launch tracking so the project does not get buried in email."
+      },
+      "ongoing": {
+        "q": "What if I need ongoing changes later?",
+        "a": "That can be a follow-on project or a support arrangement, depending on the kind of work. We do not trap deliverables behind a maintenance hostage model."
+      },
+      "fit": {
+        "q": "What if my problem is not the website?",
+        "a": "Then we will say so. Sometimes the real issue is checkout friction, bad ops, or manual internal routing, and that should change the lane we recommend."
+      }
+    },
+    "ctaPrimary": "Contact support",
+    "ctaSecondary": "Explore websites"
+  },
+  "contact": {
+    "metaTitle": "Contact & Support | CrecyStudio",
+    "metaDescription": "Reach the studio for proposals, support, legal notices, and portal questions.",
+    "kicker": "Contact",
+    "title": "Contact & Support",
+    "description": "For proposals, support, legal notices, and portal issues, use the details below.",
+    "ctaTerms": "Review terms",
+    "ctaPortal": "Open client portal",
+    "primaryHeading": "Primary contact",
+    "emailLabel": "Email",
+    "topicsHeading": "Typical support topics",
+    "topic1": "Project updates and milestones",
+    "topic2": "Billing and invoices",
+    "topic3": "Portal access recovery",
+    "topic4": "Legal/privacy requests"
+  },
+  "privacy": {
+    "metaTitle": "Privacy Policy | CrecyStudio",
+    "metaDescription": "How CrecyStudio collects, uses, and protects information from clients and visitors.",
+    "kicker": "Legal",
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: April 12, 2026",
+    "ctaContact": "Contact support",
+    "ctaTerms": "View terms",
+    "intro": "We collect only data needed to quote, deliver, and support client projects.",
+    "collectHeading": "Information we collect",
+    "collect1": "Contact details and company info.",
+    "collect2": "Project details submitted via forms.",
+    "collect3": "Operational metadata for billing and security.",
+    "useHeading": "How we use data",
+    "use1": "Prepare quotes and recommendations.",
+    "use2": "Deliver milestones and portal updates.",
+    "use3": "Process payments and support requests.",
+    "rightsHeading": "Your rights",
+    "rightsBody": "Request access, correction, or deletion by emailing"
+  },
+  "terms": {
+    "metaTitle": "Terms of Service | CrecyStudio",
+    "metaDescription": "Terms governing use of CrecyStudio services. Signed proposals control scope and pricing where they are more specific.",
+    "label": "Legal",
+    "title": "Terms of Service",
+    "intro": "Using CrecyStudio services means you agree to these terms. Signed proposals control scope, pricing, and deliverables whenever they are more specific than this page.",
+    "lastUpdated": "Last updated: April 12, 2026",
+    "scopeHeading": "Scope and changes",
+    "scopeBody": "Quotes remain estimates until approved in writing. Requests outside the agreed scope may require a change order with revised pricing and timeline.",
+    "paymentsHeading": "Payments",
+    "payments1": "Deposits are generally required before kickoff.",
+    "payments2": "Remaining balances follow the milestone schedule in the proposal.",
+    "payments3": "Late payments may pause project work until the account is current.",
+    "ownershipHeading": "Ownership",
+    "ownershipBody": "After full payment, clients own the custom deliverables produced for their project. Internal frameworks, reusable utilities, and operating methods remain CrecyStudio property.",
+    "supportHeading": "Support and disputes",
+    "supportBody": "Contact support before initiating billing disputes so we have a chance to resolve the issue directly. Most problems are easier to solve in the workspace than through a processor claim.",
+    "questionsHeading": "Questions",
+    "questionsBody1": "Reach out at",
+    "questionsBody2": "or read the",
+    "questionsLink": "privacy policy",
+    "questionsBody3": "for related information about data handling."
+  },
+  "problemSwitcher": {
+    "ariaLabel": "Problem selector",
+    "tabsLabel": "Select your biggest bottleneck",
+    "website": {
+      "prompt": "My website makes my business look smaller than it is.",
+      "impact": "Most clients judge trust in seconds. We redesign your first impression to convert more qualified leads.",
+      "ctaLabel": "Start website estimate",
+      "learnLabel": "Explore websites"
+    },
+    "ops": {
+      "prompt": "My team is stuck in repetitive manual handoffs.",
+      "impact": "We map bottlenecks, automate routing, and create cleaner operational systems that save hours each week.",
+      "ctaLabel": "Start workflow audit",
+      "learnLabel": "Explore workflow automation"
+    },
+    "ecom": {
+      "prompt": "Our checkout and store flow are leaking revenue.",
+      "impact": "We diagnose conversion friction and fix the purchase journey from product pages to fulfillment.",
+      "ctaLabel": "Start e-commerce intake",
+      "learnLabel": "Explore e-commerce"
+    }
+  },
+  "pricingExplorer": {
+    "ariaLabel": "Website pricing tiers",
+    "starter": {
+      "title": "Starter Site",
+      "price": "$1,500–$2,200",
+      "body": "For businesses needing a high-trust first impression quickly with focused conversion flow."
+    },
+    "growth": {
+      "title": "Growth Site",
+      "price": "$2,300–$3,400",
+      "body": "Adds deeper structure, integrations, and message clarity for scaling lead quality and volume."
+    },
+    "premium": {
+      "title": "Premium Build",
+      "price": "$3,500–$5,200+",
+      "body": "Complex scope with custom interactions, advanced integrations, and multi-page strategic architecture."
+    }
+  },
+  "workspaceStory": {
+    "kicker": "Active milestone",
+    "step1": { "label": "Intake", "detail": "You submit scope details and priorities. We translate that into a clear execution path." },
+    "step2": { "label": "Estimate", "detail": "You receive a scoped range with timeline, deliverables, and recommendation within 24 hours." },
+    "step3": { "label": "Workspace", "detail": "Track progress, upload assets, approve milestones, and keep every decision in one place." },
+    "step4": { "label": "Launch", "detail": "Final QA, handoff, and go-live support so the finished system performs from day one." }
   }
 }
