@@ -1,13 +1,32 @@
 import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import ServicePage from "@/components/service-page/ServicePage";
-import { systemsPageData } from "@/lib/service-pages";
+import { getServicePageData } from "@/lib/service-pages";
 
-export const metadata: Metadata = {
-  title: "Workflow Automation | Audit, Build, and Operations Cleanup",
-  description:
-    "Workflow automation for businesses that need cleaner intake, routing, status tracking, and admin systems.",
-};
+export const dynamic = "force-dynamic";
 
-export default function SystemsPage() {
-  return <ServicePage {...systemsPageData} />;
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "servicesMeta.systems" });
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+    openGraph: { title: t("metaTitle"), description: t("metaDescription") },
+    twitter: { title: t("metaTitle"), description: t("metaDescription") },
+  };
+}
+
+export default async function SystemsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const data = getServicePageData(locale, "systems");
+  return <ServicePage {...data} />;
 }

@@ -373,5 +373,39 @@
     "step2": { "label": "Estimación", "detail": "Recibes un rango ajustado con plazo, entregables y recomendación dentro de 24 horas." },
     "step3": { "label": "Espacio de trabajo", "detail": "Sigue el avance, sube recursos, aprueba hitos y mantén cada decisión en un solo lugar." },
     "step4": { "label": "Lanzamiento", "detail": "QA final, traspaso y soporte de salida en vivo para que el sistema rinda desde el primer día." }
+  },
+  "servicePage": {
+    "goodFit": "Para quién",
+    "bestFit": "Ideal para",
+    "notFirstMove": "No es el primer paso",
+    "problemsLabel": "Problemas que resolvemos",
+    "whatYouGet": "Lo que recibes",
+    "processLabel": "Proceso",
+    "pricingLabel": "Precios",
+    "faqLabel": "FAQ",
+    "readyToMove": "¿Listo para avanzar?",
+    "mostCommon": "Punto de partida más común",
+    "scopedToProject": "Ajustado a tu proyecto",
+    "alsoOffered": "También ofrecemos",
+    "exploreLane": "Explorar"
+  },
+  "crossLinks": {
+    "websites": "Vía Sitios web",
+    "ecommerce": "Vía E-commerce",
+    "systems": "Vía Sistemas"
+  },
+  "servicesMeta": {
+    "websites": {
+      "metaTitle": "Construcción de sitios web | Sitios premium enfocados en conversión",
+      "metaDescription": "Construcción de sitios web premium para empresas de servicios que necesitan más confianza, mensaje más claro y mejor conversión de leads."
+    },
+    "systems": {
+      "metaTitle": "Automatización de workflow | Auditoría, construcción y limpieza operativa",
+      "metaDescription": "Automatización de workflow para empresas que necesitan mejor toma de pedidos, ruteo, seguimiento de estado y sistemas de administración."
+    },
+    "ecommerce": {
+      "metaTitle": "Sistemas de e-commerce | Tienda, checkout y flujo operativo",
+      "metaDescription": "Sistemas de e-commerce para marcas que necesitan mejor tienda, checkout más fluido y operaciones post-compra más limpias."
+    }
   }
 }

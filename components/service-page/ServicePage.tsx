@@ -1,8 +1,17 @@
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import styles from "./service-page.module.css";
 
 type CTA = {
   label: string;
+  href: string;
+};
+
+type CrossLink = {
+  // id maps to the crossLinks.{id} dictionary entry. Letting the component
+  // own the label lookup keeps service-pages.ts free of locale concerns
+  // for cross-references.
+  id: "websites" | "ecommerce" | "systems";
   href: string;
 };
 
@@ -28,7 +37,7 @@ type FAQ = {
   answer: string;
 };
 
-type ServicePageProps = {
+export type ServicePageProps = {
   eyebrow: string;
   title: string;
   intro: string;
@@ -55,7 +64,7 @@ type ServicePageProps = {
   bestFit: string[];
   notFitTitle: string;
   notFit: string[];
-  crossLinks: CTA[];
+  crossLinks: CrossLink[];
   finalTitle: string;
   finalText: string;
   finalPrimaryCta: CTA;
@@ -93,6 +102,8 @@ export default function ServicePage({
   finalPrimaryCta,
   finalSecondaryCta,
 }: ServicePageProps) {
+  const t = useTranslations("servicePage");
+  const tCross = useTranslations("crossLinks");
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
@@ -127,7 +138,7 @@ export default function ServicePage({
       <section className={styles.section}>
         <div className={`container ${styles.fitSplit}`}>
           <article className={styles.fitCard}>
-            <p className={styles.sectionLabel}>Good fit</p>
+            <p className={styles.sectionLabel}>{t("goodFit")}</p>
             <h2 className={styles.sectionTitle}>{whoItsForTitle}</h2>
             <ul className={styles.markerList}>
               {whoItsFor.map((item) => (
@@ -139,7 +150,7 @@ export default function ServicePage({
             </ul>
 
             <div className={styles.fitNote}>
-              <p className={styles.fitNoteLabel}>Best fit</p>
+              <p className={styles.fitNoteLabel}>{t("bestFit")}</p>
               <h3>{bestFitTitle}</h3>
               <ul className={styles.noteList}>
                 {bestFit.map((item) => (
@@ -150,7 +161,7 @@ export default function ServicePage({
           </article>
 
           <article className={styles.notFitCard}>
-            <p className={styles.sectionLabel}>Not the first move</p>
+            <p className={styles.sectionLabel}>{t("notFirstMove")}</p>
             <h2 className={styles.sectionTitle}>{notFitTitle}</h2>
             <ul className={styles.markerList}>
               {notFit.map((item) => (
@@ -167,7 +178,7 @@ export default function ServicePage({
       <section className={styles.section}>
         <div className="container">
           <div className={styles.sectionHead}>
-            <p className={styles.sectionLabel}>Problems we solve</p>
+            <p className={styles.sectionLabel}>{t("problemsLabel")}</p>
             <h2 className={styles.sectionTitle}>{problemsTitle}</h2>
           </div>
 
@@ -185,7 +196,7 @@ export default function ServicePage({
       <section className={styles.section}>
         <div className="container">
           <div className={styles.sectionHead}>
-            <p className={styles.sectionLabel}>What you get</p>
+            <p className={styles.sectionLabel}>{t("whatYouGet")}</p>
             <h2 className={styles.sectionTitle}>{includesTitle}</h2>
           </div>
 
@@ -207,7 +218,7 @@ export default function ServicePage({
       <section className={styles.processBand}>
         <div className="container">
           <div className={styles.sectionHead}>
-            <p className={styles.darkLabel}>Process</p>
+            <p className={styles.darkLabel}>{t("processLabel")}</p>
             <h2 className={styles.darkTitle}>{processTitle}</h2>
             <p className={styles.darkIntro}>{processIntro}</p>
           </div>
@@ -227,7 +238,7 @@ export default function ServicePage({
       <section className={`${styles.section} ${styles.pricingSection}`}>
         <div className="container">
           <div className={styles.sectionHead}>
-            <p className={styles.sectionLabel}>Pricing</p>
+            <p className={styles.sectionLabel}>{t("pricingLabel")}</p>
             <h2 className={styles.sectionTitle}>{pricingTitle}</h2>
             <p className={styles.sectionIntro}>{pricingIntro}</p>
           </div>
@@ -239,7 +250,7 @@ export default function ServicePage({
                 <p className={styles.pricingValue}>{card.value}</p>
                 <p className={styles.pricingDetail}>{card.detail}</p>
                 <div className={styles.pricingMeta}>
-                  {index === 1 ? "Most common starting point" : "Scoped to your project"}
+                  {index === 1 ? t("mostCommon") : t("scopedToProject")}
                 </div>
               </article>
             ))}
@@ -250,7 +261,7 @@ export default function ServicePage({
       <section className={styles.section}>
         <div className="container">
           <div className={styles.sectionHead}>
-            <p className={styles.sectionLabel}>FAQ</p>
+            <p className={styles.sectionLabel}>{t("faqLabel")}</p>
             <h2 className={styles.sectionTitle}>{faqTitle}</h2>
           </div>
 
@@ -268,7 +279,7 @@ export default function ServicePage({
       <section className={styles.section}>
         <div className="container">
           <div className={styles.finalCard}>
-            <p className={styles.sectionLabel}>Ready to move?</p>
+            <p className={styles.sectionLabel}>{t("readyToMove")}</p>
             <h2 className={styles.finalTitle}>{finalTitle}</h2>
             <p className={styles.sectionIntro}>{finalText}</p>
 
@@ -286,12 +297,12 @@ export default function ServicePage({
 
       <section className={styles.alsoStrip}>
         <div className={`container ${styles.alsoGrid}`}>
-          <p className={styles.sectionLabel}>Also offered</p>
+          <p className={styles.sectionLabel}>{t("alsoOffered")}</p>
           <div className={styles.crossLinks}>
             {crossLinks.map((link) => (
               <article key={link.href} className={styles.crossLinkCard}>
-                <h3>{link.label}</h3>
-                <Link href={link.href}>Explore -&gt;</Link>
+                <h3>{tCross(link.id)}</h3>
+                <Link href={link.href}>{t("exploreLane")} -&gt;</Link>
               </article>
             ))}
           </div>
