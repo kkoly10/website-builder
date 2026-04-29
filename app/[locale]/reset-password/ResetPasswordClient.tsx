@@ -3,6 +3,7 @@
 import { Link } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { useMemo, useState, type FormEvent } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -14,6 +15,8 @@ function safeNextPath(next: string | null) {
 export default function ResetPasswordClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("auth");
+  const tReset = useTranslations("auth.resetPassword");
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -30,12 +33,12 @@ export default function ResetPasswordClient() {
     setError(null);
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      setError(tReset("minLengthError"));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(tReset("mismatchError"));
       return;
     }
 
@@ -53,11 +56,7 @@ export default function ResetPasswordClient() {
       router.replace(`/login?reset=1&next=${encodeURIComponent(nextPath)}`);
       router.refresh();
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to update password. Open this page from the reset email link."
-      );
+      setError(err instanceof Error ? err.message : tReset("error"));
       setSubmitting(false);
     }
   }
@@ -67,15 +66,15 @@ export default function ResetPasswordClient() {
       <div className="cardInner" >
         <div className="kicker">
           <span className="kickerDot" aria-hidden="true" />
-          Set New Password
+          {tReset("kicker")}
         </div>
 
         <h1 className="h2" >
-          Choose a new password
+          {tReset("title")}
         </h1>
 
         <p className="p" style={{ marginTop: 0 }}>
-          Open this page from the password reset link in your email.
+          {tReset("subtitle")}
         </p>
 
         <form onSubmit={handleUpdatePassword} >
@@ -83,7 +82,7 @@ export default function ResetPasswordClient() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="New password (8+ characters)"
+            placeholder={tReset("newPasswordPlaceholder")}
             required
             style={inputStyle}
           />
@@ -92,13 +91,13 @@ export default function ResetPasswordClient() {
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Confirm new password"
+            placeholder={tReset("confirmPasswordPlaceholder")}
             required
             style={inputStyle}
           />
 
           <button className="btn btnPrimary" type="submit" disabled={submitting}>
-            {submitting ? "Updating..." : "Update Password"}
+            {submitting ? tReset("submitting") : tReset("submit")}
             <span className="btnArrow">→</span>
           </button>
         </form>
@@ -112,13 +111,13 @@ export default function ResetPasswordClient() {
               background: "rgba(255,80,80,0.08)",
             }}
           >
-            <strong>Error:</strong> {error}
+            <strong>{t("errorPrefix")}</strong> {error}
           </div>
         ) : null}
 
         <div >
           <Link href={`/login?next=${encodeURIComponent(nextPath)}`} className="btn btnGhost">
-            Back to Login
+            {t("backToLogin")}
           </Link>
         </div>
       </div>
