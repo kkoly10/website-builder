@@ -1,13 +1,32 @@
 import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import ServicePage from "@/components/service-page/ServicePage";
-import { websitesPageData } from "@/lib/service-pages";
+import { getServicePageData } from "@/lib/service-pages";
 
-export const metadata: Metadata = {
-  title: "Website Building | Premium, Conversion-Focused Websites",
-  description:
-    "Premium website building for service businesses that need stronger trust, clearer messaging, and better lead conversion.",
-};
+export const dynamic = "force-dynamic";
 
-export default function WebsitesPage() {
-  return <ServicePage {...websitesPageData} />;
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "servicesMeta.websites" });
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+    openGraph: { title: t("metaTitle"), description: t("metaDescription") },
+    twitter: { title: t("metaTitle"), description: t("metaDescription") },
+  };
+}
+
+export default async function WebsitesPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const data = getServicePageData(locale, "websites");
+  return <ServicePage {...data} />;
 }

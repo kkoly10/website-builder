@@ -373,5 +373,39 @@
     "step2": { "label": "Estimate", "detail": "You receive a scoped range with timeline, deliverables, and recommendation within 24 hours." },
     "step3": { "label": "Workspace", "detail": "Track progress, upload assets, approve milestones, and keep every decision in one place." },
     "step4": { "label": "Launch", "detail": "Final QA, handoff, and go-live support so the finished system performs from day one." }
+  },
+  "servicePage": {
+    "goodFit": "Good fit",
+    "bestFit": "Best fit",
+    "notFirstMove": "Not the first move",
+    "problemsLabel": "Problems we solve",
+    "whatYouGet": "What you get",
+    "processLabel": "Process",
+    "pricingLabel": "Pricing",
+    "faqLabel": "FAQ",
+    "readyToMove": "Ready to move?",
+    "mostCommon": "Most common starting point",
+    "scopedToProject": "Scoped to your project",
+    "alsoOffered": "Also offered",
+    "exploreLane": "Explore"
+  },
+  "crossLinks": {
+    "websites": "Website lane",
+    "ecommerce": "E-commerce lane",
+    "systems": "Systems lane"
+  },
+  "servicesMeta": {
+    "websites": {
+      "metaTitle": "Website Building | Premium, Conversion-Focused Websites",
+      "metaDescription": "Premium website building for service businesses that need stronger trust, clearer messaging, and better lead conversion."
+    },
+    "systems": {
+      "metaTitle": "Workflow Automation | Audit, Build, and Operations Cleanup",
+      "metaDescription": "Workflow automation for businesses that need cleaner intake, routing, status tracking, and admin systems."
+    },
+    "ecommerce": {
+      "metaTitle": "E-commerce Systems | Storefront, Checkout, and Ops Flow",
+      "metaDescription": "E-commerce systems for brands that need stronger storefront UX, cleaner checkout flow, and better post-purchase operations."
+    }
   }
 }

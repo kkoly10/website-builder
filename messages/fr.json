@@ -373,5 +373,39 @@
     "step2": { "label": "Estimation", "detail": "Vous recevez une fourchette chiffrée avec calendrier, livrables et recommandation sous 24 heures." },
     "step3": { "label": "Espace de travail", "detail": "Suivez l'avancement, chargez les ressources, approuvez les jalons et gardez chaque décision au même endroit." },
     "step4": { "label": "Lancement", "detail": "QA finale, remise et support de mise en ligne pour que le système fini performe dès le premier jour." }
+  },
+  "servicePage": {
+    "goodFit": "Pour qui",
+    "bestFit": "Idéal pour",
+    "notFirstMove": "Pas le bon premier pas",
+    "problemsLabel": "Problèmes que nous résolvons",
+    "whatYouGet": "Ce que vous obtenez",
+    "processLabel": "Processus",
+    "pricingLabel": "Tarifs",
+    "faqLabel": "FAQ",
+    "readyToMove": "Prêt à passer à l'action ?",
+    "mostCommon": "Point de départ le plus courant",
+    "scopedToProject": "Adapté à votre projet",
+    "alsoOffered": "Aussi proposé",
+    "exploreLane": "Explorer"
+  },
+  "crossLinks": {
+    "websites": "Axe Sites web",
+    "ecommerce": "Axe E-commerce",
+    "systems": "Axe Systèmes"
+  },
+  "servicesMeta": {
+    "websites": {
+      "metaTitle": "Création de sites web | Sites premium axés sur la conversion",
+      "metaDescription": "Création de sites web premium pour les entreprises de services qui ont besoin de plus de confiance, d'un message plus clair et d'une meilleure conversion des prospects."
+    },
+    "systems": {
+      "metaTitle": "Automatisation de workflow | Audit, construction et nettoyage opérationnel",
+      "metaDescription": "Automatisation de workflow pour les entreprises qui ont besoin d'une meilleure prise en charge des demandes, du routage, du suivi de statut et des systèmes d'administration."
+    },
+    "ecommerce": {
+      "metaTitle": "Systèmes e-commerce | Vitrine, paiement et flux opérationnel",
+      "metaDescription": "Systèmes e-commerce pour les marques qui ont besoin d'une meilleure vitrine, d'un paiement plus fluide et d'opérations post-achat plus propres."
+    }
   }
 }

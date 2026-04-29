@@ -1,13 +1,32 @@
 import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import ServicePage from "@/components/service-page/ServicePage";
-import { ecommercePageData } from "@/lib/service-pages";
+import { getServicePageData } from "@/lib/service-pages";
 
-export const metadata: Metadata = {
-  title: "E-commerce Systems | Storefront, Checkout, and Ops Flow",
-  description:
-    "E-commerce systems for brands that need stronger storefront UX, cleaner checkout flow, and better post-purchase operations.",
-};
+export const dynamic = "force-dynamic";
 
-export default function EcommercePage() {
-  return <ServicePage {...ecommercePageData} />;
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "servicesMeta.ecommerce" });
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+    openGraph: { title: t("metaTitle"), description: t("metaDescription") },
+    twitter: { title: t("metaTitle"), description: t("metaDescription") },
+  };
+}
+
+export default async function EcommercePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const data = getServicePageData(locale, "ecommerce");
+  return <ServicePage {...data} />;
 }
