@@ -442,6 +442,206 @@ systemsData.en = {
   finalSecondaryCta: { label: "Compare Services", href: "/" },
 };
 
+systemsData.fr = {
+  eyebrow: "Automatisation de workflow",
+  title: "Arrêtez de faire la même tâche deux fois. Nous construisons l'automatisation à votre place.",
+  intro:
+    "Si vous copiez des données entre des outils, envoyez les mêmes e-mails à la main ou perdez la trace des demandes clients — votre entreprise a un problème opérationnel. Nous auditons ce qui est cassé, construisons l'automatisation qui le répare, et tout documentons pour que cela ne devienne pas un mystère.",
+  heroImage: "/images/services/ops-hero.webp",
+  heroAlt: "Automatisation de workflow pour petites entreprises",
+  heroStats: [
+    "Zapier, Make.com ou sur mesure",
+    "Audit d'abord, puis construction",
+    "Vous possédez les workflows",
+  ],
+  primaryCta: { label: "Démarrer un audit workflow", href: "/ops-intake" },
+  secondaryCta: { label: "Voir comment ça marche", href: "/process" },
+  whoItsForTitle: "Idéal pour les entreprises noyées sous l'administratif répétitif.",
+  whoItsFor: [
+    "Vous passez des heures à copier des données entre des outils qui devraient communiquer entre eux.",
+    "Des prospects passent à la trappe parce que personne ne suit qui est responsable de la relance.",
+    "Votre équipe envoie les mêmes e-mails, remplit les mêmes formulaires et fait les mêmes étapes chaque jour.",
+    "Vous avez essayé de régler ça avec des logiciels mais vous vous êtes retrouvé avec plus d'outils et plus de confusion.",
+  ],
+  problemsTitle: "Le vrai coût des opérations manuelles.",
+  problems: [
+    "Vous payez des personnes qualifiées pour faire de la saisie qu'une machine devrait gérer.",
+    "Personne ne connaît le vrai statut de quoi que ce soit parce que c'est dans la tête de quelqu'un ou un tableur.",
+    "L'onboarding client prend trop de temps parce que chaque étape demande un passage de relais manuel.",
+    "La facturation est en retard parce que quelqu'un doit penser à l'envoyer.",
+  ],
+  includesTitle: "Ce que comprend l'axe automatisation",
+  includes: [
+    {
+      title: "Audit + Diagnostic",
+      items: [
+        "Nous cartographions votre processus actuel et trouvons les goulets",
+        "Un score IA identifie ce qu'il faut automatiser en premier",
+        "Vous voyez la carte de processus avant/après avant que nous construisions quoi que ce soit",
+      ],
+    },
+    {
+      title: "Construction + Tests",
+      items: [
+        "Zapier, Make.com ou intégrations sur mesure — selon ce qui convient",
+        "Routage, notifications, mises à jour de statut et logique de relais",
+        "Chaque automatisation est testée avec de vraies données avant la mise en production",
+      ],
+    },
+    {
+      title: "Documentation + Support",
+      items: [
+        "Procédures écrites pour que votre équipe comprenne ce qui a été construit",
+        "Remise propre — pas d'automatisations mystérieuses",
+        "Abonnement optionnel pour la maintenance et de nouveaux workflows",
+      ],
+    },
+  ],
+  pricingTitle: "Tarifs basés sur la complexité, pas sur des suppositions",
+  pricingIntro:
+    "Nous commençons par un audit pour savoir ce que nous construisons avant de chiffrer. Chaque projet reçoit de vrais chiffres, pas des fourchettes vagues.",
+  pricingCards: [
+    { label: "Correctif workflow rapide", value: "1 000 $ – 1 800 $", detail: "Une automatisation ciblée. Idéale pour un seul processus qui doit cesser d'être manuel — routage d'intake, e-mails de relance, notifications de statut." },
+    { label: "Construction de système ops", value: "2 000 $ – 3 800 $", detail: "Plusieurs workflows connectés. Pour les entreprises qui ont besoin de 2 à 4 automatisations qui fonctionnent ensemble — sync CRM, relais de facturation, tableaux de reporting." },
+    { label: "Partenaire systèmes continu", value: "500 $ – 1 250 $/mois", detail: "Abonnement mensuel. Nous maintenons vos automatisations, en construisons de nouvelles à mesure que votre entreprise évolue, et gérons le dépannage." },
+  ],
+  processTitle: "Comment fonctionne l'axe automatisation",
+  processIntro:
+    "Nous ne commençons pas à construire avant de comprendre ce qui est vraiment cassé. Chaque prestation commence par un diagnostic.",
+  process: [
+    { step: "01", title: "Dites-nous ce qui est cassé", detail: "Remplissez un intake en 4 étapes sur vos outils, vos points de douleur et les workflows que vous voulez réparer. Cela prend environ 5 minutes." },
+    { step: "02", title: "Audit + carte de processus", detail: "Nous diagnostiquons le goulet, cartographions votre processus actuel et vous montrons à quoi ressemble la version automatisée — avant de construire quoi que ce soit." },
+    { step: "03", title: "Construction de la première automatisation", detail: "Nous mettons en œuvre le correctif à plus forte valeur en premier. Vous le voyez fonctionner dans votre espace avec suivi de statut et résultats de tests." },
+    { step: "04", title: "Documentation + extension", detail: "Une fois le premier workflow stable, nous le documentons, formons votre équipe et planifions la prochaine automatisation selon ce qui aidera le plus." },
+  ],
+  bestFitTitle: "Commencez ici si votre processus interne est le goulet.",
+  bestFit: [
+    "Vous perdez des heures chaque semaine sur des tâches qui devraient être automatiques.",
+    "Vos outils ne communiquent pas et les données vivent dans cinq endroits différents.",
+    "Vous voulez du routage, des notifications et des passages de relais qui marchent sans qu'on doive y penser.",
+  ],
+  notFitTitle: "Probablement pas le bon premier pas si…",
+  notFit: [
+    "Vous avez surtout besoin d'un site public — commencez par notre axe sites web.",
+    "Vous avez besoin d'une boutique en ligne construite ou gérée — regardez notre axe e-commerce.",
+    "Vous voulez de l'automatisation avant d'avoir compris quel processus devrait vraiment être automatisé.",
+  ],
+  faqTitle: "FAQ automatisation",
+  faqs: [
+    { question: "Vous automatisez tout d'un coup ?", answer: "Non. Nous commençons par le workflow le plus utile, vérifions qu'il fonctionne, le documentons, puis étendons. Essayer de tout automatiser d'un coup, c'est comme ça que les entreprises se retrouvent avec des systèmes fragiles." },
+    { question: "Quels outils utilisez-vous ?", answer: "Zapier et Make.com couvrent la plupart des cas. Pour les besoins complexes, nous construisons des intégrations sur mesure. L'audit détermine quel outil convient à votre workflow spécifique." },
+    { question: "Et si j'ai déjà des automatisations qui se cassent sans cesse ?", answer: "Cas fréquent. Nous pouvons auditer et réparer les automatisations existantes avant d'en ajouter de nouvelles. Parfois, le meilleur premier pas est de nettoyer ce qui est déjà là." },
+    { question: "Mon équipe comprendra-t-elle ce que vous construisez ?", answer: "Oui. Chaque workflow inclut une documentation écrite et une visite guidée. Nous ne construisons pas d'automatisations mystérieuses — votre équipe doit comprendre et faire confiance au système." },
+    { question: "Cela peut-il devenir un support continu ?", answer: "Oui. L'abonnement Partenaire systèmes continu (500 $ – 1 250 $/mois) couvre la maintenance, la construction de nouveaux workflows et le dépannage à mesure que votre entreprise évolue." },
+  ],
+  crossLinks: CROSS_LINKS.systems,
+  finalTitle: "Prêt à arrêter de perdre du temps sur des tâches qu'une machine devrait gérer ?",
+  finalText:
+    "Commencez par un audit workflow. Nous diagnostiquerons le goulet, vous montrerons le correctif et vous donnerons un vrai prix — le tout sous 48 heures.",
+  finalPrimaryCta: { label: "Démarrer un audit workflow", href: "/ops-intake" },
+  finalSecondaryCta: { label: "Comparer les services", href: "/" },
+};
+
+systemsData.es = {
+  eyebrow: "Automatización de workflow",
+  title: "Deja de hacer la misma tarea dos veces. Construimos la automatización por ti.",
+  intro:
+    "Si copias datos entre herramientas, envías los mismos correos a mano o pierdes el rastro de las solicitudes de los clientes — tu negocio tiene un problema operativo. Auditamos lo que está roto, construimos la automatización que lo arregla y documentamos todo para que no se convierta en un misterio.",
+  heroImage: "/images/services/ops-hero.webp",
+  heroAlt: "Automatización de workflow para pequeñas empresas",
+  heroStats: [
+    "Zapier, Make.com o a medida",
+    "Primero auditoría, luego construcción",
+    "Eres dueño de los workflows",
+  ],
+  primaryCta: { label: "Iniciar auditoría de workflow", href: "/ops-intake" },
+  secondaryCta: { label: "Ver cómo funciona", href: "/process" },
+  whoItsForTitle: "Ideal para empresas ahogadas en trabajo administrativo repetitivo.",
+  whoItsFor: [
+    "Pasas horas copiando datos entre herramientas que deberían comunicarse entre sí.",
+    "Los leads se pierden porque nadie sigue quién es responsable del seguimiento.",
+    "Tu equipo envía los mismos correos, llena los mismos formularios y hace los mismos pasos cada día.",
+    "Has intentado arreglarlo con software pero terminaste con más herramientas y más confusión.",
+  ],
+  problemsTitle: "El verdadero costo de las operaciones manuales.",
+  problems: [
+    "Pagas a personas calificadas para hacer captura de datos que una máquina debería manejar.",
+    "Nadie sabe el verdadero estado de nada porque está en la cabeza de alguien o en una hoja de cálculo.",
+    "El onboarding del cliente tarda demasiado porque cada paso requiere un traspaso manual.",
+    "La facturación va con retraso porque alguien tiene que acordarse de enviarla.",
+  ],
+  includesTitle: "Qué incluye la vía de automatización",
+  includes: [
+    {
+      title: "Auditoría + Diagnóstico",
+      items: [
+        "Mapeamos tu proceso actual y encontramos los cuellos de botella",
+        "Una puntuación con IA identifica qué automatizar primero",
+        "Ves el mapa de proceso antes/después antes de que construyamos nada",
+      ],
+    },
+    {
+      title: "Construcción + Pruebas",
+      items: [
+        "Zapier, Make.com o integraciones a medida — lo que encaje",
+        "Ruteo, notificaciones, actualizaciones de estado y lógica de traspaso",
+        "Cada automatización se prueba con datos reales antes de salir en vivo",
+      ],
+    },
+    {
+      title: "Documentación + Soporte",
+      items: [
+        "SOPs por escrito para que tu equipo entienda lo que se construyó",
+        "Traspaso limpio — sin automatizaciones misteriosas",
+        "Retainer continuo opcional para mantenimiento y nuevos workflows",
+      ],
+    },
+  ],
+  pricingTitle: "Precios basados en complejidad, no en suposiciones",
+  pricingIntro:
+    "Empezamos con una auditoría para saber qué construimos antes de cotizar. Cada proyecto recibe números reales, no rangos vagos.",
+  pricingCards: [
+    { label: "Arreglo rápido de workflow", value: "$1.000 – $1.800", detail: "Una automatización enfocada. Ideal para un solo proceso que necesita dejar de ser manual — ruteo de intake, correos de seguimiento, notificaciones de estado." },
+    { label: "Construcción de sistema ops", value: "$2.000 – $3.800", detail: "Múltiples workflows conectados. Para empresas que necesitan 2 a 4 automatizaciones funcionando juntas — sync de CRM, traspaso de facturación, dashboards de reporting." },
+    { label: "Socio de sistemas continuo", value: "$500 – $1.250/mes", detail: "Retainer mensual. Mantenemos tus automatizaciones, construimos nuevas a medida que tu negocio evoluciona y manejamos la resolución de problemas." },
+  ],
+  processTitle: "Cómo funciona la vía de automatización",
+  processIntro:
+    "No empezamos a construir hasta entender qué está realmente roto. Cada contratación empieza con un diagnóstico.",
+  process: [
+    { step: "01", title: "Cuéntanos qué está roto", detail: "Llena un intake de 4 pasos sobre tus herramientas, dolores y los workflows que quieres arreglar. Toma unos 5 minutos." },
+    { step: "02", title: "Auditoría + mapa de proceso", detail: "Diagnosticamos el cuello de botella, mapeamos tu proceso actual y te mostramos cómo se ve la versión automatizada — antes de construir nada." },
+    { step: "03", title: "Construcción de la primera automatización", detail: "Implementamos primero el arreglo de mayor valor. Lo ves funcionando en tu espacio con seguimiento de estado y resultados de pruebas." },
+    { step: "04", title: "Documentación + expansión", detail: "Una vez estable el primer workflow, lo documentamos, formamos a tu equipo y planificamos la siguiente automatización según lo que más ayude." },
+  ],
+  bestFitTitle: "Empieza aquí si tu proceso interno es el cuello de botella.",
+  bestFit: [
+    "Pierdes horas cada semana en tareas que deberían ser automáticas.",
+    "Tus herramientas no se hablan y los datos viven en cinco lugares distintos.",
+    "Quieres ruteo, notificaciones y traspasos que simplemente funcionen sin que alguien tenga que recordar.",
+  ],
+  notFitTitle: "Probablemente no sea el primer paso si…",
+  notFit: [
+    "Sobre todo necesitas un sitio web público — empieza por nuestra vía de sitios web.",
+    "Necesitas una tienda en línea construida o gestionada — mira nuestra vía de e-commerce.",
+    "Quieres automatización antes de entender qué proceso debería automatizarse de verdad.",
+  ],
+  faqTitle: "FAQ de automatización",
+  faqs: [
+    { question: "¿Automatizan todo de una vez?", answer: "No. Empezamos con el workflow más valioso primero, nos aseguramos de que funcione, lo documentamos y luego expandimos. Intentar automatizar todo a la vez es como las empresas terminan con sistemas frágiles." },
+    { question: "¿Qué herramientas usan?", answer: "Zapier y Make.com cubren la mayoría de los casos. Para necesidades complejas, construimos integraciones a medida. La auditoría determina qué herramienta encaja con tu workflow específico." },
+    { question: "¿Y si ya tengo automatizaciones que siguen rompiéndose?", answer: "Situación común. Podemos auditar y arreglar automatizaciones existentes antes de añadir nuevas. A veces el mejor primer paso es limpiar lo que ya está." },
+    { question: "¿Mi equipo entenderá lo que construyen?", answer: "Sí. Cada workflow incluye documentación escrita y un walkthrough. No construimos automatizaciones misteriosas — tu equipo necesita entender y confiar en el sistema." },
+    { question: "¿Esto puede convertirse en soporte continuo?", answer: "Sí. El retainer Socio de Sistemas Continuo ($500 – $1.250/mes) cubre mantenimiento, nuevas construcciones de workflow y resolución de problemas a medida que tu negocio evoluciona." },
+  ],
+  crossLinks: CROSS_LINKS.systems,
+  finalTitle: "¿Listo para dejar de perder tiempo en tareas que una máquina debería manejar?",
+  finalText:
+    "Empieza con una auditoría de workflow. Diagnosticaremos el cuello de botella, te mostraremos el arreglo y te daremos un precio real — todo dentro de 48 horas.",
+  finalPrimaryCta: { label: "Iniciar auditoría de workflow", href: "/ops-intake" },
+  finalSecondaryCta: { label: "Comparar servicios", href: "/" },
+};
+
 ecommerceData.en = {
   eyebrow: "E-commerce services",
   title: "Build your store, fix what's broken, or let us run the whole thing.",
