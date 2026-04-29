@@ -3,6 +3,7 @@
 import { Link } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { useMemo, useState, type FormEvent } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -14,6 +15,8 @@ function safeNextPath(next: string | null) {
 export default function SignupClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const t = useTranslations("auth");
+  const tSignup = useTranslations("auth.signup");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,7 +46,7 @@ export default function SignupClient() {
       if (signUpError) throw signUpError;
       router.push(`/login?signup=1&next=${encodeURIComponent(nextPath)}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create account.");
+      setError(err instanceof Error ? err.message : tSignup("error"));
       setSubmitting(false);
     }
   }
@@ -54,59 +57,59 @@ export default function SignupClient() {
         <div>
           <div className="kicker">
             <span className="kickerDot" aria-hidden="true" />
-            CrecyStudio Registration
+            {tSignup("kicker")}
           </div>
-          <h1 className="h2">Create Account</h1>
+          <h1 className="h2">{tSignup("title")}</h1>
           <p className="pDark" style={{ marginTop: 6 }}>
-            Register to view your quotes and project workspaces.
+            {tSignup("subtitle")}
           </p>
         </div>
 
         <form onSubmit={handleSignup}>
           <div>
-            <label className="fieldLabel">Email Address</label>
+            <label className="fieldLabel">{t("emailLabel")}</label>
             <input
               className="input"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@company.com"
+              placeholder={t("emailPlaceholder")}
               required
               autoComplete="email"
             />
           </div>
 
           <div>
-            <label className="fieldLabel">Password</label>
+            <label className="fieldLabel">{t("passwordLabel")}</label>
             <input
               className="input"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder={t("passwordPlaceholder")}
               required
               autoComplete="new-password"
               minLength={8}
             />
             <div style={{ marginTop: 6, fontSize: 12, color: "var(--muted)" }}>
-              Use at least 8 characters.
+              {tSignup("minLengthHint")}
             </div>
           </div>
 
           <button className="btn btnPrimary" type="submit" disabled={submitting} style={{ marginTop: 8, padding: "12px", fontSize: 15, width: "100%", justifyContent: "center" }}>
-            {submitting ? "Creating account..." : "Sign Up →"}
+            {submitting ? tSignup("submitting") : `${tSignup("submit")} →`}
           </button>
         </form>
 
         {error && (
           <div style={{ borderRadius: 8, padding: 12, border: "1px solid var(--accentStroke)", background: "var(--bg2)", color: "var(--accent)", fontSize: 13, fontWeight: 700 }}>
-            <strong>Error: </strong> {error}
+            <strong>{t("errorPrefix")}</strong> {error}
           </div>
         )}
 
         <div style={{ display: "flex", justifyContent: "center", borderTop: "1px solid var(--stroke)", paddingTop: 16, marginTop: 8 }}>
           <Link href={`/login?next=${encodeURIComponent(nextPath)}`} style={{ color: "var(--muted)", fontSize: 13, textDecoration: "none" }}>
-            Already have an account? <span style={{ color: "var(--fg)", fontWeight: 700 }}>Sign in</span>
+            {tSignup("haveAccount")} <span style={{ color: "var(--fg)", fontWeight: 700 }}>{tSignup("signInLink")}</span>
           </Link>
         </div>
       </div>

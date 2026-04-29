@@ -407,5 +407,73 @@
       "metaTitle": "E-commerce Systems | Storefront, Checkout, and Ops Flow",
       "metaDescription": "E-commerce systems for brands that need stronger storefront UX, cleaner checkout flow, and better post-purchase operations."
     }
+  },
+  "auth": {
+    "errorPrefix": "Error: ",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "you@company.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "backToLogin": "Back to Login",
+    "login": {
+      "metaTitle": "Sign in | CrecyStudio",
+      "metaDescription": "Sign in to access your project workspaces.",
+      "loadingKicker": "Authenticating",
+      "loadingTitle": "Preparing sign-in...",
+      "kicker": "CrecyStudio Login",
+      "title": "Welcome Back",
+      "subtitle": "Sign in to access your project workspaces.",
+      "submitting": "Authenticating...",
+      "submit": "Sign In",
+      "needAccount": "Need an account?",
+      "signUpLink": "Sign up",
+      "forgotPassword": "Forgot Password?",
+      "flashSignup": "Account created. You can sign in now.",
+      "flashReset": "Password updated. Sign in with your new password.",
+      "flashVerified": "Email verified. You can sign in now.",
+      "error": "Failed to sign in."
+    },
+    "signup": {
+      "metaTitle": "Create account | CrecyStudio",
+      "metaDescription": "Register to view your quotes and project workspaces.",
+      "loadingKicker": "Registration",
+      "loadingTitle": "Preparing signup...",
+      "kicker": "CrecyStudio Registration",
+      "title": "Create Account",
+      "subtitle": "Register to view your quotes and project workspaces.",
+      "minLengthHint": "Use at least 8 characters.",
+      "submitting": "Creating account...",
+      "submit": "Sign Up",
+      "haveAccount": "Already have an account?",
+      "signInLink": "Sign in",
+      "error": "Failed to create account."
+    },
+    "forgotPassword": {
+      "metaTitle": "Reset password | CrecyStudio",
+      "metaDescription": "Request a password reset link for your CrecyStudio account.",
+      "loadingKicker": "Loading password reset…",
+      "kicker": "Password Reset",
+      "title": "Reset your password",
+      "subtitle": "Enter your email and we'll send you a reset link.",
+      "submitting": "Sending...",
+      "submit": "Send Reset Link",
+      "success": "Password reset email sent. Check your inbox.",
+      "error": "Failed to send reset email."
+    },
+    "resetPassword": {
+      "metaTitle": "Choose new password | CrecyStudio",
+      "metaDescription": "Set a new password for your CrecyStudio account.",
+      "loadingKicker": "Loading reset page…",
+      "kicker": "Set New Password",
+      "title": "Choose a new password",
+      "subtitle": "Open this page from the password reset link in your email.",
+      "newPasswordPlaceholder": "New password (8+ characters)",
+      "confirmPasswordPlaceholder": "Confirm new password",
+      "submitting": "Updating...",
+      "submit": "Update Password",
+      "minLengthError": "Password must be at least 8 characters.",
+      "mismatchError": "Passwords do not match.",
+      "error": "Failed to update password. Open this page from the reset email link."
+    }
   }
 }

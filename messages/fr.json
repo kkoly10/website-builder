@@ -407,5 +407,73 @@
       "metaTitle": "Systèmes e-commerce | Vitrine, paiement et flux opérationnel",
       "metaDescription": "Systèmes e-commerce pour les marques qui ont besoin d'une meilleure vitrine, d'un paiement plus fluide et d'opérations post-achat plus propres."
     }
+  },
+  "auth": {
+    "errorPrefix": "Erreur : ",
+    "emailLabel": "Adresse e-mail",
+    "emailPlaceholder": "vous@entreprise.com",
+    "passwordLabel": "Mot de passe",
+    "passwordPlaceholder": "••••••••",
+    "backToLogin": "Retour à la connexion",
+    "login": {
+      "metaTitle": "Connexion | CrecyStudio",
+      "metaDescription": "Connectez-vous pour accéder à vos espaces de projet.",
+      "loadingKicker": "Authentification",
+      "loadingTitle": "Préparation de la connexion...",
+      "kicker": "Connexion CrecyStudio",
+      "title": "Bon retour",
+      "subtitle": "Connectez-vous pour accéder à vos espaces de projet.",
+      "submitting": "Authentification...",
+      "submit": "Se connecter",
+      "needAccount": "Besoin d'un compte ?",
+      "signUpLink": "S'inscrire",
+      "forgotPassword": "Mot de passe oublié ?",
+      "flashSignup": "Compte créé. Vous pouvez vous connecter maintenant.",
+      "flashReset": "Mot de passe mis à jour. Connectez-vous avec votre nouveau mot de passe.",
+      "flashVerified": "E-mail vérifié. Vous pouvez vous connecter maintenant.",
+      "error": "Échec de la connexion."
+    },
+    "signup": {
+      "metaTitle": "Créer un compte | CrecyStudio",
+      "metaDescription": "Inscrivez-vous pour consulter vos devis et espaces de projet.",
+      "loadingKicker": "Inscription",
+      "loadingTitle": "Préparation de l'inscription...",
+      "kicker": "Inscription CrecyStudio",
+      "title": "Créer un compte",
+      "subtitle": "Inscrivez-vous pour consulter vos devis et espaces de projet.",
+      "minLengthHint": "Utilisez au moins 8 caractères.",
+      "submitting": "Création du compte...",
+      "submit": "S'inscrire",
+      "haveAccount": "Vous avez déjà un compte ?",
+      "signInLink": "Se connecter",
+      "error": "Échec de la création du compte."
+    },
+    "forgotPassword": {
+      "metaTitle": "Réinitialiser le mot de passe | CrecyStudio",
+      "metaDescription": "Demandez un lien de réinitialisation pour votre compte CrecyStudio.",
+      "loadingKicker": "Chargement de la réinitialisation…",
+      "kicker": "Réinitialisation du mot de passe",
+      "title": "Réinitialiser votre mot de passe",
+      "subtitle": "Saisissez votre e-mail et nous vous enverrons un lien de réinitialisation.",
+      "submitting": "Envoi...",
+      "submit": "Envoyer le lien",
+      "success": "E-mail de réinitialisation envoyé. Vérifiez votre boîte de réception.",
+      "error": "Échec de l'envoi de l'e-mail de réinitialisation."
+    },
+    "resetPassword": {
+      "metaTitle": "Choisir un nouveau mot de passe | CrecyStudio",
+      "metaDescription": "Définissez un nouveau mot de passe pour votre compte CrecyStudio.",
+      "loadingKicker": "Chargement de la page…",
+      "kicker": "Nouveau mot de passe",
+      "title": "Choisissez un nouveau mot de passe",
+      "subtitle": "Ouvrez cette page depuis le lien de réinitialisation reçu par e-mail.",
+      "newPasswordPlaceholder": "Nouveau mot de passe (8+ caractères)",
+      "confirmPasswordPlaceholder": "Confirmez le nouveau mot de passe",
+      "submitting": "Mise à jour...",
+      "submit": "Mettre à jour le mot de passe",
+      "minLengthError": "Le mot de passe doit comporter au moins 8 caractères.",
+      "mismatchError": "Les mots de passe ne correspondent pas.",
+      "error": "Échec de la mise à jour. Ouvrez cette page depuis le lien de l'e-mail de réinitialisation."
+    }
   }
 }

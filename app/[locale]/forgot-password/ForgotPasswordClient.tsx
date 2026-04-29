@@ -2,6 +2,7 @@
 
 import { Link } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useMemo, useState, type FormEvent } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -12,6 +13,8 @@ function safeNextPath(next: string | null) {
 
 export default function ForgotPasswordClient() {
   const searchParams = useSearchParams();
+  const t = useTranslations("auth");
+  const tForgot = useTranslations("auth.forgotPassword");
 
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -42,9 +45,9 @@ export default function ForgotPasswordClient() {
 
       if (error) throw error;
 
-      setMessage("Password reset email sent. Check your inbox.");
+      setMessage(tForgot("success"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send reset email.");
+      setError(err instanceof Error ? err.message : tForgot("error"));
     } finally {
       setSubmitting(false);
     }
@@ -55,15 +58,15 @@ export default function ForgotPasswordClient() {
       <div className="cardInner" >
         <div className="kicker">
           <span className="kickerDot" aria-hidden="true" />
-          Password Reset
+          {tForgot("kicker")}
         </div>
 
         <h1 className="h2" >
-          Reset your password
+          {tForgot("title")}
         </h1>
 
         <p className="p" style={{ marginTop: 0 }}>
-          Enter your email and we’ll send you a reset link.
+          {tForgot("subtitle")}
         </p>
 
         <form onSubmit={handleResetEmail} >
@@ -71,13 +74,13 @@ export default function ForgotPasswordClient() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@company.com"
+            placeholder={t("emailPlaceholder")}
             required
             style={inputStyle}
           />
 
           <button className="btn btnPrimary" type="submit" disabled={submitting}>
-            {submitting ? "Sending..." : "Send Reset Link"}
+            {submitting ? tForgot("submitting") : tForgot("submit")}
             <span className="btnArrow">→</span>
           </button>
         </form>
@@ -104,13 +107,13 @@ export default function ForgotPasswordClient() {
               background: "rgba(255,80,80,0.08)",
             }}
           >
-            <strong>Error:</strong> {error}
+            <strong>{t("errorPrefix")}</strong> {error}
           </div>
         ) : null}
 
         <div >
           <Link href={`/login?next=${encodeURIComponent(nextPath)}`} className="btn btnGhost">
-            Back to Login
+            {t("backToLogin")}
           </Link>
         </div>
       </div>

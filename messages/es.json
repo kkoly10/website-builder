@@ -407,5 +407,73 @@
       "metaTitle": "Sistemas de e-commerce | Tienda, checkout y flujo operativo",
       "metaDescription": "Sistemas de e-commerce para marcas que necesitan mejor tienda, checkout más fluido y operaciones post-compra más limpias."
     }
+  },
+  "auth": {
+    "errorPrefix": "Error: ",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "tu@empresa.com",
+    "passwordLabel": "Contraseña",
+    "passwordPlaceholder": "••••••••",
+    "backToLogin": "Volver al inicio de sesión",
+    "login": {
+      "metaTitle": "Iniciar sesión | CrecyStudio",
+      "metaDescription": "Inicia sesión para acceder a tus espacios de proyecto.",
+      "loadingKicker": "Autenticando",
+      "loadingTitle": "Preparando inicio de sesión...",
+      "kicker": "Inicio de sesión CrecyStudio",
+      "title": "Bienvenido de vuelta",
+      "subtitle": "Inicia sesión para acceder a tus espacios de proyecto.",
+      "submitting": "Autenticando...",
+      "submit": "Iniciar sesión",
+      "needAccount": "¿Necesitas una cuenta?",
+      "signUpLink": "Regístrate",
+      "forgotPassword": "¿Contraseña olvidada?",
+      "flashSignup": "Cuenta creada. Ya puedes iniciar sesión.",
+      "flashReset": "Contraseña actualizada. Inicia sesión con tu nueva contraseña.",
+      "flashVerified": "Correo verificado. Ya puedes iniciar sesión.",
+      "error": "No se pudo iniciar sesión."
+    },
+    "signup": {
+      "metaTitle": "Crear cuenta | CrecyStudio",
+      "metaDescription": "Regístrate para ver tus cotizaciones y espacios de proyecto.",
+      "loadingKicker": "Registro",
+      "loadingTitle": "Preparando registro...",
+      "kicker": "Registro CrecyStudio",
+      "title": "Crear cuenta",
+      "subtitle": "Regístrate para ver tus cotizaciones y espacios de proyecto.",
+      "minLengthHint": "Usa al menos 8 caracteres.",
+      "submitting": "Creando cuenta...",
+      "submit": "Registrarse",
+      "haveAccount": "¿Ya tienes una cuenta?",
+      "signInLink": "Iniciar sesión",
+      "error": "No se pudo crear la cuenta."
+    },
+    "forgotPassword": {
+      "metaTitle": "Restablecer contraseña | CrecyStudio",
+      "metaDescription": "Solicita un enlace de restablecimiento para tu cuenta CrecyStudio.",
+      "loadingKicker": "Cargando restablecimiento…",
+      "kicker": "Restablecer contraseña",
+      "title": "Restablecer tu contraseña",
+      "subtitle": "Introduce tu correo y te enviaremos un enlace de restablecimiento.",
+      "submitting": "Enviando...",
+      "submit": "Enviar enlace",
+      "success": "Correo de restablecimiento enviado. Revisa tu bandeja de entrada.",
+      "error": "No se pudo enviar el correo de restablecimiento."
+    },
+    "resetPassword": {
+      "metaTitle": "Elegir nueva contraseña | CrecyStudio",
+      "metaDescription": "Establece una nueva contraseña para tu cuenta CrecyStudio.",
+      "loadingKicker": "Cargando página…",
+      "kicker": "Nueva contraseña",
+      "title": "Elige una nueva contraseña",
+      "subtitle": "Abre esta página desde el enlace de restablecimiento en tu correo.",
+      "newPasswordPlaceholder": "Nueva contraseña (8+ caracteres)",
+      "confirmPasswordPlaceholder": "Confirmar nueva contraseña",
+      "submitting": "Actualizando...",
+      "submit": "Actualizar contraseña",
+      "minLengthError": "La contraseña debe tener al menos 8 caracteres.",
+      "mismatchError": "Las contraseñas no coinciden.",
+      "error": "No se pudo actualizar la contraseña. Abre esta página desde el enlace de restablecimiento del correo."
+    }
   }
 }
