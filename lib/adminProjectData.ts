@@ -279,7 +279,7 @@ export async function listAdminProjectData() {
     .order("created_at", { ascending: false });
 
   if (quotesRes.error) {
-    throw new Error(quotesRes.error.message);
+    return [];
   }
 
   const results = await Promise.allSettled(
