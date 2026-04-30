@@ -5,7 +5,8 @@
     "openPortal": "Abrir el portal",
     "signOut": "Cerrar sesión",
     "startProject": "Iniciar un proyecto",
-    "openMenu": "Abrir el menú de navegación"
+    "openMenu": "Abrir el menú de navegación",
+    "login": "Iniciar sesión"
   },
   "nav": {
     "websites": "Sitios web",

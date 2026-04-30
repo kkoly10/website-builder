@@ -5,7 +5,8 @@
     "openPortal": "Open portal",
     "signOut": "Sign out",
     "startProject": "Start a project",
-    "openMenu": "Open navigation menu"
+    "openMenu": "Open navigation menu",
+    "login": "Log in"
   },
   "nav": {
     "websites": "Websites",
