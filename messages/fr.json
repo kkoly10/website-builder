@@ -529,5 +529,195 @@
       "portfolio": { "headline": "Site portfolio + autorité", "desc": "Structure visuelle d'études de cas, blocs de contenu adaptés au SEO et capture de prospects intégrée tout au long du portfolio." },
       "leads": { "headline": "Site de génération de prospects", "desc": "Positionnement clair des services, CTA solides, formulaires de capture et performance rapide mobile-first." }
     }
+  },
+  "build": {
+    "metaTitle": "Devis de site web | CrecyStudio",
+    "metaDescription": "Cadrez votre projet de site étape par étape et recevez un devis détaillé sous 24 heures.",
+    "kicker": "Devis de site web",
+    "heroLoading": "Chargement...",
+    "step0Title": "Cadrez votre <em>projet</em>",
+    "step0Subtitle": "Choisissez comment vous voulez démarrer — nous vous guidons dans le cadrage et générons un devis détaillé à la fin.",
+    "stepCounter": "Étape {current} sur {total}",
+    "modes": {
+      "guided": {
+        "title": "Aidez-moi à décider",
+        "desc": "Nous posons des questions orientées objectifs et recommandons la meilleure configuration.",
+        "cta": "Démarrer l'intake guidé"
+      },
+      "known": {
+        "title": "Je sais ce qu'il me faut",
+        "desc": "Vous connaissez déjà vos besoins. Allez directement au cadrage.",
+        "cta": "Démarrer l'intake direct"
+      }
+    },
+    "stepTitles": {
+      "0": "Choisissez comment démarrer",
+      "1": "Quel est l'objectif ?",
+      "2": "Cadrage de base",
+      "3": "Fonctionnalités et intégrations",
+      "4": "Ressources et préparation",
+      "5": "Budget et décision",
+      "6": "Calendrier et détails",
+      "7": "Vérifiez votre cadrage",
+      "8": "Où devons-nous envoyer le devis ?"
+    },
+    "step1": {
+      "guidedTitle": "Quel est l'objectif principal ?",
+      "knownTitle": "Quel type de site ?",
+      "primaryGoal": "Objectif principal de l'entreprise",
+      "describeGoal": "Décrivez votre objectif",
+      "goalPlaceholder": "ex. recrutement, crédibilité investisseur…",
+      "websiteTypeLabel": "Type de site"
+    },
+    "step2": {
+      "title": "Cadrage de base",
+      "suggestedSetup": "Configuration suggérée",
+      "typeLabel": "Type :",
+      "bookingEnabled": "Réservation activée",
+      "paymentsEnabled": "Paiements activés",
+      "applySuggestion": "Appliquer la suggestion",
+      "totalPages": "Nombre total de pages estimé",
+      "singlePageLabel": "1 (Page d'atterrissage unique)"
+    },
+    "step3": {
+      "title": "Fonctionnalités et intégrations",
+      "features": {
+        "booking": "Réservation / rendez-vous",
+        "payments": "Paiements / paiement en ligne",
+        "blog": "Blog / articles",
+        "membership": "Adhésion / contenu réservé"
+      },
+      "advancedAutomations": "Automatisations avancées ?",
+      "selectTypes": "Sélectionnez les types",
+      "thirdPartyIntegrations": "Intégrations tierces"
+    },
+    "step4": {
+      "title": "Ressources et préparation",
+      "currentUrl": "URL du site actuel",
+      "currentUrlPlaceholder": "https://votresite.com",
+      "referenceSite": "Site de référence / inspiration",
+      "referenceSitePlaceholder": "https://concurrent.com",
+      "hasLogo": "Avez-vous un logo ?",
+      "hasBrandGuide": "Couleurs de marque définies ?",
+      "contentWritten": "Contenu rédigé ?",
+      "domainHosting": "Domaine / hébergement en place ?",
+      "domainHaveIt": "Oui, je l'ai",
+      "domainNeedHelp": "Non, j'ai besoin d'aide"
+    },
+    "step5": {
+      "title": "Budget et décision",
+      "budgetRange": "Fourchette de budget",
+      "decisionMaker": "Êtes-vous le décideur final ?",
+      "decisionYes": "Oui — je peux approuver",
+      "decisionNo": "Non — d'autres doivent valider",
+      "stakeholdersCount": "Combien de parties prenantes ?",
+      "stakeholders23": "2 à 3 personnes",
+      "stakeholders4Plus": "4 ou plus"
+    },
+    "step6": {
+      "title": "Calendrier et détails",
+      "designDirection": "Direction de design",
+      "targetTimeline": "Calendrier visé",
+      "additionalNotes": "Notes supplémentaires",
+      "notesPlaceholder": "Exigences spécifiques, demandes de fonctionnalités, références concurrentes..."
+    },
+    "step7": {
+      "title": "Vérifiez votre cadrage",
+      "rows": {
+        "websiteType": "Type de site",
+        "totalPages": "Nombre de pages",
+        "contentReadiness": "État du contenu",
+        "budgetRange": "Fourchette de budget",
+        "timeline": "Calendrier",
+        "design": "Design",
+        "features": "Fonctionnalités",
+        "featuresNone": "Aucune",
+        "integrations": "Intégrations",
+        "currentSite": "Site actuel",
+        "notes": "Notes"
+      }
+    },
+    "step8": {
+      "title": "Où devons-nous envoyer le devis ?",
+      "emailLabel": "Adresse e-mail *",
+      "emailPlaceholder": "vous@entreprise.com",
+      "phoneLabel": "Numéro de téléphone (optionnel)",
+      "phonePlaceholder": "(555) 555-5555"
+    },
+    "nav": {
+      "back": "Retour",
+      "continue": "Continuer",
+      "generateEstimate": "Générer le devis"
+    },
+    "validation": {
+      "validEmail": "Veuillez saisir une adresse e-mail valide.",
+      "estimateError": "Nous n'avons pas pu générer le devis."
+    },
+    "enums": {
+      "intents": {
+        "Marketing": "Marketing",
+        "Leads": "Prospects",
+        "Booking": "Réservation",
+        "Selling": "Vente",
+        "Content": "Contenu",
+        "Membership": "Adhésion",
+        "Other": "Autre"
+      },
+      "websiteTypes": {
+        "Business": "Site d'entreprise",
+        "Ecommerce": "E-commerce",
+        "Portfolio": "Portfolio",
+        "Landing": "Page d'atterrissage"
+      },
+      "pages": {
+        "1": "1",
+        "1-3": "1–3",
+        "4-5": "4–5",
+        "6-8": "6–8",
+        "9+": "9+"
+      },
+      "designs": {
+        "Modern": "Moderne",
+        "Classic": "Classique",
+        "Creative": "Créatif"
+      },
+      "timelines": {
+        "2-3 weeks": "2–3 semaines",
+        "4+ weeks": "4+ semaines",
+        "Under 14 days": "Moins de 14 jours"
+      },
+      "contentReady": {
+        "Ready": "Prêt",
+        "Some": "Partiel",
+        "Not ready": "Pas prêt"
+      },
+      "yesNo": {
+        "Yes": "Oui",
+        "No": "Non"
+      },
+      "budgets": {
+        "under-2k": "Moins de 2 000 $",
+        "2k-5k": "2 000 $ – 5 000 $",
+        "5k-10k": "5 000 $ – 10 000 $",
+        "10k-plus": "10 000 $+",
+        "not-sure": "Pas encore sûr"
+      },
+      "automation": {
+        "Email confirmations": "Confirmations par e-mail",
+        "Email follow-ups": "Relances par e-mail",
+        "SMS reminders": "Rappels SMS",
+        "CRM integration": "Intégration CRM",
+        "Lead routing": "Routage des prospects"
+      },
+      "integrations": {
+        "Google Maps / location": "Google Maps / localisation",
+        "Calendly / scheduling": "Calendly / planification",
+        "Stripe payments": "Paiements Stripe",
+        "PayPal payments": "Paiements PayPal",
+        "Mailchimp / email list": "Mailchimp / liste e-mail",
+        "Analytics (GA4 / Pixel)": "Analytics (GA4 / Pixel)",
+        "Live chat": "Chat en direct"
+      }
+    }
   }
 }
