@@ -94,7 +94,9 @@ a { color: inherit; text-decoration: none; }
 .mobileMenuLinks a { padding: .72rem .8rem; border: 1px solid var(--rule); background: var(--paper); font: 500 11px/1.2 var(--font-mono); text-transform: uppercase; letter-spacing: .08em; }
 .mobileMenuLinkActive { border-color: var(--accent) !important; color: var(--accent); }
 .mobileMenuForm { margin: 0; }
-.mobileMenuSignout { width: 100%; }
+/* mobileMenuSignout: ghost-style CTA (Sign Out, Log in) — ensure ink border
+   survives the broad .mobileMenuLinks a override */
+.mobileMenuSignout { width: 100%; border-color: var(--ink); }
 .mobileMenuPrimary { width: 100%; background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
 .kicker,.metaLabel { font: 500 11px/1 var(--font-mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; display: inline-flex; align-items: center; gap: .5rem; }
@@ -172,7 +174,7 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 980px) {
   .navDesktop { display: none; }
   .mobileMenu { display: block; }
-  .grid2stretch { grid-template-columns: 1fr; }
+  .grid2,.grid2stretch { grid-template-columns: 1fr; }
   .topNavInner { min-height: 70px; }
   .footerTop,.footerBottom { grid-template-columns: 1fr; display: grid; }
 }
@@ -1152,7 +1154,6 @@ a { color: inherit; text-decoration: none; }
 /* ── Utility classes missing from initial build ──────────────────── */
 /* Two-column grid (matches grid2stretch minus the stretch naming) */
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }
-@media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
 
 /* Horizontal action row used across marketing + flow pages */
 .heroActions { display: flex; flex-wrap: wrap; gap: .9rem; margin-top: 1rem; align-items: center; }

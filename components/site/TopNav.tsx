@@ -136,9 +136,9 @@ export default function TopNav({
             </>
           ) : (
             <>
-              <RawLink href="/login" className="btn btnGhost">
+              <Link href="/login" className="btn btnGhost">
                 {tCommon("login")}
-              </RawLink>
+              </Link>
               <Link href={startProjectHref} className="btn btnPrimary">
                 {tCommon("startProject")} <span className="btnArrow">-&gt;</span>
               </Link>
@@ -186,9 +186,9 @@ export default function TopNav({
                 </>
               ) : (
                 <>
-                  <RawLink href="/login" className="btn btnGhost mobileMenuSignout">
+                  <Link href="/login" className="btn btnGhost mobileMenuSignout">
                     {tCommon("login")}
-                  </RawLink>
+                  </Link>
                   <Link href={startProjectHref} className="btn btnPrimary mobileMenuPrimary">
                     {tCommon("startProject")} <span className="btnArrow">-&gt;</span>
                   </Link>
