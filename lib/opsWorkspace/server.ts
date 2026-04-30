@@ -544,14 +544,11 @@ export async function getOpsWorkspaceBundle(opsIntakeId: string): Promise<OpsWor
       .maybeSingle(),
   ]);
 
-  if (intakeError) throw new Error(intakeError.message);
-  if (callError) throw new Error(callError.message);
-  if (pieError) throw new Error(pieError.message);
-  if (!intake) return null;
+  if (intakeError || !intake) return null;
 
   const intakeRow = intake as OpsIntakeRow;
-  const call = (calls as OpsCallRow | null) ?? null;
-  const pie = (pies as OpsPieRow | null) ?? null;
+  const call = callError ? null : (calls as OpsCallRow | null) ?? null;
+  const pie = pieError ? null : (pies as OpsPieRow | null) ?? null;
   const pieReportRaw = asObj(pie?.report_json);
   const pieReport = normalizePie(pieReportRaw, intakeRow);
   const bestTool = bestToolFromSignals({ tools: intakeRow.current_tools ?? [], workflows: intakeRow.workflows_needed ?? [], diagnosisCount: pieReport.diagnosis.length, riskCount: pieReport.risks.length });
