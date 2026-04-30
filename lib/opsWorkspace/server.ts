@@ -475,21 +475,21 @@ export async function getOpsAdminRows(): Promise<OpsAdminRow[]> {
     supabaseAdmin.from("ops_pie_reports").select("id, ops_intake_id, created_at, status, summary, report_json").order("created_at", { ascending: false }),
   ]);
 
-  if (intakeError) throw new Error(intakeError.message);
-  if (callError) throw new Error(callError.message);
-  if (pieError) throw new Error(pieError.message);
+  const safeIntakes = intakeError ? [] : (intakes ?? []);
+  const safeCalls = callError ? [] : ((calls ?? []) as OpsCallRow[]);
+  const safePies = pieError ? [] : ((pies ?? []) as OpsPieRow[]);
 
   const latestCallByIntake = new Map<string, OpsCallRow>();
-  for (const call of (calls ?? []) as OpsCallRow[]) {
+  for (const call of safeCalls) {
     if (!latestCallByIntake.has(call.ops_intake_id)) latestCallByIntake.set(call.ops_intake_id, call);
   }
 
   const latestPieByIntake = new Map<string, OpsPieRow>();
-  for (const pie of (pies ?? []) as OpsPieRow[]) {
+  for (const pie of safePies) {
     if (!latestPieByIntake.has(pie.ops_intake_id)) latestPieByIntake.set(pie.ops_intake_id, pie);
   }
 
-  return ((intakes ?? []) as OpsIntakeRow[]).map((intake) => {
+  return (safeIntakes as OpsIntakeRow[]).map((intake) => {
     const call = latestCallByIntake.get(intake.id) ?? null;
     const pie = latestPieByIntake.get(intake.id) ?? null;
     const pieReport = asObj(pie?.report_json);

@@ -168,31 +168,31 @@ function setMilestoneDone(milestones: Milestone[], key: string, label: string, d
 
 function pieTone(score: number | null) {
   if (score == null) return { color: "var(--muted-2)", label: "—" };
-  if (score >= 80) return { color: "#5DCAA5", label: "Strong" };
-  if (score >= 60) return { color: "#c9a84c", label: "Good" };
-  if (score >= 40) return { color: "#dfc06a", label: "Fair" };
-  return { color: "#F09595", label: "Low" };
+  if (score >= 80) return { color: "var(--success)", label: "Strong" };
+  if (score >= 60) return { color: "var(--muted)", label: "Good" };
+  if (score >= 40) return { color: "var(--muted)", label: "Fair" };
+  return { color: "var(--accent)", label: "Low" };
 }
 
 function invoiceTone(status: ProjectInvoice["status"]) {
   switch (status) {
     case "paid":
       return {
-        background: "rgba(46,160,67,0.1)",
-        border: "1px solid rgba(46,160,67,0.3)",
-        color: "#5DCAA5",
+        background: "var(--success-bg)",
+        border: "1px solid var(--success)",
+        color: "var(--success)",
       };
     case "overdue":
       return {
-        background: "rgba(240,149,149,0.1)",
-        border: "1px solid rgba(240,149,149,0.3)",
-        color: "#F09595",
+        background: "var(--accent-bg)",
+        border: "1px solid var(--accent)",
+        color: "var(--accent)",
       };
     case "sent":
       return {
-        background: "rgba(201,168,76,0.12)",
-        border: "1px solid rgba(201,168,76,0.28)",
-        color: "var(--accent)",
+        background: "var(--accent-bg)",
+        border: "1px solid var(--rule)",
+        color: "var(--muted)",
       };
     case "cancelled":
       return {
@@ -297,7 +297,7 @@ function TabBar({ tabs, active, onChange }: { tabs: { key: string; label: string
           {tab.badge != null && tab.badge > 0 && (
             <span style={{
               fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 999,
-              background: "rgba(201,168,76,0.12)", color: "var(--accent)",
+              background: "var(--accent-bg)", color: "var(--accent)",
             }}>{tab.badge}</span>
           )}
         </button>
@@ -324,22 +324,22 @@ function LaunchCheckItem({ label, done }: { label: string; done: boolean }) {
     <div style={{
       display: "flex", justifyContent: "space-between", alignItems: "center",
       padding: "10px 14px", border: "1px solid var(--rule)", borderRadius: 10,
-      background: done ? "rgba(46,160,67,0.04)" : "transparent",
+      background: done ? "var(--success-bg)" : "transparent",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <div style={{
           width: 20, height: 20, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
-          background: done ? "rgba(46,160,67,0.15)" : "var(--rule)",
+          background: done ? "var(--success)" : "var(--rule)",
         }}>
           {done && (
             <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-              <path d="M2.5 6.5L5 9L9.5 3.5" stroke="#5DCAA5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M2.5 6.5L5 9L9.5 3.5" stroke="var(--paper)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           )}
         </div>
         <span style={{ fontSize: 13, fontWeight: 500, color: done ? "var(--ink)" : "var(--muted)" }}>{label}</span>
       </div>
-      <span style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: done ? "#5DCAA5" : "var(--muted-2)" }}>
+      <span style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: done ? "var(--success)" : "var(--muted-2)" }}>
         {done ? "Ready" : "Pending"}
       </span>
     </div>
@@ -884,9 +884,9 @@ export default function ProjectControlClient({
       {message && (
         <div style={{
           marginBottom: 16, padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
-          background: messageIsError ? "rgba(255,0,0,0.06)" : "rgba(46,160,67,0.06)",
-          border: `1px solid ${messageIsError ? "rgba(255,0,0,0.15)" : "rgba(46,160,67,0.15)"}`,
-          color: messageIsError ? "#F09595" : "#5DCAA5",
+          background: messageIsError ? "var(--accent-bg)" : "var(--success-bg)",
+          border: `1px solid ${messageIsError ? "var(--accent)" : "var(--success)"}`,
+          color: messageIsError ? "var(--accent)" : "var(--success)",
         }}>
           {message}
         </div>
@@ -1072,7 +1072,7 @@ export default function ProjectControlClient({
                 <Field label="Deposit amount"><input className="input" type="number" value={data.portalStateAdmin.depositAmount} onChange={(e) => setData((p) => ({ ...p, portalStateAdmin: { ...p.portalStateAdmin, depositAmount: Number(e.target.value || 0) } }))} /></Field>
                 <div style={{ display: "flex", alignItems: "flex-end", gap: 8, flexWrap: "wrap" }}>
                   {data.depositStatus === "paid" ? (
-                    <div style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(46,160,67,0.1)", border: "1px solid rgba(46,160,67,0.3)", color: "#5DCAA5", fontSize: 12, fontWeight: 700 }}>
+                    <div style={{ padding: "8px 14px", borderRadius: 8, background: "var(--success-bg)", border: "1px solid var(--success)", color: "var(--success)", fontSize: 12, fontWeight: 700 }}>
                       Deposit paid ✓
                     </div>
                   ) : (
@@ -1098,7 +1098,7 @@ export default function ProjectControlClient({
                 {data.portalStateAdmin.milestones.map((m) => (
                   <label key={m.key} style={{
                     display: "flex", alignItems: "center", gap: 10, padding: "8px 12px",
-                    border: "1px solid var(--rule)", borderRadius: 8, background: m.done ? "rgba(46,160,67,0.04)" : "var(--paper-2)", cursor: "pointer",
+                    border: "1px solid var(--rule)", borderRadius: 8, background: m.done ? "var(--success-bg)" : "var(--paper-2)", cursor: "pointer",
                   }}>
                     <input type="checkbox" checked={m.done} onChange={() => toggleMilestone(m.key)} style={{ accentColor: "var(--accent)", width: 16, height: 16 }} />
                     <div style={{ flex: 1 }}>
@@ -1297,7 +1297,7 @@ export default function ProjectControlClient({
               <button className="btn btnPrimary" disabled={busy || !data.publishedAgreementText.trim()} style={{ fontSize: 12, padding: "7px 14px" }}
                 onClick={requestPublishAgreement}>Publish to client →</button>
               {isAgreementPublished({ agreementStatus: data.portalAdmin.agreementStatus, publishedAgreementText: data.publishedAgreementText }) && (
-                <button className="btn btnGhost" disabled={busy} style={{ fontSize: 12, padding: "7px 14px", color: "#F09595" }}
+                <button className="btn btnGhost" disabled={busy} style={{ fontSize: 12, padding: "7px 14px", color: "var(--accent)" }}
                   onClick={unpublishAgreement}>Unpublish</button>
               )}
             </div>
@@ -1401,11 +1401,11 @@ export default function ProjectControlClient({
               <button className="btn btnPrimary" disabled={busy || !readiness.canMarkLive} style={{ fontSize: 12, padding: "8px 16px" }}
                 onClick={requestMarkLive}>Mark live →</button>
               {(data.portalAdmin.launchStatus === "Ready for launch" || data.portalAdmin.launchStatus === "Live") && (
-                <button className="btn btnGhost" disabled={busy} style={{ fontSize: 12, padding: "8px 16px", color: "#F09595" }}
+                <button className="btn btnGhost" disabled={busy} style={{ fontSize: 12, padding: "8px 16px", color: "var(--accent)" }}
                   onClick={() => revertLaunchStatus("Not ready", "preview_ready")}>Revert to not ready</button>
               )}
               {data.portalAdmin.launchStatus === "Live" && (
-                <button className="btn btnGhost" disabled={busy} style={{ fontSize: 12, padding: "8px 16px", color: "#F09595" }}
+                <button className="btn btnGhost" disabled={busy} style={{ fontSize: 12, padding: "8px 16px", color: "var(--accent)" }}
                   onClick={() => revertLaunchStatus("Ready for launch", "launch_ready")}>Revert to ready</button>
               )}
             </div>
@@ -1659,11 +1659,11 @@ export default function ProjectControlClient({
               : data.clientSync.revisions.map((r) => (
                 <div key={r.id} style={{
                   padding: "12px 14px", borderRadius: 10, background: "var(--paper-2)", marginBottom: 6,
-                  borderLeft: `3px solid ${r.priority === "high" ? "rgba(226,75,74,0.5)" : r.status === "new" ? "rgba(201,168,76,0.5)" : "var(--rule)"}`,
+                  borderLeft: `3px solid ${r.priority === "high" ? "var(--accent)" : r.status === "new" ? "var(--rule)" : "var(--rule)"}`,
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 10 }}>
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: r.priority === "high" ? "#F09595" : "var(--muted-2)", textTransform: "uppercase" }}>{r.priority} priority</div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: r.priority === "high" ? "var(--accent)" : "var(--muted-2)", textTransform: "uppercase" }}>{r.priority} priority</div>
                       <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4, lineHeight: 1.5 }}>{r.message}</div>
                       <div style={{ fontSize: 11, color: "var(--muted-2)", marginTop: 4 }}>{fmtDate(r.createdAt)}</div>
                     </div>

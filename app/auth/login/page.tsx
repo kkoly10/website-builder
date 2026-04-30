@@ -196,8 +196,8 @@ export default async function LoginPage({
               padding: "12px 14px",
               borderRadius: 10,
               border: "none",
-              background: "#ff7a18",
-              color: "#111",
+              background: "var(--accent)",
+              color: "var(--paper)",
               fontWeight: 800,
               cursor: "pointer",
             }}

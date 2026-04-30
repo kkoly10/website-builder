@@ -43,26 +43,26 @@ function statusTone(status?: string | null) {
 
   if (["active", "approved", "live", "completed", "ready"].includes(s)) {
     return {
-      bg: "rgba(46, 160, 67, 0.14)",
-      border: "rgba(46, 160, 67, 0.34)",
-      color: "#b7f5c4",
+      bg: "var(--success-bg)",
+      border: "var(--success)",
+      color: "var(--success)",
       label: pretty(status),
     };
   }
 
   if (["requested", "review", "new", "pending"].includes(s)) {
     return {
-      bg: "rgba(201, 168, 76, 0.14)",
-      border: "rgba(201, 168, 76, 0.34)",
-      color: "#f1d98a",
+      bg: "var(--accent-bg)",
+      border: "var(--accent)",
+      color: "var(--accent)",
       label: pretty(status),
     };
   }
 
   return {
-    bg: "rgba(141, 164, 255, 0.12)",
-    border: "rgba(141, 164, 255, 0.26)",
-    color: "#d8e0ff",
+    bg: "var(--paper-2)",
+    border: "var(--rule)",
+    color: "var(--muted)",
     label: pretty(status || "new"),
   };
 }

@@ -191,17 +191,17 @@ export default function EcommerceIntakePage() {
   const pathMeta = {
     build: {
       label: "Build my store",
-      color: "#c9a84c",
+      color: "var(--accent)",
       description: "You need a new online store designed, built, and launched.",
     },
     run: {
       label: "Run my existing store",
-      color: "#5DCAA5",
+      color: "var(--success)",
       description: "You have a working store and need someone to handle operations.",
     },
     fix: {
       label: "Fix my broken store",
-      color: "#8da4ff",
+      color: "var(--muted)",
       description: "Your store exists but something isn't working right.",
     },
   };

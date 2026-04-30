@@ -375,7 +375,7 @@ export default function BuildClient() {
                       display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
                       borderRadius: 10, cursor: "pointer", transition: "all 0.15s",
                       border: `1px solid ${active ? "var(--accent)" : "var(--stroke)"}`,
-                      background: active ? "rgba(201,168,76,0.06)" : "transparent",
+                      background: active ? "var(--accent-bg)" : "transparent",
                     }}>
                       <input type="radio" name="budget" value={val} checked={active} onChange={() => setForm({ ...form, budget: val })} style={{ accentColor: "var(--accent)" }} />
                       <span style={{ color: "var(--fg)", fontWeight: active ? 600 : 400, fontSize: 14 }}>{tEnumBudgets(val)}</span>
@@ -446,7 +446,7 @@ export default function BuildClient() {
 
       {/* STEP 8 — Contact */}
       {step === 8 && (
-        <div className="portalPanel fadeUp" style={{ borderColor: "rgba(201,168,76,0.2)", background: "radial-gradient(600px 200px at 50% 0%, rgba(201,168,76,0.04), transparent 50%), var(--panel)" }}>
+        <div className="portalPanel fadeUp" style={{ borderColor: "var(--accent)", background: "var(--panel)" }}>
           <div className="portalPanelHeader"><h2 className="portalPanelTitle">{t("step8.title")}</h2></div>
           <div style={{ display: "grid", gap: 14 }}>
             <div><div className="fieldLabel">{t("step8.emailLabel")}</div><input className="input" type="email" value={form.leadEmail} onChange={(e) => setForm({ ...form, leadEmail: e.target.value })} placeholder={t("step8.emailPlaceholder")} /></div>
@@ -475,8 +475,8 @@ function Check({ label, checked, onChange }: { label: string; checked: boolean; 
     <label style={{
       display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
       borderRadius: 10, cursor: "pointer", transition: "all 0.15s",
-      border: `1px solid ${checked ? "rgba(201,168,76,0.3)" : "var(--stroke)"}`,
-      background: checked ? "rgba(201,168,76,0.06)" : "transparent",
+      border: `1px solid ${checked ? "var(--accent)" : "var(--stroke)"}`,
+      background: checked ? "var(--accent-bg)" : "transparent",
     }}>
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ accentColor: "var(--accent)" }} />
       <span style={{ fontSize: 14, color: "var(--fg)" }}>{label}</span>

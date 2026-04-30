@@ -37,24 +37,20 @@ export default async function InternalLayout({ children }: { children: ReactNode
               Dashboard
             </Link>
 
-            <Link
-              href="/internal/admin"
-              className="btn btnPrimary"
-              style={{ background: "linear-gradient(180deg, #3b82f6, #2563eb)", borderColor: "#1d4ed8" }}
-            >
-              🌐 Web Pipeline
+            <Link href="/internal/admin" className="btn btnGhost">
+              Web Pipeline
             </Link>
 
-            <Link href="/internal/admin/ecommerce" className="btn btnPrimary" style={{ background: "linear-gradient(180deg, #10b981, #059669)", borderColor: "#047857" }}>
-              📦 E-commerce
+            <Link href="/internal/admin/ecommerce" className="btn btnGhost">
+              E-commerce
             </Link>
 
-            <Link href="/internal/admin/ops" className="btn btnPrimary" style={{ background: "linear-gradient(180deg, #ff7a18, #e66a00)", borderColor: "#cc5e00" }}>
-              ⚙️ Ops Pipeline
+            <Link href="/internal/admin/ops" className="btn btnGhost">
+              Ops Pipeline
             </Link>
 
-            <Link href="/internal/ghost/messages" className="btn btnGhost" style={{ borderColor: "#7c3aed", color: "#a78bfa" }}>
-              👻 Message Lab
+            <Link href="/internal/ghost/messages" className="btn btnGhost">
+              Message Lab
             </Link>
 
             <form action="/auth/signout" method="post" style={{ marginLeft: 8 }}>

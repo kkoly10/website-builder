@@ -19,12 +19,12 @@ function fmtDate(value?: string | null) {
 function tone(status?: string | null) {
   const s = String(status || "").toLowerCase();
   if (["completed", "active", "live", "accepted"].includes(s)) {
-    return { bg: "rgba(46,160,67,0.14)", border: "rgba(46,160,67,0.34)", color: "#b7f5c4", label: pretty(status) };
+    return { bg: "var(--success-bg)", border: "var(--success)", color: "var(--success)", label: pretty(status) };
   }
   if (["building", "proposal_review", "discovery", "reviewing", "quoted", "sent", "scheduled", "in_progress"].includes(s)) {
-    return { bg: "rgba(201,168,76,0.14)", border: "rgba(201,168,76,0.34)", color: "#f1d98a", label: pretty(status) };
+    return { bg: "var(--accent-bg)", border: "var(--accent)", color: "var(--accent)", label: pretty(status) };
   }
-  return { bg: "rgba(141,164,255,0.12)", border: "rgba(141,164,255,0.26)", color: "#d8e0ff", label: pretty(status || "new") };
+  return { bg: "var(--paper-2)", border: "var(--rule)", color: "var(--muted)", label: pretty(status || "new") };
 }
 
 export default function EcommercePipelineClient({ initialRows }: { initialRows: EcommerceAdminRow[] }) {
