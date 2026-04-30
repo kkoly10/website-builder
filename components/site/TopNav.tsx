@@ -6,6 +6,7 @@ import { usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import BrandLogo from "@/components/brand/BrandLogo";
 import LocaleSwitcher from "@/components/site/LocaleSwitcher";
+import { useEffect, useRef } from "react";
 
 type TopNavProps = {
   admin: boolean;
@@ -59,6 +60,14 @@ export default function TopNav({
   const pathname = usePathname();
   const t = useTranslations("nav");
   const tCommon = useTranslations("common");
+  const mobileMenuRef = useRef<HTMLDetailsElement>(null);
+
+  // Close the mobile menu whenever the route changes.
+  useEffect(() => {
+    if (mobileMenuRef.current) {
+      mobileMenuRef.current.removeAttribute("open");
+    }
+  }, [pathname]);
 
   const navItems: NavItem[] = [
     { href: "/websites", label: t("websites") },
@@ -126,13 +135,18 @@ export default function TopNav({
               </form>
             </>
           ) : (
-            <Link href={startProjectHref} className="btn btnPrimary">
-              {tCommon("startProject")} <span className="btnArrow">-&gt;</span>
-            </Link>
+            <>
+              <Link href="/login" className="btn btnGhost">
+                {tCommon("login")}
+              </Link>
+              <Link href={startProjectHref} className="btn btnPrimary">
+                {tCommon("startProject")} <span className="btnArrow">-&gt;</span>
+              </Link>
+            </>
           )}
         </div>
 
-        <details className="mobileMenu">
+        <details className="mobileMenu" ref={mobileMenuRef}>
           <summary className="mobileMenuSummary" aria-label={tCommon("openMenu")}>
             <span />
             <span />
@@ -171,9 +185,14 @@ export default function TopNav({
                   </form>
                 </>
               ) : (
-                <Link href={startProjectHref} className="btn btnPrimary mobileMenuPrimary">
-                  {tCommon("startProject")} <span className="btnArrow">-&gt;</span>
-                </Link>
+                <>
+                  <Link href="/login" className="btn btnGhost mobileMenuSignout">
+                    {tCommon("login")}
+                  </Link>
+                  <Link href={startProjectHref} className="btn btnPrimary mobileMenuPrimary">
+                    {tCommon("startProject")} <span className="btnArrow">-&gt;</span>
+                  </Link>
+                </>
               )}
             </div>
           </div>

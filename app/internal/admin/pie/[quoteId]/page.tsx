@@ -80,7 +80,7 @@ export default async function WebQuoteDetailPage(props: { params: ParamsPromise 
               <h2 className="h2">Raw Client Intake Data</h2>
               <details>
                 <summary style={{ cursor: "pointer", fontWeight: 800, color: "var(--fg)" }}>View Form Answers</summary>
-                <pre style={{ background: "var(--bg2)", border: "1px solid var(--stroke)", padding: 12, borderRadius: 8, fontSize: 12, whiteSpace: "pre-wrap", marginTop: 10 }}>
+                <pre style={{ background: "var(--paper-2)", border: "1px solid var(--rule)", padding: 12, borderRadius: 8, fontSize: 12, whiteSpace: "pre-wrap", marginTop: 10 }}>
                   {JSON.stringify(quote.quote_json || quote.intake_normalized, null, 2)}
                 </pre>
               </details>

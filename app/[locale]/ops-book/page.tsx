@@ -83,8 +83,8 @@ export default async function OpsBookPage({
                     marginTop: 12,
                     borderRadius: 12,
                     padding: 12,
-                    border: "1px solid rgba(255,80,80,0.35)",
-                    background: "rgba(255,80,80,0.08)",
+                    border: "1px solid var(--accent)",
+                    background: "var(--accent-bg)",
                   }}
                 >
                   <strong>Error:</strong> {error.message}

@@ -122,18 +122,13 @@ export async function getDashboardSnapshot(rangeInput?: string) {
       .from("customer_portal_milestones")
       .select("portal_project_id, status, updated_at"),
     supabaseAdmin.from("pie_reports").select("quote_id, score, created_at"),
-    listRecentProjectActivity(12),
+    listRecentProjectActivity(12).catch(() => [] as Awaited<ReturnType<typeof listRecentProjectActivity>>),
   ]);
 
-  if (quotesRes.error) throw new Error(quotesRes.error.message);
-  if (projectsRes.error) throw new Error(projectsRes.error.message);
-  if (milestonesRes.error) throw new Error(milestonesRes.error.message);
-  if (pieRes.error) throw new Error(pieRes.error.message);
-
-  const quotes = (quotesRes.data ?? []) as QuoteRow[];
-  const projects = (projectsRes.data ?? []) as PortalProjectRow[];
-  const milestones = (milestonesRes.data ?? []) as MilestoneRow[];
-  const pies = (pieRes.data ?? []) as PieRow[];
+  const quotes = (quotesRes.error ? [] : quotesRes.data ?? []) as QuoteRow[];
+  const projects = (projectsRes.error ? [] : projectsRes.data ?? []) as PortalProjectRow[];
+  const milestones = (milestonesRes.error ? [] : milestonesRes.data ?? []) as MilestoneRow[];
+  const pies = (pieRes.error ? [] : pieRes.data ?? []) as PieRow[];
 
   const projectByQuote = new Map(projects.map((project) => [project.quote_id, project]));
   const milestoneCountByProject = new Map<string, { done: number; total: number }>();

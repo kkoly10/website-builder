@@ -267,7 +267,7 @@ export default function EcommerceIntakePage() {
                 <div><div className="fieldLabel">Contact name *</div><input className="input" value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} placeholder="Jane Smith" /></div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <div><div className="fieldLabel">Email *</div><input className="input" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@business.com" />{form.email && <div style={{ fontSize: 11, marginTop: 4, color: emailValid ? "#5DCAA5" : "#F09595" }}>{emailValid ? "Valid email" : "Enter a valid email"}</div>}</div>
+                <div><div className="fieldLabel">Email *</div><input className="input" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@business.com" />{form.email && <div style={{ fontSize: 11, marginTop: 4, color: emailValid ? "var(--success)" : "var(--accent)" }}>{emailValid ? "Valid email" : "Enter a valid email"}</div>}</div>
                 <div><div className="fieldLabel">Phone</div><input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="(555) 555-5555" /></div>
               </div>
               {form.entryPath !== "build" && <><div><div className="fieldLabel">Store URL</div><input className="input" value={form.storeUrl} onChange={(e) => setForm({ ...form, storeUrl: e.target.value })} placeholder="https://yourstore.com or Amazon seller page" /></div><div><div className="fieldLabel">What platform is your store on?</div><select className="select" value={form.platform} onChange={(e) => setForm({ ...form, platform: e.target.value })}><option value="">Select platform</option>{PLATFORMS.filter((p) => p !== "Don't have one yet").map((p) => <option key={p}>{p}</option>)}</select></div></>}
@@ -291,7 +291,7 @@ export default function EcommerceIntakePage() {
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
                 {CHANNELS.map((ch) => {
                   const active = form.salesChannels.includes(ch);
-                  return <button key={ch} type="button" onClick={() => toggleList("salesChannels", ch)} style={{ padding: "6px 14px", borderRadius: 999, fontSize: 13, fontWeight: 600, border: `1px solid ${active ? "var(--accent)" : "var(--rule)"}`, background: active ? "rgba(201,168,76,0.08)" : "transparent", color: active ? "var(--accent)" : "var(--muted)", cursor: "pointer", transition: "all 0.15s" }}>{ch}</button>;
+                  return <button key={ch} type="button" onClick={() => toggleList("salesChannels", ch)} style={{ padding: "6px 14px", borderRadius: 999, fontSize: 13, fontWeight: 600, border: `1px solid ${active ? "var(--accent)" : "var(--rule)"}`, background: active ? "var(--accent-bg)" : "transparent", color: active ? "var(--accent)" : "var(--muted)", cursor: "pointer", transition: "all 0.15s" }}>{ch}</button>;
                 })}
               </div>
             </div>
@@ -358,7 +358,7 @@ export default function EcommerceIntakePage() {
 
             {recommendation.complexityFlags.length > 0 && <div className="pills" style={{ marginTop: 14 }}>{recommendation.complexityFlags.map((flag) => <span key={flag} className="pill">{flag}</span>)}</div>}
 
-            {error && <div style={{ marginTop: 14, padding: 12, borderRadius: 10, border: "1px solid rgba(240,149,149,0.3)", background: "rgba(240,149,149,0.06)", color: "#F09595", fontWeight: 600, fontSize: 14 }}>{error}</div>}
+            {error && <div style={{ marginTop: 14, padding: 12, borderRadius: 10, border: "1px solid var(--accent)", background: "var(--accent-bg)", color: "var(--accent)", fontWeight: 600, fontSize: 14 }}>{error}</div>}
           </div>
         )}
 

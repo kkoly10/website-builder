@@ -486,7 +486,7 @@ function Check({ label, checked, onChange }: { label: string; checked: boolean; 
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)", gap: 16 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "10px 0", borderBottom: "1px solid var(--rule)", gap: 16 }}>
       <span style={{ fontSize: 13, color: "var(--muted)", flexShrink: 0 }}>{label}</span>
       <span style={{ fontSize: 13, fontWeight: 600, color: "var(--fg)", textAlign: "right", maxWidth: "60%" }}>{value}</span>
     </div>

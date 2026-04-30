@@ -32,7 +32,7 @@ export default function RecoverQuoteRedirect() {
 
   return (
     <div className="hint">
-      <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.92)" }}>
+      <div style={{ fontWeight: 900, color: "var(--ink)" }}>
         Recovering your last quote…
       </div>
       <div className="pDark" style={{ marginTop: 6 }}>

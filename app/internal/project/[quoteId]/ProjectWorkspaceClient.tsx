@@ -107,7 +107,7 @@ export default function ProjectWorkspaceClient({
     <div className="row" style={{ flexDirection: "column", gap: 14 }}>
       
       {/* Header summary */}
-      <div className="card" style={{ border: "1px solid var(--accentStroke)", boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
+      <div className="card" style={{ border: "1px solid var(--accent)", boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
         <div className="cardInner">
           <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
             <div style={{ minWidth: 260 }}>
@@ -146,7 +146,7 @@ export default function ProjectWorkspaceClient({
             ) : (
               <div className="row" style={{ flexDirection: "column", gap: 12 }}>
                 {snapshots.slice().sort((a, b) => b.version_no - a.version_no).map((s) => (
-                  <div key={s.id} className="panel" style={{ border: s.status === 'approved' ? "1px solid var(--accentStroke)" : "1px solid var(--stroke)" }}>
+                  <div key={s.id} className="panel" style={{ border: s.status === 'approved' ? "1px solid var(--accent)" : "1px solid var(--rule)" }}>
                     <div className="panelHeader" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div >v{s.version_no} • <span style={{ color: s.status === 'approved' ? "var(--accent)" : "inherit" }}>{s.status}</span></div>
                       <div className="smallNote">{fmtDate(s.created_at)}</div>

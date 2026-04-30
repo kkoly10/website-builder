@@ -49,7 +49,7 @@ export default function AIBuilderPage() {
   }
 
   return (
-    <main className="container" style={{ paddingTop: "var(--sp-32)", paddingBottom: "var(--sp-48)" }}>
+    <main className="container" style={{ paddingTop: "2rem", paddingBottom: "3rem" }}>
       <h1>AI Website Builder</h1>
 
       <p>Step {step} of 4</p>

@@ -233,7 +233,7 @@ export default function EcommerceWorkspaceControlClient({ initialData }: { initi
         </Panel>
 
         <Panel title="Pricing recommendation" note="Use intake-driven pricing as the baseline, then adjust if needed.">
-          <div style={{ border: "1px solid var(--accentStroke)", background: "var(--accentSoft)", borderRadius: 14, padding: 14 }}>
+          <div style={{ border: "1px solid var(--accent)", background: "var(--accent-bg)", borderRadius: 14, padding: 14 }}>
             <div className="smallNote">Recommended tier</div>
             <div style={{ marginTop: 8, fontWeight: 900, fontSize: 22 }}>{recommendation.tierLabel}</div>
             <div className="pDark" style={{ marginTop: 6 }}>{recommendation.displayRange}</div>
