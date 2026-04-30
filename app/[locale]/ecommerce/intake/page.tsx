@@ -192,16 +192,22 @@ export default function EcommerceIntakePage() {
     build: {
       label: "Build my store",
       color: "var(--accent)",
+      bg: "var(--accent-bg)",
+      border: "var(--accent)",
       description: "You need a new online store designed, built, and launched.",
     },
     run: {
       label: "Run my existing store",
       color: "var(--success)",
+      bg: "var(--success-bg)",
+      border: "var(--success)",
       description: "You have a working store and need someone to handle operations.",
     },
     fix: {
       label: "Fix my broken store",
       color: "var(--muted)",
+      bg: "var(--paper-2)",
+      border: "var(--rule)",
       description: "Your store exists but something isn't working right.",
     },
   };
@@ -245,7 +251,7 @@ export default function EcommerceIntakePage() {
               const meta = pathMeta[path];
               const selected = form.entryPath === path;
               return (
-                <button key={path} type="button" onClick={() => selectPath(path)} style={{ display: "grid", gridTemplateColumns: "12px 1fr auto", gap: 16, alignItems: "center", padding: "22px 24px", borderRadius: 16, border: `1px solid ${selected ? meta.color : "var(--rule)"}`, background: selected ? `${meta.color}08` : "var(--paper)", cursor: "pointer", textAlign: "left", transition: "border-color 0.2s, background 0.2s, transform 0.2s" }}>
+                <button key={path} type="button" onClick={() => selectPath(path)} style={{ display: "grid", gridTemplateColumns: "12px 1fr auto", gap: 16, alignItems: "center", padding: "22px 24px", borderRadius: 16, border: `1px solid ${selected ? meta.border : "var(--rule)"}`, background: selected ? meta.bg : "var(--paper)", cursor: "pointer", textAlign: "left", transition: "border-color 0.2s, background 0.2s, transform 0.2s" }}>
                   <div style={{ width: 12, height: 12, borderRadius: "50%", background: meta.color, opacity: selected ? 1 : 0.4 }} />
                   <div>
                     <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 500, color: "var(--ink)", letterSpacing: "-0.02em" }}>{meta.label}</div>
@@ -283,7 +289,9 @@ export default function EcommerceIntakePage() {
               {serviceOptions.map((svc) => {
                 const checked = form.serviceTypes.includes(svc);
                 const accentColor = form.entryPath ? pathMeta[form.entryPath].color : "var(--accent)";
-                return <label key={svc} style={{ display: "flex", gap: 10, alignItems: "center", padding: "12px 14px", borderRadius: 10, border: `1px solid ${checked ? accentColor + "40" : "var(--rule)"}`, background: checked ? accentColor + "08" : "var(--paper-2)", cursor: "pointer", transition: "all 0.15s" }}><input type="checkbox" checked={checked} onChange={() => toggleList("serviceTypes", svc)} style={{ accentColor }} /><span style={{ fontSize: 14, color: "var(--ink)" }}>{svc}</span></label>;
+                const accentBg = form.entryPath ? pathMeta[form.entryPath].bg : "var(--accent-bg)";
+                const accentBorder = form.entryPath ? pathMeta[form.entryPath].border : "var(--accent)";
+                return <label key={svc} style={{ display: "flex", gap: 10, alignItems: "center", padding: "12px 14px", borderRadius: 10, border: `1px solid ${checked ? accentBorder : "var(--rule)"}`, background: checked ? accentBg : "var(--paper-2)", cursor: "pointer", transition: "all 0.15s" }}><input type="checkbox" checked={checked} onChange={() => toggleList("serviceTypes", svc)} style={{ accentColor }} /><span style={{ fontSize: 14, color: "var(--ink)" }}>{svc}</span></label>;
               })}
             </div>
             <div style={{ marginTop: 16 }}>
@@ -333,7 +341,7 @@ export default function EcommerceIntakePage() {
         {reviewStep && (
           <div className="portalPanel fadeUp">
             <div className="portalPanelHeader"><h2 className="portalPanelTitle">Review your intake</h2></div>
-            {form.entryPath && <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 12, border: `1px solid ${pathMeta[form.entryPath].color}30`, background: `${pathMeta[form.entryPath].color}08`, marginBottom: 16 }}><div style={{ width: 10, height: 10, borderRadius: "50%", background: pathMeta[form.entryPath].color }} /><span style={{ fontSize: 14, fontWeight: 600, color: pathMeta[form.entryPath].color }}>{pathMeta[form.entryPath].label}</span></div>}
+            {form.entryPath && <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 12, border: `1px solid ${pathMeta[form.entryPath].border}`, background: pathMeta[form.entryPath].bg, marginBottom: 16 }}><div style={{ width: 10, height: 10, borderRadius: "50%", background: pathMeta[form.entryPath].color }} /><span style={{ fontSize: 14, fontWeight: 600, color: pathMeta[form.entryPath].color }}>{pathMeta[form.entryPath].label}</span></div>}
 
             <div style={{ border: "1px solid color-mix(in srgb, var(--accent) 28%, var(--paper))", background: "var(--accent-bg)", borderRadius: 12, padding: 14, marginBottom: 16 }}>
               <div className="smallNote">Recommended pricing lane</div>
