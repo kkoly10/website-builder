@@ -70,24 +70,24 @@ function tone(status?: string | null) {
   const s = String(status || "").toLowerCase();
   if (["active", "approved", "live", "completed", "ready"].includes(s)) {
     return {
-      bg: "rgba(46,160,67,0.14)",
-      border: "rgba(46,160,67,0.34)",
-      color: "#b7f5c4",
+      bg: "var(--success-bg)",
+      border: "var(--success)",
+      color: "var(--success)",
       label: pretty(status),
     };
   }
   if (["requested", "review", "new", "pending", "scoped", "planning", "process mapping", "discovery"].includes(s)) {
     return {
-      bg: "rgba(201,168,76,0.14)",
-      border: "rgba(201,168,76,0.34)",
-      color: "#f1d98a",
+      bg: "var(--accent-bg)",
+      border: "var(--accent)",
+      color: "var(--accent)",
       label: pretty(status),
     };
   }
   return {
-    bg: "rgba(141,164,255,0.12)",
-    border: "rgba(141,164,255,0.26)",
-    color: "#d8e0ff",
+    bg: "var(--paper-2)",
+    border: "var(--rule)",
+    color: "var(--muted)",
     label: pretty(status || "new"),
   };
 }
@@ -524,7 +524,7 @@ function GhostAdminChat({ opsIntakeId, starterPrompts }: { opsIntakeId: string; 
     <Panel title="Ghost Admin Chat" note="Project-aware AI operations advisor.">
       {messages.length === 0 ? <div><div className="fieldLabel">Starter Prompts</div><div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{starterPrompts.map((prompt) => <button key={prompt} type="button" className="btn btnGhost" style={{ fontSize: 13 }} onClick={() => send(prompt)} disabled={loading}>{prompt}</button>)}</div></div> : null}
       <div style={{ display: "grid", gap: 10, maxHeight: 520, overflowY: "auto" }}>
-        {messages.map((msg) => <div key={msg.id} style={{ padding: 14, borderRadius: 12, background: msg.role === "user" ? "rgba(141,164,255,0.12)" : "rgba(46,160,67,0.08)", border: msg.role === "user" ? "1px solid rgba(141,164,255,0.22)" : "1px solid rgba(46,160,67,0.20)" }}><div className="smallNote" style={{ marginBottom: 6 }}>{msg.role === "user" ? "You" : "Ghost Admin"} • {fmtDate(msg.timestamp)}</div><div className="pDark" style={{ whiteSpace: "pre-wrap" }}>{msg.content}</div></div>)}
+        {messages.map((msg) => <div key={msg.id} style={{ padding: 14, borderRadius: 12, background: msg.role === "user" ? "var(--paper-2)" : "var(--success-bg)", border: msg.role === "user" ? "1px solid var(--rule)" : "1px solid var(--success)" }}><div className="smallNote" style={{ marginBottom: 6 }}>{msg.role === "user" ? "You" : "Ghost Admin"} • {fmtDate(msg.timestamp)}</div><div className="pDark" style={{ whiteSpace: "pre-wrap" }}>{msg.content}</div></div>)}
         {loading ? <div className="smallNote">Ghost Admin is thinking...</div> : null}
       </div>
       <div className="row" style={{ gap: 8 }}>

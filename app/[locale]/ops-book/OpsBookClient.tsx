@@ -178,8 +178,8 @@ export default function OpsBookClient({ intake }: { intake: Intake }) {
           {status === "sent" ? (
             <div
               style={{
-                border: "1px solid rgba(34,197,94,0.35)",
-                background: "rgba(34,197,94,0.08)",
+                border: "1px solid var(--success)",
+                background: "var(--success-bg)",
                 borderRadius: 10,
                 padding: 12,
                 fontWeight: 700,
@@ -192,8 +192,8 @@ export default function OpsBookClient({ intake }: { intake: Intake }) {
           {status === "error" ? (
             <div
               style={{
-                border: "1px solid rgba(255,0,0,0.35)",
-                background: "rgba(255,0,0,0.08)",
+                border: "1px solid var(--accent)",
+                background: "var(--accent-bg)",
                 borderRadius: 10,
                 padding: 12,
                 fontWeight: 700,

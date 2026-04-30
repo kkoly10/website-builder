@@ -268,8 +268,8 @@ export default async function CreateAccountPage({
               padding: "12px 14px",
               borderRadius: 10,
               border: "none",
-              background: token ? "#ff7a18" : "var(--muted2)",
-              color: "#111",
+              background: token ? "var(--accent)" : "var(--muted)",
+              color: "var(--paper)",
               fontWeight: 800,
               cursor: token ? "pointer" : "not-allowed",
             }}

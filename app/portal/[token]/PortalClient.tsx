@@ -288,21 +288,21 @@ function invoiceTone(status: ProjectInvoice["status"]) {
   switch (status) {
     case "paid":
       return {
-        background: "rgba(46,160,67,0.1)",
-        border: "1px solid rgba(46,160,67,0.3)",
-        color: "#5DCAA5",
+        background: "var(--success-bg)",
+        border: "1px solid var(--success)",
+        color: "var(--success)",
       };
     case "overdue":
       return {
-        background: "rgba(240,149,149,0.1)",
-        border: "1px solid rgba(240,149,149,0.3)",
-        color: "#F09595",
+        background: "var(--accent-bg)",
+        border: "1px solid var(--accent)",
+        color: "var(--accent)",
       };
     case "sent":
       return {
-        background: "rgba(201,168,76,0.12)",
-        border: "1px solid rgba(201,168,76,0.28)",
-        color: "var(--accent)",
+        background: "var(--accent-bg)",
+        border: "1px solid var(--rule)",
+        color: "var(--muted)",
       };
     case "cancelled":
       return {
@@ -1619,8 +1619,8 @@ export default function PortalClient({
             {bundle.agreement.status === "accepted" ? (
               <div style={{
                 marginBottom: 12, padding: 10, borderRadius: 10,
-                background: "rgba(46,160,67,0.10)", border: "1px solid rgba(46,160,67,0.30)",
-                color: "#5DCAA5", fontSize: 13, fontWeight: 700,
+                background: "var(--success-bg)", border: "1px solid var(--success)",
+                color: "var(--success)", fontSize: 13, fontWeight: 700,
               }}>
                 Agreement accepted
               </div>

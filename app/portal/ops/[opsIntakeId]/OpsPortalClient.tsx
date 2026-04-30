@@ -46,12 +46,12 @@ function getOpsStory(phase: string) {
 }
 
 const AUTOMATION_STATUS_META: Record<string, { color: string; bg: string; border: string }> = {
-  live: { color: "#5DCAA5", bg: "rgba(46,160,67,0.08)", border: "rgba(46,160,67,0.2)" },
-  completed: { color: "#5DCAA5", bg: "rgba(46,160,67,0.08)", border: "rgba(46,160,67,0.2)" },
-  testing: { color: "#c9a84c", bg: "rgba(201,168,76,0.08)", border: "rgba(201,168,76,0.2)" },
-  building: { color: "#c9a84c", bg: "rgba(201,168,76,0.08)", border: "rgba(201,168,76,0.2)" },
-  scoped: { color: "#8da4ff", bg: "rgba(141,164,255,0.08)", border: "rgba(141,164,255,0.2)" },
-  discovery: { color: "#8da4ff", bg: "rgba(141,164,255,0.08)", border: "rgba(141,164,255,0.2)" },
+  live: { color: "var(--success)", bg: "var(--success-bg)", border: "var(--success)" },
+  completed: { color: "var(--success)", bg: "var(--success-bg)", border: "var(--success)" },
+  testing: { color: "var(--accent)", bg: "var(--accent-bg)", border: "var(--accent)" },
+  building: { color: "var(--accent)", bg: "var(--accent-bg)", border: "var(--accent)" },
+  scoped: { color: "var(--muted)", bg: "var(--paper-2)", border: "var(--rule)" },
+  discovery: { color: "var(--muted)", bg: "var(--paper-2)", border: "var(--rule)" },
 };
 
 function autoMeta(status: string) {
@@ -79,7 +79,7 @@ function ProgressRing({ percent, size = 66 }: { percent: number; size?: number }
   const r = (size - 8) / 2;
   const c = Math.PI * 2 * r;
   const offset = c - (c * percent) / 100;
-  const color = percent >= 80 ? "#5DCAA5" : percent >= 40 ? "#c9a84c" : "var(--muted)";
+  const color = percent >= 80 ? "var(--success)" : percent >= 40 ? "var(--accent)" : "var(--muted)";
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--stroke)" strokeWidth="4" />
@@ -233,7 +233,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
             <div style={{ marginTop: 12, padding: "14px 16px", borderRadius: 12, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Next steps</div>
               {bundle.workspace.nextActions.slice(0, 3).map((a) => (
-                <div key={a} style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, paddingLeft: 12, borderLeft: "2px solid rgba(201,168,76,0.2)", marginBottom: 6 }}>{a}</div>
+                <div key={a} style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, paddingLeft: 12, borderLeft: "2px solid var(--rule)", marginBottom: 6 }}>{a}</div>
               ))}
             </div>
           )}
@@ -250,7 +250,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
             <div style={{ display: "grid", gap: 0 }}>
               {bundle.workspace.currentProcess.map((step, i) => (
                 <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 0", borderBottom: i < bundle.workspace.currentProcess.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
-                  <div style={{ width: 24, height: 24, borderRadius: "50%", border: "2px solid rgba(226,75,74,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: "#F09595", flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", border: "2px solid var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: "var(--accent)", flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
                   <div style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.5 }}>{step}</div>
                 </div>
               ))}
@@ -265,7 +265,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
             <div style={{ display: "grid", gap: 0 }}>
               {bundle.workspace.futureProcess.map((step, i) => (
                 <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 0", borderBottom: i < bundle.workspace.futureProcess.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
-                  <div style={{ width: 24, height: 24, borderRadius: "50%", border: "2px solid rgba(46,160,67,0.3)", background: "rgba(46,160,67,0.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: "#5DCAA5", flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", border: "2px solid var(--success)", background: "var(--success-bg)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: "var(--success)", flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
                   <div style={{ fontSize: 14, color: "var(--fg)", lineHeight: 1.5 }}>{step}</div>
                 </div>
               ))}
@@ -315,7 +315,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
                   <div style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)" }}>{auto.name}</div>
                   <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 2 }}>{auto.toolRecommendation}</div>
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 600, color: "#5DCAA5", textTransform: "uppercase" }}>Live</span>
+                <span style={{ fontSize: 10, fontWeight: 600, color: "var(--success)", textTransform: "uppercase" }}>Live</span>
               </div>
             ))}
           </div>
@@ -358,12 +358,12 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
                 <h2 className="portalPanelTitle">Approvals needed</h2>
               </div>
               {bundle.workspace.approvals.map((a) => (
-                <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderRadius: 10, border: "1px solid var(--stroke)", background: a.status.toLowerCase() === "pending" ? "rgba(201,168,76,0.03)" : "rgba(46,160,67,0.03)", marginBottom: 6 }}>
+                <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderRadius: 10, border: "1px solid var(--stroke)", background: "transparent", marginBottom: 6 }}>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)" }}>{a.label}</div>
                     {a.notes && <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 2 }}>{a.notes}</div>}
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: a.status.toLowerCase() === "pending" ? "var(--accent)" : "#5DCAA5" }}>{a.status}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: a.status.toLowerCase() === "pending" ? "var(--accent)" : "var(--success)" }}>{a.status}</span>
                 </div>
               ))}
             </div>
@@ -403,7 +403,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
         <Drawer label="Issues & incidents" value={`${bundle.workspace.incidents.length}`}>
           {bundle.workspace.incidents.map((inc) => (
             <div key={inc.id} className="portalDrawerRow" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}><span className="portalDrawerVal">{inc.title}</span><span style={{ fontSize: 10, fontWeight: 600, color: inc.severity.toLowerCase() === "high" ? "#F09595" : "var(--muted2)", textTransform: "uppercase" }}>{inc.severity}</span></div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}><span className="portalDrawerVal">{inc.title}</span><span style={{ fontSize: 10, fontWeight: 600, color: inc.severity.toLowerCase() === "high" ? "var(--accent)" : "var(--muted)", textTransform: "uppercase" }}>{inc.severity}</span></div>
               <span className="portalDrawerKey">{inc.summary || inc.resolution}</span>
             </div>
           ))}

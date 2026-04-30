@@ -57,12 +57,12 @@ function getStory(mode: string, phase: string) {
 function statusTone(value: string) {
   const v = String(value || "").toLowerCase();
   if (["done", "approved", "accepted", "live", "completed", "paid"].includes(v)) {
-    return { color: "#5DCAA5", bg: "rgba(46,160,67,0.08)", border: "rgba(46,160,67,0.22)" };
+    return { color: "var(--success)", bg: "var(--success-bg)", border: "var(--success)" };
   }
   if (["building", "in_progress", "review", "sent", "scheduled", "testing", "planned"].includes(v)) {
-    return { color: "#c9a84c", bg: "rgba(201,168,76,0.08)", border: "rgba(201,168,76,0.22)" };
+    return { color: "var(--accent)", bg: "var(--accent-bg)", border: "var(--accent)" };
   }
-  return { color: "#8da4ff", bg: "rgba(141,164,255,0.08)", border: "rgba(141,164,255,0.22)" };
+  return { color: "var(--muted)", bg: "var(--paper-2)", border: "var(--rule)" };
 }
 
 function Drawer({ label, value, children, defaultOpen = false }: { label: string; value: string; children: React.ReactNode; defaultOpen?: boolean }) {

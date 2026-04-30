@@ -98,14 +98,14 @@ export default function BuildIntroClient() {
                 style={{
                   display: "grid", gridTemplateColumns: "14px 1fr", gap: 14, alignItems: "center",
                   padding: "14px 16px", borderRadius: 12, textAlign: "left", cursor: "pointer",
-                  border: `1px solid ${active ? "rgba(201,168,76,0.3)" : "var(--stroke)"}`,
-                  background: active ? "rgba(201,168,76,0.06)" : "transparent",
+                  border: `1px solid ${active ? "var(--accent)" : "var(--stroke)"}`,
+                  background: active ? "var(--accent-bg)" : "transparent",
                   transition: "all 0.15s",
                 }}>
                 <div style={{
                   width: 14, height: 14, borderRadius: "50%",
-                  border: `2px solid ${active ? "#c9a84c" : "var(--stroke)"}`,
-                  background: active ? "#c9a84c" : "transparent",
+                  border: `2px solid ${active ? "var(--accent)" : "var(--stroke)"}`,
+                  background: active ? "var(--accent)" : "transparent",
                   transition: "all 0.15s",
                 }} />
                 <div>
@@ -132,7 +132,7 @@ export default function BuildIntroClient() {
                   style={{
                     padding: "8px 16px", borderRadius: 999, fontSize: 13, fontWeight: 600,
                     border: `1px solid ${active ? "var(--accent)" : "var(--stroke)"}`,
-                    background: active ? "rgba(201,168,76,0.08)" : "transparent",
+                    background: active ? "var(--accent-bg)" : "transparent",
                     color: active ? "var(--accent)" : "var(--muted)",
                     cursor: "pointer", transition: "all 0.15s",
                   }}>
@@ -156,7 +156,7 @@ export default function BuildIntroClient() {
                     display: "flex", justifyContent: "space-between", alignItems: "center",
                     padding: "10px 14px", borderRadius: 10, cursor: "pointer",
                     border: `1px solid ${active ? "var(--accent)" : "var(--stroke)"}`,
-                    background: active ? "rgba(201,168,76,0.06)" : "transparent",
+                    background: active ? "var(--accent-bg)" : "transparent",
                     transition: "all 0.15s",
                   }}>
                   <span style={{ fontSize: 14, fontWeight: 600, color: active ? "var(--accent)" : "var(--fg)" }}>{t(`timelines.${tl}.label`)}</span>
@@ -182,7 +182,7 @@ export default function BuildIntroClient() {
                   style={{
                     padding: "10px 14px", borderRadius: 10, fontSize: 13, textAlign: "left",
                     border: `1px solid ${active ? "var(--accent)" : "var(--stroke)"}`,
-                    background: active ? "rgba(201,168,76,0.06)" : "transparent",
+                    background: active ? "var(--accent-bg)" : "transparent",
                     color: active ? "var(--fg)" : "var(--muted)",
                     fontWeight: active ? 600 : 400, cursor: "pointer", transition: "all 0.15s",
                   }}>
@@ -205,7 +205,7 @@ export default function BuildIntroClient() {
                   style={{
                     padding: "10px 14px", borderRadius: 10, fontSize: 13, textAlign: "left",
                     border: `1px solid ${active ? "var(--accent)" : "var(--stroke)"}`,
-                    background: active ? "rgba(201,168,76,0.06)" : "transparent",
+                    background: active ? "var(--accent-bg)" : "transparent",
                     color: active ? "var(--fg)" : "var(--muted)",
                     fontWeight: active ? 600 : 400, cursor: "pointer", transition: "all 0.15s",
                   }}>
@@ -219,8 +219,8 @@ export default function BuildIntroClient() {
 
       {/* Recommendation */}
       <div className="portalPanel fadeUp" style={{
-        borderColor: "rgba(201,168,76,0.2)",
-        background: "radial-gradient(600px 200px at 30% 20%, rgba(201,168,76,0.04), transparent 50%), var(--panel)",
+        borderColor: "var(--accent)",
+        background: "var(--panel)",
       }}>
         <div className="portalPanelHeader">
           <h2 className="portalPanelTitle">{t("recommendationLabel")}</h2>
@@ -228,8 +228,8 @@ export default function BuildIntroClient() {
 
         <div style={{
           padding: "16px 18px", borderRadius: 12,
-          border: "1px solid rgba(201,168,76,0.15)",
-          background: "rgba(201,168,76,0.04)",
+          border: "1px solid var(--rule)",
+          background: "var(--accent-bg)",
           marginBottom: 16,
         }}>
           <div style={{
