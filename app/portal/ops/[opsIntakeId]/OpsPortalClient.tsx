@@ -59,7 +59,7 @@ function autoMeta(status: string) {
   for (const key of Object.keys(AUTOMATION_STATUS_META)) {
     if (s.includes(key)) return AUTOMATION_STATUS_META[key];
   }
-  return { color: "var(--muted)", bg: "rgba(255,255,255,0.03)", border: "var(--stroke)" };
+  return { color: "var(--muted)", bg: "var(--paper-2)", border: "var(--rule)" };
 }
 
 function Drawer({ label, value, children, defaultOpen = false }: { label: string; value: string; children: React.ReactNode; defaultOpen?: boolean; }) {
