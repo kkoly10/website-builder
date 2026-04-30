@@ -215,11 +215,11 @@ export default function OpsBookClient({ intake }: { intake: Intake }) {
 
           <div className="smallNote">
             Want a portal login?{" "}
-            <Link href={signupHref} style={{ color: "var(--accent2)", fontWeight: 800 }}>
+            <Link href={signupHref} style={{ color: "var(--accent-2)", fontWeight: 800 }}>
               Create account
             </Link>{" "}
             or{" "}
-            <Link href={loginHref} style={{ color: "var(--accent2)", fontWeight: 800 }}>
+            <Link href={loginHref} style={{ color: "var(--accent-2)", fontWeight: 800 }}>
               Sign in
             </Link>
             .

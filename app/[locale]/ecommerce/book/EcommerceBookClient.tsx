@@ -78,11 +78,11 @@ export default function EcommerceBookClient({ ecomIntakeId }: Props) {
               </div>
               <div>
                 <label className="fieldLabel">Notes</label>
-                <textarea className="input" value={notes} onChange={(e) => setNotes(e.target.value)} style={{ minHeight: 90 }} placeholder="Anything we should prepare before the call" />
+                <textarea className="textarea" value={notes} onChange={(e) => setNotes(e.target.value)} style={{ minHeight: 90 }} placeholder="Anything we should prepare before the call" />
               </div>
             </div>
 
-            {error ? <p style={{ color: "#ef4444", marginTop: 12 }}>{error}</p> : null}
+            {error ? <p style={{ color: "var(--accent)", marginTop: 12 }}>{error}</p> : null}
 
             <div style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap" }}>
               <button className="btn btnPrimary" onClick={submit} disabled={submitting}>

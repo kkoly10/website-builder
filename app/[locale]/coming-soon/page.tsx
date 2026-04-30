@@ -73,7 +73,7 @@ export default function ComingSoonPage() {
                 <div><div className="fieldLabel">Monthly order volume (optional)</div>
                   <select className="select" value={volume} onChange={(e) => setVolume(e.target.value as VolumeOption)}><option>Not selling yet</option><option>Under 100 orders / month</option><option>100-500 orders / month</option><option>500+ orders / month</option></select>
                 </div>
-                {error && <div className="hint" style={{ borderColor: "var(--accentStroke)", color: "var(--accent)" }}>{error}</div>}
+                {error && <div className="hint" style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>{error}</div>}
                 <button type="submit" disabled={submitting} className="btn btnPrimary wFull">{submitting ? "Submitting..." : "Join Early Interest"}</button>
                 <p className="smallNote">By submitting, you agree to be contacted if we launch this service.</p>
               </form>

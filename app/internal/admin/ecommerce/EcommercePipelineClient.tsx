@@ -100,7 +100,7 @@ export default function EcommercePipelineClient({ initialRows }: { initialRows: 
                     <div className="smallNote">Workspace summary</div>
                     <div style={{ marginTop: 8, color: "var(--fg)", fontWeight: 800 }}>{row.serviceSummary}</div>
                   </div>
-                  <div style={{ border: "1px solid var(--accentStroke)", background: "var(--accentSoft)", borderRadius: 14, padding: 14 }}>
+                  <div style={{ border: "1px solid var(--accent)", background: "var(--accent-bg)", borderRadius: 14, padding: 14 }}>
                     <div className="smallNote">Pricing recommendation</div>
                     <div style={{ marginTop: 8, color: "var(--fg)", fontWeight: 800 }}>{row.recommendationTier}</div>
                     <div className="pDark" style={{ marginTop: 6 }}>{row.recommendationRange}</div>

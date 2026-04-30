@@ -92,7 +92,7 @@ export default async function InternalHomePage() {
                   <div className="pDark">No web quotes yet.</div>
                 ) : (
                   (recentWeb ?? []).map((row) => (
-                    <div key={row.id} style={{ borderRadius: 8, border: "1px solid var(--stroke)", background: "var(--bg2)", padding: 10 }}>
+                    <div key={row.id} style={{ borderRadius: 8, border: "1px solid var(--stroke)", background: "var(--paper-2)", padding: 10 }}>
                       <div >{row.lead_email || "No Email"}</div>
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
                         <span className="badge" >${row.estimate_total}</span>
@@ -134,7 +134,7 @@ export default async function InternalHomePage() {
                   <div className="pDark">No ops intakes yet.</div>
                 ) : (
                   (recentOps ?? []).map((row) => (
-                    <div key={row.id} style={{ borderRadius: 8, border: "1px solid var(--stroke)", background: "var(--bg2)", padding: 10 }}>
+                    <div key={row.id} style={{ borderRadius: 8, border: "1px solid var(--stroke)", background: "var(--paper-2)", padding: 10 }}>
                       <div >{row.company_name || "Unnamed company"}</div>
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
                         <span className="badge" >{row.recommendation_tier || "N/A"}</span>

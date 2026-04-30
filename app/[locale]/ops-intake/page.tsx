@@ -419,8 +419,8 @@ export default function OpsIntakePage() {
             <>
               <div
                 style={{
-                  background: "rgba(255,122,24,0.08)",
-                  border: "1px solid rgba(255,122,24,0.3)",
+                  background: "var(--accent-bg)",
+                  border: "1px solid var(--accent)",
                   padding: 20,
                   borderRadius: 12,
                 }}
@@ -500,7 +500,7 @@ export default function OpsIntakePage() {
 
               <div className="smallNote">{PRICING_MESSAGES.depositPolicy}</div>
 
-              {error ? <div style={{ color: "#ff6b6b", fontSize: 14 }}>{error}</div> : null}
+              {error ? <div style={{ color: "var(--accent)", fontSize: 14 }}>{error}</div> : null}
             </>
           )}
         </div>
@@ -548,8 +548,8 @@ function CheckRow({
       className="checkRow"
       style={{
         cursor: "pointer",
-        background: checked ? "var(--accentSoft)" : "var(--bg2)",
-        borderColor: checked ? "var(--accentStroke)" : "var(--stroke)",
+        background: checked ? "var(--accent-soft)" : "var(--paper-2)",
+        borderColor: checked ? "var(--accent)" : "var(--rule)",
       }}
     >
       <div className="checkLeft">
