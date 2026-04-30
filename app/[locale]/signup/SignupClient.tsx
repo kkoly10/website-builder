@@ -52,7 +52,7 @@ export default function SignupClient() {
   }
 
   return (
-    <div className="card" style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.4)", border: "1px solid var(--accentStroke)" }}>
+    <div className="card" style={{ border: "1px solid var(--accent)" }}>
       <div className="cardInner">
         <div>
           <div className="kicker">
@@ -65,7 +65,7 @@ export default function SignupClient() {
           </p>
         </div>
 
-        <form onSubmit={handleSignup}>
+        <form onSubmit={handleSignup} style={{ display: "grid", gap: "1rem" }}>
           <div>
             <label className="fieldLabel">{t("emailLabel")}</label>
             <input
@@ -102,7 +102,7 @@ export default function SignupClient() {
         </form>
 
         {error && (
-          <div style={{ borderRadius: 8, padding: 12, border: "1px solid var(--accentStroke)", background: "var(--bg2)", color: "var(--accent)", fontSize: 13, fontWeight: 700 }}>
+          <div style={{ padding: 12, border: "1px solid var(--accent)", background: "var(--accent-bg)", color: "var(--accent-2)", fontSize: 13, fontWeight: 700 }}>
             <strong>{t("errorPrefix")}</strong> {error}
           </div>
         )}

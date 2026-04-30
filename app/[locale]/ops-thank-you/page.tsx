@@ -44,7 +44,7 @@ export default function OpsThankYouPage({
               ) : null}
             </div>
 
-            <div className="card" style={{ marginTop: 14, background: "rgba(255,255,255,0.03)" }}>
+            <div className="card" style={{ marginTop: 14, background: "var(--paper-2)" }}>
               <div className="cardInner">
                 <div style={{ fontWeight: 900, marginBottom: 8 }}>Optional: Create your account now</div>
                 <p className="p" style={{ marginTop: 0 }}>

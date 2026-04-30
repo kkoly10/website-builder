@@ -69,14 +69,15 @@ export default function ForgotPasswordClient() {
           {tForgot("subtitle")}
         </p>
 
-        <form onSubmit={handleResetEmail} >
+        <form onSubmit={handleResetEmail} style={{ display: "grid", gap: "1rem" }}>
           <input
+            className="input"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t("emailPlaceholder")}
             required
-            style={inputStyle}
+            autoComplete="email"
           />
 
           <button className="btn btnPrimary" type="submit" disabled={submitting}>
@@ -86,27 +87,13 @@ export default function ForgotPasswordClient() {
         </form>
 
         {message ? (
-          <div
-            style={{
-              borderRadius: 12,
-              padding: 12,
-              border: "1px solid rgba(80,220,120,0.35)",
-              background: "rgba(80,220,120,0.08)",
-            }}
-          >
+          <div style={{ padding: 12, border: "1px solid var(--success)", background: "var(--success-bg)", color: "var(--success)", fontSize: 13 }}>
             {message}
           </div>
         ) : null}
 
         {error ? (
-          <div
-            style={{
-              borderRadius: 12,
-              padding: 12,
-              border: "1px solid rgba(255,80,80,0.35)",
-              background: "rgba(255,80,80,0.08)",
-            }}
-          >
+          <div style={{ padding: 12, border: "1px solid var(--accent)", background: "var(--accent-bg)", color: "var(--accent-2)", fontSize: 13, fontWeight: 700 }}>
             <strong>{t("errorPrefix")}</strong> {error}
           </div>
         ) : null}
@@ -121,12 +108,3 @@ export default function ForgotPasswordClient() {
   );
 }
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  borderRadius: 12,
-  border: "1px solid rgba(255,255,255,0.14)",
-  background: "rgba(255,255,255,0.03)",
-  color: "rgba(255,255,255,0.95)",
-  padding: "12px 14px",
-  outline: "none",
-};

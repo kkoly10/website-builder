@@ -146,9 +146,9 @@ export default function BookClient({ quoteId, quoteToken }: Props) {
 
   if (success) {
     return (
-      <main className="container" style={{ paddingTop: "var(--sp-32)", paddingBottom: "var(--sp-48)", maxWidth: 760 }}>
+      <main className="container" style={{ paddingTop: "2rem", paddingBottom: "3rem", maxWidth: 760 }}>
         <section className="panel" style={{ textAlign: "center", padding: "40px 20px" }}>
-          <div style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--accentSoft)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", fontSize: 24 }}>✓</div>
+          <div style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--accent-soft)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", fontSize: 24 }}>✓</div>
           <h2 className="h2" style={{ margin: 0, color: "var(--fg)" }}>Quote Saved & Call Requested</h2>
           <p className="p" style={{ marginTop: 16, color: "var(--muted)" }}>Your quote is saved in your portal. Log in or create a free account using the same email address to track your project status.</p>
 
@@ -163,7 +163,7 @@ export default function BookClient({ quoteId, quoteToken }: Props) {
   }
 
   return (
-    <main className="container" style={{ paddingTop: "var(--sp-32)", paddingBottom: "var(--sp-48)", maxWidth: 760 }}>
+    <main className="container" style={{ paddingTop: "2rem", paddingBottom: "3rem", maxWidth: 760 }}>
       <section className="panel">
         <div className="panelHeader">
           <h2 className="h2">Book your discovery call</h2>
@@ -178,7 +178,7 @@ export default function BookClient({ quoteId, quoteToken }: Props) {
                 <option value="">Select one</option><option value="Morning">Morning</option><option value="Midday">Midday</option><option value="Afternoon">Afternoon</option><option value="Evening">Evening</option><option value="Flexible">Flexible</option>
               </select>
             </div>
-            <div className="grid2">
+            <div className="grid2stretch">
               <div>
                 <div className="fieldLabel">Preferred Days/Hours</div>
                 <input className="input" value={preferredTimes} onChange={(e) => setPreferredTimes(e.target.value)} placeholder="e.g. Tue/Thu afternoons" />
@@ -193,7 +193,7 @@ export default function BookClient({ quoteId, quoteToken }: Props) {
               <textarea className="textarea" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Questions about the quote? Specific features to discuss?" />
             </div>
 
-            {error && <div style={{ padding: 12, borderRadius: 8, background: "rgba(255,80,80,0.1)", color: "#ffb4b4", border: "1px solid rgba(255,80,80,0.3)", fontWeight: 600 }}>{error}</div>}
+            {error && <div style={{ padding: 12, border: "1px solid var(--accent)", background: "var(--accent-bg)", color: "var(--accent-2)", fontWeight: 600 }}>{error}</div>}
 
             <div style={{ marginTop: 12, display: "flex", gap: 12, justifyContent: "flex-end" }}>
               <button className="btn btnPrimary" type="submit" disabled={loading || !effectiveQuoteId}>

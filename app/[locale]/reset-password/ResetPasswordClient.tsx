@@ -77,23 +77,25 @@ export default function ResetPasswordClient() {
           {tReset("subtitle")}
         </p>
 
-        <form onSubmit={handleUpdatePassword} >
+        <form onSubmit={handleUpdatePassword} style={{ display: "grid", gap: "1rem" }}>
           <input
+            className="input"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder={tReset("newPasswordPlaceholder")}
             required
-            style={inputStyle}
+            autoComplete="new-password"
           />
 
           <input
+            className="input"
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder={tReset("confirmPasswordPlaceholder")}
             required
-            style={inputStyle}
+            autoComplete="new-password"
           />
 
           <button className="btn btnPrimary" type="submit" disabled={submitting}>
@@ -103,14 +105,7 @@ export default function ResetPasswordClient() {
         </form>
 
         {error ? (
-          <div
-            style={{
-              borderRadius: 12,
-              padding: 12,
-              border: "1px solid rgba(255,80,80,0.35)",
-              background: "rgba(255,80,80,0.08)",
-            }}
-          >
+          <div style={{ padding: 12, border: "1px solid var(--accent)", background: "var(--accent-bg)", color: "var(--accent-2)", fontSize: 13, fontWeight: 700 }}>
             <strong>{t("errorPrefix")}</strong> {error}
           </div>
         ) : null}
@@ -125,12 +120,3 @@ export default function ResetPasswordClient() {
   );
 }
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  borderRadius: 12,
-  border: "1px solid rgba(255,255,255,0.14)",
-  background: "rgba(255,255,255,0.03)",
-  color: "rgba(255,255,255,0.95)",
-  padding: "12px 14px",
-  outline: "none",
-};
