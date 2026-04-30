@@ -35,7 +35,7 @@ export default function WebGeneratePieButton({ quoteId }: { quoteId: string }) {
         {loading ? "Analyzing..." : "Generate / Refresh PIE →"}
       </button>
       
-      {error && <span style={{ color: "#ffb4b4", fontSize: 13, fontWeight: 700 }}>{error}</span>}
+      {error && <span style={{ color: "var(--accent)", fontSize: 13, fontWeight: 700 }}>{error}</span>}
     </div>
   );
 }

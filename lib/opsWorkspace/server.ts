@@ -455,20 +455,11 @@ export async function getOpsAdminRows(): Promise<OpsAdminRow[]> {
 
   const result = await supabaseAdmin
     .from("ops_intakes")
-    .select("id, created_at, company_name, contact_name, email, industry, team_size, job_volume, monthly_revenue, budget_range, urgency, readiness, status, recommendation_tier, recommendation_price_range, recommendation_score, current_tools, pain_points, workflows_needed, tried_before, notes, workspace_state")
+    .select("*")
     .order("created_at", { ascending: false });
 
-  if (result.error && /workspace_state/i.test(result.error.message)) {
-    const fallback = await supabaseAdmin
-      .from("ops_intakes")
-      .select("id, created_at, company_name, contact_name, email, industry, team_size, job_volume, monthly_revenue, budget_range, urgency, readiness, status, recommendation_tier, recommendation_price_range, recommendation_score, current_tools, pain_points, workflows_needed, tried_before, notes")
-      .order("created_at", { ascending: false });
-    intakes = (fallback.data ?? []) as OpsIntakeRow[];
-    intakeError = fallback.error;
-  } else {
-    intakes = (result.data ?? []) as OpsIntakeRow[];
-    intakeError = result.error;
-  }
+  intakes = (result.data ?? []) as OpsIntakeRow[];
+  intakeError = result.error;
 
   const [{ data: calls, error: callError }, { data: pies, error: pieError }] = await Promise.all([
     supabaseAdmin.from("ops_call_requests").select("id, ops_intake_id, created_at, status").order("created_at", { ascending: false }),
@@ -525,7 +516,7 @@ export async function getOpsWorkspaceBundle(opsIntakeId: string): Promise<OpsWor
   const [{ data: intake, error: intakeError }, { data: calls, error: callError }, { data: pies, error: pieError }] = await Promise.all([
     supabaseAdmin
       .from("ops_intakes")
-      .select("id, created_at, company_name, contact_name, email, phone, industry, team_size, job_volume, monthly_revenue, budget_range, urgency, readiness, current_tools, pain_points, workflows_needed, notes, tried_before, status, recommendation_tier, recommendation_price_range, recommendation_score")
+      .select("*")
       .eq("id", opsIntakeId)
       .maybeSingle(),
     supabaseAdmin

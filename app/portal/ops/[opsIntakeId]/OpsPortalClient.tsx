@@ -59,7 +59,7 @@ function autoMeta(status: string) {
   for (const key of Object.keys(AUTOMATION_STATUS_META)) {
     if (s.includes(key)) return AUTOMATION_STATUS_META[key];
   }
-  return { color: "var(--muted)", bg: "rgba(255,255,255,0.03)", border: "var(--stroke)" };
+  return { color: "var(--muted)", bg: "var(--paper-2)", border: "var(--rule)" };
 }
 
 function Drawer({ label, value, children, defaultOpen = false }: { label: string; value: string; children: React.ReactNode; defaultOpen?: boolean; }) {
@@ -182,15 +182,15 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
           </div>
 
           <div style={{ padding: "4px 0", display: "grid", gap: 14 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid var(--rule)" }}>
               <span style={{ fontSize: 13, color: "var(--muted)" }}>Main bottleneck</span>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--fg)", maxWidth: 320, textAlign: "right" }}>{bundle.ghostAdmin.mainBottleneck}</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid var(--rule)" }}>
               <span style={{ fontSize: 13, color: "var(--muted)" }}>Business objective</span>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--fg)", maxWidth: 320, textAlign: "right" }}>{bundle.ghostAdmin.businessObjective}</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid var(--rule)" }}>
               <span style={{ fontSize: 13, color: "var(--muted)" }}>Recommended first fix</span>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--accent)", maxWidth: 320, textAlign: "right" }}>{bundle.ghostAdmin.bestFirstFix}</span>
             </div>
@@ -249,7 +249,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
             </div>
             <div style={{ display: "grid", gap: 0 }}>
               {bundle.workspace.currentProcess.map((step, i) => (
-                <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 0", borderBottom: i < bundle.workspace.currentProcess.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+                <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 0", borderBottom: i < bundle.workspace.currentProcess.length - 1 ? "1px solid var(--rule)" : "none" }}>
                   <div style={{ width: 24, height: 24, borderRadius: "50%", border: "2px solid var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: "var(--accent)", flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
                   <div style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.5 }}>{step}</div>
                 </div>
@@ -264,7 +264,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
             </div>
             <div style={{ display: "grid", gap: 0 }}>
               {bundle.workspace.futureProcess.map((step, i) => (
-                <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 0", borderBottom: i < bundle.workspace.futureProcess.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+                <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 0", borderBottom: i < bundle.workspace.futureProcess.length - 1 ? "1px solid var(--rule)" : "none" }}>
                   <div style={{ width: 24, height: 24, borderRadius: "50%", border: "2px solid var(--success)", background: "var(--success-bg)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: "var(--success)", flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
                   <div style={{ fontSize: 14, color: "var(--fg)", lineHeight: 1.5 }}>{step}</div>
                 </div>
@@ -290,8 +290,8 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
                     <div style={{ fontSize: 15, fontWeight: 600, color: "var(--fg)" }}>{auto.name}</div>
                     <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 3, lineHeight: 1.5 }}>{auto.purpose}</div>
                     <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "rgba(255,255,255,0.04)", border: "1px solid var(--stroke)", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{auto.priority}</span>
-                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "rgba(255,255,255,0.04)", border: "1px solid var(--stroke)", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{auto.toolRecommendation}</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "var(--rule)", border: "1px solid var(--stroke)", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{auto.priority}</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "var(--rule)", border: "1px solid var(--stroke)", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{auto.toolRecommendation}</span>
                     </div>
                   </div>
                   <span style={{ padding: "5px 12px", borderRadius: 999, fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: meta.color, background: meta.bg, border: `1px solid ${meta.border}` }}>{pretty(auto.status)}</span>
@@ -310,7 +310,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
               <span className="portalPanelCount">{bundle.workspace.liveAutomations.length} running</span>
             </div>
             {bundle.workspace.liveAutomations.map((auto) => (
-              <div key={auto.id} style={{ padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.04)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div key={auto.id} style={{ padding: "12px 0", borderBottom: "1px solid var(--rule)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)" }}>{auto.name}</div>
                   <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 2 }}>{auto.toolRecommendation}</div>
@@ -325,7 +325,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
               <h2 className="portalPanelTitle">Results we&apos;re tracking</h2>
             </div>
             {bundle.workspace.kpis.map((kpi) => (
-              <div key={kpi.name} style={{ padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+              <div key={kpi.name} style={{ padding: "12px 0", borderBottom: "1px solid var(--rule)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)" }}>{kpi.name}</span>
                   <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)" }}>Target: {kpi.target}</span>
@@ -382,7 +382,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
       {bundle.workspace.sops.length > 0 && (
         <Drawer label="SOPs & training" value={`${bundle.workspace.sops.length} workflow${bundle.workspace.sops.length !== 1 ? "s" : ""}`}>
           {bundle.workspace.sops.map((sop) => (
-            <div key={sop.workflow} style={{ padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+            <div key={sop.workflow} style={{ padding: "10px 0", borderBottom: "1px solid var(--rule)" }}>
               <div style={{ fontWeight: 600, fontSize: 14, color: "var(--fg)" }}>{sop.workflow}</div>
               <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 2 }}>Trigger: {sop.trigger}</div>
               {sop.steps.length > 0 && <div style={{ marginTop: 6, display: "grid", gap: 3 }}>{sop.steps.map((step, i) => (<div key={i} style={{ fontSize: 13, color: "var(--muted)", paddingLeft: 14, borderLeft: "2px solid var(--stroke)" }}>{step}</div>))}</div>}

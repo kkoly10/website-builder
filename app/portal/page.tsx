@@ -160,9 +160,10 @@ export default async function PortalPage() {
   const leadIds = Array.from(
     new Set(quoteRows.map((q) => q.lead_id).filter(Boolean) as string[])
   );
+  const quoteIds = quoteRows.map((q) => q.id);
   const opsIds = opsRows.map((r) => r.id);
 
-  const [leadRes, opsCallRes, opsPieRes] = await Promise.all([
+  const [leadRes, opsCallRes, opsPieRes, portalProjectsRes] = await Promise.all([
     leadIds.length
       ? supabaseAdmin.from("leads").select("id, email, name").in("id", leadIds)
       : Promise.resolve({ data: [] as LeadRow[] }),
@@ -180,6 +181,12 @@ export default async function PortalPage() {
           .in("ops_intake_id", opsIds)
           .order("created_at", { ascending: false })
       : Promise.resolve({ data: [] as OpsPieRow[] }),
+    quoteIds.length
+      ? supabaseAdmin
+          .from("customer_portal_projects")
+          .select("quote_id, access_token")
+          .in("quote_id", quoteIds)
+      : Promise.resolve({ data: [] as { quote_id: string; access_token: string }[] }),
   ]);
 
   const leadById = new Map<string, LeadRow>();
@@ -193,6 +200,11 @@ export default async function PortalPage() {
   const pieByOps = new Map<string, OpsPieRow>();
   for (const p of (opsPieRes.data ?? []) as OpsPieRow[]) {
     if (!pieByOps.has(p.ops_intake_id)) pieByOps.set(p.ops_intake_id, p);
+  }
+
+  const portalTokenByQuoteId = new Map<string, string>();
+  for (const pp of (portalProjectsRes.data ?? []) as { quote_id: string; access_token: string }[]) {
+    if (pp.quote_id && pp.access_token) portalTokenByQuoteId.set(pp.quote_id, pp.access_token);
   }
 
   const totalProjects = quoteRows.length + opsRows.length + ecomRows.length;
@@ -296,10 +308,11 @@ export default async function PortalPage() {
                     estimateLabel(q),
                     quotePhase(q),
                   ]}
-                  action={
-                    q.public_token ? (
+                  action={(() => {
+                    const portalToken = portalTokenByQuoteId.get(q.id) || q.public_token;
+                    return portalToken ? (
                       <Link
-                        href={`/portal/${q.public_token}`}
+                        href={`/portal/${portalToken}`}
                         className="btn btnPrimary productBtnSm"
                       >
                         Open workspace -&gt;
@@ -308,8 +321,8 @@ export default async function PortalPage() {
                       <Link href="/build/intro" className="btn btnGhost productBtnSm">
                         Continue -&gt;
                       </Link>
-                    )
-                  }
+                    );
+                  })()}
                 />
               );
             })}
