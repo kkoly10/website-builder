@@ -196,14 +196,14 @@ function invoiceTone(status: ProjectInvoice["status"]) {
       };
     case "cancelled":
       return {
-        background: "rgba(53,48,41,0.08)",
-        border: "1px solid rgba(53,48,41,0.16)",
+        background: "var(--paper-2)",
+        border: "1px solid var(--rule)",
         color: "var(--muted)",
       };
     default:
       return {
-        background: "rgba(53,48,41,0.06)",
-        border: "1px solid rgba(53,48,41,0.12)",
+        background: "var(--paper)",
+        border: "1px solid var(--rule)",
         color: "var(--muted-2)",
       };
   }
