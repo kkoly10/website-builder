@@ -54,7 +54,7 @@ export default async function InternalHomePage() {
           </p>
           <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
             <Link href="/internal/dashboard" className="btn btnPrimary">
-              Open Dashboard <span className="btnArrow">â†’</span>
+              Open Dashboard <span className="btnArrow">→</span>
             </Link>
             <Link href="/internal/admin" className="btn btnGhost">
               Open Website Pipeline

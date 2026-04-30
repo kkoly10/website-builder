@@ -115,7 +115,7 @@ function fmtDate(v?: string) {
   return Number.isNaN(d.getTime()) ? v : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 function fmtDateTime(v?: string | null) {
-  if (!v) return "â€”";
+  if (!v) return "—";
   const d = new Date(v);
   return Number.isNaN(d.getTime())
     ? v
