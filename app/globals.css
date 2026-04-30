@@ -120,6 +120,14 @@ a { color: inherit; text-decoration: none; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }
 .serviceCardList { margin: .9rem 0 0; padding-left: 1.1rem; color: var(--ink-2); }
 
+.badge { display: inline-flex; align-items: center; padding: .2rem .55rem; border: 1px solid var(--rule); background: var(--paper-2); font: 500 11px/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.badgeHot { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
+
+.statRow { display: flex; gap: .75rem; flex-wrap: wrap; padding: .75rem 0; }
+.stat { display: grid; gap: .2rem; min-width: 80px; }
+.statNum { font: 700 clamp(1.4rem,3vw,2rem)/.95 var(--font-display); letter-spacing: -.04em; color: var(--ink); }
+.statLab { font: 500 11px/1.3 var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+
 .card,.panel { border: 1px solid var(--rule); background: var(--paper); }
 .cardInner,.panelBody { padding: 1rem; }
 .panelHeader { padding: .85rem 1rem; border-bottom: 1px solid var(--rule); background: var(--paper-2); }
