@@ -720,5 +720,88 @@
         "Live chat": "Chat en direct"
       }
     }
+  },
+  "book": {
+    "metaTitle": "Réserver votre appel de découverte | CrecyStudio",
+    "metaDescription": "Planifiez un appel de découverte pour passer en revue votre devis avant tout acompte.",
+    "missing": {
+      "kicker": "Continuez votre devis pour réserver",
+      "title": "Nous avons besoin de votre référence de devis avant de planifier",
+      "body": "Partez de votre devis pour que nous puissions rattacher la demande d'appel au bon projet. Si vous venez de soumettre un devis, cette page peut rediriger automatiquement dans un instant.",
+      "ctaEstimate": "Aller au devis",
+      "ctaEdit": "Modifier les réponses",
+      "ctaPortal": "Portail client",
+      "ctaHelp": "Aidez-moi à retrouver mon devis"
+    },
+    "recover": {
+      "title": "Récupération de votre dernier devis…",
+      "body": "Si vous avez récemment soumis un devis, nous essaierons de rouvrir la page de réservation automatiquement."
+    },
+    "form": {
+      "title": "Réservez votre appel de découverte",
+      "subtitle": "Passons en revue la portée et assurons-nous que nous sommes alignés avant tout paiement.",
+      "bestTimeLabel": "Meilleur moment de la journée *",
+      "bestTimePlaceholder": "Choisissez",
+      "bestTimes": {
+        "Morning": "Matin",
+        "Midday": "Midi",
+        "Afternoon": "Après-midi",
+        "Evening": "Soir",
+        "Flexible": "Flexible"
+      },
+      "preferredTimesLabel": "Jours / horaires préférés",
+      "preferredTimesPlaceholder": "ex. mar/jeu après-midi",
+      "timezoneLabel": "Fuseau horaire",
+      "notesLabel": "Notes pour l'appel (optionnel)",
+      "notesPlaceholder": "Questions sur le devis ? Fonctionnalités spécifiques à discuter ?",
+      "submitting": "Envoi...",
+      "submit": "Confirmer la demande",
+      "missingQuote": "Référence de devis manquante.",
+      "submitError": "Échec de l'envoi"
+    },
+    "success": {
+      "title": "Devis enregistré et appel demandé",
+      "body": "Votre devis est enregistré dans votre portail. Connectez-vous ou créez un compte gratuit avec la même adresse e-mail pour suivre l'état de votre projet.",
+      "openPortal": "Ouvrir le portail",
+      "createAccount": "Créer un compte",
+      "logIn": "Se connecter"
+    }
+  },
+  "estimate": {
+    "metaTitle": "Votre devis de site web | CrecyStudio",
+    "metaDescription": "Consultez votre devis cadré, voyez l'investissement et réservez un appel de découverte avant tout acompte.",
+    "empty": {
+      "kicker": "CrecyStudio · Devis",
+      "title": "Nous n'avons pas trouvé ce devis.",
+      "body": "Ouvrez le lien du devis depuis votre e-mail, connectez-vous avec la même adresse utilisée pour l'intake, ou démarrez un nouveau devis si vous devez reconstruire la portée.",
+      "ctaQuote": "Démarrer un devis",
+      "ctaPortal": "Portail client",
+      "ctaHome": "Accueil"
+    },
+    "breadcrumb": "Votre projet",
+    "breadcrumbFor": "Devis pour {name}",
+    "heroLabel": "Votre devis personnalisé",
+    "investmentSectionLabel": "Votre projet",
+    "investmentSectionTitle": "Portée et investissement",
+    "scopeCardTitle": "Ce que nous allons construire",
+    "scopeCaveatInline": "· À confirmer",
+    "contextLabel": "Avant de vous engager",
+    "priceLabelLikely": "Investissement probable",
+    "priceLabelProject": "Investissement du projet",
+    "priceRangeNote": "Nous confirmerons le devis fixe final pendant l'appel, avant tout acompte.",
+    "depositLabel": "Acompte aujourd'hui",
+    "balanceLabel": "Solde au lancement",
+    "creatingCheckout": "Création du paiement sécurisé...",
+    "stripeFineprint": "Paiement sécurisé via Stripe",
+    "processSectionLabel": "La suite",
+    "processTitleDeep": "De l'appel d'alignement à la portée fixe.",
+    "processTitleWarm": "Un appel rapide, puis un démarrage propre.",
+    "processTitleFast": "De l'acceptation au lancement.",
+    "processBodyDeep": "Nous utilisons l'appel pour lever d'abord les ambiguïtés, puis nous passons au démarrage avec le devis fixe que tout le monde comprend.",
+    "processBodyDefault": "Les prochaines étapes restent visibles tout du long pour que le projet ne disparaisse pas dans des e-mails et des suppositions.",
+    "tierContextLabel": "Pour le contexte",
+    "tierContextTitle": "Comment nous tarifons les projets.",
+    "messageCta": "Nous écrire pour des questions",
+    "depositError": "Impossible de créer la session de paiement."
   }
 }

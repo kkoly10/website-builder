@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 const LAST_QUOTE_KEY = "crecystudio:lastQuoteId";
 const LAST_QUOTE_TOKEN_KEY = "crecystudio:lastQuoteToken";
 
 export default function RecoverQuoteRedirect() {
   const router = useRouter();
+  const t = useTranslations("book.recover");
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
@@ -33,10 +35,10 @@ export default function RecoverQuoteRedirect() {
   return (
     <div className="hint">
       <div style={{ fontWeight: 900, color: "var(--ink)" }}>
-        Recovering your last quote…
+        {t("title")}
       </div>
       <div className="pDark" style={{ marginTop: 6 }}>
-        If you recently submitted an estimate, we’ll try to reopen the booking page automatically.
+        {t("body")}
       </div>
     </div>
   );

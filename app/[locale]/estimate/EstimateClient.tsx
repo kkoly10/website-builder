@@ -2,14 +2,15 @@
 
 import { Link } from "@/i18n/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import type { EstimatePresentation } from "@/lib/estimatePresentation";
 
 type Props = {
   view: EstimatePresentation | null;
 };
 
-function money(value: number | null) {
-  if (value == null || !Number.isFinite(value)) return "Scoped after review";
+function money(value: number | null, fallback: string) {
+  if (value == null || !Number.isFinite(value)) return fallback;
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -17,17 +18,23 @@ function money(value: number | null) {
   }).format(value);
 }
 
-function buildPriceDisplay(view: EstimatePresentation) {
+function buildPriceDisplay(view: EstimatePresentation, fallback: string) {
   if (view.variant === "deep") {
-    return `${money(view.price.min)} - ${money(view.price.max)}`;
+    return `${money(view.price.min, fallback)} - ${money(view.price.max, fallback)}`;
   }
-
-  return money(view.price.target);
+  return money(view.price.target, fallback);
 }
 
 export default function EstimateClient({ view }: Props) {
+  const t = useTranslations("estimate");
   const [accepting, setAccepting] = useState(false);
   const [acceptError, setAcceptError] = useState("");
+
+  // Fallback for when a price is null. Lib still emits "Scoped after review"
+  // in some cases via view.price.priceNote etc. — translating those is part
+  // of the lib refactor, not this PR. The fallback below covers the inline
+  // money() call only.
+  const moneyFallback = "—";
 
   async function onAccept() {
     if (!view?.acceptUrl) return;
@@ -47,12 +54,12 @@ export default function EstimateClient({ view }: Props) {
 
       const json = await response.json().catch(() => ({}));
       if (!response.ok || !json?.depositUrl) {
-        throw new Error(json?.error || "Unable to create the deposit session.");
+        throw new Error(json?.error || t("depositError"));
       }
 
       window.location.href = String(json.depositUrl);
     } catch (error) {
-      setAcceptError(error instanceof Error ? error.message : "Unable to create the deposit session.");
+      setAcceptError(error instanceof Error ? error.message : t("depositError"));
       setAccepting(false);
     }
   }
@@ -62,30 +69,27 @@ export default function EstimateClient({ view }: Props) {
       <main className="container estimateEmpty">
         <div className="kicker">
           <span className="kickerDot" aria-hidden="true" />
-          CrecyStudio · Estimate
+          {t("empty.kicker")}
         </div>
         <div style={{ height: 12 }} />
-        <h1 className="h2">We could not find that quote.</h1>
-        <p className="p maxW860">
-          Open the estimate link from your email, sign in with the same email you used on the intake,
-          or start a fresh website quote if you need to rebuild the scope.
-        </p>
+        <h1 className="h2">{t("empty.title")}</h1>
+        <p className="p maxW860">{t("empty.body")}</p>
         <div className="estimateEmptyActions">
           <Link href="/build/intro" className="btn btnPrimary">
-            Start a website quote <span className="btnArrow">-&gt;</span>
+            {t("empty.ctaQuote")} <span className="btnArrow">-&gt;</span>
           </Link>
           <Link href="/portal" className="btn btnGhost">
-            Client portal
+            {t("empty.ctaPortal")}
           </Link>
           <Link href="/" className="btn btnGhost">
-            Home
+            {t("empty.ctaHome")}
           </Link>
         </div>
       </main>
     );
   }
 
-  const priceDisplay = buildPriceDisplay(view);
+  const priceDisplay = buildPriceDisplay(view, moneyFallback);
   const showRange = view.variant === "deep";
   const showAccept = !!view.acceptLabel;
   const primarySchedule = view.variant !== "fast" && view.callToBook;
@@ -93,14 +97,14 @@ export default function EstimateClient({ view }: Props) {
   return (
     <main className="estimatePage">
       <div className="container estimateBreadcrumb">
-        <span>Your project</span>
+        <span>{t("breadcrumb")}</span>
         <span className="estimateBreadcrumbSep">/</span>
-        <span className="estimateBreadcrumbAccent">Estimate for {view.businessName}</span>
+        <span className="estimateBreadcrumbAccent">{t("breadcrumbFor", { name: view.businessName })}</span>
       </div>
 
       <header className="estimateHero">
         <div className="container">
-          <div className="estimateHeroLabel">Your personalized estimate</div>
+          <div className="estimateHeroLabel">{t("heroLabel")}</div>
           <h1 className="estimateHeroTitle">{view.heroTitle}</h1>
           <p className="estimateHeroBody">{view.heroBody}</p>
           {view.heroMeta ? <p className="estimateHeroMeta">{view.heroMeta}</p> : null}
@@ -109,20 +113,20 @@ export default function EstimateClient({ view }: Props) {
 
       <section className="estimateModule">
         <div className="container">
-          <div className="estimateSectionLabel">Your project</div>
-          <h2 className="estimateSectionTitle">Scope and investment</h2>
+          <div className="estimateSectionLabel">{t("investmentSectionLabel")}</div>
+          <h2 className="estimateSectionTitle">{t("investmentSectionTitle")}</h2>
           <p className="estimateSectionBody">{view.investmentIntro}</p>
 
           <div className="estimateScopeGrid">
             <article className="estimateScopeCard">
-              <h3>What we&apos;ll build</h3>
+              <h3>{t("scopeCardTitle")}</h3>
               <div className="estimateScopeRows">
                 {view.scopeRows.map((row) => (
                   <div className="estimateScopeRow" key={row.label}>
                     <div className="estimateScopeKey">{row.label}</div>
                     <div className="estimateScopeValue">
                       {row.value}
-                      {view.scopeCaveat ? <span className="estimateScopeCaveatInline"> · To be confirmed</span> : null}
+                      {view.scopeCaveat ? <span className="estimateScopeCaveatInline"> {t("scopeCaveatInline")}</span> : null}
                     </div>
                   </div>
                 ))}
@@ -133,7 +137,7 @@ export default function EstimateClient({ view }: Props) {
             <div className="estimatePriceRail">
               {view.contextNote ? (
                 <aside className="estimateContextCard">
-                  <div className="estimateContextLabel">Before you commit</div>
+                  <div className="estimateContextLabel">{t("contextLabel")}</div>
                   <h3>{view.contextNote}</h3>
                   {view.contextDetails.length ? (
                     <ul className="estimateContextList">
@@ -147,26 +151,26 @@ export default function EstimateClient({ view }: Props) {
 
               <article className="estimatePriceBlock">
                 <div className="estimatePriceLabel">
-                  {showRange ? "Likely investment" : "Project investment"}
+                  {showRange ? t("priceLabelLikely") : t("priceLabelProject")}
                 </div>
                 <div className="estimatePriceAmount">{priceDisplay}</div>
                 <p className="estimatePriceMeta">{view.price.priceNote}</p>
 
                 {showRange ? (
                   <div className="estimatePriceRangeNote">
-                    We&apos;ll confirm the final fixed quote on the call before any deposit is taken.
+                    {t("priceRangeNote")}
                   </div>
                 ) : (
                   <div className="estimatePriceSplit">
                     <div>
-                      <div className="estimateSplitLabel">Deposit today</div>
+                      <div className="estimateSplitLabel">{t("depositLabel")}</div>
                       <div className="estimateSplitValue estimateSplitValueAccent">
-                        {money(view.price.deposit)}
+                        {money(view.price.deposit, moneyFallback)}
                       </div>
                     </div>
                     <div>
-                      <div className="estimateSplitLabel">Balance at launch</div>
-                      <div className="estimateSplitValue">{money(view.price.balance)}</div>
+                      <div className="estimateSplitLabel">{t("balanceLabel")}</div>
+                      <div className="estimateSplitValue">{money(view.price.balance, moneyFallback)}</div>
                     </div>
                   </div>
                 )}
@@ -190,13 +194,13 @@ export default function EstimateClient({ view }: Props) {
                       onClick={onAccept}
                       disabled={accepting}
                     >
-                      {accepting ? "Creating secure checkout..." : view.acceptLabel}{" "}
+                      {accepting ? t("creatingCheckout") : view.acceptLabel}{" "}
                       <span className="estimateButtonArrow">-&gt;</span>
                     </button>
                   ) : null}
 
                   <div className="estimateFineprint">
-                    {primarySchedule ? primarySchedule.helper : "Secure payment via Stripe"}
+                    {primarySchedule ? primarySchedule.helper : t("stripeFineprint")}
                   </div>
                   {view.existingCallNote ? (
                     <div className="estimateExistingCallNote">{view.existingCallNote}</div>
@@ -225,18 +229,16 @@ export default function EstimateClient({ view }: Props) {
 
       <section className="estimateProcessSection">
         <div className="container">
-          <div className="estimateSectionLabel">What happens next</div>
+          <div className="estimateSectionLabel">{t("processSectionLabel")}</div>
           <h2 className="estimateSectionTitle">
             {view.variant === "deep"
-              ? "From alignment call to fixed scope."
+              ? t("processTitleDeep")
               : view.variant === "warm"
-              ? "A quick call, then a clean kickoff."
-              : "From accept to launch."}
+              ? t("processTitleWarm")
+              : t("processTitleFast")}
           </h2>
           <p className="estimateSectionBody">
-            {view.variant === "deep"
-              ? "We use the call to remove ambiguity first, then we move into kickoff with the fixed quote everyone understands."
-              : "The next steps stay visible the whole way through so the project never disappears into email and guesswork."}
+            {view.variant === "deep" ? t("processBodyDeep") : t("processBodyDefault")}
           </p>
 
           <div className="estimateProcessGrid">
@@ -255,8 +257,8 @@ export default function EstimateClient({ view }: Props) {
         <div className="container">
           <div className="estimateTierIntro">
             <div>
-              <div className="estimateSectionLabel">For context</div>
-              <h2 className="estimateSectionTitle">How we tier projects.</h2>
+              <div className="estimateSectionLabel">{t("tierContextLabel")}</div>
+              <h2 className="estimateSectionTitle">{t("tierContextTitle")}</h2>
             </div>
             <p className="estimateTierIntroBody">{view.tierIntro}</p>
           </div>
@@ -312,14 +314,14 @@ export default function EstimateClient({ view }: Props) {
                 onClick={onAccept}
                 disabled={accepting}
               >
-                {accepting ? "Creating secure checkout..." : view.acceptLabel}{" "}
+                {accepting ? t("creatingCheckout") : view.acceptLabel}{" "}
                 <span className="estimateButtonArrow">-&gt;</span>
               </button>
             ) : null}
 
             {view.messageUrl ? (
               <Link className="estimateGhostButton estimateClosingButton" href={view.messageUrl}>
-                Message us with questions
+                {t("messageCta")}
               </Link>
             ) : null}
 
