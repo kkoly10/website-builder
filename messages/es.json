@@ -1272,7 +1272,7 @@
     "launch": {
       "panelTitle": "Lanzamiento",
       "ready": "Listo para lanzar",
-      "leftBeforeLaunch": "{count, plural, one {1 cosa pendiente antes del lanzamiento} other {# cosas pendientes antes del lanzamiento}}",
+      "leftBeforeLaunch": "{count, plural, one {# cosa pendiente antes del lanzamiento} other {# cosas pendientes antes del lanzamiento}}",
       "checksPassed": "{completed} de {total} verificaciones aprobadas",
       "asideText": "Estamos manejando los elementos restantes en segundo plano. Recibirás una notificación cuando todo esté listo para salir en vivo.",
       "notesLabel": "Notas de lanzamiento",
@@ -1289,7 +1289,7 @@
     "invoices": {
       "title": "Facturas",
       "intro": "Cada factura de tu proyecto aparece aquí, incluyendo el historial pagado y cualquier saldo abierto.",
-      "count": "{count, plural, one {1 factura} other {# facturas}}",
+      "count": "{count, plural, one {# factura} other {# facturas}}",
       "empty": "Aún no se han emitido facturas.",
       "issued": "Emitida el {date}",
       "due": " · Vence el {date}",
@@ -1322,7 +1322,7 @@
     "messages": {
       "panelTitle": "Mensajes",
       "intro": "Haz preguntas, confirma aprobaciones o envía al estudio cualquier cosa que quieras que veamos.",
-      "count": "{count, plural, one {1 mensaje} other {# mensajes}}",
+      "count": "{count, plural, one {# mensaje} other {# mensajes}}",
       "empty": "Aún no hay mensajes",
       "unknownDay": "Día desconocido",
       "writePlaceholder": "Escribir un mensaje al estudio…",
@@ -1341,7 +1341,7 @@
     "activity": {
       "panelTitle": "Actividad",
       "intro": "Una línea de tiempo continua de los hitos y actualizaciones visibles para el cliente de tu proyecto.",
-      "count": "{count, plural, one {1 evento} other {# eventos}}",
+      "count": "{count, plural, one {# evento} other {# eventos}}",
       "empty": "Aún sin actividad.",
       "actors": {
         "client": "Cliente",
@@ -1351,7 +1351,7 @@
     },
     "assets": {
       "panelTitle": "Tu contenido",
-      "count": "{count, plural, one {1 elemento} other {# elementos}}",
+      "count": "{count, plural, one {# elemento} other {# elementos}}",
       "uploadDrop": "Suelta los archivos aquí o",
       "uploadBrowse": "explora",
       "uploadHint": "Logos, textos, fotos, accesos — los organizamos",
@@ -1387,7 +1387,7 @@
     },
     "feedback": {
       "panelTitle": "Comentarios",
-      "count": "{count, plural, one {1 elemento} other {# elementos}}",
+      "count": "{count, plural, one {# elemento} other {# elementos}}",
       "placeholder": "¿Qué debe cambiar? ¿Qué se siente mal?",
       "submit": "Enviar comentarios",
       "submitting": "Enviando…",
@@ -1563,6 +1563,298 @@
       "kicker": "Lab de sistemas",
       "title": "Cargando espacio ops…",
       "body": "Estamos preparando el diagnóstico del flujo, el mapa de sistemas y el plan de automatización."
+    }
+  },
+  "portalOpsToken": {
+    "kicker": "Automatización de flujo de trabajo",
+    "headline": "Tu automatización está <em>{phase}</em>",
+    "phases": {
+      "live": "activa y en marcha",
+      "partially_live": "saliendo en vivo",
+      "building": "en construcción",
+      "process_mapping": "siendo mapeada",
+      "discovery": "en descubrimiento",
+      "intake": "iniciando"
+    },
+    "stories": {
+      "live": "Tus automatizaciones están activas. Revisa el panel de resultados abajo para ver cómo están funcionando, o envía comentarios si algo necesita ajustarse.",
+      "partially_live": "Algunas de tus automatizaciones ya están en marcha. Estamos construyendo el resto — puedes seguir cada una abajo.",
+      "building": "Hemos mapeado tus flujos de trabajo y estamos construyendo las automatizaciones ahora. Puedes ver lo que está en marcha y lo que sigue.",
+      "process_mapping": "Estamos documentando tu proceso actual y diseñando la versión automatizada. Una vez confirmado el mapa, comenzamos a construir.",
+      "discovery": "Estamos aprendiendo cómo funciona tu negocio para encontrar las cosas correctas a automatizar. Tus aportes sobre puntos de dolor y prioridades nos ayudan a avanzar más rápido.",
+      "intake": "Recibimos tu solicitud de flujo de trabajo. El siguiente paso es entender tu proceso para recomendar el enfoque de automatización correcto."
+    },
+    "actions": {
+      "refresh": "Actualizar",
+      "refreshing": "Actualizando…",
+      "backToPortal": "Volver al portal",
+      "acceptAgreement": "Aceptar acuerdo",
+      "saving": "Guardando…",
+      "prepareDeposit": "Preparar pago del depósito",
+      "preparing": "Preparando…",
+      "payDeposit": "Pagar depósito"
+    },
+    "meta": {
+      "started": "Iniciado el {date}",
+      "toolLabel": "Herramienta: {tool}"
+    },
+    "studioNote": "Nota del estudio",
+    "whatWeFound": {
+      "panelTitle": "Lo que encontramos",
+      "mainBottleneck": "Cuello de botella principal",
+      "businessObjective": "Objetivo de negocio",
+      "bestFirstFix": "Primera solución recomendada",
+      "bestTool": "Mejor herramienta para la tarea",
+      "painPointsLabel": "Puntos de dolor que reportaste"
+    },
+    "automationProgress": {
+      "panelTitle": "Progreso de automatización",
+      "allLive": "Todas las automatizaciones activas",
+      "remaining": "{count, plural, one {# automatización pendiente} other {# automatizaciones pendientes}}",
+      "statusLine": "{live} activas · {building} en construcción · {planned} planificadas",
+      "waitingOnLabel": "Esperando:",
+      "nextSteps": "Próximos pasos"
+    },
+    "process": {
+      "before": "Antes — tu proceso actual",
+      "after": "Después — la versión automatizada",
+      "stepsCount": "{count, plural, one {# paso} other {# pasos}}"
+    },
+    "automationTracker": {
+      "panelTitle": "Seguimiento de automatizaciones",
+      "count": "{count, plural, one {# automatización} other {# automatizaciones}}"
+    },
+    "liveAutomations": {
+      "panelTitle": "Automatizaciones activas",
+      "count": "{count, plural, one {# en marcha} other {# en marcha}}",
+      "liveBadge": "Activa"
+    },
+    "results": {
+      "panelTitle": "Resultados que seguimos",
+      "target": "Objetivo: {value}"
+    },
+    "questions": {
+      "panelTitle": "Preguntas para ti"
+    },
+    "approvals": {
+      "panelTitle": "Aprobaciones requeridas"
+    },
+    "detailsTitle": "Detalles del proyecto",
+    "drawers": {
+      "connectedSystems": {
+        "label": "Sistemas conectados",
+        "value": "{count, plural, one {# herramienta} other {# herramientas}}"
+      },
+      "sops": {
+        "label": "Procedimientos & capacitación",
+        "value": "{count, plural, one {# flujo} other {# flujos}}",
+        "trigger": "Disparador: {trigger}"
+      },
+      "risks": {
+        "label": "Registro de riesgos",
+        "value": "{count, plural, one {# riesgo} other {# riesgos}}",
+        "mitigation": "Mitigación: {mitigation}"
+      },
+      "incidents": {
+        "label": "Problemas & incidentes"
+      },
+      "changeRequests": {
+        "label": "Solicitudes de cambio"
+      },
+      "agreement": {
+        "label": "Acuerdo & depósito",
+        "agreementStatus": "Estado del acuerdo",
+        "accepted": "Aceptado",
+        "agreementHeader": "Acuerdo",
+        "depositStatus": "Estado del depósito",
+        "depositAmount": "Monto del depósito",
+        "paidAt": "Pagado el"
+      },
+      "servicePricing": {
+        "label": "Servicio & precio",
+        "package": "Paquete",
+        "projectRange": "Rango de proyecto",
+        "retainerRange": "Rango de retainer",
+        "industry": "Industria",
+        "teamSize": "Tamaño del equipo"
+      }
+    },
+    "footer": {
+      "poweredBy": "Desarrollado por",
+      "tagline": " · Tus flujos, tu propiedad"
+    },
+    "errors": {
+      "refreshFailed": "Error al actualizar.",
+      "actionFailed": "Error en la acción."
+    },
+    "statuses": {
+      "pending": "Pendiente",
+      "accepted": "Aceptado",
+      "paid": "Pagado",
+      "live": "Activo",
+      "completed": "Completado",
+      "testing": "En pruebas",
+      "building": "En construcción",
+      "scoped": "Definido",
+      "discovery": "Descubrimiento",
+      "approved": "Aprobado",
+      "done": "Hecho"
+    }
+  },
+  "portalEcomToken": {
+    "kicker": "E-commerce · vía {mode}",
+    "headline": "Tu tienda está <em>{phase}</em>",
+    "modes": {
+      "build": "construcción",
+      "run": "gestión",
+      "fix": "reparación"
+    },
+    "stories": {
+      "buildLaunch": {
+        "headline": "casi lista para lanzarse",
+        "body": "Tu tienda está en revisión final. Usa este espacio para seguir aprobaciones, elementos requeridos y preparación para el lanzamiento."
+      },
+      "buildBuild": {
+        "headline": "en construcción",
+        "body": "Estamos ensamblando tu tienda, cargando productos y preparando los detalles del lanzamiento. Tus hitos y entregables están abajo."
+      },
+      "buildProposal": {
+        "headline": "lista para revisión de propuesta",
+        "body": "Hemos definido la construcción de la tienda y colocado la propuesta en este espacio para que puedas revisar el camino al lanzamiento."
+      },
+      "buildDefault": {
+        "headline": "iniciando",
+        "body": "Recibimos tu solicitud de construcción. El siguiente paso es descubrimiento, elementos y alineación final del alcance."
+      },
+      "fixTesting": {
+        "headline": "en validación",
+        "body": "Hemos implementado las correcciones de mayor prioridad y estamos validando la nueva experiencia antes de cerrar el proyecto."
+      },
+      "fixWork": {
+        "headline": "en reparación",
+        "body": "Estamos trabajando en el plan de mejoras. Este espacio muestra qué se encontró, qué se está corrigiendo y qué sigue."
+      },
+      "fixDefault": {
+        "headline": "en revisión",
+        "body": "Estamos diagnosticando los problemas de la tienda y convirtiéndolos en un plan de reparación claro."
+      },
+      "active": {
+        "headline": "en gestión",
+        "body": "Tus operaciones de e-commerce están activas. Este espacio es donde sigues las prioridades actuales, problemas y desempeño mensual."
+      },
+      "onboarding": {
+        "headline": "en incorporación",
+        "body": "Nos hemos alineado en la vía de servicio y estamos configurando el ritmo operativo recurrente para tu tienda."
+      },
+      "default": {
+        "headline": "configurándose",
+        "body": "Estamos definiendo el modelo operativo, prioridades y estructura de reportes para tu tienda."
+      }
+    },
+    "actions": {
+      "openPreview": "Abrir vista previa",
+      "visitLiveStore": "Visitar tienda en vivo",
+      "refresh": "Actualizar",
+      "refreshing": "Actualizando…",
+      "backToPortal": "Volver al portal",
+      "acceptAgreement": "Aceptar acuerdo",
+      "saving": "Guardando…",
+      "prepareDeposit": "Preparar pago del depósito",
+      "preparing": "Preparando…",
+      "payDeposit": "Pagar depósito"
+    },
+    "meta": {
+      "fallbackName": "Proyecto de e-commerce",
+      "started": "Iniciado el {date}",
+      "phase": "Fase: {phase}",
+      "waitingOn": "Esperando: {waitingOn}"
+    },
+    "studioNote": "Nota del estudio",
+    "workspaceOverview": {
+      "panelTitle": "Vista general del espacio",
+      "servicePath": "Vía de servicio",
+      "currentPhase": "Fase actual",
+      "planningCall": "Llamada de planificación",
+      "quoteStatus": "Estado de la cotización",
+      "waitingOn": "Esperando",
+      "callNotRequested": "no solicitada",
+      "quoteNotStarted": "no iniciada",
+      "serviceSummaryLabel": "Resumen de servicio"
+    },
+    "proposalPricing": {
+      "panelTitle": "Propuesta + precio del servicio",
+      "setupFee": "Tarifa de configuración",
+      "projectFee": "Tarifa de proyecto",
+      "monthlyFee": "Tarifa mensual",
+      "fulfillmentLabel": "Modelo de logística / servicio",
+      "fulfillmentTbc": "Por confirmar",
+      "lastUpdated": "Actualizado el {date}"
+    },
+    "deliverables": "Entregables",
+    "milestones": "Hitos",
+    "tasks": "Tareas actuales",
+    "assetsNeeded": "Elementos / info requeridos",
+    "approvals": "Aprobaciones requeridas",
+    "metrics": {
+      "panelTitle": "Métricas seguidas",
+      "target": "Objetivo: {value}",
+      "fallback": "—"
+    },
+    "issues": "Problemas / solicitudes abiertos",
+    "monthlyPlan": {
+      "panelTitle": "Plan mensual",
+      "empty": "Aún no se ha agregado un plan mensual."
+    },
+    "nextActions": {
+      "panelTitle": "Próximas acciones",
+      "empty": "Aún no hay próximas acciones listadas."
+    },
+    "drawers": {
+      "agreement": {
+        "label": "Acuerdo & depósito",
+        "agreementStatus": "Estado del acuerdo",
+        "accepted": "Aceptado",
+        "depositStatus": "Estado del depósito",
+        "depositAmount": "Monto del depósito",
+        "paidAt": "Pagado el"
+      },
+      "projectDetails": {
+        "label": "Detalles del proyecto",
+        "business": "Empresa",
+        "contact": "Contacto",
+        "email": "Correo",
+        "storeUrl": "URL de la tienda",
+        "salesChannels": "Canales de venta",
+        "monthlyOrders": "Pedidos mensuales",
+        "timeline": "Calendario",
+        "budget": "Presupuesto"
+      }
+    },
+    "footer": {
+      "poweredBy": "Desarrollado por",
+      "tagline": " · Tu tienda, tu espacio"
+    },
+    "errors": {
+      "refreshFailed": "Error al actualizar.",
+      "actionFailed": "Error en la acción."
+    },
+    "statuses": {
+      "pending": "Pendiente",
+      "accepted": "Aceptado",
+      "paid": "Pagado",
+      "live": "En vivo",
+      "completed": "Completado",
+      "done": "Hecho",
+      "approved": "Aprobado",
+      "review": "Revisión",
+      "sent": "Enviado",
+      "scheduled": "Programado",
+      "testing": "En pruebas",
+      "building": "En construcción",
+      "in_progress": "En progreso",
+      "planned": "Planificado",
+      "not_requested": "No solicitada",
+      "not_started": "No iniciada"
     }
   }
 }
