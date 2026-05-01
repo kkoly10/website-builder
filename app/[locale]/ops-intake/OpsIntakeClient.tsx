@@ -206,7 +206,7 @@ export default function OpsIntakeClient() {
         }),
       });
 
-      if (!res.ok) throw new Error("Submission failed");
+      if (!res.ok) throw new Error(t("validation.submitError"));
       const data = await res.json();
       router.push(data.nextUrl || "/ops-thank-you");
     } catch (err) {
