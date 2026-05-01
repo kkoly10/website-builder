@@ -1001,5 +1001,205 @@
     "signInCta": "Iniciar sesión",
     "submitAnotherCta": "Enviar otro intake",
     "openWorkspaceCta": "Abrir espacio de workflow"
+  },
+  "ecomIntake": {
+    "metaTitle": "Intake de e-commerce | CrecyStudio",
+    "metaDescription": "Cuéntanos si necesitas una tienda construida, gestionada o arreglada y definimos la contratación adecuada.",
+    "kicker": "Intake de e-commerce",
+    "step0Title": "¿Con qué necesitas <em>ayuda?</em>",
+    "step0Subtitle": "Elige la opción que mejor describa tu situación. Eso determina las preguntas que hacemos y el tipo de propuesta que recibirás.",
+    "fallbackHeadline": "Intake de e-commerce",
+    "paths": {
+      "build": {
+        "label": "Construir mi tienda",
+        "description": "Necesitas que diseñemos, construyamos y lancemos una nueva tienda en línea."
+      },
+      "run": {
+        "label": "Llevar mi tienda existente",
+        "description": "Tienes una tienda funcionando y necesitas que alguien gestione las operaciones."
+      },
+      "fix": {
+        "label": "Arreglar mi tienda rota",
+        "description": "Tu tienda existe pero algo no está funcionando bien."
+      }
+    },
+    "step1": {
+      "heading": "Cuéntanos sobre tu negocio",
+      "businessLabel": "Nombre del negocio *",
+      "businessPlaceholder": "Acme Store",
+      "contactLabel": "Nombre de contacto *",
+      "contactPlaceholder": "Jane Smith",
+      "emailLabel": "Correo *",
+      "emailPlaceholder": "tu@negocio.com",
+      "emailValid": "Correo válido",
+      "emailInvalid": "Introduce un correo válido",
+      "phoneLabel": "Teléfono",
+      "phonePlaceholder": "(555) 555-5555",
+      "storeUrlLabel": "URL de la tienda",
+      "storeUrlPlaceholder": "https://tutienda.com o página de vendedor de Amazon",
+      "platformLabel": "¿En qué plataforma está tu tienda?",
+      "platformSelect": "Selecciona la plataforma",
+      "preferredPlatformLabel": "Plataforma preferida",
+      "preferredPlatformNotSure": "Aún no estoy seguro"
+    },
+    "step2": {
+      "headingBuild": "¿Qué debe incluir la tienda?",
+      "headingRun": "¿Qué necesitas que manejemos?",
+      "headingFix": "¿Qué hay que arreglar?",
+      "channelsLabel": "¿Dónde vendes? (selecciona todos)"
+    },
+    "step3Build": {
+      "heading": "Presupuesto y plazos",
+      "skuLabel": "Número aproximado de productos",
+      "skuPlaceholder": "p. ej., 25, 100, 500+",
+      "budgetLabel": "Rango de presupuesto",
+      "budgetPlaceholder": "p. ej., $2.000–$5.000",
+      "timelineLabel": "Plazos",
+      "timelinePlaceholder": "p. ej., 3–4 semanas",
+      "notesLabel": "¿Algo más que debamos saber?",
+      "notesPlaceholder": "Preferencias de diseño, funciones imprescindibles, ejemplos de competencia..."
+    },
+    "step3Other": {
+      "heading": "Volumen actual de tu tienda",
+      "monthlyOrdersLabel": "Pedidos al mes",
+      "monthlyOrdersPlaceholder": "p. ej., 50, 200, 1000+",
+      "peakLabel": "Volumen en temporada alta",
+      "peakPlaceholder": "p. ej., 2x normal, pico navideño",
+      "skuLabel": "SKUs aproximados",
+      "skuPlaceholder": "p. ej., 25, 100, 500+",
+      "budgetLabel": "Presupuesto mensual",
+      "budgetPlaceholder": "p. ej., $500–$2.000/mes",
+      "timelineLabel": "¿Cuándo lo necesitas?",
+      "timelinePlaceholder": "p. ej., lo antes posible, el próximo mes",
+      "notesLabel": "¿Algo más que debamos saber?",
+      "notesPlaceholder": "Dolores actuales, lo que se ha intentado antes, problemas específicos..."
+    },
+    "review": {
+      "heading": "Revisa tu intake",
+      "recommendedLane": "Vía de precios recomendada",
+      "rows": {
+        "business": "Negocio",
+        "contact": "Contacto",
+        "storeUrl": "URL de la tienda",
+        "platform": "Plataforma",
+        "channels": "Canales",
+        "services": "Servicios",
+        "skus": "SKUs",
+        "monthlyOrders": "Pedidos mensuales",
+        "budget": "Presupuesto",
+        "timeline": "Plazos",
+        "notes": "Notas",
+        "empty": "—"
+      }
+    },
+    "nav": {
+      "back": "Atrás",
+      "continue": "Continuar",
+      "submitting": "Enviando...",
+      "submit": "Enviar intake"
+    },
+    "validation": {
+      "incomplete": "Por favor completa el nombre del negocio, el contacto y un correo válido.",
+      "submissionFailed": "Error al enviar",
+      "fallback": "Algo salió mal."
+    },
+    "draftNote": "El borrador se guarda automáticamente en tu navegador",
+    "enums": {
+      "channels": {
+        "Shopify": "Shopify",
+        "Amazon": "Amazon",
+        "Etsy": "Etsy",
+        "eBay": "eBay",
+        "WooCommerce": "WooCommerce",
+        "Walmart": "Walmart",
+        "Own website": "Sitio propio",
+        "Other": "Otro"
+      },
+      "platforms": {
+        "Shopify": "Shopify",
+        "WooCommerce": "WooCommerce",
+        "BigCommerce": "BigCommerce",
+        "Squarespace": "Squarespace",
+        "Wix": "Wix",
+        "Amazon Seller Central": "Amazon Seller Central",
+        "Etsy": "Etsy",
+        "Custom / other": "A medida / otro",
+        "Don't have one yet": "Aún no tengo plataforma"
+      },
+      "buildServices": {
+        "Full store build (design + setup)": "Construcción completa (diseño + configuración)",
+        "Product page design": "Diseño de páginas de producto",
+        "Checkout flow optimization": "Optimización del checkout",
+        "Payment gateway setup": "Configuración de pasarela de pago",
+        "Shipping rate configuration": "Configuración de tarifas de envío",
+        "Post-purchase email flow": "Flujo de correos post-compra"
+      },
+      "runServices": {
+        "Product listing management": "Gestión de fichas de producto",
+        "Order processing & fulfillment coordination": "Procesamiento de pedidos y coordinación de cumplimiento",
+        "Customer service & returns": "Atención al cliente y devoluciones",
+        "Inventory tracking": "Control de inventario",
+        "Marketplace management (Amazon, Etsy, etc.)": "Gestión de marketplaces (Amazon, Etsy, etc.)",
+        "Monthly performance reporting": "Reporte mensual de rendimiento",
+        "Promotional campaigns & pricing updates": "Campañas promocionales y actualizaciones de precio"
+      },
+      "fixServices": {
+        "Checkout abandonment audit": "Auditoría de abandono de checkout",
+        "Conversion rate optimization": "Optimización de la tasa de conversión",
+        "Shipping & fulfillment restructure": "Reestructuración de envío y cumplimiento",
+        "Product page overhaul": "Renovación de páginas de producto",
+        "Post-purchase flow fix": "Arreglo del flujo post-compra",
+        "Payment & tax configuration": "Configuración de pagos e impuestos"
+      }
+    }
+  },
+  "ecomBook": {
+    "metaTitle": "Reserva tu llamada de planificación de vendedor | CrecyStudio",
+    "metaDescription": "Agenda tu llamada de planificación de vendedor después de enviar el intake de e-commerce.",
+    "missing": {
+      "kicker": "Reserva E-commerce",
+      "title": "Falta intake de e-commerce",
+      "body": "Empieza desde la página de intake de e-commerce para que podamos asociar la reserva al envío correcto.",
+      "ctaStart": "Iniciar intake de e-commerce",
+      "ctaHome": "Inicio"
+    },
+    "form": {
+      "kicker": "Siguiente paso",
+      "title": "Solicita tu llamada de planificación de vendedor",
+      "subtitleWithId": "Tu intake n.º {shortId} está recibido. Comparte tus horarios preferidos y coordinaremos tu próxima llamada de estrategia.",
+      "subtitlePending": "Tu intake está pendiente. Comparte tus horarios preferidos y coordinaremos tu próxima llamada de estrategia.",
+      "bestTimeLabel": "Mejor momento para conectar *",
+      "bestTimes": {
+        "Morning": "Mañana",
+        "Afternoon": "Tarde",
+        "Evening": "Noche",
+        "Flexible": "Flexible"
+      },
+      "preferredLabel": "Días / horarios preferidos",
+      "preferredPlaceholder": "lun. – mié. después de las 14 h",
+      "timezoneLabel": "Zona horaria",
+      "timezonePlaceholder": "America/New_York",
+      "notesLabel": "Notas",
+      "notesPlaceholder": "Lo que debamos preparar antes de la llamada",
+      "submitting": "Enviando...",
+      "submit": "Solicitar llamada de estrategia",
+      "missingId": "Falta el ID del intake. Por favor regresa primero al formulario.",
+      "missingTime": "Por favor selecciona el mejor momento para conectar.",
+      "requestFailed": "Error en la solicitud.",
+      "fallbackError": "Algo salió mal."
+    }
+  },
+  "ecomSuccess": {
+    "metaTitle": "Solicitud de e-commerce recibida | CrecyStudio",
+    "metaDescription": "Tu intake de e-commerce y la solicitud de llamada de planificación han sido recibidos.",
+    "kicker": "Solicitud recibida",
+    "title": "Tu intake y solicitud de llamada están guardados",
+    "bodyPrefix": "Revisaremos tu perfil de vendedor y volveremos con opciones para los siguientes pasos.",
+    "intakeIdLabel": "ID de intake:",
+    "callIdLabel": "ID de llamada:",
+    "emptyId": "—",
+    "whatNext": "Qué viene después: verificamos el ajuste de servicios, redactamos una recomendación modular y proponemos un plan de lanzamiento para sitio, almacenamiento, cumplimiento o soporte de gestión.",
+    "ctaPricing": "Volver a precios",
+    "ctaPortal": "Abrir portal del cliente"
   }
 }

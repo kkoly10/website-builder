@@ -1001,5 +1001,205 @@
     "signInCta": "Sign In",
     "submitAnotherCta": "Submit Another Intake",
     "openWorkspaceCta": "Open Workflow Workspace"
+  },
+  "ecomIntake": {
+    "metaTitle": "E-commerce intake | CrecyStudio",
+    "metaDescription": "Tell us whether you need a store built, run, or fixed and we'll scope the right engagement.",
+    "kicker": "E-commerce intake",
+    "step0Title": "What do you need <em>help with?</em>",
+    "step0Subtitle": "Pick the option that best describes your situation. This determines what questions we ask and what kind of proposal you'll get.",
+    "fallbackHeadline": "E-commerce intake",
+    "paths": {
+      "build": {
+        "label": "Build my store",
+        "description": "You need a new online store designed, built, and launched."
+      },
+      "run": {
+        "label": "Run my existing store",
+        "description": "You have a working store and need someone to handle operations."
+      },
+      "fix": {
+        "label": "Fix my broken store",
+        "description": "Your store exists but something isn't working right."
+      }
+    },
+    "step1": {
+      "heading": "Tell us about your business",
+      "businessLabel": "Business name *",
+      "businessPlaceholder": "Acme Store",
+      "contactLabel": "Contact name *",
+      "contactPlaceholder": "Jane Smith",
+      "emailLabel": "Email *",
+      "emailPlaceholder": "you@business.com",
+      "emailValid": "Valid email",
+      "emailInvalid": "Enter a valid email",
+      "phoneLabel": "Phone",
+      "phonePlaceholder": "(555) 555-5555",
+      "storeUrlLabel": "Store URL",
+      "storeUrlPlaceholder": "https://yourstore.com or Amazon seller page",
+      "platformLabel": "What platform is your store on?",
+      "platformSelect": "Select platform",
+      "preferredPlatformLabel": "Preferred platform",
+      "preferredPlatformNotSure": "Not sure yet"
+    },
+    "step2": {
+      "headingBuild": "What should the store include?",
+      "headingRun": "What do you need us to handle?",
+      "headingFix": "What needs fixing?",
+      "channelsLabel": "Where do you sell? (select all)"
+    },
+    "step3Build": {
+      "heading": "Budget & timeline",
+      "skuLabel": "Approximate number of products",
+      "skuPlaceholder": "e.g., 25, 100, 500+",
+      "budgetLabel": "Budget range",
+      "budgetPlaceholder": "e.g., $2,000–$5,000",
+      "timelineLabel": "Timeline",
+      "timelinePlaceholder": "e.g., 3–4 weeks",
+      "notesLabel": "Anything else we should know?",
+      "notesPlaceholder": "Design preferences, must-have features, competitor examples..."
+    },
+    "step3Other": {
+      "heading": "Your store's current volume",
+      "monthlyOrdersLabel": "Orders per month",
+      "monthlyOrdersPlaceholder": "e.g., 50, 200, 1000+",
+      "peakLabel": "Peak season volume",
+      "peakPlaceholder": "e.g., 2x normal, holiday surge",
+      "skuLabel": "Approximate SKU count",
+      "skuPlaceholder": "e.g., 25, 100, 500+",
+      "budgetLabel": "Budget range (monthly)",
+      "budgetPlaceholder": "e.g., $500–$2,000/mo",
+      "timelineLabel": "When do you need this?",
+      "timelinePlaceholder": "e.g., ASAP, next month",
+      "notesLabel": "Anything else we should know?",
+      "notesPlaceholder": "Current pain points, what's been tried before, specific problems..."
+    },
+    "review": {
+      "heading": "Review your intake",
+      "recommendedLane": "Recommended pricing lane",
+      "rows": {
+        "business": "Business",
+        "contact": "Contact",
+        "storeUrl": "Store URL",
+        "platform": "Platform",
+        "channels": "Channels",
+        "services": "Services",
+        "skus": "SKUs",
+        "monthlyOrders": "Monthly orders",
+        "budget": "Budget",
+        "timeline": "Timeline",
+        "notes": "Notes",
+        "empty": "—"
+      }
+    },
+    "nav": {
+      "back": "Back",
+      "continue": "Continue",
+      "submitting": "Submitting...",
+      "submit": "Submit intake"
+    },
+    "validation": {
+      "incomplete": "Please complete business name, contact name, and a valid email.",
+      "submissionFailed": "Submission failed",
+      "fallback": "Something went wrong."
+    },
+    "draftNote": "Draft auto-saves in your browser",
+    "enums": {
+      "channels": {
+        "Shopify": "Shopify",
+        "Amazon": "Amazon",
+        "Etsy": "Etsy",
+        "eBay": "eBay",
+        "WooCommerce": "WooCommerce",
+        "Walmart": "Walmart",
+        "Own website": "Own website",
+        "Other": "Other"
+      },
+      "platforms": {
+        "Shopify": "Shopify",
+        "WooCommerce": "WooCommerce",
+        "BigCommerce": "BigCommerce",
+        "Squarespace": "Squarespace",
+        "Wix": "Wix",
+        "Amazon Seller Central": "Amazon Seller Central",
+        "Etsy": "Etsy",
+        "Custom / other": "Custom / other",
+        "Don't have one yet": "Don't have one yet"
+      },
+      "buildServices": {
+        "Full store build (design + setup)": "Full store build (design + setup)",
+        "Product page design": "Product page design",
+        "Checkout flow optimization": "Checkout flow optimization",
+        "Payment gateway setup": "Payment gateway setup",
+        "Shipping rate configuration": "Shipping rate configuration",
+        "Post-purchase email flow": "Post-purchase email flow"
+      },
+      "runServices": {
+        "Product listing management": "Product listing management",
+        "Order processing & fulfillment coordination": "Order processing & fulfillment coordination",
+        "Customer service & returns": "Customer service & returns",
+        "Inventory tracking": "Inventory tracking",
+        "Marketplace management (Amazon, Etsy, etc.)": "Marketplace management (Amazon, Etsy, etc.)",
+        "Monthly performance reporting": "Monthly performance reporting",
+        "Promotional campaigns & pricing updates": "Promotional campaigns & pricing updates"
+      },
+      "fixServices": {
+        "Checkout abandonment audit": "Checkout abandonment audit",
+        "Conversion rate optimization": "Conversion rate optimization",
+        "Shipping & fulfillment restructure": "Shipping & fulfillment restructure",
+        "Product page overhaul": "Product page overhaul",
+        "Post-purchase flow fix": "Post-purchase flow fix",
+        "Payment & tax configuration": "Payment & tax configuration"
+      }
+    }
+  },
+  "ecomBook": {
+    "metaTitle": "Book your seller planning call | CrecyStudio",
+    "metaDescription": "Schedule your seller planning call after submitting the e-commerce intake.",
+    "missing": {
+      "kicker": "E-commerce Booking",
+      "title": "Missing e-commerce intake",
+      "body": "Start from the e-commerce intake page so we can attach the booking to the right submission.",
+      "ctaStart": "Start E-commerce Intake",
+      "ctaHome": "Home"
+    },
+    "form": {
+      "kicker": "Next Step",
+      "title": "Request your seller planning call",
+      "subtitleWithId": "Your intake #{shortId} is in. Share your preferred times and we'll coordinate your next strategy call.",
+      "subtitlePending": "Your intake is pending. Share your preferred times and we'll coordinate your next strategy call.",
+      "bestTimeLabel": "Best time to connect *",
+      "bestTimes": {
+        "Morning": "Morning",
+        "Afternoon": "Afternoon",
+        "Evening": "Evening",
+        "Flexible": "Flexible"
+      },
+      "preferredLabel": "Preferred days/times",
+      "preferredPlaceholder": "Mon–Wed after 2 PM",
+      "timezoneLabel": "Timezone",
+      "timezonePlaceholder": "America/New_York",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Anything we should prepare before the call",
+      "submitting": "Submitting...",
+      "submit": "Request Seller Strategy Call",
+      "missingId": "Missing intake id. Please return to the intake form first.",
+      "missingTime": "Please select your best time to connect.",
+      "requestFailed": "Request failed.",
+      "fallbackError": "Something went wrong."
+    }
+  },
+  "ecomSuccess": {
+    "metaTitle": "E-commerce request received | CrecyStudio",
+    "metaDescription": "Your e-commerce intake and planning call request have been received.",
+    "kicker": "Request received",
+    "title": "Your intake and planning call request are saved",
+    "bodyPrefix": "We'll review your seller profile and follow up with next-step options.",
+    "intakeIdLabel": "Intake ID:",
+    "callIdLabel": "Call ID:",
+    "emptyId": "—",
+    "whatNext": "What happens next: we verify service fit, draft a modular recommendation, and propose a launch plan for website, storage, fulfillment, or management support.",
+    "ctaPricing": "Back to Pricing",
+    "ctaPortal": "Open Client Portal"
   }
 }
