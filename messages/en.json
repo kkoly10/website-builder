@@ -22,7 +22,7 @@
     "footerAria": "Footer"
   },
   "footer": {
-    "blurb": "Website-first studio for businesses that need a sharper first impression, cleaner operations, and one workspace to run the project.",
+    "blurb": "Independent web studio building premium websites and custom web systems. One workspace from scope to launch.",
     "rightsReserved": "All rights reserved.",
     "links": {
       "aria": "Footer",
@@ -38,11 +38,11 @@
     }
   },
   "home": {
-    "metaTitle": "CrecyStudio | Websites that make your phone ring",
-    "metaDescription": "Northern Virginia web studio that builds small business websites that earn trust fast and give clients a live workspace to track scope, previews, feedback, and launch.",
-    "heroLabel": "Northern Virginia web studio / est. 2024",
-    "heroTitle": "Websites that make your <em>phone ring.</em>",
-    "heroSub": "We build small business websites that earn trust fast and give clients a live workspace to track scope, previews, feedback, and launch.",
+    "metaTitle": "CrecyStudio | Websites and custom web systems",
+    "metaDescription": "Independent web studio building premium websites and custom web systems — from polished marketing sites to client portals, booking flows, and custom dashboards. One workspace from scope to launch.",
+    "heroLabel": "Independent web studio / est. 2024",
+    "heroTitle": "Websites and custom web systems for businesses that need to <em>look bigger than they are.</em>",
+    "heroSub": "From a polished marketing site to a full client portal, booking flow, or custom dashboard — built in one workspace, owned by you.",
     "ctaStart": "Start a project",
     "ctaProcess": "See the process",
     "proof": {

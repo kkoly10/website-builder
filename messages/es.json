@@ -22,7 +22,7 @@
     "footerAria": "Pie de página"
   },
   "footer": {
-    "blurb": "Estudio enfocado en la web para empresas que necesitan una primera impresión más nítida, operaciones más limpias y un único espacio de trabajo para conducir el proyecto.",
+    "blurb": "Independent web studio building premium websites and custom web systems. One workspace from scope to launch.",
     "rightsReserved": "Todos los derechos reservados.",
     "links": {
       "aria": "Pie de página",
@@ -38,11 +38,11 @@
     }
   },
   "home": {
-    "metaTitle": "CrecyStudio | Sitios web que hacen sonar tu teléfono",
-    "metaDescription": "Estudio web del norte de Virginia que crea sitios para pequeñas empresas. Genera confianza rápidamente y ofrece a tus clientes un espacio de trabajo en vivo para seguir el alcance, las vistas previas, los comentarios y el lanzamiento.",
-    "heroLabel": "Estudio web del norte de Virginia / desde 2024",
-    "heroTitle": "Sitios web que hacen sonar <em>tu teléfono.</em>",
-    "heroSub": "Construimos sitios web para pequeñas empresas que generan confianza rápido y le dan a tus clientes un espacio de trabajo en vivo para seguir el alcance, las vistas previas, los comentarios y el lanzamiento.",
+    "metaTitle": "CrecyStudio | Websites and custom web systems",
+    "metaDescription": "Independent web studio building premium websites and custom web systems — from polished marketing sites to client portals, booking flows, and custom dashboards. One workspace from scope to launch.",
+    "heroLabel": "Independent web studio / est. 2024",
+    "heroTitle": "Websites and custom web systems for businesses that need to <em>look bigger than they are.</em>",
+    "heroSub": "From a polished marketing site to a full client portal, booking flow, or custom dashboard — built in one workspace, owned by you.",
     "ctaStart": "Iniciar un proyecto",
     "ctaProcess": "Ver el proceso",
     "proof": {
