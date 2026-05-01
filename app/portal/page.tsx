@@ -309,7 +309,7 @@ export default async function PortalPage() {
                     quotePhase(q),
                   ]}
                   action={(() => {
-                    const portalToken = portalTokenByQuoteId.get(q.id) || q.public_token;
+                    const portalToken = portalTokenByQuoteId.get(q.id);
                     return portalToken ? (
                       <Link
                         href={`/portal/${portalToken}`}
