@@ -1,4 +1,8 @@
+import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import RawLink from "next/link";
 import BookClient from "./BookClient";
 import RecoverQuoteRedirect from "./RecoverQuoteRedirect";
 
@@ -19,53 +23,78 @@ function pickAny(sp: Record<string, string | string[] | undefined>, keys: string
   return "";
 }
 
-export default async function BookPage(props: { searchParams: SearchParamsPromise }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "book" });
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+    openGraph: { title: t("metaTitle"), description: t("metaDescription") },
+    twitter: { title: t("metaTitle"), description: t("metaDescription") },
+  };
+}
+
+export default async function BookPage(props: {
+  params: Promise<{ locale: string }>;
+  searchParams: SearchParamsPromise;
+}) {
+  const { locale } = await props.params;
+  setRequestLocale(locale);
   const sp = await props.searchParams;
 
   const quoteId = pickAny(sp, ["quoteId", "quoteid", "qid", "id"]);
   const quoteToken = pickAny(sp, ["token", "quoteToken", "quote_token", "t"]);
 
   if (!quoteId) {
-    return (
-      <main className="container" style={{ padding: "28px 0 80px" }}>
-        <RecoverQuoteRedirect />
-
-        <section className="card">
-          <div className="cardInner">
-            <div className="kicker">
-              <span className="kickerDot" aria-hidden="true" />
-              Continue your quote to book
-            </div>
-
-            <div style={{ height: 10 }} />
-            <h1 className="h2">
-              We need your quote reference before scheduling
-            </h1>
-
-            <p className="p">
-              Start from your estimate so we can attach the call request to the correct project.
-              If you recently submitted an estimate, this page may redirect automatically in a moment.
-            </p>
-
-            <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <Link className="btn btnPrimary" href="/estimate">
-                Go to Estimate <span className="btnArrow">→</span>
-              </Link>
-              <Link className="btn btnGhost" href="/build">
-                Edit answers
-              </Link>
-              <Link className="btn btnGhost" href="/portal">
-                Client Portal
-              </Link>
-              <Link href="mailto:hello@crecystudio.com?subject=Help%20finding%20my%20quote" className="btn btnGhost">
-                Help me find my quote
-              </Link>
-            </div>
-          </div>
-        </section>
-      </main>
-    );
+    return <BookMissingPanel />;
   }
 
   return <BookClient quoteId={quoteId} quoteToken={quoteToken || undefined} />;
+}
+
+function BookMissingPanel() {
+  const t = useTranslations("book.missing");
+
+  return (
+    <main className="container" style={{ padding: "28px 0 80px" }}>
+      <RecoverQuoteRedirect />
+
+      <section className="card">
+        <div className="cardInner">
+          <div className="kicker">
+            <span className="kickerDot" aria-hidden="true" />
+            {t("kicker")}
+          </div>
+
+          <div style={{ height: 10 }} />
+          <h1 className="h2">{t("title")}</h1>
+
+          <p className="p">{t("body")}</p>
+
+          <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <Link className="btn btnPrimary" href="/estimate">
+              {t("ctaEstimate")} <span className="btnArrow">→</span>
+            </Link>
+            <Link className="btn btnGhost" href="/build">
+              {t("ctaEdit")}
+            </Link>
+            {/* /portal lives outside [locale]; render with raw next/link so /fr/build does not prefix it */}
+            <RawLink className="btn btnGhost" href="/portal">
+              {t("ctaPortal")}
+            </RawLink>
+            <a
+              href="mailto:hello@crecystudio.com?subject=Help%20finding%20my%20quote"
+              className="btn btnGhost"
+            >
+              {t("ctaHelp")}
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
 }

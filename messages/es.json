@@ -720,5 +720,88 @@
         "Live chat": "Chat en vivo"
       }
     }
+  },
+  "book": {
+    "metaTitle": "Reserva tu llamada de descubrimiento | CrecyStudio",
+    "metaDescription": "Agenda una llamada de descubrimiento para revisar tu estimación antes de cualquier depósito.",
+    "missing": {
+      "kicker": "Continúa tu cotización para reservar",
+      "title": "Necesitamos tu referencia de cotización antes de agendar",
+      "body": "Empieza desde tu estimación para que podamos asociar la solicitud al proyecto correcto. Si acabas de enviar una estimación, esta página puede redirigir automáticamente en un momento.",
+      "ctaEstimate": "Ir a la estimación",
+      "ctaEdit": "Editar respuestas",
+      "ctaPortal": "Portal del cliente",
+      "ctaHelp": "Ayúdame a encontrar mi cotización"
+    },
+    "recover": {
+      "title": "Recuperando tu última cotización…",
+      "body": "Si acabas de enviar una estimación, intentaremos reabrir la página de reserva automáticamente."
+    },
+    "form": {
+      "title": "Reserva tu llamada de descubrimiento",
+      "subtitle": "Repasemos el alcance y asegurémonos de estar alineados antes de cualquier pago.",
+      "bestTimeLabel": "Mejor momento del día *",
+      "bestTimePlaceholder": "Selecciona uno",
+      "bestTimes": {
+        "Morning": "Mañana",
+        "Midday": "Mediodía",
+        "Afternoon": "Tarde",
+        "Evening": "Noche",
+        "Flexible": "Flexible"
+      },
+      "preferredTimesLabel": "Días / horas preferidas",
+      "preferredTimesPlaceholder": "p. ej. mar/jue por la tarde",
+      "timezoneLabel": "Zona horaria",
+      "notesLabel": "Notas para la llamada (opcional)",
+      "notesPlaceholder": "¿Preguntas sobre la cotización? ¿Funciones específicas a discutir?",
+      "submitting": "Enviando...",
+      "submit": "Confirmar solicitud",
+      "missingQuote": "Falta la referencia de cotización.",
+      "submitError": "Error al enviar"
+    },
+    "success": {
+      "title": "Cotización guardada y llamada solicitada",
+      "body": "Tu cotización está guardada en tu portal. Inicia sesión o crea una cuenta gratuita con el mismo correo para seguir el estado de tu proyecto.",
+      "openPortal": "Abrir portal",
+      "createAccount": "Crear cuenta",
+      "logIn": "Iniciar sesión"
+    }
+  },
+  "estimate": {
+    "metaTitle": "Tu estimación de sitio web | CrecyStudio",
+    "metaDescription": "Revisa tu estimación con alcance, ve la inversión y agenda una llamada de descubrimiento antes de cualquier depósito.",
+    "empty": {
+      "kicker": "CrecyStudio · Estimación",
+      "title": "No encontramos esa cotización.",
+      "body": "Abre el enlace de la estimación desde tu correo, inicia sesión con el mismo correo que usaste en el intake, o empieza una nueva cotización si necesitas reconstruir el alcance.",
+      "ctaQuote": "Iniciar una cotización",
+      "ctaPortal": "Portal del cliente",
+      "ctaHome": "Inicio"
+    },
+    "breadcrumb": "Tu proyecto",
+    "breadcrumbFor": "Estimación para {name}",
+    "heroLabel": "Tu estimación personalizada",
+    "investmentSectionLabel": "Tu proyecto",
+    "investmentSectionTitle": "Alcance e inversión",
+    "scopeCardTitle": "Lo que construiremos",
+    "scopeCaveatInline": "· Por confirmar",
+    "contextLabel": "Antes de comprometerte",
+    "priceLabelLikely": "Inversión probable",
+    "priceLabelProject": "Inversión del proyecto",
+    "priceRangeNote": "Confirmaremos la cotización fija final en la llamada, antes de cualquier depósito.",
+    "depositLabel": "Depósito hoy",
+    "balanceLabel": "Saldo al lanzamiento",
+    "creatingCheckout": "Creando pago seguro...",
+    "stripeFineprint": "Pago seguro vía Stripe",
+    "processSectionLabel": "Qué viene después",
+    "processTitleDeep": "De la llamada de alineación al alcance fijo.",
+    "processTitleWarm": "Una llamada rápida, luego un kickoff limpio.",
+    "processTitleFast": "Del acuerdo al lanzamiento.",
+    "processBodyDeep": "Usamos la llamada para quitar ambigüedad primero, luego pasamos al kickoff con la cotización fija que todos entienden.",
+    "processBodyDefault": "Los siguientes pasos quedan visibles todo el camino para que el proyecto no desaparezca en correos y suposiciones.",
+    "tierContextLabel": "Para contexto",
+    "tierContextTitle": "Cómo organizamos los proyectos por niveles.",
+    "messageCta": "Escríbenos con preguntas",
+    "depositError": "No se pudo crear la sesión de depósito."
   }
 }

@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import EstimateClient from "./EstimateClient";
 import { loadEstimatePresentation } from "@/lib/estimatePresentation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -19,7 +21,27 @@ function pickAny(sp: Record<string, string | string[] | undefined>, keys: string
   return "";
 }
 
-export default async function EstimatePage(props: { searchParams: SearchParamsPromise }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "estimate" });
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+    openGraph: { title: t("metaTitle"), description: t("metaDescription") },
+    twitter: { title: t("metaTitle"), description: t("metaDescription") },
+  };
+}
+
+export default async function EstimatePage(props: {
+  params: Promise<{ locale: string }>;
+  searchParams: SearchParamsPromise;
+}) {
+  const { locale } = await props.params;
+  setRequestLocale(locale);
   const sp = await props.searchParams;
   const quoteId = pickAny(sp, ["quoteId", "quoteid", "qid", "id"]);
   const quoteToken = pickAny(sp, ["token", "quoteToken", "quote_token", "t"]);

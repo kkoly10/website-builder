@@ -720,5 +720,88 @@
         "Live chat": "Live chat"
       }
     }
+  },
+  "book": {
+    "metaTitle": "Book your discovery call | CrecyStudio",
+    "metaDescription": "Schedule a discovery call to review your website estimate before any deposit.",
+    "missing": {
+      "kicker": "Continue your quote to book",
+      "title": "We need your quote reference before scheduling",
+      "body": "Start from your estimate so we can attach the call request to the correct project. If you recently submitted an estimate, this page may redirect automatically in a moment.",
+      "ctaEstimate": "Go to Estimate",
+      "ctaEdit": "Edit answers",
+      "ctaPortal": "Client Portal",
+      "ctaHelp": "Help me find my quote"
+    },
+    "recover": {
+      "title": "Recovering your last quote…",
+      "body": "If you recently submitted an estimate, we'll try to reopen the booking page automatically."
+    },
+    "form": {
+      "title": "Book your discovery call",
+      "subtitle": "Let's review the scope and ensure we're aligned before any payment.",
+      "bestTimeLabel": "Best time of day *",
+      "bestTimePlaceholder": "Select one",
+      "bestTimes": {
+        "Morning": "Morning",
+        "Midday": "Midday",
+        "Afternoon": "Afternoon",
+        "Evening": "Evening",
+        "Flexible": "Flexible"
+      },
+      "preferredTimesLabel": "Preferred Days/Hours",
+      "preferredTimesPlaceholder": "e.g. Tue/Thu afternoons",
+      "timezoneLabel": "Timezone",
+      "notesLabel": "Notes for the call (optional)",
+      "notesPlaceholder": "Questions about the quote? Specific features to discuss?",
+      "submitting": "Submitting...",
+      "submit": "Confirm Request",
+      "missingQuote": "Missing quote reference.",
+      "submitError": "Failed to submit"
+    },
+    "success": {
+      "title": "Quote Saved & Call Requested",
+      "body": "Your quote is saved in your portal. Log in or create a free account using the same email address to track your project status.",
+      "openPortal": "Open Portal",
+      "createAccount": "Create Account",
+      "logIn": "Log in"
+    }
+  },
+  "estimate": {
+    "metaTitle": "Your website estimate | CrecyStudio",
+    "metaDescription": "Review your scoped website estimate, see investment, and book a discovery call before any deposit.",
+    "empty": {
+      "kicker": "CrecyStudio · Estimate",
+      "title": "We could not find that quote.",
+      "body": "Open the estimate link from your email, sign in with the same email you used on the intake, or start a fresh website quote if you need to rebuild the scope.",
+      "ctaQuote": "Start a website quote",
+      "ctaPortal": "Client portal",
+      "ctaHome": "Home"
+    },
+    "breadcrumb": "Your project",
+    "breadcrumbFor": "Estimate for {name}",
+    "heroLabel": "Your personalized estimate",
+    "investmentSectionLabel": "Your project",
+    "investmentSectionTitle": "Scope and investment",
+    "scopeCardTitle": "What we'll build",
+    "scopeCaveatInline": "· To be confirmed",
+    "contextLabel": "Before you commit",
+    "priceLabelLikely": "Likely investment",
+    "priceLabelProject": "Project investment",
+    "priceRangeNote": "We'll confirm the final fixed quote on the call before any deposit is taken.",
+    "depositLabel": "Deposit today",
+    "balanceLabel": "Balance at launch",
+    "creatingCheckout": "Creating secure checkout...",
+    "stripeFineprint": "Secure payment via Stripe",
+    "processSectionLabel": "What happens next",
+    "processTitleDeep": "From alignment call to fixed scope.",
+    "processTitleWarm": "A quick call, then a clean kickoff.",
+    "processTitleFast": "From accept to launch.",
+    "processBodyDeep": "We use the call to remove ambiguity first, then we move into kickoff with the fixed quote everyone understands.",
+    "processBodyDefault": "The next steps stay visible the whole way through so the project never disappears into email and guesswork.",
+    "tierContextLabel": "For context",
+    "tierContextTitle": "How we tier projects.",
+    "messageCta": "Message us with questions",
+    "depositError": "Unable to create the deposit session."
   }
 }
