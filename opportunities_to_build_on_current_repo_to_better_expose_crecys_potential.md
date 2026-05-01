@@ -50,11 +50,13 @@ CrecyStudio's voice should stay warm and benefit-driven on first contact, then e
 
 ### Audience
 
-Primary audience: small service businesses in Northern Virginia and the broader DMV (the live site already names this), expanding to remote service-business buyers as case studies and SEO surface accumulate. Concrete buyer types in priority order:
+Primary audience: small service businesses in Northern Virginia and the broader DMV (the live site already names this geography), expanding to remote service-business buyers as case studies and SEO surface accumulate. Buyer types are described by ticket size and lane mapping:
 
-- **Small ($1.8K–$10K tickets):** Local service operators (contractors, trainers, consultants, repair, event vendors, wedding vendors) who need a credible site or a booking/payment add-on. This is the bread-and-butter today.
-- **Mid ($10K–$25K tickets):** Same operators upgrading to a portal, customer-account area, or quote/intake system on top of an existing site.
-- **Big ($25K+ tickets):** Service businesses validating a software product, or operators of niche service trades who need a full custom web app. Korent and Proveo are the studio's own examples of this scope. Often introduced by referral or by entering through a smaller engagement first.
+- **Small ticket ($1.8K–$10K):** Buyer is shopping for a website. Maps to the Websites lane (Starter through Premium tiers). Typical buyers: contractors, trainers, consultants, repair shops, event vendors, wedding vendors. This is the bread-and-butter today.
+- **Mid ticket ($10K–$25K):** Buyer wants a website plus a meaningful add-on — a portal, a booking/payment flow, a customer-account area, or an intake/quote system — or a small custom build. Spans the top of the Websites lane (Premium) and the Discovery+MVP tier of the Web Apps lane. Often the same Small-ticket buyer two engagements later.
+- **Big ticket ($25K+):** Buyer wants a custom web app — multi-role, integrations, custom data models, sometimes multi-tenant. Maps to the Standard or Custom tiers of the Web Apps lane. Often introduced by referral or arrives after entering through a smaller engagement first.
+
+Korent and Proveo are the studio's *own ventures* at Big-ticket scope and serve as capability proof in the Proof of Capability section — not as buyer testimonials.
 
 This doc explicitly does not target enterprise buyers or VC-backed startups. Pricing, voice, and process are tuned for owner-operators who write the check themselves.
 
@@ -194,10 +196,12 @@ Web Apps does not show fixed prices on cards — only ranges. Every Web Apps lea
 | Plan | Monthly | Best for |
 |---|---:|---|
 | Care | $250/mo | Content updates, monitoring, monthly health check |
-| Care+ | $650/mo | Care + small features, analytics review, light automation maintenance |
-| Studio Partner | $1,250/mo | Care+ + monthly improvement sprint, priority response |
+| Care+ | $650/mo | Care + small features, analytics review |
+| Care Pro | $1,250/mo | Care+ + monthly improvement sprint, priority response |
 
 Care plans get a dedicated `/care-plans` page and a section anchor on `/pricing`. Recurring revenue is the single biggest stabilizer for a solo operator's income; without a public surface it gets sold only as a post-launch upsell, which leaves money on the table.
+
+**Care vs. Automation Systems Partner — relationship note.** The Automation lane's Systems Partner retainer ($500–$1,250/mo) covers ongoing maintenance for clients whose primary engagement was an Automation build. Care plans cover post-launch site/system care for any project type. Pricing overlaps at the top of both ranges; a Care Pro client and a Systems Partner client may pay similarly but receive different scope (site-care monthly tasks vs. automation-monitoring + tweaks). These two products may merge into a single "Care" line in v2 once buyer volume reveals which framing converts better. For v1, keep them separate but cross-link from each lane's page.
 
 ---
 

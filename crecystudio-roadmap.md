@@ -1,6 +1,20 @@
 # CrecyStudio — Website Lane Roadmap
 
-> **Status: partially superseded.** Strategic positioning and the multi-lane studio direction now live in `opportunities_to_build_on_current_repo_to_better_expose_crecys_potential.md`. This doc remains the historical record of the website-lane operating-system roadmap. Items P0–P2 (#1–#9 — portal data layer, portal reskin, two-way messaging, final invoicing, automated nudges, activity feed, etc.) have largely shipped per `supabase/migrations/`. Items P3 #10–#13 (e-signature, brand asset library, knowledge base, notification preferences) remain valid backlog and should be carried forward in the new strategy doc's 90-day roadmap.
+> **Status: superseded.** Strategic positioning and the multi-lane studio direction now live in `opportunities_to_build_on_current_repo_to_better_expose_crecys_potential.md`. This doc remains the historical record of the website-lane operating-system roadmap.
+>
+> All P0–P2 items have shipped, verified per repo state on 2026-05-01:
+>
+> - **#1 Portal data-layer migration** — `supabase/migrations/20260420_create_customer_portal_tables.sql` (customer_portal_projects/milestones/assets/revisions)
+> - **#2 Portal reskin (paper/ink)** — `app/globals.css` defines `--paper` / `--paper-2..4` / `--ink` tokens; portal uses shared classes
+> - **#3 Marketing interior reskin** — Live site renders paper/ink across `/`, `/websites`, `/systems`, `/process`, `/pricing`; fonts are Inter Tight + JetBrains Mono
+> - **#4 Two-way messaging** — `supabase/migrations/20260421_add_customer_portal_messages.sql` (sender_role client/studio/internal, attachments, read_at)
+> - **#5 Admin reskin** — `app/internal/admin/page.tsx` and project-control surfaces use the shared `kicker`/`card`/`h2`/`pDark` classes
+> - **#6 Final / milestone / retainer invoicing** — `supabase/migrations/20260422_create_project_invoices.sql`
+> - **#7 Automated nudges** — `nudge_log` table in `supabase/migrations/20260422_add_project_activity_and_nudges.sql`
+> - **#8 Unified activity feed** — `project_activity` table in same migration
+> - **#9 Internal dashboard** — `app/internal/dashboard/page.tsx` with KPI cards (revenue in play, active projects, average value), range selectors (today/week/month/quarter/year), needs-attention queue, capacity meter
+>
+> P3 items (#10 e-signature, #11 brand asset library, #12 knowledge base, #13 notification preferences) remain valid backlog and should be carried forward in the new strategy doc's 90-day roadmap.
 
 A priority-ordered list of fixes, polish work, and missing features needed to take the website lane from a strong 7/10 to a true 10/10 boutique agency operating system. Based on a code-level audit of the current workspace.
 

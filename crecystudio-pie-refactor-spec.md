@@ -1,6 +1,18 @@
 # PIE Engine Refactor — Specification
 
-> **Status: current source of truth for PIE engine implementation.** Strategic and positioning context for CrecyStudio lives in `opportunities_to_build_on_current_repo_to_better_expose_crecys_potential.md`, which references this spec for big-ticket routing logic (the fast/warm/deep paths). Phase 1 (config and cleanup) and the tier bands are already shipped (`lib/pricing/tiers.ts`, `lib/pricing/config.ts`). Phases 2–7 remain the implementation roadmap.
+> **Status: largely shipped — current source of truth for PIE engine implementation.** Strategic and positioning context for CrecyStudio lives in `opportunities_to_build_on_current_repo_to_better_expose_crecys_potential.md`, which references this spec for big-ticket routing logic (the fast/warm/deep paths).
+>
+> Engine state per `lib/pie/ensurePie.ts` and `lib/pricing/`, verified on 2026-05-01:
+>
+> - **Phase 1 (config and cleanup)** — Shipped. `lib/pricing/tiers.ts` defines `TIER_CONFIG` bands (Starter/Growth/Premium); `lib/pricing/config.ts` exports `INTERNAL_HOURLY_RATE`.
+> - **Phase 2 (hours model refactor)** — Shipped. `PiePayloadV3` includes `capacity.estimatedHours.{min,target,max}` and `capacity.breakdown.{discovery,build,revisions,qa,launch}`.
+> - **Phase 3 (tier recommendation refactor)** — Shipped. `tier.recommended` / `tier.priceBand` / `tier.targetPrice` / `tier.rationale` are populated from complexity scoring.
+> - **Phase 4 (pricing signal refactor)** — Shipped. `capacity.profitSignal` (`healthy` | `tight` | `unprofitable`) and `profitMessage` are emitted.
+> - **Phase 5 (routing logic)** — Shipped. `routing` field with `triggerDetails`, deep- and warm-trigger evaluation, `recommendedCallLength`, and `manualOverride` / `finalPath` slots are present in the engine.
+> - **Phase 6 (admin UI updates)** — Status not yet confirmed. Tier-band visualization and routing-override controls in `app/internal/admin/[id]/ProjectControlClient.tsx` need visual inspection.
+> - **Phase 7 (client-facing fast/warm/deep variants on `/estimate`)** — Status not yet confirmed. `app/[locale]/estimate/page.tsx` needs visual inspection.
+>
+> The remaining work is therefore mostly client-facing surface (Phases 6–7), not engine logic.
 
 Reference spec for refactoring the Project Intelligence Engine from labor-cost pricing to tier/value-based pricing. This is the target state. Implementation is separate work.
 
