@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 
 /* ═══════════════════════════════════
    TYPES
@@ -217,36 +218,56 @@ type PortalBundle = {
   messages: PortalMessage[];
 };
 
+type Phase =
+  | "live"
+  | "launch_ready"
+  | "preview_review"
+  | "build"
+  | "kickoff"
+  | "deposit_sent"
+  | "assets_submitted"
+  | "pre_start"
+  | "intake";
+
+type LaunchCheckKey =
+  | "agreement"
+  | "preview"
+  | "domain"
+  | "analytics"
+  | "forms"
+  | "seo"
+  | "handoff";
+
 /* ═══════════════════════════════════
    UTILITY FUNCTIONS
    ═══════════════════════════════════ */
 
-function money(value?: number | null) {
+function money(value: number | null | undefined, locale: string) {
   if (value == null || !Number.isFinite(Number(value))) return "—";
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
   }).format(Number(value));
 }
 
-function fmtDate(value?: string | null) {
+function fmtDate(value: string | null | undefined, locale: string) {
   if (!value) return "—";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return d.toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric" });
 }
 
-function pretty(value?: string | null) {
+function prettyFallback(value?: string | null) {
   if (!value) return "—";
   return value.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
-function fmtDateTime(value?: string | null) {
+function fmtDateTime(value: string | null | undefined, locale: string) {
   if (!value) return "—";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleString("en-US", {
+  return d.toLocaleString(locale, {
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -254,15 +275,15 @@ function fmtDateTime(value?: string | null) {
   });
 }
 
-function groupMessagesByDay(messages: PortalMessage[]) {
+function groupMessagesByDay(messages: PortalMessage[], locale: string, unknownLabel: string) {
   const groups: { key: string; label: string; items: PortalMessage[] }[] = [];
 
   for (const message of messages) {
     const date = new Date(message.createdAt || "");
     const key = Number.isNaN(date.getTime()) ? "unknown" : date.toLocaleDateString("en-CA");
     const label = Number.isNaN(date.getTime())
-      ? "Unknown day"
-      : date.toLocaleDateString("en-US", {
+      ? unknownLabel
+      : date.toLocaleDateString(locale, {
           weekday: "short",
           month: "short",
           day: "numeric",
@@ -324,29 +345,28 @@ function invoiceTone(status: ProjectInvoice["status"]) {
    ═══════════════════════════════════ */
 
 function computeClientLaunchReadiness(bundle: PortalBundle) {
-  const checks = [
+  const checks: { key: LaunchCheckKey; done: boolean }[] = [
     {
       key: "agreement",
-      label: "Agreement",
       done:
         !!bundle.agreement.publishedText?.trim() ||
         ["published to client", "signed", "kickoff ready"].includes(
           String(bundle.agreement.status || "").toLowerCase()
         ),
     },
-    { key: "preview", label: "Preview", done: !!bundle.preview.url },
-    { key: "domain", label: "Domain", done: isReadyState(bundle.launch.domainStatus) },
-    { key: "analytics", label: "Analytics", done: isReadyState(bundle.launch.analyticsStatus) },
-    { key: "forms", label: "Forms", done: isReadyState(bundle.launch.formsStatus) },
-    { key: "seo", label: "SEO", done: isReadyState(bundle.launch.seoStatus) },
-    { key: "handoff", label: "Handoff", done: isReadyState(bundle.launch.handoffStatus) },
+    { key: "preview", done: !!bundle.preview.url },
+    { key: "domain", done: isReadyState(bundle.launch.domainStatus) },
+    { key: "analytics", done: isReadyState(bundle.launch.analyticsStatus) },
+    { key: "forms", done: isReadyState(bundle.launch.formsStatus) },
+    { key: "seo", done: isReadyState(bundle.launch.seoStatus) },
+    { key: "handoff", done: isReadyState(bundle.launch.handoffStatus) },
   ];
   const completed = checks.filter((c) => c.done).length;
   const percent = Math.round((completed / checks.length) * 100);
   return { checks, percent, completed };
 }
 
-function getPhaseKey(bundle: PortalBundle) {
+function getPhaseKey(bundle: PortalBundle): Phase {
   const quoteStatus = String(bundle.quote.status || "").toLowerCase();
   const depositStatus = String(bundle.quote.deposit.status || "").toLowerCase();
   const launchStatus = String(bundle.launch.status || "").toLowerCase();
@@ -363,29 +383,6 @@ function getPhaseKey(bundle: PortalBundle) {
   return "intake";
 }
 
-function getStoryContent(phase: string) {
-  switch (phase) {
-    case "live":
-      return { headline: "live", body: "Your website is live and serving visitors. You can still submit feedback or upload new content at any time." };
-    case "launch_ready":
-      return { headline: "ready to launch", body: "Everything is in place. We're preparing your site for launch — you'll be notified as soon as it goes live." };
-    case "preview_review":
-      return { headline: "ready for review", body: "We've published a preview of your website. Take your time looking through every page — when you're ready, leave feedback below or open the preview to see it live." };
-    case "build":
-      return { headline: "being built", body: "We're building your website right now. You can track progress here, upload content, and submit feedback as things take shape." };
-    case "kickoff":
-      return { headline: "about to begin", body: "Your deposit has been received and the project is queued for kickoff. We'll start building shortly." };
-    case "deposit_sent":
-      return { headline: "awaiting verification", body: "We received your deposit notice and are verifying the payment. Work begins as soon as it clears." };
-    case "assets_submitted":
-      return { headline: "getting organized", body: "Thanks for submitting your content. We're reviewing your assets and preparing to start the build." };
-    case "pre_start":
-      return { headline: "in early planning", body: "Your project has been scoped. Review the agreement and deposit details below to get things moving." };
-    default:
-      return { headline: "taking shape", body: "Your project workspace is ready. Review the details below, upload your content, and we'll take it from there." };
-  }
-}
-
 function getMilestoneState(milestones: PortalMilestone[], index: number) {
   if (milestones[index]?.done) return "done";
   const activeIndex = milestones.findIndex((item) => !item.done);
@@ -396,7 +393,8 @@ function getMilestoneState(milestones: PortalMilestone[], index: number) {
    SUB-COMPONENTS
    ═══════════════════════════════════ */
 
-function JourneyMap({ milestones }: { milestones: PortalMilestone[] }) {
+function JourneyMap({ milestones, locale }: { milestones: PortalMilestone[]; locale: string }) {
+  const t = useTranslations("portalToken.journey");
   const doneCount = milestones.filter((m) => m.done).length;
   const fillPercent = milestones.length > 1
     ? ((doneCount - 0.5) / (milestones.length - 1)) * 100
@@ -404,7 +402,7 @@ function JourneyMap({ milestones }: { milestones: PortalMilestone[] }) {
 
   return (
     <div className="portalJourney">
-      <div className="portalSectionLabel">Your project journey</div>
+      <div className="portalSectionLabel">{t("title")}</div>
       <div className="portalJourneyTrack">
         <div className="portalJourneyLine">
           <div
@@ -441,7 +439,7 @@ function JourneyMap({ milestones }: { milestones: PortalMilestone[] }) {
                 {m.label}
               </div>
               <div className="portalJourneyDate">
-                {m.updatedAt ? fmtDate(m.updatedAt) : "—"}
+                {m.updatedAt ? fmtDate(m.updatedAt, locale) : "—"}
               </div>
             </div>
           );
@@ -464,7 +462,7 @@ function JourneyMap({ milestones }: { milestones: PortalMilestone[] }) {
               <div className="portalMilestoneCopy">
                 <div className="portalMilestoneLabel">{m.label}</div>
                 <div className="portalMilestoneDate">
-                  {m.updatedAt ? fmtDate(m.updatedAt) : "Waiting on this step"}
+                  {m.updatedAt ? fmtDate(m.updatedAt, locale) : t("waiting")}
                 </div>
               </div>
             </div>
@@ -476,10 +474,12 @@ function JourneyMap({ milestones }: { milestones: PortalMilestone[] }) {
 }
 
 function LaunchSummary({ checks, percent, completed }: {
-  checks: { key: string; label: string; done: boolean }[];
+  checks: { key: LaunchCheckKey; done: boolean }[];
   percent: number;
   completed: number;
 }) {
+  const t = useTranslations("portalToken.launch");
+  const tChecks = useTranslations("portalToken.launch.checks");
   const remaining = checks.filter((c) => !c.done);
 
   return (
@@ -489,10 +489,10 @@ function LaunchSummary({ checks, percent, completed }: {
         <div className="portalLaunchInfo">
           <h4>
             {remaining.length === 0
-              ? "Ready to launch"
-              : `${remaining.length} thing${remaining.length > 1 ? "s" : ""} left before launch`}
+              ? t("ready")
+              : t("leftBeforeLaunch", { count: remaining.length })}
           </h4>
-          <p>{completed} of {checks.length} checks passed</p>
+          <p>{t("checksPassed", { completed, total: checks.length })}</p>
         </div>
       </div>
 
@@ -509,7 +509,7 @@ function LaunchSummary({ checks, percent, completed }: {
             <span className="portalLaunchCheckBox">
               <span className="portalLaunchCheckBoxInner" />
             </span>
-            <span>{c.label}</span>
+            <span>{tChecks(c.key)}</span>
           </div>
         ))}
       </div>
@@ -555,6 +555,44 @@ export default function PortalClient({
   token: string;
   initialData: PortalBundle;
 }) {
+  const locale = useLocale();
+  const t = useTranslations("portalToken");
+  const tActions = useTranslations("portalToken.actions");
+  const tMeta = useTranslations("portalToken.meta");
+  const tDeposit = useTranslations("portalToken.deposit");
+  const tInvoices = useTranslations("portalToken.invoices");
+  const tInvoiceTypes = useTranslations("portalToken.invoices.types");
+  const tInvoiceStatuses = useTranslations("portalToken.invoices.statuses");
+  const tPreview = useTranslations("portalToken.preview");
+  const tMessages = useTranslations("portalToken.messages");
+  const tMessageRoles = useTranslations("portalToken.messages.roles");
+  const tActivity = useTranslations("portalToken.activity");
+  const tActivityActors = useTranslations("portalToken.activity.actors");
+  const tAssets = useTranslations("portalToken.assets");
+  const tAssetCategories = useTranslations("portalToken.assets.categories");
+  const tAssetStatuses = useTranslations("portalToken.assets.statuses");
+  const tFeedback = useTranslations("portalToken.feedback");
+  const tFeedbackPriority = useTranslations("portalToken.feedback.priority");
+  const tFeedbackPriorityShort = useTranslations("portalToken.feedback.priorityShort");
+  const tFeedbackStatuses = useTranslations("portalToken.feedback.statuses");
+  const tDetails = useTranslations("portalToken.details");
+  const tDetailRows = useTranslations("portalToken.details.rows");
+  const tImpacts = useTranslations("portalToken.details.changeOrderImpacts");
+  const tFooter = useTranslations("portalToken.footer");
+  const tErrors = useTranslations("portalToken.errors");
+  const tPhases = useTranslations("portalToken.phases");
+  const tStories = useTranslations("portalToken.stories");
+  const tLaunch = useTranslations("portalToken.launch");
+
+  const lookup = useCallback(
+    (dict: ReturnType<typeof useTranslations>, raw: string | null | undefined) => {
+      const key = String(raw || "").toLowerCase().trim();
+      if (!key) return "—";
+      return dict.has(key) ? dict(key) : prettyFallback(raw);
+    },
+    []
+  );
+
   const [bundle, setBundle] = useState<PortalBundle>(initialData);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -607,10 +645,12 @@ export default function PortalClient({
 
   /* ── Computed ── */
   const phase = useMemo(() => getPhaseKey(bundle), [bundle]);
-  const story = useMemo(() => getStoryContent(phase), [phase]);
   const launchReadiness = useMemo(() => computeClientLaunchReadiness(bundle), [bundle]);
   const depositPaid = String(bundle.quote.deposit.status || "").toLowerCase() === "paid";
-  const groupedMessages = useMemo(() => groupMessagesByDay(bundle.messages), [bundle.messages]);
+  const groupedMessages = useMemo(
+    () => groupMessagesByDay(bundle.messages, locale, tMessages("unknownDay")),
+    [bundle.messages, locale, tMessages]
+  );
 
   /* ── Actions ── */
   async function applyAction(body: Record<string, unknown>) {
@@ -623,10 +663,10 @@ export default function PortalClient({
         body: JSON.stringify(body),
       });
       const json = await res.json();
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to update workspace.");
+      if (!res.ok || !json?.ok) throw new Error(json?.error || tErrors("updateFailed"));
       setBundle(json.data as PortalBundle);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update workspace.");
+      setError(err instanceof Error ? err.message : tErrors("updateFailed"));
     } finally {
       setSaving(false);
     }
@@ -648,10 +688,10 @@ export default function PortalClient({
         form.append("notes", assetNotes.trim());
         const res = await fetch("/api/portal/assets", { method: "POST", body: form });
         const json = await res.json();
-        if (!res.ok || !json?.ok) throw new Error(json?.error || "Upload failed.");
+        if (!res.ok || !json?.ok) throw new Error(json?.error || tErrors("uploadFailed"));
         await refreshBundle(true);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Upload failed.");
+        setError(err instanceof Error ? err.message : tErrors("uploadFailed"));
       } finally {
         setSaving(false);
       }
@@ -672,10 +712,10 @@ export default function PortalClient({
           }),
         });
         const json = await res.json();
-        if (!res.ok || !json?.ok) throw new Error(json?.error || "Upload failed.");
+        if (!res.ok || !json?.ok) throw new Error(json?.error || tErrors("uploadFailed"));
         await refreshBundle(true);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Upload failed.");
+        setError(err instanceof Error ? err.message : tErrors("uploadFailed"));
       } finally {
         setSaving(false);
       }
@@ -731,13 +771,13 @@ export default function PortalClient({
       }
 
       const json = await res.json().catch(() => ({}));
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to send message.");
+      if (!res.ok || !json?.ok) throw new Error(json?.error || tErrors("messageFailed"));
       await refreshBundle(true);
       setMessageBody("");
       setMessageFile(null);
       if (messageFileRef.current) messageFileRef.current.value = "";
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send message.");
+      setError(err instanceof Error ? err.message : tErrors("messageFailed"));
     } finally {
       setSaving(false);
     }
@@ -754,14 +794,17 @@ export default function PortalClient({
       <div className="portalStory heroFadeUp">
         <div className="portalStoryKicker">
           <span className="portalStoryKickerDot" />
-          Website project
+          {t("kicker")}
         </div>
 
         <h1 className="portalStoryHeadline">
-          Your website is <em>{story.headline}</em>
+          {t.rich("headline", {
+            phase: tPhases(phase),
+            em: (chunks) => <em>{chunks}</em>,
+          })}
         </h1>
 
-        <p className="portalStoryBody">{story.body}</p>
+        <p className="portalStoryBody">{tStories(phase)}</p>
 
         <div className="portalStoryActions">
           {bundle.preview.url ? (
@@ -771,7 +814,7 @@ export default function PortalClient({
               rel="noreferrer"
               className="portalStoryCta"
             >
-              Open your preview
+              {tActions("openPreview")}
               <span className="portalStoryCtaArrow">→</span>
             </a>
           ) : null}
@@ -783,7 +826,7 @@ export default function PortalClient({
               rel="noreferrer"
               className="btn btnGhost"
             >
-              Open live site
+              {tActions("openLiveSite")}
             </a>
           ) : null}
 
@@ -793,23 +836,23 @@ export default function PortalClient({
             onClick={() => refreshBundle(false)}
             style={{ fontSize: 13 }}
           >
-            {refreshing ? "Refreshing..." : "Refresh"}
+            {refreshing ? tActions("refreshing") : tActions("refresh")}
           </button>
 
           <Link href="/portal" className="btn btnGhost" style={{ fontSize: 13 }}>
-            Back to portal
+            {tActions("backToPortal")}
           </Link>
         </div>
 
         <div className="portalStoryMeta">
           <span className="portalStoryMetaItem">
-            Project #{String(bundle.quote.id).slice(0, 8)}
+            {tMeta("projectId", { id: String(bundle.quote.id).slice(0, 8) })}
           </span>
           <span className="portalStoryMetaItem">
-            Started {fmtDate(bundle.quote.createdAt)}
+            {tMeta("started", { date: fmtDate(bundle.quote.createdAt, locale) })}
           </span>
           <span className="portalStoryMetaItem">
-            {bundle.scopeSnapshot.tierLabel} tier
+            {tMeta("tierLabel", { tier: bundle.scopeSnapshot.tierLabel })}
           </span>
         </div>
       </div>
@@ -824,17 +867,13 @@ export default function PortalClient({
         }`}
       >
           <div className="portalDepositLead">
-            <h3>{depositPaid ? "Deposit received" : "Your deposit is waiting"}</h3>
-            <p>
-              {depositPaid
-                ? "Your deposit has been recorded and the project is moving through kickoff. We will keep the workspace updated as build work progresses."
-                : "Work begins as soon as the deposit clears. Pay securely via the link and we will confirm receipt within 24 hours."}
-            </p>
+            <h3>{depositPaid ? tDeposit("headerPaid") : tDeposit("headerPending")}</h3>
+            <p>{depositPaid ? tDeposit("bodyPaid") : tDeposit("bodyPending")}</p>
           </div>
           <div className="portalDepositActions">
             {bundle.quote.deposit.amount ? (
               <span className="portalDepositAmount">
-                {money(bundle.quote.deposit.amount)}
+                {money(bundle.quote.deposit.amount, locale)}
               </span>
             ) : null}
 
@@ -845,7 +884,7 @@ export default function PortalClient({
                 rel="noreferrer"
                 className="portalStoryCta"
               >
-                Pay deposit <span className="portalStoryCtaArrow">→</span>
+                {tActions("payDeposit")} <span className="portalStoryCtaArrow">→</span>
               </a>
             ) : null}
 
@@ -857,22 +896,22 @@ export default function PortalClient({
                 onClick={() =>
                   applyAction({
                     type: "deposit_notice_sent",
-                    note: "Client reported that the deposit was sent and is awaiting verification.",
+                    note: tDeposit("depositSentReason"),
                   })
                 }
               >
-                {saving ? "Sending..." : "I sent the deposit"}
+                {saving ? tActions("depositSending") : tActions("depositSent")}
               </button>
             ) : null}
 
             {bundle.portalState.clientStatus === "deposit_sent" ? (
               <span className="portalDepositMeta">
-                Deposit notice sent — awaiting verification
+                {tActions("depositNoticeAwaiting")}
               </span>
             ) : null}
             {depositPaid && bundle.quote.deposit.paidAt ? (
               <span className="portalDepositMeta">
-                Paid {fmtDate(bundle.quote.deposit.paidAt)}
+                {tActions("depositPaidOn", { date: fmtDate(bundle.quote.deposit.paidAt, locale) })}
               </span>
             ) : null}
           </div>
@@ -880,25 +919,23 @@ export default function PortalClient({
 
       {/* ── Journey Map ── */}
       {bundle.portalState.milestones.length > 0 ? (
-        <JourneyMap milestones={bundle.portalState.milestones} />
+        <JourneyMap milestones={bundle.portalState.milestones} locale={locale} />
       ) : null}
 
       <div className="portalPanel fadeUp" style={{ animationDelay: "0.06s", marginBottom: "1rem" }}>
         <div className="portalPanelHeader">
           <div>
-            <h2 className="portalPanelTitle">Invoices</h2>
-            <div className="portalMessageIntro">
-              Every invoice for your project appears here, including paid history and any open balances.
-            </div>
+            <h2 className="portalPanelTitle">{tInvoices("title")}</h2>
+            <div className="portalMessageIntro">{tInvoices("intro")}</div>
           </div>
           <span className="portalPanelCount">
-            {bundle.invoices.length} invoice{bundle.invoices.length === 1 ? "" : "s"}
+            {tInvoices("count", { count: bundle.invoices.length })}
           </span>
         </div>
 
         <div style={{ display: "grid", gap: 10 }}>
           {bundle.invoices.length === 0 ? (
-            <div className="portalEmptyState">No invoices have been issued yet.</div>
+            <div className="portalEmptyState">{tInvoices("empty")}</div>
           ) : (
             bundle.invoices.map((invoice) => {
               const tone = invoiceTone(invoice.status);
@@ -916,22 +953,24 @@ export default function PortalClient({
                     <div>
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                         <div style={{ fontSize: 16, fontWeight: 600, color: "var(--ink)" }}>
-                          {pretty(invoice.invoiceType)} invoice
+                          {tInvoiceTypes.has(invoice.invoiceType)
+                            ? tInvoiceTypes(invoice.invoiceType)
+                            : `${prettyFallback(invoice.invoiceType)} invoice`}
                         </div>
                         <span style={{ ...tone, borderRadius: 999, padding: "4px 10px", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                          {pretty(invoice.status)}
+                          {lookup(tInvoiceStatuses, invoice.status)}
                         </span>
                       </div>
                       <div style={{ marginTop: 4, fontSize: 12, color: "var(--muted-2)" }}>
-                        Issued {fmtDate(invoice.createdAt)}
-                        {invoice.dueDate ? ` · Due ${fmtDate(invoice.dueDate)}` : ""}
-                        {invoice.paidAt ? ` · Paid ${fmtDate(invoice.paidAt)}` : ""}
+                        {tInvoices("issued", { date: fmtDate(invoice.createdAt, locale) })}
+                        {invoice.dueDate ? tInvoices("due", { date: fmtDate(invoice.dueDate, locale) }) : ""}
+                        {invoice.paidAt ? tInvoices("paid", { date: fmtDate(invoice.paidAt, locale) }) : ""}
                       </div>
                     </div>
 
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontSize: 20, fontWeight: 700, color: "var(--ink)" }}>
-                        {money(invoice.amount)}
+                        {money(invoice.amount, locale)}
                       </div>
                       <div style={{ fontSize: 11, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                         {invoice.currency}
@@ -953,7 +992,7 @@ export default function PortalClient({
                         rel="noreferrer"
                         className="portalStoryCta"
                       >
-                        Pay now <span className="portalStoryCtaArrow">→</span>
+                        {tActions("payNow")} <span className="portalStoryCtaArrow">→</span>
                       </a>
                     ) : null}
                     {invoice.paymentUrl ? (
@@ -964,7 +1003,7 @@ export default function PortalClient({
                         className="btn btnGhost"
                         style={{ fontSize: 13 }}
                       >
-                        Open invoice
+                        {tActions("openInvoice")}
                       </a>
                     ) : null}
                   </div>
@@ -980,7 +1019,7 @@ export default function PortalClient({
         <div className="portalNote fadeUp">
           <div className="portalNoteIcon">C</div>
           <div>
-            <div className="portalNoteLabel">Note from the studio</div>
+            <div className="portalNoteLabel">{t("studioNote")}</div>
             <div className="portalNoteText">{bundle.portalState.adminPublicNote}</div>
           </div>
         </div>
@@ -990,7 +1029,7 @@ export default function PortalClient({
       <div className="portalGrid2 portalGrid2Wide">
         <div className="portalPanel fadeUp" style={{ animationDelay: "0.1s" }}>
           <div className="portalPanelHeader">
-            <h2 className="portalPanelTitle">Preview</h2>
+            <h2 className="portalPanelTitle">{tPreview("panelTitle")}</h2>
           </div>
 
           <div className="portalPreviewCard">
@@ -998,18 +1037,18 @@ export default function PortalClient({
               <span className="portalPreviewImgLabel">
                 {bundle.preview.url
                   ? new URL(bundle.preview.url).hostname
-                  : "Preview not published yet"}
+                  : tPreview("notPublished")}
               </span>
               {bundle.preview.url ? (
                 <span className="portalPreviewLiveBadge">
                   <span className="portalPreviewLiveDot" />
-                  Preview live
+                  {tPreview("live")}
                 </span>
               ) : null}
             </div>
             <div className="portalPreviewBody">
               <div className="portalPreviewUrl">
-                {bundle.preview.url || "Pending"}
+                {bundle.preview.url || tPreview("pending")}
               </div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {bundle.preview.url ? (
@@ -1020,11 +1059,11 @@ export default function PortalClient({
                     className="btn btnPrimary"
                     style={{ fontSize: 13 }}
                   >
-                    Open preview <span className="btnArrow">→</span>
+                    {tPreview("openPreview")} <span className="btnArrow">→</span>
                   </a>
                 ) : (
                   <button className="btn btnGhost" disabled>
-                    Preview pending
+                    {tPreview("previewPending")}
                   </button>
                 )}
                 {bundle.preview.productionUrl ? (
@@ -1035,7 +1074,7 @@ export default function PortalClient({
                     className="btn btnGhost"
                     style={{ fontSize: 13 }}
                   >
-                    Open live site
+                    {tPreview("openLiveSite")}
                   </a>
                 ) : null}
               </div>
@@ -1044,7 +1083,7 @@ export default function PortalClient({
 
           {bundle.preview.notes ? (
             <div className="portalInfoNote">
-              <div className="portalInfoNoteLabel">Preview notes</div>
+              <div className="portalInfoNoteLabel">{tPreview("notesLabel")}</div>
               <p className="portalInfoNoteText">{bundle.preview.notes}</p>
             </div>
           ) : null}
@@ -1052,44 +1091,39 @@ export default function PortalClient({
 
         <div className="portalPanel fadeUp" style={{ animationDelay: "0.15s" }}>
           <div className="portalPanelHeader">
-            <h2 className="portalPanelTitle">Launch</h2>
+            <h2 className="portalPanelTitle">{tLaunch("panelTitle")}</h2>
           </div>
           <LaunchSummary
             checks={launchReadiness.checks}
             percent={launchReadiness.percent}
             completed={launchReadiness.completed}
           />
-          <div className="portalLaunchAside">
-            We&apos;re handling the remaining items behind the scenes. You&apos;ll be notified
-            when everything&apos;s ready to go live.
-          </div>
+          <div className="portalLaunchAside">{tLaunch("asideText")}</div>
 
           {bundle.launch.notes ? (
             <div className="portalInfoNote">
-              <div className="portalInfoNoteLabel">Launch notes</div>
+              <div className="portalInfoNoteLabel">{tLaunch("notesLabel")}</div>
               <p className="portalInfoNoteText">{bundle.launch.notes}</p>
             </div>
           ) : null}
         </div>
       </div>
 
-      {/* ── Content & Assets + Feedback ── */}
+      {/* ── Messages Panel ── */}
       <div className="portalPanel fadeUp" style={{ animationDelay: "0.18s", marginBottom: "1rem" }}>
         <div className="portalPanelHeader">
           <div>
-            <h2 className="portalPanelTitle">Messages</h2>
-            <div className="portalMessageIntro">
-              Ask questions, confirm approvals, or send the studio anything you want us to see.
-            </div>
+            <h2 className="portalPanelTitle">{tMessages("panelTitle")}</h2>
+            <div className="portalMessageIntro">{tMessages("intro")}</div>
           </div>
           <span className="portalPanelCount">
-            {bundle.messages.length} message{bundle.messages.length === 1 ? "" : "s"}
+            {tMessages("count", { count: bundle.messages.length })}
           </span>
         </div>
 
         <div className="portalMessageThread">
           {groupedMessages.length === 0 ? (
-            <div className="portalEmptyState">No messages yet</div>
+            <div className="portalEmptyState">{tMessages("empty")}</div>
           ) : (
             groupedMessages.map((group) => (
               <div key={group.key}>
@@ -1124,11 +1158,13 @@ export default function PortalClient({
                       <div className="portalMessageBody">
                         <div className="portalMessageMeta">
                           <div className="portalMessageSender">{entry.senderName}</div>
-                          <span className="pill">{pretty(entry.senderRole)}</span>
-                          <span className="portalMessageTime">{fmtDateTime(entry.createdAt)}</span>
+                          <span className="pill">{lookup(tMessageRoles, entry.senderRole)}</span>
+                          <span className="portalMessageTime">{fmtDateTime(entry.createdAt, locale)}</span>
                           {entry.senderRole === "studio" ? (
                             <span className="portalMessageTime">
-                              {entry.readAt ? `Seen ${fmtDateTime(entry.readAt)}` : "Unread"}
+                              {entry.readAt
+                                ? tMessages("seen", { time: fmtDateTime(entry.readAt, locale) })
+                                : tMessages("unread")}
                             </span>
                           ) : null}
                         </div>
@@ -1143,7 +1179,7 @@ export default function PortalClient({
                               rel="noreferrer"
                               className="portalAttachmentChip"
                             >
-                              <span>{entry.attachment.name || "Attachment"}</span>
+                              <span>{entry.attachment.name || tMessages("attachmentFallback")}</span>
                               {entry.attachment.size ? (
                                 <span className="portalAttachmentMeta">
                                   {(entry.attachment.size / 1024).toFixed(0)} KB
@@ -1164,7 +1200,7 @@ export default function PortalClient({
         <form onSubmit={submitMessage} className="portalMessageComposer">
           <textarea
             className="portalFeedbackArea"
-            placeholder="Write a message to the studio..."
+            placeholder={tMessages("writePlaceholder")}
             value={messageBody}
             onChange={(e) => setMessageBody(e.target.value)}
           />
@@ -1176,7 +1212,7 @@ export default function PortalClient({
                 style={{ fontSize: 12 }}
                 onClick={() => messageFileRef.current?.click()}
               >
-                Attach file
+                {tMessages("attach")}
               </button>
               <input
                 ref={messageFileRef}
@@ -1191,38 +1227,37 @@ export default function PortalClient({
               ) : null}
             </div>
             <button type="submit" className="portalFeedbackBtn" disabled={saving}>
-              {saving ? "Sending..." : "Send message"}
+              {saving ? tMessages("sending") : tMessages("send")}
             </button>
           </div>
         </form>
       </div>
 
+      {/* ── Activity Panel ── */}
       <div className="portalPanel fadeUp" style={{ animationDelay: "0.2s", marginBottom: "1rem" }}>
         <div className="portalPanelHeader">
           <div>
-            <h2 className="portalPanelTitle">Activity</h2>
-            <div className="portalMessageIntro">
-              A running timeline of the client-facing milestones and updates for your project.
-            </div>
+            <h2 className="portalPanelTitle">{tActivity("panelTitle")}</h2>
+            <div className="portalMessageIntro">{tActivity("intro")}</div>
           </div>
           <span className="portalPanelCount">
-            {bundle.activityFeed.length} event{bundle.activityFeed.length === 1 ? "" : "s"}
+            {tActivity("count", { count: bundle.activityFeed.length })}
           </span>
         </div>
 
         <div style={{ display: "grid", gap: 10 }}>
           {bundle.activityFeed.length === 0 ? (
-            <div className="portalEmptyState">No activity yet.</div>
+            <div className="portalEmptyState">{tActivity("empty")}</div>
           ) : (
             bundle.activityFeed.map((item) => (
               <div key={item.id} style={{ display: "grid", gridTemplateColumns: "72px minmax(0,1fr)", gap: 14, padding: "14px 16px", borderRadius: 14, border: "1px solid var(--rule)", background: "var(--paper-2)" }}>
                 <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: item.actorRole === "client" ? "var(--accent)" : "var(--muted-2)" }}>
-                  {pretty(item.actorRole)}
+                  {lookup(tActivityActors, item.actorRole)}
                 </div>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>{item.summary}</div>
                   <div style={{ marginTop: 4, fontSize: 12, color: "var(--muted-2)" }}>
-                    {fmtDateTime(item.createdAt)}
+                    {fmtDateTime(item.createdAt, locale)}
                   </div>
                 </div>
               </div>
@@ -1235,9 +1270,9 @@ export default function PortalClient({
         {/* Assets */}
         <div className="portalPanel fadeUp" style={{ animationDelay: "0.2s" }}>
           <div className="portalPanelHeader">
-            <h2 className="portalPanelTitle">Your content</h2>
+            <h2 className="portalPanelTitle">{tAssets("panelTitle")}</h2>
             <span className="portalPanelCount">
-              {bundle.portalState.assets.length} item{bundle.portalState.assets.length !== 1 ? "s" : ""}
+              {tAssets("count", { count: bundle.portalState.assets.length })}
             </span>
           </div>
 
@@ -1256,42 +1291,39 @@ export default function PortalClient({
                 </svg>
               </div>
               <div className="portalUploadText">
-                Drop files here or <b>browse</b>
+                {tAssets("uploadDrop")} <b>{tAssets("uploadBrowse")}</b>
               </div>
               <div className="portalUploadHint">
-                Logos, copy, photos, credentials — we&apos;ll sort them
+                {tAssets("uploadHint")}
               </div>
             </div>
           ) : (
             <form onSubmit={submitAsset} className="portalUploadForm">
               <div>
-                <div className="fieldLabel">Asset label</div>
+                <div className="fieldLabel">{tAssets("labelLabel")}</div>
                 <input
                   className="input"
                   value={assetLabel}
                   onChange={(e) => setAssetLabel(e.target.value)}
-                  placeholder="Homepage copy, logo file, service photos..."
+                  placeholder={tAssets("labelPlaceholder")}
                 />
               </div>
 
               <div className="portalInlineGrid2">
                 <div>
-                  <div className="fieldLabel">Category</div>
+                  <div className="fieldLabel">{tAssets("categoryLabel")}</div>
                   <select
                     className="select"
                     value={assetCategory}
                     onChange={(e) => setAssetCategory(e.target.value)}
                   >
-                    <option>Brand</option>
-                    <option>Copy</option>
-                    <option>Images</option>
-                    <option>Access</option>
-                    <option>Legal</option>
-                    <option>Other</option>
+                    {(["Brand", "Copy", "Images", "Access", "Legal", "Other"] as const).map((opt) => (
+                      <option key={opt} value={opt}>{tAssetCategories(opt)}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
-                  <div className="fieldLabel">Submit as</div>
+                  <div className="fieldLabel">{tAssets("submitAsLabel")}</div>
                   <div className="row" style={{ gap: 6 }}>
                     <button
                       type="button"
@@ -1299,7 +1331,7 @@ export default function PortalClient({
                       style={{ fontSize: 12, padding: "6px 12px" }}
                       onClick={() => setAssetMode("link")}
                     >
-                      Link
+                      {tAssets("modeLink")}
                     </button>
                     <button
                       type="button"
@@ -1307,7 +1339,7 @@ export default function PortalClient({
                       style={{ fontSize: 12, padding: "6px 12px" }}
                       onClick={() => setAssetMode("file")}
                     >
-                      File
+                      {tAssets("modeFile")}
                     </button>
                   </div>
                 </div>
@@ -1315,17 +1347,17 @@ export default function PortalClient({
 
               {assetMode === "link" ? (
                 <div>
-                  <div className="fieldLabel">URL</div>
+                  <div className="fieldLabel">{tAssets("urlLabel")}</div>
                   <input
                     className="input"
                     value={assetUrl}
                     onChange={(e) => setAssetUrl(e.target.value)}
-                    placeholder="Google Drive / Dropbox / direct link"
+                    placeholder={tAssets("urlPlaceholder")}
                   />
                 </div>
               ) : (
                 <div>
-                  <div className="fieldLabel">Choose file</div>
+                  <div className="fieldLabel">{tAssets("fileLabel")}</div>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -1342,40 +1374,44 @@ export default function PortalClient({
               )}
 
               <div>
-                <div className="fieldLabel">Notes</div>
+                <div className="fieldLabel">{tAssets("notesLabel")}</div>
                 <textarea
                   className="textarea"
                   value={assetNotes}
                   onChange={(e) => setAssetNotes(e.target.value)}
-                  placeholder="Anything we should know?"
+                  placeholder={tAssets("notesPlaceholder")}
                   style={{ minHeight: 60 }}
                 />
               </div>
 
               <div className="row" style={{ gap: 8 }}>
                 <button type="submit" className="btn btnPrimary" disabled={saving}>
-                  {saving ? "Saving..." : "Submit asset"} <span className="btnArrow">→</span>
+                  {saving ? tAssets("submitting") : tAssets("submit")} <span className="btnArrow">→</span>
                 </button>
                 <button
                   type="button"
                   className="btn btnGhost"
                   onClick={() => setShowUploadForm(false)}
                 >
-                  Cancel
+                  {tAssets("cancel")}
                 </button>
               </div>
             </form>
           )}
 
           {bundle.portalState.assets.length === 0 && !showUploadForm ? (
-            <div className="portalEmptyState">No assets submitted yet</div>
+            <div className="portalEmptyState">{tAssets("empty")}</div>
           ) : (
             bundle.portalState.assets.map((asset) => (
               <div key={asset.id} className="portalAsset">
                 <div>
                   <div className="portalAssetName">{asset.label}</div>
                   <div className="portalAssetMeta">
-                    {asset.category} · {fmtDate(asset.createdAt)}
+                    {tAssetCategories.has(asset.category)
+                      ? tAssetCategories(asset.category)
+                      : asset.category}
+                    {" · "}
+                    {fmtDate(asset.createdAt, locale)}
                     {asset.notes ? ` · ${asset.notes}` : ""}
                   </div>
                 </div>
@@ -1389,7 +1425,7 @@ export default function PortalClient({
                         : "portalPillSubmitted"
                     }`}
                   >
-                    {pretty(asset.status)}
+                    {lookup(tAssetStatuses, asset.status)}
                   </span>
                   <a
                     href={asset.url}
@@ -1397,7 +1433,7 @@ export default function PortalClient({
                     rel="noreferrer"
                     style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600 }}
                   >
-                    Open
+                    {tAssets("open")}
                   </a>
                 </div>
               </div>
@@ -1408,16 +1444,16 @@ export default function PortalClient({
         {/* Feedback */}
         <div className="portalPanel fadeUp" style={{ animationDelay: "0.25s" }}>
           <div className="portalPanelHeader">
-            <h2 className="portalPanelTitle">Feedback</h2>
+            <h2 className="portalPanelTitle">{tFeedback("panelTitle")}</h2>
             <span className="portalPanelCount">
-              {bundle.portalState.revisions.length} item{bundle.portalState.revisions.length !== 1 ? "s" : ""}
+              {tFeedback("count", { count: bundle.portalState.revisions.length })}
             </span>
           </div>
 
           <form onSubmit={submitRevision} className="portalFeedbackForm">
             <textarea
               className="portalFeedbackArea"
-              placeholder="What should change? What feels off?"
+              placeholder={tFeedback("placeholder")}
               value={revisionMessage}
               onChange={(e) => setRevisionMessage(e.target.value)}
             />
@@ -1434,18 +1470,18 @@ export default function PortalClient({
                     }`}
                     onClick={() => setRevisionPriority(priority)}
                   >
-                    {priority} priority
+                    {tFeedbackPriority(priority)}
                   </button>
                 ))}
               </div>
               <button type="submit" className="portalFeedbackBtn" disabled={saving}>
-                {saving ? "Sending..." : "Submit feedback"}
+                {saving ? tFeedback("submitting") : tFeedback("submit")}
               </button>
             </div>
           </form>
 
           {bundle.portalState.revisions.length === 0 ? (
-            <div className="portalEmptyState">No revision requests yet</div>
+            <div className="portalEmptyState">{tFeedback("empty")}</div>
           ) : (
             bundle.portalState.revisions.map((rev) => (
               <div
@@ -1459,7 +1495,7 @@ export default function PortalClient({
                 }`}
               >
                 <div className="portalRevTop">
-                  <span className="portalRevStatus">{pretty(rev.status)}</span>
+                  <span className="portalRevStatus">{lookup(tFeedbackStatuses, rev.status)}</span>
                   <span
                     className={`portalRevPriority ${
                       rev.priority === "high"
@@ -1467,11 +1503,13 @@ export default function PortalClient({
                         : "portalRevPriorityNormal"
                     }`}
                   >
-                    {rev.priority}
+                    {tFeedbackPriorityShort(rev.priority)}
                   </span>
                 </div>
                 <div className="portalRevMsg">{rev.message}</div>
-                <div className="portalRevDate">Submitted {fmtDate(rev.createdAt)}</div>
+                <div className="portalRevDate">
+                  {tFeedback("submittedOn", { date: fmtDate(rev.createdAt, locale) })}
+                </div>
               </div>
             ))
           )}
@@ -1480,50 +1518,53 @@ export default function PortalClient({
 
       {/* ── Project Details (Drawers) ── */}
       <div className="portalSectionLabel fadeUp" style={{ marginTop: 8 }}>
-        Project details
+        {tDetails("title")}
       </div>
 
       <Drawer
-        label="Scope & features"
-        value={`${bundle.scopeSnapshot.pagesIncluded.length} pages · ${bundle.scopeSnapshot.featuresIncluded.length} features`}
+        label={tDetails("scopeLabel")}
+        value={tDetails("scopeValue", {
+          pages: bundle.scopeSnapshot.pagesIncluded.length,
+          features: bundle.scopeSnapshot.featuresIncluded.length,
+        })}
       >
         <div className="portalDrawerRow">
-          <span className="portalDrawerKey">Tier</span>
+          <span className="portalDrawerKey">{tDetailRows("tier")}</span>
           <span className="portalDrawerVal">{bundle.scopeSnapshot.tierLabel}</span>
         </div>
         <div className="portalDrawerRow">
-          <span className="portalDrawerKey">Platform</span>
+          <span className="portalDrawerKey">{tDetailRows("platform")}</span>
           <span className="portalDrawerVal">{bundle.scopeSnapshot.platform}</span>
         </div>
         <div className="portalDrawerRow">
-          <span className="portalDrawerKey">Website type</span>
-          <span className="portalDrawerVal">{pretty(bundle.scope.websiteType)}</span>
+          <span className="portalDrawerKey">{tDetailRows("websiteType")}</span>
+          <span className="portalDrawerVal">{prettyFallback(bundle.scope.websiteType)}</span>
         </div>
         <div className="portalDrawerRow">
-          <span className="portalDrawerKey">Timeline</span>
+          <span className="portalDrawerKey">{tDetailRows("timeline")}</span>
           <span className="portalDrawerVal">{bundle.scopeSnapshot.timeline}</span>
         </div>
         <div className="portalDrawerRow">
-          <span className="portalDrawerKey">Revision policy</span>
+          <span className="portalDrawerKey">{tDetailRows("revisionPolicy")}</span>
           <span className="portalDrawerVal">{bundle.scopeSnapshot.revisionPolicy}</span>
         </div>
         <div className="portalDrawerRow">
-          <span className="portalDrawerKey">Content readiness</span>
-          <span className="portalDrawerVal">{pretty(bundle.scope.contentReady)}</span>
+          <span className="portalDrawerKey">{tDetailRows("contentReady")}</span>
+          <span className="portalDrawerVal">{prettyFallback(bundle.scope.contentReady)}</span>
         </div>
         <div className="portalDrawerRow">
-          <span className="portalDrawerKey">Domain / hosting</span>
-          <span className="portalDrawerVal">{pretty(bundle.scope.domainHosting)}</span>
+          <span className="portalDrawerKey">{tDetailRows("domainHosting")}</span>
+          <span className="portalDrawerVal">{prettyFallback(bundle.scope.domainHosting)}</span>
         </div>
         <div className="portalDrawerRow">
-          <span className="portalDrawerKey">Integrations</span>
+          <span className="portalDrawerKey">{tDetailRows("integrations")}</span>
           <span className="portalDrawerVal">
-            {bundle.scope.integrations.length ? bundle.scope.integrations.join(", ") : "None listed"}
+            {bundle.scope.integrations.length ? bundle.scope.integrations.join(", ") : tDetailRows("noneListed")}
           </span>
         </div>
         {bundle.scopeSnapshot.pagesIncluded.length > 0 && (
           <div className="portalDrawerRow" style={{ borderBottom: "none", flexWrap: "wrap" }}>
-            <span className="portalDrawerKey">Pages</span>
+            <span className="portalDrawerKey">{tDetailRows("pages")}</span>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {bundle.scopeSnapshot.pagesIncluded.map((p) => (
                 <span key={p} className="portalFeatureTag">{p}</span>
@@ -1533,7 +1574,7 @@ export default function PortalClient({
         )}
         {bundle.scopeSnapshot.featuresIncluded.length > 0 && (
           <div className="portalDrawerRow" style={{ borderBottom: "none", flexWrap: "wrap", paddingTop: 4 }}>
-            <span className="portalDrawerKey">Features</span>
+            <span className="portalDrawerKey">{tDetailRows("features")}</span>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {bundle.scopeSnapshot.featuresIncluded.map((f) => (
                 <span key={f} className="portalFeatureTag">{f}</span>
@@ -1543,7 +1584,7 @@ export default function PortalClient({
         )}
         {bundle.scopeSnapshot.exclusions.length > 0 && (
           <div className="portalDrawerRow" style={{ borderBottom: "none", flexWrap: "wrap", paddingTop: 4 }}>
-            <span className="portalDrawerKey">Exclusions</span>
+            <span className="portalDrawerKey">{tDetailRows("exclusions")}</span>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {bundle.scopeSnapshot.exclusions.map((x) => (
                 <span key={x} className="portalFeatureTag">{x}</span>
@@ -1557,7 +1598,7 @@ export default function PortalClient({
             background: "var(--paper-2)", border: "1px solid var(--rule)",
           }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
-              Intake notes
+              {tDetailRows("intakeNotes")}
             </div>
             <p className="p" style={{ margin: 0, fontSize: 14 }}>{bundle.scope.notes}</p>
           </div>
@@ -1565,35 +1606,37 @@ export default function PortalClient({
       </Drawer>
 
       <Drawer
-        label="Agreement & payment"
-        value={pretty(bundle.agreement.status)}
+        label={tDetails("agreementLabel")}
+        value={prettyFallback(bundle.agreement.status)}
       >
         <div className="portalDrawerRow">
-          <span className="portalDrawerKey">Agreement status</span>
-          <span className="portalDrawerVal">{pretty(bundle.agreement.status)}</span>
+          <span className="portalDrawerKey">{tDetailRows("agreementStatus")}</span>
+          <span className="portalDrawerVal">{prettyFallback(bundle.agreement.status)}</span>
         </div>
         <div className="portalDrawerRow">
-          <span className="portalDrawerKey">Agreement model</span>
+          <span className="portalDrawerKey">{tDetailRows("agreementModel")}</span>
           <span className="portalDrawerVal">{bundle.agreement.model}</span>
         </div>
         <div className="portalDrawerRow">
-          <span className="portalDrawerKey">Ownership model</span>
+          <span className="portalDrawerKey">{tDetailRows("ownershipModel")}</span>
           <span className="portalDrawerVal">{bundle.agreement.ownershipModel}</span>
         </div>
         <div className="portalDrawerRow">
-          <span className="portalDrawerKey">Published</span>
-          <span className="portalDrawerVal">{fmtDate(bundle.agreement.publishedAt)}</span>
+          <span className="portalDrawerKey">{tDetailRows("published")}</span>
+          <span className="portalDrawerVal">{fmtDate(bundle.agreement.publishedAt, locale)}</span>
         </div>
         <div className="portalDrawerRow">
-          <span className="portalDrawerKey">Deposit status</span>
+          <span className="portalDrawerKey">{tDetailRows("depositStatus")}</span>
           <span className={`portalDrawerVal ${depositPaid ? "portalDrawerValPaid" : ""}`}>
-            {depositPaid ? `Paid — ${money(bundle.quote.deposit.amount)}` : pretty(bundle.quote.deposit.status)}
+            {depositPaid
+              ? tDetailRows("depositPaid", { amount: money(bundle.quote.deposit.amount, locale) })
+              : prettyFallback(bundle.quote.deposit.status)}
           </span>
         </div>
         {!depositPaid && bundle.quote.deposit.amount ? (
           <div className="portalDrawerRow">
-            <span className="portalDrawerKey">Deposit amount</span>
-            <span className="portalDrawerVal">{money(bundle.quote.deposit.amount)}</span>
+            <span className="portalDrawerKey">{tDetailRows("depositAmount")}</span>
+            <span className="portalDrawerVal">{money(bundle.quote.deposit.amount, locale)}</span>
           </div>
         ) : null}
         {bundle.quote.deposit.notes ? (
@@ -1602,7 +1645,7 @@ export default function PortalClient({
             background: "var(--paper-2)", border: "1px solid var(--rule)",
           }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
-              Deposit notes
+              {tDetailRows("depositNotes")}
             </div>
             <p className="p" style={{ margin: 0, fontSize: 14 }}>{bundle.quote.deposit.notes}</p>
           </div>
@@ -1613,7 +1656,7 @@ export default function PortalClient({
             background: "var(--paper-2)", border: "1px solid var(--rule)",
           }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
-              Published agreement
+              {tDetailRows("publishedAgreement")}
             </div>
 
             {bundle.agreement.status === "accepted" ? (
@@ -1622,7 +1665,7 @@ export default function PortalClient({
                 background: "var(--success-bg)", border: "1px solid var(--success)",
                 color: "var(--success)", fontSize: 13, fontWeight: 700,
               }}>
-                Agreement accepted
+                {tDetailRows("agreementAccepted")}
               </div>
             ) : (
               <div style={{ marginBottom: 12 }}>
@@ -1631,10 +1674,10 @@ export default function PortalClient({
                   disabled={saving}
                   onClick={() => applyAction({ type: "agreement_accept" })}
                 >
-                  {saving ? "Saving..." : "Accept Agreement"}
+                  {saving ? tActions("agreementSaving") : tActions("acceptAgreement")}
                 </button>
                 <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--muted)" }}>
-                  Scroll through the agreement below, then click Accept to sign.
+                  {tDetailRows("acceptHelp")}
                 </p>
               </div>
             )}
@@ -1652,13 +1695,16 @@ export default function PortalClient({
 
       {(bundle.history.scopeVersions.length > 0 || bundle.history.changeOrders.length > 0) && (
         <Drawer
-          label="Scope history & change orders"
-          value={`${bundle.history.scopeVersions.length} versions · ${bundle.history.changeOrders.length} changes`}
+          label={tDetails("scopeHistoryLabel")}
+          value={tDetails("scopeHistoryValue", {
+            versions: bundle.history.scopeVersions.length,
+            changes: bundle.history.changeOrders.length,
+          })}
         >
           {bundle.history.scopeVersions.map((sv) => (
             <div key={sv.id} className="portalDrawerRow">
               <span className="portalDrawerKey">{sv.label}</span>
-              <span className="portalDrawerVal">{fmtDate(sv.createdAt)}</span>
+              <span className="portalDrawerVal">{fmtDate(sv.createdAt, locale)}</span>
             </div>
           ))}
           {bundle.history.changeOrders.map((co) => (
@@ -1668,16 +1714,16 @@ export default function PortalClient({
             }}>
               <div style={{ fontWeight: 700, color: "var(--ink)" }}>{co.title}</div>
               <div style={{ fontSize: 12, color: "var(--muted-2)", marginTop: 4 }}>
-                {fmtDate(co.createdAt)} · {pretty(co.status)}
+                {fmtDate(co.createdAt, locale)} · {prettyFallback(co.status)}
               </div>
               <p className="p" style={{ margin: "8px 0 0", fontSize: 14 }}>{co.summary}</p>
               {(co.priceImpact || co.timelineImpact || co.scopeImpact) && (
                 <div style={{ fontSize: 12, color: "var(--muted-2)", marginTop: 8 }}>
-                  {co.priceImpact ? `Price: ${co.priceImpact}` : ""}
+                  {co.priceImpact ? tImpacts("price", { value: co.priceImpact }) : ""}
                   {co.priceImpact && co.timelineImpact ? " · " : ""}
-                  {co.timelineImpact ? `Timeline: ${co.timelineImpact}` : ""}
+                  {co.timelineImpact ? tImpacts("timeline", { value: co.timelineImpact }) : ""}
                   {(co.priceImpact || co.timelineImpact) && co.scopeImpact ? " · " : ""}
-                  {co.scopeImpact ? `Scope: ${co.scopeImpact}` : ""}
+                  {co.scopeImpact ? tImpacts("scope", { value: co.scopeImpact }) : ""}
                 </div>
               )}
             </div>
@@ -1686,24 +1732,29 @@ export default function PortalClient({
       )}
 
       <Drawer
-        label="Notes & contact"
-        value={bundle.callRequest?.bestTime || "Details"}
+        label={tDetails("notesContactLabel")}
+        value={bundle.callRequest?.bestTime || tDetails("notesContactDefault")}
       >
         <div className="portalDrawerRow">
-          <span className="portalDrawerKey">Project notes</span>
-          <span className="portalDrawerVal">{bundle.portalState.clientNotes || "None"}</span>
+          <span className="portalDrawerKey">{tDetailRows("projectNotes")}</span>
+          <span className="portalDrawerVal">{bundle.portalState.clientNotes || tDetailRows("none")}</span>
         </div>
         <div className="portalDrawerRow">
-          <span className="portalDrawerKey">Best time to call</span>
+          <span className="portalDrawerKey">{tDetailRows("bestTimeToCall")}</span>
           <span className="portalDrawerVal">
             {bundle.callRequest?.bestTime
-              ? `${bundle.callRequest.bestTime}${bundle.callRequest.timezone ? ` (${bundle.callRequest.timezone})` : ""}`
-              : "Not provided"}
+              ? bundle.callRequest.timezone
+                ? tDetails("callTimeWithTimezone", {
+                    time: bundle.callRequest.bestTime,
+                    timezone: bundle.callRequest.timezone,
+                  })
+                : bundle.callRequest.bestTime
+              : tDetailRows("notProvided")}
           </span>
         </div>
         {bundle.pie.summary ? (
           <div className="portalDrawerRow" style={{ borderBottom: "none" }}>
-            <span className="portalDrawerKey">PIE summary</span>
+            <span className="portalDrawerKey">{tDetailRows("pieSummary")}</span>
             <span className="portalDrawerVal" style={{ maxWidth: 300, textAlign: "right" }}>
               {bundle.pie.summary}
             </span>
@@ -1713,7 +1764,7 @@ export default function PortalClient({
 
       {/* ── Footer ── */}
       <div className="portalFooter">
-        Powered by <a href="/">Crecy Studio</a> · Your website, your ownership
+        {tFooter("poweredBy")} <a href="/">Crecy Studio</a>{tFooter("tagline")}
       </div>
     </div>
   );

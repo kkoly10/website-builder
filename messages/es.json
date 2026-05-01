@@ -1201,5 +1201,270 @@
     "whatNext": "Qué viene después: verificamos el ajuste de servicios, redactamos una recomendación modular y proponemos un plan de lanzamiento para sitio, almacenamiento, cumplimiento o soporte de gestión.",
     "ctaPricing": "Volver a precios",
     "ctaPortal": "Abrir portal del cliente"
+  },
+  "portalToken": {
+    "kicker": "Proyecto de sitio web",
+    "headline": "Tu sitio web está <em>{phase}</em>",
+    "phases": {
+      "live": "en vivo",
+      "launch_ready": "listo para lanzarse",
+      "preview_review": "listo para revisión",
+      "build": "en construcción",
+      "kickoff": "a punto de empezar",
+      "deposit_sent": "esperando verificación",
+      "assets_submitted": "organizándose",
+      "pre_start": "en planificación inicial",
+      "intake": "tomando forma"
+    },
+    "stories": {
+      "live": "Tu sitio web está en vivo y atendiendo a visitantes. Aún puedes enviar comentarios o subir contenido nuevo en cualquier momento.",
+      "launch_ready": "Todo está en su sitio. Estamos preparando el lanzamiento — recibirás una notificación tan pronto esté en vivo.",
+      "preview_review": "Hemos publicado una vista previa de tu sitio. Tómate tu tiempo recorriendo cada página — cuando estés listo, deja comentarios abajo o abre la vista previa para verlo en vivo.",
+      "build": "Estamos construyendo tu sitio web ahora mismo. Puedes seguir el progreso aquí, subir contenido y enviar comentarios mientras avanza.",
+      "kickoff": "Tu depósito ha sido recibido y el proyecto está en cola para arrancar. Empezaremos a construir en breve.",
+      "deposit_sent": "Recibimos tu aviso de depósito y estamos verificando el pago. El trabajo comienza tan pronto se confirme.",
+      "assets_submitted": "Gracias por enviar tu contenido. Estamos revisando tus elementos y preparando el inicio de la construcción.",
+      "pre_start": "Tu proyecto ha sido definido. Revisa el acuerdo y los detalles del depósito abajo para avanzar.",
+      "intake": "Tu espacio de proyecto está listo. Revisa los detalles abajo, sube tu contenido y nosotros nos encargamos del resto."
+    },
+    "actions": {
+      "openPreview": "Abrir tu vista previa",
+      "openLiveSite": "Abrir sitio en vivo",
+      "refreshing": "Actualizando…",
+      "refresh": "Actualizar",
+      "backToPortal": "Volver al portal",
+      "previewPending": "Vista previa pendiente",
+      "openInvoice": "Abrir factura",
+      "payNow": "Pagar ahora",
+      "payDeposit": "Pagar depósito",
+      "depositSending": "Enviando…",
+      "depositSent": "Envié el depósito",
+      "depositNoticeAwaiting": "Aviso de depósito enviado — esperando verificación",
+      "depositPaidOn": "Pagado el {date}",
+      "attachFile": "Adjuntar archivo",
+      "sending": "Enviando…",
+      "sendMessage": "Enviar mensaje",
+      "saving": "Guardando…",
+      "submitAsset": "Enviar elemento",
+      "cancel": "Cancelar",
+      "open": "Abrir",
+      "submitFeedback": "Enviar comentarios",
+      "feedbackSending": "Enviando…",
+      "acceptAgreement": "Aceptar acuerdo",
+      "agreementSaving": "Guardando…"
+    },
+    "meta": {
+      "projectId": "Proyecto N°{id}",
+      "started": "Iniciado el {date}",
+      "tierLabel": "Nivel {tier}"
+    },
+    "deposit": {
+      "headerPaid": "Depósito recibido",
+      "headerPending": "Tu depósito está pendiente",
+      "bodyPaid": "Tu depósito ha sido registrado y el proyecto avanza hacia el arranque. Mantendremos el espacio actualizado a medida que avance la construcción.",
+      "bodyPending": "El trabajo comienza tan pronto se confirme el depósito. Paga de forma segura mediante el enlace y confirmaremos la recepción en 24 horas.",
+      "depositSentReason": "El cliente reportó que el depósito fue enviado y está esperando verificación."
+    },
+    "journey": {
+      "title": "El camino de tu proyecto",
+      "waiting": "Esperando este paso"
+    },
+    "launch": {
+      "panelTitle": "Lanzamiento",
+      "ready": "Listo para lanzar",
+      "leftBeforeLaunch": "{count, plural, one {1 cosa pendiente antes del lanzamiento} other {# cosas pendientes antes del lanzamiento}}",
+      "checksPassed": "{completed} de {total} verificaciones aprobadas",
+      "asideText": "Estamos manejando los elementos restantes en segundo plano. Recibirás una notificación cuando todo esté listo para salir en vivo.",
+      "notesLabel": "Notas de lanzamiento",
+      "checks": {
+        "agreement": "Acuerdo",
+        "preview": "Vista previa",
+        "domain": "Dominio",
+        "analytics": "Analítica",
+        "forms": "Formularios",
+        "seo": "SEO",
+        "handoff": "Entrega"
+      }
+    },
+    "invoices": {
+      "title": "Facturas",
+      "intro": "Cada factura de tu proyecto aparece aquí, incluyendo el historial pagado y cualquier saldo abierto.",
+      "count": "{count, plural, one {1 factura} other {# facturas}}",
+      "empty": "Aún no se han emitido facturas.",
+      "issued": "Emitida el {date}",
+      "due": " · Vence el {date}",
+      "paid": " · Pagada el {date}",
+      "types": {
+        "deposit": "Factura de depósito",
+        "milestone": "Factura de hito",
+        "final": "Factura final",
+        "retainer": "Factura de retainer"
+      },
+      "statuses": {
+        "draft": "Borrador",
+        "sent": "Enviada",
+        "paid": "Pagada",
+        "overdue": "Vencida",
+        "cancelled": "Cancelada"
+      }
+    },
+    "studioNote": "Nota del estudio",
+    "preview": {
+      "panelTitle": "Vista previa",
+      "notPublished": "Vista previa aún no publicada",
+      "live": "Vista previa en vivo",
+      "pending": "Pendiente",
+      "openPreview": "Abrir vista previa",
+      "openLiveSite": "Abrir sitio en vivo",
+      "previewPending": "Vista previa pendiente",
+      "notesLabel": "Notas de vista previa"
+    },
+    "messages": {
+      "panelTitle": "Mensajes",
+      "intro": "Haz preguntas, confirma aprobaciones o envía al estudio cualquier cosa que quieras que veamos.",
+      "count": "{count, plural, one {1 mensaje} other {# mensajes}}",
+      "empty": "Aún no hay mensajes",
+      "unknownDay": "Día desconocido",
+      "writePlaceholder": "Escribir un mensaje al estudio…",
+      "attach": "Adjuntar archivo",
+      "send": "Enviar mensaje",
+      "sending": "Enviando…",
+      "seen": "Visto {time}",
+      "unread": "No leído",
+      "attachmentFallback": "Adjunto",
+      "roles": {
+        "client": "Cliente",
+        "studio": "Estudio",
+        "internal": "Interno"
+      }
+    },
+    "activity": {
+      "panelTitle": "Actividad",
+      "intro": "Una línea de tiempo continua de los hitos y actualizaciones visibles para el cliente de tu proyecto.",
+      "count": "{count, plural, one {1 evento} other {# eventos}}",
+      "empty": "Aún sin actividad.",
+      "actors": {
+        "client": "Cliente",
+        "studio": "Estudio",
+        "system": "Sistema"
+      }
+    },
+    "assets": {
+      "panelTitle": "Tu contenido",
+      "count": "{count, plural, one {1 elemento} other {# elementos}}",
+      "uploadDrop": "Suelta los archivos aquí o",
+      "uploadBrowse": "explora",
+      "uploadHint": "Logos, textos, fotos, accesos — los organizamos",
+      "labelLabel": "Nombre del elemento",
+      "labelPlaceholder": "Texto de inicio, archivo de logo, fotos de servicios…",
+      "categoryLabel": "Categoría",
+      "submitAsLabel": "Enviar como",
+      "modeLink": "Enlace",
+      "modeFile": "Archivo",
+      "urlLabel": "URL",
+      "urlPlaceholder": "Google Drive / Dropbox / enlace directo",
+      "fileLabel": "Elegir archivo",
+      "notesLabel": "Notas",
+      "notesPlaceholder": "¿Algo que debamos saber?",
+      "submit": "Enviar elemento",
+      "submitting": "Guardando…",
+      "cancel": "Cancelar",
+      "empty": "Aún no se han enviado elementos",
+      "open": "Abrir",
+      "categories": {
+        "Brand": "Marca",
+        "Copy": "Texto",
+        "Images": "Imágenes",
+        "Access": "Accesos",
+        "Legal": "Legal",
+        "Other": "Otro"
+      },
+      "statuses": {
+        "submitted": "Enviado",
+        "received": "Recibido",
+        "approved": "Aprobado"
+      }
+    },
+    "feedback": {
+      "panelTitle": "Comentarios",
+      "count": "{count, plural, one {1 elemento} other {# elementos}}",
+      "placeholder": "¿Qué debe cambiar? ¿Qué se siente mal?",
+      "submit": "Enviar comentarios",
+      "submitting": "Enviando…",
+      "empty": "Aún no hay solicitudes de revisión",
+      "submittedOn": "Enviado el {date}",
+      "priority": {
+        "low": "prioridad baja",
+        "normal": "prioridad normal",
+        "high": "prioridad alta"
+      },
+      "priorityShort": {
+        "low": "baja",
+        "normal": "normal",
+        "high": "alta"
+      },
+      "statuses": {
+        "new": "Nuevo",
+        "reviewed": "Revisado",
+        "scheduled": "Programado",
+        "done": "Hecho"
+      }
+    },
+    "details": {
+      "title": "Detalles del proyecto",
+      "scopeLabel": "Alcance & funcionalidades",
+      "scopeValue": "{pages} páginas · {features} funcionalidades",
+      "rows": {
+        "tier": "Nivel",
+        "platform": "Plataforma",
+        "websiteType": "Tipo de sitio",
+        "timeline": "Calendario",
+        "revisionPolicy": "Política de revisión",
+        "contentReady": "Preparación de contenido",
+        "domainHosting": "Dominio / hosting",
+        "integrations": "Integraciones",
+        "noneListed": "Ninguna indicada",
+        "pages": "Páginas",
+        "features": "Funcionalidades",
+        "exclusions": "Exclusiones",
+        "intakeNotes": "Notas de intake",
+        "agreementStatus": "Estado del acuerdo",
+        "agreementModel": "Modelo de acuerdo",
+        "ownershipModel": "Modelo de propiedad",
+        "published": "Publicado",
+        "depositStatus": "Estado del depósito",
+        "depositAmount": "Monto del depósito",
+        "depositNotes": "Notas del depósito",
+        "publishedAgreement": "Acuerdo publicado",
+        "agreementAccepted": "Acuerdo aceptado",
+        "acceptHelp": "Desplázate por el acuerdo abajo y luego haz clic en Aceptar para firmar.",
+        "depositPaid": "Pagado — {amount}",
+        "projectNotes": "Notas del proyecto",
+        "none": "Ninguna",
+        "bestTimeToCall": "Mejor momento para llamar",
+        "notProvided": "No proporcionado",
+        "pieSummary": "Resumen PIE"
+      },
+      "agreementLabel": "Acuerdo & pago",
+      "scopeHistoryLabel": "Historial de alcance & órdenes de cambio",
+      "scopeHistoryValue": "{versions} versiones · {changes} cambios",
+      "notesContactLabel": "Notas & contacto",
+      "notesContactDefault": "Detalles",
+      "callTimeWithTimezone": "{time} ({timezone})",
+      "changeOrderImpacts": {
+        "price": "Precio: {value}",
+        "timeline": "Calendario: {value}",
+        "scope": "Alcance: {value}"
+      }
+    },
+    "footer": {
+      "poweredBy": "Desarrollado por",
+      "tagline": " · Tu sitio, tu propiedad"
+    },
+    "errors": {
+      "updateFailed": "Error al actualizar el espacio.",
+      "uploadFailed": "Error al subir.",
+      "messageFailed": "Error al enviar el mensaje."
+    }
   }
 }
