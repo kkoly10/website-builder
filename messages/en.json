@@ -1466,5 +1466,103 @@
       "uploadFailed": "Upload failed.",
       "messageFailed": "Failed to send message."
     }
+  },
+  "portal": {
+    "common": {
+      "openWorkspace": "Open workspace",
+      "continue": "Continue",
+      "poweredBy": "Powered by",
+      "noStoreUrl": "No store URL",
+      "websiteFallbackTitle": "Website project",
+      "opsFallbackTitle": "Workflow request",
+      "ecomFallbackTitle": "E-commerce request",
+      "websiteScopeFallback": "Website scope",
+      "opsScopeFallback": "Workflow systems",
+      "scopedAfterReview": "Scoped after review",
+      "tierPending": "Pending",
+      "callNotRequested": "Not requested"
+    },
+    "landing": {
+      "metaTitle": "Client portal | CrecyStudio",
+      "metaDescription": "Manage your active website, systems, and e-commerce projects in one place.",
+      "kicker": "Client portal",
+      "welcomeBack": "Welcome back",
+      "welcomeBackName": "Welcome back, <em>{name}</em>",
+      "emptyBody": "You do not have any active projects yet. Start a website quote, workflow audit, or e-commerce intake to get going.",
+      "summaryBody": "{count, plural, one {You have 1 active project. Website work leads this page, with systems and e-commerce grouped underneath.} other {You have # active projects. Website work leads this page, with systems and e-commerce grouped underneath.}}",
+      "ctaNewWebsite": "New website quote",
+      "ctaNewOps": "New workflow audit",
+      "ctaNewEcom": "New e-commerce intake",
+      "ctaAdmin": "Admin HQ",
+      "signedInAs": "Signed in as {email}",
+      "summaryCount": "{count, plural, one {# project} other {# projects}}",
+      "callStatusLabel": "Call: {status}",
+      "lanes": {
+        "website": {
+          "title": "Websites",
+          "label": "Website projects",
+          "description": "Lead with the public-facing projects that need your review and approvals.",
+          "viewCta": "View website projects",
+          "emptyCta": "Start a quote"
+        },
+        "ops": {
+          "title": "Systems",
+          "label": "Workflow automation projects",
+          "description": "Internal systems and automation work running in your workspace.",
+          "viewCta": "View systems",
+          "emptyCta": "Start an audit"
+        },
+        "ecom": {
+          "title": "E-commerce",
+          "label": "E-commerce projects",
+          "description": "Storefront, checkout, and operations work for online selling.",
+          "viewCta": "View e-commerce",
+          "emptyCta": "Start an intake"
+        }
+      },
+      "phases": {
+        "kickoffReady": "Kickoff ready",
+        "inProgress": "In progress",
+        "preStart": "Pre-start",
+        "intake": "Intake"
+      },
+      "statuses": {
+        "submitted": "Submitted",
+        "new": "New",
+        "call_requested": "Call requested",
+        "awaiting_call": "Awaiting call",
+        "active": "Active",
+        "closed_won": "Closed won",
+        "proposal": "Proposal",
+        "deposit": "Deposit",
+        "paid": "Paid",
+        "requested": "Requested",
+        "in_progress": "In progress",
+        "completed": "Completed"
+      },
+      "empty": {
+        "title": "No projects yet",
+        "body": "Start a website quote, workflow audit, or e-commerce intake. Your projects will appear here with their own workspaces."
+      }
+    },
+    "error": {
+      "kicker": "Portal error",
+      "title": "Something went wrong",
+      "body": "We couldn't load this page. Try refreshing, or go back to your portal.",
+      "retry": "Try again",
+      "back": "Back to portal"
+    },
+    "opsEntry": {
+      "kicker": "Systems Lab",
+      "title": "Missing ops project",
+      "body": "Open an existing ops project from your portal hub, or start a new workflow intake.",
+      "ctaBack": "Back to Portal",
+      "ctaIntake": "Start Workflow Intake"
+    },
+    "opsLoading": {
+      "kicker": "Systems Lab",
+      "title": "Loading ops workspace…",
+      "body": "We're preparing the workflow diagnosis, systems map, and automation plan."
+    }
   }
 }

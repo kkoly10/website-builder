@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { getEcommercePricing } from "@/lib/pricing";
 
 type EntryPath = "build" | "run" | "fix" | null;
@@ -75,6 +75,7 @@ const PATH_KEYS: Exclude<EntryPath, null>[] = ["build", "run", "fix"];
 
 export default function EcommerceIntakeClient() {
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations("ecomIntake");
   const tPath = useTranslations("ecomIntake.paths");
   const tEnumChannels = useTranslations("ecomIntake.enums.channels");
@@ -191,7 +192,7 @@ export default function EcommerceIntakeClient() {
       const res = await fetch("/api/ecommerce/submit-intake", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, preferredLocale: locale }),
       });
       const data = await res.json();
       if (!res.ok || !data?.ok) throw new Error(data?.error || t("validation.submissionFailed"));

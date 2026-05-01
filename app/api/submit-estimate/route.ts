@@ -5,6 +5,7 @@ import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/serve
 import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { recordServerEvent } from "@/lib/analytics/server";
 import { resolveQuoteAccess, sameNormalizedEmail } from "@/lib/accessControl";
+import { pickPreferredLocale } from "@/lib/preferredLocale";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -104,9 +105,13 @@ async function findLeadByEmail(email: string) {
   return null;
 }
 
-async function createLead(email: string, name: string | null) {
+async function createLead(email: string, name: string | null, preferredLocale: string) {
   {
-    const res = await supabaseAdmin.from("leads").insert({ email }).select("id").single();
+    const res = await supabaseAdmin
+      .from("leads")
+      .insert({ email, preferred_locale: preferredLocale })
+      .select("id")
+      .single();
     if (!res.error && res.data?.id) {
       const id = String(res.data.id);
       if (name) await supabaseAdmin.from("leads").update({ name }).eq("id", id);
@@ -114,7 +119,11 @@ async function createLead(email: string, name: string | null) {
     }
   }
   {
-    const res = await supabaseAdmin.from("leads").insert({ lead_email: email }).select("id").single();
+    const res = await supabaseAdmin
+      .from("leads")
+      .insert({ lead_email: email, preferred_locale: preferredLocale })
+      .select("id")
+      .single();
     if (!res.error && res.data?.id) {
       const id = String(res.data.id);
       if (name) await supabaseAdmin.from("leads").update({ name }).eq("id", id);
@@ -124,10 +133,18 @@ async function createLead(email: string, name: string | null) {
   throw new Error("Failed to create lead row (check leads table columns/RLS).");
 }
 
-async function ensureLeadId(email: string, name: string | null) {
+async function ensureLeadId(email: string, name: string | null, preferredLocale: string) {
   const existing = await findLeadByEmail(email);
-  if (existing?.id) return existing.id;
-  return await createLead(email, name);
+  if (existing?.id) {
+    // Refresh lead's locale preference whenever they re-engage so outbound
+    // emails follow the language they're actually browsing in.
+    await supabaseAdmin
+      .from("leads")
+      .update({ preferred_locale: preferredLocale })
+      .eq("id", existing.id);
+    return existing.id;
+  }
+  return await createLead(email, name, preferredLocale);
 }
 
 export async function POST(req: Request) {
@@ -144,6 +161,7 @@ export async function POST(req: Request) {
     }
 
     const leadName = extractLeadName(body) || null;
+    const preferredLocale = pickPreferredLocale(body?.preferredLocale ?? body?.locale);
     const pricingTruth = normalizePricing(body);
 
     const total = pricingTruth.band.target || extractEstimate(body).total;
@@ -176,7 +194,7 @@ export async function POST(req: Request) {
       }
     }
 
-    const leadId = await ensureLeadId(leadEmail, leadName);
+    const leadId = await ensureLeadId(leadEmail, leadName, preferredLocale);
 
     const quoteJson = {
       ...body,
@@ -203,6 +221,7 @@ export async function POST(req: Request) {
       estimate_low: low,
       estimate_high: high,
       status: "submitted",
+      preferred_locale: preferredLocale,
     };
 
     if (shouldAttachAuthUser) {

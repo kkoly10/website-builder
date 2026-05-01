@@ -4,6 +4,7 @@ import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/serve
 import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { recordServerEvent } from "@/lib/analytics/server";
 import { getEcommercePricing } from "@/lib/pricing";
+import { pickPreferredLocale } from "@/lib/preferredLocale";
 
 type Recommendation = Record<string, any>;
 
@@ -106,6 +107,7 @@ export async function POST(req: NextRequest) {
       decision_maker: String(body.decisionMaker ?? "").trim() || null,
       notes: String(body.notes ?? "").trim() || null,
       status: "new",
+      preferred_locale: pickPreferredLocale(body?.preferredLocale ?? body?.locale),
     };
 
     if (authUserId && authUserEmail === email) payload.auth_user_id = authUserId;

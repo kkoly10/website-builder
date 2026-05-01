@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import ScrollReveal from "@/components/site/ScrollReveal";
 import { getWebsitePricing } from "@/lib/pricing";
 
@@ -56,6 +56,7 @@ function normalizeContentReady(value: ContentReady) {
 }
 
 export default function BuildClient() {
+  const locale = useLocale();
   const t = useTranslations("build");
   const tStep = useTranslations("build.stepTitles");
   const tEnumIntents = useTranslations("build.enums.intents");
@@ -172,6 +173,7 @@ export default function BuildClient() {
             tierRecommended: pricing.tierLabel, tierKey: pricing.tierKey,
             isCustomScope: pricing.isCustomScope,
           },
+          preferredLocale: locale,
         }),
       });
 

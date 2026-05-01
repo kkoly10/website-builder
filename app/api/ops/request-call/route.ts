@@ -5,6 +5,7 @@ import { generateOpsPieForIntake } from "@/lib/opsPie";
 import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { recordServerEvent } from "@/lib/analytics/server";
 import { maybeAttachOpsIntakeToUser } from "@/lib/accessControl";
+import { pickPreferredLocale } from "@/lib/preferredLocale";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,8 @@ type Payload = {
   preferredTimes?: string;
   timezone?: string;
   notes?: string;
+  preferredLocale?: string;
+  locale?: string;
 };
 
 export async function POST(req: Request) {
@@ -64,6 +67,8 @@ export async function POST(req: Request) {
       });
     }
 
+    const preferredLocale = pickPreferredLocale(body?.preferredLocale ?? body?.locale);
+
     const { data: callRow, error: callErr } = await supabaseAdmin
       .from("ops_call_requests")
       .insert({
@@ -73,6 +78,7 @@ export async function POST(req: Request) {
         timezone: timezone || null,
         notes: notes || null,
         status: "requested",
+        preferred_locale: preferredLocale,
       })
       .select("id")
       .single();

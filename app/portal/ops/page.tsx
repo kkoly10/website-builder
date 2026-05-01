@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
@@ -22,25 +23,25 @@ export default async function OpsPortalEntryPage({
     redirect(`/portal/ops/${opsIntakeId}`);
   }
 
+  const t = await getTranslations("portal.opsEntry");
+
   return (
     <main className="container section">
       <div className="card">
         <div className="cardInner">
           <div className="kicker">
             <span className="kickerDot" aria-hidden="true" />
-            Systems Lab
+            {t("kicker")}
           </div>
           <div style={{ height: 10 }} />
-          <h1 className="h2">Missing ops project</h1>
-          <p className="p">
-            Open an existing ops project from your portal hub, or start a new workflow intake.
-          </p>
+          <h1 className="h2">{t("title")}</h1>
+          <p className="p">{t("body")}</p>
           <div className="row" style={{ marginTop: 14 }}>
             <Link href="/portal" className="btn btnPrimary">
-              Back to Portal <span className="btnArrow">→</span>
+              {t("ctaBack")} <span className="btnArrow">→</span>
             </Link>
             <Link href="/ops-intake" className="btn btnGhost">
-              Start Workflow Intake
+              {t("ctaIntake")}
             </Link>
           </div>
         </div>

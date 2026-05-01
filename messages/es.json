@@ -1466,5 +1466,103 @@
       "uploadFailed": "Error al subir.",
       "messageFailed": "Error al enviar el mensaje."
     }
+  },
+  "portal": {
+    "common": {
+      "openWorkspace": "Abrir espacio de trabajo",
+      "continue": "Continuar",
+      "poweredBy": "Desarrollado por",
+      "noStoreUrl": "Sin URL de tienda",
+      "websiteFallbackTitle": "Proyecto de sitio web",
+      "opsFallbackTitle": "Solicitud de flujo de trabajo",
+      "ecomFallbackTitle": "Solicitud de e-commerce",
+      "websiteScopeFallback": "Alcance del sitio web",
+      "opsScopeFallback": "Sistemas de flujo",
+      "scopedAfterReview": "Definido tras revisión",
+      "tierPending": "Pendiente",
+      "callNotRequested": "No solicitado"
+    },
+    "landing": {
+      "metaTitle": "Portal del cliente | CrecyStudio",
+      "metaDescription": "Gestiona tus proyectos activos de sitio web, sistemas y e-commerce en un solo lugar.",
+      "kicker": "Portal del cliente",
+      "welcomeBack": "Bienvenido de nuevo",
+      "welcomeBackName": "Bienvenido de nuevo, <em>{name}</em>",
+      "emptyBody": "Aún no tienes proyectos activos. Inicia una cotización de sitio web, una auditoría de flujo de trabajo o un intake de e-commerce para empezar.",
+      "summaryBody": "{count, plural, one {Tienes 1 proyecto activo. Los sitios web abren la página, con los sistemas y el e-commerce agrupados debajo.} other {Tienes # proyectos activos. Los sitios web abren la página, con los sistemas y el e-commerce agrupados debajo.}}",
+      "ctaNewWebsite": "Nueva cotización de sitio",
+      "ctaNewOps": "Nueva auditoría de flujo",
+      "ctaNewEcom": "Nuevo intake de e-commerce",
+      "ctaAdmin": "Panel admin",
+      "signedInAs": "Conectado como {email}",
+      "summaryCount": "{count, plural, one {# proyecto} other {# proyectos}}",
+      "callStatusLabel": "Llamada: {status}",
+      "lanes": {
+        "website": {
+          "title": "Sitios web",
+          "label": "Proyectos de sitio web",
+          "description": "Empieza por los proyectos públicos que necesitan tu revisión y aprobaciones.",
+          "viewCta": "Ver proyectos de sitio web",
+          "emptyCta": "Iniciar cotización"
+        },
+        "ops": {
+          "title": "Sistemas",
+          "label": "Proyectos de automatización de flujo",
+          "description": "Sistemas internos y trabajos de automatización activos en tu espacio.",
+          "viewCta": "Ver sistemas",
+          "emptyCta": "Iniciar auditoría"
+        },
+        "ecom": {
+          "title": "E-commerce",
+          "label": "Proyectos de e-commerce",
+          "description": "Tienda, pago y operaciones para la venta en línea.",
+          "viewCta": "Ver e-commerce",
+          "emptyCta": "Iniciar intake"
+        }
+      },
+      "phases": {
+        "kickoffReady": "Listo para arrancar",
+        "inProgress": "En progreso",
+        "preStart": "Pre-inicio",
+        "intake": "Intake"
+      },
+      "statuses": {
+        "submitted": "Enviado",
+        "new": "Nuevo",
+        "call_requested": "Llamada solicitada",
+        "awaiting_call": "Esperando llamada",
+        "active": "Activo",
+        "closed_won": "Ganado",
+        "proposal": "Propuesta",
+        "deposit": "Depósito",
+        "paid": "Pagado",
+        "requested": "Solicitado",
+        "in_progress": "En progreso",
+        "completed": "Completado"
+      },
+      "empty": {
+        "title": "Aún sin proyectos",
+        "body": "Inicia una cotización de sitio web, una auditoría de flujo o un intake de e-commerce. Tus proyectos aparecerán aquí con sus propios espacios."
+      }
+    },
+    "error": {
+      "kicker": "Error del portal",
+      "title": "Algo salió mal",
+      "body": "No pudimos cargar esta página. Intenta actualizar o vuelve a tu portal.",
+      "retry": "Intentar de nuevo",
+      "back": "Volver al portal"
+    },
+    "opsEntry": {
+      "kicker": "Lab de sistemas",
+      "title": "Proyecto ops no encontrado",
+      "body": "Abre un proyecto ops existente desde tu portal, o inicia un nuevo intake de flujo.",
+      "ctaBack": "Volver al portal",
+      "ctaIntake": "Iniciar intake de flujo"
+    },
+    "opsLoading": {
+      "kicker": "Lab de sistemas",
+      "title": "Cargando espacio ops…",
+      "body": "Estamos preparando el diagnóstico del flujo, el mapa de sistemas y el plan de automatización."
+    }
   }
 }

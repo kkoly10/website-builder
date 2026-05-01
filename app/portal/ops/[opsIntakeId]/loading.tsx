@@ -1,15 +1,18 @@
-export default function OpsPortalWorkspaceLoading() {
+import { getTranslations } from "next-intl/server";
+
+export default async function OpsPortalWorkspaceLoading() {
+  const t = await getTranslations("portal.opsLoading");
   return (
     <main className="container section">
       <div className="card">
         <div className="cardInner">
           <div className="kicker">
             <span className="kickerDot" aria-hidden="true" />
-            Systems Lab
+            {t("kicker")}
           </div>
           <div style={{ height: 10 }} />
-          <h1 className="h2">Loading ops workspace…</h1>
-          <p className="p">We’re preparing the workflow diagnosis, systems map, and automation plan.</p>
+          <h1 className="h2">{t("title")}</h1>
+          <p className="p">{t("body")}</p>
         </div>
       </div>
     </main>
