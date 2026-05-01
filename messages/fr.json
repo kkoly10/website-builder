@@ -1564,5 +1564,297 @@
       "title": "Chargement de l'espace ops…",
       "body": "Nous préparons le diagnostic du workflow, la cartographie des systèmes et le plan d'automatisation."
     }
+  },
+  "portalOpsToken": {
+    "kicker": "Automatisation de workflow",
+    "headline": "Votre automatisation est <em>{phase}</em>",
+    "phases": {
+      "live": "active et en marche",
+      "partially_live": "en cours de déploiement",
+      "building": "en construction",
+      "process_mapping": "en cartographie",
+      "discovery": "en découverte",
+      "intake": "en démarrage"
+    },
+    "stories": {
+      "live": "Vos automatisations sont actives. Consultez le tableau de bord ci-dessous pour voir leur performance, ou envoyez un retour si quelque chose doit être ajusté.",
+      "partially_live": "Certaines de vos automatisations sont déjà en marche. Nous construisons les autres — vous pouvez suivre chacune ci-dessous.",
+      "building": "Nous avons cartographié vos workflows et nous construisons les automatisations maintenant. Vous voyez ce qui est en cours et la suite.",
+      "process_mapping": "Nous documentons votre processus actuel et concevons la version automatisée. Une fois la carte validée, nous démarrons la construction.",
+      "discovery": "Nous apprenons comment fonctionne votre entreprise pour identifier les bons éléments à automatiser. Vos retours sur les irritants et priorités nous aident à avancer plus vite.",
+      "intake": "Nous avons reçu votre demande de workflow. La prochaine étape est de comprendre votre processus pour recommander la bonne approche d'automatisation."
+    },
+    "actions": {
+      "refresh": "Actualiser",
+      "refreshing": "Actualisation…",
+      "backToPortal": "Retour à l'espace",
+      "acceptAgreement": "Accepter l'accord",
+      "saving": "Enregistrement…",
+      "prepareDeposit": "Préparer le paiement de l'acompte",
+      "preparing": "Préparation…",
+      "payDeposit": "Payer l'acompte"
+    },
+    "meta": {
+      "started": "Démarré le {date}",
+      "toolLabel": "Outil : {tool}"
+    },
+    "studioNote": "Note du studio",
+    "whatWeFound": {
+      "panelTitle": "Ce que nous avons trouvé",
+      "mainBottleneck": "Goulot d'étranglement principal",
+      "businessObjective": "Objectif métier",
+      "bestFirstFix": "Premier correctif recommandé",
+      "bestTool": "Meilleur outil pour la tâche",
+      "painPointsLabel": "Irritants que vous avez signalés"
+    },
+    "automationProgress": {
+      "panelTitle": "Avancement de l'automatisation",
+      "allLive": "Toutes les automatisations sont actives",
+      "remaining": "{count, plural, one {1 automatisation restante} other {# automatisations restantes}}",
+      "statusLine": "{live} actives · {building} en construction · {planned} planifiées",
+      "waitingOnLabel": "En attente de :",
+      "nextSteps": "Prochaines étapes"
+    },
+    "process": {
+      "before": "Avant — votre processus actuel",
+      "after": "Après — la version automatisée",
+      "stepsCount": "{count, plural, one {1 étape} other {# étapes}}"
+    },
+    "automationTracker": {
+      "panelTitle": "Suivi des automatisations",
+      "count": "{count, plural, one {1 automatisation} other {# automatisations}}"
+    },
+    "liveAutomations": {
+      "panelTitle": "Automatisations actives",
+      "count": "{count, plural, one {1 en marche} other {# en marche}}",
+      "liveBadge": "Active"
+    },
+    "results": {
+      "panelTitle": "Résultats que nous suivons",
+      "target": "Objectif : {value}"
+    },
+    "questions": {
+      "panelTitle": "Questions pour vous"
+    },
+    "approvals": {
+      "panelTitle": "Approbations requises"
+    },
+    "detailsTitle": "Détails du projet",
+    "drawers": {
+      "connectedSystems": {
+        "label": "Systèmes connectés",
+        "value": "{count, plural, one {1 outil} other {# outils}}"
+      },
+      "sops": {
+        "label": "Procédures & formation",
+        "value": "{count, plural, one {1 workflow} other {# workflows}}",
+        "trigger": "Déclencheur : {trigger}"
+      },
+      "risks": {
+        "label": "Journal des risques",
+        "value": "{count, plural, one {1 risque} other {# risques}}",
+        "mitigation": "Mitigation : {mitigation}"
+      },
+      "incidents": {
+        "label": "Problèmes & incidents"
+      },
+      "changeRequests": {
+        "label": "Demandes de changement"
+      },
+      "agreement": {
+        "label": "Accord & acompte",
+        "agreementStatus": "Statut de l'accord",
+        "accepted": "Accepté",
+        "agreementHeader": "Accord",
+        "depositStatus": "Statut de l'acompte",
+        "depositAmount": "Montant de l'acompte",
+        "paidAt": "Payé le"
+      },
+      "servicePricing": {
+        "label": "Service & tarification",
+        "package": "Forfait",
+        "projectRange": "Plage projet",
+        "retainerRange": "Plage forfait",
+        "industry": "Industrie",
+        "teamSize": "Taille de l'équipe"
+      }
+    },
+    "footer": {
+      "poweredBy": "Propulsé par",
+      "tagline": " · Vos workflows, votre propriété"
+    },
+    "errors": {
+      "refreshFailed": "Échec de l'actualisation.",
+      "actionFailed": "Échec de l'action."
+    },
+    "statuses": {
+      "pending": "En attente",
+      "accepted": "Accepté",
+      "paid": "Payé",
+      "live": "Actif",
+      "completed": "Terminé",
+      "testing": "En test",
+      "building": "En construction",
+      "scoped": "Cadré",
+      "discovery": "Découverte",
+      "approved": "Approuvé",
+      "done": "Terminé"
+    }
+  },
+  "portalEcomToken": {
+    "kicker": "E-commerce · piste {mode}",
+    "headline": "Votre boutique est <em>{phase}</em>",
+    "modes": {
+      "build": "construction",
+      "run": "gestion",
+      "fix": "réparation"
+    },
+    "stories": {
+      "buildLaunch": {
+        "headline": "presque prête à être lancée",
+        "body": "Votre vitrine est en revue finale. Utilisez cet espace pour suivre les approbations, les éléments requis et la préparation au lancement."
+      },
+      "buildBuild": {
+        "headline": "en construction",
+        "body": "Nous assemblons votre vitrine, chargeons les produits et préparons les détails du lancement. Vos jalons et livrables sont ci-dessous."
+      },
+      "buildProposal": {
+        "headline": "prête pour la revue de la proposition",
+        "body": "Nous avons cadré la construction de la boutique et placé la proposition dans cet espace pour que vous puissiez examiner le chemin vers le lancement."
+      },
+      "buildDefault": {
+        "headline": "en démarrage",
+        "body": "Nous avons reçu votre demande de construction. La prochaine étape est la découverte, les éléments et l'alignement final du périmètre."
+      },
+      "fixTesting": {
+        "headline": "en validation",
+        "body": "Nous avons mis en place les correctifs prioritaires et validons la nouvelle expérience avant de clôturer le projet."
+      },
+      "fixWork": {
+        "headline": "en réparation",
+        "body": "Nous travaillons sur le plan d'amélioration. Cet espace montre ce qui a été trouvé, ce qui est corrigé et la suite."
+      },
+      "fixDefault": {
+        "headline": "en revue",
+        "body": "Nous diagnostiquons les problèmes de la boutique et les transformons en plan de réparation clair."
+      },
+      "active": {
+        "headline": "en gestion",
+        "body": "Vos opérations e-commerce sont actives. Cet espace est où vous suivez les priorités actuelles, les problèmes et la performance mensuelle."
+      },
+      "onboarding": {
+        "headline": "en intégration",
+        "body": "Nous nous sommes alignés sur la voie de service et mettons en place le rythme opérationnel récurrent pour votre boutique."
+      },
+      "default": {
+        "headline": "en mise en place",
+        "body": "Nous définissons le modèle opérationnel, les priorités et la structure de reporting pour votre boutique."
+      }
+    },
+    "actions": {
+      "openPreview": "Ouvrir la prévisualisation",
+      "visitLiveStore": "Visiter la boutique en ligne",
+      "refresh": "Actualiser",
+      "refreshing": "Actualisation…",
+      "backToPortal": "Retour à l'espace",
+      "acceptAgreement": "Accepter l'accord",
+      "saving": "Enregistrement…",
+      "prepareDeposit": "Préparer le paiement de l'acompte",
+      "preparing": "Préparation…",
+      "payDeposit": "Payer l'acompte"
+    },
+    "meta": {
+      "fallbackName": "Projet e-commerce",
+      "started": "Démarré le {date}",
+      "phase": "Phase : {phase}",
+      "waitingOn": "En attente de : {waitingOn}"
+    },
+    "studioNote": "Note du studio",
+    "workspaceOverview": {
+      "panelTitle": "Aperçu de l'espace",
+      "servicePath": "Voie de service",
+      "currentPhase": "Phase actuelle",
+      "planningCall": "Appel de planification",
+      "quoteStatus": "Statut du devis",
+      "waitingOn": "En attente de",
+      "callNotRequested": "non demandé",
+      "quoteNotStarted": "non démarré",
+      "serviceSummaryLabel": "Résumé du service"
+    },
+    "proposalPricing": {
+      "panelTitle": "Proposition + tarification du service",
+      "setupFee": "Frais d'installation",
+      "projectFee": "Frais de projet",
+      "monthlyFee": "Frais mensuels",
+      "fulfillmentLabel": "Modèle de logistique / service",
+      "fulfillmentTbc": "À confirmer",
+      "lastUpdated": "Mise à jour le {date}"
+    },
+    "deliverables": "Livrables",
+    "milestones": "Jalons",
+    "tasks": "Tâches en cours",
+    "assetsNeeded": "Éléments / infos requis",
+    "approvals": "Approbations requises",
+    "metrics": {
+      "panelTitle": "Indicateurs suivis",
+      "target": "Objectif : {value}",
+      "fallback": "—"
+    },
+    "issues": "Problèmes / demandes ouverts",
+    "monthlyPlan": {
+      "panelTitle": "Plan mensuel",
+      "empty": "Aucun plan mensuel ajouté pour l'instant."
+    },
+    "nextActions": {
+      "panelTitle": "Prochaines actions",
+      "empty": "Aucune prochaine action listée pour l'instant."
+    },
+    "drawers": {
+      "agreement": {
+        "label": "Accord & acompte",
+        "agreementStatus": "Statut de l'accord",
+        "accepted": "Accepté",
+        "depositStatus": "Statut de l'acompte",
+        "depositAmount": "Montant de l'acompte",
+        "paidAt": "Payé le"
+      },
+      "projectDetails": {
+        "label": "Détails du projet",
+        "business": "Entreprise",
+        "contact": "Contact",
+        "email": "Courriel",
+        "storeUrl": "URL de la boutique",
+        "salesChannels": "Canaux de vente",
+        "monthlyOrders": "Commandes mensuelles",
+        "timeline": "Calendrier",
+        "budget": "Budget"
+      }
+    },
+    "footer": {
+      "poweredBy": "Propulsé par",
+      "tagline": " · Votre boutique, votre espace"
+    },
+    "errors": {
+      "refreshFailed": "Échec de l'actualisation.",
+      "actionFailed": "Échec de l'action."
+    },
+    "statuses": {
+      "pending": "En attente",
+      "accepted": "Accepté",
+      "paid": "Payé",
+      "live": "En ligne",
+      "completed": "Terminé",
+      "done": "Terminé",
+      "approved": "Approuvé",
+      "review": "Revue",
+      "sent": "Envoyé",
+      "scheduled": "Planifié",
+      "testing": "En test",
+      "building": "En construction",
+      "in_progress": "En cours",
+      "planned": "Planifié",
+      "not_requested": "Non demandé",
+      "not_started": "Non démarré"
+    }
   }
 }

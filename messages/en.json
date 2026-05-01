@@ -1564,5 +1564,297 @@
       "title": "Loading ops workspace…",
       "body": "We're preparing the workflow diagnosis, systems map, and automation plan."
     }
+  },
+  "portalOpsToken": {
+    "kicker": "Workflow automation",
+    "headline": "Your automation is <em>{phase}</em>",
+    "phases": {
+      "live": "live and running",
+      "partially_live": "going live",
+      "building": "being built",
+      "process_mapping": "being mapped out",
+      "discovery": "in discovery",
+      "intake": "getting started"
+    },
+    "stories": {
+      "live": "Your automations are active. Check the results dashboard below to see how they're performing, or submit feedback if something needs adjusting.",
+      "partially_live": "Some of your automations are already running. We're building the rest — you can track each one below.",
+      "building": "We've mapped out your workflows and we're building the automations now. You can see what's being worked on and what's coming next.",
+      "process_mapping": "We're documenting your current process and designing the automated version. Once the map is confirmed, we start building.",
+      "discovery": "We're learning how your business runs so we can find the right things to automate. Your input on pain points and priorities helps us move faster.",
+      "intake": "We've received your workflow request. Next step is understanding your process so we can recommend the right automation approach."
+    },
+    "actions": {
+      "refresh": "Refresh",
+      "refreshing": "Refreshing…",
+      "backToPortal": "Back to portal",
+      "acceptAgreement": "Accept Agreement",
+      "saving": "Saving…",
+      "prepareDeposit": "Prepare deposit payment",
+      "preparing": "Preparing…",
+      "payDeposit": "Pay deposit"
+    },
+    "meta": {
+      "started": "Started {date}",
+      "toolLabel": "Tool: {tool}"
+    },
+    "studioNote": "Note from the studio",
+    "whatWeFound": {
+      "panelTitle": "What we found",
+      "mainBottleneck": "Main bottleneck",
+      "businessObjective": "Business objective",
+      "bestFirstFix": "Recommended first fix",
+      "bestTool": "Best tool for the job",
+      "painPointsLabel": "Pain points you reported"
+    },
+    "automationProgress": {
+      "panelTitle": "Automation progress",
+      "allLive": "All automations live",
+      "remaining": "{count, plural, one {1 automation remaining} other {# automations remaining}}",
+      "statusLine": "{live} live · {building} building · {planned} planned",
+      "waitingOnLabel": "Waiting on:",
+      "nextSteps": "Next steps"
+    },
+    "process": {
+      "before": "Before — your current process",
+      "after": "After — the automated version",
+      "stepsCount": "{count, plural, one {1 step} other {# steps}}"
+    },
+    "automationTracker": {
+      "panelTitle": "Automation tracker",
+      "count": "{count, plural, one {1 automation} other {# automations}}"
+    },
+    "liveAutomations": {
+      "panelTitle": "Live automations",
+      "count": "{count, plural, one {1 running} other {# running}}",
+      "liveBadge": "Live"
+    },
+    "results": {
+      "panelTitle": "Results we're tracking",
+      "target": "Target: {value}"
+    },
+    "questions": {
+      "panelTitle": "Questions for you"
+    },
+    "approvals": {
+      "panelTitle": "Approvals needed"
+    },
+    "detailsTitle": "Project details",
+    "drawers": {
+      "connectedSystems": {
+        "label": "Connected systems",
+        "value": "{count, plural, one {1 tool} other {# tools}}"
+      },
+      "sops": {
+        "label": "SOPs & training",
+        "value": "{count, plural, one {1 workflow} other {# workflows}}",
+        "trigger": "Trigger: {trigger}"
+      },
+      "risks": {
+        "label": "Risk log",
+        "value": "{count, plural, one {1 risk} other {# risks}}",
+        "mitigation": "Mitigation: {mitigation}"
+      },
+      "incidents": {
+        "label": "Issues & incidents"
+      },
+      "changeRequests": {
+        "label": "Change requests"
+      },
+      "agreement": {
+        "label": "Agreement & deposit",
+        "agreementStatus": "Agreement status",
+        "accepted": "Accepted",
+        "agreementHeader": "Agreement",
+        "depositStatus": "Deposit status",
+        "depositAmount": "Deposit amount",
+        "paidAt": "Paid at"
+      },
+      "servicePricing": {
+        "label": "Service & pricing",
+        "package": "Package",
+        "projectRange": "Project range",
+        "retainerRange": "Retainer range",
+        "industry": "Industry",
+        "teamSize": "Team size"
+      }
+    },
+    "footer": {
+      "poweredBy": "Powered by",
+      "tagline": " · Your workflows, your ownership"
+    },
+    "errors": {
+      "refreshFailed": "Failed to refresh.",
+      "actionFailed": "Action failed."
+    },
+    "statuses": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "paid": "Paid",
+      "live": "Live",
+      "completed": "Completed",
+      "testing": "Testing",
+      "building": "Building",
+      "scoped": "Scoped",
+      "discovery": "Discovery",
+      "approved": "Approved",
+      "done": "Done"
+    }
+  },
+  "portalEcomToken": {
+    "kicker": "E-commerce · {mode} lane",
+    "headline": "Your store is <em>{phase}</em>",
+    "modes": {
+      "build": "build",
+      "run": "run",
+      "fix": "fix"
+    },
+    "stories": {
+      "buildLaunch": {
+        "headline": "almost ready to launch",
+        "body": "Your storefront is in final review. Use this workspace to track approvals, required assets, and launch readiness."
+      },
+      "buildBuild": {
+        "headline": "being built",
+        "body": "We're assembling your storefront, loading products, and preparing launch details. Your milestones and deliverables are below."
+      },
+      "buildProposal": {
+        "headline": "ready for proposal review",
+        "body": "We've scoped the store build and placed the proposal in this workspace so you can review the path to launch."
+      },
+      "buildDefault": {
+        "headline": "getting started",
+        "body": "We've received your build request. Next step is discovery, assets, and final scope alignment."
+      },
+      "fixTesting": {
+        "headline": "being validated",
+        "body": "We've implemented the highest-priority fixes and are validating the new experience before closing the project."
+      },
+      "fixWork": {
+        "headline": "being repaired",
+        "body": "We're working through the improvement plan. This workspace shows what was found, what is being fixed, and what is next."
+      },
+      "fixDefault": {
+        "headline": "under review",
+        "body": "We're diagnosing the store issues and turning them into a clear repair plan."
+      },
+      "active": {
+        "headline": "being managed",
+        "body": "Your e-commerce operations are active. This workspace is where you track current priorities, issues, and monthly performance."
+      },
+      "onboarding": {
+        "headline": "being onboarded",
+        "body": "We've aligned on the service path and are setting up the recurring operating rhythm for your store."
+      },
+      "default": {
+        "headline": "getting set up",
+        "body": "We're defining the operating model, priorities, and reporting structure for your store."
+      }
+    },
+    "actions": {
+      "openPreview": "Open preview",
+      "visitLiveStore": "Visit live store",
+      "refresh": "Refresh",
+      "refreshing": "Refreshing…",
+      "backToPortal": "Back to portal",
+      "acceptAgreement": "Accept agreement",
+      "saving": "Saving…",
+      "prepareDeposit": "Prepare deposit payment",
+      "preparing": "Preparing…",
+      "payDeposit": "Pay deposit"
+    },
+    "meta": {
+      "fallbackName": "E-commerce project",
+      "started": "Started {date}",
+      "phase": "Phase: {phase}",
+      "waitingOn": "Waiting on: {waitingOn}"
+    },
+    "studioNote": "Note from the studio",
+    "workspaceOverview": {
+      "panelTitle": "Workspace overview",
+      "servicePath": "Service path",
+      "currentPhase": "Current phase",
+      "planningCall": "Planning call",
+      "quoteStatus": "Quote status",
+      "waitingOn": "Waiting on",
+      "callNotRequested": "not requested",
+      "quoteNotStarted": "not started",
+      "serviceSummaryLabel": "Service summary"
+    },
+    "proposalPricing": {
+      "panelTitle": "Proposal + service pricing",
+      "setupFee": "Setup fee",
+      "projectFee": "Project fee",
+      "monthlyFee": "Monthly fee",
+      "fulfillmentLabel": "Fulfillment / service model",
+      "fulfillmentTbc": "To be confirmed",
+      "lastUpdated": "Last updated {date}"
+    },
+    "deliverables": "Deliverables",
+    "milestones": "Milestones",
+    "tasks": "Current tasks",
+    "assetsNeeded": "Assets / info needed",
+    "approvals": "Approvals needed",
+    "metrics": {
+      "panelTitle": "Tracked metrics",
+      "target": "Target: {value}",
+      "fallback": "—"
+    },
+    "issues": "Open issues / requests",
+    "monthlyPlan": {
+      "panelTitle": "Monthly plan",
+      "empty": "No monthly plan added yet."
+    },
+    "nextActions": {
+      "panelTitle": "Next actions",
+      "empty": "No next actions listed yet."
+    },
+    "drawers": {
+      "agreement": {
+        "label": "Agreement & deposit",
+        "agreementStatus": "Agreement status",
+        "accepted": "Accepted",
+        "depositStatus": "Deposit status",
+        "depositAmount": "Deposit amount",
+        "paidAt": "Paid at"
+      },
+      "projectDetails": {
+        "label": "Project details",
+        "business": "Business",
+        "contact": "Contact",
+        "email": "Email",
+        "storeUrl": "Store URL",
+        "salesChannels": "Sales channels",
+        "monthlyOrders": "Monthly orders",
+        "timeline": "Timeline",
+        "budget": "Budget"
+      }
+    },
+    "footer": {
+      "poweredBy": "Powered by",
+      "tagline": " · Your store, your workspace"
+    },
+    "errors": {
+      "refreshFailed": "Refresh failed.",
+      "actionFailed": "Action failed."
+    },
+    "statuses": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "paid": "Paid",
+      "live": "Live",
+      "completed": "Completed",
+      "done": "Done",
+      "approved": "Approved",
+      "review": "Review",
+      "sent": "Sent",
+      "scheduled": "Scheduled",
+      "testing": "Testing",
+      "building": "Building",
+      "in_progress": "In progress",
+      "planned": "Planned",
+      "not_requested": "Not requested",
+      "not_started": "Not started"
+    }
   }
 }
