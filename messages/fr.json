@@ -44,7 +44,37 @@
     "heroTitle": "Websites and custom web systems for businesses that need to <em>look bigger than they are.</em>",
     "heroSub": "From a polished marketing site to a full client portal, booking flow, or custom dashboard — built in one workspace, owned by you.",
     "ctaStart": "Démarrer un projet",
-    "ctaProcess": "Voir le processus",
+    "ctaProcess": "See what we build",
+    "whatWeBuild": {
+      "label": "What we build",
+      "title": "From a polished website to the system that runs the business.",
+      "cards": {
+        "websites": {
+          "title": "Websites",
+          "body": "Get found, get trusted, get the call."
+        },
+        "webApps": {
+          "title": "Custom web apps",
+          "body": "Dashboards, portals, internal tools, MVPs."
+        },
+        "portals": {
+          "title": "Client portals",
+          "body": "A private workspace your customers actually use."
+        },
+        "booking": {
+          "title": "Booking & payments",
+          "body": "Take deposits and bookings without duct tape."
+        },
+        "automation": {
+          "title": "Workflow automation",
+          "body": "Stop doing the same task twice."
+        },
+        "rescue": {
+          "title": "Website rescue",
+          "body": "Fix what you have without a full rebuild."
+        }
+      }
+    },
     "proof": {
       "delivery": "Délai habituel",
       "deliveryValue": "2-4 sem",

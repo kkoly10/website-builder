@@ -40,6 +40,17 @@ const JOURNEY_KEYS = [
   ["launch", "pending"],
 ] as const;
 
+// Phase 1: routes that don't yet exist (custom-web-apps, client-portals,
+// website-rescue) fall back to /contact?type=... until Phase 2 ships them.
+const WHAT_WE_BUILD_CARDS = [
+  { key: "websites", href: "/websites", event: "cta_home_card_websites" },
+  { key: "webApps", href: "/contact?type=web_app", event: "cta_home_card_web_apps" },
+  { key: "portals", href: "/contact?type=portal", event: "cta_home_card_portals" },
+  { key: "booking", href: "/build/intro?intent=booking", event: "cta_home_card_booking" },
+  { key: "automation", href: "/systems", event: "cta_home_card_automation" },
+  { key: "rescue", href: "/contact?type=rescue", event: "cta_home_card_rescue" },
+] as const;
+
 export default async function Home({
   params,
 }: {
@@ -94,7 +105,7 @@ function HomeContent() {
             <TrackLink href="/build/intro" event="cta_home_hero_quote" className="btn btnPrimary">
               {t("ctaStart")} <span className="btnArrow">-&gt;</span>
             </TrackLink>
-            <TrackLink href="/process" event="cta_home_hero_process" className={styles.heroSecondaryCta}>
+            <TrackLink href="#what-we-build" event="cta_home_hero_what_we_build" className={styles.heroSecondaryCta}>
               {t("ctaProcess")}
             </TrackLink>
           </div>
@@ -109,6 +120,29 @@ function HomeContent() {
               <p className={styles.proofLabel}>{item.label}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section id="what-we-build" className={`${styles.whatWeBuild} fadeUp`}>
+        <div className="container">
+          <div className={styles.whatWeBuildHead}>
+            <p className={styles.sectionLabel}>{t("whatWeBuild.label")}</p>
+            <h2 className={styles.sectionTitle}>{t("whatWeBuild.title")}</h2>
+          </div>
+          <div className={styles.whatWeBuildGrid}>
+            {WHAT_WE_BUILD_CARDS.map((card) => (
+              <TrackLink
+                key={card.key}
+                href={card.href}
+                event={card.event}
+                className={styles.wbCard}
+              >
+                <h3 className={styles.wbCardTitle}>{t(`whatWeBuild.cards.${card.key}.title`)}</h3>
+                <p className={styles.wbCardBody}>{t(`whatWeBuild.cards.${card.key}.body`)}</p>
+                <span className={styles.wbCardArrow} aria-hidden>-&gt;</span>
+              </TrackLink>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -248,28 +282,6 @@ function HomeContent() {
         </div>
       </section>
 
-      <section className={`${styles.also} fadeUp`}>
-        <div className={`container ${styles.alsoGrid}`}>
-          <p className={styles.sectionLabel}>{t("also.label")}</p>
-          <div className={styles.lanes}>
-            <article className={styles.lane}>
-              <h3>{t("also.systemsTitle")}</h3>
-              <p>{t("also.systemsBody")}</p>
-              <TrackLink href="/systems" event="cta_home_secondary_systems" className={styles.laneLink}>
-                {t("also.systemsLink")} -&gt;
-              </TrackLink>
-            </article>
-
-            <article className={styles.lane}>
-              <h3>{t("also.ecomTitle")}</h3>
-              <p>{t("also.ecomBody")}</p>
-              <TrackLink href="/ecommerce" event="cta_home_secondary_ecom" className={styles.laneLink}>
-                {t("also.ecomLink")} -&gt;
-              </TrackLink>
-            </article>
-          </div>
-        </div>
-      </section>
     </main>
   );
 }
