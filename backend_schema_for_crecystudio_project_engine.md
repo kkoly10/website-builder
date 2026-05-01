@@ -2,387 +2,134 @@
 
 ## Purpose
 
-This document defines the recommended backend schema for turning the current `website-builder` repo into a stronger CrecyStudio project engine. The backend should support not only websites, but also custom web apps, client portals, dashboards, booking/payment systems, automations, e-commerce systems, support plans, and retainers.
+This is the data-layer companion to `opportunities_to_build_on_current_repo_to_better_expose_crecys_potential.md` and `frontend_schema_and_connection_to_current_systems.md`. The strategy doc says *what to sell*; the frontend doc says *what users see*; this doc says *what the database holds and how the API serves it*.
 
-The backend should support this full lifecycle:
+This rewrite replaces the earlier draft. The earlier draft proposed a HubSpot/Jira-shape schema across 8 layers and 30+ tables — the right shape for a multi-operator agency with separate sales and delivery teams. The current direction — set by the strategy doc — is a v1.5 minimal target appropriate for a solo operator: 4 new tables plus 1 column, designed to close the highest-value gaps (proposal versioning, agreement audit trail, recurring revenue, lane-queryability) without overbuilding for scale that doesn't exist yet.
 
-```txt
-contact/company
--> lead
--> intake
--> estimate
--> opportunity
--> proposal
--> agreement
--> invoice/deposit
--> project
--> portal
--> milestones/tasks/revisions/messages
--> launch
--> support/retainer
-```
+The v3 HubSpot shape is named here as a "later" reference, not a v1 target. Specific triggers that would warrant promoting to v3 are listed below.
 
 ---
 
 ## Executive Summary
 
-The current backend direction is already strong. It includes quote submission, leads, pricing truth, deposit links, Stripe webhooks, portal projects, messages, revisions, files/assets, invoices, activity tracking, admin project views, scope snapshots, and change orders.
+The backend already supports the full lifecycle that matters today: lead capture, intake, pricing, deposit, portal, milestones, assets, revisions, messages, invoices, activity feed, scope snapshots, change orders, Stripe idempotency, and an internal admin pipeline. The PIE engine is shipped at v3 with fast/warm/deep routing.
 
-However, the current schema appears to rely on `quotes`, portal project tables, and some `debug` JSON for data that should eventually become first-class records. A 10/10 backend should separate the system into clear layers:
+The v1.5 backend rewrite addresses four real gaps the existing schema doesn't:
 
-- CRM layer
-- Sales layer
-- Delivery layer
-- Billing layer
-- Portal layer
-- File/asset layer
-- Support/retainer layer
-- Analytics/activity layer
+1. **Proposals live in `quotes.debug` JSON**, not a real table. No version history, no sent/viewed/accepted lifecycle, no proposal-level analytics.
+2. **Agreements live in `customer_portal_projects.agreement_*` columns**, not a separate audit-trail table. No body hash, no accepted-IP capture, no version-binding.
+3. **Recurring revenue has no engine.** Retainers are invoiceable as one-off entries on `project_invoices` but `support_subscriptions` doesn't exist.
+4. **`project_type` column doesn't exist on `quotes` or `customer_portal_projects`**, so admin can't filter by lane and the new positioning has no queryable spine.
 
-This does not mean rebuilding everything immediately. The best path is gradual migration: preserve the current working quoteId/token/deposit/portal flow while adding cleaner tables around it.
+The v1.5 target is 1 column + 4 tables. Everything else stays. Migration is non-breaking; existing reads and writes continue working through fallbacks during the transition.
 
 ---
 
-## Recommended Backend Layers
+## What's Already Shipped (Backend Layer)
 
-| Layer | Main Tables | Purpose |
+Per the opportunity doc reconciliation:
+
+| Backend area | Status | Migration / file |
 |---|---|---|
-| CRM | `contacts`, `companies`, `leads`, `lead_sources`, `activities` | Who the person/business is and how they entered the pipeline |
-| Sales | `intakes`, `estimates`, `opportunities`, `quotes`, `proposals`, `proposal_versions`, `agreements`, `call_requests` | Turn a lead into an approved project |
-| Delivery | `projects`, `project_members`, `tasks`, `milestones`, `scope_snapshots`, `change_orders`, `project_activity` | Manage work after the sale |
-| Billing | `invoices`, `invoice_line_items`, `payments`, `stripe_checkout_sessions`, `stripe_webhook_events`, `subscriptions`, `retainers` | Track deposits, final payments, retainers, invoices, and webhook reconciliation |
-| Portal | `portal_projects`, `portal_access_tokens`, `portal_assets`, `portal_messages`, `portal_revisions`, `portal_activity_feed` | Client-facing project workspace |
-| Files | `files`, `file_versions`, `file_links`, `storage_objects` | Private assets, uploads, attachments, agreements, screenshots, brand files |
-| Support | `support_plans`, `support_subscriptions`, `support_tickets`, `maintenance_requests`, `monthly_reports` | Recurring revenue after launch |
-| Analytics | `analytics_events`, `funnel_events`, `project_metrics` | Conversion, revenue, delivery, and retention reporting |
+| `customer_portal_projects` + milestones + assets + revisions | Shipped | `supabase/migrations/20260420_create_customer_portal_tables.sql` |
+| `customer_portal_messages` (two-way messaging with attachments) | Shipped | `supabase/migrations/20260421_add_customer_portal_messages.sql` |
+| `project_activity` (unified activity feed) | Shipped | `supabase/migrations/20260422_add_project_activity_and_nudges.sql` |
+| `nudge_log` (idempotent automated reminders) | Shipped | same migration |
+| `project_invoices` (deposit / milestone / final / retainer one-off invoices) | Shipped | `supabase/migrations/20260422_create_project_invoices.sql` |
+| `stripe_processed_sessions` (Stripe Checkout idempotency, two-state claimed/completed) | Shipped | `supabase/migrations/20260428_create_stripe_processed_sessions.sql` |
+| `quote_portal_state` + early `portal_assets` (legacy schema, superseded by `customer_portal_*`) | Shipped | `supabase/migrations/20260328_create_quote_portal_state_and_portal_assets.sql` |
+| `ops_intakes` workspace state | Shipped | `supabase/migrations/20260326_add_workspace_state_to_ops_intakes.sql` |
+| Tier-based pricing config | Shipped | `lib/pricing/tiers.ts` |
+| PIE v3 engine (fast/warm/deep routing, deep/warm trigger evaluation, capacity breakdown, profit signal) | Shipped | `lib/pie/ensurePie.ts` |
+
+Total: 7 SQL migrations, full pricing module set, and the PIE engine — all in production.
 
 ---
 
-## Core Entity Flow
+## v1.5 Minimal Target
 
-### CRM Objects
+The four tables and one column to add. Designed to fit on one afternoon's worth of migration work for a solo operator and to close the proposal/agreement/recurring-revenue/lane-queryability gaps without inviting CRM-style sprawl.
 
-These should represent people and businesses.
+### 1. `project_type` column on `quotes` and `customer_portal_projects`
 
-```txt
-contacts
-companies
-company_contacts
-leads
-lead_sources
-activities
-```
-
-Why this matters: HubSpot-style CRM systems separate contacts, companies, deals/leads/quotes, tickets, activities, and custom objects. That separation makes reporting, automation, and scaling cleaner than stuffing everything into a single quote/project table.
-
-### Sales Objects
-
-These should represent the process of turning a lead into a paid project.
-
-```txt
-intakes
-estimates
-opportunities
-quotes
-proposals
-proposal_versions
-agreements
-call_requests
-```
-
-### Delivery Objects
-
-These should represent the actual work.
-
-```txt
-projects
-project_members
-tasks
-milestones
-scope_snapshots
-change_orders
-project_status_events
-project_activity
-```
-
-### Billing Objects
-
-These should represent payments, invoices, and financial reconciliation.
-
-```txt
-invoices
-invoice_line_items
-payments
-stripe_checkout_sessions
-stripe_webhook_events
-support_subscriptions
-```
-
-### Portal Objects
-
-These should represent what the client can see and interact with.
-
-```txt
-portal_projects
-portal_access_tokens
-portal_messages
-portal_assets
-portal_revisions
-portal_activity_feed
-```
-
----
-
-## Project Types
-
-Every project should have a `project_type` so the backend can route different project categories through different workflows.
-
-Recommended project types:
-
-```txt
-website
-custom_web_app
-client_portal
-booking_payment_system
-business_automation
-ecommerce
-website_rescue
-dashboard_internal_tool
-```
-
-This matters because a simple website should not have the same workflow assumptions as a custom app, and an automation project should not use the same portal content as an e-commerce project.
-
----
-
-## Recommended Base Lifecycle
-
-Use a shared lifecycle, but allow project-type-specific portal sections and workflow details.
-
-```txt
-new
-qualified
-estimate_generated
-call_requested
-proposal_drafted
-proposal_sent
-accepted
-deposit_sent
-deposit_paid
-active
-preview_ready
-revision_requested
-launch_ready
-live
-closed_won
-closed_lost
-support_active
-```
-
-Jira's workflow model is useful here: work moves through statuses and transitions. The key is to keep the workflow simple enough that you actually use it. Too many statuses create confusion.
-
----
-
-## Core Schema Proposal
-
-### CRM Tables
-
-| Table | Important Columns | Purpose |
-|---|---|---|
-| `contacts` | `id`, `email`, `phone`, `first_name`, `last_name`, `auth_user_id`, `created_at` | Individual people, including leads and client users |
-| `companies` | `id`, `name`, `website`, `industry`, `size`, `created_at` | Business accounts |
-| `company_contacts` | `company_id`, `contact_id`, `role`, `is_primary` | Many-to-many link between people and companies |
-| `leads` | `id`, `contact_id`, `company_id`, `source`, `status`, `created_at` | Top-of-funnel record |
-| `lead_sources` | `id`, `source_name`, `campaign`, `utm_json` | Marketing attribution |
-| `activities` | `id`, `contact_id`, `company_id`, `event_type`, `summary`, `created_at` | CRM-level touch history |
-
-### Sales Tables
-
-| Table | Important Columns | Purpose |
-|---|---|---|
-| `intakes` | `id`, `lead_id`, `project_type`, `status`, `raw_answers`, `normalized_answers`, `created_at` | Universal intake table |
-| `estimates` | `id`, `intake_id`, `lane`, `tier`, `low`, `high`, `target`, `complexity_score`, `flags`, `custom_scope_required` | Pricing/scoping output |
-| `opportunities` | `id`, `lead_id`, `company_id`, `project_type`, `stage`, `estimated_value`, `probability`, `owner_id` | Sales pipeline object similar to a deal |
-| `quotes` | `id`, `opportunity_id`, `estimate_id`, `status`, `public_token`, `expires_at` | Client-visible quote/estimate reference |
-| `call_requests` | `id`, `quote_id`, `opportunity_id`, `best_time`, `timezone`, `notes`, `status` | Discovery-call workflow |
-| `proposals` | `id`, `opportunity_id`, `project_id`, `current_version_id`, `status`, `sent_at`, `accepted_at` | Proposal container |
-| `proposal_versions` | `id`, `proposal_id`, `version_no`, `scope_summary`, `price`, `deposit_amount`, `timeline`, `terms`, `body_json` | Versioned proposal content |
-| `agreements` | `id`, `project_id`, `proposal_id`, `version_no`, `status`, `body_text`, `body_hash`, `published_at`, `accepted_at`, `accepted_by_contact_id`, `accepted_ip` | Legal/contract acceptance and audit trail |
-
-### Delivery Tables
-
-| Table | Important Columns | Purpose |
-|---|---|---|
-| `projects` | `id`, `opportunity_id`, `quote_id`, `company_id`, `project_type`, `status`, `title`, `start_date`, `target_launch_date` | Main delivery object |
-| `project_members` | `project_id`, `contact_id`, `role`, `permissions` | Who can access the project/portal |
-| `project_status_events` | `id`, `project_id`, `from_status`, `to_status`, `actor_id`, `reason`, `created_at` | Audit trail for status transitions |
-| `scope_snapshots` | `id`, `project_id`, `quote_id`, `version_no`, `status`, `snapshot_json`, `price_target`, `timeline_text` | Versioned scope governance |
-| `change_orders` | `id`, `project_id`, `base_snapshot_id`, `status`, `title`, `delta_price`, `delta_hours`, `client_message`, `admin_notes` | Formal scope change tracking |
-| `tasks` | `id`, `project_id`, `title`, `status`, `assignee_id`, `due_date`, `client_visible` | Internal delivery tasks |
-| `milestones` | `id`, `project_id`, `title`, `status`, `due_date`, `client_visible`, `sort_order` | Project journey steps |
-| `project_activity` | `id`, `project_id`, `actor_role`, `actor_id`, `event_type`, `summary`, `payload_json`, `client_visible`, `created_at` | Unified timeline for admin and portal |
-
-### Billing Tables
-
-| Table | Important Columns | Purpose |
-|---|---|---|
-| `invoices` | `id`, `project_id`, `quote_id`, `invoice_type`, `amount`, `status`, `due_date`, `paid_at`, `stripe_session_id` | Invoice lifecycle |
-| `invoice_line_items` | `id`, `invoice_id`, `description`, `quantity`, `unit_amount`, `total_amount` | Detailed invoice items |
-| `payments` | `id`, `invoice_id`, `project_id`, `provider`, `provider_payment_id`, `amount`, `status`, `paid_at` | Payment records independent of quote debug data |
-| `stripe_checkout_sessions` | `id`, `project_id`, `quote_id`, `invoice_id`, `session_id`, `url`, `amount`, `status`, `metadata_json` | Stripe session reconciliation |
-| `stripe_webhook_events` | `id`, `event_id`, `event_type`, `processed_at`, `status`, `payload_json` | Webhook idempotency and audit log |
-| `support_subscriptions` | `id`, `company_id`, `project_id`, `support_plan_id`, `status`, `stripe_subscription_id` | Ongoing support revenue |
-
-### Portal Tables
-
-| Table | Important Columns | Purpose |
-|---|---|---|
-| `portal_projects` | `id`, `project_id`, `quote_id`, `access_token`, `status`, `client_status`, `scope_snapshot` | Client workspace root |
-| `portal_messages` | `id`, `project_id`, `sender_contact_id`, `sender_role`, `body`, `attachment_file_id`, `read_at`, `created_at` | Portal communications |
-| `portal_assets` | `id`, `project_id`, `uploaded_by_contact_id`, `file_id`, `asset_type`, `label`, `status`, `notes` | Client uploads and asset tracking |
-| `portal_revisions` | `id`, `project_id`, `request_text`, `priority`, `status`, `created_by_contact_id`, `created_at` | Revision requests |
-| `portal_activity_feed` | `id`, `project_id`, `event_type`, `summary`, `client_visible`, `created_at` | Client-visible activity timeline |
-
-### File and Support Tables
-
-| Table | Important Columns | Purpose |
-|---|---|---|
-| `files` | `id`, `project_id`, `bucket`, `storage_path`, `original_name`, `mime_type`, `size_bytes`, `visibility`, `uploaded_by` | Metadata around Supabase Storage files |
-| `file_versions` | `id`, `file_id`, `version_no`, `storage_path`, `uploaded_by`, `created_at` | Versioning for files if needed |
-| `support_plans` | `id`, `name`, `monthly_price`, `included_hours`, `features_json` | Available care plans |
-| `support_tickets` | `id`, `project_id`, `subscription_id`, `status`, `priority`, `subject`, `description` | Post-launch support |
-| `monthly_reports` | `id`, `project_id`, `subscription_id`, `period_start`, `period_end`, `summary_json` | Retainer reporting |
-
----
-
-## Why Proposals and Agreements Need Real Tables
-
-The current system can store generated proposal and pre-contract/agreement data inside quote debug JSON. That is acceptable for an internal v1, but a stronger backend should move this into real tables.
-
-Reasons:
-
-- Every proposal change can create a version.
-- You can track sent, viewed, accepted, declined, and expired states.
-- You can audit who accepted an agreement, when, from what IP, and against which version hash.
-- Payment links can connect to proposal versions instead of loose debug data.
-- Client portal can display the approved scope and agreement cleanly.
-- Reporting becomes easier: proposal acceptance rate, average value, time-to-accept, close rate.
-
----
-
-## Stripe and Billing Model
-
-Stripe Checkout should remain the primary payment path because it reduces custom checkout complexity and supports metadata for internal reconciliation.
-
-Recommended payment types:
-
-| Payment Type | Required Metadata / Internal Link | Backend Effect |
-|---|---|---|
-| Deposit payment | `proposal_id`, `quote_id`, `project_id`, `invoice_id` | Marks deposit paid, activates project, updates portal |
-| Milestone invoice | `project_id`, `invoice_id`, `milestone_id` | Used for mid-project payments |
-| Final invoice | `project_id`, `invoice_id` | Used before launch/handoff or final delivery |
-| Retainer/subscription | `support_subscription_id`, `company_id` | Used for ongoing care/support plans |
-| Webhook event | `event_id`, `event_type`, `object_id` | Stored in `stripe_webhook_events` for idempotency and audit |
-
-Stripe webhook rules:
-
-- Verify signature.
-- Only listen to required event types.
-- Store processed event IDs.
-- Do not process the same event twice.
-- Update local payment, invoice, project, and portal records from the webhook.
-- Keep Stripe metadata tied to internal IDs.
-
----
-
-## RLS and Security Model
-
-Supabase RLS should be enabled for any public-schema table that can be accessed through the client. Service-role access should stay server-only. Client portal access should be token-based plus optional authenticated owner access for sensitive actions such as agreement acceptance and deposit notices.
-
-| Area | Policy Direction | Implementation Note |
-|---|---|---|
-| `contacts` / `profiles` | User can view/update own profile; admins can view all | RLS by `auth.uid()` and admin role helper |
-| `projects` | Client can view projects where they are a project member; admins can view all | Use `project_members` bridge |
-| `portal_messages` | Client can read/write messages for their project; internal notes are admin-only | Filter by `sender_role` and `client_visible` |
-| Files / storage | Private buckets by default. Signed URLs for temporary access | Use storage metadata rows and RLS policies |
-| `invoices` / `payments` | Client can view own invoices; only server/admin can create or mark paid | Payment confirmation from webhook/server only |
-| Admin routes | Server-only admin check before service role use | Keep `requireAdminRoute` pattern |
-
----
-
-## Project-Type-Specific Portal Behavior
-
-The client portal should not look exactly the same for every project type.
-
-| Project Type | Portal Should Emphasize |
-|---|---|
-| Website | Pages, content/assets, preview URL, revisions, launch checklist |
-| Custom web app | Features, sprints, environments, QA, roles, deployments |
-| Client portal | User roles, dashboard sections, portal features, access rules |
-| Booking/payment system | Booking rules, payment links, confirmation flow, test transactions |
-| Business automation | Workflows, triggers, tools, tests, SOPs, handoff notes |
-| E-commerce | Products, checkout, payment setup, fulfillment, launch readiness |
-| Website rescue | Audit findings, fixes, before/after notes, relaunch checklist |
-| Dashboard/internal tool | Data sources, admin screens, permissions, reporting views |
-
----
-
-## API Route Model
-
-| Area | Route Pattern | Responsibility |
-|---|---|---|
-| Public intake | `POST /api/intakes` or current `POST /api/submit-estimate` | Create lead, intake, estimate, quote/opportunity |
-| Call request | `POST /api/request-call` | Create call request and update stage |
-| Proposal | `POST /api/internal/proposals`, `POST /api/proposals/[token]/accept` | Generate, send, accept, and version proposals |
-| Deposit | `POST /api/internal/create-deposit-link`, `POST /api/estimate/accept` | Create Stripe Checkout Session and local session |
-| Webhook | `POST /api/webhooks/stripe` | Verify signature, guard duplicates, update payment/invoice/project/portal |
-| Portal | `GET/POST /api/portal/[token]` | Load and update client workspace |
-| Admin | `GET /api/internal/admin/projects`, `POST /api/internal/admin/project-update` | Command center operations |
-| Files | `POST /api/portal/assets`, `POST /api/portal/[token]/messages` | Upload files to private buckets and store metadata |
-
----
-
-## Migration Plan From Current Backend
-
-| Step | Migration Action |
-|---|---|
-| Step 1 | Add `project_type` to quotes, intakes, projects/portal projects where possible |
-| Step 2 | Create `proposals` and `proposal_versions` while still reading existing `debug.generatedProposal` as fallback |
-| Step 3 | Create `agreements` table and migrate `publishedAgreementText` / `agreementAcceptance` out of quote debug |
-| Step 4 | Create `stripe_checkout_sessions` and `stripe_webhook_events` tables; keep current processed-session behavior until migrated |
-| Step 5 | Create unified `project_activity` event writes for all key actions |
-| Step 6 | Add `support_plans`, `support_subscriptions`, and `support_tickets` for post-launch revenue |
-| Step 7 | Add custom app intake fields and estimator/scoping workflow |
-
----
-
-## Example SQL Skeleton
+Phase 1 of the opportunity doc roadmap. Adds the queryable spine for the new positioning.
 
 ```sql
-create type project_type as enum (
+-- Migration: <date>_add_project_type.sql
+
+create type project_type_enum as enum (
   'website',
-  'custom_web_app',
-  'client_portal',
-  'booking_payment_system',
-  'business_automation',
+  'web_app',
+  'automation',
   'ecommerce',
-  'website_rescue',
-  'dashboard_internal_tool'
+  'rescue'
 );
 
-create table public.intakes (
+alter table quotes
+  add column if not exists project_type project_type_enum;
+
+alter table customer_portal_projects
+  add column if not exists project_type project_type_enum;
+
+-- Backfill: every existing row is a website until we know otherwise
+update quotes
+  set project_type = 'website'
+  where project_type is null;
+
+update customer_portal_projects
+  set project_type = 'website'
+  where project_type is null;
+
+-- After backfill, enforce NOT NULL on new rows
+alter table quotes
+  alter column project_type set not null;
+
+alter table customer_portal_projects
+  alter column project_type set not null;
+
+-- Indexes for admin pipeline filtering
+create index if not exists idx_quotes_project_type
+  on quotes(project_type, created_at desc);
+
+create index if not exists idx_customer_portal_projects_project_type
+  on customer_portal_projects(project_type, created_at desc);
+```
+
+Once shipped, `app/api/submit-estimate/route.ts` writes the value from `IntakeSubmission.projectType`. Admin pipeline (`lib/adminProjectData.ts` + `app/internal/admin/AdminPipelineClient.tsx`) filters by lane.
+
+### 2. `proposals`
+
+The container for proposal lifecycle.
+
+```sql
+create table proposals (
   id uuid primary key default gen_random_uuid(),
-  lead_id uuid references public.leads(id),
-  project_type project_type not null,
-  status text not null default 'submitted',
-  raw_answers jsonb not null default '{}'::jsonb,
-  normalized_answers jsonb not null default '{}'::jsonb,
+  quote_id uuid not null references quotes(id) on delete cascade,
+  current_version_id uuid,  -- FK added after proposal_versions exists
+  status text not null default 'draft'
+    check (status in ('draft', 'sent', 'viewed', 'accepted', 'declined', 'expired')),
+  sent_at timestamptz,
+  viewed_at timestamptz,
+  accepted_at timestamptz,
+  declined_at timestamptz,
+  expires_at timestamptz,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  unique (quote_id)  -- one proposal record per quote; versioning via proposal_versions
 );
 
-create table public.proposal_versions (
+create index if not exists idx_proposals_quote on proposals(quote_id);
+create index if not exists idx_proposals_status on proposals(status, sent_at desc);
+```
+
+### 3. `proposal_versions`
+
+Versioned proposal content. Every meaningful edit creates a new version; `proposals.current_version_id` points at the active one.
+
+```sql
+create table proposal_versions (
   id uuid primary key default gen_random_uuid(),
-  proposal_id uuid not null references public.proposals(id) on delete cascade,
+  proposal_id uuid not null references proposals(id) on delete cascade,
   version_no int not null,
   scope_summary text,
   price_target numeric,
@@ -393,39 +140,323 @@ create table public.proposal_versions (
   created_at timestamptz not null default now(),
   unique (proposal_id, version_no)
 );
+
+create index if not exists idx_proposal_versions_proposal
+  on proposal_versions(proposal_id, version_no desc);
+
+-- Add the FK that proposals.current_version_id couldn't have at table-creation time
+alter table proposals
+  add constraint proposals_current_version_fk
+  foreign key (current_version_id) references proposal_versions(id);
 ```
+
+Read pattern: admin reads `proposals` joined to its `current_version_id` to render the active proposal. History reads `proposal_versions` ordered by `version_no desc`. Existing `quotes.debug.generatedProposal` becomes a fallback — admin code reads "from `proposals` if present, else from `debug`." Old quotes work without backfill.
+
+### 4. `agreements`
+
+Audit-trail table for agreement publication and acceptance.
+
+```sql
+create table agreements (
+  id uuid primary key default gen_random_uuid(),
+  portal_project_id uuid not null references customer_portal_projects(id) on delete cascade,
+  proposal_version_id uuid references proposal_versions(id),
+  status text not null default 'draft'
+    check (status in ('draft', 'published', 'accepted', 'voided')),
+  body_text text not null,
+  body_hash text not null,  -- sha256 hex of body_text computed at publication
+  published_at timestamptz,
+  accepted_at timestamptz,
+  accepted_by_email text,
+  accepted_ip text,
+  accepted_user_agent text,
+  voided_at timestamptz,
+  void_reason text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_agreements_portal_project
+  on agreements(portal_project_id, created_at desc);
+```
+
+When a portal client accepts an agreement, the API handler writes a row with `status='accepted'`, `accepted_at=now()`, `accepted_by_email` from the portal session context, `accepted_ip` from request headers, and `accepted_user_agent` from the `User-Agent` header. The body hash is computed at publication and not recomputed at acceptance — if it differs at audit, the agreement was tampered with after publication. Existing `customer_portal_projects.agreement_*` columns become legacy fallback reads during transition.
+
+### 5. `support_subscriptions`
+
+Recurring-revenue engine. Created when the first Care plan is sold — not before.
+
+```sql
+create table support_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  portal_project_id uuid not null references customer_portal_projects(id) on delete cascade,
+  plan text not null
+    check (plan in ('care', 'care_plus', 'care_pro', 'systems_partner')),
+  monthly_price_cents integer not null,
+  status text not null default 'active'
+    check (status in ('active', 'cancelled', 'past_due')),
+  stripe_subscription_id text unique,
+  stripe_customer_id text,
+  current_period_start timestamptz,
+  current_period_end timestamptz,
+  started_at timestamptz not null default now(),
+  cancelled_at timestamptz,
+  cancel_reason text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_support_subscriptions_portal_project
+  on support_subscriptions(portal_project_id);
+
+create index if not exists idx_support_subscriptions_status
+  on support_subscriptions(status);
+
+create index if not exists idx_support_subscriptions_stripe
+  on support_subscriptions(stripe_subscription_id);
+```
+
+Stripe `customer.subscription.created` / `updated` / `deleted` webhook events update this table. The existing `stripe_processed_sessions` table extends naturally to handle subscription event idempotency — same claimed/completed dedupe pattern, same `event_id` column.
+
+### Migration order
+
+1. **Add `project_type` column** + backfill — Phase 1 of the opportunity doc roadmap.
+2. **Add `proposals` + `proposal_versions`** — Phase 3.
+3. **Add `agreements`** — Phase 3.
+4. **Add `support_subscriptions`** — Phase 3, only when the first Care plan is actually sold. Don't migrate ahead of demand.
+
+Each migration is independent. Order matters only for fallback behavior: until `proposals` exists, admin reads `quotes.debug.generatedProposal`; until `agreements` exists, admin reads `customer_portal_projects.agreement_*` columns. Both fallback patterns are intentionally non-removing — old data stays readable forever.
 
 ---
 
-## Implementation Priority
+## What's Deferred to v3 (and what would trigger it)
 
-| Priority | Backend Action |
+The earlier draft proposed an enterprise schema with `contacts`, `companies`, `company_contacts`, `lead_sources`, `opportunities`, `tasks`, `project_members`, `support_plans`, `support_tickets`, `analytics_events`, `funnel_events`, `project_metrics`, and a separation between `intakes` / `estimates` / `opportunities` / `quotes` / `proposals`. None of that is in v1.5.
+
+Concrete triggers that would warrant promoting to v3:
+
+- **A second operator joins.** Solo doesn't need `project_members`. Two operators do.
+- **Multi-stakeholder companies become more than ~25% of the pipeline.** Solo-prop buyers don't need `companies` + `company_contacts`. B2B mid-market does.
+- **Closed-deal volume exceeds ~30 per quarter** with retention-cohort analysis as a real need. Below that, manual queries on existing tables are fine.
+- **A real CRM integration is required** (HubSpot, Salesforce, Pipedrive sync). At that point a `contacts`/`companies` shape mirrors the destination CRM and saves transformation work.
+- **Support tickets become a queue-managed product** rather than ad-hoc Care+ work. Below that, treating tickets as tagged messages in the existing `customer_portal_messages` + `project_activity` tables is sufficient.
+
+Until at least one trigger fires, v3 is overhead. The schema would either bit-rot from disuse or accumulate joins that hurt admin query speed without delivering proportionate value.
+
+---
+
+## Project-Type Backend Contract
+
+Five `ProjectType` values mirror the frontend taxonomy:
+
+```sql
+create type project_type_enum as enum (
+  'website',
+  'web_app',
+  'automation',
+  'ecommerce',
+  'rescue'
+);
+```
+
+Stored on `quotes` and `customer_portal_projects` (Phase 1 migration above). Read by:
+
+- **`lib/adminProjectData.ts`** — admin pipeline filters by lane via `project_type` column instead of inferring from intake fields.
+- **`app/internal/dashboard/page.tsx`** — KPIs split by `project_type` in `getDashboardSnapshot()`.
+- **`lib/pie/ensurePie.ts`** — already lane-aware via `pricing.lane` from intake; the column makes the value persistently queryable post-submission.
+- **Future portal templates** — different project types eventually render different milestone defaults (see "Project-Type-Specific Portal Behavior" below).
+
+`DeliveryArchetype` (the internal-only second axis from the frontend doc) is *not* added as a column in v1.5. Operator-set archetype lives inside `customer_portal_projects.scope_snapshot.archetype` JSON for now. Promote to a column when more than ~3 archetype-specific code branches exist in admin — until then, JSON is fine and easier to evolve.
+
+---
+
+## Lifecycle Statuses
+
+The existing `customer_portal_projects` table tracks `project_status` and `client_status` with default `'new'`. v1.5 doesn't replace those; it adds proposal, agreement, and subscription lifecycle on top.
+
+### Proposal lifecycle
+
+```
+draft → sent → viewed → (accepted | declined | expired)
+```
+
+- **draft** — created; not yet visible to client.
+- **sent** — admin published; client URL active. `sent_at` set.
+- **viewed** — client opened the proposal at least once. `viewed_at` set.
+- **accepted** — client clicked accept. `accepted_at` set; quote moves to `accepted` status; deposit link generated.
+- **declined** — client clicked decline. `declined_at` set; quote stays open for revision.
+- **expired** — `expires_at` reached without action. Cron-or-on-read computed.
+
+State transitions are write-only and audit-logged via `project_activity` rows (event types: `proposal_sent`, `proposal_viewed`, `proposal_accepted`, `proposal_declined`).
+
+### Agreement lifecycle
+
+```
+draft → published → (accepted | voided)
+```
+
+- **draft** — admin authoring; no body hash yet.
+- **published** — body hash computed and frozen. `published_at` set. Client can view and accept.
+- **accepted** — client signed. `accepted_at`, `accepted_by_email`, `accepted_ip`, `accepted_user_agent` captured.
+- **voided** — admin manually voided (e.g., scope renegotiated). `voided_at` and `void_reason` set. A new agreement row is created for the renegotiated scope; the voided one is immutable for audit.
+
+Once `published_at` is set, `body_text` and `body_hash` are immutable. Any subsequent edit requires voiding and re-publishing.
+
+### Support subscription lifecycle
+
+```
+active → past_due → (active | cancelled)
+       ↘ cancelled
+```
+
+Driven by Stripe webhook events. `past_due` enters when an invoice fails; `active` re-entered on success. `cancelled` is terminal. A "paused" state is intentionally absent in v1.5 — Stripe's `pause_collection` integration adds complexity (admin UI + webhook detection) without proven demand. Add when a client first asks to pause; the column type can extend non-disruptively via a CHECK constraint update.
+
+---
+
+## Stripe and Billing Model
+
+Stripe Checkout remains the primary payment path because it minimizes custom checkout complexity and supports metadata for internal reconciliation. v1.5 extends the existing model to subscriptions without replacing one-off invoicing.
+
+### Payment types and metadata
+
+| Payment type | Stripe object | Required metadata | Effect |
+|---|---|---|---|
+| Deposit | Checkout Session (mode: `payment`) | `quote_id`, `portal_project_id`, `invoice_id`, `payment_type: 'deposit'` | Marks deposit paid, activates project, updates portal |
+| Milestone invoice | Checkout Session (mode: `payment`) | `portal_project_id`, `invoice_id`, `payment_type: 'milestone'` | Marks specific `project_invoices` row paid |
+| Final invoice | Checkout Session (mode: `payment`) | `portal_project_id`, `invoice_id`, `payment_type: 'final'` | Marks invoice paid; portal may flip to `closed_won` |
+| Retainer (one-off) | Checkout Session (mode: `payment`) | `portal_project_id`, `invoice_id`, `payment_type: 'retainer'` | Marks invoice paid; doesn't create a subscription |
+| Care subscription | Checkout Session (mode: `subscription`) — uses a per-plan Stripe `Price` ID configured in the Stripe dashboard | `subscription_data.metadata`: `portal_project_id`, `support_plan: 'care' \| 'care_plus' \| 'care_pro' \| 'systems_partner'`, `payment_type: 'subscription'` | Creates `support_subscriptions` row on `customer.subscription.created` |
+
+### Webhook event handling
+
+The existing `app/api/webhooks/stripe/route.ts` already verifies signatures and uses `stripe_processed_sessions` for idempotency on `checkout.session.completed` events. v1.5 extends that handler to additional event types:
+
+| Event | New v1.5 handling |
 |---|---|
-| P0 | Do not break the current quoteId/token/deposit/portal flow. Preserve working behavior |
-| P1 | Add `project_type` and better status lifecycle across new records |
-| P2 | Add real proposal/agreement tables with fallback to current debug JSON |
-| P3 | Add local Stripe session/event tables and standardize webhook reconciliation |
-| P4 | Add custom web app intake/estimator and project-type portal templates |
-| P5 | Add support/retainer backend for recurring revenue |
+| `checkout.session.completed` | Existing: marks deposit/invoice paid via `stripe_processed_sessions`. v1.5 adds: if `mode === 'subscription'`, create `support_subscriptions` row from session metadata. |
+| `customer.subscription.created` | New: idempotent insert/upsert into `support_subscriptions`; status `'active'`. |
+| `customer.subscription.updated` | New: update `current_period_start/end`, `status` (`'active'` / `'past_due'`). |
+| `customer.subscription.deleted` | New: set `status='cancelled'`, `cancelled_at=now()`. |
+| `invoice.payment_failed` (subscription) | New: set `support_subscriptions.status='past_due'`. |
+| `invoice.payment_succeeded` (subscription) | New: re-set `status='active'` if previously `past_due`. |
+
+Idempotency for subscription events reuses the existing `stripe_processed_sessions` table. Subscription events do not have a Checkout Session ID, so the handler stores `session_id = event.id` (Stripe's event ID) for those rows — the column name is slightly inaccurate but the dedupe semantics are preserved without a schema change. Optionally rename the column to `dedupe_key` in a later cleanup migration if the inaccuracy bothers; not required for v1.5.
+
+---
+
+## RLS and Security Model
+
+Supabase Row-Level Security is enabled on every table that's reachable from the public schema via the anon or authenticated key. Service-role access stays server-only. The new v1.5 tables follow the same pattern as the existing portal tables.
+
+| Table | Read policy | Write policy |
+|---|---|---|
+| `proposals` | Service-role only (admin reads via server route) | Service-role only |
+| `proposal_versions` | Service-role only | Service-role only |
+| `agreements` | Token-bound: client can read agreements for their `portal_project_id` via a portal session helper. Service-role for admin. | Service-role only (publication and acceptance write paths run on the server) |
+| `support_subscriptions` | Token-bound: client can read their own subscription row. Service-role for admin. | Service-role only (Stripe webhook handler is server-side) |
+
+Token binding for portal-scoped reads uses the existing pattern: the API route resolves `access_token` to `portal_project_id` server-side, then queries with the service role and returns the result. The anon key never touches these tables directly.
+
+Acceptance writes (agreement accept, proposal accept) capture client IP via `request.headers.get('x-forwarded-for')` and `User-Agent` server-side. The portal client sends nothing; everything observable is captured by the server.
+
+Existing security guarantees that stay unchanged:
+
+- Stripe webhook signature verification (`STRIPE_WEBHOOK_SECRET`).
+- Admin route gating via `requireAdminRoute()` and `isAdminUser()`.
+- Rate limiting on public endpoints via `lib/rateLimit.ts`.
+- CORS / CSRF middleware in `proxy.ts`.
+- Idempotent webhook processing via `stripe_processed_sessions`.
+
+---
+
+## Project-Type-Specific Portal Behavior
+
+The portal is one codepath; project-type-specific behavior is data-driven, not code-branched. Each project type points to a default set of milestones and the portal's section emphasis.
+
+| Project type | Portal section emphasis | Default milestones |
+|---|---|---|
+| `website` | Pages, content/assets, preview URL, revisions, launch checklist | Deposit · Content · Build · Review · Launch |
+| `web_app` | Features, sprints, environments, QA, deployments, roles | Discovery · MVP · QA · Beta · Launch |
+| `automation` | Workflows, triggers, tools, tests, SOPs, handoff notes | Audit · Build · Test · Document · Handoff |
+| `ecommerce` | Products, checkout, payment setup, fulfillment, launch readiness | Setup · Catalog · Checkout · Test · Launch |
+| `rescue` | Audit findings, fixes, before/after notes, relaunch checklist | Audit · Plan · Sprint · Relaunch |
+
+Implementation: `customer_portal_milestones` rows are seeded from a `project_type → milestone[]` map in `lib/customerPortal.ts` when the portal project is created. The `project_status` field already exists; `project_type` (Phase 1 migration) feeds the seeding logic. No new milestone-template table needed for v1.5.
+
+---
+
+## API Route Model
+
+v1.5 prefers extending existing routes over creating parallel new paths. The repo already has admin proposal, pre-contract (agreement), and invoice surfaces; the portal already dispatches client actions through `app/api/portal/[token]/route.ts` via an `actionType` discriminator. v1.5 extends those, only adding net-new routes where no existing surface fits.
+
+| Area | Route | v1.5 effect |
+|---|---|---|
+| Public intake | `POST /api/submit-estimate` (existing) | Reads `projectType` from body; writes `quotes.project_type` and `customer_portal_projects.project_type` |
+| Call request | `POST /api/request-call` (existing) | Unchanged for v1.5 |
+| Proposal create / update / send | `POST /api/internal/admin/proposal/route.ts` (existing — EXTEND) | Currently writes proposal data to `quotes.debug.generatedProposal`. v1.5 extends to also insert/upsert a `proposals` row plus a new `proposal_versions` row on each save; transitions `proposals.status` ('draft' → 'sent') on publish |
+| Proposal accept | `POST /api/portal/[token]/route.ts` with `actionType: 'proposal_accept'` (existing dispatcher — EXTEND) | New action; sets `proposals.status='accepted'`, triggers existing deposit-link creation |
+| Agreement publish | `POST /api/internal/admin/pre-contract/route.ts` (existing — EXTEND) | Currently writes `customer_portal_projects.agreement_*` fields. v1.5 extends to also insert an `agreements` row with `status='published'` and computed body_hash |
+| Agreement accept | `POST /api/portal/[token]/route.ts` with `actionType: 'agreement_accept_v2'` (existing dispatcher — EXTEND) | New action; inserts `accepted_*` fields including IP and User-Agent into the active `agreements` row |
+| Subscription start | `POST /api/internal/start-subscription/route.ts` (NEW) | Creates Stripe subscription Checkout Session via a per-plan `Price` ID (Care / Care+ / Care Pro / Systems Partner); attaches `portal_project_id` and `support_plan` to `subscription_data.metadata` |
+| Webhook | `POST /api/webhooks/stripe/route.ts` (existing — EXTEND) | Adds `customer.subscription.*` and `invoice.payment_*` handlers; existing deposit handler unchanged |
+| Portal | `GET/POST /api/portal/[token]` and children (existing) | Reads `agreements` for the project; existing message/asset/revision/invoice routes unchanged |
+| Admin | `GET /api/internal/admin/projects` and children (existing) | Joins `project_type` for lane filter; reads `proposals` for proposal status |
+| Invoices admin | `app/api/internal/admin/invoices/route.ts` and `.../invoices/send/` (existing) | Unchanged for v1.5 |
+
+Existing API routes that don't change for v1.5: deposit creation, deposit success/cancel, portal messages/assets/revisions/invoices/preview, ops admin, ecommerce admin, internal dashboard.
+
+---
+
+## v1.5 Migration Plan
+
+Numbered steps, each independent and reversible. Roughly maps to the opportunity doc 90-day roadmap.
+
+| # | Step | Phase | Effort |
+|---|---|---|---|
+| 1 | Migration: add `project_type` enum + columns + backfill + indexes | 1 | S (1–2h) |
+| 2 | Update `app/api/submit-estimate/route.ts` to write `project_type` from `IntakeSubmission.projectType` | 1 | S (1h) |
+| 3 | Update `lib/adminProjectData.ts` and `AdminPipelineClient.tsx` to surface `project_type` filter | 1 | S (2h) |
+| 4 | Migration: create `proposals` + `proposal_versions` (with deferred FK) | 3 | M (4h) |
+| 5 | Extend existing `app/api/internal/admin/proposal/route.ts` to also write `proposals` + `proposal_versions` rows on each save (current debug-JSON write stays for backward compatibility) | 3 | M (4h) |
+| 6 | Extend portal `app/api/portal/[token]/route.ts` actionType dispatcher with `proposal_accept` action; on accept, set `proposals.status='accepted'` and trigger the existing deposit-link flow | 3 | M (3h) |
+| 7 | Update admin proposal rendering (`lib/customerPortal.ts`, `app/internal/admin/[id]/ProjectControlClient.tsx`) to read from `proposals` / `proposal_versions` with fallback to `quotes.debug.generatedProposal` | 3 | S (3h) |
+| 8 | Migration: create `agreements` | 3 | S (2h) |
+| 9 | Extend existing `app/api/internal/admin/pre-contract/route.ts` to also insert an `agreements` row at publish; extend portal `[token]/route.ts` with `agreement_accept_v2` actionType writing `accepted_*` fields | 3 | M (5h) |
+| 10 | Update portal and admin agreement rendering to read from `agreements` with fallback to `customer_portal_projects.agreement_*` | 3 | S (3h) |
+| 11 | Migration: create `support_subscriptions` | 3 | S (1h) |
+| 12 | Extend `app/api/webhooks/stripe/route.ts` to handle `customer.subscription.*` and `invoice.payment_*` events | 3 | M (4h) |
+| 13 | Build `app/api/internal/start-subscription/route.ts` (creates Stripe subscription Checkout Session; resolves a per-plan `Price` ID configured in Stripe dashboard) | 3 | S (3h) |
+| 14 | Update admin to surface support-subscription state alongside one-off invoices | 3 | S (2h) |
+
+**Steps 11–14 ordering.** These four are gated on the first Care plan actually being sold. When that happens, run all four in one sitting — the migration is useless without the webhook handler, the webhook handler is useless without the start-subscription endpoint, and admin can't surface what isn't there. Don't ship step 11 alone weeks ahead and let it sit.
+
+Total: ~40 hours backend work across 90 days, all fitting under Phase 1 + Phase 3 of the opportunity doc roadmap. Reversible because each migration can be rolled back independently and old data paths stay readable through fallbacks.
+
+### Transition strategy for old quotes
+
+Old quotes (created before Phase 3 ships) keep their proposals in `quotes.debug.generatedProposal` and their agreements in `customer_portal_projects.agreement_*` columns. They are not backfilled into the new tables. New code reads from the new tables first and falls back to the legacy fields when no row exists. This way:
+
+- No data loss for old quotes.
+- No bulk-migration risk — every existing client engagement stays readable forever.
+- Read code is dual-source; write code is single-source (new tables only after Phase 3).
+- After ~6 months of no new old-quote reads (track via admin opens), the fallback path can be removed in a small cleanup PR.
 
 ---
 
 ## Repo Evidence Reviewed
 
-| Area | Repo Path(s) | Why It Matters |
+| Area | Repo path(s) | Why it matters for v1.5 |
 |---|---|---|
-| Public homepage | `app/[locale]/page.tsx` | Existing homepage structure with hero, proof, portal preview/differentiator, process, pricing tiers, closing CTA, and secondary systems/e-commerce lanes |
-| Reusable service pages | `app/[locale]/websites/page.tsx`, `app/[locale]/systems/page.tsx`, `app/[locale]/ecommerce/page.tsx` | Service pages already use a shared ServicePage component and getServicePageData content model |
-| Service page data | `lib/service-pages.ts` | Detailed website, workflow automation, and e-commerce copy/data already exists |
-| Full build intake | `app/[locale]/build/BuildClient.tsx` | Multi-step intake collects website type, goals, pages, booking, payments, automations, integrations, content readiness, budget, timeline, email, and phone |
-| Quote submit route | `app/api/submit-estimate/route.ts` | Creates/updates leads and quotes, stores raw/normalized intake, pricing truth, totals, quote token, and analytics event |
-| Pricing engine | `lib/pricing/config.ts`, `lib/pricing/website.ts` | Existing tiers and complexity scoring for websites plus ops/e-commerce tier structures |
-| Call request flow | `app/[locale]/book/BookClient.tsx`, `app/api/request-call/route.ts` | Quote-aware discovery call request flow updates status and can send alerts |
-| Deposit/payment flow | `app/api/estimate/accept/route.ts`, `app/api/internal/create-deposit-link/route.ts`, `lib/depositPayments.ts`, `app/api/webhooks/stripe/route.ts` | Creates Stripe deposit links, stores deposit state, updates quote/portal status, and confirms payments |
-| Client portal | `app/portal/[token]/PortalClient.tsx`, `app/api/portal/[token]/route.ts` | Client workspace with deposit banner, milestones, invoices, assets, revisions, messages, preview, launch readiness, and agreements |
-| Internal admin pipeline | `app/internal/admin/page.tsx`, `AdminPipelineClient.tsx` | Master-detail admin pipeline with urgency queue, value, next-action logic, status/readiness badges, message polling, and embedded controls |
-| Admin project model | `lib/adminProjectData.ts` | Combines quote, portal, lead, estimates, PIE, call requests, pricing, scope snapshot, deposit, assets, revisions, invoices, activity, messages, proposals, and agreements |
-| Scope/change-order tools | `app/internal/project/[quoteId]/ProjectWorkspaceClient.tsx`, `app/api/internal/admin/change-order/route.ts` | Scope snapshots and change orders support scope governance |
+| Existing migrations | `supabase/migrations/` | 7 migrations confirm portal, messaging, activity, nudges, invoices, Stripe idempotency, ops state shipped |
+| Quote table | `quotes` (referenced throughout `app/api/submit-estimate/route.ts`, `lib/adminProjectData.ts`) | Phase 1 adds `project_type` column |
+| Customer portal tables | `customer_portal_projects`, `customer_portal_milestones`, `customer_portal_assets`, `customer_portal_revisions`, `customer_portal_messages` | Phase 1 adds `project_type` column on `customer_portal_projects`; agreement migration replaces in-table `agreement_*` fields |
+| Project invoices | `project_invoices` table; `lib/projectInvoices.ts`; `app/api/internal/admin/invoices/route.ts` (with `send/` subdirectory) | Existing one-off invoice paths stay; `support_subscriptions` is the new recurring path |
+| Stripe idempotency | `stripe_processed_sessions` table; `app/api/webhooks/stripe/route.ts`; `lib/depositPayments.ts` | Subscription event handling extends the existing dedupe pattern via `event_id` |
+| Activity feed | `project_activity` table; portal client and admin renderers | New event types for proposal/agreement/subscription state transitions |
+| PIE engine | `lib/pie/ensurePie.ts` | Reads `pricing.lane`; persistence via `project_type` column closes the queryable spine |
+| Admin project data | `lib/adminProjectData.ts` | Composes the unified admin view; v1.5 adds proposal/agreement/subscription joins |
+| Pricing config | `lib/pricing/{tiers,config,website,ops,ecommerce}.ts` | Tier bands inform `proposal_versions.price_target` defaults |
+| Auth & route protection | `lib/internalAuth.ts`, `lib/routeAuth.ts`, `lib/accessControl.ts`, `proxy.ts` | New admin routes use `requireAdminRoute()`; new public token routes use existing token-binding helpers |
 
 ---
 
@@ -433,9 +464,10 @@ create table public.proposal_versions (
 
 - HubSpot CRM data model overview: https://knowledge.hubspot.com/object-settings/use-the-object-library
 - Atlassian Jira workflow overview: https://www.atlassian.com/software/jira/guides/workflows/overview
-- Atlassian Jira workflow best practices: https://support.atlassian.com/jira-software-cloud/docs/best-practices-for-workflows-in-jira/
 - Stripe Checkout Sessions API: https://docs.stripe.com/payments/checkout-sessions
+- Stripe Subscriptions API: https://docs.stripe.com/billing/subscriptions/overview
 - Stripe webhook best practices: https://docs.stripe.com/webhooks?locale=en-GB
 - Stripe idempotent requests: https://docs.stripe.com/api/idempotent_requests
 - Supabase Row Level Security: https://supabase.com/docs/guides/database/postgres/row-level-security
 - Supabase Storage buckets: https://supabase.com/docs/guides/storage/buckets/fundamentals
+- PostgreSQL enum types: https://www.postgresql.org/docs/current/datatype-enum.html
