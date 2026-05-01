@@ -50,11 +50,11 @@ CrecyStudio's voice should stay warm and benefit-driven on first contact, then e
 
 ### Audience
 
-Primary audience: small service businesses in Northern Virginia and the broader DMV (the live site already names this geography), expanding to remote service-business buyers as case studies and SEO surface accumulate. Buyer types are described by ticket size and lane mapping:
+Primary audience: small service businesses internationally, English-speaking. NoVa/DMV remains the home market and referral base, but public-facing copy stays geographically neutral so international buyers don't bounce. The repo already supports `en` / `fr` / `es` via `next-intl`; non-English locales render `en` content via fallback until traffic justifies translating new pages. Pricing displays explicitly in USD across all surfaces.
 
 - **Small ticket ($1.8K–$10K):** Buyer is shopping for a website. Maps to the Websites lane (Starter through Premium tiers). Typical buyers: contractors, trainers, consultants, repair shops, event vendors, wedding vendors. This is the bread-and-butter today.
-- **Mid ticket ($10K–$25K):** Buyer wants a website plus a meaningful add-on — a portal, a booking/payment flow, a customer-account area, or an intake/quote system — or a small custom build. Spans the top of the Websites lane (Premium) and the Discovery+MVP tier of the Web Apps lane. Often the same Small-ticket buyer two engagements later.
-- **Big ticket ($25K+):** Buyer wants a custom web app — multi-role, integrations, custom data models, sometimes multi-tenant. Maps to the Standard or Custom tiers of the Web Apps lane. Often introduced by referral or arrives after entering through a smaller engagement first.
+- **Mid ticket ($10K–$35K):** Buyer wants a website plus a meaningful add-on — a portal, a booking/payment flow, a customer-account area, or an intake/quote system — or a small custom build. Spans the top of the Websites lane (Premium) and the MVP tier of the Web Apps lane. Often the same Small-ticket buyer two engagements later.
+- **Big ticket ($35K+):** Buyer wants a custom web app — multi-role, integrations, custom data models, sometimes multi-tenant. Maps to the Standard or Custom tiers of the Web Apps lane. Often introduced by referral or arrives after entering through a smaller engagement first.
 
 Korent and Proveo are the studio's *own ventures* at Big-ticket scope and serve as capability proof in the Proof of Capability section — not as buyer testimonials.
 
@@ -106,10 +106,10 @@ Five lanes is the smallest set that captures the actual buyer mindset distinctio
 | Lane | Buyer says | Typical ticket | Entry route | Delivery archetype |
 |---|---|---|---|---|
 | **Websites** | "I need a website that converts" | $1.8K – $10K | `/websites` → `/build/intro` | `marketing_site`, `booking_site` |
-| **Web Apps** | "I need a custom app or dashboard" | $8K – $35K+ | `/custom-web-apps` → `/custom-app-intake` | `portal`, `dashboard`, `saas_mvp` |
+| **Web Apps** | "I need a custom app or dashboard" | $2.5K (discovery) – $75K+ | `/custom-web-apps` → `/custom-app-intake` | `portal`, `dashboard`, `saas_mvp` |
 | **Automation** | "I'm drowning in repetitive admin work" | $1K – $4K + retainer | `/systems` → `/ops-intake` | `automation` |
 | **E-commerce** | "I need to sell things online" | $1.8K – $4K + retainer | `/ecommerce` → `/ecommerce/intake` | `storefront` |
-| **Rescue** | "My current site isn't working" | $1.2K – $3K | `/website-rescue` → `/build?projectType=rescue` | `rescue_sprint` |
+| **Rescue** | "My current site isn't working" | $1K – $6.5K | `/website-rescue` → `/build/intro?projectType=rescue` | `rescue_sprint` |
 
 ### `ProjectType` taxonomy (frontend + backend contract)
 
@@ -140,16 +140,18 @@ The buyer chooses a `ProjectType`. The operator (or PIE) picks the `DeliveryArch
 
 One scrollable `/pricing` page, anchor-navigated by lane. Each lane shows its tiers with the same visual treatment. Small-ticket buyers see Starter prices; big-ticket buyers see Premium and discovery paths in the same place.
 
-### Pricing notes (operator to confirm before any of this surfaces publicly)
+### Pricing — confirmed and validated against 2026 market data
 
-The numbers below are a mix of existing operator pricing and proposals from this rewrite. Confirm or override each one before publishing.
+All prices below are confirmed by the operator. New tiers (Web Apps, Rescue, Care) were validated against 2026 boutique-market pricing data — they sit in the middle of the boutique band, not above market. All prices are USD; pricing pages display "USD" explicitly to prevent international-buyer confusion.
 
-- **Websites tiers** — $1,800 / $3,500 / $6,500+. Already live on `/pricing` and `/websites`. Carry as-is unless the operator wants to revise.
-- **Automation tiers** — $1,000–$1,800 / $2,000–$3,800 / $500–$1,250/mo. Already live on `/systems`. Carry as-is.
-- **E-commerce tiers** — $1,800–$4,000+ / $500–$1,800/mo / $1,200. Already live on `/ecommerce`. Carry as-is.
-- **Web Apps ranges** — $8K–$18K / $18K–$35K / $35K+. *Proposed by this rewrite, not derived from operator history.* Anchored to the scope of Korent and Proveo as NoVa boutique-tier estimates. Confirm with operator before publishing.
-- **Rescue sprint** — $1,200–$2,800. *Proposed by this rewrite.* Anchored to a 1–2 week sprint scope. Confirm.
-- **Care plans** — $250 / $650 / $1,250 per month. *Proposed by this rewrite.* No public-facing care pricing exists today. Confirm before `/care-plans` is built.
+- **Websites tiers** — $1,800 / $3,500 / $6,500+. Live on `/pricing` and `/websites`.
+- **Automation tiers** — $1,000–$1,800 / $2,000–$3,800 / $500–$1,250/mo. Live on `/systems`.
+- **E-commerce tiers** — $1,800–$4,000+ / $500–$1,800/mo / $1,200. Live on `/ecommerce`.
+- **Web Apps** — Discovery sprint $2,500–$5,000 / MVP $18K–$35K / Standard $35K–$75K / Custom $75K+. Validated against $15K–$60K MVP and $40K–$100K mid-range market norms (boutique band).
+- **Rescue** — Audit $1,000–$1,500 / Sprint $3,500–$6,500. Validated against $0–$2K standalone-audit and $2,125–$7,500 1–2 week sprint hour-cost math.
+- **Care plans** — $400 / $850 / $2,250 per month. Validated against $199–$599/mo SMB standard and $1,500–$4,000/mo agency-retainer norms; Care Pro sits in agency-retainer territory.
+
+See `docs/care-plans-operating.md` for Care plan scope, SLAs, exclusions, and operating rules.
 
 ### Websites lane
 
@@ -163,11 +165,12 @@ The numbers below are a mix of existing operator pricing and proposals from this
 
 | Tier | Range | Best for |
 |---|---:|---|
-| Discovery + MVP | $8,000 – $18,000 | Validated idea, single-user-role app, 2–3 core features |
-| Standard build | $18,000 – $35,000 | Multi-role app, integrations, dashboard + customer-facing surface |
-| Custom scope | $35,000+ | Multi-tenant SaaS, custom data models, advanced integrations |
+| Discovery sprint | $2,500 – $5,000 | Paid 1–2 week scoping engagement for ambiguous projects, before MVP commit |
+| MVP | $18,000 – $35,000 | Validated idea, single primary user role, 2–4 core features, basic auth and/or payments |
+| Standard build | $35,000 – $75,000 | Multi-role app, integrations, dashboard + customer-facing surface, real onboarding |
+| Custom scope | $75,000+ | Multi-tenant SaaS, custom data models, advanced integrations (Korent and Proveo scope sits here) |
 
-Web Apps does not show fixed prices on cards — only ranges. Every Web Apps lead routes through `/custom-app-intake` to a free strategy call. PIE's deep-path routing handles the "this needs a real conversation" gate.
+Web Apps does not show fixed prices on cards — only ranges. Every Web Apps lead routes through `/custom-app-intake` to a free strategy call. PIE's deep-path routing handles the "this needs a real conversation" gate. The Discovery sprint is an optional paid scoping engagement before MVP commit when scope is ambiguous; not required for clear scopes.
 
 ### Automation lane
 
@@ -189,19 +192,20 @@ Web Apps does not show fixed prices on cards — only ranges. Every Web Apps lea
 
 | Offer | Range | Best for |
 |---|---:|---|
-| Rescue sprint | $1,200 – $2,800 | Mobile cleanup, conversion fixes, form/CTA repair, speed/trust improvements |
+| Rescue Audit | $1,000 – $1,500 | 3–5 day diagnostic. Written report with prioritized fix list. Becomes input to a Sprint or full redesign quote. |
+| Rescue Sprint | $3,500 – $6,500 | Audit + 1–2 week implementation of highest-impact fixes. |
 
 ### Care plans (recurring)
 
 | Plan | Monthly | Best for |
 |---|---:|---|
-| Care | $250/mo | Content updates, monitoring, monthly health check |
-| Care+ | $650/mo | Care + small features, analytics review |
-| Care Pro | $1,250/mo | Care+ + monthly improvement sprint, priority response |
+| Care | $400/mo | Content updates, monitoring, monthly health check, 48h response SLA |
+| Care+ | $850/mo | Care + ~5h small features, analytics review, 24h response SLA |
+| Care Pro | $2,250/mo | Care+ + monthly improvement sprint (~8h), priority response (4h SLA), monthly strategy call |
 
 Care plans get a dedicated `/care-plans` page and a section anchor on `/pricing`. Recurring revenue is the single biggest stabilizer for a solo operator's income; without a public surface it gets sold only as a post-launch upsell, which leaves money on the table.
 
-**Care vs. Automation Systems Partner — relationship note.** The Automation lane's Systems Partner retainer ($500–$1,250/mo) covers ongoing maintenance for clients whose primary engagement was an Automation build. Care plans cover post-launch site/system care for any project type. Pricing overlaps at the top of both ranges; a Care Pro client and a Systems Partner client may pay similarly but receive different scope (site-care monthly tasks vs. automation-monitoring + tweaks). These two products may merge into a single "Care" line in v2 once buyer volume reveals which framing converts better. For v1, keep them separate but cross-link from each lane's page.
+**Care vs. Automation Systems Partner — relationship note.** The Automation lane's Systems Partner retainer ($500–$1,250/mo) covers ongoing maintenance for clients whose primary engagement was an Automation build. Care plans cover post-launch site/system care for any project type. After Care Pro re-pricing to $2,250/mo (validated against agency-retainer market data), the two products now occupy distinct price points (Systems Partner top of $1,250 vs. Care Pro at $2,250), which clarifies positioning: Systems Partner is automation-maintenance-only; Care Pro is broader monthly improvement work plus 4h-SLA priority response and a monthly strategy call. They may still merge into a unified "Care" line in v2 once buyer volume reveals which framing converts better; for v1 they remain separate with cross-links from each lane's page. Full Care plan operating rules live in `docs/care-plans-operating.md`.
 
 ---
 
@@ -271,7 +275,7 @@ Concrete page-by-page changes mapped to the five lanes. Every change is sized in
 |---|---|---|
 | `/custom-web-apps` | Sell the Web Apps lane: dashboards, portals, internal tools, MVPs. CTA routes to `/custom-app-intake`. | Web Apps |
 | `/client-portals` | Sell the portal as a standalone add-on and as a premium-package feature. CTA routes to `/demos/portal` and intake. | Web Apps |
-| `/website-rescue` | Sell rescue sprint: mobile cleanup, conversion fixes, form/CTA repair. CTA routes to `/build?projectType=rescue`. | Rescue |
+| `/website-rescue` | Sell rescue audit + sprint: mobile cleanup, conversion fixes, form/CTA repair. CTA routes to `/build/intro?projectType=rescue`. | Rescue |
 | `/work` | Studio ventures + client cases. Trust artifact for paid traffic. | All |
 | `/care-plans` | Three monthly tiers (Care / Care+ / Care Pro). | All (post-launch) |
 | `/demos/portal` | One seeded demo of the client portal experience. | Web Apps + all (proof) |
@@ -334,7 +338,7 @@ Phase 1 outcome: homepage tells the new story, intake routing is project-type aw
 |---|---|---|
 | `/custom-web-apps` service page | M | Hero, problems, includes, pricing (range only), bestFit/notFit, FAQ; CTA routes to `/custom-app-intake`; cross-link to `/work` |
 | `/client-portals` service page | M | Hero, problems, includes, pricing, FAQ; CTA routes to `/demos/portal` and `/build/intro` |
-| `/website-rescue` service page | S | Hero, problems, sprint scope, fixed price, CTA routes to `/build?projectType=rescue` |
+| `/website-rescue` service page | S | Hero, problems, audit + sprint scope and pricing, CTA routes to `/build/intro?projectType=rescue` |
 | `/custom-app-intake` page and API route | M | 8–10 question intake; `submit-estimate` accepts `projectType=web_app`; routes to free strategy call request |
 | `/demos/portal` seeded experience | M | Seed migration; read-only enforcement on portal write APIs; "Demo" watermark + banner; emits `demo_portal_view` and `demo_portal_to_intake` analytics events |
 | `/care-plans` page | S | Three tier cards, cross-link from `/pricing#care`, footer link from every lane page. **Prerequisite:** `docs/care-plans-operating.md` exists with included scope, time-bank or task-count, response SLA, and upcharge triggers — page does not ship without it |
