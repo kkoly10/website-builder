@@ -317,6 +317,7 @@ async function signMessageAttachment(message: AnyObj) {
 async function getPortalProjectByToken(token: string) {
   if (!token) return null;
 
+  // Primary: look up by access_token (the canonical portal token)
   const { data, error } = await supabaseAdmin
     .from("customer_portal_projects")
     .select("*")
@@ -324,7 +325,17 @@ async function getPortalProjectByToken(token: string) {
     .maybeSingle();
 
   if (error) throw error;
-  return data ?? null;
+  if (data) return data;
+
+  // Fallback: token may be quotes.public_token — find the portal project via the quote
+  const { data: quote } = await supabaseAdmin
+    .from("quotes")
+    .select("id")
+    .eq("public_token", token)
+    .maybeSingle();
+
+  if (!quote) return null;
+  return getPortalProjectByQuoteId(quote.id);
 }
 
 async function getPortalProjectByQuoteId(quoteId: string) {
