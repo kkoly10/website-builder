@@ -1,5 +1,7 @@
 # CrecyStudio — Website Lane Roadmap
 
+> **Status: partially superseded.** Strategic positioning and the multi-lane studio direction now live in `opportunities_to_build_on_current_repo_to_better_expose_crecys_potential.md`. This doc remains the historical record of the website-lane operating-system roadmap. Items P0–P2 (#1–#9 — portal data layer, portal reskin, two-way messaging, final invoicing, automated nudges, activity feed, etc.) have largely shipped per `supabase/migrations/`. Items P3 #10–#13 (e-signature, brand asset library, knowledge base, notification preferences) remain valid backlog and should be carried forward in the new strategy doc's 90-day roadmap.
+
 A priority-ordered list of fixes, polish work, and missing features needed to take the website lane from a strong 7/10 to a true 10/10 boutique agency operating system. Based on a code-level audit of the current workspace.
 
 ---

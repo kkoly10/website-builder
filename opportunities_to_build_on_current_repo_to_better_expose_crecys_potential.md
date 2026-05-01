@@ -32,7 +32,7 @@ The earlier `crecystudio-roadmap.md` was written when the strategy was still "10
 |---|---|---|
 | Portal data-layer migration to `customer_portal_*` tables | Shipped | `supabase/migrations/20260420_create_customer_portal_tables.sql` |
 | Two-way messaging in the portal | Shipped | `supabase/migrations/20260421_add_customer_portal_messages.sql` |
-| Final invoicing flow beyond deposits | Shipped | `supabase/migrations/20260422_create_project_invoices.sql` |
+| Final / milestone / retainer invoicing | Shipped (one-off invoices) | `supabase/migrations/20260422_create_project_invoices.sql` supports `deposit` / `milestone` / `final` / `retainer` invoice types. Recurring-subscription lifecycle (auto-renew, dunning) is not yet wired — `support_subscriptions` is in scope for the v1.5 backend rewrite |
 | Unified activity feed | Shipped | `supabase/migrations/20260422_add_project_activity_and_nudges.sql` |
 | Stripe processed-session idempotency | Shipped | `supabase/migrations/20260428_create_stripe_processed_sessions.sql` |
 | Tier-based pricing config | Shipped | `lib/pricing/tiers.ts` (Starter/Growth/Premium bands live) |
@@ -47,6 +47,16 @@ The launch-readiness audit (`docs/launch-readiness-business-analysis-2026-03-30.
 ## Voice and Positioning
 
 CrecyStudio's voice should stay warm and benefit-driven on first contact, then escalate to systems-fluent for buyers who scroll or click through. The hero is the small-ticket buyer's entry. The lane pages are where big-ticket buyers self-identify.
+
+### Audience
+
+Primary audience: small service businesses in Northern Virginia and the broader DMV (the live site already names this), expanding to remote service-business buyers as case studies and SEO surface accumulate. Concrete buyer types in priority order:
+
+- **Small ($1.8K–$10K tickets):** Local service operators (contractors, trainers, consultants, repair, event vendors, wedding vendors) who need a credible site or a booking/payment add-on. This is the bread-and-butter today.
+- **Mid ($10K–$25K tickets):** Same operators upgrading to a portal, customer-account area, or quote/intake system on top of an existing site.
+- **Big ($25K+ tickets):** Service businesses validating a software product, or operators of niche service trades who need a full custom web app. Korent and Proveo are the studio's own examples of this scope. Often introduced by referral or by entering through a smaller engagement first.
+
+This doc explicitly does not target enterprise buyers or VC-backed startups. Pricing, voice, and process are tuned for owner-operators who write the check themselves.
 
 ### The hero (homepage)
 
@@ -127,6 +137,17 @@ The buyer chooses a `ProjectType`. The operator (or PIE) picks the `DeliveryArch
 ## Service Package Architecture
 
 One scrollable `/pricing` page, anchor-navigated by lane. Each lane shows its tiers with the same visual treatment. Small-ticket buyers see Starter prices; big-ticket buyers see Premium and discovery paths in the same place.
+
+### Pricing notes (operator to confirm before any of this surfaces publicly)
+
+The numbers below are a mix of existing operator pricing and proposals from this rewrite. Confirm or override each one before publishing.
+
+- **Websites tiers** — $1,800 / $3,500 / $6,500+. Already live on `/pricing` and `/websites`. Carry as-is unless the operator wants to revise.
+- **Automation tiers** — $1,000–$1,800 / $2,000–$3,800 / $500–$1,250/mo. Already live on `/systems`. Carry as-is.
+- **E-commerce tiers** — $1,800–$4,000+ / $500–$1,800/mo / $1,200. Already live on `/ecommerce`. Carry as-is.
+- **Web Apps ranges** — $8K–$18K / $18K–$35K / $35K+. *Proposed by this rewrite, not derived from operator history.* Anchored to the scope of Korent and Proveo as NoVa boutique-tier estimates. Confirm with operator before publishing.
+- **Rescue sprint** — $1,200–$2,800. *Proposed by this rewrite.* Anchored to a 1–2 week sprint scope. Confirm.
+- **Care plans** — $250 / $650 / $1,250 per month. *Proposed by this rewrite.* No public-facing care pricing exists today. Confirm before `/care-plans` is built.
 
 ### Websites lane
 

@@ -1,5 +1,7 @@
 # PIE Engine Refactor — Specification
 
+> **Status: current source of truth for PIE engine implementation.** Strategic and positioning context for CrecyStudio lives in `opportunities_to_build_on_current_repo_to_better_expose_crecys_potential.md`, which references this spec for big-ticket routing logic (the fast/warm/deep paths). Phase 1 (config and cleanup) and the tier bands are already shipped (`lib/pricing/tiers.ts`, `lib/pricing/config.ts`). Phases 2–7 remain the implementation roadmap.
+
 Reference spec for refactoring the Project Intelligence Engine from labor-cost pricing to tier/value-based pricing. This is the target state. Implementation is separate work.
 
 ---
