@@ -2,14 +2,22 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 type Props = {
   ecomIntakeId: string;
 };
 
+// Best-time options stay English literals (sent verbatim to
+// /api/ecommerce/request-call). Display labels render via tBestTimes().
+const BEST_TIME_KEYS = ["Morning", "Afternoon", "Evening", "Flexible"] as const;
+
 export default function EcommerceBookClient({ ecomIntakeId }: Props) {
   const router = useRouter();
-  const [bestTime, setBestTime] = useState("Morning");
+  const t = useTranslations("ecomBook.form");
+  const tBestTimes = useTranslations("ecomBook.form.bestTimes");
+
+  const [bestTime, setBestTime] = useState<string>(BEST_TIME_KEYS[0]);
   const [preferredTimes, setPreferredTimes] = useState("");
   const [timezone, setTimezone] = useState("America/New_York");
   const [notes, setNotes] = useState("");
@@ -20,12 +28,12 @@ export default function EcommerceBookClient({ ecomIntakeId }: Props) {
 
   const submit = async () => {
     if (!ecomIntakeId) {
-      setError("Missing intake id. Please return to the intake form first.");
+      setError(t("missingId"));
       return;
     }
 
     if (!bestTime.trim()) {
-      setError("Please select your best time to connect.");
+      setError(t("missingTime"));
       return;
     }
 
@@ -40,11 +48,11 @@ export default function EcommerceBookClient({ ecomIntakeId }: Props) {
       });
 
       const data = await res.json();
-      if (!res.ok || !data?.ok) throw new Error(data?.error || "Request failed.");
+      if (!res.ok || !data?.ok) throw new Error(data?.error || t("requestFailed"));
 
       router.push(data.nextUrl || `/ecommerce/success?ecomIntakeId=${encodeURIComponent(ecomIntakeId)}`);
     } catch (err: any) {
-      setError(err.message || "Something went wrong.");
+      setError(err.message || t("fallbackError"));
       setSubmitting(false);
     }
   };
@@ -54,31 +62,34 @@ export default function EcommerceBookClient({ ecomIntakeId }: Props) {
       <section className="section" style={{ maxWidth: 760, margin: "0 auto" }}>
         <div className="card">
           <div className="cardInner" style={{ padding: 30 }}>
-            <div className="kicker">Next Step</div>
-            <h1 className="h1" style={{ marginTop: 10 }}>Request your seller planning call</h1>
-            <p className="pDark">Your intake #{intakeShort || "pending"} is in. Share your preferred times and we&apos;ll coordinate your next strategy call.</p>
+            <div className="kicker">{t("kicker")}</div>
+            <h1 className="h1" style={{ marginTop: 10 }}>{t("title")}</h1>
+            <p className="pDark">
+              {intakeShort
+                ? t("subtitleWithId", { shortId: intakeShort })
+                : t("subtitlePending")}
+            </p>
 
             <div style={{ display: "grid", gap: 12, marginTop: 20 }}>
               <div>
-                <label className="fieldLabel">Best time to connect *</label>
+                <label className="fieldLabel">{t("bestTimeLabel")}</label>
                 <select className="select" value={bestTime} onChange={(e) => setBestTime(e.target.value)}>
-                  <option>Morning</option>
-                  <option>Afternoon</option>
-                  <option>Evening</option>
-                  <option>Flexible</option>
+                  {BEST_TIME_KEYS.map((opt) => (
+                    <option key={opt} value={opt}>{tBestTimes(opt)}</option>
+                  ))}
                 </select>
               </div>
               <div>
-                <label className="fieldLabel">Preferred days/times</label>
-                <input className="input" value={preferredTimes} onChange={(e) => setPreferredTimes(e.target.value)} placeholder="Mon–Wed after 2 PM" />
+                <label className="fieldLabel">{t("preferredLabel")}</label>
+                <input className="input" value={preferredTimes} onChange={(e) => setPreferredTimes(e.target.value)} placeholder={t("preferredPlaceholder")} />
               </div>
               <div>
-                <label className="fieldLabel">Timezone</label>
-                <input className="input" value={timezone} onChange={(e) => setTimezone(e.target.value)} placeholder="America/New_York" />
+                <label className="fieldLabel">{t("timezoneLabel")}</label>
+                <input className="input" value={timezone} onChange={(e) => setTimezone(e.target.value)} placeholder={t("timezonePlaceholder")} />
               </div>
               <div>
-                <label className="fieldLabel">Notes</label>
-                <textarea className="textarea" value={notes} onChange={(e) => setNotes(e.target.value)} style={{ minHeight: 90 }} placeholder="Anything we should prepare before the call" />
+                <label className="fieldLabel">{t("notesLabel")}</label>
+                <textarea className="textarea" value={notes} onChange={(e) => setNotes(e.target.value)} style={{ minHeight: 90 }} placeholder={t("notesPlaceholder")} />
               </div>
             </div>
 
@@ -86,7 +97,7 @@ export default function EcommerceBookClient({ ecomIntakeId }: Props) {
 
             <div style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap" }}>
               <button className="btn btnPrimary" onClick={submit} disabled={submitting}>
-                {submitting ? "Submitting..." : "Request Seller Strategy Call"}
+                {submitting ? t("submitting") : t("submit")}
               </button>
             </div>
           </div>
