@@ -1272,7 +1272,7 @@
     "launch": {
       "panelTitle": "Lancement",
       "ready": "Prêt à lancer",
-      "leftBeforeLaunch": "{count, plural, one {1 chose à finaliser avant le lancement} other {# choses à finaliser avant le lancement}}",
+      "leftBeforeLaunch": "{count, plural, one {# chose à finaliser avant le lancement} other {# choses à finaliser avant le lancement}}",
       "checksPassed": "{completed} sur {total} contrôles validés",
       "asideText": "Nous gérons les éléments restants en coulisses. Vous serez notifié dès que tout sera prêt pour la mise en ligne.",
       "notesLabel": "Notes de lancement",
@@ -1289,7 +1289,7 @@
     "invoices": {
       "title": "Factures",
       "intro": "Toutes les factures de votre projet apparaissent ici, y compris l'historique payé et les soldes ouverts.",
-      "count": "{count, plural, one {1 facture} other {# factures}}",
+      "count": "{count, plural, one {# facture} other {# factures}}",
       "empty": "Aucune facture n'a encore été émise.",
       "issued": "Émise le {date}",
       "due": " · Échéance {date}",
@@ -1322,7 +1322,7 @@
     "messages": {
       "panelTitle": "Messages",
       "intro": "Posez des questions, confirmez des approbations, ou envoyez au studio tout ce que vous voulez nous montrer.",
-      "count": "{count, plural, one {1 message} other {# messages}}",
+      "count": "{count, plural, one {# message} other {# messages}}",
       "empty": "Aucun message pour l'instant",
       "unknownDay": "Jour inconnu",
       "writePlaceholder": "Écrire un message au studio…",
@@ -1341,7 +1341,7 @@
     "activity": {
       "panelTitle": "Activité",
       "intro": "Une chronologie continue des étapes et mises à jour côté client de votre projet.",
-      "count": "{count, plural, one {1 événement} other {# événements}}",
+      "count": "{count, plural, one {# événement} other {# événements}}",
       "empty": "Aucune activité pour l'instant.",
       "actors": {
         "client": "Client",
@@ -1351,7 +1351,7 @@
     },
     "assets": {
       "panelTitle": "Votre contenu",
-      "count": "{count, plural, one {1 élément} other {# éléments}}",
+      "count": "{count, plural, one {# élément} other {# éléments}}",
       "uploadDrop": "Déposez les fichiers ici ou",
       "uploadBrowse": "parcourez",
       "uploadHint": "Logos, textes, photos, accès — nous trions",
@@ -1387,7 +1387,7 @@
     },
     "feedback": {
       "panelTitle": "Retours",
-      "count": "{count, plural, one {1 élément} other {# éléments}}",
+      "count": "{count, plural, one {# élément} other {# éléments}}",
       "placeholder": "Que faut-il changer ? Qu'est-ce qui ne va pas ?",
       "submit": "Envoyer le retour",
       "submitting": "Envoi…",
@@ -1610,7 +1610,7 @@
     "automationProgress": {
       "panelTitle": "Avancement de l'automatisation",
       "allLive": "Toutes les automatisations sont actives",
-      "remaining": "{count, plural, one {1 automatisation restante} other {# automatisations restantes}}",
+      "remaining": "{count, plural, one {# automatisation restante} other {# automatisations restantes}}",
       "statusLine": "{live} actives · {building} en construction · {planned} planifiées",
       "waitingOnLabel": "En attente de :",
       "nextSteps": "Prochaines étapes"
@@ -1618,15 +1618,15 @@
     "process": {
       "before": "Avant — votre processus actuel",
       "after": "Après — la version automatisée",
-      "stepsCount": "{count, plural, one {1 étape} other {# étapes}}"
+      "stepsCount": "{count, plural, one {# étape} other {# étapes}}"
     },
     "automationTracker": {
       "panelTitle": "Suivi des automatisations",
-      "count": "{count, plural, one {1 automatisation} other {# automatisations}}"
+      "count": "{count, plural, one {# automatisation} other {# automatisations}}"
     },
     "liveAutomations": {
       "panelTitle": "Automatisations actives",
-      "count": "{count, plural, one {1 en marche} other {# en marche}}",
+      "count": "{count, plural, one {# en marche} other {# en marche}}",
       "liveBadge": "Active"
     },
     "results": {
@@ -1643,16 +1643,16 @@
     "drawers": {
       "connectedSystems": {
         "label": "Systèmes connectés",
-        "value": "{count, plural, one {1 outil} other {# outils}}"
+        "value": "{count, plural, one {# outil} other {# outils}}"
       },
       "sops": {
         "label": "Procédures & formation",
-        "value": "{count, plural, one {1 workflow} other {# workflows}}",
+        "value": "{count, plural, one {# workflow} other {# workflows}}",
         "trigger": "Déclencheur : {trigger}"
       },
       "risks": {
         "label": "Journal des risques",
-        "value": "{count, plural, one {1 risque} other {# risques}}",
+        "value": "{count, plural, one {# risque} other {# risques}}",
         "mitigation": "Mitigation : {mitigation}"
       },
       "incidents": {

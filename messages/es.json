@@ -1272,7 +1272,7 @@
     "launch": {
       "panelTitle": "Lanzamiento",
       "ready": "Listo para lanzar",
-      "leftBeforeLaunch": "{count, plural, one {1 cosa pendiente antes del lanzamiento} other {# cosas pendientes antes del lanzamiento}}",
+      "leftBeforeLaunch": "{count, plural, one {# cosa pendiente antes del lanzamiento} other {# cosas pendientes antes del lanzamiento}}",
       "checksPassed": "{completed} de {total} verificaciones aprobadas",
       "asideText": "Estamos manejando los elementos restantes en segundo plano. Recibirás una notificación cuando todo esté listo para salir en vivo.",
       "notesLabel": "Notas de lanzamiento",
@@ -1289,7 +1289,7 @@
     "invoices": {
       "title": "Facturas",
       "intro": "Cada factura de tu proyecto aparece aquí, incluyendo el historial pagado y cualquier saldo abierto.",
-      "count": "{count, plural, one {1 factura} other {# facturas}}",
+      "count": "{count, plural, one {# factura} other {# facturas}}",
       "empty": "Aún no se han emitido facturas.",
       "issued": "Emitida el {date}",
       "due": " · Vence el {date}",
@@ -1322,7 +1322,7 @@
     "messages": {
       "panelTitle": "Mensajes",
       "intro": "Haz preguntas, confirma aprobaciones o envía al estudio cualquier cosa que quieras que veamos.",
-      "count": "{count, plural, one {1 mensaje} other {# mensajes}}",
+      "count": "{count, plural, one {# mensaje} other {# mensajes}}",
       "empty": "Aún no hay mensajes",
       "unknownDay": "Día desconocido",
       "writePlaceholder": "Escribir un mensaje al estudio…",
@@ -1341,7 +1341,7 @@
     "activity": {
       "panelTitle": "Actividad",
       "intro": "Una línea de tiempo continua de los hitos y actualizaciones visibles para el cliente de tu proyecto.",
-      "count": "{count, plural, one {1 evento} other {# eventos}}",
+      "count": "{count, plural, one {# evento} other {# eventos}}",
       "empty": "Aún sin actividad.",
       "actors": {
         "client": "Cliente",
@@ -1351,7 +1351,7 @@
     },
     "assets": {
       "panelTitle": "Tu contenido",
-      "count": "{count, plural, one {1 elemento} other {# elementos}}",
+      "count": "{count, plural, one {# elemento} other {# elementos}}",
       "uploadDrop": "Suelta los archivos aquí o",
       "uploadBrowse": "explora",
       "uploadHint": "Logos, textos, fotos, accesos — los organizamos",
@@ -1387,7 +1387,7 @@
     },
     "feedback": {
       "panelTitle": "Comentarios",
-      "count": "{count, plural, one {1 elemento} other {# elementos}}",
+      "count": "{count, plural, one {# elemento} other {# elementos}}",
       "placeholder": "¿Qué debe cambiar? ¿Qué se siente mal?",
       "submit": "Enviar comentarios",
       "submitting": "Enviando…",
@@ -1610,7 +1610,7 @@
     "automationProgress": {
       "panelTitle": "Progreso de automatización",
       "allLive": "Todas las automatizaciones activas",
-      "remaining": "{count, plural, one {1 automatización pendiente} other {# automatizaciones pendientes}}",
+      "remaining": "{count, plural, one {# automatización pendiente} other {# automatizaciones pendientes}}",
       "statusLine": "{live} activas · {building} en construcción · {planned} planificadas",
       "waitingOnLabel": "Esperando:",
       "nextSteps": "Próximos pasos"
@@ -1618,15 +1618,15 @@
     "process": {
       "before": "Antes — tu proceso actual",
       "after": "Después — la versión automatizada",
-      "stepsCount": "{count, plural, one {1 paso} other {# pasos}}"
+      "stepsCount": "{count, plural, one {# paso} other {# pasos}}"
     },
     "automationTracker": {
       "panelTitle": "Seguimiento de automatizaciones",
-      "count": "{count, plural, one {1 automatización} other {# automatizaciones}}"
+      "count": "{count, plural, one {# automatización} other {# automatizaciones}}"
     },
     "liveAutomations": {
       "panelTitle": "Automatizaciones activas",
-      "count": "{count, plural, one {1 en marcha} other {# en marcha}}",
+      "count": "{count, plural, one {# en marcha} other {# en marcha}}",
       "liveBadge": "Activa"
     },
     "results": {
@@ -1643,16 +1643,16 @@
     "drawers": {
       "connectedSystems": {
         "label": "Sistemas conectados",
-        "value": "{count, plural, one {1 herramienta} other {# herramientas}}"
+        "value": "{count, plural, one {# herramienta} other {# herramientas}}"
       },
       "sops": {
         "label": "Procedimientos & capacitación",
-        "value": "{count, plural, one {1 flujo} other {# flujos}}",
+        "value": "{count, plural, one {# flujo} other {# flujos}}",
         "trigger": "Disparador: {trigger}"
       },
       "risks": {
         "label": "Registro de riesgos",
-        "value": "{count, plural, one {1 riesgo} other {# riesgos}}",
+        "value": "{count, plural, one {# riesgo} other {# riesgos}}",
         "mitigation": "Mitigación: {mitigation}"
       },
       "incidents": {

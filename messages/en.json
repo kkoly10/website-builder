@@ -1272,7 +1272,7 @@
     "launch": {
       "panelTitle": "Launch",
       "ready": "Ready to launch",
-      "leftBeforeLaunch": "{count, plural, one {1 thing left before launch} other {# things left before launch}}",
+      "leftBeforeLaunch": "{count, plural, one {# thing left before launch} other {# things left before launch}}",
       "checksPassed": "{completed} of {total} checks passed",
       "asideText": "We're handling the remaining items behind the scenes. You'll be notified when everything's ready to go live.",
       "notesLabel": "Launch notes",
@@ -1289,7 +1289,7 @@
     "invoices": {
       "title": "Invoices",
       "intro": "Every invoice for your project appears here, including paid history and any open balances.",
-      "count": "{count, plural, one {1 invoice} other {# invoices}}",
+      "count": "{count, plural, one {# invoice} other {# invoices}}",
       "empty": "No invoices have been issued yet.",
       "issued": "Issued {date}",
       "due": " · Due {date}",
@@ -1322,7 +1322,7 @@
     "messages": {
       "panelTitle": "Messages",
       "intro": "Ask questions, confirm approvals, or send the studio anything you want us to see.",
-      "count": "{count, plural, one {1 message} other {# messages}}",
+      "count": "{count, plural, one {# message} other {# messages}}",
       "empty": "No messages yet",
       "unknownDay": "Unknown day",
       "writePlaceholder": "Write a message to the studio…",
@@ -1341,7 +1341,7 @@
     "activity": {
       "panelTitle": "Activity",
       "intro": "A running timeline of the client-facing milestones and updates for your project.",
-      "count": "{count, plural, one {1 event} other {# events}}",
+      "count": "{count, plural, one {# event} other {# events}}",
       "empty": "No activity yet.",
       "actors": {
         "client": "Client",
@@ -1351,7 +1351,7 @@
     },
     "assets": {
       "panelTitle": "Your content",
-      "count": "{count, plural, one {1 item} other {# items}}",
+      "count": "{count, plural, one {# item} other {# items}}",
       "uploadDrop": "Drop files here or",
       "uploadBrowse": "browse",
       "uploadHint": "Logos, copy, photos, credentials — we'll sort them",
@@ -1387,7 +1387,7 @@
     },
     "feedback": {
       "panelTitle": "Feedback",
-      "count": "{count, plural, one {1 item} other {# items}}",
+      "count": "{count, plural, one {# item} other {# items}}",
       "placeholder": "What should change? What feels off?",
       "submit": "Submit feedback",
       "submitting": "Sending…",
@@ -1610,7 +1610,7 @@
     "automationProgress": {
       "panelTitle": "Automation progress",
       "allLive": "All automations live",
-      "remaining": "{count, plural, one {1 automation remaining} other {# automations remaining}}",
+      "remaining": "{count, plural, one {# automation remaining} other {# automations remaining}}",
       "statusLine": "{live} live · {building} building · {planned} planned",
       "waitingOnLabel": "Waiting on:",
       "nextSteps": "Next steps"
@@ -1618,15 +1618,15 @@
     "process": {
       "before": "Before — your current process",
       "after": "After — the automated version",
-      "stepsCount": "{count, plural, one {1 step} other {# steps}}"
+      "stepsCount": "{count, plural, one {# step} other {# steps}}"
     },
     "automationTracker": {
       "panelTitle": "Automation tracker",
-      "count": "{count, plural, one {1 automation} other {# automations}}"
+      "count": "{count, plural, one {# automation} other {# automations}}"
     },
     "liveAutomations": {
       "panelTitle": "Live automations",
-      "count": "{count, plural, one {1 running} other {# running}}",
+      "count": "{count, plural, one {# running} other {# running}}",
       "liveBadge": "Live"
     },
     "results": {
@@ -1643,16 +1643,16 @@
     "drawers": {
       "connectedSystems": {
         "label": "Connected systems",
-        "value": "{count, plural, one {1 tool} other {# tools}}"
+        "value": "{count, plural, one {# tool} other {# tools}}"
       },
       "sops": {
         "label": "SOPs & training",
-        "value": "{count, plural, one {1 workflow} other {# workflows}}",
+        "value": "{count, plural, one {# workflow} other {# workflows}}",
         "trigger": "Trigger: {trigger}"
       },
       "risks": {
         "label": "Risk log",
-        "value": "{count, plural, one {1 risk} other {# risks}}",
+        "value": "{count, plural, one {# risk} other {# risks}}",
         "mitigation": "Mitigation: {mitigation}"
       },
       "incidents": {
