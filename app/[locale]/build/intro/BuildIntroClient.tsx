@@ -1,10 +1,30 @@
 "use client";
 
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { trackEvent } from "@/lib/analytics/client";
 import ScrollReveal from "@/components/site/ScrollReveal";
+
+type ProjectType = "website" | "web_app" | "automation" | "ecommerce" | "rescue";
+
+const PROJECT_TYPE_KEYS: ProjectType[] = [
+  "website",
+  "web_app",
+  "automation",
+  "ecommerce",
+  "rescue",
+];
+
+// Phase 1: routes that don't yet exist (custom-app intake, dedicated rescue
+// intake) fall back to /contact?type=... until Phase 2 ships them.
+const PROJECT_TYPE_ROUTES: Record<Exclude<ProjectType, "website">, string> = {
+  web_app: "/contact?type=web_app",
+  automation: "/ops-intake",
+  ecommerce: "/ecommerce/intake",
+  rescue: "/contact?type=rescue",
+};
 
 type QuizGoal = "more-leads" | "bookings" | "sell-online" | "show-work";
 type QuizTimeline = "fast" | "standard" | "flexible";
@@ -42,33 +62,178 @@ const RECOMMENDATION_FROM_GOAL: Record<QuizGoal, {
   "more-leads": { key: "leads", intent: "Leads", websiteType: "Business" },
 };
 
+// Maps a ?intent=X URL param (English machine value, case-insensitive) to a
+// quiz goal so deep-links from the homepage cards preselect the right starting
+// point inside the website quiz.
+const INTENT_TO_GOAL: Record<string, QuizGoal> = {
+  booking: "bookings",
+  selling: "sell-online",
+  leads: "more-leads",
+  content: "show-work",
+};
+
+function isProjectType(value: string | null): value is ProjectType {
+  return value !== null && (PROJECT_TYPE_KEYS as string[]).includes(value);
+}
+
 export default function BuildIntroClient() {
   const t = useTranslations("buildIntro");
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
+  const urlProjectType = searchParams.get("projectType");
+  const urlIntent = searchParams.get("intent");
+
+  const initialProjectType: ProjectType | null = isProjectType(urlProjectType)
+    ? urlProjectType
+    : null;
+
+  const initialGoal: QuizGoal = useMemo(() => {
+    if (urlIntent) {
+      const mapped = INTENT_TO_GOAL[urlIntent.toLowerCase()];
+      if (mapped) return mapped;
+    }
+    return "more-leads";
+  }, [urlIntent]);
+
+  const [projectType, setProjectType] = useState<ProjectType | null>(initialProjectType);
   const [quiz, setQuiz] = useState<QuizState>({
-    goal: "more-leads",
+    goal: initialGoal,
     pages: "1-3",
     timeline: "standard",
     contentReady: "some",
     budget: "not-sure",
   });
 
+  // Non-website deeplink: the URL had ?projectType=web_app|automation|ecommerce|
+  // rescue on initial load. Redirect immediately to the lane intake and skip
+  // /build/intro in history so the back button doesn't return here.
+  useEffect(() => {
+    if (initialProjectType && initialProjectType !== "website") {
+      trackEvent({
+        event: "intake_router_selected",
+        metadata: { projectType: initialProjectType, source: "deeplink" },
+      });
+      router.replace(
+        PROJECT_TYPE_ROUTES[initialProjectType as Exclude<ProjectType, "website">],
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleProjectTypeSelect = (type: ProjectType) => {
+    trackEvent({
+      event: "intake_router_selected",
+      metadata: { projectType: type, source: "click" },
+    });
+    if (type === "website") {
+      setProjectType("website");
+    } else {
+      router.push(PROJECT_TYPE_ROUTES[type]);
+    }
+  };
+
   const rec = useMemo(() => RECOMMENDATION_FROM_GOAL[quiz.goal], [quiz.goal]);
 
   const intakeHref = useMemo(() => {
-    // The full estimate flow expects English machine values for these params.
-    const contentMap: Record<QuizContent, string> = { ready: "Ready", some: "Some", "not-ready": "Not ready" };
+    const contentMap: Record<QuizContent, string> = {
+      ready: "Ready",
+      some: "Some",
+      "not-ready": "Not ready",
+    };
     const params = new URLSearchParams({
       mode: "guided",
       intent: rec.intent,
       websiteType: rec.websiteType,
       pages: quiz.pages,
-      timeline: quiz.timeline === "fast" ? "Under 14 days" : quiz.timeline === "standard" ? "2-3 weeks" : "4+ weeks",
+      timeline:
+        quiz.timeline === "fast"
+          ? "Under 14 days"
+          : quiz.timeline === "standard"
+            ? "2-3 weeks"
+            : "4+ weeks",
       contentReady: contentMap[quiz.contentReady],
     });
     return `/build?${params.toString()}`;
   }, [quiz, rec]);
 
+  // Deeplink-in-flight: render minimal redirect notice while router.replace runs.
+  if (projectType !== null && projectType !== "website") {
+    return (
+      <main className="container" style={{ maxWidth: 780, padding: "48px 0 80px" }}>
+        <p style={{ color: "var(--muted)", fontSize: 14 }}>{t("redirecting")}</p>
+      </main>
+    );
+  }
+
+  // Step 0: project-type picker (no project type chosen yet).
+  if (projectType === null) {
+    return (
+      <main className="container" style={{ maxWidth: 780, padding: "48px 0 80px" }}>
+        <ScrollReveal />
+
+        <div className="portalStory heroFadeUp" style={{ paddingBottom: 28 }}>
+          <div className="portalStoryKicker">
+            <span className="portalStoryKickerDot" />
+            {t("routerKicker")}
+          </div>
+          <h1
+            className="portalStoryHeadline"
+            style={{ fontSize: "clamp(28px, 5vw, 40px)" }}
+          >
+            {t("routerTitle")}
+          </h1>
+          <p className="portalStoryBody">{t("routerSubtitle")}</p>
+        </div>
+
+        <div className="portalPanel fadeUp">
+          <div style={{ display: "grid", gap: 8 }}>
+            {PROJECT_TYPE_KEYS.map((pt) => (
+              <button
+                key={pt}
+                type="button"
+                onClick={() => handleProjectTypeSelect(pt)}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "14px 1fr",
+                  gap: 14,
+                  alignItems: "center",
+                  padding: "16px 18px",
+                  borderRadius: 12,
+                  textAlign: "left",
+                  cursor: "pointer",
+                  border: "1px solid var(--stroke)",
+                  background: "transparent",
+                  transition: "all 0.15s",
+                }}
+              >
+                <div
+                  style={{
+                    width: 14,
+                    height: 14,
+                    borderRadius: "50%",
+                    border: "2px solid var(--stroke)",
+                    background: "transparent",
+                    transition: "all 0.15s",
+                  }}
+                />
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "var(--fg)" }}>
+                    {t(`projectTypes.${pt}.label`)}
+                  </div>
+                  <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 2 }}>
+                    {t(`projectTypes.${pt}.desc`)}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // projectType === "website" — existing 5-step quiz, preserved verbatim.
   return (
     <main className="container" style={{ maxWidth: 780, padding: "48px 0 80px" }}>
       <ScrollReveal />
