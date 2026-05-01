@@ -1201,5 +1201,270 @@
     "whatNext": "La suite : nous vérifions l'adéquation des services, rédigeons une recommandation modulaire et proposons un plan de lancement pour le site, le stockage, la logistique ou le support de gestion.",
     "ctaPricing": "Retour aux tarifs",
     "ctaPortal": "Ouvrir le portail client"
+  },
+  "portalToken": {
+    "kicker": "Projet de site web",
+    "headline": "Votre site web est <em>{phase}</em>",
+    "phases": {
+      "live": "en ligne",
+      "launch_ready": "prêt à être lancé",
+      "preview_review": "prêt à être revu",
+      "build": "en construction",
+      "kickoff": "sur le point de démarrer",
+      "deposit_sent": "en attente de vérification",
+      "assets_submitted": "en cours d'organisation",
+      "pre_start": "en planification initiale",
+      "intake": "en cours de préparation"
+    },
+    "stories": {
+      "live": "Votre site web est en ligne et accueille des visiteurs. Vous pouvez encore envoyer des retours ou téléverser du nouveau contenu à tout moment.",
+      "launch_ready": "Tout est en place. Nous préparons le lancement de votre site — vous serez notifié dès qu'il sera en ligne.",
+      "preview_review": "Nous avons publié une prévisualisation de votre site. Prenez le temps de parcourir chaque page — quand vous êtes prêt, laissez un retour ci-dessous ou ouvrez la prévisualisation.",
+      "build": "Nous construisons votre site web en ce moment. Vous pouvez suivre l'avancement, téléverser du contenu et envoyer des retours au fil de l'avancement.",
+      "kickoff": "Votre acompte a été reçu et le projet est en file pour le démarrage. Nous commençons la construction sous peu.",
+      "deposit_sent": "Nous avons reçu votre avis d'acompte et vérifions le paiement. Le travail démarre dès qu'il est validé.",
+      "assets_submitted": "Merci d'avoir soumis votre contenu. Nous examinons vos éléments et préparons le démarrage de la construction.",
+      "pre_start": "Votre projet a été cadré. Examinez l'accord et les détails de l'acompte ci-dessous pour avancer.",
+      "intake": "Votre espace de projet est prêt. Examinez les détails ci-dessous, téléversez votre contenu et nous prenons le relais."
+    },
+    "actions": {
+      "openPreview": "Ouvrir votre prévisualisation",
+      "openLiveSite": "Ouvrir le site en ligne",
+      "refreshing": "Actualisation…",
+      "refresh": "Actualiser",
+      "backToPortal": "Retour à l'espace",
+      "previewPending": "Prévisualisation en attente",
+      "openInvoice": "Ouvrir la facture",
+      "payNow": "Payer maintenant",
+      "payDeposit": "Payer l'acompte",
+      "depositSending": "Envoi…",
+      "depositSent": "J'ai envoyé l'acompte",
+      "depositNoticeAwaiting": "Avis d'acompte envoyé — en attente de vérification",
+      "depositPaidOn": "Payé le {date}",
+      "attachFile": "Joindre un fichier",
+      "sending": "Envoi…",
+      "sendMessage": "Envoyer le message",
+      "saving": "Enregistrement…",
+      "submitAsset": "Soumettre l'élément",
+      "cancel": "Annuler",
+      "open": "Ouvrir",
+      "submitFeedback": "Envoyer le retour",
+      "feedbackSending": "Envoi…",
+      "acceptAgreement": "Accepter l'accord",
+      "agreementSaving": "Enregistrement…"
+    },
+    "meta": {
+      "projectId": "Projet n°{id}",
+      "started": "Démarré le {date}",
+      "tierLabel": "Niveau {tier}"
+    },
+    "deposit": {
+      "headerPaid": "Acompte reçu",
+      "headerPending": "Votre acompte est en attente",
+      "bodyPaid": "Votre acompte a été enregistré et le projet avance vers le démarrage. Nous tiendrons l'espace à jour au fil de la construction.",
+      "bodyPending": "Le travail démarre dès que l'acompte est validé. Payez en sécurité via le lien et nous confirmons la réception sous 24 heures.",
+      "depositSentReason": "Le client a indiqué que l'acompte a été envoyé et est en attente de vérification."
+    },
+    "journey": {
+      "title": "Le parcours de votre projet",
+      "waiting": "En attente de cette étape"
+    },
+    "launch": {
+      "panelTitle": "Lancement",
+      "ready": "Prêt à lancer",
+      "leftBeforeLaunch": "{count, plural, one {1 chose à finaliser avant le lancement} other {# choses à finaliser avant le lancement}}",
+      "checksPassed": "{completed} sur {total} contrôles validés",
+      "asideText": "Nous gérons les éléments restants en coulisses. Vous serez notifié dès que tout sera prêt pour la mise en ligne.",
+      "notesLabel": "Notes de lancement",
+      "checks": {
+        "agreement": "Accord",
+        "preview": "Prévisualisation",
+        "domain": "Domaine",
+        "analytics": "Analytique",
+        "forms": "Formulaires",
+        "seo": "SEO",
+        "handoff": "Transmission"
+      }
+    },
+    "invoices": {
+      "title": "Factures",
+      "intro": "Toutes les factures de votre projet apparaissent ici, y compris l'historique payé et les soldes ouverts.",
+      "count": "{count, plural, one {1 facture} other {# factures}}",
+      "empty": "Aucune facture n'a encore été émise.",
+      "issued": "Émise le {date}",
+      "due": " · Échéance {date}",
+      "paid": " · Payée le {date}",
+      "types": {
+        "deposit": "Facture d'acompte",
+        "milestone": "Facture d'étape",
+        "final": "Facture finale",
+        "retainer": "Facture de forfait"
+      },
+      "statuses": {
+        "draft": "Brouillon",
+        "sent": "Envoyée",
+        "paid": "Payée",
+        "overdue": "En retard",
+        "cancelled": "Annulée"
+      }
+    },
+    "studioNote": "Note du studio",
+    "preview": {
+      "panelTitle": "Prévisualisation",
+      "notPublished": "Prévisualisation pas encore publiée",
+      "live": "Prévisualisation en ligne",
+      "pending": "En attente",
+      "openPreview": "Ouvrir la prévisualisation",
+      "openLiveSite": "Ouvrir le site en ligne",
+      "previewPending": "Prévisualisation en attente",
+      "notesLabel": "Notes de prévisualisation"
+    },
+    "messages": {
+      "panelTitle": "Messages",
+      "intro": "Posez des questions, confirmez des approbations, ou envoyez au studio tout ce que vous voulez nous montrer.",
+      "count": "{count, plural, one {1 message} other {# messages}}",
+      "empty": "Aucun message pour l'instant",
+      "unknownDay": "Jour inconnu",
+      "writePlaceholder": "Écrire un message au studio…",
+      "attach": "Joindre un fichier",
+      "send": "Envoyer le message",
+      "sending": "Envoi…",
+      "seen": "Vu {time}",
+      "unread": "Non lu",
+      "attachmentFallback": "Pièce jointe",
+      "roles": {
+        "client": "Client",
+        "studio": "Studio",
+        "internal": "Interne"
+      }
+    },
+    "activity": {
+      "panelTitle": "Activité",
+      "intro": "Une chronologie continue des étapes et mises à jour côté client de votre projet.",
+      "count": "{count, plural, one {1 événement} other {# événements}}",
+      "empty": "Aucune activité pour l'instant.",
+      "actors": {
+        "client": "Client",
+        "studio": "Studio",
+        "system": "Système"
+      }
+    },
+    "assets": {
+      "panelTitle": "Votre contenu",
+      "count": "{count, plural, one {1 élément} other {# éléments}}",
+      "uploadDrop": "Déposez les fichiers ici ou",
+      "uploadBrowse": "parcourez",
+      "uploadHint": "Logos, textes, photos, accès — nous trions",
+      "labelLabel": "Nom de l'élément",
+      "labelPlaceholder": "Texte d'accueil, fichier de logo, photos de services…",
+      "categoryLabel": "Catégorie",
+      "submitAsLabel": "Soumettre en tant que",
+      "modeLink": "Lien",
+      "modeFile": "Fichier",
+      "urlLabel": "URL",
+      "urlPlaceholder": "Google Drive / Dropbox / lien direct",
+      "fileLabel": "Choisir un fichier",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Quelque chose à savoir ?",
+      "submit": "Soumettre l'élément",
+      "submitting": "Enregistrement…",
+      "cancel": "Annuler",
+      "empty": "Aucun élément soumis pour l'instant",
+      "open": "Ouvrir",
+      "categories": {
+        "Brand": "Marque",
+        "Copy": "Texte",
+        "Images": "Images",
+        "Access": "Accès",
+        "Legal": "Légal",
+        "Other": "Autre"
+      },
+      "statuses": {
+        "submitted": "Soumis",
+        "received": "Reçu",
+        "approved": "Approuvé"
+      }
+    },
+    "feedback": {
+      "panelTitle": "Retours",
+      "count": "{count, plural, one {1 élément} other {# éléments}}",
+      "placeholder": "Que faut-il changer ? Qu'est-ce qui ne va pas ?",
+      "submit": "Envoyer le retour",
+      "submitting": "Envoi…",
+      "empty": "Aucune demande de révision pour l'instant",
+      "submittedOn": "Soumis le {date}",
+      "priority": {
+        "low": "priorité basse",
+        "normal": "priorité normale",
+        "high": "priorité haute"
+      },
+      "priorityShort": {
+        "low": "basse",
+        "normal": "normale",
+        "high": "haute"
+      },
+      "statuses": {
+        "new": "Nouveau",
+        "reviewed": "Revu",
+        "scheduled": "Planifié",
+        "done": "Terminé"
+      }
+    },
+    "details": {
+      "title": "Détails du projet",
+      "scopeLabel": "Périmètre & fonctionnalités",
+      "scopeValue": "{pages} pages · {features} fonctionnalités",
+      "rows": {
+        "tier": "Niveau",
+        "platform": "Plateforme",
+        "websiteType": "Type de site",
+        "timeline": "Calendrier",
+        "revisionPolicy": "Politique de révision",
+        "contentReady": "Préparation du contenu",
+        "domainHosting": "Domaine / hébergement",
+        "integrations": "Intégrations",
+        "noneListed": "Aucune indiquée",
+        "pages": "Pages",
+        "features": "Fonctionnalités",
+        "exclusions": "Exclusions",
+        "intakeNotes": "Notes d'intake",
+        "agreementStatus": "Statut de l'accord",
+        "agreementModel": "Modèle d'accord",
+        "ownershipModel": "Modèle de propriété",
+        "published": "Publié",
+        "depositStatus": "Statut de l'acompte",
+        "depositAmount": "Montant de l'acompte",
+        "depositNotes": "Notes d'acompte",
+        "publishedAgreement": "Accord publié",
+        "agreementAccepted": "Accord accepté",
+        "acceptHelp": "Faites défiler l'accord ci-dessous, puis cliquez sur Accepter pour signer.",
+        "depositPaid": "Payé — {amount}",
+        "projectNotes": "Notes du projet",
+        "none": "Aucune",
+        "bestTimeToCall": "Meilleur moment pour appeler",
+        "notProvided": "Non fourni",
+        "pieSummary": "Résumé PIE"
+      },
+      "agreementLabel": "Accord & paiement",
+      "scopeHistoryLabel": "Historique du périmètre & ordres de modification",
+      "scopeHistoryValue": "{versions} versions · {changes} modifications",
+      "notesContactLabel": "Notes & contact",
+      "notesContactDefault": "Détails",
+      "callTimeWithTimezone": "{time} ({timezone})",
+      "changeOrderImpacts": {
+        "price": "Prix : {value}",
+        "timeline": "Calendrier : {value}",
+        "scope": "Périmètre : {value}"
+      }
+    },
+    "footer": {
+      "poweredBy": "Propulsé par",
+      "tagline": " · Votre site, votre propriété"
+    },
+    "errors": {
+      "updateFailed": "Échec de la mise à jour de l'espace.",
+      "uploadFailed": "Échec du téléversement.",
+      "messageFailed": "Échec de l'envoi du message."
+    }
   }
 }

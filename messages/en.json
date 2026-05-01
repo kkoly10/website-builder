@@ -1201,5 +1201,270 @@
     "whatNext": "What happens next: we verify service fit, draft a modular recommendation, and propose a launch plan for website, storage, fulfillment, or management support.",
     "ctaPricing": "Back to Pricing",
     "ctaPortal": "Open Client Portal"
+  },
+  "portalToken": {
+    "kicker": "Website project",
+    "headline": "Your website is <em>{phase}</em>",
+    "phases": {
+      "live": "live",
+      "launch_ready": "ready to launch",
+      "preview_review": "ready for review",
+      "build": "being built",
+      "kickoff": "about to begin",
+      "deposit_sent": "awaiting verification",
+      "assets_submitted": "getting organized",
+      "pre_start": "in early planning",
+      "intake": "taking shape"
+    },
+    "stories": {
+      "live": "Your website is live and serving visitors. You can still submit feedback or upload new content at any time.",
+      "launch_ready": "Everything is in place. We're preparing your site for launch — you'll be notified as soon as it goes live.",
+      "preview_review": "We've published a preview of your website. Take your time looking through every page — when you're ready, leave feedback below or open the preview to see it live.",
+      "build": "We're building your website right now. You can track progress here, upload content, and submit feedback as things take shape.",
+      "kickoff": "Your deposit has been received and the project is queued for kickoff. We'll start building shortly.",
+      "deposit_sent": "We received your deposit notice and are verifying the payment. Work begins as soon as it clears.",
+      "assets_submitted": "Thanks for submitting your content. We're reviewing your assets and preparing to start the build.",
+      "pre_start": "Your project has been scoped. Review the agreement and deposit details below to get things moving.",
+      "intake": "Your project workspace is ready. Review the details below, upload your content, and we'll take it from there."
+    },
+    "actions": {
+      "openPreview": "Open your preview",
+      "openLiveSite": "Open live site",
+      "refreshing": "Refreshing…",
+      "refresh": "Refresh",
+      "backToPortal": "Back to portal",
+      "previewPending": "Preview pending",
+      "openInvoice": "Open invoice",
+      "payNow": "Pay now",
+      "payDeposit": "Pay deposit",
+      "depositSending": "Sending…",
+      "depositSent": "I sent the deposit",
+      "depositNoticeAwaiting": "Deposit notice sent — awaiting verification",
+      "depositPaidOn": "Paid {date}",
+      "attachFile": "Attach file",
+      "sending": "Sending…",
+      "sendMessage": "Send message",
+      "saving": "Saving…",
+      "submitAsset": "Submit asset",
+      "cancel": "Cancel",
+      "open": "Open",
+      "submitFeedback": "Submit feedback",
+      "feedbackSending": "Sending…",
+      "acceptAgreement": "Accept Agreement",
+      "agreementSaving": "Saving…"
+    },
+    "meta": {
+      "projectId": "Project #{id}",
+      "started": "Started {date}",
+      "tierLabel": "{tier} tier"
+    },
+    "deposit": {
+      "headerPaid": "Deposit received",
+      "headerPending": "Your deposit is waiting",
+      "bodyPaid": "Your deposit has been recorded and the project is moving through kickoff. We will keep the workspace updated as build work progresses.",
+      "bodyPending": "Work begins as soon as the deposit clears. Pay securely via the link and we will confirm receipt within 24 hours.",
+      "depositSentReason": "Client reported that the deposit was sent and is awaiting verification."
+    },
+    "journey": {
+      "title": "Your project journey",
+      "waiting": "Waiting on this step"
+    },
+    "launch": {
+      "panelTitle": "Launch",
+      "ready": "Ready to launch",
+      "leftBeforeLaunch": "{count, plural, one {1 thing left before launch} other {# things left before launch}}",
+      "checksPassed": "{completed} of {total} checks passed",
+      "asideText": "We're handling the remaining items behind the scenes. You'll be notified when everything's ready to go live.",
+      "notesLabel": "Launch notes",
+      "checks": {
+        "agreement": "Agreement",
+        "preview": "Preview",
+        "domain": "Domain",
+        "analytics": "Analytics",
+        "forms": "Forms",
+        "seo": "SEO",
+        "handoff": "Handoff"
+      }
+    },
+    "invoices": {
+      "title": "Invoices",
+      "intro": "Every invoice for your project appears here, including paid history and any open balances.",
+      "count": "{count, plural, one {1 invoice} other {# invoices}}",
+      "empty": "No invoices have been issued yet.",
+      "issued": "Issued {date}",
+      "due": " · Due {date}",
+      "paid": " · Paid {date}",
+      "types": {
+        "deposit": "Deposit invoice",
+        "milestone": "Milestone invoice",
+        "final": "Final invoice",
+        "retainer": "Retainer invoice"
+      },
+      "statuses": {
+        "draft": "Draft",
+        "sent": "Sent",
+        "paid": "Paid",
+        "overdue": "Overdue",
+        "cancelled": "Cancelled"
+      }
+    },
+    "studioNote": "Note from the studio",
+    "preview": {
+      "panelTitle": "Preview",
+      "notPublished": "Preview not published yet",
+      "live": "Preview live",
+      "pending": "Pending",
+      "openPreview": "Open preview",
+      "openLiveSite": "Open live site",
+      "previewPending": "Preview pending",
+      "notesLabel": "Preview notes"
+    },
+    "messages": {
+      "panelTitle": "Messages",
+      "intro": "Ask questions, confirm approvals, or send the studio anything you want us to see.",
+      "count": "{count, plural, one {1 message} other {# messages}}",
+      "empty": "No messages yet",
+      "unknownDay": "Unknown day",
+      "writePlaceholder": "Write a message to the studio…",
+      "attach": "Attach file",
+      "send": "Send message",
+      "sending": "Sending…",
+      "seen": "Seen {time}",
+      "unread": "Unread",
+      "attachmentFallback": "Attachment",
+      "roles": {
+        "client": "Client",
+        "studio": "Studio",
+        "internal": "Internal"
+      }
+    },
+    "activity": {
+      "panelTitle": "Activity",
+      "intro": "A running timeline of the client-facing milestones and updates for your project.",
+      "count": "{count, plural, one {1 event} other {# events}}",
+      "empty": "No activity yet.",
+      "actors": {
+        "client": "Client",
+        "studio": "Studio",
+        "system": "System"
+      }
+    },
+    "assets": {
+      "panelTitle": "Your content",
+      "count": "{count, plural, one {1 item} other {# items}}",
+      "uploadDrop": "Drop files here or",
+      "uploadBrowse": "browse",
+      "uploadHint": "Logos, copy, photos, credentials — we'll sort them",
+      "labelLabel": "Asset label",
+      "labelPlaceholder": "Homepage copy, logo file, service photos…",
+      "categoryLabel": "Category",
+      "submitAsLabel": "Submit as",
+      "modeLink": "Link",
+      "modeFile": "File",
+      "urlLabel": "URL",
+      "urlPlaceholder": "Google Drive / Dropbox / direct link",
+      "fileLabel": "Choose file",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Anything we should know?",
+      "submit": "Submit asset",
+      "submitting": "Saving…",
+      "cancel": "Cancel",
+      "empty": "No assets submitted yet",
+      "open": "Open",
+      "categories": {
+        "Brand": "Brand",
+        "Copy": "Copy",
+        "Images": "Images",
+        "Access": "Access",
+        "Legal": "Legal",
+        "Other": "Other"
+      },
+      "statuses": {
+        "submitted": "Submitted",
+        "received": "Received",
+        "approved": "Approved"
+      }
+    },
+    "feedback": {
+      "panelTitle": "Feedback",
+      "count": "{count, plural, one {1 item} other {# items}}",
+      "placeholder": "What should change? What feels off?",
+      "submit": "Submit feedback",
+      "submitting": "Sending…",
+      "empty": "No revision requests yet",
+      "submittedOn": "Submitted {date}",
+      "priority": {
+        "low": "low priority",
+        "normal": "normal priority",
+        "high": "high priority"
+      },
+      "priorityShort": {
+        "low": "low",
+        "normal": "normal",
+        "high": "high"
+      },
+      "statuses": {
+        "new": "New",
+        "reviewed": "Reviewed",
+        "scheduled": "Scheduled",
+        "done": "Done"
+      }
+    },
+    "details": {
+      "title": "Project details",
+      "scopeLabel": "Scope & features",
+      "scopeValue": "{pages} pages · {features} features",
+      "rows": {
+        "tier": "Tier",
+        "platform": "Platform",
+        "websiteType": "Website type",
+        "timeline": "Timeline",
+        "revisionPolicy": "Revision policy",
+        "contentReady": "Content readiness",
+        "domainHosting": "Domain / hosting",
+        "integrations": "Integrations",
+        "noneListed": "None listed",
+        "pages": "Pages",
+        "features": "Features",
+        "exclusions": "Exclusions",
+        "intakeNotes": "Intake notes",
+        "agreementStatus": "Agreement status",
+        "agreementModel": "Agreement model",
+        "ownershipModel": "Ownership model",
+        "published": "Published",
+        "depositStatus": "Deposit status",
+        "depositAmount": "Deposit amount",
+        "depositNotes": "Deposit notes",
+        "publishedAgreement": "Published agreement",
+        "agreementAccepted": "Agreement accepted",
+        "acceptHelp": "Scroll through the agreement below, then click Accept to sign.",
+        "depositPaid": "Paid — {amount}",
+        "projectNotes": "Project notes",
+        "none": "None",
+        "bestTimeToCall": "Best time to call",
+        "notProvided": "Not provided",
+        "pieSummary": "PIE summary"
+      },
+      "agreementLabel": "Agreement & payment",
+      "scopeHistoryLabel": "Scope history & change orders",
+      "scopeHistoryValue": "{versions} versions · {changes} changes",
+      "notesContactLabel": "Notes & contact",
+      "notesContactDefault": "Details",
+      "callTimeWithTimezone": "{time} ({timezone})",
+      "changeOrderImpacts": {
+        "price": "Price: {value}",
+        "timeline": "Timeline: {value}",
+        "scope": "Scope: {value}"
+      }
+    },
+    "footer": {
+      "poweredBy": "Powered by",
+      "tagline": " · Your website, your ownership"
+    },
+    "errors": {
+      "updateFailed": "Failed to update workspace.",
+      "uploadFailed": "Upload failed.",
+      "messageFailed": "Failed to send message."
+    }
   }
 }
