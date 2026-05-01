@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This is the strategy document for using the current `website-builder` repo as CrecyStudio's internal service-delivery engine. The mission is specific: serve both small tickets ($1.8K websites) and big tickets ($50K custom web apps) inside one premium, professional experience — same workspace, same process quality, same proof.
+This is the strategy document for using the current `website-builder` repo as CrecyStudio's internal service-delivery engine. The mission is specific: serve both small tickets ($1.8K websites) and big tickets ($35K+ custom web apps) inside one premium, professional experience — same workspace, same process quality, same proof.
 
 This document replaces the earlier draft that proposed eight overlapping project types and a HubSpot-shaped backend. The earlier framing was right about the *direction* (CrecyStudio is more than a website builder) and wrong about the *shape* (one operator does not need a CRM-style schema or eight separate marketing surfaces). This rewrite aligns the strategy to one operator running a premium boutique that takes clients from a $2K starter site to a custom-app build without changing studios.
 
@@ -20,7 +20,7 @@ To:
 
 > "Premium websites and custom web systems for businesses that need to look bigger than they are — same workspace from the first page to the full app."
 
-The work to expose this is mostly *positioning and routing*, not new capability. The portal exists. The admin pipeline exists. The PIE engine exists. The deposit flow exists. What's missing is a homepage that names systems out loud, three new service surfaces, one demo, a care-plan page, and a v1.5 backend cleanup that moves proposals and agreements out of debug JSON. About 6–8 weeks of focused work for a solo operator.
+The work to expose this is mostly *positioning and routing*, not new capability. The portal exists. The admin pipeline exists. The PIE engine exists. The deposit flow exists. What's missing is a homepage that names systems out loud, three new service surfaces, one demo, a care-plan page, and a v1.5 backend cleanup that moves proposals and agreements out of debug JSON. About 85–110 hours of focused work — paced over 90 days at 12–18 hrs/week alongside client delivery, or 6–8 weeks if compressed full-time.
 
 ---
 
@@ -36,7 +36,7 @@ The earlier `crecystudio-roadmap.md` was written when the strategy was still "10
 | Unified activity feed | Shipped | `supabase/migrations/20260422_add_project_activity_and_nudges.sql` |
 | Stripe processed-session idempotency | Shipped | `supabase/migrations/20260428_create_stripe_processed_sessions.sql` |
 | Tier-based pricing config | Shipped | `lib/pricing/tiers.ts` (Starter/Growth/Premium bands live) |
-| Paper/ink marketing reskin | In progress | Live homepage uses paper/ink language |
+| Paper/ink reskin (marketing + portal + admin) | Shipped | `app/globals.css` defines `--paper` / `--paper-2..4` / `--ink` tokens and `Inter Tight` / `JetBrains Mono` fonts; marketing pages, portal, and admin all use the shared classes |
 
 The PIE refactor spec (`crecystudio-pie-refactor-spec.md`) defines a fast/warm/deep routing model that already covers the "complex builds need a strategy call" requirement. This rewrite reuses PIE's deep path for big-ticket routing instead of inventing a parallel system.
 
@@ -78,7 +78,7 @@ Six cards, each with a one-line benefit, deep-linking to the right service page 
 1. **Websites** — *Get found, get trusted, get the call.* → `/websites`
 2. **Custom web apps** — *Dashboards, portals, internal tools, MVPs.* → `/custom-web-apps`
 3. **Client portals** — *A private workspace your customers actually use.* → `/client-portals`
-4. **Booking & payments** — *Take deposits and bookings without duct tape.* → `/websites#booking-mode`
+4. **Booking & payments** — *Take deposits and bookings without duct tape.* → `/build/intro?intent=booking`
 5. **Workflow automation** — *Stop doing the same task twice.* → `/systems`
 6. **Website rescue** — *Fix what you have without a full rebuild.* → `/website-rescue`
 
@@ -106,7 +106,7 @@ Five lanes is the smallest set that captures the actual buyer mindset distinctio
 | Lane | Buyer says | Typical ticket | Entry route | Delivery archetype |
 |---|---|---|---|---|
 | **Websites** | "I need a website that converts" | $1.8K – $10K | `/websites` → `/build/intro` | `marketing_site`, `booking_site` |
-| **Web Apps** | "I need a custom app or dashboard" | $8K – $50K+ | `/custom-web-apps` → `/custom-app-intake` | `portal`, `dashboard`, `saas_mvp` |
+| **Web Apps** | "I need a custom app or dashboard" | $8K – $35K+ | `/custom-web-apps` → `/custom-app-intake` | `portal`, `dashboard`, `saas_mvp` |
 | **Automation** | "I'm drowning in repetitive admin work" | $1K – $4K + retainer | `/systems` → `/ops-intake` | `automation` |
 | **E-commerce** | "I need to sell things online" | $1.8K – $4K + retainer | `/ecommerce` → `/ecommerce/intake` | `storefront` |
 | **Rescue** | "My current site isn't working" | $1.2K – $3K | `/website-rescue` → `/build?projectType=rescue` | `rescue_sprint` |
@@ -284,7 +284,7 @@ Concrete page-by-page changes mapped to the five lanes. Every change is sized in
 | `/` (homepage) | Replace hero copy. Add "What We Build" cards section below proof strip. Keep portal preview. Keep process. Add `/work` cross-link. |
 | `/build/intro` | Promote from website-goal quiz to project-type router. First step asks "what are you building?" then branches. |
 | `/pricing` | Rebuild as one scrollable page with anchor nav (Websites / Web Apps / Automation / E-commerce / Rescue / Care). Each lane shows its tiers. |
-| `/websites` | Add a "Modes" section showing how the same Websites lane handles a basic marketing site, a booking/payment site, or a content-heavy site. Cross-link `/care-plans` in footer. |
+| `/websites` | Cross-link `/care-plans` in footer. (A "Modes" section visualizing the Websites lane's range — basic marketing site / booking-payment site / content-heavy — is a v2 nice-to-have; the booking/payments homepage card routes directly into `/build/intro?intent=booking` so no `/websites` anchor is needed for v1.) |
 | `/systems` | Cross-link `/care-plans`. Note relationship between Systems Partner retainer and Care Pro. |
 | `/ecommerce` | Cross-link `/care-plans`. Otherwise no change for v1. |
 
@@ -313,7 +313,7 @@ Only after the first one earns its keep. Track `demo_portal_view` analytics even
 
 ## 90-Day Roadmap
 
-Sized for a solo operator at ~15–25 hours/week on this work alongside client delivery. Three phases, each ~30 days. Effort is S (1–4h), M (4–10h), L (10h+).
+Sized for a solo operator at ~12–18 hours/week on this work alongside client delivery. Three phases, each ~30 days. Effort is S (1–4h), M (4–10h), L (10h+).
 
 ### Phase 1 — Days 1–30: Reposition and structural
 
@@ -321,7 +321,7 @@ Sized for a solo operator at ~15–25 hours/week on this work alongside client d
 |---|---|---|
 | Rewrite homepage hero copy in `messages/en.json` | S | New hero string live; CTAs unchanged; en/fr/es fall back to en for new copy |
 | Add "What We Build" cards section to `app/[locale]/page.tsx` | S | Six cards rendering, each linking to correct service page or intake with `?projectType=...` |
-| Promote `/build/intro` to project-type router | M | First step asks "what are you building?" with five options; routes branch to correct intake; `projectType` carried through URL |
+| Promote `/build/intro` to project-type router | M | First step asks "what are you building?" with five options; routes branch to correct intake when it exists (`/build` for website / rescue, `/ops-intake` for automation, `/ecommerce/intake` for ecommerce); for `web_app` in Phase 1, falls back to `/contact?type=web_app` until `/custom-app-intake` ships in Phase 2; `projectType` carried through URL; emits `intake_router_selected` analytics event with the chosen value |
 | Add `project_type` column to `quotes` and `customer_portal_projects` | S | Migration shipped; `submit-estimate` writes value; existing rows backfill to `'website'` |
 | Build `/work` page with Korent + Proveo + 1 anonymized case | M | Page renders three case cards with honest "studio venture" vs. "client work" sectioning |
 | Rebuild `/pricing` as anchor-navigated single page | M | Six anchor sections (Websites / Web Apps / Automation / E-commerce / Rescue / Care); existing tier copy carries over |
@@ -336,8 +336,8 @@ Phase 1 outcome: homepage tells the new story, intake routing is project-type aw
 | `/client-portals` service page | M | Hero, problems, includes, pricing, FAQ; CTA routes to `/demos/portal` and `/build/intro` |
 | `/website-rescue` service page | S | Hero, problems, sprint scope, fixed price, CTA routes to `/build?projectType=rescue` |
 | `/custom-app-intake` page and API route | M | 8–10 question intake; `submit-estimate` accepts `projectType=web_app`; routes to free strategy call request |
-| `/demos/portal` seeded experience | M | Seed migration; read-only enforcement on portal write APIs; "Demo" watermark + banner |
-| `/care-plans` page | S | Three tier cards, cross-link from `/pricing#care`, footer link from every lane page |
+| `/demos/portal` seeded experience | M | Seed migration; read-only enforcement on portal write APIs; "Demo" watermark + banner; emits `demo_portal_view` and `demo_portal_to_intake` analytics events |
+| `/care-plans` page | S | Three tier cards, cross-link from `/pricing#care`, footer link from every lane page. **Prerequisite:** `docs/care-plans-operating.md` exists with included scope, time-bank or task-count, response SLA, and upcharge triggers — page does not ship without it |
 
 Phase 2 outcome: every lane has a public surface, the portal demo is live, care plans are sellable.
 
@@ -347,7 +347,7 @@ Phase 2 outcome: every lane has a public surface, the portal demo is live, care 
 |---|---|---|
 | `proposals` + `proposal_versions` tables | M | Migration; admin UI to create/version a proposal; existing `debug.generatedProposal` becomes a fallback read |
 | `agreements` table with audit trail | S | Migration; portal agreement-accept route writes a row with hash + IP + accepted_at |
-| `support_subscriptions` table (when first Care plan sold) | S | Migration; admin UI to start a subscription; Stripe subscription webhook handler |
+| `support_subscriptions` table (when first Care plan sold) | M | Migration; admin UI to start a subscription; Stripe subscription webhook handler |
 | PIE Phase 6 — admin tier-band visualization + override controls | S | Admin shows recommended tier band visually; override buttons next to PIE recommendation |
 | PIE Phase 7 — three client-facing post-quote variants on `/estimate` | M | Page reads `routing.finalPath`, renders fast (firm price + accept) / warm (firm price + recommended call) / deep (range + required call) |
 | Outreach: launch announcement, post in 2–3 communities, optional paid traffic test | M | Public launch post drafted and shipped; first 10 visits to `/custom-web-apps` measured |
@@ -356,7 +356,14 @@ Phase 3 outcome: backend matches the new positioning, big-ticket sales motion is
 
 ### Total estimated effort
 
-~85–110 hours across 90 days. Comfortable for a solo operator at 12–18 hrs/week on this work. Scale up if client-delivery load is light, scale down if a real client lands. The order is what matters; each task is reorderable within its phase.
+~85–110 hours across 90 days. Comfortable for a solo operator at 12–18 hrs/week on this work. Scale up if client-delivery load is light, scale down if a real client lands.
+
+### Operating notes for a solo operator
+
+- **Each phase is independently shippable.** Phase 1 alone repositions the homepage, the router, and the pricing page — that's a meaningful release on its own. Stop after Phase 1 if results aren't moving the needle in 30 days; revisit positioning before doubling down on Phase 2.
+- **All tasks are interruptible at phase boundaries.** Real client work takes priority. Pause and resume between phases, not mid-phase.
+- **The order within a phase is flexible**; the order between phases is not. Don't start Phase 2 (new service surfaces) before Phase 1 (intake routing and pricing) is live, or buyers will land on new pages with no working path forward.
+- **Care plans operating doc (`docs/care-plans-operating.md`) is a Phase 2 prerequisite, not a Phase 2 deliverable.** Without it, the first Care+ request becomes ambiguous; with it, the offer is sellable.
 
 ---
 
@@ -383,7 +390,7 @@ Tied to the existing `analytics_events` writes (`lib/analytics/server.ts` and `l
 | `/custom-web-apps` view → `/custom-app-intake` start rate | `analytics_events` page views and intake starts | Above 8% (cold-traffic floor) |
 | `/demos/portal` view → `/build/intro` rate | New event `demo_portal_to_intake` | Above 5% |
 | Average project value across closed deals | Admin pipeline | Mix shifts from website-only to include 1+ Web-Apps deal per quarter |
-| Care plan attach rate at launch | `support_subscriptions` (when shipped) | Above 25% of new client launches in Phase 3 |
+| Care plan attach rate at launch | `support_subscriptions` (when shipped) | Tracked qualitatively in Phase 3 (sample size too small for a hard rate): presented in every proposal; attached on at least 1 of every 3 launches; revisit as a hard percentage target after the first 10 closed launches post-Phase-3 |
 | `/work` view depth | `analytics_events` scroll/time-on-page | Median time >40s for traffic that lands on /work |
 
 ---
@@ -402,9 +409,9 @@ Tied to the existing `analytics_events` writes (`lib/analytics/server.ts` and `l
 | Deposit / Stripe flow | `app/api/estimate/accept/route.ts`, `app/api/internal/create-deposit-link/route.ts`, `lib/depositPayments.ts`, `app/api/webhooks/stripe/route.ts` | Idempotency in place via `stripe_processed_sessions`; Phase 3 adds invoice/subscription paths on the same pattern |
 | Client portal | `app/portal/[token]/{PortalClient.tsx,page.tsx,route.ts}` | Hosts the demo seed in Phase 2; messages/invoices/activity types already present |
 | Internal admin pipeline | `app/internal/admin/{page.tsx,AdminPipelineClient.tsx,[id]/ProjectControlClient.tsx}` | Used to manage project_type filter (Phase 1) and tier-band override controls (Phase 3) |
-| Internal dashboard | `app/internal/dashboard/page.tsx` | Already shipped per `crecystudio-roadmap.md` supersession header — KPIs and capacity meter live |
+| Internal dashboard | `app/internal/dashboard/page.tsx` | Already shipped — verified KPI cards (revenue in play, active projects, average value), range selectors (today / week / month / quarter / year), needs-attention queue, capacity meter |
 | Admin project model | `lib/adminProjectData.ts` | Composes quote + portal + lead + estimates + PIE + call requests + deposit + assets + revisions + invoices + activity + messages + proposals + agreements |
-| Migrations | `supabase/migrations/` | Seven migrations cover portal, messaging, activity, nudges, invoices, Stripe idempotency. v1.5 backend doc adds proposals/agreements/support_subscriptions |
+| Migrations | `supabase/migrations/` | Seven migrations cover ops workspace state, portal data, messaging, activity, nudges, invoices, and Stripe idempotency. v1.5 backend doc adds `proposals` / `agreements` / `support_subscriptions` |
 
 ---
 
