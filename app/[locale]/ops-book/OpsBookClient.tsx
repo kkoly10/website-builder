@@ -2,6 +2,7 @@
 
 import { Link } from "@/i18n/navigation";
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 type Intake = {
   id: string;
@@ -12,13 +13,13 @@ type Intake = {
   recommendation_price_range?: string | null;
 };
 
-const BEST_TIME_OPTIONS = [
+const BEST_TIME_KEYS = [
   "Weekday morning (9am–12pm)",
   "Weekday afternoon (12pm–4pm)",
   "Weekday evening (4pm–7pm)",
   "Weekend",
   "Anytime",
-];
+] as const;
 
 function detectTimezone() {
   try {
@@ -29,9 +30,15 @@ function detectTimezone() {
 }
 
 export default function OpsBookClient({ intake }: { intake: Intake }) {
+  const t = useTranslations("opsBook.client");
+  const tBestTimes = useTranslations("opsBook.client.bestTimes");
+  const tBook = useTranslations("opsBook");
+
   const intakeId = useMemo(() => String(intake?.id ?? "").trim(), [intake]);
 
-  const [bestTimeToCall, setBestTimeToCall] = useState(BEST_TIME_OPTIONS[0]);
+  // bestTimeToCall stays English literal (sent to /api/ops/request-call).
+  // Display label rendered via tBestTimes() below.
+  const [bestTimeToCall, setBestTimeToCall] = useState<string>(BEST_TIME_KEYS[0]);
   const [preferredTimes, setPreferredTimes] = useState("");
   const [timezone, setTimezone] = useState(detectTimezone());
   const [notes, setNotes] = useState("");
@@ -44,7 +51,7 @@ export default function OpsBookClient({ intake }: { intake: Intake }) {
 
     if (!intakeId) {
       setStatus("error");
-      setErrorMsg("Missing ops intake ID. Please start from the workflow intake page.");
+      setErrorMsg(t("missingIdError"));
       return;
     }
 
@@ -57,7 +64,7 @@ export default function OpsBookClient({ intake }: { intake: Intake }) {
       });
 
       const json = await res.json();
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to request workflow call.");
+      if (!res.ok || !json?.ok) throw new Error(json?.error || t("callError"));
 
       try {
         localStorage.setItem("crecystudio:lastOpsIntakeId", intakeId);
@@ -71,7 +78,7 @@ export default function OpsBookClient({ intake }: { intake: Intake }) {
       }
     } catch (e: any) {
       setStatus("error");
-      setErrorMsg(e?.message || "Failed to request call.");
+      setErrorMsg(e?.message || t("submitError"));
     }
   }
 
@@ -83,21 +90,21 @@ export default function OpsBookClient({ intake }: { intake: Intake }) {
     <main className="container" style={{ padding: "32px 0 80px" }}>
       <div className="kicker">
         <span className="kickerDot" aria-hidden="true" />
-        Workflow Call Booking
+        {tBook("callBookingKicker")}
       </div>
 
       <div style={{ height: 12 }} />
-      <h1 className="h1">Book your workflow review call</h1>
+      <h1 className="h1">{t("title")}</h1>
       <p className="p" style={{ maxWidth: 900, marginTop: 10 }}>
-        We found your workflow intake. Choose your preferred timing and we’ll follow up to confirm.
+        {t("subtitle")}
       </p>
 
       <div style={{ height: 18 }} />
 
       <section className="panel">
         <div className="panelHeader">
-          <div>Intake summary</div>
-          <div className="smallNote">We’ll attach the booking to this workflow request.</div>
+          <div>{t("summaryHeading")}</div>
+          <div className="smallNote">{t("summaryNote")}</div>
         </div>
 
         <div className="panelBody" >
@@ -113,7 +120,7 @@ export default function OpsBookClient({ intake }: { intake: Intake }) {
               {intake.recommendation_tier ? (
                 <div className="badge badgeHot">{intake.recommendation_tier}</div>
               ) : (
-                <div className="badge">Workflow intake</div>
+                <div className="badge">{t("fallbackBadge")}</div>
               )}
               {intake.recommendation_price_range ? (
                 <div className="pDark" style={{ marginTop: 6 }}>
@@ -124,7 +131,7 @@ export default function OpsBookClient({ intake }: { intake: Intake }) {
           </div>
 
           <div className="smallNote">
-            Intake ID: <code>{intakeId}</code>
+            {t("intakeIdInline")} <code>{intakeId}</code>
           </div>
         </div>
       </section>
@@ -133,44 +140,44 @@ export default function OpsBookClient({ intake }: { intake: Intake }) {
 
       <section className="panel">
         <div className="panelHeader">
-          <div>Call details</div>
-          <div className="smallNote">Pick the best timing, add notes, and submit.</div>
+          <div>{t("callDetailsHeading")}</div>
+          <div className="smallNote">{t("callDetailsNote")}</div>
         </div>
 
         <div className="panelBody" >
           <label >
-            <span className="fieldLabel">Best time to call</span>
+            <span className="fieldLabel">{t("bestTimeLabel")}</span>
             <select className="select" value={bestTimeToCall} onChange={(e) => setBestTimeToCall(e.target.value)}>
-              {BEST_TIME_OPTIONS.map((opt) => (
+              {BEST_TIME_KEYS.map((opt) => (
                 <option key={opt} value={opt}>
-                  {opt}
+                  {tBestTimes(opt)}
                 </option>
               ))}
             </select>
           </label>
 
           <label >
-            <span className="fieldLabel">Preferred times (optional)</span>
+            <span className="fieldLabel">{t("preferredLabel")}</span>
             <input
               className="input"
               value={preferredTimes}
               onChange={(e) => setPreferredTimes(e.target.value)}
-              placeholder='e.g., "Mon/Wed after 5pm"'
+              placeholder={t("preferredPlaceholder")}
             />
           </label>
 
           <label >
-            <span className="fieldLabel">Timezone</span>
+            <span className="fieldLabel">{t("timezoneLabel")}</span>
             <input className="input" value={timezone} onChange={(e) => setTimezone(e.target.value)} />
           </label>
 
           <label >
-            <span className="fieldLabel">Notes</span>
+            <span className="fieldLabel">{t("notesLabel")}</span>
             <textarea
               className="textarea"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Budget, priority workflow, deadlines, or special notes…"
+              placeholder={t("notesPlaceholder")}
               rows={5}
             />
           </label>
@@ -185,7 +192,7 @@ export default function OpsBookClient({ intake }: { intake: Intake }) {
                 fontWeight: 700,
               }}
             >
-              Call request submitted. You can create an account to keep everything attached to your email.
+              {t("successMessage")}
             </div>
           ) : null}
 
@@ -199,28 +206,29 @@ export default function OpsBookClient({ intake }: { intake: Intake }) {
                 fontWeight: 700,
               }}
             >
-              {errorMsg || "Something went wrong."}
+              {errorMsg || t("errorFallback")}
             </div>
           ) : null}
 
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "space-between" }}>
             <Link className="btn btnGhost" href="/systems">
-              Back to Systems
+              {t("backToSystems")}
             </Link>
 
             <button className="btn btnPrimary" type="button" onClick={requestCall} disabled={status === "sending"}>
-              {status === "sending" ? "Requesting..." : "Request workflow call"} <span className="btnArrow">→</span>
+              {status === "sending" ? t("submitting") : t("submit")} <span className="btnArrow">→</span>
             </button>
           </div>
 
           <div className="smallNote">
-            Want a portal login?{" "}
+            {t("portalLoginPromptStart")}{" "}
+            {/* /signup and /login are under [locale], so i18n Link prefixes them correctly. */}
             <Link href={signupHref} style={{ color: "var(--accent-2)", fontWeight: 800 }}>
-              Create account
+              {t("createAccount")}
             </Link>{" "}
-            or{" "}
+            {t("or")}{" "}
             <Link href={loginHref} style={{ color: "var(--accent-2)", fontWeight: 800 }}>
-              Sign in
+              {t("signIn")}
             </Link>
             .
           </div>

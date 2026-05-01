@@ -803,5 +803,203 @@
     "tierContextTitle": "Cómo organizamos los proyectos por niveles.",
     "messageCta": "Escríbenos con preguntas",
     "depositError": "No se pudo crear la sesión de depósito."
+  },
+  "opsIntake": {
+    "metaTitle": "Auditoría de workflow | CrecyStudio",
+    "metaDescription": "Cuéntanos sobre tus sistemas y dolores. Auditamos el workflow, puntuamos la complejidad y recomendamos la contratación adecuada.",
+    "kicker": "Auditoría de workflow",
+    "title": "Intake de sistemas del negocio",
+    "stepCounter": "Paso {current} de 4 — {stepTitle}",
+    "stepTitles": {
+      "1": "Lo básico",
+      "2": "Tus herramientas y dolores",
+      "3": "Objetivos y presupuesto",
+      "4": "Revisar y enviar"
+    },
+    "step1": {
+      "heading": "Cuéntanos sobre tu negocio",
+      "companyLabel": "Nombre de la empresa *",
+      "companyPlaceholder": "Acme Corp",
+      "contactLabel": "Tu nombre *",
+      "contactPlaceholder": "Jane Smith",
+      "industryLabel": "Sector",
+      "industryPlaceholder": "p. ej. Legal, HVAC, Inmobiliaria",
+      "teamSizeLabel": "Tamaño del equipo",
+      "jobVolumeLabel": "Volumen mensual de clientes",
+      "monthlyRevenueLabel": "Ingresos mensuales (opcional)",
+      "currentWebsiteLabel": "Sitio actual (si lo tienes)",
+      "currentWebsitePlaceholder": "https://tusitio.com"
+    },
+    "step2": {
+      "heading": "Tus herramientas y dolores",
+      "toolsLabel": "Software que usas actualmente (selecciona todo lo que aplique)",
+      "painLabel": "¿Qué te causa más dolor? (selecciona todo lo que aplique)",
+      "triedBeforeLabel": "¿Has intentado arreglar esto antes?"
+    },
+    "step3": {
+      "heading": "Objetivos y presupuesto",
+      "workflowsLabel": "Workflows que quieres construir (selecciona todo lo que aplique)",
+      "budgetLabel": "¿Cuál es tu rango de presupuesto?",
+      "urgencyLabel": "¿Qué tan urgente es?",
+      "notesLabel": "¿Algo más que debamos saber?",
+      "notesPlaceholder": "Herramientas específicas, plazos, restricciones..."
+    },
+    "step4": {
+      "recommendedEngagement": "Contratación recomendada",
+      "complexityFlags": "Indicadores de complejidad",
+      "auditDestinationHeading": "¿Adónde enviamos tu auditoría?",
+      "emailLabel": "Correo electrónico *",
+      "emailPlaceholder": "tu@empresa.com",
+      "phoneLabel": "Teléfono (opcional)",
+      "phonePlaceholder": "(555) 555-5555",
+      "whyHeading": "Por qué se ubicó aquí"
+    },
+    "nav": {
+      "back": "Atrás",
+      "continue": "Continuar",
+      "submitting": "Enviando...",
+      "submit": "Enviar auditoría"
+    },
+    "validation": {
+      "validEmail": "Por favor introduce un correo válido.",
+      "submitError": "Algo salió mal. Por favor inténtalo de nuevo."
+    },
+    "enums": {
+      "teamSize": {
+        "1-5 employees": "1 a 5 empleados",
+        "6-15 employees": "6 a 15 empleados",
+        "16-50 employees": "16 a 50 empleados",
+        "50+ employees": "50+ empleados"
+      },
+      "jobVolume": {
+        "Under 10 per month": "Menos de 10 al mes",
+        "10-50 per month": "10 a 50 al mes",
+        "50-200 per month": "50 a 200 al mes",
+        "200+ per month": "200+ al mes"
+      },
+      "revenue": {
+        "Under $10k/mo": "Menos de $10k/mes",
+        "$10k - $50k/mo": "$10k – $50k/mes",
+        "$50k - $200k/mo": "$50k – $200k/mes",
+        "$200k+/mo": "$200k+/mes",
+        "Prefer not to say": "Prefiero no decirlo"
+      },
+      "budget": {
+        "Under $1,000": "Menos de $1.000",
+        "$1,000 - $2,000": "$1.000 – $2.000",
+        "$2,000 - $4,000": "$2.000 – $4.000",
+        "$4,000 - $8,000": "$4.000 – $8.000",
+        "$8,000+": "$8.000+",
+        "Not sure yet": "Aún no estoy seguro"
+      },
+      "urgency": {
+        "ASAP - this is costing us now": "Lo antes posible — ya nos está costando",
+        "Within the next month": "Dentro del próximo mes",
+        "Next 2-3 months": "En los próximos 2 a 3 meses",
+        "Exploring options": "Explorando opciones"
+      },
+      "triedBefore": {
+        "No - first time addressing this": "No — primera vez que lo abordo",
+        "Yes - tried to fix it internally": "Sí — intentamos arreglarlo internamente",
+        "Yes - hired someone and it didn't work": "Sí — contratamos a alguien y no funcionó",
+        "Yes - using a tool but it's not working": "Sí — usamos una herramienta pero no funciona"
+      },
+      "tools": {
+        "QuickBooks / Xero": "QuickBooks / Xero",
+        "HubSpot / Salesforce": "HubSpot / Salesforce",
+        "Clio / PracticePanther": "Clio / PracticePanther",
+        "Stripe / Square": "Stripe / Square",
+        "Google Sheets / Excel": "Google Sheets / Excel",
+        "Legacy Industry Software": "Software de industria heredado"
+      },
+      "painPoints": {
+        "Too much manual data entry": "Demasiada captura manual de datos",
+        "Software systems don't talk to each other": "Los sistemas no se hablan entre sí",
+        "Leads falling through the cracks": "Se pierden leads",
+        "Billing is delayed or inconsistent": "La facturación va atrasada o inconsistente",
+        "Client onboarding takes too long": "El onboarding de clientes tarda demasiado",
+        "No visibility into what's happening in the business": "Sin visibilidad de lo que pasa en el negocio"
+      },
+      "workflows": {
+        "Automated Client Intake": "Intake de cliente automatizado",
+        "CRM to Billing Sync": "Sync de CRM a facturación",
+        "Operations Dashboard": "Dashboard de operaciones",
+        "Automated Follow-ups": "Seguimientos automatizados",
+        "Lead Routing & Assignment": "Ruteo y asignación de leads",
+        "Invoice & Payment Automation": "Automatización de facturas y pagos"
+      }
+    }
+  },
+  "opsBook": {
+    "metaTitle": "Reserva tu llamada de revisión de workflow | CrecyStudio",
+    "metaDescription": "Elige un horario para tu llamada de revisión de workflow después de enviar el intake de auditoría.",
+    "kicker": "Reserva Ops",
+    "missing": {
+      "title": "Falta intake ops",
+      "body": "Empieza desde la página de intake de workflow para que podamos asociar la reserva al envío correcto.",
+      "ctaStart": "Iniciar intake de workflow",
+      "ctaHome": "Inicio"
+    },
+    "loadError": {
+      "title": "No se pudo cargar el intake",
+      "body": "No encontramos ese intake de workflow. Por favor reinicia el flujo e inténtalo de nuevo.",
+      "errorPrefix": "Error:"
+    },
+    "found": {
+      "title": "Reserva tu llamada de revisión de workflow",
+      "body": "Encontramos tu intake. Elige abajo tu horario preferido para que podamos asociarlo a la solicitud correcta.",
+      "intakeIdLabel": "ID de intake:"
+    },
+    "callBookingKicker": "Reserva de llamada de workflow",
+    "client": {
+      "title": "Reserva tu llamada de revisión de workflow",
+      "subtitle": "Encontramos tu intake de workflow. Elige tu horario preferido y volveremos a confirmar.",
+      "summaryHeading": "Resumen del intake",
+      "summaryNote": "Asociaremos la reserva a esta solicitud de workflow.",
+      "fallbackBadge": "Intake de workflow",
+      "intakeIdInline": "ID de intake:",
+      "callDetailsHeading": "Detalles de la llamada",
+      "callDetailsNote": "Elige el mejor horario, agrega notas y envía.",
+      "bestTimeLabel": "Mejor momento para llamar",
+      "bestTimes": {
+        "Weekday morning (9am–12pm)": "Mañana entre semana (9–12 h)",
+        "Weekday afternoon (12pm–4pm)": "Tarde entre semana (12–16 h)",
+        "Weekday evening (4pm–7pm)": "Tarde-noche entre semana (16–19 h)",
+        "Weekend": "Fin de semana",
+        "Anytime": "Cualquier momento"
+      },
+      "preferredLabel": "Horarios preferidos (opcional)",
+      "preferredPlaceholder": "p. ej., «lun/mié después de las 17 h»",
+      "timezoneLabel": "Zona horaria",
+      "notesLabel": "Notas",
+      "notesPlaceholder": "Presupuesto, workflow prioritario, plazos o notas especiales…",
+      "successMessage": "Solicitud de llamada enviada. Puedes crear una cuenta para tener todo asociado a tu correo.",
+      "errorFallback": "Algo salió mal.",
+      "missingIdError": "Falta el ID del intake ops. Empieza desde la página de intake de workflow.",
+      "submitError": "Error al solicitar la llamada.",
+      "callError": "Error al solicitar la llamada de workflow.",
+      "backToSystems": "Volver a Sistemas",
+      "submitting": "Enviando...",
+      "submit": "Solicitar llamada de workflow",
+      "portalLoginPromptStart": "¿Quieres acceso al portal?",
+      "createAccount": "Crear cuenta",
+      "or": "o",
+      "signIn": "Iniciar sesión"
+    }
+  },
+  "opsThankYou": {
+    "metaTitle": "Solicitud de revisión de workflow recibida | CrecyStudio",
+    "metaDescription": "Tu intake de auditoría de workflow y tus preferencias de llamada han sido recibidos.",
+    "kicker": "Flujo Ops • Completo",
+    "title": "Gracias — recibimos tu solicitud de revisión de workflow",
+    "body": "Guardamos tu intake y tus preferencias de llamada. El siguiente paso es revisar tus operaciones y preparar un plan de workflow limpio.",
+    "intakePillPrefix": "Intake:",
+    "callPillPrefix": "Solicitud de llamada:",
+    "createAccountCardTitle": "Opcional: crea tu cuenta ahora",
+    "createAccountCardBody": "Crear una cuenta te permite iniciar sesión más tarde para revisar tu proyecto y los próximos pasos.",
+    "createAccountCta": "Crear cuenta",
+    "signInCta": "Iniciar sesión",
+    "submitAnotherCta": "Enviar otro intake",
+    "openWorkspaceCta": "Abrir espacio de workflow"
   }
 }

@@ -803,5 +803,203 @@
     "tierContextTitle": "How we tier projects.",
     "messageCta": "Message us with questions",
     "depositError": "Unable to create the deposit session."
+  },
+  "opsIntake": {
+    "metaTitle": "Workflow audit intake | CrecyStudio",
+    "metaDescription": "Tell us about your business systems and pain points. We'll audit the workflow, score complexity, and recommend the right engagement.",
+    "kicker": "Workflow Audit",
+    "title": "Business Systems Intake",
+    "stepCounter": "Step {current} of 4 — {stepTitle}",
+    "stepTitles": {
+      "1": "The Basics",
+      "2": "Your Tools & Pain Points",
+      "3": "Goals & Budget",
+      "4": "Review & Submit"
+    },
+    "step1": {
+      "heading": "Tell us about your business",
+      "companyLabel": "Company Name *",
+      "companyPlaceholder": "Acme Corp",
+      "contactLabel": "Your Name *",
+      "contactPlaceholder": "Jane Smith",
+      "industryLabel": "Industry",
+      "industryPlaceholder": "e.g. Legal, HVAC, Real Estate",
+      "teamSizeLabel": "Team Size",
+      "jobVolumeLabel": "Monthly Client Volume",
+      "monthlyRevenueLabel": "Monthly Revenue (optional)",
+      "currentWebsiteLabel": "Current Website (if any)",
+      "currentWebsitePlaceholder": "https://yoursite.com"
+    },
+    "step2": {
+      "heading": "Your Tools & Pain Points",
+      "toolsLabel": "Software you currently use (select all that apply)",
+      "painLabel": "What is causing the most pain? (select all that apply)",
+      "triedBeforeLabel": "Have you tried to fix this before?"
+    },
+    "step3": {
+      "heading": "Goals & Budget",
+      "workflowsLabel": "Workflows you want built (select all that apply)",
+      "budgetLabel": "What is your budget range?",
+      "urgencyLabel": "How urgent is this?",
+      "notesLabel": "Anything else we should know?",
+      "notesPlaceholder": "Specific tools, deadlines, constraints..."
+    },
+    "step4": {
+      "recommendedEngagement": "Recommended Engagement",
+      "complexityFlags": "Complexity flags",
+      "auditDestinationHeading": "Where should we send your audit?",
+      "emailLabel": "Email Address *",
+      "emailPlaceholder": "you@company.com",
+      "phoneLabel": "Phone (Optional)",
+      "phonePlaceholder": "(555) 555-5555",
+      "whyHeading": "Why it landed here"
+    },
+    "nav": {
+      "back": "Back",
+      "continue": "Continue",
+      "submitting": "Submitting...",
+      "submit": "Submit Audit"
+    },
+    "validation": {
+      "validEmail": "Please enter a valid email address.",
+      "submitError": "Something went wrong. Please try again."
+    },
+    "enums": {
+      "teamSize": {
+        "1-5 employees": "1-5 employees",
+        "6-15 employees": "6-15 employees",
+        "16-50 employees": "16-50 employees",
+        "50+ employees": "50+ employees"
+      },
+      "jobVolume": {
+        "Under 10 per month": "Under 10 per month",
+        "10-50 per month": "10-50 per month",
+        "50-200 per month": "50-200 per month",
+        "200+ per month": "200+ per month"
+      },
+      "revenue": {
+        "Under $10k/mo": "Under $10k/mo",
+        "$10k - $50k/mo": "$10k - $50k/mo",
+        "$50k - $200k/mo": "$50k - $200k/mo",
+        "$200k+/mo": "$200k+/mo",
+        "Prefer not to say": "Prefer not to say"
+      },
+      "budget": {
+        "Under $1,000": "Under $1,000",
+        "$1,000 - $2,000": "$1,000 - $2,000",
+        "$2,000 - $4,000": "$2,000 - $4,000",
+        "$4,000 - $8,000": "$4,000 - $8,000",
+        "$8,000+": "$8,000+",
+        "Not sure yet": "Not sure yet"
+      },
+      "urgency": {
+        "ASAP - this is costing us now": "ASAP - this is costing us now",
+        "Within the next month": "Within the next month",
+        "Next 2-3 months": "Next 2-3 months",
+        "Exploring options": "Exploring options"
+      },
+      "triedBefore": {
+        "No - first time addressing this": "No - first time addressing this",
+        "Yes - tried to fix it internally": "Yes - tried to fix it internally",
+        "Yes - hired someone and it didn't work": "Yes - hired someone and it didn't work",
+        "Yes - using a tool but it's not working": "Yes - using a tool but it's not working"
+      },
+      "tools": {
+        "QuickBooks / Xero": "QuickBooks / Xero",
+        "HubSpot / Salesforce": "HubSpot / Salesforce",
+        "Clio / PracticePanther": "Clio / PracticePanther",
+        "Stripe / Square": "Stripe / Square",
+        "Google Sheets / Excel": "Google Sheets / Excel",
+        "Legacy Industry Software": "Legacy Industry Software"
+      },
+      "painPoints": {
+        "Too much manual data entry": "Too much manual data entry",
+        "Software systems don't talk to each other": "Software systems don't talk to each other",
+        "Leads falling through the cracks": "Leads falling through the cracks",
+        "Billing is delayed or inconsistent": "Billing is delayed or inconsistent",
+        "Client onboarding takes too long": "Client onboarding takes too long",
+        "No visibility into what's happening in the business": "No visibility into what's happening in the business"
+      },
+      "workflows": {
+        "Automated Client Intake": "Automated Client Intake",
+        "CRM to Billing Sync": "CRM to Billing Sync",
+        "Operations Dashboard": "Operations Dashboard",
+        "Automated Follow-ups": "Automated Follow-ups",
+        "Lead Routing & Assignment": "Lead Routing & Assignment",
+        "Invoice & Payment Automation": "Invoice & Payment Automation"
+      }
+    }
+  },
+  "opsBook": {
+    "metaTitle": "Book your workflow review call | CrecyStudio",
+    "metaDescription": "Pick a time for your workflow review call after submitting the audit intake.",
+    "kicker": "Ops Booking",
+    "missing": {
+      "title": "Missing ops intake",
+      "body": "Start from the workflow intake page so we can attach the booking to the right submission.",
+      "ctaStart": "Start Workflow Intake",
+      "ctaHome": "Home"
+    },
+    "loadError": {
+      "title": "Could not load intake",
+      "body": "We couldn't find that workflow intake. Please restart the intake flow and try again.",
+      "errorPrefix": "Error:"
+    },
+    "found": {
+      "title": "Book your workflow review call",
+      "body": "We found your intake. Pick your preferred call timing below so we can attach it to the correct workflow request.",
+      "intakeIdLabel": "Intake ID:"
+    },
+    "callBookingKicker": "Workflow Call Booking",
+    "client": {
+      "title": "Book your workflow review call",
+      "subtitle": "We found your workflow intake. Choose your preferred timing and we'll follow up to confirm.",
+      "summaryHeading": "Intake summary",
+      "summaryNote": "We'll attach the booking to this workflow request.",
+      "fallbackBadge": "Workflow intake",
+      "intakeIdInline": "Intake ID:",
+      "callDetailsHeading": "Call details",
+      "callDetailsNote": "Pick the best timing, add notes, and submit.",
+      "bestTimeLabel": "Best time to call",
+      "bestTimes": {
+        "Weekday morning (9am–12pm)": "Weekday morning (9am–12pm)",
+        "Weekday afternoon (12pm–4pm)": "Weekday afternoon (12pm–4pm)",
+        "Weekday evening (4pm–7pm)": "Weekday evening (4pm–7pm)",
+        "Weekend": "Weekend",
+        "Anytime": "Anytime"
+      },
+      "preferredLabel": "Preferred times (optional)",
+      "preferredPlaceholder": "e.g., \"Mon/Wed after 5pm\"",
+      "timezoneLabel": "Timezone",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Budget, priority workflow, deadlines, or special notes…",
+      "successMessage": "Call request submitted. You can create an account to keep everything attached to your email.",
+      "errorFallback": "Something went wrong.",
+      "missingIdError": "Missing ops intake ID. Please start from the workflow intake page.",
+      "submitError": "Failed to request call.",
+      "callError": "Failed to request workflow call.",
+      "backToSystems": "Back to Systems",
+      "submitting": "Requesting...",
+      "submit": "Request workflow call",
+      "portalLoginPromptStart": "Want a portal login?",
+      "createAccount": "Create account",
+      "or": "or",
+      "signIn": "Sign in"
+    }
+  },
+  "opsThankYou": {
+    "metaTitle": "Workflow review request received | CrecyStudio",
+    "metaDescription": "Your workflow audit intake and call preferences have been received.",
+    "kicker": "Ops Flow • Complete",
+    "title": "Thanks — your workflow review request is in",
+    "body": "We saved your intake and call preferences. Next step is reviewing your operations and preparing a clean workflow plan.",
+    "intakePillPrefix": "Intake:",
+    "callPillPrefix": "Call request:",
+    "createAccountCardTitle": "Optional: Create your account now",
+    "createAccountCardBody": "Creating an account lets you sign in later to check your project and next steps.",
+    "createAccountCta": "Create Account",
+    "signInCta": "Sign In",
+    "submitAnotherCta": "Submit Another Intake",
+    "openWorkspaceCta": "Open Workflow Workspace"
   }
 }
