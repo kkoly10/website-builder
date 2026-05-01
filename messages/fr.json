@@ -22,7 +22,7 @@
     "footerAria": "Pied de page"
   },
   "footer": {
-    "blurb": "Studio orienté web pour les entreprises qui ont besoin d'une première impression plus nette, d'opérations plus propres et d'un seul espace de travail pour piloter le projet.",
+    "blurb": "Independent web studio building premium websites and custom web systems. One workspace from scope to launch.",
     "rightsReserved": "Tous droits réservés.",
     "links": {
       "aria": "Pied de page",
@@ -38,11 +38,11 @@
     }
   },
   "home": {
-    "metaTitle": "CrecyStudio | Des sites web qui font sonner votre téléphone",
-    "metaDescription": "Studio web de Virginie du Nord qui crée des sites pour petites entreprises. Gagnez la confiance rapidement et offrez à vos clients un espace de travail en direct pour suivre la portée, les aperçus, les retours et le lancement.",
-    "heroLabel": "Studio web de Virginie du Nord / depuis 2024",
-    "heroTitle": "Des sites web qui font sonner <em>votre téléphone.</em>",
-    "heroSub": "Nous concevons des sites pour petites entreprises qui inspirent confiance rapidement et offrent à vos clients un espace de travail en direct pour suivre la portée, les aperçus, les retours et le lancement.",
+    "metaTitle": "CrecyStudio | Websites and custom web systems",
+    "metaDescription": "Independent web studio building premium websites and custom web systems — from polished marketing sites to client portals, booking flows, and custom dashboards. One workspace from scope to launch.",
+    "heroLabel": "Independent web studio / est. 2024",
+    "heroTitle": "Websites and custom web systems for businesses that need to <em>look bigger than they are.</em>",
+    "heroSub": "From a polished marketing site to a full client portal, booking flow, or custom dashboard — built in one workspace, owned by you.",
     "ctaStart": "Démarrer un projet",
     "ctaProcess": "Voir le processus",
     "proof": {
