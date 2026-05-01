@@ -2,7 +2,7 @@
 
 import { Link } from "@/i18n/navigation";
 import { useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 type Intake = {
   id: string;
@@ -30,6 +30,7 @@ function detectTimezone() {
 }
 
 export default function OpsBookClient({ intake }: { intake: Intake }) {
+  const locale = useLocale();
   const t = useTranslations("opsBook.client");
   const tBestTimes = useTranslations("opsBook.client.bestTimes");
   const tBook = useTranslations("opsBook");
@@ -60,7 +61,7 @@ export default function OpsBookClient({ intake }: { intake: Intake }) {
       const res = await fetch("/api/ops/request-call", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ opsIntakeId: intakeId, bestTimeToCall, preferredTimes, timezone, notes }),
+        body: JSON.stringify({ opsIntakeId: intakeId, bestTimeToCall, preferredTimes, timezone, notes, preferredLocale: locale }),
       });
 
       const json = await res.json();

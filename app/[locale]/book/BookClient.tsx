@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 type Props = { quoteId: string; quoteToken?: string };
 type SuccessState = { callRequestId?: string; nextUrl?: string } | null;
@@ -38,6 +38,7 @@ function readQuoteTokenFromUrl() {
 }
 
 export default function BookClient({ quoteId, quoteToken }: Props) {
+  const locale = useLocale();
   const t = useTranslations("book.form");
   const tSuccess = useTranslations("book.success");
   const tBestTimes = useTranslations("book.form.bestTimes");
@@ -120,6 +121,7 @@ export default function BookClient({ quoteId, quoteToken }: Props) {
           preferredTimes,
           timezone,
           notes,
+          preferredLocale: locale,
         }),
       });
 

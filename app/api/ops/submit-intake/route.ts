@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/server";
 import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { recordServerEvent } from "@/lib/analytics/server";
+import { pickPreferredLocale } from "@/lib/preferredLocale";
 
 export const dynamic = "force-dynamic";
 
@@ -128,6 +129,7 @@ export async function POST(req: NextRequest) {
 
     const shouldAttachToUser = !!authUserId && !!authUserEmail && authUserEmail === email;
     const recommendation = normalizeRecommendation(body.recommendation);
+    const preferredLocale = pickPreferredLocale(body?.preferredLocale ?? body?.locale);
 
     const payload: Record<string, any> = {
       company_name: companyName,
@@ -150,6 +152,7 @@ export async function POST(req: NextRequest) {
         : recommendation.priceRange,
       recommendation_score: recommendation.score || null,
       status: "new",
+      preferred_locale: preferredLocale,
     };
 
     if (shouldAttachToUser) {

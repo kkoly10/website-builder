@@ -4,6 +4,7 @@ import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/serve
 import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { recordServerEvent } from "@/lib/analytics/server";
 import { maybeAttachQuoteToUser, resolveQuoteAccess, sameNormalizedEmail } from "@/lib/accessControl";
+import { pickPreferredLocale } from "@/lib/preferredLocale";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -100,6 +101,8 @@ export async function POST(req: Request) {
       });
     }
 
+    const preferredLocale = pickPreferredLocale(body?.preferredLocale ?? body?.locale);
+
     const { data: callRow, error: crErr } = await supabaseAdmin
       .from("call_requests")
       .insert({
@@ -109,6 +112,7 @@ export async function POST(req: Request) {
         preferred_times: preferredTimes || null,
         timezone: timezone || null,
         status: "requested",
+        preferred_locale: preferredLocale,
       })
       .select("id")
       .single();

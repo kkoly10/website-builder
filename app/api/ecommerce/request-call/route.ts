@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { recordServerEvent } from "@/lib/analytics/server";
 import { maybeAttachEcomIntakeToUser } from "@/lib/accessControl";
+import { pickPreferredLocale } from "@/lib/preferredLocale";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,8 @@ type Payload = {
   preferredTimes?: string;
   timezone?: string;
   notes?: string;
+  preferredLocale?: string;
+  locale?: string;
 };
 
 export async function POST(req: NextRequest) {
@@ -63,6 +66,8 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    const preferredLocale = pickPreferredLocale(body?.preferredLocale ?? body?.locale);
+
     const { data: call, error: callErr } = await supabaseAdmin
       .from("ecom_call_requests")
       .insert({
@@ -72,6 +77,7 @@ export async function POST(req: NextRequest) {
         timezone: timezone || null,
         notes: notes || null,
         status: "requested",
+        preferred_locale: preferredLocale,
       })
       .select("id")
       .single<{ id: string }>();

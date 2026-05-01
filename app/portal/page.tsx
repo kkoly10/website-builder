@@ -1,6 +1,8 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
   claimCustomerRecordsForUser,
@@ -10,6 +12,14 @@ import {
 import ScrollReveal from "@/components/site/ScrollReveal";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("portal.landing");
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+  };
+}
 
 type QuoteRow = {
   id: string;
@@ -51,71 +61,38 @@ type EcomIntakeRow = {
 type OpsCallRow = { id: string; ops_intake_id: string; status: string | null };
 type OpsPieRow = { id: string; ops_intake_id: string; summary: string | null };
 
-function fmtDate(v?: string | null) {
-  if (!v) return "-";
+function fmtDate(v: string | null | undefined, locale: string) {
+  if (!v) return "—";
   const d = new Date(v);
   return Number.isNaN(d.getTime())
     ? v
-    : d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    : d.toLocaleDateString(locale, { month: "short", day: "numeric" });
 }
 
-function money(v?: number | null) {
-  if (v == null || !Number.isFinite(Number(v))) return "-";
-  return new Intl.NumberFormat("en-US", {
+function money(v: number | null | undefined, locale: string) {
+  if (v == null || !Number.isFinite(Number(v))) return "—";
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
   }).format(Number(v));
 }
 
-function pretty(v?: string | null) {
-  if (!v) return "-";
+function prettyFallback(v: string | null | undefined) {
+  if (!v) return "—";
   return v.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
-function estimateLabel(q: QuoteRow) {
-  if (q.estimate_total != null) return money(q.estimate_total);
-  if (q.estimate_low != null || q.estimate_high != null) {
-    return `${money(q.estimate_low)} - ${money(q.estimate_high)}`;
-  }
-  return "Scoped after review";
-}
+type PhaseKey = "kickoffReady" | "inProgress" | "preStart" | "intake";
 
-function quotePhase(q: QuoteRow) {
+function quotePhaseKey(q: QuoteRow): PhaseKey {
   const s = String(q.status || "").toLowerCase();
   const dep = String(q.deposit_status || "").toLowerCase();
-  if (dep === "paid") return "Kickoff ready";
-  if (["active", "closed_won"].includes(s)) return "In progress";
-  if (["proposal", "deposit"].includes(s)) return "Pre-start";
-  return "Intake";
+  if (dep === "paid") return "kickoffReady";
+  if (["active", "closed_won"].includes(s)) return "inProgress";
+  if (["proposal", "deposit"].includes(s)) return "preStart";
+  return "intake";
 }
-
-const LANE_META = {
-  website: {
-    title: "Websites",
-    label: "Website projects",
-    description: "Lead with the public-facing projects that need your review and approvals.",
-    emptyHref: "/build/intro",
-    emptyCta: "Start a quote",
-    sectionClass: "portalHubSectionWebsite",
-  },
-  ops: {
-    title: "Systems",
-    label: "Workflow automation projects",
-    description: "Internal systems and automation work running in your workspace.",
-    emptyHref: "/ops-intake",
-    emptyCta: "Start an audit",
-    sectionClass: "portalHubSectionOps",
-  },
-  ecom: {
-    title: "E-commerce",
-    label: "E-commerce projects",
-    description: "Storefront, checkout, and operations work for online selling.",
-    emptyHref: "/ecommerce/intake",
-    emptyCta: "Start an intake",
-    sectionClass: "portalHubSectionEcom",
-  },
-} as const;
 
 export default async function PortalPage() {
   const supabase = await createSupabaseServerClient();
@@ -126,6 +103,31 @@ export default async function PortalPage() {
 
   await claimCustomerRecordsForUser({ userId: user.id, email: user.email });
   const admin = await isAdminUser({ userId: user.id, email: user.email });
+
+  const t = await getTranslations("portal.landing");
+  const tCommon = await getTranslations("portal.common");
+  const tLanes = await getTranslations("portal.landing.lanes");
+  const tPhases = await getTranslations("portal.landing.phases");
+  const tStatuses = await getTranslations("portal.landing.statuses");
+  // Resolve the active locale via getTranslations' message namespace; fmtDate
+  // and Intl.NumberFormat both need a BCP-47 tag, and the request locale lives
+  // in next-intl's request scope.
+  const { getLocale } = await import("next-intl/server");
+  const locale = await getLocale();
+
+  const labelForStatus = (raw: string | null | undefined) => {
+    const key = String(raw || "").toLowerCase().trim();
+    if (!key) return "—";
+    return tStatuses.has(key) ? tStatuses(key) : prettyFallback(raw);
+  };
+
+  const estimateLabel = (q: QuoteRow) => {
+    if (q.estimate_total != null) return money(q.estimate_total, locale);
+    if (q.estimate_low != null || q.estimate_high != null) {
+      return `${money(q.estimate_low, locale)} – ${money(q.estimate_high, locale)}`;
+    }
+    return tCommon("scopedAfterReview");
+  };
 
   const [{ data: quotes }, { data: opsIntakes }, { data: ecomIntakes }] =
     await Promise.all([
@@ -219,68 +221,90 @@ export default async function PortalPage() {
       <div className="portalStory heroFadeUp">
         <div className="portalStoryKicker">
           <span className="portalStoryKickerDot" />
-          Client portal
+          {t("kicker")}
         </div>
 
         <h1 className="portalStoryHeadline">
-          Welcome back{websiteSummary ? <>, <em>{websiteSummary}</em></> : null}
+          {websiteSummary
+            ? t.rich("welcomeBackName", {
+                name: websiteSummary,
+                em: (chunks) => <em>{chunks}</em>,
+              })
+            : t("welcomeBack")}
         </h1>
 
         <p className="portalStoryBody">
           {totalProjects === 0
-            ? "You do not have any active projects yet. Start a website quote, workflow audit, or e-commerce intake to get going."
-            : `You have ${totalProjects} active project${totalProjects !== 1 ? "s" : ""}. Website work leads this page, with systems and e-commerce grouped underneath.`}
+            ? t("emptyBody")
+            : t("summaryBody", { count: totalProjects })}
         </p>
 
         <div className="portalStoryActions">
           <Link href="/build/intro" className="portalStoryCta">
-            New website quote <span className="portalStoryCtaArrow">-&gt;</span>
+            {t("ctaNewWebsite")} <span className="portalStoryCtaArrow">-&gt;</span>
           </Link>
           <Link href="/ops-intake" className="btn btnGhost productBtnSm">
-            New workflow audit
+            {t("ctaNewOps")}
           </Link>
           <Link href="/ecommerce/intake" className="btn btnGhost productBtnSm">
-            New e-commerce intake
+            {t("ctaNewEcom")}
           </Link>
           {admin ? (
             <Link href="/internal/admin" className="btn btnGhost productBtnSm">
-              Admin HQ
+              {t("ctaAdmin")}
             </Link>
           ) : null}
         </div>
 
         <div className="portalStoryMeta">
-          <span className="portalStoryMetaItem">Signed in as {user.email}</span>
+          <span className="portalStoryMetaItem">
+            {t("signedInAs", { email: user.email ?? "" })}
+          </span>
         </div>
       </div>
 
       <div className="portalHubSummary fadeUp">
         <LaneSummaryCard
           lane="website"
-          title={LANE_META.website.title}
-          description={LANE_META.website.description}
+          title={tLanes("website.title")}
+          description={tLanes("website.description")}
+          countLabel={t("summaryCount", { count: quoteRows.length })}
           count={quoteRows.length}
-          href={quoteRows.length > 0 ? "#website-projects" : LANE_META.website.emptyHref}
-          cta={quoteRows.length > 0 ? "View website projects" : LANE_META.website.emptyCta}
+          href={quoteRows.length > 0 ? "#website-projects" : "/build/intro"}
+          cta={
+            quoteRows.length > 0
+              ? tLanes("website.viewCta")
+              : tLanes("website.emptyCta")
+          }
           primary
         />
 
         <div className="portalHubSummarySecondary">
           <LaneSummaryCard
             lane="ops"
-            title={LANE_META.ops.title}
-            description={LANE_META.ops.description}
+            title={tLanes("ops.title")}
+            description={tLanes("ops.description")}
+            countLabel={t("summaryCount", { count: opsRows.length })}
             count={opsRows.length}
-            href={opsRows.length > 0 ? "#ops-projects" : LANE_META.ops.emptyHref}
-            cta={opsRows.length > 0 ? "View systems" : LANE_META.ops.emptyCta}
+            href={opsRows.length > 0 ? "#ops-projects" : "/ops-intake"}
+            cta={
+              opsRows.length > 0
+                ? tLanes("ops.viewCta")
+                : tLanes("ops.emptyCta")
+            }
           />
           <LaneSummaryCard
             lane="ecom"
-            title={LANE_META.ecom.title}
-            description={LANE_META.ecom.description}
+            title={tLanes("ecom.title")}
+            description={tLanes("ecom.description")}
+            countLabel={t("summaryCount", { count: ecomRows.length })}
             count={ecomRows.length}
-            href={ecomRows.length > 0 ? "#ecom-projects" : LANE_META.ecom.emptyHref}
-            cta={ecomRows.length > 0 ? "View e-commerce" : LANE_META.ecom.emptyCta}
+            href={ecomRows.length > 0 ? "#ecom-projects" : "/ecommerce/intake"}
+            cta={
+              ecomRows.length > 0
+                ? tLanes("ecom.viewCta")
+                : tLanes("ecom.emptyCta")
+            }
           />
         </div>
       </div>
@@ -288,10 +312,10 @@ export default async function PortalPage() {
       {quoteRows.length > 0 ? (
         <section id="website-projects" className="productSection">
           <div
-            className={`portalSectionLabel productSectionLabel ${LANE_META.website.sectionClass}`}
+            className={`portalSectionLabel productSectionLabel portalHubSectionWebsite`}
           >
             <span className="productSectionDot" />
-            {LANE_META.website.label}
+            {tLanes("website.label")}
           </div>
 
           <div className="productList">
@@ -300,13 +324,13 @@ export default async function PortalPage() {
               return (
                 <ProjectListCard
                   key={q.id}
-                  title={lead?.name || "Website project"}
-                  status={<StatusPill status={q.status} />}
+                  title={lead?.name || tCommon("websiteFallbackTitle")}
+                  status={<StatusPill label={labelForStatus(q.status)} />}
                   meta={[
-                    fmtDate(q.created_at),
-                    q.tier_recommended || "Website scope",
+                    fmtDate(q.created_at, locale),
+                    q.tier_recommended || tCommon("websiteScopeFallback"),
                     estimateLabel(q),
-                    quotePhase(q),
+                    tPhases(quotePhaseKey(q)),
                   ]}
                   action={(() => {
                     const portalToken = portalTokenByQuoteId.get(q.id);
@@ -315,11 +339,11 @@ export default async function PortalPage() {
                         href={`/portal/${portalToken}`}
                         className="btn btnPrimary productBtnSm"
                       >
-                        Open workspace -&gt;
+                        {tCommon("openWorkspace")} -&gt;
                       </Link>
                     ) : (
                       <Link href="/build/intro" className="btn btnGhost productBtnSm">
-                        Continue -&gt;
+                        {tCommon("continue")} -&gt;
                       </Link>
                     );
                   })()}
@@ -333,37 +357,40 @@ export default async function PortalPage() {
       {opsRows.length > 0 ? (
         <section id="ops-projects" className="productSection">
           <div
-            className={`portalSectionLabel productSectionLabel ${LANE_META.ops.sectionClass}`}
+            className={`portalSectionLabel productSectionLabel portalHubSectionOps`}
           >
             <span className="productSectionDot" />
-            {LANE_META.ops.label}
+            {tLanes("ops.label")}
           </div>
 
           <div className="productList">
             {opsRows.map((o) => {
               const call = callByOps.get(o.id);
               const pie = pieByOps.get(o.id);
+              const callStatusLabel = call?.status
+                ? labelForStatus(call.status)
+                : tCommon("callNotRequested");
               return (
                 <ProjectListCard
                   key={o.id}
-                  title={o.company_name || "Workflow request"}
-                  status={<StatusPill status={o.status} />}
+                  title={o.company_name || tCommon("opsFallbackTitle")}
+                  status={<StatusPill label={labelForStatus(o.status)} />}
                   meta={[
-                    fmtDate(o.created_at),
-                    o.industry || "Workflow systems",
-                    o.recommendation_tier || "Pending",
-                    `Call: ${pretty(call?.status) || "Not requested"}`,
+                    fmtDate(o.created_at, locale),
+                    o.industry || tCommon("opsScopeFallback"),
+                    o.recommendation_tier || tCommon("tierPending"),
+                    t("callStatusLabel", { status: callStatusLabel }),
                   ]}
                   summary={
                     pie?.summary
                       ? pie.summary.length > 120
-                        ? `${pie.summary.slice(0, 120)}...`
+                        ? `${pie.summary.slice(0, 120)}…`
                         : pie.summary
                       : undefined
                   }
                   action={
                     <Link href={`/portal/ops/${o.id}`} className="btn btnPrimary productBtnSm">
-                      Open workspace -&gt;
+                      {tCommon("openWorkspace")} -&gt;
                     </Link>
                   }
                 />
@@ -376,22 +403,22 @@ export default async function PortalPage() {
       {ecomRows.length > 0 ? (
         <section id="ecom-projects" className="productSection">
           <div
-            className={`portalSectionLabel productSectionLabel ${LANE_META.ecom.sectionClass}`}
+            className={`portalSectionLabel productSectionLabel portalHubSectionEcom`}
           >
             <span className="productSectionDot" />
-            {LANE_META.ecom.label}
+            {tLanes("ecom.label")}
           </div>
 
           <div className="productList">
             {ecomRows.map((e) => (
               <ProjectListCard
                 key={e.id}
-                title={e.business_name || "E-commerce request"}
-                status={<StatusPill status={e.status} />}
-                meta={[fmtDate(e.created_at), e.store_url || "No store URL"]}
+                title={e.business_name || tCommon("ecomFallbackTitle")}
+                status={<StatusPill label={labelForStatus(e.status)} />}
+                meta={[fmtDate(e.created_at, locale), e.store_url || tCommon("noStoreUrl")]}
                 action={
                   <Link href={`/portal/ecommerce/${e.id}`} className="btn btnPrimary productBtnSm">
-                    Open workspace -&gt;
+                    {tCommon("openWorkspace")} -&gt;
                   </Link>
                 }
               />
@@ -402,16 +429,13 @@ export default async function PortalPage() {
 
       {totalProjects === 0 ? (
         <div className="productEmpty">
-          <div className="productEmptyTitle">No projects yet</div>
-          <div className="productEmptyBody">
-            Start a website quote, workflow audit, or e-commerce intake. Your
-            projects will appear here with their own workspaces.
-          </div>
+          <div className="productEmptyTitle">{t("empty.title")}</div>
+          <div className="productEmptyBody">{t("empty.body")}</div>
         </div>
       ) : null}
 
       <div className="portalFooter">
-        Powered by <a href="/">Crecy Studio</a>
+        {tCommon("poweredBy")} <a href="/">Crecy Studio</a>
       </div>
     </div>
   );
@@ -422,6 +446,7 @@ function LaneSummaryCard({
   title,
   description,
   count,
+  countLabel,
   href,
   cta,
   primary = false,
@@ -430,6 +455,7 @@ function LaneSummaryCard({
   title: string;
   description: string;
   count: number;
+  countLabel: string;
   href: string;
   cta: string;
   primary?: boolean;
@@ -443,9 +469,7 @@ function LaneSummaryCard({
     >
       <div className="portalHubCardHead">
         <span className="portalHubEyebrow">{title}</span>
-        <span className="portalHubMeta">
-          {count} project{count !== 1 ? "s" : ""}
-        </span>
+        <span className="portalHubMeta">{countLabel}</span>
       </div>
       <div className="portalHubCount">{count}</div>
       <p className="portalHubBody">{description}</p>
@@ -475,8 +499,8 @@ function ProjectListCard({
           {status}
         </div>
         <div className="productMetaRow">
-          {meta.map((v) => (
-            <span key={v}>{v}</span>
+          {meta.map((v, i) => (
+            <span key={`${v}-${i}`}>{v}</span>
           ))}
         </div>
         {summary ? <p className="productSummary">{summary}</p> : null}
@@ -486,6 +510,6 @@ function ProjectListCard({
   );
 }
 
-function StatusPill({ status }: { status: string | null }) {
-  return <span className="productChip portalHubStatus">{pretty(status)}</span>;
+function StatusPill({ label }: { label: string }) {
+  return <span className="productChip portalHubStatus">{label}</span>;
 }

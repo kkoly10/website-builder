@@ -1466,5 +1466,103 @@
       "uploadFailed": "Échec du téléversement.",
       "messageFailed": "Échec de l'envoi du message."
     }
+  },
+  "portal": {
+    "common": {
+      "openWorkspace": "Ouvrir l'espace de travail",
+      "continue": "Continuer",
+      "poweredBy": "Propulsé par",
+      "noStoreUrl": "Aucune URL de boutique",
+      "websiteFallbackTitle": "Projet de site web",
+      "opsFallbackTitle": "Demande de workflow",
+      "ecomFallbackTitle": "Demande e-commerce",
+      "websiteScopeFallback": "Périmètre site web",
+      "opsScopeFallback": "Systèmes de workflow",
+      "scopedAfterReview": "Cadré après revue",
+      "tierPending": "En attente",
+      "callNotRequested": "Non demandé"
+    },
+    "landing": {
+      "metaTitle": "Espace client | CrecyStudio",
+      "metaDescription": "Gérez vos projets actifs de site web, de systèmes et d'e-commerce au même endroit.",
+      "kicker": "Espace client",
+      "welcomeBack": "Bon retour",
+      "welcomeBackName": "Bon retour, <em>{name}</em>",
+      "emptyBody": "Vous n'avez pas encore de projets actifs. Lancez un devis de site web, un audit de workflow ou un intake e-commerce pour démarrer.",
+      "summaryBody": "{count, plural, one {Vous avez 1 projet actif. Les sites web ouvrent la page, avec les systèmes et l'e-commerce regroupés en dessous.} other {Vous avez # projets actifs. Les sites web ouvrent la page, avec les systèmes et l'e-commerce regroupés en dessous.}}",
+      "ctaNewWebsite": "Nouveau devis de site",
+      "ctaNewOps": "Nouvel audit de workflow",
+      "ctaNewEcom": "Nouvel intake e-commerce",
+      "ctaAdmin": "QG admin",
+      "signedInAs": "Connecté en tant que {email}",
+      "summaryCount": "{count, plural, one {# projet} other {# projets}}",
+      "callStatusLabel": "Appel : {status}",
+      "lanes": {
+        "website": {
+          "title": "Sites web",
+          "label": "Projets de site web",
+          "description": "Commencez par les projets publics qui ont besoin de votre revue et de vos validations.",
+          "viewCta": "Voir les projets de site web",
+          "emptyCta": "Démarrer un devis"
+        },
+        "ops": {
+          "title": "Systèmes",
+          "label": "Projets d'automatisation de workflow",
+          "description": "Systèmes internes et travaux d'automatisation actifs dans votre espace.",
+          "viewCta": "Voir les systèmes",
+          "emptyCta": "Démarrer un audit"
+        },
+        "ecom": {
+          "title": "E-commerce",
+          "label": "Projets e-commerce",
+          "description": "Vitrine, paiement et opérations pour la vente en ligne.",
+          "viewCta": "Voir l'e-commerce",
+          "emptyCta": "Démarrer un intake"
+        }
+      },
+      "phases": {
+        "kickoffReady": "Lancement prêt",
+        "inProgress": "En cours",
+        "preStart": "Avant lancement",
+        "intake": "Intake"
+      },
+      "statuses": {
+        "submitted": "Soumis",
+        "new": "Nouveau",
+        "call_requested": "Appel demandé",
+        "awaiting_call": "En attente d'appel",
+        "active": "Actif",
+        "closed_won": "Gagné",
+        "proposal": "Proposition",
+        "deposit": "Acompte",
+        "paid": "Payé",
+        "requested": "Demandé",
+        "in_progress": "En cours",
+        "completed": "Terminé"
+      },
+      "empty": {
+        "title": "Aucun projet pour l'instant",
+        "body": "Lancez un devis de site web, un audit de workflow ou un intake e-commerce. Vos projets apparaîtront ici avec leurs propres espaces."
+      }
+    },
+    "error": {
+      "kicker": "Erreur de l'espace",
+      "title": "Une erreur est survenue",
+      "body": "Nous n'avons pas pu charger cette page. Essayez d'actualiser ou retournez à votre espace.",
+      "retry": "Réessayer",
+      "back": "Retour à l'espace"
+    },
+    "opsEntry": {
+      "kicker": "Labo systèmes",
+      "title": "Projet ops introuvable",
+      "body": "Ouvrez un projet ops existant depuis votre espace, ou lancez un nouvel intake de workflow.",
+      "ctaBack": "Retour à l'espace",
+      "ctaIntake": "Démarrer un intake de workflow"
+    },
+    "opsLoading": {
+      "kicker": "Labo systèmes",
+      "title": "Chargement de l'espace ops…",
+      "body": "Nous préparons le diagnostic du workflow, la cartographie des systèmes et le plan d'automatisation."
+    }
   }
 }

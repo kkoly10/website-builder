@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { getOpsPricing, PRICING_MESSAGES } from "@/lib/pricing";
 
 // IMPORTANT: All literal values in these arrays are sent verbatim to
@@ -102,6 +102,7 @@ const JOB_VOLUME_OPTIONS = [
 
 export default function OpsIntakeClient() {
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations("opsIntake");
   const tStep = useTranslations("opsIntake.stepTitles");
   const tEnumTeam = useTranslations("opsIntake.enums.teamSize");
@@ -203,6 +204,7 @@ export default function OpsIntakeClient() {
             reasons: recommendation.reasons,
             complexityFlags: recommendation.complexityFlags,
           },
+          preferredLocale: locale,
         }),
       });
 

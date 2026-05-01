@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 type Props = {
   ecomIntakeId: string;
@@ -14,6 +14,7 @@ const BEST_TIME_KEYS = ["Morning", "Afternoon", "Evening", "Flexible"] as const;
 
 export default function EcommerceBookClient({ ecomIntakeId }: Props) {
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations("ecomBook.form");
   const tBestTimes = useTranslations("ecomBook.form.bestTimes");
 
@@ -44,7 +45,7 @@ export default function EcommerceBookClient({ ecomIntakeId }: Props) {
       const res = await fetch("/api/ecommerce/request-call", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ecomIntakeId, bestTime, preferredTimes, timezone, notes }),
+        body: JSON.stringify({ ecomIntakeId, bestTime, preferredTimes, timezone, notes, preferredLocale: locale }),
       });
 
       const data = await res.json();
