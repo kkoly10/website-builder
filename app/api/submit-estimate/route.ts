@@ -24,6 +24,24 @@ function firstString(...vals: any[]) {
   return "";
 }
 
+const PROJECT_TYPE_VALUES = [
+  "website",
+  "web_app",
+  "automation",
+  "ecommerce",
+  "rescue",
+] as const;
+type ProjectType = (typeof PROJECT_TYPE_VALUES)[number];
+
+function parseProjectType(...vals: unknown[]): ProjectType {
+  for (const v of vals) {
+    if (typeof v === "string" && (PROJECT_TYPE_VALUES as readonly string[]).includes(v)) {
+      return v as ProjectType;
+    }
+  }
+  return "website";
+}
+
 function extractLeadEmail(body: LooseObj) {
   const raw = firstString(
     body?.leadEmail,
@@ -163,6 +181,7 @@ export async function POST(req: Request) {
     const leadName = extractLeadName(body) || null;
     const preferredLocale = pickPreferredLocale(body?.preferredLocale ?? body?.locale);
     const pricingTruth = normalizePricing(body);
+    const projectType = parseProjectType(body?.projectType, body?.project_type);
 
     const total = pricingTruth.band.target || extractEstimate(body).total;
     const low = pricingTruth.band.min || extractEstimate(body).low;
@@ -209,6 +228,7 @@ export async function POST(req: Request) {
       lead_id: leadId,
       lead_email: leadEmail,
       owner_email_norm: normalizeEmail(leadEmail),
+      project_type: projectType,
       tier_recommended: pricingTruth.tierLabel,
       quote_json: quoteJson,
       intake_raw:
