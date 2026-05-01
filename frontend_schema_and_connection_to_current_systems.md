@@ -446,8 +446,8 @@ These are direction, not finished copy. Each new service page gets enough to ren
 - **Includes (per plan, escalating):**
   - *Care* — content updates, monthly health check, monitoring, basic support.
   - *Care+* — Care + small features, analytics review, light refinements.
-  - *Care Pro* — Care+ + monthly improvement sprint, priority response.
-- **Pricing:** $250 / $650 / $1,250 per month (operator to confirm before publishing).
+  - *Care Pro* — Care+ + monthly improvement sprint, priority response (4h SLA), monthly 30-min strategy call.
+- **Pricing:** $400 / $850 / $2,250 per month USD (validated against 2026 boutique-market data; full operating rules in `docs/care-plans-operating.md`).
 - **Best for:** post-launch website clients, custom-app clients with ongoing iteration needs, automation clients who'd otherwise route to Systems Partner.
 - **Not a fit:** clients who want unlimited dev hours; clients launching with no defined ongoing need.
 - **Primary CTA:** *Start a care plan* → `/contact?type=care`
