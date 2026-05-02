@@ -46,7 +46,7 @@ const WHAT_WE_BUILD_CARDS = [
   { key: "websites", href: "/websites", event: "cta_home_card_websites" },
   { key: "webApps", href: "/contact?type=web_app", event: "cta_home_card_web_apps" },
   { key: "portals", href: "/contact?type=portal", event: "cta_home_card_portals" },
-  { key: "booking", href: "/build/intro?intent=booking", event: "cta_home_card_booking" },
+  { key: "booking", href: "/build/intro?projectType=website&intent=booking", event: "cta_home_card_booking" },
   { key: "automation", href: "/systems", event: "cta_home_card_automation" },
   { key: "rescue", href: "/contact?type=rescue", event: "cta_home_card_rescue" },
 ] as const;
