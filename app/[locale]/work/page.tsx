@@ -5,8 +5,6 @@ import TrackLink from "@/components/site/TrackLink";
 import ScrollReveal from "@/components/site/ScrollReveal";
 import styles from "./work.module.css";
 
-export const dynamic = "force-dynamic";
-
 export async function generateMetadata({
   params,
 }: {
@@ -23,7 +21,10 @@ export async function generateMetadata({
 }
 
 const VENTURE_KEYS = ["korent", "proveo"] as const;
-const CLIENT_KEYS = ["case1"] as const;
+// Empty until a real client case is live. The placeholder card holds the
+// section so the page reads as "we're publishing cases here, not just
+// studio ventures" without inventing a fictional engagement.
+const CLIENT_KEYS = [] as const;
 
 // External live products. Plain anchors with target=_blank since TrackLink
 // uses next-intl's locale-aware Link, which is for internal routes only.

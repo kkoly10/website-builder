@@ -20,24 +20,48 @@ export async function generateMetadata({
   };
 }
 
+// Maps the ?type=... URL param (English machine value) to the byType.* key
+// in the contact namespace. Lets pages elsewhere (homepage cards, /work CTA)
+// link to /contact?type=X and have this page acknowledge what they came for
+// instead of showing a generic intro.
+const TYPE_TO_KEY: Record<string, "webApp" | "portal" | "rescue"> = {
+  web_app: "webApp",
+  portal: "portal",
+  rescue: "rescue",
+};
+
+type ContactTypeKey = "webApp" | "portal" | "rescue" | null;
+
 export default async function ContactPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { locale } = await params;
+  const sp = searchParams ? await searchParams : {};
+  const rawType = Array.isArray(sp.type) ? sp.type[0] : sp.type;
+  const typeKey: ContactTypeKey =
+    typeof rawType === "string" && TYPE_TO_KEY[rawType] ? TYPE_TO_KEY[rawType] : null;
   setRequestLocale(locale);
-  return <ContactContent />;
+  return <ContactContent typeKey={typeKey} />;
 }
 
-function ContactContent() {
+function ContactContent({ typeKey }: { typeKey: ContactTypeKey }) {
   const t = useTranslations("contact");
+  const kicker = typeKey ? t(`byType.${typeKey}.kicker`) : t("kicker");
+  const title = typeKey ? t(`byType.${typeKey}.title`) : t("title");
+  const description = typeKey ? t(`byType.${typeKey}.description`) : t("description");
+  const mailtoHref = typeKey
+    ? `mailto:hello@crecystudio.com?subject=${encodeURIComponent(kicker)}`
+    : "mailto:hello@crecystudio.com";
 
   return (
     <SupportPageShell
-      kicker={t("kicker")}
-      title={t("title")}
-      description={t("description")}
+      kicker={kicker}
+      title={title}
+      description={description}
       ctas={[
         { href: "/terms", label: t("ctaTerms") },
         { href: "/portal", label: t("ctaPortal"), variant: "ghost", raw: true },
@@ -49,7 +73,7 @@ function ContactContent() {
             <h2 className="h3">{t("primaryHeading")}</h2>
             <p className="pDark">{t("emailLabel")}</p>
             <p className="p">
-              <a href="mailto:hello@crecystudio.com">hello@crecystudio.com</a>
+              <a href={mailtoHref}>hello@crecystudio.com</a>
             </p>
           </div>
         </article>

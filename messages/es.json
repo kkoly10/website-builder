@@ -13,6 +13,7 @@
     "ecommerce": "E-commerce",
     "systems": "Sistemas",
     "process": "Proceso",
+    "work": "Work",
     "pricing": "Precios",
     "faq": "FAQ",
     "clientPortal": "Portal del cliente",
@@ -30,6 +31,7 @@
       "ecommerce": "E-commerce",
       "systems": "Sistemas",
       "process": "Proceso",
+      "work": "Work",
       "pricing": "Precios",
       "faq": "FAQ",
       "contact": "Contacto",
@@ -313,7 +315,24 @@
     "topic1": "Actualizaciones e hitos del proyecto",
     "topic2": "Facturación y facturas",
     "topic3": "Recuperación de acceso al portal",
-    "topic4": "Solicitudes legales / privacidad"
+    "topic4": "Solicitudes legales / privacidad",
+    "byType": {
+      "webApp": {
+        "kicker": "Custom web app inquiry",
+        "title": "Tell us about your custom web app",
+        "description": "Quick context — what problem are you solving, who would use it, and when do you need it live? Email us and we'll route to a free 30-minute strategy call to scope properly."
+      },
+      "portal": {
+        "kicker": "Client portal inquiry",
+        "title": "Tell us about the portal you need",
+        "description": "Who logs in (clients, staff, both), what they do there, and what's the current pain point? Email us and we'll set up a scoping conversation."
+      },
+      "rescue": {
+        "kicker": "Website rescue inquiry",
+        "title": "Tell us what's broken on your current site",
+        "description": "URL, what isn't working, and what you've already tried. Email us and we'll do a quick triage and propose audit or sprint scope."
+      }
+    }
   },
   "privacy": {
     "metaTitle": "Política de privacidad | CrecyStudio",
@@ -1911,9 +1930,9 @@
       "korent": {
         "name": "Korent",
         "tagline": "Operating system for inflatable rental businesses",
-        "summary": "Multi-tenant SaaS with public storefront, operator dashboard, and crew mobile workspace. 19-table Postgres schema with Row-Level Security, Stripe payments, delivery routing, and an AI operator copilot.",
+        "summary": "Multi-tenant SaaS for inflatable rental businesses with three surfaces — public storefront, operator dashboard, and crew mobile workspace. Postgres with Row-Level Security for tenant isolation, delivery-route planning, document generation for rental agreements, and an AI operator copilot.",
         "chip1": "Multi-tenant",
-        "chip2": "Stripe payments",
+        "chip2": "Crew mobile",
         "chip3": "Delivery routing",
         "chip4": "AI copilot",
         "linkLabel": "Visit korent.app"
@@ -1930,17 +1949,8 @@
       }
     },
     "clientLabel": "Client work",
-    "clientIntro": "Recent client engagements. Names anonymized when clients prefer.",
-    "clients": {
-      "case1": {
-        "headline": "Regional service business — 3× inbound leads in 60 days",
-        "summary": "A multi-location service operator was getting traffic but not converting. We rebuilt the homepage around a single goal, added a booking-first conversion path, and instrumented the funnel. Inbound calls and form fills tripled in the first sixty days post-launch.",
-        "chip1": "Marketing site",
-        "chip2": "Booking flow",
-        "chip3": "Conversion focus"
-      }
-    },
-    "comingSoon": "More case studies coming",
+    "clientIntro": "Client case studies will land here as engagements complete. Anonymized first, then replaced with the named version when the client agrees.",
+    "comingSoon": "First case study lands here soon",
     "ctaPrimary": "Start a project",
     "ctaSecondary": "Plan a custom app"
   }
