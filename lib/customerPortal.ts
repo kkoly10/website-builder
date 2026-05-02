@@ -386,7 +386,8 @@ async function loadPortalBundle(portal: AnyObj | null) {
   if (milestonesRes.error) throw milestonesRes.error;
   if (assetsRes.error) throw assetsRes.error;
   if (revisionsRes.error) throw revisionsRes.error;
-  if (messagesRes.error) throw messagesRes.error;
+  // PGRST205 = table not in schema cache (migration pending); treat as empty
+  if (messagesRes.error && (messagesRes.error as any)?.code !== "PGRST205") throw messagesRes.error;
 
   const quote = quoteRes.data ?? null;
 

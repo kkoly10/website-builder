@@ -12,6 +12,7 @@ export default function robots(): MetadataRoute.Robots {
           "/internal/",
           "/api/",
           "/portal/",
+          "/demos/",
           "/editor/",
           "/pie-lab/",
           "/auth/",

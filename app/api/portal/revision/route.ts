@@ -56,6 +56,14 @@ export async function POST(req: NextRequest) {
     if (!rl.ok) return rateLimitResponse(rl.resetAt);
 
     const body = (await req.json()) as RevisionPayload;
+
+    if ((body.token || "").trim() === "demo") {
+      return NextResponse.json(
+        { ok: false, error: "This is a read-only demo workspace. No changes can be saved." },
+        { status: 403 }
+      );
+    }
+
     const resolved = await resolvePortalAccess(body.token || "");
 
     if (!resolved) {

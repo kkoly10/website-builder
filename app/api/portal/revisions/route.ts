@@ -15,6 +15,12 @@ export async function POST(req: Request) {
     if (!token) {
       return NextResponse.json({ ok: false, error: "Missing token" }, { status: 400 });
     }
+    if (token === "demo") {
+      return NextResponse.json(
+        { ok: false, error: "This is a read-only demo workspace. No changes can be saved." },
+        { status: 403 }
+      );
+    }
     if (!requestText) {
       return NextResponse.json(
         { ok: false, error: "Revision request cannot be empty" },

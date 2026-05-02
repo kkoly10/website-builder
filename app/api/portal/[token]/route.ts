@@ -98,6 +98,14 @@ export async function POST(
     if (!rl.ok) return rateLimitResponse(rl.resetAt);
 
     const { token } = await getParams(ctx);
+
+    if (token === "demo") {
+      return NextResponse.json(
+        { ok: false, error: "This is a read-only demo workspace. No changes can be saved." },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const actionType = String(body?.type || "").trim();
     const sensitiveActions = new Set(["agreement_accept", "deposit_notice_sent"]);

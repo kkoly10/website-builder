@@ -112,6 +112,13 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      if (token === "demo") {
+        return NextResponse.json(
+          { ok: false, error: "This is a read-only demo workspace. No changes can be saved." },
+          { status: 403 }
+        );
+      }
+
       if (!safeUrl) {
         return NextResponse.json(
           { ok: false, error: "Asset URL must be a valid http or https link." },
@@ -145,6 +152,13 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           { ok: false, error: "Portal token is required." },
           { status: 400 }
+        );
+      }
+
+      if (token === "demo") {
+        return NextResponse.json(
+          { ok: false, error: "This is a read-only demo workspace. No changes can be saved." },
+          { status: 403 }
         );
       }
 
