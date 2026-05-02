@@ -967,7 +967,7 @@ customWebAppsData.en = {
     "One workspace, start to finish",
   ],
   primaryCta: { label: "Plan a custom app", href: "/custom-app-intake" },
-  secondaryCta: { label: "See the workspace", href: "/demos/portal" },
+  secondaryCta: { label: "See our work", href: "/work" },
   whoItsForTitle: "Best for founders and operators who've outgrown off-the-shelf tools.",
   whoItsFor: [
     "You have a process that lives across spreadsheets, Notion, and a dozen browser tabs.",
@@ -1120,8 +1120,8 @@ clientPortalsData.en = {
     "No per-seat pricing",
     "Works for any service type",
   ],
-  primaryCta: { label: "See the demo", href: "/demos/portal" },
-  secondaryCta: { label: "Start a portal project", href: "/build/intro?projectType=web_app" },
+  primaryCta: { label: "Start a portal project", href: "/custom-app-intake" },
+  secondaryCta: { label: "See our work", href: "/work" },
   whoItsForTitle: "Best for service businesses running multi-week client engagements.",
   whoItsFor: [
     "Your client communication lives in scattered email threads and you can't find anything.",
@@ -1251,8 +1251,8 @@ clientPortalsData.en = {
   finalTitle: "See what your clients would actually use.",
   finalText:
     "The demo is seeded with realistic project data. Browse the milestones, check the messaging, and see if it fits your workflow.",
-  finalPrimaryCta: { label: "See the demo", href: "/demos/portal" },
-  finalSecondaryCta: { label: "Start a portal project", href: "/build/intro?projectType=web_app" },
+  finalPrimaryCta: { label: "Start a portal project", href: "/custom-app-intake" },
+  finalSecondaryCta: { label: "See our work", href: "/work" },
 };
 
 // ─── Website Rescue ──────────────────────────────────────────────────────────
@@ -1417,7 +1417,7 @@ carePlansData.en = {
     "Cancel with 30 days notice",
   ],
   primaryCta: { label: "Start a care plan", href: "/contact?type=care" },
-  secondaryCta: { label: "See the workspace", href: "/demos/portal" },
+  secondaryCta: { label: "See our work", href: "/work" },
   whoItsForTitle: "Best for post-launch clients who want ongoing improvement.",
   whoItsFor: [
     "You launched a site or system with us and want it to keep getting better.",
@@ -1544,7 +1544,7 @@ carePlansData.en = {
   finalText:
     "You can upgrade or downgrade any time. Most clients start on Care or Care+ and move to Care Pro once they see the cadence.",
   finalPrimaryCta: { label: "Start a care plan", href: "/contact?type=care" },
-  finalSecondaryCta: { label: "See the workspace", href: "/demos/portal" },
+  finalSecondaryCta: { label: "See our work", href: "/work" },
 };
 
 export function getServicePageData(locale: string, id: ServiceId): ServiceData {
