@@ -23,8 +23,9 @@ export async function generateMetadata({
 const VENTURE_KEYS = ["korent", "proveo"] as const;
 // Empty until a real client case is live. The placeholder card holds the
 // section so the page reads as "we're publishing cases here, not just
-// studio ventures" without inventing a fictional engagement.
-const CLIENT_KEYS = [] as const;
+// studio ventures" without inventing a fictional engagement. When a real
+// case lands, define keys here and re-introduce the iteration alongside
+// the matching work.clients.* entries in messages/*.json.
 
 // External live products. Plain anchors with target=_blank since TrackLink
 // uses next-intl's locale-aware Link, which is for internal routes only.
@@ -102,17 +103,6 @@ function WorkContent() {
           </div>
 
           <div className={styles.grid}>
-            {CLIENT_KEYS.map((key) => (
-              <article key={key} className={styles.card}>
-                <h3 className={styles.clientHeadline}>{t(`clients.${key}.headline`)}</h3>
-                <p className={styles.summary}>{t(`clients.${key}.summary`)}</p>
-                <div className={styles.chips}>
-                  <span className={styles.chip}>{t(`clients.${key}.chip1`)}</span>
-                  <span className={styles.chip}>{t(`clients.${key}.chip2`)}</span>
-                  <span className={styles.chip}>{t(`clients.${key}.chip3`)}</span>
-                </div>
-              </article>
-            ))}
             <article className={`${styles.card} ${styles.cardPlaceholder}`}>
               <p className={styles.placeholder}>{t("comingSoon")}</p>
             </article>
