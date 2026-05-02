@@ -28,8 +28,6 @@ export async function generateMetadata({
   };
 }
 
-const TIER_KEYS = ["starter", "growth", "premium"] as const;
-const FEATURE_COUNT = 5;
 const JOURNEY_KEYS = [
   ["intake", "done"],
   ["agreement", "done"],
@@ -77,18 +75,6 @@ function HomeContent() {
     { phase: t("how.step3Phase"), title: t("how.step3Title"), body: t("how.step3Body") },
   ];
 
-  const tiers = TIER_KEYS.map((key) => ({
-    key,
-    name: t(`tiers.${key}.name`),
-    price: t(`tiers.${key}.price`),
-    desc: t(`tiers.${key}.desc`),
-    features: Array.from(
-      { length: FEATURE_COUNT },
-      (_, i) => t(`tiers.${key}.f${i + 1}`)
-    ),
-    featured: key === "growth",
-  }));
-
   return (
     <main className={styles.page}>
       <ScrollReveal />
@@ -105,10 +91,11 @@ function HomeContent() {
             <TrackLink href="/build/intro" event="cta_home_hero_quote" className="btn btnPrimary">
               {t("ctaStart")} <span className="btnArrow">-&gt;</span>
             </TrackLink>
-            <TrackLink href="#what-we-build" event="cta_home_hero_what_we_build" className={styles.heroSecondaryCta}>
+            <TrackLink href="/work" event="cta_home_hero_work" className={styles.heroSecondaryCta}>
               {t("ctaProcess")}
             </TrackLink>
           </div>
+          <p className={styles.heroScarcity}>{t("ctaScarcity")}</p>
         </div>
       </header>
 
@@ -143,6 +130,57 @@ function HomeContent() {
               </TrackLink>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className={`${styles.ventures} fadeUp`}>
+        <div className="container">
+          <div className={styles.venturesHead}>
+            <p className={styles.venturesLabel}>{t("ventures.label")}</p>
+            <h2 className={styles.venturesTitle}>{t("ventures.title")}</h2>
+            <p className={styles.venturesIntro}>{t("ventures.intro")}</p>
+          </div>
+          <div className={styles.venturesGrid}>
+            <article className={styles.ventureCard}>
+              <p className={styles.ventureName}>{t("ventures.korent.name")}</p>
+              <p className={styles.ventureTagline}>{t("ventures.korent.tagline")}</p>
+              <p className={styles.ventureDetail}>{t("ventures.korent.detail")}</p>
+              <div className={styles.ventureChips}>
+                <span className={styles.ventureChip}>{t("ventures.korent.chip1")}</span>
+                <span className={styles.ventureChip}>{t("ventures.korent.chip2")}</span>
+              </div>
+              <a
+                href={t("ventures.korent.url")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.ventureLink}
+              >
+                {t("ventures.korent.link")} -&gt;
+              </a>
+            </article>
+            <article className={styles.ventureCard}>
+              <p className={styles.ventureName}>{t("ventures.proveo.name")}</p>
+              <p className={styles.ventureTagline}>{t("ventures.proveo.tagline")}</p>
+              <p className={styles.ventureDetail}>{t("ventures.proveo.detail")}</p>
+              <div className={styles.ventureChips}>
+                <span className={styles.ventureChip}>{t("ventures.proveo.chip1")}</span>
+                <span className={styles.ventureChip}>{t("ventures.proveo.chip2")}</span>
+              </div>
+              <a
+                href={t("ventures.proveo.url")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.ventureLink}
+              >
+                {t("ventures.proveo.link")} -&gt;
+              </a>
+            </article>
+          </div>
+          <p className={styles.venturesCta}>
+            <TrackLink href="/work" event="cta_home_ventures_work" className={styles.venturesCtaLink}>
+              {t("ventures.cta")} -&gt;
+            </TrackLink>
+          </p>
         </div>
       </section>
 
@@ -233,52 +271,25 @@ function HomeContent() {
         </div>
       </section>
 
-      <section className={`${styles.pricing} fadeUp`}>
-        <div className="container">
-          <div className={styles.pricingHead}>
-            <div>
-              <p className={styles.sectionLabel}>{t("tiers.label")}</p>
-              <h2 className={styles.sectionTitle}>{t("tiers.title")}</h2>
-            </div>
-            <p className={styles.pricingLede}>{t("tiers.lede")}</p>
-          </div>
-
-          <div className={styles.tiers}>
-            {tiers.map((tier) => (
-              <article
-                key={tier.key}
-                className={`${styles.tier} ${tier.featured ? styles.tierFeatured : ""}`}
-              >
-                <p className={styles.tierName}>{tier.name}</p>
-                <p className={styles.tierPrice}>{tier.price}</p>
-                <p className={styles.tierDesc}>{tier.desc}</p>
-                <ul>
-                  {tier.features.map((feature) => (
-                    <li key={feature}>{feature}</li>
-                  ))}
-                </ul>
-                <TrackLink
-                  href="/build/intro"
-                  event="cta_home_pricing_quote"
-                  className={styles.tierCta}
-                >
-                  {t("tiers.ctaQuote")}
-                </TrackLink>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section className={`${styles.closing} fadeUp`}>
         <div className="container">
           <p className={styles.sectionLabel}>{t("closing.label")}</p>
           <h2>
             {t.rich("closing.title", { em: (chunks) => <em>{chunks}</em> })}
           </h2>
-          <TrackLink href="/build/intro" event="cta_home_closing_quote" className="btn btnPrimary">
-            {t("closing.cta")} <span className="btnArrow">-&gt;</span>
-          </TrackLink>
+          <div className={styles.closingActions}>
+            <TrackLink href="/contact" event="cta_home_closing_contact" className="btn btnPrimary">
+              {t("closing.cta")} <span className="btnArrow">-&gt;</span>
+            </TrackLink>
+            <TrackLink href="/build/intro" event="cta_home_closing_estimate" className="btn">
+              {t("closing.ctaSecondary")} <span className="btnArrow">-&gt;</span>
+            </TrackLink>
+          </div>
+          <p className={styles.closingPricingLink}>
+            <TrackLink href="/pricing" event="cta_home_closing_pricing">
+              {t("closing.ctaPricing")}
+            </TrackLink>
+          </p>
         </div>
       </section>
 
