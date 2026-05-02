@@ -42,11 +42,11 @@ const JOURNEY_KEYS = [
 // website-rescue) fall back to /contact?type=... until Phase 2 ships them.
 const WHAT_WE_BUILD_CARDS = [
   { key: "websites", href: "/websites", event: "cta_home_card_websites" },
-  { key: "webApps", href: "/contact?type=web_app", event: "cta_home_card_web_apps" },
-  { key: "portals", href: "/contact?type=portal", event: "cta_home_card_portals" },
+  { key: "webApps", href: "/custom-web-apps", event: "cta_home_card_web_apps" },
+  { key: "portals", href: "/client-portals", event: "cta_home_card_portals" },
   { key: "booking", href: "/build/intro?projectType=website&intent=booking", event: "cta_home_card_booking" },
   { key: "automation", href: "/systems", event: "cta_home_card_automation" },
-  { key: "rescue", href: "/contact?type=rescue", event: "cta_home_card_rescue" },
+  { key: "rescue", href: "/website-rescue", event: "cta_home_card_rescue" },
 ] as const;
 
 export default async function Home({

@@ -36,7 +36,8 @@
       "faq": "FAQ",
       "contact": "Contact",
       "privacy": "Confidentialité",
-      "terms": "Conditions"
+      "terms": "Conditions",
+      "carePlans": "Care plans"
     }
   },
   "home": {
@@ -561,7 +562,11 @@
   "crossLinks": {
     "websites": "Axe Sites web",
     "ecommerce": "Axe E-commerce",
-    "systems": "Axe Systèmes"
+    "systems": "Axe Systèmes",
+    "customWebApps": "Custom web apps",
+    "clientPortals": "Client portals",
+    "websiteRescue": "Website rescue",
+    "carePlans": "Care plans"
   },
   "servicesMeta": {
     "websites": {
@@ -575,6 +580,22 @@
     "ecommerce": {
       "metaTitle": "Systèmes e-commerce | Vitrine, paiement et flux opérationnel",
       "metaDescription": "Systèmes e-commerce pour les marques qui ont besoin d'une meilleure vitrine, d'un paiement plus fluide et d'opérations post-achat plus propres."
+    },
+    "customWebApps": {
+      "metaTitle": "Custom Web Apps | Dashboards, Portals, and Internal Tools",
+      "metaDescription": "Custom web applications for businesses that need more than a website — dashboards, client portals, internal tools, and MVPs built by a senior practitioner."
+    },
+    "clientPortals": {
+      "metaTitle": "Client Portals | Branded Workspaces Your Clients Actually Use",
+      "metaDescription": "Private project workspaces with milestones, messaging, file sharing, invoicing, and agreements — owned by you, branded to your business."
+    },
+    "websiteRescue": {
+      "metaTitle": "Website Rescue | Fix What's Broken Without a Full Rebuild",
+      "metaDescription": "Website audit and sprint service for small businesses with a site that's slow, broken on mobile, or not converting — fixed in 1–2 weeks."
+    },
+    "carePlans": {
+      "metaTitle": "Care Plans | Monthly Website and System Maintenance",
+      "metaDescription": "Three monthly care plans that keep your site or custom system healthy — content updates, monitoring, small features, and improvement sprints."
     }
   },
   "auth": {
