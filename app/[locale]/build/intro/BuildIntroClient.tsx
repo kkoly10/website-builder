@@ -17,10 +17,8 @@ const PROJECT_TYPE_KEYS: ProjectType[] = [
   "rescue",
 ];
 
-// Phase 1: routes that don't yet exist (custom-app intake, dedicated rescue
-// intake) fall back to /contact?type=... until Phase 2 ships them.
 const PROJECT_TYPE_ROUTES: Record<Exclude<ProjectType, "website">, string> = {
-  web_app: "/contact?type=web_app",
+  web_app: "/custom-app-intake",
   automation: "/ops-intake",
   ecommerce: "/ecommerce/intake",
   rescue: "/contact?type=rescue",
