@@ -212,7 +212,7 @@
 
 .pricingNav {
   position: sticky;
-  top: 0;
+  top: 78px;
   z-index: 20;
   background: var(--paper);
   border-bottom: 1px solid var(--rule);
@@ -293,5 +293,9 @@
 
   .darkCard {
     min-height: auto;
+  }
+
+  .pricingNav {
+    top: 70px;
   }
 }
