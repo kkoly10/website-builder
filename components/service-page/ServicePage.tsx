@@ -19,6 +19,7 @@ type PricingCard = {
   label: string;
   value: string;
   detail: string;
+  meta?: string;
 };
 
 type IncludeGroup = {
@@ -257,7 +258,7 @@ export default function ServicePage({
                 <p className={styles.pricingValue}>{card.value}</p>
                 <p className={styles.pricingDetail}>{card.detail}</p>
                 <div className={styles.pricingMeta}>
-                  {index === 1 ? t("mostCommon") : t("scopedToProject")}
+                  {card.meta ?? (index === 1 ? t("mostCommon") : t("scopedToProject"))}
                 </div>
               </article>
             ))}

@@ -1020,18 +1020,28 @@ customWebAppsData.en = {
       value: "$2,500–$5,000",
       detail:
         "Paid scoping engagement before MVP commit. Results in a scope document, milestone plan, and budget bands.",
+      meta: "Optional for clear scopes",
     },
     {
       label: "MVP",
       value: "$18,000–$35,000",
       detail:
         "First working version of a focused product. Validated scope, core workflows, one user role, deployment.",
+      meta: "Most common starting point",
     },
     {
       label: "Standard build",
       value: "$35,000–$75,000",
       detail:
         "Full product with multiple user roles, admin panel, integrations, payments, documented handoff.",
+      meta: "Scoped to your project",
+    },
+    {
+      label: "Custom scope",
+      value: "$75,000+",
+      detail:
+        "Multi-tenant SaaS, complex integrations, AI features, white-label systems, enterprise requirements.",
+      meta: "Strategy call required",
     },
   ],
   processTitle: "How a custom app gets built.",
@@ -1166,21 +1176,24 @@ clientPortalsData.en = {
   pricingCards: [
     {
       label: "Portal add-on",
-      value: "From $3,500",
+      value: "Scoped to project",
       detail:
         "Added to a Growth or Premium website build. Client login, milestones, messaging, file sharing.",
+      meta: "Most common starting point",
     },
     {
       label: "Standalone system",
       value: "From $12,000",
       detail:
         "Portal as its own product for service businesses. Multi-client, branded workspace, invoicing.",
+      meta: "Scoped to your project",
     },
     {
       label: "Custom build",
       value: "Scoped to project",
       detail:
         "Multi-tenant, custom integrations, white-label. Requires a strategy call to scope.",
+      meta: "Strategy call required",
     },
   ],
   processTitle: "How a portal gets built.",
@@ -1311,18 +1324,21 @@ websiteRescueData.en = {
       value: "$1,000–$1,500",
       detail:
         "Written report: speed, mobile, SEO, conversion, trust signals. Prioritized fix list ranked by impact and effort.",
+      meta: "Fixed-range deliverable",
     },
     {
       label: "Sprint",
       value: "$3,500–$6,500",
       detail:
         "1–2 week implementation of the highest-impact changes from the audit. Full scope agreed before work starts.",
+      meta: "Most common starting point",
     },
     {
       label: "Audit + Sprint",
       value: "From $4,500",
       detail:
         "Both phases scoped together. One kickoff, one scope agreement — best if you already know the site needs work.",
+      meta: "Best value",
     },
   ],
   processTitle: "How a rescue works.",
@@ -1454,18 +1470,21 @@ carePlansData.en = {
       value: "$400/mo",
       detail:
         "Content updates, monthly health check, uptime monitoring, basic support. 24-hour response.",
+      meta: "Fixed monthly",
     },
     {
       label: "Care+",
       value: "$850/mo",
       detail:
         "Everything in Care plus small feature additions, analytics review, and light refinements. 12-hour response.",
+      meta: "Most popular plan",
     },
     {
       label: "Care Pro",
       value: "$2,250/mo",
       detail:
         "Monthly improvement sprint, 30-min strategy call, and 4-hour priority response SLA.",
+      meta: "Fixed monthly",
     },
   ],
   processTitle: "How care plans work.",
