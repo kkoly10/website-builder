@@ -65,8 +65,16 @@ type MessageSummary = {
   lastRole: "client" | "studio" | "internal" | null;
 };
 
+export type ProjectType =
+  | "website"
+  | "web_app"
+  | "automation"
+  | "ecommerce"
+  | "rescue";
+
 export type AdminProjectData = {
   quoteId: string;
+  projectType: ProjectType;
   publicToken: string;
   workspaceUrl: string;
   createdAt: string;
@@ -163,10 +171,30 @@ function summarizeMessages(messages: PortalMessage[]): MessageSummary {
   };
 }
 
-function toAdminProjectData(workspace: any, debug: Record<string, any>): AdminProjectData {
+const VALID_PROJECT_TYPES: ProjectType[] = [
+  "website",
+  "web_app",
+  "automation",
+  "ecommerce",
+  "rescue",
+];
+
+function coerceProjectType(value: unknown): ProjectType {
+  if (typeof value === "string" && (VALID_PROJECT_TYPES as string[]).includes(value)) {
+    return value as ProjectType;
+  }
+  return "website";
+}
+
+function toAdminProjectData(
+  workspace: any,
+  debug: Record<string, any>,
+  projectType: ProjectType,
+): AdminProjectData {
   const messages: PortalMessage[] = Array.isArray(workspace.messages) ? workspace.messages : [];
   return {
     quoteId: workspace.quote.id,
+    projectType,
     publicToken: workspace.quote.publicToken,
     workspaceUrl: workspace.quote.publicToken ? `/portal/${workspace.quote.publicToken}` : "",
     createdAt: workspace.quote.createdAt,
@@ -257,7 +285,11 @@ function toAdminProjectData(workspace: any, debug: Record<string, any>): AdminPr
 export async function getAdminProjectDataByQuoteId(quoteId: string) {
   const [workspaceRes, quoteRes, invoices, activityFeed] = await Promise.all([
     getCustomerPortalViewByQuoteId(quoteId, { includeInternal: true }),
-    supabaseAdmin.from("quotes").select("id, debug").eq("id", quoteId).maybeSingle(),
+    supabaseAdmin
+      .from("quotes")
+      .select("id, debug, project_type")
+      .eq("id", quoteId)
+      .maybeSingle(),
     listProjectInvoicesByQuoteId(quoteId),
     listProjectActivityByQuoteId(quoteId, { limit: 80 }),
   ]);
@@ -268,7 +300,8 @@ export async function getAdminProjectDataByQuoteId(quoteId: string) {
 
   return toAdminProjectData(
     { ...workspaceRes.data, invoices, activityFeed },
-    safeObj(quoteRes.data.debug)
+    safeObj(quoteRes.data.debug),
+    coerceProjectType((quoteRes.data as { project_type?: unknown }).project_type),
   );
 }
 

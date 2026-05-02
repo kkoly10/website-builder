@@ -5,6 +5,17 @@ import { useEffect, useMemo, useState } from "react";
 import type { AdminProjectData } from "@/lib/adminProjectData";
 import ProjectControlClient from "./[id]/ProjectControlClient";
 
+type LaneFilter = "all" | "website" | "web_app" | "automation" | "ecommerce" | "rescue";
+
+const LANE_FILTER_OPTIONS: { value: LaneFilter; label: string }[] = [
+  { value: "all", label: "All lanes" },
+  { value: "website", label: "Websites" },
+  { value: "web_app", label: "Web apps" },
+  { value: "automation", label: "Automation" },
+  { value: "ecommerce", label: "E-commerce" },
+  { value: "rescue", label: "Rescue" },
+];
+
 function money(value: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -128,6 +139,7 @@ export default function AdminPipelineClient({
   const [selectedId, setSelectedId] = useState(initialProjects[0]?.quoteId ?? "");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("urgency");
+  const [laneFilter, setLaneFilter] = useState<LaneFilter>("all");
 
   useEffect(() => {
     let cancelled = false;
@@ -174,6 +186,7 @@ export default function AdminPipelineClient({
   const filteredProjects = useMemo(() => {
     const query = search.trim().toLowerCase();
     const next = projects.filter((project) => {
+      if (laneFilter !== "all" && project.projectType !== laneFilter) return false;
       if (!query) return true;
       return (
         project.leadName.toLowerCase().includes(query) ||
@@ -192,7 +205,7 @@ export default function AdminPipelineClient({
     });
 
     return next;
-  }, [projects, search, sort]);
+  }, [projects, search, sort, laneFilter]);
 
   useEffect(() => {
     if (!filteredProjects.some((project) => project.quoteId === selectedId)) {
@@ -248,8 +261,21 @@ export default function AdminPipelineClient({
               />
               <select
                 className="select"
+                value={laneFilter}
+                onChange={(event) => setLaneFilter(event.target.value as LaneFilter)}
+                aria-label="Filter by lane"
+              >
+                {LANE_FILTER_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                className="select"
                 value={sort}
                 onChange={(event) => setSort(event.target.value)}
+                aria-label="Sort order"
               >
                 <option value="urgency">Sort by urgency</option>
                 <option value="value">Sort by value</option>
