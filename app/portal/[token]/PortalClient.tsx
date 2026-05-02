@@ -788,6 +788,47 @@ export default function PortalClient({
      ═══════════════════════════════════ */
 
   return (
+    <>
+    {token === "demo" && (
+      <div style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 100,
+        background: "var(--ink)",
+        borderBottom: "1px solid color-mix(in srgb, var(--paper) 15%, transparent)",
+        padding: "10px 0",
+      }}>
+        <div className="container" style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "1.2rem",
+          flexWrap: "wrap",
+        }}>
+          <span style={{
+            fontSize: 11,
+            fontFamily: "var(--font-mono)",
+            color: "color-mix(in srgb, var(--paper) 55%, transparent)",
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+          }}>
+            Demo workspace — read-only · data resets periodically
+          </span>
+          <a
+            href="/build/intro"
+            style={{
+              fontSize: 11,
+              fontFamily: "var(--font-mono)",
+              color: "var(--accent-soft, #e06c5a)",
+              textDecoration: "none",
+              letterSpacing: "0.03em",
+            }}
+          >
+            Start a real project →
+          </a>
+        </div>
+      </div>
+    )}
     <div className="container portalShell">
 
       {/* ── Story Hero ── */}
@@ -1767,5 +1808,6 @@ export default function PortalClient({
         {tFooter("poweredBy")} <a href="/">Crecy Studio</a>{tFooter("tagline")}
       </div>
     </div>
+    </>
   );
 }

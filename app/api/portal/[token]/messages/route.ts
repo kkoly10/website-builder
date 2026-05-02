@@ -169,6 +169,14 @@ export async function POST(
     if (!rl.ok) return rateLimitResponse(rl.resetAt);
 
     const { token } = await getParams(ctx);
+
+    if (token === "demo") {
+      return NextResponse.json(
+        { ok: false, error: "This is a read-only demo workspace. No changes can be saved." },
+        { status: 403 }
+      );
+    }
+
     const bundle = await getCustomerPortalBundleByToken(token);
 
     if (!bundle?.portal?.id) {
