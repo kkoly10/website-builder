@@ -3,7 +3,7 @@
 }
 
 .hero {
-  padding: 6rem 0 4rem;
+  padding: 4rem 0 3rem;
 }
 
 .heroLabel,
@@ -47,9 +47,9 @@
 
 .heroTitle {
   margin-top: 1rem;
-  max-width: 12ch;
-  font-size: clamp(3rem, 8vw, 7rem);
-  line-height: 0.92;
+  max-width: 18ch;
+  font-size: clamp(2.4rem, 5.5vw, 4.8rem);
+  line-height: 0.97;
 }
 
 .heroTitle span {
@@ -80,6 +80,14 @@
   flex-wrap: wrap;
   gap: 0.9rem;
   margin-top: 2rem;
+}
+
+.heroScarcity {
+  margin-top: 0.9rem;
+  font: 500 11px/1.3 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .heroSecondaryCta {
@@ -461,10 +469,6 @@
 }
 
 @media (max-width: 980px) {
-  .hero {
-    padding: 4.2rem 0 3rem;
-  }
-
   .proofGrid,
   .portalCards,
   .howSteps,
@@ -473,7 +477,8 @@
   .lanes,
   .diffHead,
   .pricingHead,
-  .journey {
+  .journey,
+  .venturesGrid {
     grid-template-columns: 1fr;
   }
 
@@ -577,4 +582,154 @@
   .whatWeBuildGrid {
     grid-template-columns: 1fr;
   }
+}
+
+.ventures {
+  padding: 4.8rem 0;
+  background: var(--ink);
+  border-bottom: 1px solid color-mix(in srgb, var(--paper) 10%, transparent);
+}
+
+.venturesHead {
+  display: grid;
+  gap: 0.7rem;
+  margin-bottom: 2rem;
+  max-width: 60ch;
+}
+
+.venturesLabel {
+  margin: 0;
+  font: 500 11px/1.3 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--paper) 52%, transparent);
+}
+
+.venturesLabel::before {
+  content: "/ ";
+  color: var(--accent-soft);
+}
+
+.venturesTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  letter-spacing: -0.04em;
+  font-size: clamp(1.8rem, 3.5vw, 3rem);
+  line-height: 1.05;
+  color: var(--paper);
+}
+
+.venturesIntro {
+  margin: 0;
+  color: color-mix(in srgb, var(--paper) 68%, var(--muted));
+  line-height: 1.75;
+  font-size: 0.95rem;
+}
+
+.venturesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.ventureCard {
+  padding: 1.6rem;
+  border: 1px solid color-mix(in srgb, var(--paper) 12%, transparent);
+  background: color-mix(in srgb, var(--ink) 82%, var(--paper) 18%);
+  display: grid;
+  gap: 0.7rem;
+  align-content: start;
+}
+
+.ventureName {
+  margin: 0;
+  font-family: var(--font-display);
+  letter-spacing: -0.03em;
+  font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+  line-height: 1.1;
+  color: var(--paper);
+}
+
+.ventureTagline {
+  margin: 0;
+  font: 500 11px/1.3 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--paper) 52%, transparent);
+}
+
+.ventureDetail {
+  margin: 0;
+  color: color-mix(in srgb, var(--paper) 72%, var(--muted));
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+
+.ventureChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ventureChip {
+  padding: 0.25rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--paper) 18%, transparent);
+  font: 500 10px/1.3 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--paper) 62%, transparent);
+}
+
+.ventureLink {
+  font: 500 11px/1.3 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-soft);
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.ventureLink:hover {
+  opacity: 0.75;
+}
+
+.venturesCta {
+  margin: 2rem 0 0;
+}
+
+.venturesCtaLink {
+  font: 500 11px/1.3 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--paper) 62%, transparent);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.venturesCtaLink:hover {
+  color: var(--paper);
+}
+
+.closingActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 2rem;
+}
+
+.closingPricingLink {
+  margin-top: 1.2rem;
+  font: 500 11px/1.3 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.closingPricingLink a {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.closingPricingLink a:hover {
+  color: var(--ink);
 }
