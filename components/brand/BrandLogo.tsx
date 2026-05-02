@@ -11,15 +11,16 @@ export default function BrandLogo({
 }: BrandLogoProps) {
   return (
     <Link href={href} className="brandLogo" aria-label="Crecy Studio home">
-      <span className="brandLogoMark" aria-hidden="true" />
-      <span className="brandLogoText">
-        <span className="brandLogoTitle">
-          crecy<span className="brandLogoDot">.</span>studio
-        </span>
-        {showTag ? (
-          <span className="brandLogoSub">Websites / automation / systems</span>
-        ) : null}
-      </span>
+      <img
+        src="/brand/crecy-d1-horizontal-dark.svg"
+        alt="Crecy Studio"
+        height={28}
+        width={157}
+        style={{ display: "block" }}
+      />
+      {showTag ? (
+        <span className="brandLogoSub">Websites / automation / systems</span>
+      ) : null}
     </Link>
   );
 }

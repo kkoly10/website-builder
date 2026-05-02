@@ -125,7 +125,35 @@ async function main() {
     { id: "00000000-0000-0000-0002-000000000005", portal_project_id: DEMO_PORTAL_ID, title: "Launch & handoff", status: "todo", sort_order: 50 },
   ], "id");
 
-  // 5. Assets
+  // 5. Messages
+  await upsert("customer_portal_messages", [
+    {
+      id: "00000000-0000-0000-0004-000000000001",
+      portal_project_id: DEMO_PORTAL_ID,
+      sender_role: "studio",
+      sender_name: "CrecyStudio",
+      body: "Hey Sarah 👋 Scope is locked and we're off. You'll get a first-draft preview link by end of week.",
+      created_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "00000000-0000-0000-0004-000000000002",
+      portal_project_id: DEMO_PORTAL_ID,
+      sender_role: "client",
+      sender_name: "Sarah Chen",
+      body: "Great, looking forward to it! One thing — can we make sure the contact form goes to both me and my assistant?",
+      created_at: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "00000000-0000-0000-0004-000000000003",
+      portal_project_id: DEMO_PORTAL_ID,
+      sender_role: "studio",
+      sender_name: "CrecyStudio",
+      body: "Noted — we'll wire the form to route to both addresses. First draft is live in the preview below. Main things left: hero image swap and the About page copy once you send it over.",
+      created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+  ], "id");
+
+  // 6. Assets
   await upsert("customer_portal_assets", [
     {
       id: "00000000-0000-0000-0003-000000000001",
