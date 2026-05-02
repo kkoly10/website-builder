@@ -1248,9 +1248,9 @@ clientPortalsData.en = {
     "B2C businesses where customers never need to log in",
   ],
   crossLinks: CROSS_LINKS.client_portals,
-  finalTitle: "See what your clients would actually use.",
+  finalTitle: "Give your clients a workspace they'll actually use.",
   finalText:
-    "The demo is seeded with realistic project data. Browse the milestones, check the messaging, and see if it fits your workflow.",
+    "Tell us about your workflow and we'll scope the right portal — add-on to an existing site or a standalone system. Thirty-minute call, no commitment.",
   finalPrimaryCta: { label: "Start a portal project", href: "/custom-app-intake" },
   finalSecondaryCta: { label: "See our work", href: "/work" },
 };

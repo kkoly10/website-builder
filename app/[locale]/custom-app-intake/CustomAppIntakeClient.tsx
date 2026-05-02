@@ -119,6 +119,7 @@ export default function CustomAppIntakeClient() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("customAppIntake");
+  const tStep = useTranslations("customAppIntake.stepTitles");
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -156,17 +157,6 @@ export default function CustomAppIntakeClient() {
     setError("");
 
     try {
-      trackEvent({
-        event: "custom_app_intake_submitted",
-        metadata: {
-          stage: form.stage,
-          scope: form.scopePreference,
-          timeline: form.timeline,
-          targetUsers: form.targetUsers,
-          userScale: form.userScale,
-        },
-      });
-
       const res = await fetch("/api/submit-estimate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -191,6 +181,16 @@ export default function CustomAppIntakeClient() {
 
       if (!res.ok) throw new Error(t("validation.submitError"));
       const data = await res.json();
+      trackEvent({
+        event: "custom_app_intake_submitted",
+        metadata: {
+          stage: form.stage,
+          scope: form.scopePreference,
+          timeline: form.timeline,
+          targetUsers: form.targetUsers,
+          userScale: form.userScale,
+        },
+      });
       const quoteId = data?.quoteId;
       if (quoteId) {
         router.push(`/book?quoteId=${encodeURIComponent(quoteId)}`);
@@ -214,7 +214,7 @@ export default function CustomAppIntakeClient() {
         {t("title")}
       </h1>
       <p className="p" style={{ marginBottom: 24 }}>
-        {t("stepCounter", { current: step, total: TOTAL_STEPS, stepTitle: t(`stepTitles.${step}`) })}
+        {t("stepCounter", { current: step, total: TOTAL_STEPS, stepTitle: tStep(String(step)) })}
       </p>
 
       {/* Progress bar */}
