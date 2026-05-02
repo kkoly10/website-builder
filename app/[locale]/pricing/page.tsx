@@ -22,12 +22,6 @@ export async function generateMetadata({
   };
 }
 
-const TIER_KEYS = ["starter", "growth", "premium"] as const;
-const OTHER_KEYS = [
-  { id: "ecommerce", anchor: "ecommerce" },
-  { id: "systems", anchor: "systems" },
-] as const;
-
 export default async function PricingPage({
   params,
 }: {
@@ -41,18 +35,11 @@ export default async function PricingPage({
 function PricingContent() {
   const t = useTranslations("pricing");
 
-  const tiers = TIER_KEYS.map((key) => ({
-    key,
-    label: t(`${key}.label`),
-    value: t(`${key}.value`),
-    detail: t(`${key}.detail`),
-    meta: t(`${key}.meta`),
-  }));
-
   return (
     <main className={styles.page}>
       <ScrollReveal />
 
+      {/* Hero */}
       <section className={`${styles.hero} heroFadeUp`}>
         <div className="container">
           <div className={styles.heroInner}>
@@ -63,54 +50,287 @@ function PricingContent() {
         </div>
       </section>
 
-      <section className={`${styles.section} ${styles.pricingWrap}`}>
+      {/* Anchor nav */}
+      <nav className={styles.pricingNav} aria-label={t("nav.aria")}>
+        <div className="container">
+          <div className={styles.pricingNavInner}>
+            <a href="#websites" className={styles.pricingNavLink}>
+              {t("nav.websites")}
+            </a>
+            <a href="#web-apps" className={styles.pricingNavLink}>
+              {t("nav.webApps")}
+            </a>
+            <a href="#automation" className={styles.pricingNavLink}>
+              {t("nav.automation")}
+            </a>
+            <a href="#ecommerce" className={styles.pricingNavLink}>
+              {t("nav.ecommerce")}
+            </a>
+            <a href="#rescue" className={styles.pricingNavLink}>
+              {t("nav.rescue")}
+            </a>
+            <a href="#care" className={styles.pricingNavLink}>
+              {t("nav.care")}
+            </a>
+          </div>
+        </div>
+      </nav>
+
+      {/* Websites */}
+      <section
+        id="websites"
+        className={`${styles.section} ${styles.pricingWrap}`}
+        style={{ scrollMarginTop: "132px" }}
+      >
         <div className="container">
           <div className={styles.sectionHead}>
-            <p className={styles.sectionLabel}>{t("tiersLabel")}</p>
-            <h2 className={styles.sectionTitle}>{t("tiersTitle")}</h2>
+            <p className={styles.sectionLabel}>
+              {t("websitesSection.sectionLabel")}
+            </p>
+            <h2 className={styles.sectionTitle}>
+              {t("websitesSection.sectionTitle")}
+            </h2>
           </div>
 
           <div className={styles.pricingGrid}>
-            {tiers.map((tier) => (
-              <article key={tier.key} className={styles.pricingCard}>
-                <p className={styles.cardKicker}>{tier.label}</p>
-                <p className={styles.pricingValue}>{tier.value}</p>
-                <p>{tier.detail}</p>
-                <div className={styles.pricingMeta}>{tier.meta}</div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className={styles.section}>
-        <div className="container">
-          <div className={styles.sectionHead}>
-            <p className={styles.sectionLabel}>{t("otherLabel")}</p>
-            <h2 className={styles.sectionTitle}>{t("otherTitle")}</h2>
-          </div>
-
-          <div className={styles.gridTwo}>
-            {OTHER_KEYS.map((item) => (
-              <article
-                id={item.anchor}
-                key={item.id}
-                className={styles.card}
-                style={{ scrollMarginTop: 96 }}
-              >
-                <p className={styles.cardKicker}>{t("otherKicker")}</p>
-                <h3>{t(`${item.id}.title`)}</h3>
-                <p>{t(`${item.id}.body`)}</p>
+            {(["starter", "growth", "premium"] as const).map((key) => (
+              <article key={key} className={styles.pricingCard}>
+                <p className={styles.cardKicker}>
+                  {t(`websitesSection.${key}.label`)}
+                </p>
+                <p className={styles.pricingValue}>
+                  {t(`websitesSection.${key}.value`)}
+                </p>
+                <p>{t(`websitesSection.${key}.detail`)}</p>
+                <div className={styles.pricingMeta}>
+                  {t(`websitesSection.${key}.meta`)}
+                </div>
               </article>
             ))}
           </div>
 
           <div className={styles.ctaRow}>
-            <Link href="/build/intro" className="btn btnPrimary">
-              {t("ctaPrimary")}
+            <Link
+              href="/build/intro?projectType=website"
+              className="btn btnPrimary"
+            >
+              {t("websitesSection.cta")}
             </Link>
-            <Link href="/process" className="btn btnGhost">
-              {t("ctaSecondary")}
+          </div>
+        </div>
+      </section>
+
+      {/* Web Apps */}
+      <section
+        id="web-apps"
+        className={styles.section}
+        style={{ scrollMarginTop: "132px" }}
+      >
+        <div className="container">
+          <div className={styles.sectionHead}>
+            <p className={styles.sectionLabel}>
+              {t("webAppsSection.sectionLabel")}
+            </p>
+            <h2 className={styles.sectionTitle}>
+              {t("webAppsSection.sectionTitle")}
+            </h2>
+          </div>
+
+          <p className={styles.sectionNote}>{t("webAppsSection.note")}</p>
+
+          <div className={styles.gridTwo}>
+            {(["discovery", "mvp", "standard", "custom"] as const).map(
+              (key) => (
+                <article key={key} className={styles.pricingCard}>
+                  <p className={styles.cardKicker}>
+                    {t(`webAppsSection.${key}.label`)}
+                  </p>
+                  <p className={styles.pricingValue}>
+                    {t(`webAppsSection.${key}.value`)}
+                  </p>
+                  <p>{t(`webAppsSection.${key}.detail`)}</p>
+                  <div className={styles.pricingMeta}>
+                    {t(`webAppsSection.${key}.meta`)}
+                  </div>
+                </article>
+              )
+            )}
+          </div>
+
+          <div className={styles.ctaRow}>
+            <Link href="/contact?type=web_app" className="btn btnPrimary">
+              {t("webAppsSection.cta")}
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Automation */}
+      <section
+        id="automation"
+        className={`${styles.section} ${styles.pricingWrap}`}
+        style={{ scrollMarginTop: "132px" }}
+      >
+        <div className="container">
+          <div className={styles.sectionHead}>
+            <p className={styles.sectionLabel}>
+              {t("automationSection.sectionLabel")}
+            </p>
+            <h2 className={styles.sectionTitle}>
+              {t("automationSection.sectionTitle")}
+            </h2>
+          </div>
+
+          <div className={styles.pricingGrid}>
+            {(["quickFix", "opsSystem", "systemsPartner"] as const).map(
+              (key) => (
+                <article key={key} className={styles.pricingCard}>
+                  <p className={styles.cardKicker}>
+                    {t(`automationSection.${key}.label`)}
+                  </p>
+                  <p className={styles.pricingValue}>
+                    {t(`automationSection.${key}.value`)}
+                  </p>
+                  <p>{t(`automationSection.${key}.detail`)}</p>
+                  <div className={styles.pricingMeta}>
+                    {t(`automationSection.${key}.meta`)}
+                  </div>
+                </article>
+              )
+            )}
+          </div>
+
+          <div className={styles.ctaRow}>
+            <Link href="/ops-intake" className="btn btnPrimary">
+              {t("automationSection.cta")}
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* E-commerce */}
+      <section
+        id="ecommerce"
+        className={styles.section}
+        style={{ scrollMarginTop: "132px" }}
+      >
+        <div className="container">
+          <div className={styles.sectionHead}>
+            <p className={styles.sectionLabel}>
+              {t("ecommerceSection.sectionLabel")}
+            </p>
+            <h2 className={styles.sectionTitle}>
+              {t("ecommerceSection.sectionTitle")}
+            </h2>
+          </div>
+
+          <div className={styles.pricingGrid}>
+            {(["build", "run", "fix"] as const).map((key) => (
+              <article key={key} className={styles.pricingCard}>
+                <p className={styles.cardKicker}>
+                  {t(`ecommerceSection.${key}.label`)}
+                </p>
+                <p className={styles.pricingValue}>
+                  {t(`ecommerceSection.${key}.value`)}
+                </p>
+                <p>{t(`ecommerceSection.${key}.detail`)}</p>
+                <div className={styles.pricingMeta}>
+                  {t(`ecommerceSection.${key}.meta`)}
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className={styles.ctaRow}>
+            <Link href="/ecommerce/intake" className="btn btnPrimary">
+              {t("ecommerceSection.cta")}
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Rescue */}
+      <section
+        id="rescue"
+        className={`${styles.section} ${styles.pricingWrap}`}
+        style={{ scrollMarginTop: "132px" }}
+      >
+        <div className="container">
+          <div className={styles.sectionHead}>
+            <p className={styles.sectionLabel}>
+              {t("rescueSection.sectionLabel")}
+            </p>
+            <h2 className={styles.sectionTitle}>
+              {t("rescueSection.sectionTitle")}
+            </h2>
+          </div>
+
+          <div className={styles.gridTwo}>
+            {(["audit", "sprint"] as const).map((key) => (
+              <article key={key} className={styles.pricingCard}>
+                <p className={styles.cardKicker}>
+                  {t(`rescueSection.${key}.label`)}
+                </p>
+                <p className={styles.pricingValue}>
+                  {t(`rescueSection.${key}.value`)}
+                </p>
+                <p>{t(`rescueSection.${key}.detail`)}</p>
+                <div className={styles.pricingMeta}>
+                  {t(`rescueSection.${key}.meta`)}
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className={styles.ctaRow}>
+            <Link
+              href="/build/intro?projectType=rescue"
+              className="btn btnPrimary"
+            >
+              {t("rescueSection.cta")}
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Care plans */}
+      <section
+        id="care"
+        className={styles.section}
+        style={{ scrollMarginTop: "132px" }}
+      >
+        <div className="container">
+          <div className={styles.sectionHead}>
+            <p className={styles.sectionLabel}>
+              {t("careSection.sectionLabel")}
+            </p>
+            <h2 className={styles.sectionTitle}>
+              {t("careSection.sectionTitle")}
+            </h2>
+          </div>
+
+          <p className={styles.sectionNote}>{t("careSection.note")}</p>
+
+          <div className={styles.pricingGrid}>
+            {(["care", "carePlus", "carePro"] as const).map((key) => (
+              <article key={key} className={styles.pricingCard}>
+                <p className={styles.cardKicker}>
+                  {t(`careSection.${key}.label`)}
+                </p>
+                <p className={styles.pricingValue}>
+                  {t(`careSection.${key}.value`)}
+                </p>
+                <p>{t(`careSection.${key}.detail`)}</p>
+                <div className={styles.pricingMeta}>
+                  {t(`careSection.${key}.meta`)}
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className={styles.ctaRow}>
+            <Link href="/contact" className="btn btnPrimary">
+              {t("careSection.cta")}
             </Link>
           </div>
         </div>
