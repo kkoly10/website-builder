@@ -7,7 +7,7 @@
  * ignoreDuplicates, so re-running is idempotent.
  *
  * Uses the service role key from SUPABASE_SERVICE_ROLE_KEY env var.
- * Reads .env.local automatically via --env-file flag or dotenv.
+ * Reads .env.local automatically via fs (no dotenv dependency required).
  */
 
 import { createClient } from "@supabase/supabase-js";

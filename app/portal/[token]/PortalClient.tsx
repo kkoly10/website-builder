@@ -815,7 +815,7 @@ export default function PortalClient({
             Demo workspace — read-only · data resets periodically
           </span>
           <a
-            href="/custom-app-intake"
+            href="/build/intro"
             style={{
               fontSize: 11,
               fontFamily: "var(--font-mono)",
