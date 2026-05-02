@@ -180,44 +180,160 @@
     }
   },
   "pricing": {
-    "metaTitle": "Precios | CrecyStudio",
-    "metaDescription": "Rangos claros antes de empezar el trabajo. Estimaciones fijas ajustadas a tu proyecto, sin contratos rehén ni extras sorpresa.",
-    "label": "Precios",
-    "title": "Rangos claros antes de empezar el trabajo.",
-    "intro": "Primero ajustamos el alcance, enviamos una estimación por escrito y mantenemos el número ligado al proyecto real en lugar de inventar trabajo sorpresa más tarde.",
-    "tiersLabel": "Niveles para sitios web",
-    "tiersTitle": "La mayoría de proyectos web caen en uno de estos rangos.",
-    "starter": {
-      "label": "/ Starter",
-      "value": "$1.800 - $2.400",
-      "detail": "Para un sitio de una página limpio y creíble que necesita hacer una sola cosa bien.",
-      "meta": "Una página / móvil primero / lanzamiento rápido"
+    "metaTitle": "Pricing | CrecyStudio",
+    "metaDescription": "Clear pricing ranges before the work starts. Fixed estimates scoped to your project, with no hostage retainers or surprise add-ons.",
+    "label": "Pricing",
+    "title": "Clear ranges before the work starts.",
+    "intro": "All prices are USD. We scope first, send a written estimate, and keep the number tied to the actual project — no hostage retainers, no surprise add-ons.",
+    "nav": {
+      "aria": "Jump to pricing section",
+      "websites": "Websites",
+      "webApps": "Web Apps",
+      "automation": "Automation",
+      "ecommerce": "E-commerce",
+      "rescue": "Rescue",
+      "care": "Care plans"
     },
-    "growth": {
-      "label": "/ Growth",
-      "value": "$3.500 - $4.500",
-      "detail": "Para la mayoría de empresas de servicios que necesitan un sitio multipágina y una primera impresión más fuerte.",
-      "meta": "4-6 páginas / captura de leads / revisión en espacio"
+    "websitesSection": {
+      "sectionLabel": "Website tiers",
+      "sectionTitle": "Most website projects land in one of these bands.",
+      "starter": {
+        "label": "/ Starter",
+        "value": "$1,800 – $2,400",
+        "detail": "For a clean, credible single-page site that needs to do one job well.",
+        "meta": "Single-page / mobile-first / fast launch"
+      },
+      "growth": {
+        "label": "/ Growth",
+        "value": "$3,500 – $4,500",
+        "detail": "For most service businesses that need a multi-page site and a stronger first impression.",
+        "meta": "4–6 pages / lead capture / workspace review"
+      },
+      "premium": {
+        "label": "/ Premium",
+        "value": "$6,500 – $10,000+",
+        "detail": "For businesses that need content depth, integrations, and more architectural lift.",
+        "meta": "8+ pages / advanced scope / deeper implementation"
+      },
+      "cta": "Start a website estimate"
     },
-    "premium": {
-      "label": "/ Premium",
-      "value": "$6.500 - $10.000+",
-      "detail": "Para empresas que necesitan profundidad de contenido, integraciones y más músculo arquitectónico.",
-      "meta": "8+ páginas / alcance avanzado / implementación más profunda"
+    "webAppsSection": {
+      "sectionLabel": "Custom web apps",
+      "sectionTitle": "Dashboards, portals, internal tools, and MVPs.",
+      "note": "All web app projects start with a strategy call. Ranges only — scope and complexity drive the final number.",
+      "discovery": {
+        "label": "/ Discovery sprint",
+        "value": "$2,500 – $5,000",
+        "detail": "1–2 week paid scoping engagement for projects that need definition before an MVP commit.",
+        "meta": "1–2 weeks / written brief / shapes the MVP"
+      },
+      "mvp": {
+        "label": "/ MVP",
+        "value": "$18,000 – $35,000",
+        "detail": "Multi-role web application with auth, a custom data model, and working integrations.",
+        "meta": "Custom auth / data model / integrations / launch-ready"
+      },
+      "standard": {
+        "label": "/ Standard",
+        "value": "$35,000 – $75,000",
+        "detail": "Production-grade application with complex workflows, multi-tenant support, or significant data architecture.",
+        "meta": "Complex workflows / multi-tenant / advanced architecture"
+      },
+      "custom": {
+        "label": "/ Custom",
+        "value": "$75,000+",
+        "detail": "Large-scale or multi-system builds where scope is determined in discovery.",
+        "meta": "Custom scope / multi-system / discovery required"
+      },
+      "cta": "Book a strategy call"
     },
-    "otherLabel": "Otros encargos",
-    "otherTitle": "No todo proyecto es construir un sitio web.",
-    "otherKicker": "Cómo se cotiza",
-    "ecommerce": {
-      "title": "E-commerce",
-      "body": "Las construcciones de tienda, los arreglos y las operaciones mensuales se cotizan según la complejidad de la tienda, la plataforma y la carga operativa después del intake."
+    "automationSection": {
+      "sectionLabel": "Workflow automation",
+      "sectionTitle": "Stop doing the same task twice.",
+      "quickFix": {
+        "label": "/ Quick fix",
+        "value": "$1,000 – $1,800",
+        "detail": "One broken or manual process diagnosed and automated.",
+        "meta": "Single workflow / documented / owned by you"
+      },
+      "opsSystem": {
+        "label": "/ Ops system",
+        "value": "$2,000 – $3,800",
+        "detail": "Two to four connected workflows with documentation and a clean handoff.",
+        "meta": "2–4 workflows / documented / training included"
+      },
+      "systemsPartner": {
+        "label": "/ Systems partner",
+        "value": "$500 – $1,250/mo",
+        "detail": "Ongoing automation maintenance and iterative improvements to your ops stack.",
+        "meta": "Monthly retainer / maintenance + improvements"
+      },
+      "cta": "Start an automation intake"
     },
-    "systems": {
-      "title": "Sistemas",
-      "body": "El trabajo de automatización empieza con un diagnóstico, así que el precio depende del proceso que realmente necesita arreglarse, no de promesas vagas de herramientas."
+    "ecommerceSection": {
+      "sectionLabel": "E-commerce",
+      "sectionTitle": "Stores built, run, and fixed.",
+      "build": {
+        "label": "/ Build",
+        "value": "$1,800 – $4,000+",
+        "detail": "New store or full rebuild — scoped after intake based on platform, products, and conversion goals.",
+        "meta": "New build / platform-matched / conversion-focused"
+      },
+      "run": {
+        "label": "/ Run",
+        "value": "$500 – $1,800/mo",
+        "detail": "Monthly ops: product updates, order flow monitoring, analytics, and platform maintenance.",
+        "meta": "Monthly retainer / ops + analytics / platform care"
+      },
+      "fix": {
+        "label": "/ Fix",
+        "value": "$1,200",
+        "detail": "Targeted repair — broken checkout, mobile layout issues, platform migration, or conversion audit.",
+        "meta": "Single fix / scoped upfront / fast turnaround"
+      },
+      "cta": "Start an e-commerce intake"
     },
-    "ctaPrimary": "Iniciar una estimación web",
-    "ctaSecondary": "Ver el proceso"
+    "rescueSection": {
+      "sectionLabel": "Website rescue",
+      "sectionTitle": "Fix what you have without a full rebuild.",
+      "audit": {
+        "label": "/ Rescue audit",
+        "value": "$1,000 – $1,500",
+        "detail": "3–5 day diagnostic with a written report and prioritized fix list — whether or not you engage us for the sprint.",
+        "meta": "3–5 days / written report / independent advice"
+      },
+      "sprint": {
+        "label": "/ Rescue sprint",
+        "value": "$3,500 – $6,500",
+        "detail": "Audit plus a 1–2 week implementation of the highest-impact fixes. Audit fee applies to the sprint.",
+        "meta": "Audit included / 1–2 week sprint / highest-impact fixes"
+      },
+      "cta": "Start with a rescue audit"
+    },
+    "careSection": {
+      "sectionLabel": "Care plans",
+      "sectionTitle": "Your site stays healthy after launch.",
+      "note": "Monthly plans billed in USD. 3-month minimum commitment, month-to-month after.",
+      "care": {
+        "label": "/ Care",
+        "value": "$400/mo",
+        "detail": "Monthly health check, monitoring, content updates, plugin updates, and end-of-month email summary.",
+        "meta": "2h bank / 48h ack / 5d resolve"
+      },
+      "carePlus": {
+        "label": "/ Care+",
+        "value": "$850/mo",
+        "detail": "Care plus small feature work, analytics review, portal activity dashboard, and shorter response windows.",
+        "meta": "5h bank / 24h ack / 3d resolve"
+      },
+      "carePro": {
+        "label": "/ Care Pro",
+        "value": "$2,250/mo",
+        "detail": "Care+ plus a monthly improvement sprint, a 30-minute strategy call, and priority-response SLA.",
+        "meta": "8h bank + sprint / 4h ack / 1d resolve / strategy call"
+      },
+      "cta": "Ask about a care plan"
+    }
   },
   "process": {
     "metaTitle": "Proceso | CrecyStudio",
@@ -419,10 +535,22 @@
   },
   "workspaceStory": {
     "kicker": "Hito activo",
-    "step1": { "label": "Intake", "detail": "Envías los detalles del alcance y prioridades. Los traducimos en un camino de ejecución claro." },
-    "step2": { "label": "Estimación", "detail": "Recibes un rango ajustado con plazo, entregables y recomendación dentro de 24 horas." },
-    "step3": { "label": "Espacio de trabajo", "detail": "Sigue el avance, sube recursos, aprueba hitos y mantén cada decisión en un solo lugar." },
-    "step4": { "label": "Lanzamiento", "detail": "QA final, traspaso y soporte de salida en vivo para que el sistema rinda desde el primer día." }
+    "step1": {
+      "label": "Intake",
+      "detail": "Envías los detalles del alcance y prioridades. Los traducimos en un camino de ejecución claro."
+    },
+    "step2": {
+      "label": "Estimación",
+      "detail": "Recibes un rango ajustado con plazo, entregables y recomendación dentro de 24 horas."
+    },
+    "step3": {
+      "label": "Espacio de trabajo",
+      "detail": "Sigue el avance, sube recursos, aprueba hitos y mantén cada decisión en un solo lugar."
+    },
+    "step4": {
+      "label": "Lanzamiento",
+      "detail": "QA final, traspaso y soporte de salida en vivo para que el sistema rinda desde el primer día."
+    }
   },
   "servicePage": {
     "goodFit": "Para quién",
@@ -537,11 +665,26 @@
     "routerSubtitle": "Pick what's closest to what you need. We'll route you to the right intake.",
     "redirecting": "Routing you to the right intake...",
     "projectTypes": {
-      "website": { "label": "Website", "desc": "I need a website that converts." },
-      "web_app": { "label": "Custom web app", "desc": "Dashboard, portal, internal tool, MVP." },
-      "automation": { "label": "Workflow automation", "desc": "I'm drowning in repetitive admin work." },
-      "ecommerce": { "label": "E-commerce", "desc": "I need to sell things online." },
-      "rescue": { "label": "Website rescue", "desc": "My current site isn't working." }
+      "website": {
+        "label": "Website",
+        "desc": "I need a website that converts."
+      },
+      "web_app": {
+        "label": "Custom web app",
+        "desc": "Dashboard, portal, internal tool, MVP."
+      },
+      "automation": {
+        "label": "Workflow automation",
+        "desc": "I'm drowning in repetitive admin work."
+      },
+      "ecommerce": {
+        "label": "E-commerce",
+        "desc": "I need to sell things online."
+      },
+      "rescue": {
+        "label": "Website rescue",
+        "desc": "My current site isn't working."
+      }
     },
     "goalQuestion": "¿Cuál es el objetivo principal?",
     "pagesQuestion": "¿Cuántas páginas?",
@@ -555,10 +698,22 @@
     "altSystemsCta": "Mejor necesito automatización de workflow",
     "altEcomCta": "Mejor necesito ayuda con e-commerce",
     "goals": {
-      "more-leads": { "label": "Obtener más leads", "desc": "Más llamadas, formularios y consultas desde tu sitio" },
-      "bookings": { "label": "Agendar citas", "desc": "Que los clientes reserven directamente desde tu sitio" },
-      "sell-online": { "label": "Vender en línea", "desc": "Productos o servicios con checkout y pagos" },
-      "show-work": { "label": "Mostrar trabajo", "desc": "Portfolio, casos de estudio y construcción de credibilidad" }
+      "more-leads": {
+        "label": "Obtener más leads",
+        "desc": "Más llamadas, formularios y consultas desde tu sitio"
+      },
+      "bookings": {
+        "label": "Agendar citas",
+        "desc": "Que los clientes reserven directamente desde tu sitio"
+      },
+      "sell-online": {
+        "label": "Vender en línea",
+        "desc": "Productos o servicios con checkout y pagos"
+      },
+      "show-work": {
+        "label": "Mostrar trabajo",
+        "desc": "Portfolio, casos de estudio y construcción de credibilidad"
+      }
     },
     "pages": {
       "1": "1 página",
@@ -568,9 +723,18 @@
       "9+": "9+ páginas"
     },
     "timelines": {
-      "fast": { "label": "Lo antes posible", "desc": "Menos de 14 días" },
-      "standard": { "label": "Estándar", "desc": "2–3 semanas" },
-      "flexible": { "label": "Flexible", "desc": "4+ semanas" }
+      "fast": {
+        "label": "Lo antes posible",
+        "desc": "Menos de 14 días"
+      },
+      "standard": {
+        "label": "Estándar",
+        "desc": "2–3 semanas"
+      },
+      "flexible": {
+        "label": "Flexible",
+        "desc": "4+ semanas"
+      }
     },
     "content": {
       "ready": "Sí — texto e imágenes están listos",
@@ -585,10 +749,22 @@
       "not-sure": "Aún no estoy seguro"
     },
     "recommendations": {
-      "ecommerce": { "headline": "Sitio e-commerce enfocado a conversión", "desc": "Arquitectura lista para productos con checkout seguro, páginas de producto enfocadas a conversión y flujo post-compra." },
-      "booking": { "headline": "Sitio de servicios enfocado a reservas", "desc": "Páginas de servicios muy claras con agendamiento integrado, automatización de seguimiento y flujo de reserva optimizado para móvil." },
-      "portfolio": { "headline": "Sitio de portfolio + autoridad", "desc": "Estructura visual de casos de estudio, bloques de contenido amigables con SEO y captura de leads integrada en todo el portfolio." },
-      "leads": { "headline": "Sitio de generación de leads", "desc": "Posicionamiento claro de servicios, CTAs sólidos, formularios de captura y rendimiento rápido mobile-first." }
+      "ecommerce": {
+        "headline": "Sitio e-commerce enfocado a conversión",
+        "desc": "Arquitectura lista para productos con checkout seguro, páginas de producto enfocadas a conversión y flujo post-compra."
+      },
+      "booking": {
+        "headline": "Sitio de servicios enfocado a reservas",
+        "desc": "Páginas de servicios muy claras con agendamiento integrado, automatización de seguimiento y flujo de reserva optimizado para móvil."
+      },
+      "portfolio": {
+        "headline": "Sitio de portfolio + autoridad",
+        "desc": "Estructura visual de casos de estudio, bloques de contenido amigables con SEO y captura de leads integrada en todo el portfolio."
+      },
+      "leads": {
+        "headline": "Sitio de generación de leads",
+        "desc": "Posicionamiento claro de servicios, CTAs sólidos, formularios de captura y rendimiento rápido mobile-first."
+      }
     }
   },
   "build": {
