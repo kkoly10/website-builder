@@ -1,7 +1,14 @@
 import type { ServicePageProps } from "@/components/service-page/ServicePage";
 
 type Locale = "en" | "fr" | "es";
-type ServiceId = "websites" | "systems" | "ecommerce";
+type ServiceId =
+  | "websites"
+  | "systems"
+  | "ecommerce"
+  | "custom_web_apps"
+  | "client_portals"
+  | "website_rescue"
+  | "care_plans";
 
 // ServiceData mirrors ServicePageProps. We translate by swapping locale-keyed
 // objects under each ServiceId. /fr and /es fall back to the en entry if a
@@ -12,14 +19,37 @@ const CROSS_LINKS: Record<ServiceId, ServicePageProps["crossLinks"]> = {
   websites: [
     { id: "ecommerce", href: "/ecommerce" },
     { id: "systems", href: "/systems" },
+    { id: "carePlans", href: "/care-plans" },
   ],
   systems: [
     { id: "websites", href: "/websites" },
     { id: "ecommerce", href: "/ecommerce" },
+    { id: "carePlans", href: "/care-plans" },
   ],
   ecommerce: [
     { id: "websites", href: "/websites" },
     { id: "systems", href: "/systems" },
+    { id: "carePlans", href: "/care-plans" },
+  ],
+  custom_web_apps: [
+    { id: "websites", href: "/websites" },
+    { id: "clientPortals", href: "/client-portals" },
+    { id: "carePlans", href: "/care-plans" },
+  ],
+  client_portals: [
+    { id: "customWebApps", href: "/custom-web-apps" },
+    { id: "websites", href: "/websites" },
+    { id: "carePlans", href: "/care-plans" },
+  ],
+  website_rescue: [
+    { id: "websites", href: "/websites" },
+    { id: "customWebApps", href: "/custom-web-apps" },
+    { id: "carePlans", href: "/care-plans" },
+  ],
+  care_plans: [
+    { id: "websites", href: "/websites" },
+    { id: "systems", href: "/systems" },
+    { id: "customWebApps", href: "/custom-web-apps" },
   ],
 };
 
@@ -921,8 +951,594 @@ ecommerceData.es = {
   finalSecondaryCta: { label: "Ver precios completos", href: "/pricing" },
 };
 
+// ─── Custom Web Apps ────────────────────────────────────────────────────────
+
+const customWebAppsData: Partial<Record<Locale, ServiceData>> = {};
+
+customWebAppsData.en = {
+  eyebrow: "Custom web apps",
+  title: "When a website isn't enough, we build the system that runs the business.",
+  intro:
+    "Dashboards, customer portals, internal tools, MVPs — built on the same foundation we use for our own products, with one workspace from scope to launch.",
+  heroStats: [
+    "Discovery sprint from $2,500",
+    "MVP from $18K",
+    "No template limits",
+    "One workspace, start to finish",
+  ],
+  primaryCta: { label: "Plan a custom app", href: "/custom-app-intake" },
+  secondaryCta: { label: "See the workspace", href: "/demos/portal" },
+  whoItsForTitle: "Best for founders and operators who've outgrown off-the-shelf tools.",
+  whoItsFor: [
+    "You have a process that lives across spreadsheets, Notion, and a dozen browser tabs.",
+    "You've validated a software idea and need someone to actually build it.",
+    "You need a tool your customers will log into, not just a marketing site.",
+    "Your team spends more time managing workarounds than serving customers.",
+  ],
+  problemsTitle: "Four signs you need a custom system, not another SaaS subscription.",
+  problems: [
+    "You've outgrown off-the-shelf SaaS but every contractor quote starts at $80K.",
+    "You don't have a CTO, but you have real software needs.",
+    "You've been burned by a freelancer who shipped half a product and disappeared.",
+    "You're paying for five tools that still don't talk to each other.",
+  ],
+  includesTitle: "From scope to handoff — everything in one build.",
+  includes: [
+    {
+      title: "Architecture and scope",
+      items: [
+        "Paid discovery sprint when needed",
+        "System design and data model",
+        "Scope lock with milestone plan",
+        "Realistic budget bands before a dollar is committed",
+      ],
+    },
+    {
+      title: "Build",
+      items: [
+        "Next.js + Supabase by default",
+        "Auth, role-based access, payments, integrations",
+        "AI features as needed",
+        "Milestone-based delivery with full workspace visibility",
+      ],
+    },
+    {
+      title: "Launch and ownership",
+      items: [
+        "Your code, your accounts, your domain",
+        "Documented handoff — no black box",
+        "Optional Care Pro retainer for ongoing work",
+      ],
+    },
+  ],
+  pricingTitle: "Priced to the scope, not to a template.",
+  pricingIntro:
+    "All Web Apps projects start with a 30-minute strategy call. Prices are ranges — final scope determines cost. Discovery sprint is optional for clear, well-defined scopes.",
+  pricingCards: [
+    {
+      label: "Discovery sprint",
+      value: "$2,500–$5,000",
+      detail:
+        "Paid scoping engagement before MVP commit. Results in a scope document, milestone plan, and budget bands.",
+    },
+    {
+      label: "MVP",
+      value: "$18,000–$35,000",
+      detail:
+        "First working version of a focused product. Validated scope, core workflows, one user role, deployment.",
+    },
+    {
+      label: "Standard build",
+      value: "$35,000–$75,000",
+      detail:
+        "Full product with multiple user roles, admin panel, integrations, payments, documented handoff.",
+    },
+  ],
+  processTitle: "How a custom app gets built.",
+  processIntro:
+    "Every project starts with a call, not a quote. We scope before we price so there are no surprises mid-build.",
+  process: [
+    {
+      step: "01 — Discovery",
+      title: "Define the system",
+      detail:
+        "Scope, user roles, data model, integration needs. Optional paid discovery sprint for complex scopes where figuring out what to build is itself the hard problem.",
+    },
+    {
+      step: "02 — Build",
+      title: "Milestone-based delivery",
+      detail:
+        "Build in your shared workspace with full visibility. You see every milestone as it ships. Scope changes go through a change-order process — no surprises.",
+    },
+    {
+      step: "03 — Launch",
+      title: "Handoff and ownership",
+      detail:
+        "Deployed on your accounts. Documented so any developer can understand the system. Optional Care Pro retainer if you want ongoing iteration.",
+    },
+  ],
+  faqTitle: "Custom web app FAQ",
+  faqs: [
+    {
+      question: "Do I have to start with a discovery sprint?",
+      answer:
+        "No — if your scope is well-defined, we can move straight to an MVP proposal. Discovery is for cases where figuring out what to build is itself the hard problem.",
+    },
+    {
+      question: "What stack do you build on?",
+      answer:
+        "Next.js + Supabase by default: TypeScript, React, PostgreSQL, auth, file storage, and real-time built in. We adapt for specific requirements.",
+    },
+    {
+      question: "How is this different from hiring a freelancer?",
+      answer:
+        "Structured process, documented handoff, milestone-based payments, and a shared workspace you have full access to throughout. No disappearing after launch.",
+    },
+  ],
+  bestFitTitle: "Best fit for…",
+  bestFit: [
+    "Founders shipping their first software product",
+    "Operators replacing manual processes with a real system",
+    "Agencies needing white-label internal tools",
+  ],
+  notFitTitle: "Probably not the right call if…",
+  notFit: [
+    "An off-the-shelf tool already does it — we don't rebuild what HubSpot, Stripe, or Linear already build",
+    "You need a $500 patch, not a new system",
+    "You want to own zero code or documentation after delivery",
+  ],
+  crossLinks: CROSS_LINKS.custom_web_apps,
+  finalTitle: "Ready to talk through your idea?",
+  finalText:
+    "The first call is free and takes 30 minutes. We'll tell you what the system is, what it isn't, and what a realistic scope looks like.",
+  finalPrimaryCta: { label: "Plan a custom app", href: "/custom-app-intake" },
+  finalSecondaryCta: { label: "See our work", href: "/work" },
+};
+
+// ─── Client Portals ──────────────────────────────────────────────────────────
+
+const clientPortalsData: Partial<Record<Locale, ServiceData>> = {};
+
+clientPortalsData.en = {
+  eyebrow: "Client portals",
+  title: "A private workspace your customers actually use.",
+  intro:
+    "Track scope, share files, send messages, sign off on milestones, view invoices — all in one place that feels like your studio, not a shared Drive folder.",
+  heroStats: [
+    "Branded to your business",
+    "Your code, your data",
+    "No per-seat pricing",
+    "Works for any service type",
+  ],
+  primaryCta: { label: "See the demo", href: "/demos/portal" },
+  secondaryCta: { label: "Start a portal project", href: "/build/intro?projectType=web_app" },
+  whoItsForTitle: "Best for service businesses running multi-week client engagements.",
+  whoItsFor: [
+    "Your client communication lives in scattered email threads and you can't find anything.",
+    "You've been embarrassed by a client asking for 'the latest version' of something you've sent four times.",
+    "Your customers expect a real product experience, not a Google Drive folder.",
+  ],
+  problemsTitle: "Why client communication breaks down.",
+  problems: [
+    "Email threads lose attachments, history, and context — every time.",
+    '"Where are we in the project?" should never need to be asked.',
+    "Your competitors' portals look like real software; yours looks like a shared folder.",
+    "Manual invoice and agreement tracking is its own part-time job.",
+  ],
+  includesTitle: "A complete client workspace, owned by you.",
+  includes: [
+    {
+      title: "Branded workspace",
+      items: [
+        "Your logo, colors, and domain or subdomain",
+        "Custom project name and identity",
+        "Client-facing URL that's yours",
+      ],
+    },
+    {
+      title: "Project lifecycle",
+      items: [
+        "Milestones with status tracking",
+        "Asset uploads and revision requests",
+        "Two-way messaging and activity feed",
+      ],
+    },
+    {
+      title: "Money built in",
+      items: [
+        "Agreements and digital sign-off",
+        "Deposit and milestone invoices",
+        "Retainer billing with audit trail",
+      ],
+    },
+    {
+      title: "Owned by you",
+      items: [
+        "Code, data, and customers stay yours",
+        "No per-seat pricing, no vendor lock-in",
+        "Self-hostable on your own infrastructure",
+      ],
+    },
+  ],
+  pricingTitle: "Portal as an add-on or a standalone system.",
+  pricingIntro:
+    "Portals can be added to a website build or scoped as their own product. Pricing depends on scope and existing stack.",
+  pricingCards: [
+    {
+      label: "Portal add-on",
+      value: "From $3,500",
+      detail:
+        "Added to a Growth or Premium website build. Client login, milestones, messaging, file sharing.",
+    },
+    {
+      label: "Standalone system",
+      value: "From $12,000",
+      detail:
+        "Portal as its own product for service businesses. Multi-client, branded workspace, invoicing.",
+    },
+    {
+      label: "Custom build",
+      value: "Scoped to project",
+      detail:
+        "Multi-tenant, custom integrations, white-label. Requires a strategy call to scope.",
+    },
+  ],
+  processTitle: "How a portal gets built.",
+  processIntro: "Define the workflow first, then build to it.",
+  process: [
+    {
+      step: "01 — Scoping",
+      title: "Define your workflow",
+      detail:
+        "Which milestones, what files, how payments flow. Fit as add-on to an existing site or scoped as a standalone product.",
+    },
+    {
+      step: "02 — Build",
+      title: "Branded from day one",
+      detail:
+        "Built to your process and branded to your business. You and a test client can see it live before full launch.",
+    },
+    {
+      step: "03 — Launch",
+      title: "Go live with real clients",
+      detail:
+        "You own the code and the customer relationships. Optional Care Pro retainer for ongoing portal improvements.",
+    },
+  ],
+  faqTitle: "Client portal FAQ",
+  faqs: [
+    {
+      question: "Can I add a portal to my existing website?",
+      answer:
+        "Yes. Portals can be added as a standalone product or integrated with an existing site. We scope based on what you already have.",
+    },
+    {
+      question: "Can my clients use it from their phone?",
+      answer:
+        "Yes — the portal is fully responsive. Clients can view milestones, upload files, and send messages from any device.",
+    },
+    {
+      question: "What happens to my client data if I stop using it?",
+      answer:
+        "You own it — it's in your database on your Supabase account. Export any time, full control, no lock-in.",
+    },
+  ],
+  bestFitTitle: "Best fit for…",
+  bestFit: [
+    "Agencies, contractors, consultants running multi-week engagements",
+    "Repair businesses, event vendors, coaches with recurring clients",
+    "Anyone who sends more than two email threads per project to the same client",
+  ],
+  notFitTitle: "Probably not the right call if…",
+  notFit: [
+    "One-off transactions with nothing to track between purchase and delivery",
+    "B2C businesses where customers never need to log in",
+  ],
+  crossLinks: CROSS_LINKS.client_portals,
+  finalTitle: "See what your clients would actually use.",
+  finalText:
+    "The demo is seeded with realistic project data. Browse the milestones, check the messaging, and see if it fits your workflow.",
+  finalPrimaryCta: { label: "See the demo", href: "/demos/portal" },
+  finalSecondaryCta: { label: "Start a portal project", href: "/build/intro?projectType=web_app" },
+};
+
+// ─── Website Rescue ──────────────────────────────────────────────────────────
+
+const websiteRescueData: Partial<Record<Locale, ServiceData>> = {};
+
+websiteRescueData.en = {
+  eyebrow: "Website rescue",
+  title: "You don't need a rebuild. You need someone to fix what's actually broken.",
+  intro:
+    "A 1–2 week sprint that audits, prioritizes, and ships the changes that move the needle — without throwing away the site you have.",
+  heroStats: [
+    "Audit from $1,000",
+    "Sprint from $3,500",
+    "1–2 wk turnaround",
+    "No full rebuild required",
+  ],
+  primaryCta: { label: "Start a rescue", href: "/build/intro" },
+  secondaryCta: { label: "See pricing", href: "/pricing#rescue" },
+  projectType: "rescue",
+  whoItsForTitle: "Best for businesses with a site that works but leaks.",
+  whoItsFor: [
+    "Your site loads slow, breaks on phones, or doesn't convert — and you know it.",
+    "You can't justify a full rebuild but you can't keep the site as-is.",
+    "You inherited the site from someone who's gone and nobody owns the fixes.",
+  ],
+  problemsTitle: "Four signs your site needs a rescue, not a rebuild.",
+  problems: [
+    "Your site is built on something brittle — old WordPress, a dead template, a freelancer's hosting account.",
+    "You can list five things wrong with it but nobody's prioritizing them.",
+    "Mobile traffic bounces because the experience is broken.",
+    "You don't know what's working and what isn't — no baseline, no analytics.",
+  ],
+  includesTitle: "Audit, prioritize, ship.",
+  includes: [
+    {
+      title: "Audit",
+      items: [
+        "Speed and core web vitals",
+        "Mobile experience",
+        "SEO and metadata",
+        "Conversion and trust signals",
+        "Written report with prioritized findings",
+      ],
+    },
+    {
+      title: "Fix sprint",
+      items: [
+        "1–2 week implementation of top-ranked fixes",
+        "Fixed scope agreed before work starts",
+        "Clear before/after on every change",
+      ],
+    },
+    {
+      title: "Optional next step",
+      items: [
+        "Documented changes and reasoning",
+        "Full rebuild quote if the audit warrants it",
+        "Handoff notes for whoever maintains the site next",
+      ],
+    },
+  ],
+  pricingTitle: "Two phases. Fixed scope on both.",
+  pricingIntro:
+    "The audit gives you the roadmap. The sprint ships the highest-impact changes. No surprises — scope is agreed before any work starts.",
+  pricingCards: [
+    {
+      label: "Audit",
+      value: "$1,000–$1,500",
+      detail:
+        "Written report: speed, mobile, SEO, conversion, trust signals. Prioritized fix list ranked by impact and effort.",
+    },
+    {
+      label: "Sprint",
+      value: "$3,500–$6,500",
+      detail:
+        "1–2 week implementation of the highest-impact changes from the audit. Full scope agreed before work starts.",
+    },
+    {
+      label: "Audit + Sprint",
+      value: "From $4,500",
+      detail:
+        "Both phases scoped together. One kickoff, one scope agreement — best if you already know the site needs work.",
+    },
+  ],
+  processTitle: "How a rescue works.",
+  processIntro: "You know what's wrong. We'll find out exactly how wrong — and fix the things that matter.",
+  process: [
+    {
+      step: "01 — Audit",
+      title: "1–2 day review",
+      detail:
+        "Speed, mobile, SEO, conversion, trust signals. Written report with a prioritized fix list ranked by impact.",
+    },
+    {
+      step: "02 — Sprint plan",
+      title: "Agree the scope",
+      detail:
+        "Review the findings together. Agree on what to fix, in what order, for what budget. Fixed scope, no surprises.",
+    },
+    {
+      step: "03 — Sprint",
+      title: "Ship the fixes",
+      detail:
+        "1–2 week implementation. You see every change. Documented before/after on each fix.",
+    },
+  ],
+  faqTitle: "Website rescue FAQ",
+  faqs: [
+    {
+      question: "How is this different from just hiring someone to fix a bug?",
+      answer:
+        "A rescue starts with a written audit — you know exactly what's wrong and what the priority order is, before a dollar is spent on fixes. No guessing, no scope creep.",
+    },
+    {
+      question: "What if the audit shows we need a full rebuild?",
+      answer:
+        "We'll tell you honestly. If a rebuild is the right call, you get a detailed proposal based on the audit findings — not a guess quote.",
+    },
+    {
+      question: "What platforms do you rescue?",
+      answer:
+        "WordPress, Webflow, Squarespace, Wix, legacy custom builds. We can't rescue sites locked inside proprietary enterprise CMSs we can't access.",
+    },
+  ],
+  bestFitTitle: "Best fit for…",
+  bestFit: [
+    "Small businesses with a site that's fine but slow, fine but broken on phones, fine but not converting",
+    "Founders who inherited a site from a previous developer",
+    "Businesses that haven't touched their site in 2+ years",
+  ],
+  notFitTitle: "Probably not the right call if…",
+  notFit: [
+    "Brand-new businesses without a site yet — start with the Websites lane",
+    "Sites on enterprise CMSs or platforms we can't access",
+    "Businesses that want unlimited changes with no fixed scope",
+  ],
+  crossLinks: CROSS_LINKS.website_rescue,
+  finalTitle: "Know what's wrong before you spend a dollar on fixes.",
+  finalText:
+    "The audit alone gives you a prioritized roadmap. Even if you don't do the sprint, you walk away knowing exactly what to fix and in what order.",
+  finalPrimaryCta: { label: "Start a rescue", href: "/build/intro" },
+  finalSecondaryCta: { label: "See pricing", href: "/pricing#rescue" },
+};
+
+// ─── Care Plans ──────────────────────────────────────────────────────────────
+
+const carePlansData: Partial<Record<Locale, ServiceData>> = {};
+
+carePlansData.en = {
+  eyebrow: "Care plans",
+  title: "Keep the system healthy after launch.",
+  intro:
+    "Three monthly plans that cover updates, monitoring, small features, and improvement work — so your site keeps earning instead of slowly drifting.",
+  heroStats: [
+    "Plans from $400/mo",
+    "No per-task invoices",
+    "Priority response on Care Pro",
+    "Cancel with 30 days notice",
+  ],
+  primaryCta: { label: "Start a care plan", href: "/contact?type=care" },
+  secondaryCta: { label: "See the workspace", href: "/demos/portal" },
+  whoItsForTitle: "Best for post-launch clients who want ongoing improvement.",
+  whoItsFor: [
+    "You launched a site or system with us and want it to keep getting better.",
+    "You don't have a developer in-house and don't want to.",
+    "You'd rather pay a predictable monthly than invoice for every small change.",
+  ],
+  problemsTitle: "What happens when a site has no one looking after it.",
+  problems: [
+    "Your site hasn't been touched since launch and is slowly drifting out of date.",
+    "Small changes take weeks because there's no one in the loop.",
+    "You pay invoice-per-task and the costs are unpredictable.",
+    "You find out about broken things from clients, not monitoring.",
+  ],
+  includesTitle: "What each plan covers.",
+  includes: [
+    {
+      title: "Care — $400/mo",
+      items: [
+        "Content updates and text changes",
+        "Monthly health check",
+        "Uptime and performance monitoring",
+        "24-hour response SLA",
+      ],
+    },
+    {
+      title: "Care+ — $850/mo",
+      items: [
+        "Everything in Care",
+        "Small feature additions",
+        "Analytics review and recommendations",
+        "12-hour response SLA",
+      ],
+    },
+    {
+      title: "Care Pro — $2,250/mo",
+      items: [
+        "Everything in Care+",
+        "Monthly improvement sprint",
+        "Monthly 30-min strategy call",
+        "4-hour priority response SLA",
+      ],
+    },
+  ],
+  pricingTitle: "Three tiers. One consistent rhythm.",
+  pricingIntro:
+    "All plans billed monthly. Upgrade or downgrade any time. Cancel with 30 days notice. First month pro-rated to your billing cycle.",
+  pricingCards: [
+    {
+      label: "Care",
+      value: "$400/mo",
+      detail:
+        "Content updates, monthly health check, uptime monitoring, basic support. 24-hour response.",
+    },
+    {
+      label: "Care+",
+      value: "$850/mo",
+      detail:
+        "Everything in Care plus small feature additions, analytics review, and light refinements. 12-hour response.",
+    },
+    {
+      label: "Care Pro",
+      value: "$2,250/mo",
+      detail:
+        "Monthly improvement sprint, 30-min strategy call, and 4-hour priority response SLA.",
+    },
+  ],
+  processTitle: "How care plans work.",
+  processIntro: "A predictable rhythm so your site stays sharp without you managing a developer.",
+  process: [
+    {
+      step: "01 — Onboarding",
+      title: "Align on scope",
+      detail:
+        "We review your stack, set up monitoring, and align on what 'content update' and 'small feature' mean for your specific system.",
+    },
+    {
+      step: "02 — Monthly rhythm",
+      title: "Submit, prioritize, ship",
+      detail:
+        "You submit requests through the workspace. We prioritize, deliver, and document every change in your project log.",
+    },
+    {
+      step: "03 — Review",
+      title: "See the log",
+      detail:
+        "Monthly check-in on Care Pro. Quarterly summary on Care and Care+. Every change documented so you know exactly what was touched.",
+    },
+  ],
+  faqTitle: "Care plan FAQ",
+  faqs: [
+    {
+      question: "Does the site have to have been built by CrecyStudio?",
+      answer:
+        "Care and Care+ are open to any well-built site. Care Pro requires familiarity with the codebase — for non-CrecyStudio builds we may need a 2-week onboarding sprint first.",
+    },
+    {
+      question: "What counts as a 'small feature'?",
+      answer:
+        "Anything that takes under 4 hours: a new form field, a new section, an extra pricing row, a simple page. Anything larger gets scoped and quoted separately.",
+    },
+    {
+      question: "How is this different from the Automation lane's Systems Partner retainer?",
+      answer:
+        "Systems Partner ($500–$1,250/mo) covers automation-maintenance-only for clients whose main engagement was an Automation build. Care plans cover any project type — site, portal, or custom app — with broader improvement scope.",
+    },
+  ],
+  bestFitTitle: "Best fit for…",
+  bestFit: [
+    "Post-launch website clients who want ongoing improvement",
+    "Custom-app clients with regular iteration needs",
+    "Businesses that don't want to manage a developer relationship per-task",
+  ],
+  notFitTitle: "Probably not the right call if…",
+  notFit: [
+    "You want unlimited dev hours included",
+    "You're launching with no defined ongoing need yet — start a project first",
+    "You're on a platform we can't access or modify",
+  ],
+  crossLinks: CROSS_LINKS.care_plans,
+  finalTitle: "Start with the plan that fits right now.",
+  finalText:
+    "You can upgrade or downgrade any time. Most clients start on Care or Care+ and move to Care Pro once they see the cadence.",
+  finalPrimaryCta: { label: "Start a care plan", href: "/contact?type=care" },
+  finalSecondaryCta: { label: "See the workspace", href: "/demos/portal" },
+};
+
 export function getServicePageData(locale: string, id: ServiceId): ServiceData {
-  const map = id === "websites" ? websitesData : id === "systems" ? systemsData : ecommerceData;
+  const dataMap: Record<ServiceId, Partial<Record<Locale, ServiceData>>> = {
+    websites: websitesData,
+    systems: systemsData,
+    ecommerce: ecommerceData,
+    custom_web_apps: customWebAppsData,
+    client_portals: clientPortalsData,
+    website_rescue: websiteRescueData,
+    care_plans: carePlansData,
+  };
+  const map = dataMap[id];
   const normalized = (locale === "fr" || locale === "es" ? locale : "en") as Locale;
   return (map[normalized] ?? map.en)!;
 }

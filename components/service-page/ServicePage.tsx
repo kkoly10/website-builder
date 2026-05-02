@@ -11,7 +11,7 @@ type CrossLink = {
   // id maps to the crossLinks.{id} dictionary entry. Letting the component
   // own the label lookup keeps service-pages.ts free of locale concerns
   // for cross-references.
-  id: "websites" | "ecommerce" | "systems";
+  id: "websites" | "ecommerce" | "systems" | "customWebApps" | "clientPortals" | "websiteRescue" | "carePlans";
   href: string;
 };
 
@@ -67,6 +67,8 @@ export type ServicePageProps = {
   finalText: string;
   finalPrimaryCta: CTA;
   finalSecondaryCta: CTA;
+  // When set, appended as ?projectType=X to primaryCta and finalPrimaryCta hrefs
+  projectType?: string;
 };
 
 export default function ServicePage({
@@ -99,9 +101,16 @@ export default function ServicePage({
   finalText,
   finalPrimaryCta,
   finalSecondaryCta,
+  projectType,
 }: ServicePageProps) {
   const t = useTranslations("servicePage");
   const tCross = useTranslations("crossLinks");
+  const primaryCtaHref = projectType
+    ? `${primaryCta.href}?projectType=${projectType}`
+    : primaryCta.href;
+  const finalPrimaryCtaHref = projectType
+    ? `${finalPrimaryCta.href}?projectType=${projectType}`
+    : finalPrimaryCta.href;
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
@@ -112,7 +121,7 @@ export default function ServicePage({
             <p className={styles.heroIntro}>{intro}</p>
 
             <div className={styles.heroActions}>
-              <Link href={primaryCta.href} className={styles.primaryButton}>
+              <Link href={primaryCtaHref} className={styles.primaryButton}>
                 {primaryCta.label}
               </Link>
               <Link href={secondaryCta.href} className={styles.secondaryButton}>
@@ -282,7 +291,7 @@ export default function ServicePage({
             <p className={styles.sectionIntro}>{finalText}</p>
 
             <div className={styles.heroActions}>
-              <Link href={finalPrimaryCta.href} className={styles.primaryButton}>
+              <Link href={finalPrimaryCtaHref} className={styles.primaryButton}>
                 {finalPrimaryCta.label}
               </Link>
               <Link href={finalSecondaryCta.href} className={styles.secondaryButton}>

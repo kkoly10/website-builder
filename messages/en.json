@@ -36,7 +36,8 @@
       "faq": "FAQ",
       "contact": "Contact",
       "privacy": "Privacy",
-      "terms": "Terms"
+      "terms": "Terms",
+      "carePlans": "Care plans"
     }
   },
   "home": {
@@ -561,7 +562,11 @@
   "crossLinks": {
     "websites": "Website lane",
     "ecommerce": "E-commerce lane",
-    "systems": "Systems lane"
+    "systems": "Systems lane",
+    "customWebApps": "Custom web apps",
+    "clientPortals": "Client portals",
+    "websiteRescue": "Website rescue",
+    "carePlans": "Care plans"
   },
   "servicesMeta": {
     "websites": {
@@ -575,6 +580,22 @@
     "ecommerce": {
       "metaTitle": "E-commerce Systems | Storefront, Checkout, and Ops Flow",
       "metaDescription": "E-commerce systems for brands that need stronger storefront UX, cleaner checkout flow, and better post-purchase operations."
+    },
+    "customWebApps": {
+      "metaTitle": "Custom Web Apps | Dashboards, Portals, and Internal Tools",
+      "metaDescription": "Custom web applications for businesses that need more than a website — dashboards, client portals, internal tools, and MVPs built by a senior practitioner."
+    },
+    "clientPortals": {
+      "metaTitle": "Client Portals | Branded Workspaces Your Clients Actually Use",
+      "metaDescription": "Private project workspaces with milestones, messaging, file sharing, invoicing, and agreements — owned by you, branded to your business."
+    },
+    "websiteRescue": {
+      "metaTitle": "Website Rescue | Fix What's Broken Without a Full Rebuild",
+      "metaDescription": "Website audit and sprint service for small businesses with a site that's slow, broken on mobile, or not converting — fixed in 1–2 weeks."
+    },
+    "carePlans": {
+      "metaTitle": "Care Plans | Monthly Website and System Maintenance",
+      "metaDescription": "Three monthly care plans that keep your site or custom system healthy — content updates, monitoring, small features, and improvement sprints."
     }
   },
   "auth": {
