@@ -192,8 +192,12 @@ export default function CustomAppIntakeClient() {
         },
       });
       const quoteId = data?.quoteId;
+      const quoteToken = data?.quoteToken;
       if (quoteId) {
-        router.push(`/book?quoteId=${encodeURIComponent(quoteId)}`);
+        const bookUrl = quoteToken
+          ? `/book?quoteId=${encodeURIComponent(quoteId)}&token=${encodeURIComponent(quoteToken)}`
+          : `/book?quoteId=${encodeURIComponent(quoteId)}`;
+        router.push(bookUrl);
       } else {
         router.push("/contact?type=web_app");
       }
