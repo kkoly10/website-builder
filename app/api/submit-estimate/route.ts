@@ -33,13 +33,13 @@ const PROJECT_TYPE_VALUES = [
 ] as const;
 type ProjectType = (typeof PROJECT_TYPE_VALUES)[number];
 
-function parseProjectType(...vals: unknown[]): ProjectType {
+function readProjectType(...vals: unknown[]): { value: ProjectType; explicit: boolean } {
   for (const v of vals) {
     if (typeof v === "string" && (PROJECT_TYPE_VALUES as readonly string[]).includes(v)) {
-      return v as ProjectType;
+      return { value: v as ProjectType, explicit: true };
     }
   }
-  return "website";
+  return { value: "website", explicit: false };
 }
 
 function extractLeadEmail(body: LooseObj) {
@@ -181,7 +181,10 @@ export async function POST(req: Request) {
     const leadName = extractLeadName(body) || null;
     const preferredLocale = pickPreferredLocale(body?.preferredLocale ?? body?.locale);
     const pricingTruth = normalizePricing(body);
-    const projectType = parseProjectType(body?.projectType, body?.project_type);
+    const { value: projectType, explicit: projectTypeExplicit } = readProjectType(
+      body?.projectType,
+      body?.project_type,
+    );
 
     const total = pricingTruth.band.target || extractEstimate(body).total;
     const low = pricingTruth.band.min || extractEstimate(body).low;
@@ -228,7 +231,6 @@ export async function POST(req: Request) {
       lead_id: leadId,
       lead_email: leadEmail,
       owner_email_norm: normalizeEmail(leadEmail),
-      project_type: projectType,
       tier_recommended: pricingTruth.tierLabel,
       quote_json: quoteJson,
       intake_raw:
@@ -248,6 +250,16 @@ export async function POST(req: Request) {
       dbPayload.auth_user_id = user?.id ?? null;
     } else if (!quoteId) {
       dbPayload.auth_user_id = null;
+    }
+
+    // For new quotes, always classify as the chosen lane (defaulting to
+    // 'website' when the request omits one). For updates, only set
+    // project_type when the request explicitly provided one — otherwise we'd
+    // silently overwrite a previously classified non-website quote with the
+    // 'website' default whenever an unrelated UPDATE call (e.g., from /book
+    // or admin tools) reaches this endpoint without a lane field.
+    if (!quoteId || projectTypeExplicit) {
+      dbPayload.project_type = projectType;
     }
 
     let savedQuoteId: string;
