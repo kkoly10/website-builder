@@ -513,6 +513,17 @@
     "kicker": "Devis de site web",
     "title": "Trouvez la bonne configuration <em>en moins de 60 secondes</em>",
     "subtitle": "Répondez à cinq questions rapides. Nous recommanderons le bon type de build et vous enverrons directement vers le devis complet.",
+    "routerKicker": "Start a project",
+    "routerTitle": "What are you building?",
+    "routerSubtitle": "Pick what's closest to what you need. We'll route you to the right intake.",
+    "redirecting": "Routing you to the right intake...",
+    "projectTypes": {
+      "website": { "label": "Website", "desc": "I need a website that converts." },
+      "web_app": { "label": "Custom web app", "desc": "Dashboard, portal, internal tool, MVP." },
+      "automation": { "label": "Workflow automation", "desc": "I'm drowning in repetitive admin work." },
+      "ecommerce": { "label": "E-commerce", "desc": "I need to sell things online." },
+      "rescue": { "label": "Website rescue", "desc": "My current site isn't working." }
+    },
     "goalQuestion": "Quel est l'objectif principal ?",
     "pagesQuestion": "Combien de pages ?",
     "timelineQuestion": "Calendrier ?",

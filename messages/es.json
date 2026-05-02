@@ -513,6 +513,17 @@
     "kicker": "Estimación de sitio web",
     "title": "Encuentra la configuración correcta <em>en menos de 60 segundos</em>",
     "subtitle": "Responde cinco preguntas rápidas. Recomendaremos el tipo de build correcto y te llevaremos directo al flujo completo de estimación.",
+    "routerKicker": "Start a project",
+    "routerTitle": "What are you building?",
+    "routerSubtitle": "Pick what's closest to what you need. We'll route you to the right intake.",
+    "redirecting": "Routing you to the right intake...",
+    "projectTypes": {
+      "website": { "label": "Website", "desc": "I need a website that converts." },
+      "web_app": { "label": "Custom web app", "desc": "Dashboard, portal, internal tool, MVP." },
+      "automation": { "label": "Workflow automation", "desc": "I'm drowning in repetitive admin work." },
+      "ecommerce": { "label": "E-commerce", "desc": "I need to sell things online." },
+      "rescue": { "label": "Website rescue", "desc": "My current site isn't working." }
+    },
     "goalQuestion": "¿Cuál es el objetivo principal?",
     "pagesQuestion": "¿Cuántas páginas?",
     "timelineQuestion": "¿Plazo?",
