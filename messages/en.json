@@ -13,6 +13,7 @@
     "ecommerce": "E-commerce",
     "systems": "Systems",
     "process": "Process",
+    "work": "Work",
     "pricing": "Pricing",
     "faq": "FAQ",
     "clientPortal": "Client portal",
@@ -30,6 +31,7 @@
       "ecommerce": "E-commerce",
       "systems": "Systems",
       "process": "Process",
+      "work": "Work",
       "pricing": "Pricing",
       "faq": "FAQ",
       "contact": "Contact",
@@ -313,7 +315,24 @@
     "topic1": "Project updates and milestones",
     "topic2": "Billing and invoices",
     "topic3": "Portal access recovery",
-    "topic4": "Legal/privacy requests"
+    "topic4": "Legal/privacy requests",
+    "byType": {
+      "webApp": {
+        "kicker": "Custom web app inquiry",
+        "title": "Tell us about your custom web app",
+        "description": "Quick context — what problem are you solving, who would use it, and when do you need it live? Email us and we'll route to a free 30-minute strategy call to scope properly."
+      },
+      "portal": {
+        "kicker": "Client portal inquiry",
+        "title": "Tell us about the portal you need",
+        "description": "Who logs in (clients, staff, both), what they do there, and what's the current pain point? Email us and we'll set up a scoping conversation."
+      },
+      "rescue": {
+        "kicker": "Website rescue inquiry",
+        "title": "Tell us what's broken on your current site",
+        "description": "URL, what isn't working, and what you've already tried. Email us and we'll do a quick triage and propose audit or sprint scope."
+      }
+    }
   },
   "privacy": {
     "metaTitle": "Privacy Policy | CrecyStudio",
@@ -1897,5 +1916,42 @@
       "not_requested": "Not requested",
       "not_started": "Not started"
     }
+  },
+  "work": {
+    "metaTitle": "Work | CrecyStudio",
+    "metaDescription": "Selected systems we've shipped — including our own. Multi-tenant rental SaaS, AI-augmented service-contractor platform, and client work.",
+    "kicker": "Selected work",
+    "title": "Real systems we've shipped — <em>including our own.</em>",
+    "subtitle": "Two studio ventures we built, run, and operate. Plus client work where the names are sometimes anonymized.",
+    "venturesLabel": "Studio ventures",
+    "venturesIntro": "These are our own products, built and operated by the studio. They prove the engineering capability for the Web Apps lane — they're not client testimonials.",
+    "ventureBadge": "Studio venture",
+    "ventures": {
+      "korent": {
+        "name": "Korent",
+        "tagline": "Operating system for inflatable rental businesses",
+        "summary": "Multi-tenant SaaS for inflatable rental businesses with three surfaces — public storefront, operator dashboard, and crew mobile workspace. Postgres with Row-Level Security for tenant isolation, delivery-route planning, document generation for rental agreements, and an AI operator copilot.",
+        "chip1": "Multi-tenant",
+        "chip2": "Crew mobile",
+        "chip3": "Delivery routing",
+        "chip4": "AI copilot",
+        "linkLabel": "Visit korent.app"
+      },
+      "proveo": {
+        "name": "Proveo",
+        "tagline": "Photo proof + CRM for service contractors",
+        "summary": "SaaS for auto detailers, painters, and cleaners. AI photo detection identifying before/after pairs, freemium billing tiers, CRM pipeline, appointment scheduling, automated lifecycle and review-request emails.",
+        "chip1": "AI photo detection",
+        "chip2": "Freemium billing",
+        "chip3": "CRM pipeline",
+        "chip4": "Automated emails",
+        "linkLabel": "Visit proveohq.com"
+      }
+    },
+    "clientLabel": "Client work",
+    "clientIntro": "Client case studies will land here as engagements complete. Anonymized first, then replaced with the named version when the client agrees.",
+    "comingSoon": "First case study lands here soon",
+    "ctaPrimary": "Start a project",
+    "ctaSecondary": "Plan a custom app"
   }
 }

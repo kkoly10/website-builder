@@ -19,6 +19,7 @@ export default function SiteFooter() {
             <Link href="/ecommerce">{t("links.ecommerce")}</Link>
             <Link href="/systems">{t("links.systems")}</Link>
             <Link href="/process">{t("links.process")}</Link>
+            <Link href="/work">{t("links.work")}</Link>
             <Link href="/pricing">{t("links.pricing")}</Link>
             <Link href="/faq">{t("links.faq")}</Link>
             <Link href="/contact">{t("links.contact")}</Link>
