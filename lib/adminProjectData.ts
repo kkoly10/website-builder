@@ -190,6 +190,12 @@ function toAdminProjectData(
   workspace: any,
   debug: Record<string, any>,
   projectType: ProjectType,
+  agreementRow?: {
+    accepted_at: string | null;
+    accepted_by_email: string | null;
+    accepted_ip: string | null;
+    body_hash: string | null;
+  } | null,
 ): AdminProjectData {
   const messages: PortalMessage[] = Array.isArray(workspace.messages) ? workspace.messages : [];
   return {
@@ -271,7 +277,14 @@ function toAdminProjectData(
     preContractDraft: debug.generatedPreContract || "",
     publishedAgreementText:
       workspace.agreement.publishedText || debug.publishedAgreementText || "",
-    agreementAcceptance: debug.agreementAcceptance
+    agreementAcceptance: agreementRow
+      ? {
+          acceptedAt: agreementRow.accepted_at || "",
+          acceptedByEmail: agreementRow.accepted_by_email || "",
+          acceptedFromIp: agreementRow.accepted_ip || "",
+          agreementVersionHash: agreementRow.body_hash || "",
+        }
+      : debug.agreementAcceptance
       ? {
           acceptedAt: debug.agreementAcceptance.acceptedAt || "",
           acceptedByEmail: debug.agreementAcceptance.acceptedByEmail || "",
@@ -283,7 +296,7 @@ function toAdminProjectData(
 }
 
 export async function getAdminProjectDataByQuoteId(quoteId: string) {
-  const [workspaceRes, quoteRes, invoices, activityFeed] = await Promise.all([
+  const [workspaceRes, quoteRes, invoices, activityFeed, portalProjectRes] = await Promise.all([
     getCustomerPortalViewByQuoteId(quoteId, { includeInternal: true }),
     supabaseAdmin
       .from("quotes")
@@ -292,16 +305,36 @@ export async function getAdminProjectDataByQuoteId(quoteId: string) {
       .maybeSingle(),
     listProjectInvoicesByQuoteId(quoteId),
     listProjectActivityByQuoteId(quoteId, { limit: 80 }),
+    supabaseAdmin
+      .from("customer_portal_projects")
+      .select("id")
+      .eq("quote_id", quoteId)
+      .maybeSingle(),
   ]);
 
   if (!workspaceRes.ok || quoteRes.error || !quoteRes.data) {
     return null;
   }
 
+  const portalProjectId = portalProjectRes.data?.id ?? null;
+  let agreementRow = null;
+  if (portalProjectId) {
+    const { data } = await supabaseAdmin
+      .from("agreements")
+      .select("accepted_at, accepted_by_email, accepted_ip, body_hash")
+      .eq("portal_project_id", portalProjectId)
+      .eq("status", "accepted")
+      .order("accepted_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    agreementRow = data ?? null;
+  }
+
   return toAdminProjectData(
     { ...workspaceRes.data, invoices, activityFeed },
     safeObj(quoteRes.data.debug),
     coerceProjectType((quoteRes.data as { project_type?: unknown }).project_type),
+    agreementRow,
   );
 }
 

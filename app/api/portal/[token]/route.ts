@@ -255,6 +255,32 @@ export async function POST(
           .from("quotes")
           .update({ debug: nextDebug })
           .eq("id", result.data.quote.id);
+
+        // Dual-write to agreements table for cryptographic audit trail.
+        // Fire-and-forget — does not block the response.
+        if (publishedText) {
+          void (async () => {
+            const { data: portalRow } = await supabaseAdmin
+              .from("customer_portal_projects")
+              .select("id")
+              .eq("access_token", token)
+              .maybeSingle();
+            if (!portalRow?.id) return;
+            await supabaseAdmin.from("agreements").insert({
+              portal_project_id: portalRow.id,
+              body_text: publishedText,
+              body_hash: acceptanceAudit.agreementVersionHash || "",
+              published_at: new Date().toISOString(),
+              accepted_at: acceptanceAudit.acceptedAt,
+              accepted_by_email: acceptanceAudit.acceptedByEmail || null,
+              accepted_ip: acceptanceAudit.acceptedFromIp || null,
+              accepted_user_agent: audit.userAgent || null,
+              status: "accepted",
+            });
+          })().catch((err) => {
+            console.error("[portal] agreements dual-write error:", err);
+          });
+        }
       }
 
       const eventMap: Record<string, string> = {
