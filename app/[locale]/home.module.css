@@ -191,7 +191,7 @@
 }
 
 .portalEyebrow {
-  color: var(--accent-soft);
+  color: var(--accent);
 }
 
 .portalHero h3 {
@@ -203,7 +203,7 @@
 }
 
 .portalHero h3 em {
-  color: var(--accent-soft);
+  color: var(--accent);
   font-style: italic;
 }
 
@@ -264,7 +264,7 @@
 }
 
 .jstepActive .jname {
-  color: var(--accent-soft);
+  color: var(--accent);
 }
 
 .portalCards {
@@ -607,7 +607,7 @@
 
 .venturesLabel::before {
   content: "/ ";
-  color: var(--accent-soft);
+  color: var(--accent);
 }
 
 .venturesTitle {
@@ -684,7 +684,7 @@
   font: 500 11px/1.3 var(--font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent-soft);
+  color: var(--accent);
   text-decoration: none;
   transition: opacity 0.15s;
 }
