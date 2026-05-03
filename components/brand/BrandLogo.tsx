@@ -14,8 +14,6 @@ export default function BrandLogo({
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 280 50"
-        height={28}
-        width={157}
         aria-hidden="true"
         style={{ display: "block" }}
       >
@@ -23,8 +21,16 @@ export default function BrandLogo({
           <path d="M4 2 L4 34 L12 26 L22 40 L28 36 L18 22 L30 20 Z" fill="#1a1210" />
           <circle cx="8" cy="40" r="3" fill="#c43e2b" />
         </g>
-        <text x="50" y="33" fill="#1a1210" fontSize={28} fontWeight={600} fontFamily="var(--font-display, 'Sora', sans-serif)" letterSpacing="-0.8">crecy</text>
-        <text x="132" y="33" fill="#8a7d74" fontSize={28} fontWeight={300} fontFamily="var(--font-display, 'Sora', sans-serif)" letterSpacing="-0.8">studio</text>
+        <text
+          x="50"
+          y="33"
+          fontSize={28}
+          fontWeight={600}
+          fontFamily="var(--font-display, 'Sora', sans-serif)"
+          letterSpacing="-0.8"
+        >
+          <tspan fill="#1a1210">crecy</tspan><tspan fill="#c43e2b" fontWeight={300}>studio</tspan>
+        </text>
       </svg>
       {showTag ? (
         <span className="brandLogoSub">Websites / automation / systems</span>
