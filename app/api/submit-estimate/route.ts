@@ -6,6 +6,7 @@ import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/
 import { recordServerEvent } from "@/lib/analytics/server";
 import { resolveQuoteAccess, sameNormalizedEmail } from "@/lib/accessControl";
 import { pickPreferredLocale } from "@/lib/preferredLocale";
+import { ensureCustomerPortalForQuoteId } from "@/lib/customerPortal";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -286,6 +287,10 @@ export async function POST(req: Request) {
       if (error) throw new Error(error.message);
       savedQuoteId = String(data.id);
       savedQuoteToken = String(data.public_token ?? "").trim() || null;
+
+      ensureCustomerPortalForQuoteId(savedQuoteId).catch((err) => {
+        console.error("[submit-estimate] workspace auto-create failed for quote", savedQuoteId, err);
+      });
     }
 
     await recordServerEvent({

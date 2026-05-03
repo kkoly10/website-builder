@@ -211,7 +211,7 @@ export default async function PortalPage() {
   }
 
   // Auto-create workspaces for active/won quotes that don't have one yet.
-  const activeStatuses = new Set(["active", "closed_won"]);
+  const activeStatuses = new Set(["active", "closed_won", "deposit_paid"]);
   const quotesNeedingWorkspace = quoteRows.filter(
     (q) => activeStatuses.has(String(q.status || "").toLowerCase()) && !portalTokenByQuoteId.has(q.id)
   );

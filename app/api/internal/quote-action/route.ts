@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireAdminRoute } from "@/lib/routeAuth";
+import { ensureCustomerPortalForQuoteId } from "@/lib/customerPortal";
 
 export const runtime = "nodejs";
 
@@ -99,6 +100,10 @@ export async function POST(req: Request) {
         .eq("id", quoteId);
 
       if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+      ensureCustomerPortalForQuoteId(quoteId).catch((err) => {
+        console.error("[quote-action] workspace ensure failed for quote", quoteId, err);
+      });
 
       return NextResponse.redirect(referer, 303);
     }
