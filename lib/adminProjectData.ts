@@ -2,6 +2,7 @@ import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
 import { getCustomerPortalViewByQuoteId } from "@/lib/customerPortal";
 import { listProjectActivityByQuoteId, type ProjectActivityItem } from "@/lib/projectActivity";
 import { listProjectInvoicesByQuoteId, type ProjectInvoiceView } from "@/lib/projectInvoices";
+import { getProposalByQuoteId, type ProposalLifecycle } from "@/lib/proposals";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 type Milestone = { key: string; label: string; done: boolean; updatedAt?: string | null };
@@ -165,6 +166,7 @@ export type AdminProjectData = {
     acceptedFromIp: string;
     agreementVersionHash: string;
   } | null;
+  proposalLifecycle: ProposalLifecycle | null;
 };
 
 function safeObj(value: unknown) {
@@ -205,6 +207,7 @@ function toAdminProjectData(
   workspace: any,
   debug: Record<string, any>,
   projectType: ProjectType,
+  proposalLifecycle: ProposalLifecycle | null,
 ): AdminProjectData {
   const messages: PortalMessage[] = Array.isArray(workspace.messages) ? workspace.messages : [];
   return {
@@ -312,11 +315,12 @@ function toAdminProjectData(
           agreementVersionHash: debug.agreementAcceptance.agreementVersionHash || "",
         }
       : null,
+    proposalLifecycle,
   };
 }
 
 export async function getAdminProjectDataByQuoteId(quoteId: string) {
-  const [workspaceRes, quoteRes, invoices, activityFeed] = await Promise.all([
+  const [workspaceRes, quoteRes, invoices, activityFeed, proposalLifecycle] = await Promise.all([
     getCustomerPortalViewByQuoteId(quoteId, { includeInternal: true }),
     supabaseAdmin
       .from("quotes")
@@ -325,6 +329,7 @@ export async function getAdminProjectDataByQuoteId(quoteId: string) {
       .maybeSingle(),
     listProjectInvoicesByQuoteId(quoteId),
     listProjectActivityByQuoteId(quoteId, { limit: 80 }),
+    getProposalByQuoteId(quoteId),
   ]);
 
   if (!workspaceRes.ok || quoteRes.error || !quoteRes.data) {
@@ -335,6 +340,7 @@ export async function getAdminProjectDataByQuoteId(quoteId: string) {
     { ...workspaceRes.data, invoices, activityFeed },
     safeObj(quoteRes.data.debug),
     coerceProjectType((quoteRes.data as { project_type?: unknown }).project_type),
+    proposalLifecycle,
   );
 }
 
