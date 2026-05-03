@@ -70,7 +70,22 @@ type ProjectControlData = {
   leadName: string;
   leadEmail: string;
   estimate: { target: number; min: number; max: number };
-  pie: { exists: boolean; score: number | null; tier: string | null; summary: string };
+  pie: {
+    exists: boolean;
+    score: number | null;
+    tier: string | null;
+    summary: string;
+    routing?: {
+      path: string | null;
+      finalPath: string | null;
+      reason: string | null;
+      triggers: string[];
+      recommendedCallLength: string | null;
+      manualOverride: string | null;
+    } | null;
+    priceBand?: { low: number | null; high: number | null } | null;
+    targetPrice?: number | null;
+  };
   callRequest: { status: string; bestTime: string; timezone: string; notes: string } | null;
   adminPricing: { discountPercent: number; flatAdjustment: number; hourlyRate: number; notes: string };
   scopeSnapshot: { tierLabel: string; platform: string; timeline: string; revisionPolicy: string; pagesIncluded: string[]; featuresIncluded: string[]; exclusions: string[] };
@@ -84,6 +99,12 @@ type ProjectControlData = {
   messageSummary: MessageSummary;
   workspaceHistory: { scopeVersions: ScopeVersion[]; changeOrders: ChangeOrder[] };
   proposalText: string;
+  proposalLifecycle?: {
+    status: string;
+    sentAt: string | null;
+    viewedAt: string | null;
+    acceptedAt: string | null;
+  } | null;
   preContractDraft: string;
   publishedAgreementText: string;
   agreementAcceptance: {
@@ -935,6 +956,70 @@ export default function ProjectControlClient({
                 <ReadOnly label="Score" value={data.pie.score != null ? String(data.pie.score) : "—"} />
                 <ReadOnly label="Tier" value={data.pie.tier || "—"} />
               </div>
+              {data.pie.routing && (() => {
+                const fp = data.pie.routing.finalPath;
+                const routeColor = fp === "fast" ? "var(--success)" : fp === "warm" ? "#c98a00" : fp === "deep" ? "#3b82f6" : "var(--muted-2)";
+                const isOverridden = data.pie.routing.manualOverride && data.pie.routing.manualOverride !== data.pie.routing.path;
+                return (
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-2)" }}>Route</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: routeColor, padding: "2px 8px", border: `1px solid ${routeColor}`, borderRadius: 6, textTransform: "uppercase" }}>
+                        {fp || "—"}
+                      </span>
+                      {isOverridden && (
+                        <span style={{ fontSize: 10, color: "var(--muted-2)", fontStyle: "italic" }}>overridden</span>
+                      )}
+                      {data.pie.routing.recommendedCallLength && (
+                        <span style={{ fontSize: 11, color: "var(--muted)", marginLeft: "auto" }}>{data.pie.routing.recommendedCallLength}</span>
+                      )}
+                    </div>
+                    {data.pie.routing.reason && (
+                      <details style={{ marginTop: 6 }}>
+                        <summary style={{ fontSize: 11, color: "var(--muted-2)", cursor: "pointer" }}>Why</summary>
+                        <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.5, marginTop: 4, paddingLeft: 8 }}>{data.pie.routing.reason}</div>
+                      </details>
+                    )}
+                    <div style={{ marginTop: 10 }}>
+                      <label style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-2)", display: "block", marginBottom: 4 }}>Override route</label>
+                      <select className="select" style={{ fontSize: 12 }}
+                        value={data.pie.routing.manualOverride || ""}
+                        onChange={(e) => {
+                          const v = e.target.value || null;
+                          setData((p) => ({ ...p, pie: { ...p.pie, routing: p.pie.routing ? { ...p.pie.routing, manualOverride: v, finalPath: v ?? p.pie.routing.path } : null } }));
+                          savePatch({ pieManualOverride: v }, v ? `Route overridden to "${v}".` : "Override cleared.");
+                        }}>
+                        <option value="">— Use PIE default —</option>
+                        <option value="fast">fast</option>
+                        <option value="warm">warm</option>
+                        <option value="deep">deep</option>
+                      </select>
+                    </div>
+                  </div>
+                );
+              })()}
+              {data.pie.priceBand && (data.pie.priceBand.low != null || data.pie.priceBand.high != null) && (() => {
+                const lo = data.pie.priceBand.low ?? 0;
+                const hi = data.pie.priceBand.high ?? lo;
+                const tgt = data.pie.targetPrice;
+                const range = hi - lo || 1;
+                const pct = tgt != null ? Math.min(100, Math.max(0, ((tgt - lo) / range) * 100)) : null;
+                return (
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-2)", marginBottom: 4 }}>Price band</div>
+                    <div style={{ position: "relative", height: 6, background: "var(--paper-2)", borderRadius: 4, border: "1px solid var(--rule)" }}>
+                      {pct != null && (
+                        <div style={{ position: "absolute", top: -3, left: `${pct}%`, width: 12, height: 12, background: "var(--accent)", borderRadius: "50%", transform: "translateX(-50%)", border: "2px solid var(--paper)" }} />
+                      )}
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--muted-2)", marginTop: 4 }}>
+                      <span>{money(lo)}</span>
+                      {tgt != null && <span style={{ color: "var(--accent)", fontWeight: 600 }}>{money(tgt)}</span>}
+                      <span>{money(hi)}</span>
+                    </div>
+                  </div>
+                );
+              })()}
               {data.pie.summary && (
                 <div style={{ marginTop: 10, fontSize: 13, color: "var(--muted)", lineHeight: 1.6, maxHeight: 120, overflow: "auto" }}>
                   {data.pie.summary}
@@ -949,13 +1034,51 @@ export default function ProjectControlClient({
 
             <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
               <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>Proposal</h3>
+              {data.proposalLifecycle && (() => {
+                const pl = data.proposalLifecycle;
+                const statusColor: Record<string, string> = {
+                  draft: "var(--muted-2)", sent: "var(--muted)", viewed: "#3b82f6",
+                  accepted: "var(--success)", declined: "var(--accent)", expired: "var(--muted-2)",
+                };
+                const sc = statusColor[pl.status] ?? "var(--muted-2)";
+                return (
+                  <div style={{ marginBottom: 12, padding: "10px 14px", background: "var(--paper-2)", borderRadius: 10, border: "1px solid var(--rule)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: sc, padding: "2px 7px", border: `1px solid ${sc}`, borderRadius: 5 }}>{pl.status}</span>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+                      {(["sentAt", "viewedAt", "acceptedAt"] as const).map((k) => (
+                        <div key={k}>
+                          <div style={{ fontSize: 9, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{k.replace("At", "")}</div>
+                          <div style={{ fontSize: 11, color: pl[k] ? "var(--ink)" : "var(--muted-2)" }}>{pl[k] ? fmtDateTime(pl[k]) : "—"}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
               <textarea className="textarea" rows={5} value={data.proposalText}
                 onChange={(e) => setData((p) => ({ ...p, proposalText: e.target.value }))} placeholder="Draft proposal..." />
-              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+              <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
                 <button className="btn btnGhost" disabled={busy} style={{ fontSize: 12, padding: "7px 14px" }}
                   onClick={() => savePatch({ proposalText: data.proposalText }, "Proposal saved.")}>Save</button>
                 <button className="btn btnGhost" style={{ fontSize: 12, padding: "7px 14px" }}
                   onClick={() => navigator.clipboard.writeText(data.proposalText || "")}>Copy</button>
+                {data.proposalLifecycle?.status === "draft" && (
+                  <button className="btn btnGhost" disabled={busy} style={{ fontSize: 12, padding: "7px 14px" }}
+                    onClick={async () => {
+                      setBusy(true); setMessage("Marking sent..."); setMessageIsError(false);
+                      try {
+                        const res = await fetch(`/api/internal/admin/proposals/${encodeURIComponent(data.quoteId)}/mark-sent`, { method: "POST" });
+                        const json = await res.json().catch(() => ({}));
+                        if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+                        setData((p) => ({ ...p, proposalLifecycle: p.proposalLifecycle ? { ...p.proposalLifecycle, status: "sent", sentAt: new Date().toISOString() } : p.proposalLifecycle }));
+                        setMessage("Marked as sent.");
+                      } catch (err) {
+                        setMessageIsError(true); setMessage(err instanceof Error ? err.message : "Failed.");
+                      } finally { setBusy(false); }
+                    }}>Mark sent →</button>
+                )}
               </div>
             </div>
           </div>

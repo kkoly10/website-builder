@@ -266,7 +266,7 @@ export async function POST(
           .maybeSingle();
 
         if (portalRow?.id) {
-          const { data: agrRow } = await supabaseAdmin
+          const { data: agrRow, error: insertError } = await supabaseAdmin
             .from("agreements")
             .insert({
               portal_project_id: portalRow.id,
@@ -281,6 +281,10 @@ export async function POST(
             })
             .select("id")
             .single();
+
+          if (insertError) {
+            console.error("[portal] agreements insert error:", insertError.message);
+          }
 
           const agreementId = agrRow?.id ?? null;
           const clientEmail = result.data.lead?.email ?? null;
