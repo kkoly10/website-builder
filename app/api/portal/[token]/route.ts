@@ -16,6 +16,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { resolveQuoteOwnerAccess } from "@/lib/accessControl";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { generateAndDeliverCertificate } from "@/lib/certificates/generate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -255,6 +256,55 @@ export async function POST(
           .from("quotes")
           .update({ debug: nextDebug })
           .eq("id", result.data.quote.id);
+
+        // Write to agreements table and fire certificate generation
+        const { data: portalRow } = await supabaseAdmin
+          .from("customer_portal_projects")
+          .select("id")
+          .eq("access_token", token)
+          .maybeSingle();
+
+        if (portalRow?.id) {
+          const { data: agrRow } = await supabaseAdmin
+            .from("agreements")
+            .insert({
+              portal_project_id: portalRow.id,
+              body_text: publishedText,
+              body_hash: acceptanceAudit.agreementVersionHash || "",
+              published_at: result.data.agreement?.publishedAt || new Date().toISOString(),
+              accepted_at: acceptanceAudit.acceptedAt,
+              accepted_by_email: acceptanceAudit.acceptedByEmail || null,
+              accepted_ip: acceptanceAudit.acceptedFromIp || null,
+              accepted_user_agent: audit.userAgent || null,
+              status: "accepted",
+            })
+            .select("id")
+            .single();
+
+          const agreementId = agrRow?.id ?? null;
+          const clientEmail = result.data.lead?.email ?? null;
+
+          if (agreementId && clientEmail) {
+            void (async () => {
+              try {
+                await generateAndDeliverCertificate({
+                  agreementId,
+                  quoteId: String(result.data.quote.id),
+                  leadName: result.data.lead?.name || "",
+                  leadEmail: clientEmail,
+                  agreementText: publishedText,
+                  acceptedAt: acceptanceAudit.acceptedAt,
+                  acceptedByEmail: acceptanceAudit.acceptedByEmail,
+                  acceptedFromIp: acceptanceAudit.acceptedFromIp,
+                  agreementHash: acceptanceAudit.agreementVersionHash,
+                  publishedAt: result.data.agreement?.publishedAt || new Date().toISOString(),
+                });
+              } catch (err) {
+                console.error("[portal] certificate generation error:", err);
+              }
+            })();
+          }
+        }
       }
 
       const eventMap: Record<string, string> = {
