@@ -1120,7 +1120,7 @@ clientPortalsData.en = {
     "No per-seat pricing",
     "Works for any service type",
   ],
-  primaryCta: { label: "Start a portal project", href: "/custom-app-intake" },
+  primaryCta: { label: "Start a portal project", href: "/portal-intake" },
   secondaryCta: { label: "See our work", href: "/work" },
   whoItsForTitle: "Best for service businesses running multi-week client engagements.",
   whoItsFor: [
@@ -1251,7 +1251,7 @@ clientPortalsData.en = {
   finalTitle: "Give your clients a workspace they'll actually use.",
   finalText:
     "Tell us about your workflow and we'll scope the right portal — add-on to an existing site or a standalone system. Thirty-minute call, no commitment.",
-  finalPrimaryCta: { label: "Start a portal project", href: "/custom-app-intake" },
+  finalPrimaryCta: { label: "Start a portal project", href: "/portal-intake" },
   finalSecondaryCta: { label: "See our work", href: "/work" },
 };
 
@@ -1270,7 +1270,7 @@ websiteRescueData.en = {
     "1–2 wk turnaround",
     "No full rebuild required",
   ],
-  primaryCta: { label: "Start a rescue", href: "/build/intro" },
+  primaryCta: { label: "Start a rescue", href: "/rescue-intake" },
   secondaryCta: { label: "See pricing", href: "/pricing#rescue" },
   projectType: "rescue",
   whoItsForTitle: "Best for businesses with a site that works but leaks.",
@@ -1397,7 +1397,7 @@ websiteRescueData.en = {
   finalTitle: "Know what's wrong before you spend a dollar on fixes.",
   finalText:
     "The audit alone gives you a prioritized roadmap. Even if you don't do the sprint, you walk away knowing exactly what to fix and in what order.",
-  finalPrimaryCta: { label: "Start a rescue", href: "/build/intro" },
+  finalPrimaryCta: { label: "Start a rescue", href: "/rescue-intake" },
   finalSecondaryCta: { label: "See pricing", href: "/pricing#rescue" },
 };
 

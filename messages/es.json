@@ -53,10 +53,6 @@
       "label": "What we build",
       "title": "From a polished website to the system that runs the business.",
       "cards": {
-        "websites": {
-          "title": "Websites",
-          "body": "Get found, get trusted, get the call."
-        },
         "webApps": {
           "title": "Custom web apps",
           "body": "Dashboards, portals, internal tools, MVPs."
@@ -65,17 +61,24 @@
           "title": "Client portals",
           "body": "A private workspace your customers actually use."
         },
-        "booking": {
-          "title": "Booking & payments",
-          "body": "Take deposits and bookings without duct tape."
-        },
         "automation": {
           "title": "Workflow automation",
           "body": "Stop doing the same task twice."
         },
+        "websites": {
+          "title": "Websites",
+          "body": "Get found, get trusted, get the call.",
+          "badge": "Desde $1,800"
+        },
+        "ecommerce": {
+          "title": "E-commerce",
+          "body": "Una tienda que vende mientras duermes.",
+          "badge": "Desde $1,800"
+        },
         "rescue": {
           "title": "Website rescue",
-          "body": "Fix what you have without a full rebuild."
+          "body": "Fix what you have without a full rebuild.",
+          "badge": "Desde $800"
         }
       }
     },
@@ -2269,6 +2272,169 @@
         "1-3-months": "1 – 3 months",
         "3-6-months": "3 – 6 months",
         "flexible": "Flexible — quality over speed"
+      }
+    }
+  },
+  "portalIntake": {
+    "metaTitle": "Portal de cliente — CrecyStudio",
+    "metaDescription": "Cuéntanos sobre tu proyecto de portal. Definiremos la solución correcta en 30 minutos.",
+    "kicker": "Portal de Cliente",
+    "title": "Cuéntanos sobre el portal.",
+    "stepCounter": "Paso {current} de 3 — {stepTitle}",
+    "stepTitles": {
+      "1": "Tu negocio",
+      "2": "Lo que necesita",
+      "3": "Contacto y envío"
+    },
+    "step1": {
+      "heading": "Cuéntanos sobre tu negocio.",
+      "contactLabel": "Tu nombre *",
+      "contactPlaceholder": "Jane Smith",
+      "companyLabel": "Empresa / Organización",
+      "companyPlaceholder": "Acme Services",
+      "accessLabel": "¿Quién accede al portal?",
+      "currentProcessLabel": "¿Cómo gestionas esto hoy?",
+      "currentProcessPlaceholder": "ej. Enviamos PDFs por correo y usamos un Google Drive compartido."
+    },
+    "step2": {
+      "heading": "¿Qué necesita hacer?",
+      "featuresLabel": "Selecciona todo lo que aplique",
+      "integrationLabel": "¿Integración necesaria?",
+      "timelineLabel": "¿Cuándo lo necesitas?"
+    },
+    "step3": {
+      "heading": "¿Dónde enviamos el presupuesto?",
+      "estimateNote": "Los proyectos de portal comienzan típicamente en $8,000. Una llamada de 30 minutos nos ayuda a definir la solución correcta.",
+      "emailLabel": "Correo electrónico *",
+      "emailPlaceholder": "tu@empresa.com",
+      "phoneLabel": "Teléfono (opcional)",
+      "phonePlaceholder": "(555) 555-5555",
+      "notesLabel": "¿Algo más que debamos saber? (opcional)",
+      "notesPlaceholder": "ej. Necesitamos integrarlo con nuestro CRM y facturar a los clientes directamente.",
+      "privacyNote": "Solo usaremos tu información de contacto para este proyecto."
+    },
+    "nav": {
+      "back": "Atrás",
+      "continue": "Continuar",
+      "submitting": "Enviando...",
+      "submit": "Reservar llamada"
+    },
+    "validation": {
+      "contactRequired": "Por favor ingresa tu nombre.",
+      "validEmail": "Por favor ingresa un correo electrónico válido.",
+      "submitError": "Algo salió mal. Por favor intenta de nuevo."
+    },
+    "enums": {
+      "access": {
+        "clients": "Tus clientes",
+        "team": "Tu equipo interno",
+        "both": "Ambos — clientes y equipo"
+      },
+      "features": {
+        "docs": "Compartir documentos",
+        "status": "Actualizaciones de estado del proyecto",
+        "invoicing": "Factura + pago",
+        "onboarding": "Flujo de incorporación de clientes",
+        "messaging": "Mensajería / comunicación",
+        "reporting": "Panel de informes",
+        "uploads": "Carga de archivos",
+        "forms": "Formularios personalizados"
+      },
+      "integration": {
+        "none": "Ninguna",
+        "crm": "CRM (HubSpot, Salesforce, etc.)",
+        "billing": "Facturación / contabilidad (QuickBooks, Stripe, etc.)",
+        "project-mgmt": "Herramienta de gestión de proyectos (Asana, Monday, etc.)",
+        "custom-api": "API personalizada / otro"
+      },
+      "timeline": {
+        "asap": "Lo antes posible",
+        "1-3-months": "1 a 3 meses",
+        "3-6-months": "3 a 6 meses",
+        "flexible": "Flexible — calidad sobre velocidad"
+      }
+    }
+  },
+  "rescueIntake": {
+    "metaTitle": "Rescate de sitio web — CrecyStudio",
+    "metaDescription": "Cuéntenos qué está fallando. Auditaremos su sitio y le daremos un plan de corrección claro con precios honestos.",
+    "kicker": "Rescate de sitio web",
+    "title": "Cuéntenos qué está roto.",
+    "stepCounter": "Paso {current} de 3 — {stepTitle}",
+    "stepTitles": {
+      "1": "Su sitio",
+      "2": "Los problemas",
+      "3": "Contacto y envío"
+    },
+    "step1": {
+      "heading": "Cuéntenos sobre su sitio actual.",
+      "siteUrlLabel": "URL del sitio actual",
+      "siteUrlPlaceholder": "https://susitio.com",
+      "platformLabel": "¿En qué plataforma está construido?",
+      "companyLabel": "Empresa / Organización",
+      "companyPlaceholder": "Acme Services",
+      "contactLabel": "Su nombre *",
+      "contactPlaceholder": "Juan García"
+    },
+    "step2": {
+      "heading": "¿Qué está fallando?",
+      "issuesLabel": "Seleccione todos los problemas que apliquen",
+      "urgencyLabel": "¿Qué tan urgente es esto?"
+    },
+    "step3": {
+      "heading": "¿Dónde enviamos la auditoría?",
+      "estimateNote": "Las auditorías de rescate comienzan en $800. Las correcciones completas suelen costar entre $1,500 y $4,000.",
+      "emailLabel": "Correo electrónico *",
+      "emailPlaceholder": "usted@empresa.com",
+      "phoneLabel": "Teléfono (opcional)",
+      "phonePlaceholder": "(555) 555-5555",
+      "notesLabel": "¿Algo más que debamos saber? (opcional)",
+      "notesPlaceholder": "Ej. Relanzamos hace 3 meses y el tráfico cayó un 40 %.",
+      "privacyNote": "Solo usaremos su información de contacto para este proyecto."
+    },
+    "nav": {
+      "back": "Atrás",
+      "continue": "Continuar",
+      "submitting": "Enviando...",
+      "submit": "Reservar llamada de rescate"
+    },
+    "validation": {
+      "contactRequired": "Por favor ingrese su nombre.",
+      "validEmail": "Por favor ingrese un correo electrónico válido.",
+      "submitError": "Algo salió mal. Por favor intente de nuevo."
+    },
+    "enums": {
+      "platform": {
+        "wordpress": "WordPress",
+        "webflow": "Webflow",
+        "squarespace": "Squarespace",
+        "wix": "Wix",
+        "custom": "Personalizado / código a mano",
+        "other": "Otro"
+      },
+      "issues": {
+        "slow": "Sitio lento — más de 3 segundos de carga",
+        "broken": "Páginas, enlaces o funciones rotos",
+        "mobile": "Se ve mal en móvil",
+        "design": "Diseño desactualizado",
+        "conversion": "Mala conversión — los visitantes no se convierten en clientes",
+        "seo": "Problemas de SEO — el tráfico cayó o nunca funcionó",
+        "cms": "No puedo actualizar el contenido sin romper cosas",
+        "security": "Advertencias de seguridad o hackeos repetidos"
+      },
+      "urgency": {
+        "critical": {
+          "label": "Crítico — me está costando clientes ahora mismo",
+          "desc": "Cada día que está roto es una venta perdida."
+        },
+        "soon": {
+          "label": "Importante — necesita arreglarse pronto",
+          "desc": "No es urgente, pero quiero resolverlo en las próximas semanas."
+        },
+        "low": {
+          "label": "Bajo — quiero que esté bien hecho, sin prisas",
+          "desc": "Prefiero que se haga correctamente."
+        }
       }
     }
   }

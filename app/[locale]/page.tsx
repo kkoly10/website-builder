@@ -40,13 +40,15 @@ const JOURNEY_KEYS = [
 ] as const;
 
 const WHAT_WE_BUILD_CARDS = [
-  { key: "websites", href: "/websites", event: "cta_home_card_websites" },
-  { key: "webApps", href: "/custom-web-apps", event: "cta_home_card_web_apps" },
-  { key: "portals", href: "/client-portals", event: "cta_home_card_portals" },
-  { key: "booking", href: "/build/intro?projectType=website&intent=booking", event: "cta_home_card_booking" },
-  { key: "automation", href: "/systems", event: "cta_home_card_automation" },
-  { key: "rescue", href: "/website-rescue", event: "cta_home_card_rescue" },
+  { key: "webApps",    href: "/custom-web-apps",  event: "cta_home_card_web_apps"   },
+  { key: "portals",    href: "/client-portals",   event: "cta_home_card_portals"    },
+  { key: "automation", href: "/systems",           event: "cta_home_card_automation" },
+  { key: "websites",   href: "/websites",          event: "cta_home_card_websites"   },
+  { key: "ecommerce",  href: "/ecommerce",         event: "cta_home_card_ecommerce"  },
+  { key: "rescue",     href: "/website-rescue",    event: "cta_home_card_rescue"     },
 ] as const;
+
+const LOW_TICKET_KEYS = new Set(["websites", "ecommerce", "rescue"]);
 
 export default async function Home({
   params,
@@ -125,6 +127,9 @@ function HomeContent() {
               >
                 <h3 className={styles.wbCardTitle}>{t(`whatWeBuild.cards.${card.key}.title`)}</h3>
                 <p className={styles.wbCardBody}>{t(`whatWeBuild.cards.${card.key}.body`)}</p>
+                {LOW_TICKET_KEYS.has(card.key) && (
+                  <span className={styles.wbCardBadge}>{t(`whatWeBuild.cards.${card.key}.badge`)}</span>
+                )}
                 <span className={styles.wbCardArrow} aria-hidden>-&gt;</span>
               </TrackLink>
             ))}
