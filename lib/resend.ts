@@ -38,7 +38,14 @@ export async function sendResendEmail(args: SendEmailArgs) {
           from: args.from,
           subject: args.subject,
           html: args.html,
-          ...(args.attachments?.length && { attachments: args.attachments }),
+          ...(args.attachments?.length && {
+            attachments: args.attachments.map((a) => ({
+              ...a,
+              content: Buffer.isBuffer(a.content)
+                ? a.content.toString("base64")
+                : a.content,
+            })),
+          }),
         }),
       });
 

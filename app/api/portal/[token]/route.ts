@@ -1,5 +1,5 @@
 // app/api/portal/[token]/route.ts
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import crypto from "node:crypto";
 import {
   acceptCustomerPortalAgreement,
@@ -154,6 +154,7 @@ export async function POST(
         userId: user?.id ?? null,
         email: user?.email ?? null,
         ip,
+        userAgent: req.headers.get("user-agent") || null,
       };
     }
 
@@ -285,24 +286,25 @@ export async function POST(
           const clientEmail = result.data.lead?.email ?? null;
 
           if (agreementId && clientEmail) {
-            void (async () => {
+            const certInput = {
+              agreementId,
+              quoteId: String(result.data.quote.id),
+              leadName: result.data.lead?.name || "",
+              leadEmail: clientEmail,
+              agreementText: publishedText,
+              acceptedAt: acceptanceAudit.acceptedAt,
+              acceptedByEmail: acceptanceAudit.acceptedByEmail,
+              acceptedFromIp: acceptanceAudit.acceptedFromIp,
+              agreementHash: acceptanceAudit.agreementVersionHash,
+              publishedAt: result.data.agreement?.publishedAt || new Date().toISOString(),
+            };
+            after(async () => {
               try {
-                await generateAndDeliverCertificate({
-                  agreementId,
-                  quoteId: String(result.data.quote.id),
-                  leadName: result.data.lead?.name || "",
-                  leadEmail: clientEmail,
-                  agreementText: publishedText,
-                  acceptedAt: acceptanceAudit.acceptedAt,
-                  acceptedByEmail: acceptanceAudit.acceptedByEmail,
-                  acceptedFromIp: acceptanceAudit.acceptedFromIp,
-                  agreementHash: acceptanceAudit.agreementVersionHash,
-                  publishedAt: result.data.agreement?.publishedAt || new Date().toISOString(),
-                });
+                await generateAndDeliverCertificate(certInput);
               } catch (err) {
                 console.error("[portal] certificate generation error:", err);
               }
-            })();
+            });
           }
         }
       }
