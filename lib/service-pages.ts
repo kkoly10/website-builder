@@ -1120,7 +1120,7 @@ clientPortalsData.en = {
     "No per-seat pricing",
     "Works for any service type",
   ],
-  primaryCta: { label: "Start a portal project", href: "/custom-app-intake" },
+  primaryCta: { label: "Start a portal project", href: "/portal-intake" },
   secondaryCta: { label: "See our work", href: "/work" },
   whoItsForTitle: "Best for service businesses running multi-week client engagements.",
   whoItsFor: [
@@ -1251,7 +1251,7 @@ clientPortalsData.en = {
   finalTitle: "Give your clients a workspace they'll actually use.",
   finalText:
     "Tell us about your workflow and we'll scope the right portal — add-on to an existing site or a standalone system. Thirty-minute call, no commitment.",
-  finalPrimaryCta: { label: "Start a portal project", href: "/custom-app-intake" },
+  finalPrimaryCta: { label: "Start a portal project", href: "/portal-intake" },
   finalSecondaryCta: { label: "See our work", href: "/work" },
 };
 

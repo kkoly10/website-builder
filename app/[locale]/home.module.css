@@ -572,6 +572,15 @@
   margin-top: 0.4rem;
 }
 
+.wbCardBadge {
+  margin: 0;
+  font: 500 11px/1.3 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  align-self: end;
+}
+
 @media (max-width: 880px) {
   .whatWeBuildGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
