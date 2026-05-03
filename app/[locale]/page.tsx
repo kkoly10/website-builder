@@ -291,6 +291,14 @@ function HomeContent() {
               <p className={styles.founderBio}>{t("founder.bio1")}</p>
               <p className={styles.founderBio}>{t("founder.bio2")}</p>
               <p className={styles.founderBio}>{t("founder.bio3")}</p>
+              <a
+                href={t("founder.linkedinHref")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.founderLinkedIn}
+              >
+                {t("founder.linkedin")}
+              </a>
             </div>
           </div>
         </div>

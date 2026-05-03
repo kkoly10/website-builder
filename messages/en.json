@@ -160,7 +160,9 @@
       "role": "Founder & sole practitioner",
       "bio1": "I didn’t come up through an agency or a computer science program. In 2024, I launched a car rental business in Northern Virginia with 7 cars and a commercial insurance policy. Turo was taking a significant cut of every booking, so I taught myself to build my own platform — a full booking and fleet management system — and kept the profits. I ran that business for over a year, managing operations, customers, and the codebase simultaneously.",
       "bio2": "When operational costs pushed me to pivot, I posted on Facebook Marketplace offering to build websites. Got a few clients. They liked the work. Since then I’ve shipped operating platforms for a repair center, a dropshipping store, IT services, and fleet management — and two SaaS products that are live today.",
-      "bio3": "Every project at CrecyStudio comes through me. No juniors, no handoffs. You get a builder who has sat on your side of the table."
+      "bio3": "Every project at CrecyStudio comes through me. No juniors, no handoffs. You get a builder who has sat on your side of the table.",
+      "linkedin": "Connect on LinkedIn →",
+      "linkedinHref": "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407"
     },
     "closing": {
       "label": "Ready when you are.",
