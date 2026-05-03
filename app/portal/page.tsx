@@ -210,10 +210,13 @@ export default async function PortalPage() {
     if (pp.quote_id && pp.access_token) portalTokenByQuoteId.set(pp.quote_id, pp.access_token);
   }
 
-  // Auto-create workspaces for active/won quotes that don't have one yet.
+  // Auto-create workspaces for active/won/paid quotes that don't have one yet.
   const activeStatuses = new Set(["active", "closed_won", "deposit_paid", "paid"]);
   const quotesNeedingWorkspace = quoteRows.filter(
-    (q) => activeStatuses.has(String(q.status || "").toLowerCase()) && !portalTokenByQuoteId.has(q.id)
+    (q) =>
+      (activeStatuses.has(String(q.status || "").toLowerCase()) ||
+        String(q.deposit_status || "").toLowerCase() === "paid") &&
+      !portalTokenByQuoteId.has(q.id)
   );
   if (quotesNeedingWorkspace.length > 0) {
     const created = await Promise.allSettled(
