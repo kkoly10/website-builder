@@ -7,12 +7,13 @@ export const dynamic = "force-dynamic";
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { quoteId: string } }
+  ctx: { params: Promise<{ quoteId: string }> | { quoteId: string } }
 ) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
 
-  const quoteId = params.quoteId?.trim();
+  const { quoteId: rawId } = await Promise.resolve(ctx.params);
+  const quoteId = rawId?.trim();
   if (!quoteId) {
     return NextResponse.json({ ok: false, error: "quoteId is required" }, { status: 400 });
   }
