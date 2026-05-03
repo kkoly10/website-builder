@@ -83,7 +83,22 @@ export type AdminProjectData = {
   leadName: string;
   leadEmail: string;
   estimate: { target: number; min: number; max: number };
-  pie: { exists: boolean; score: number | null; tier: string | null; summary: string };
+  pie: {
+    exists: boolean;
+    score: number | null;
+    tier: string | null;
+    summary: string;
+    routing: {
+      path: string | null;
+      finalPath: string | null;
+      reason: string | null;
+      triggers: string[];
+      recommendedCallLength: string | null;
+      manualOverride: string | null;
+    } | null;
+    priceBand: { low: number | null; high: number | null } | null;
+    targetPrice: number | null;
+  };
   callRequest: { status: string; bestTime: string; timezone: string; notes: string } | null;
   adminPricing: {
     discountPercent: number;
@@ -212,6 +227,24 @@ function toAdminProjectData(
       score: workspace.pie.score,
       tier: workspace.pie.tier,
       summary: workspace.pie.summary || "",
+      routing: workspace.pie.exists
+        ? {
+            path: workspace.pie.routing?.path ?? null,
+            finalPath: debug.pieManualOverride ?? workspace.pie.routing?.path ?? null,
+            reason: workspace.pie.routing?.reason ?? null,
+            triggers: workspace.pie.routing?.triggers ?? [],
+            recommendedCallLength:
+              (workspace.pie.payload as any)?.routing?.recommendedCallLength ?? null,
+            manualOverride: debug.pieManualOverride ?? null,
+          }
+        : null,
+      priceBand: workspace.pie.exists
+        ? {
+            low: workspace.pie.pricing?.minimum ?? null,
+            high: workspace.pie.pricing?.maximum ?? null,
+          }
+        : null,
+      targetPrice: workspace.pie.exists ? (workspace.pie.pricing?.target ?? null) : null,
     },
     callRequest: workspace.callRequest
       ? {
