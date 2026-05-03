@@ -50,6 +50,21 @@ Six tasks per the opportunity doc roadmap, plus one merged follow-up.
 | **Homepage — founder section** | [#98](https://github.com/kkoly10/website-builder/pull/98) | ✅ Merged | New founder section on homepage between Process and closing CTA. Two-column layout (circular 220px photo + bio); stacks on mobile (≤720px). Bio copy: authentic origin story — Turo car rental pivot → 7 cars → Facebook Marketplace web clients → Korent + Proveo SaaS. "No juniors, no handoffs" closer reinforces single-practitioner delivery signal. `public/about/komlan.jpg` added (headshot). Messages added to en/fr/es. |
 | **Homepage — founder LinkedIn link** | [#99](https://github.com/kkoly10/website-builder/pull/99) | ✅ Merged | Added "Connect on LinkedIn →" link below the bio, pointing to `https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407`. Styled mono/uppercase matching section label aesthetic. |
 | **Homepage — trust copy pass** | [#100](https://github.com/kkoly10/website-builder/pull/100) | ✅ Merged | Honest copy audit: "senior practitioner" → "practitioner" (hero sub + `/custom-web-apps` meta); proof strip "Senior" → "Practitioner"; "No surprises" → "No guesswork"; "Accepting 3–4 projects per quarter" → "Taking on new projects"; Korent tagline "Operating system" → "Management platform"; Korent chip "AI copilot" → "AI scheduling". Applied to en/fr/es. |
+| **Color + accent-soft fix** | [#101](https://github.com/kkoly10/website-builder/pull/101) | ✅ Merged | All 5 `var(--accent-soft)` usages on dark (`--ink`) backgrounds in `home.module.css` replaced with `var(--accent)` — pale blush was invisible on dark panels. Affected: `.portalEyebrow`, `.portalHero h3 em`, `.jstepActive .jname`, `.venturesLabel::before`, `.ventureLink`. Status doc updated with PRs #94–#101. |
+| **Bug fixes — CTA routing + portal CONTINUE** | [#102](https://github.com/kkoly10/website-builder/pull/102) | ✅ Merged | Three fixes: (1) `marketing.module.css` `.darkStep` accent-soft → accent on process page. (2) Homepage portal CTA `href="/portal"` → `href="/demos/portal"` (standalone `/portal` doesn't exist). (3) Portal hub CONTINUE button: was always routing to `/build/intro`; now routes to `/portal/[token]` if workspace exists, `/book?quoteId=...&token=...` if only a quote exists, `/contact` fallback. Added `viewEstimate`/`getInTouch` to `portal.common` i18n keys. |
+
+---
+
+## Phase 3 — Backend engine (PRs #103–#106)
+
+These four PRs implement the operational backend for high-ticket conversion. Merge order: #103 first (migrations), then #104 and #106 independently, then #105 last. All TypeScript-clean at time of push; Vercel CI passes on all four.
+
+| PR | Branch | Status | Summary |
+|---|---|---|---|
+| [#103](https://github.com/kkoly10/website-builder/pull/103) | `claude/phase3-migrations` | 🔄 Draft | Adds `proposals` (one-per-quote lifecycle tracker), `proposal_versions` (append-only snapshots), and `agreements` (SHA-256 audit trail) tables. RLS enabled on all three. Non-breaking — existing `quotes.debug` columns preserved as fallback. Apply with `npx supabase db push` or Supabase MCP. |
+| [#104](https://github.com/kkoly10/website-builder/pull/104) | `claude/phase3-admin-data-layer` | 🔄 Draft | Extends `AdminProjectData.pie` with `routing` (path/finalPath/reason/triggers/recommendedCallLength/manualOverride), `priceBand` (low/high), and `targetPrice` — all already computed in `parsePieReport` but never passed through. Adds `pieManualOverride` write to the `quote-admin` POST handler; stored in `quotes.debug`. Depends on #103. |
+| [#105](https://github.com/kkoly10/website-builder/pull/105) | `claude/phase3-admin-ui` | 🔄 Draft | Admin UI enhancements: PIE routing badge (fast/warm/deep, color-coded), collapsible reason text, recommendedCallLength, manual override `<select>`, tier-band price bar with targetPrice marker. Proposal card gains status badge + sent/viewed/accepted timestamps + "Mark sent →" button. New `lib/proposals.ts` (getProposalByQuoteId, ensureProposalExists, markProposalSent, markProposalViewed). New `/api/internal/admin/proposals/[quoteId]/mark-sent` POST endpoint. `book/page.tsx` fires `markProposalViewed` on estimate load (fire-and-forget). Depends on #103 + #104. |
+| [#106](https://github.com/kkoly10/website-builder/pull/106) | `claude/phase3-agreement-wiring` | 🔄 Draft | Portal route `agreement_accept`: after writing to `quotes.debug`, fires non-blocking async dual-write to `agreements` table with body_text, body_hash, accepted_at, accepted_by_email, accepted_ip, accepted_user_agent. `getAdminProjectDataByQuoteId` queries `agreements` table for accepted row, passes to `toAdminProjectData` which prefers it over `debug.agreementAcceptance` (backwards-compatible fallback). Depends on #103 (table must exist at runtime; write silently fails if table absent). |
 
 ---
 
@@ -162,7 +177,7 @@ If you're picking this up in a new Claude Code session, in order:
 5. **Pick up where this doc says "Not started"** — that's the next task.
 6. **Update this doc** at the end of the session with whatever shipped.
 
-**Phase 1 and Phase 2 are complete as of this doc's last update.** Phase 3 is next.
+**Phase 1 and Phase 2 are complete. Phase 3 backend PRs (#103–#106) are open as drafts** — merge in order: #103 → #104 → #106 (independent) → #105. Apply the Supabase migration from #103 first.
 
 ---
 
