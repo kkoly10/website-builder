@@ -25,19 +25,21 @@ export async function getProposalByQuoteId(quoteId: string): Promise<ProposalLif
 }
 
 export async function ensureProposalExists(quoteId: string): Promise<ProposalLifecycle> {
-  const existing = await getProposalByQuoteId(quoteId);
-  if (existing) return existing;
+  // Upsert guards against concurrent inserts hitting the UNIQUE constraint
+  await supabaseAdmin
+    .from("proposals")
+    .upsert({ quote_id: quoteId, status: "draft" }, { onConflict: "quote_id", ignoreDuplicates: true });
   const { data } = await supabaseAdmin
     .from("proposals")
-    .insert({ quote_id: quoteId, status: "draft" })
     .select("id, status, sent_at, viewed_at, accepted_at")
+    .eq("quote_id", quoteId)
     .single();
   return {
     id: data!.id,
     status: data!.status,
-    sentAt: null,
-    viewedAt: null,
-    acceptedAt: null,
+    sentAt: data!.sent_at,
+    viewedAt: data!.viewed_at,
+    acceptedAt: data!.accepted_at,
   };
 }
 

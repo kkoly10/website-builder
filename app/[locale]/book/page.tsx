@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { useTranslations } from "next-intl";
+import { after } from "next/server";
 import { Link } from "@/i18n/navigation";
 import RawLink from "next/link";
 import BookClient from "./BookClient";
@@ -54,7 +55,7 @@ export default async function BookPage(props: {
     return <BookMissingPanel />;
   }
 
-  void markProposalViewed(quoteId).catch(() => {});
+  after(() => markProposalViewed(quoteId).catch(() => {}));
 
   return <BookClient quoteId={quoteId} quoteToken={quoteToken || undefined} />;
 }

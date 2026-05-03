@@ -990,8 +990,8 @@ export default function ProjectControlClient({
                 );
               })()}
               {data.pie.priceBand && (data.pie.priceBand.low != null || data.pie.priceBand.high != null) && (() => {
-                const lo = data.pie.priceBand!.low ?? 0;
-                const hi = data.pie.priceBand!.high ?? lo;
+                const lo = data.pie.priceBand.low ?? 0;
+                const hi = data.pie.priceBand.high ?? lo;
                 const tgt = data.pie.targetPrice;
                 const range = hi - lo || 1;
                 const pct = tgt != null ? Math.min(100, Math.max(0, ((tgt - lo) / range) * 100)) : null;
@@ -1026,7 +1026,7 @@ export default function ProjectControlClient({
             <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
               <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>Proposal</h3>
               {data.proposalLifecycle && (() => {
-                const pl = data.proposalLifecycle!;
+                const pl = data.proposalLifecycle;
                 const statusColor: Record<string, string> = {
                   draft: "var(--muted-2)", sent: "var(--muted)", viewed: "#3b82f6",
                   accepted: "var(--success)", declined: "var(--accent)", expired: "var(--muted-2)",
