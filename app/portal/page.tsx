@@ -222,6 +222,8 @@ export default async function PortalPage() {
     created.forEach((result, i) => {
       if (result.status === "fulfilled" && result.value?.access_token) {
         portalTokenByQuoteId.set(quotesNeedingWorkspace[i].id, result.value.access_token);
+      } else if (result.status === "rejected") {
+        console.error("[portal] workspace auto-create failed for quote", quotesNeedingWorkspace[i].id, result.reason);
       }
     });
   }
