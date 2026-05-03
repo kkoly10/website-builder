@@ -270,7 +270,7 @@ export async function POST(
               portal_project_id: portalRow.id,
               body_text: publishedText,
               body_hash: acceptanceAudit.agreementVersionHash || "",
-              published_at: new Date().toISOString(),
+              published_at: result.data.agreement?.publishedAt || new Date().toISOString(),
               accepted_at: acceptanceAudit.acceptedAt,
               accepted_by_email: acceptanceAudit.acceptedByEmail || null,
               accepted_ip: acceptanceAudit.acceptedFromIp || null,
