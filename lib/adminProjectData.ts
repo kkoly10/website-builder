@@ -2,6 +2,7 @@ import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
 import { getCustomerPortalViewByQuoteId } from "@/lib/customerPortal";
 import { listProjectActivityByQuoteId, type ProjectActivityItem } from "@/lib/projectActivity";
 import { listProjectInvoicesByQuoteId, type ProjectInvoiceView } from "@/lib/projectInvoices";
+import { getProposalByQuoteId, type ProposalLifecycle } from "@/lib/proposals";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 type Milestone = { key: string; label: string; done: boolean; updatedAt?: string | null };
@@ -83,7 +84,22 @@ export type AdminProjectData = {
   leadName: string;
   leadEmail: string;
   estimate: { target: number; min: number; max: number };
-  pie: { exists: boolean; score: number | null; tier: string | null; summary: string };
+  pie: {
+    exists: boolean;
+    score: number | null;
+    tier: string | null;
+    summary: string;
+    routing: {
+      path: string | null;
+      finalPath: string | null;
+      reason: string | null;
+      triggers: string[];
+      recommendedCallLength: string | null;
+      manualOverride: string | null;
+    } | null;
+    priceBand: { low: number | null; high: number | null } | null;
+    targetPrice: number | null;
+  };
   callRequest: { status: string; bestTime: string; timezone: string; notes: string } | null;
   adminPricing: {
     discountPercent: number;
@@ -150,6 +166,7 @@ export type AdminProjectData = {
     acceptedFromIp: string;
     agreementVersionHash: string;
   } | null;
+  proposalLifecycle: ProposalLifecycle | null;
 };
 
 function safeObj(value: unknown) {
@@ -190,6 +207,7 @@ function toAdminProjectData(
   workspace: any,
   debug: Record<string, any>,
   projectType: ProjectType,
+  proposalLifecycle: ProposalLifecycle | null,
   agreementRow?: {
     accepted_at: string | null;
     accepted_by_email: string | null;
@@ -218,6 +236,24 @@ function toAdminProjectData(
       score: workspace.pie.score,
       tier: workspace.pie.tier,
       summary: workspace.pie.summary || "",
+      routing: workspace.pie.exists
+        ? {
+            path: workspace.pie.routing?.path ?? null,
+            finalPath: debug.pieManualOverride ?? workspace.pie.routing?.path ?? null,
+            reason: workspace.pie.routing?.reason ?? null,
+            triggers: workspace.pie.routing?.triggers ?? [],
+            recommendedCallLength:
+              (workspace.pie.payload as any)?.routing?.recommendedCallLength ?? null,
+            manualOverride: debug.pieManualOverride ?? null,
+          }
+        : null,
+      priceBand: workspace.pie.exists
+        ? {
+            low: workspace.pie.pricing?.minimum ?? null,
+            high: workspace.pie.pricing?.maximum ?? null,
+          }
+        : null,
+      targetPrice: workspace.pie.exists ? (workspace.pie.pricing?.target ?? null) : null,
     },
     callRequest: workspace.callRequest
       ? {
@@ -292,11 +328,12 @@ function toAdminProjectData(
           agreementVersionHash: debug.agreementAcceptance.agreementVersionHash || "",
         }
       : null,
+    proposalLifecycle,
   };
 }
 
 export async function getAdminProjectDataByQuoteId(quoteId: string) {
-  const [workspaceRes, quoteRes, invoices, activityFeed, portalProjectRes] = await Promise.all([
+  const [workspaceRes, quoteRes, invoices, activityFeed, proposalLifecycle, portalProjectRes] = await Promise.all([
     getCustomerPortalViewByQuoteId(quoteId, { includeInternal: true }),
     supabaseAdmin
       .from("quotes")
@@ -305,6 +342,7 @@ export async function getAdminProjectDataByQuoteId(quoteId: string) {
       .maybeSingle(),
     listProjectInvoicesByQuoteId(quoteId),
     listProjectActivityByQuoteId(quoteId, { limit: 80 }),
+    getProposalByQuoteId(quoteId),
     supabaseAdmin
       .from("customer_portal_projects")
       .select("id")
@@ -334,6 +372,7 @@ export async function getAdminProjectDataByQuoteId(quoteId: string) {
     { ...workspaceRes.data, invoices, activityFeed },
     safeObj(quoteRes.data.debug),
     coerceProjectType((quoteRes.data as { project_type?: unknown }).project_type),
+    proposalLifecycle,
     agreementRow,
   );
 }

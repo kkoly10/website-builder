@@ -200,6 +200,12 @@ export async function POST(req: NextRequest) {
       nextDebug.generatedProposalUpdatedAt = new Date().toISOString();
     }
 
+    if ("pieManualOverride" in body) {
+      const override = body.pieManualOverride;
+      nextDebug.pieManualOverride =
+        typeof override === "string" && override.trim() ? override.trim() : null;
+    }
+
     if (typeof body?.preContractDraft === "string") {
       nextDebug.generatedPreContract = body.preContractDraft;
       nextDebug.generatedPreContractUpdatedAt = new Date().toISOString();
