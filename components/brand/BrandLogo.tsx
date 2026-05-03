@@ -14,8 +14,6 @@ export default function BrandLogo({
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 280 50"
-        height={40}
-        width={224}
         aria-hidden="true"
         style={{ display: "block" }}
       >
@@ -31,7 +29,7 @@ export default function BrandLogo({
           fontFamily="var(--font-display, 'Sora', sans-serif)"
           letterSpacing="-0.8"
         >
-          <tspan fill="#1a1210">crecy</tspan><tspan fill="#c43e2b">studio</tspan>
+          <tspan fill="#1a1210">crecy</tspan><tspan fill="#c43e2b" fontWeight={300}>studio</tspan>
         </text>
       </svg>
       {showTag ? (
