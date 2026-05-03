@@ -89,8 +89,8 @@ type PhaseKey = "kickoffReady" | "inProgress" | "preStart" | "intake";
 function quotePhaseKey(q: QuoteRow): PhaseKey {
   const s = String(q.status || "").toLowerCase();
   const dep = String(q.deposit_status || "").toLowerCase();
-  if (dep === "paid") return "kickoffReady";
-  if (["active", "closed_won"].includes(s)) return "inProgress";
+  if (dep === "paid" || s === "paid") return "kickoffReady";
+  if (["active", "closed_won", "deposit_paid"].includes(s)) return "inProgress";
   if (["proposal", "deposit"].includes(s)) return "preStart";
   return "intake";
 }
@@ -211,7 +211,7 @@ export default async function PortalPage() {
   }
 
   // Auto-create workspaces for active/won quotes that don't have one yet.
-  const activeStatuses = new Set(["active", "closed_won", "deposit_paid"]);
+  const activeStatuses = new Set(["active", "closed_won", "deposit_paid", "paid"]);
   const quotesNeedingWorkspace = quoteRows.filter(
     (q) => activeStatuses.has(String(q.status || "").toLowerCase()) && !portalTokenByQuoteId.has(q.id)
   );
