@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
+import Image from "next/image";
 import TrackLink from "@/components/site/TrackLink";
 import ScrollReveal from "@/components/site/ScrollReveal";
 import styles from "./home.module.css";
@@ -267,6 +268,30 @@ function HomeContent() {
                 <p>{step.body}</p>
               </article>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className={`${styles.founder} fadeUp`}>
+        <div className="container">
+          <div className={styles.founderInner}>
+            <div className={styles.founderPhotoWrap}>
+              <Image
+                src="/about/komlan.jpg"
+                alt="Komlan Kouhiko, founder of CrecyStudio"
+                width={220}
+                height={220}
+                className={styles.founderImg}
+              />
+            </div>
+            <div className={styles.founderContent}>
+              <p className={styles.sectionLabel}>{t("founder.label")}</p>
+              <h2 className={styles.founderName}>{t("founder.name")}</h2>
+              <p className={styles.founderRole}>{t("founder.role")}</p>
+              <p className={styles.founderBio}>{t("founder.bio1")}</p>
+              <p className={styles.founderBio}>{t("founder.bio2")}</p>
+              <p className={styles.founderBio}>{t("founder.bio3")}</p>
+            </div>
           </div>
         </div>
       </section>
