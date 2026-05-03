@@ -21,7 +21,7 @@ const PROJECT_TYPE_ROUTES: Record<Exclude<ProjectType, "website">, string> = {
   web_app: "/custom-app-intake",
   automation: "/ops-intake",
   ecommerce: "/ecommerce/intake",
-  rescue: "/contact?type=rescue",
+  rescue: "/rescue-intake",
 };
 
 type QuizGoal = "more-leads" | "bookings" | "sell-online" | "show-work";

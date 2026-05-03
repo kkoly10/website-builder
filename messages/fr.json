@@ -2271,5 +2271,88 @@
         "flexible": "Flexible — quality over speed"
       }
     }
+  },
+  "rescueIntake": {
+    "metaTitle": "Sauvetage de site — CrecyStudio",
+    "metaDescription": "Dites-nous ce qui ne fonctionne pas. Nous auditerons votre site et vous proposerons un plan de correction clair.",
+    "kicker": "Sauvetage de site",
+    "title": "Dites-nous ce qui est cassé.",
+    "stepCounter": "Étape {current} sur 3 — {stepTitle}",
+    "stepTitles": {
+      "1": "Votre site",
+      "2": "Les problèmes",
+      "3": "Contact et envoi"
+    },
+    "step1": {
+      "heading": "Parlez-nous de votre site actuel.",
+      "siteUrlLabel": "URL du site actuel",
+      "siteUrlPlaceholder": "https://votresite.com",
+      "platformLabel": "Sur quelle plateforme est-il construit ?",
+      "companyLabel": "Entreprise / Organisation",
+      "companyPlaceholder": "Acme Services",
+      "contactLabel": "Votre nom *",
+      "contactPlaceholder": "Jean Dupont"
+    },
+    "step2": {
+      "heading": "Qu'est-ce qui ne va pas ?",
+      "issuesLabel": "Sélectionnez tous les problèmes qui s'appliquent",
+      "urgencyLabel": "Quelle est l'urgence ?"
+    },
+    "step3": {
+      "heading": "Où envoyer l'audit ?",
+      "estimateNote": "Les audits de sauvetage débutent à 800 $. Les corrections complètes coûtent généralement entre 1 500 $ et 4 000 $.",
+      "emailLabel": "Courriel *",
+      "emailPlaceholder": "vous@entreprise.com",
+      "phoneLabel": "Téléphone (optionnel)",
+      "phonePlaceholder": "(555) 555-5555",
+      "notesLabel": "Autre chose à savoir ? (optionnel)",
+      "notesPlaceholder": "ex. Nous avons relancé il y a 3 mois et le trafic a chuté de 40 %.",
+      "privacyNote": "Nous utiliserons vos coordonnées uniquement pour ce projet."
+    },
+    "nav": {
+      "back": "Retour",
+      "continue": "Continuer",
+      "submitting": "Envoi en cours...",
+      "submit": "Réserver un appel"
+    },
+    "validation": {
+      "contactRequired": "Veuillez entrer votre nom.",
+      "validEmail": "Veuillez entrer une adresse courriel valide.",
+      "submitError": "Une erreur s'est produite. Veuillez réessayer."
+    },
+    "enums": {
+      "platform": {
+        "wordpress": "WordPress",
+        "webflow": "Webflow",
+        "squarespace": "Squarespace",
+        "wix": "Wix",
+        "custom": "Personnalisé / codé à la main",
+        "other": "Autre"
+      },
+      "issues": {
+        "slow": "Site lent — plus de 3 secondes de chargement",
+        "broken": "Pages, liens ou fonctionnalités cassés",
+        "mobile": "Mauvais rendu sur mobile",
+        "design": "Design dépassé",
+        "conversion": "Mauvaise conversion — les visiteurs ne deviennent pas clients",
+        "seo": "Problèmes SEO — trafic en chute ou inexistant",
+        "cms": "Impossible de mettre à jour le contenu sans tout casser",
+        "security": "Avertissements de sécurité ou piratages répétés"
+      },
+      "urgency": {
+        "critical": {
+          "label": "Critique — je perds des clients maintenant",
+          "desc": "Chaque jour de panne est une vente perdue."
+        },
+        "soon": {
+          "label": "Important — à corriger bientôt",
+          "desc": "Pas urgent, mais je veux que ce soit résolu rapidement."
+        },
+        "low": {
+          "label": "Faible — qualité avant rapidité",
+          "desc": "Je préfère que ce soit bien fait."
+        }
+      }
+    }
   }
 }

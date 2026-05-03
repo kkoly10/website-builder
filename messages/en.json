@@ -2271,5 +2271,88 @@
         "flexible": "Flexible — quality over speed"
       }
     }
+  },
+  "rescueIntake": {
+    "metaTitle": "Website rescue intake | CrecyStudio",
+    "metaDescription": "Tell us what's broken. We'll audit your current site and give you a clear fix plan with honest pricing.",
+    "kicker": "Website Rescue",
+    "title": "Tell us what's broken.",
+    "stepCounter": "Step {current} of 3 — {stepTitle}",
+    "stepTitles": {
+      "1": "Your Site",
+      "2": "The Problems",
+      "3": "Contact & Submit"
+    },
+    "step1": {
+      "heading": "Tell us about your current site.",
+      "siteUrlLabel": "Current site URL",
+      "siteUrlPlaceholder": "https://yoursite.com",
+      "platformLabel": "What platform is it built on?",
+      "companyLabel": "Company / Organization",
+      "companyPlaceholder": "Acme Services",
+      "contactLabel": "Your Name *",
+      "contactPlaceholder": "Jane Smith"
+    },
+    "step2": {
+      "heading": "What's going wrong?",
+      "issuesLabel": "Select every issue that applies",
+      "urgencyLabel": "How urgent is this?"
+    },
+    "step3": {
+      "heading": "Where should we send the audit?",
+      "estimateNote": "Rescue audits start at $800. Full fix scopes typically run $1,500 – $4,000 depending on what we find.",
+      "emailLabel": "Email *",
+      "emailPlaceholder": "you@company.com",
+      "phoneLabel": "Phone (optional)",
+      "phonePlaceholder": "(555) 555-5555",
+      "notesLabel": "Anything else we should know? (optional)",
+      "notesPlaceholder": "e.g. We relaunched 3 months ago and traffic dropped 40%. Agency ghosted us.",
+      "privacyNote": "We'll only use your contact info to follow up on this project. No newsletters, no spam."
+    },
+    "nav": {
+      "back": "Back",
+      "continue": "Continue",
+      "submitting": "Submitting...",
+      "submit": "Book rescue call"
+    },
+    "validation": {
+      "contactRequired": "Please enter your name.",
+      "validEmail": "Please enter a valid email address.",
+      "submitError": "Something went wrong. Please try again."
+    },
+    "enums": {
+      "platform": {
+        "wordpress": "WordPress",
+        "webflow": "Webflow",
+        "squarespace": "Squarespace",
+        "wix": "Wix",
+        "custom": "Custom / hand-coded",
+        "other": "Other"
+      },
+      "issues": {
+        "slow": "Site is slow — takes more than 3 seconds to load",
+        "broken": "Broken pages, links, or features",
+        "mobile": "Looks bad on mobile",
+        "design": "Design is outdated",
+        "conversion": "Poor conversion — visitors aren't becoming leads",
+        "seo": "SEO problems — traffic dropped or never worked",
+        "cms": "Can't update content without breaking things",
+        "security": "Security warnings or repeated hacks"
+      },
+      "urgency": {
+        "critical": {
+          "label": "Critical — costing me customers right now",
+          "desc": "Every day it's broken is a lost sale."
+        },
+        "soon": {
+          "label": "Important — needs fixing soon",
+          "desc": "Not on fire, but I want it resolved in the next few weeks."
+        },
+        "low": {
+          "label": "Low — I want it right, not rushed",
+          "desc": "Happy to queue it properly."
+        }
+      }
+    }
   }
 }

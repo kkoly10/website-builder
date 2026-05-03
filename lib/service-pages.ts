@@ -1270,7 +1270,7 @@ websiteRescueData.en = {
     "1–2 wk turnaround",
     "No full rebuild required",
   ],
-  primaryCta: { label: "Start a rescue", href: "/build/intro" },
+  primaryCta: { label: "Start a rescue", href: "/rescue-intake" },
   secondaryCta: { label: "See pricing", href: "/pricing#rescue" },
   projectType: "rescue",
   whoItsForTitle: "Best for businesses with a site that works but leaks.",
@@ -1397,7 +1397,7 @@ websiteRescueData.en = {
   finalTitle: "Know what's wrong before you spend a dollar on fixes.",
   finalText:
     "The audit alone gives you a prioritized roadmap. Even if you don't do the sprint, you walk away knowing exactly what to fix and in what order.",
-  finalPrimaryCta: { label: "Start a rescue", href: "/build/intro" },
+  finalPrimaryCta: { label: "Start a rescue", href: "/rescue-intake" },
   finalSecondaryCta: { label: "See pricing", href: "/pricing#rescue" },
 };
 

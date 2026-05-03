@@ -2271,5 +2271,88 @@
         "flexible": "Flexible — quality over speed"
       }
     }
+  },
+  "rescueIntake": {
+    "metaTitle": "Rescate de sitio web — CrecyStudio",
+    "metaDescription": "Cuéntenos qué está fallando. Auditaremos su sitio y le daremos un plan de corrección claro con precios honestos.",
+    "kicker": "Rescate de sitio web",
+    "title": "Cuéntenos qué está roto.",
+    "stepCounter": "Paso {current} de 3 — {stepTitle}",
+    "stepTitles": {
+      "1": "Su sitio",
+      "2": "Los problemas",
+      "3": "Contacto y envío"
+    },
+    "step1": {
+      "heading": "Cuéntenos sobre su sitio actual.",
+      "siteUrlLabel": "URL del sitio actual",
+      "siteUrlPlaceholder": "https://susitio.com",
+      "platformLabel": "¿En qué plataforma está construido?",
+      "companyLabel": "Empresa / Organización",
+      "companyPlaceholder": "Acme Services",
+      "contactLabel": "Su nombre *",
+      "contactPlaceholder": "Juan García"
+    },
+    "step2": {
+      "heading": "¿Qué está fallando?",
+      "issuesLabel": "Seleccione todos los problemas que apliquen",
+      "urgencyLabel": "¿Qué tan urgente es esto?"
+    },
+    "step3": {
+      "heading": "¿Dónde enviamos la auditoría?",
+      "estimateNote": "Las auditorías de rescate comienzan en $800. Las correcciones completas suelen costar entre $1,500 y $4,000.",
+      "emailLabel": "Correo electrónico *",
+      "emailPlaceholder": "usted@empresa.com",
+      "phoneLabel": "Teléfono (opcional)",
+      "phonePlaceholder": "(555) 555-5555",
+      "notesLabel": "¿Algo más que debamos saber? (opcional)",
+      "notesPlaceholder": "Ej. Relanzamos hace 3 meses y el tráfico cayó un 40 %.",
+      "privacyNote": "Solo usaremos su información de contacto para este proyecto."
+    },
+    "nav": {
+      "back": "Atrás",
+      "continue": "Continuar",
+      "submitting": "Enviando...",
+      "submit": "Reservar llamada de rescate"
+    },
+    "validation": {
+      "contactRequired": "Por favor ingrese su nombre.",
+      "validEmail": "Por favor ingrese un correo electrónico válido.",
+      "submitError": "Algo salió mal. Por favor intente de nuevo."
+    },
+    "enums": {
+      "platform": {
+        "wordpress": "WordPress",
+        "webflow": "Webflow",
+        "squarespace": "Squarespace",
+        "wix": "Wix",
+        "custom": "Personalizado / código a mano",
+        "other": "Otro"
+      },
+      "issues": {
+        "slow": "Sitio lento — más de 3 segundos de carga",
+        "broken": "Páginas, enlaces o funciones rotos",
+        "mobile": "Se ve mal en móvil",
+        "design": "Diseño desactualizado",
+        "conversion": "Mala conversión — los visitantes no se convierten en clientes",
+        "seo": "Problemas de SEO — el tráfico cayó o nunca funcionó",
+        "cms": "No puedo actualizar el contenido sin romper cosas",
+        "security": "Advertencias de seguridad o hackeos repetidos"
+      },
+      "urgency": {
+        "critical": {
+          "label": "Crítico — me está costando clientes ahora mismo",
+          "desc": "Cada día que está roto es una venta perdida."
+        },
+        "soon": {
+          "label": "Importante — necesita arreglarse pronto",
+          "desc": "No es urgente, pero quiero resolverlo en las próximas semanas."
+        },
+        "low": {
+          "label": "Bajo — quiero que esté bien hecho, sin prisas",
+          "desc": "Prefiero que se haga correctamente."
+        }
+      }
+    }
   }
 }
