@@ -9,6 +9,7 @@ import {
   createSupabaseServerClient,
   isAdminUser,
 } from "@/lib/supabase/server";
+import { ensureCustomerPortalForQuoteId } from "@/lib/customerPortal";
 import ScrollReveal from "@/components/site/ScrollReveal";
 
 export const dynamic = "force-dynamic";
@@ -88,8 +89,8 @@ type PhaseKey = "kickoffReady" | "inProgress" | "preStart" | "intake";
 function quotePhaseKey(q: QuoteRow): PhaseKey {
   const s = String(q.status || "").toLowerCase();
   const dep = String(q.deposit_status || "").toLowerCase();
-  if (dep === "paid") return "kickoffReady";
-  if (["active", "closed_won"].includes(s)) return "inProgress";
+  if (dep === "paid" || s === "paid") return "kickoffReady";
+  if (["active", "closed_won", "deposit_paid"].includes(s)) return "inProgress";
   if (["proposal", "deposit"].includes(s)) return "preStart";
   return "intake";
 }
@@ -207,6 +208,27 @@ export default async function PortalPage() {
   const portalTokenByQuoteId = new Map<string, string>();
   for (const pp of (portalProjectsRes.data ?? []) as { quote_id: string; access_token: string }[]) {
     if (pp.quote_id && pp.access_token) portalTokenByQuoteId.set(pp.quote_id, pp.access_token);
+  }
+
+  // Auto-create workspaces for active/won/paid quotes that don't have one yet.
+  const activeStatuses = new Set(["active", "closed_won", "deposit_paid", "paid"]);
+  const quotesNeedingWorkspace = quoteRows.filter(
+    (q) =>
+      (activeStatuses.has(String(q.status || "").toLowerCase()) ||
+        String(q.deposit_status || "").toLowerCase() === "paid") &&
+      !portalTokenByQuoteId.has(q.id)
+  );
+  if (quotesNeedingWorkspace.length > 0) {
+    const created = await Promise.allSettled(
+      quotesNeedingWorkspace.map((q) => ensureCustomerPortalForQuoteId(q.id))
+    );
+    created.forEach((result, i) => {
+      if (result.status === "fulfilled" && result.value?.access_token) {
+        portalTokenByQuoteId.set(quotesNeedingWorkspace[i].id, result.value.access_token);
+      } else if (result.status === "rejected") {
+        console.error("[portal] workspace auto-create failed for quote", quotesNeedingWorkspace[i].id, result.reason);
+      }
+    });
   }
 
   const totalProjects = quoteRows.length + opsRows.length + ecomRows.length;

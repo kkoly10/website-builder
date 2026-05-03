@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireAdminRoute } from "@/lib/routeAuth";
+import { ensureCustomerPortalForQuoteId } from "@/lib/customerPortal";
 
 export const runtime = "nodejs";
 
@@ -40,6 +41,13 @@ export async function POST(req: Request) {
 
       if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
+      const workspaceStatuses = new Set(["active", "closed_won", "deposit_paid", "deposit_sent", "scope_locked"]);
+      if (workspaceStatuses.has(status)) {
+        ensureCustomerPortalForQuoteId(quoteId).catch((err) => {
+          console.error("[quote-action] workspace ensure failed for quote", quoteId, err);
+        });
+      }
+
       return NextResponse.redirect(referer, 303);
     }
 
@@ -65,6 +73,10 @@ export async function POST(req: Request) {
 
       if (updErr) return NextResponse.json({ error: updErr.message }, { status: 400 });
 
+      ensureCustomerPortalForQuoteId(quoteId).catch((err) => {
+        console.error("[quote-action] workspace ensure failed for quote", quoteId, err);
+      });
+
       return NextResponse.redirect(referer, 303);
     }
 
@@ -85,6 +97,12 @@ export async function POST(req: Request) {
 
       if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
+      if (deposit_link) {
+        ensureCustomerPortalForQuoteId(quoteId).catch((err) => {
+          console.error("[quote-action] workspace ensure failed for quote", quoteId, err);
+        });
+      }
+
       return NextResponse.redirect(referer, 303);
     }
 
@@ -99,6 +117,10 @@ export async function POST(req: Request) {
         .eq("id", quoteId);
 
       if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+      ensureCustomerPortalForQuoteId(quoteId).catch((err) => {
+        console.error("[quote-action] workspace ensure failed for quote", quoteId, err);
+      });
 
       return NextResponse.redirect(referer, 303);
     }
