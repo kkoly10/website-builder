@@ -153,6 +153,7 @@ export async function POST(
         userId: user?.id ?? null,
         email: user?.email ?? null,
         ip,
+        userAgent: req.headers.get("user-agent") || null,
       };
     }
 
@@ -266,7 +267,7 @@ export async function POST(
               .eq("access_token", token)
               .maybeSingle();
             if (!portalRow?.id) return;
-            await supabaseAdmin.from("agreements").insert({
+            const { error: insertError } = await supabaseAdmin.from("agreements").insert({
               portal_project_id: portalRow.id,
               body_text: publishedText,
               body_hash: acceptanceAudit.agreementVersionHash || "",
@@ -277,6 +278,9 @@ export async function POST(
               accepted_user_agent: audit.userAgent || null,
               status: "accepted",
             });
+            if (insertError) {
+              console.error("[portal] agreements dual-write insert error:", insertError.message);
+            }
           })().catch((err) => {
             console.error("[portal] agreements dual-write error:", err);
           });
