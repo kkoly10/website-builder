@@ -9,6 +9,7 @@ import {
   createSupabaseServerClient,
   isAdminUser,
 } from "@/lib/supabase/server";
+import { ensureCustomerPortalForQuoteId } from "@/lib/customerPortal";
 import ScrollReveal from "@/components/site/ScrollReveal";
 
 export const dynamic = "force-dynamic";
@@ -207,6 +208,22 @@ export default async function PortalPage() {
   const portalTokenByQuoteId = new Map<string, string>();
   for (const pp of (portalProjectsRes.data ?? []) as { quote_id: string; access_token: string }[]) {
     if (pp.quote_id && pp.access_token) portalTokenByQuoteId.set(pp.quote_id, pp.access_token);
+  }
+
+  // Auto-create workspaces for active/won quotes that don't have one yet.
+  const activeStatuses = new Set(["active", "closed_won"]);
+  const quotesNeedingWorkspace = quoteRows.filter(
+    (q) => activeStatuses.has(String(q.status || "").toLowerCase()) && !portalTokenByQuoteId.has(q.id)
+  );
+  if (quotesNeedingWorkspace.length > 0) {
+    const created = await Promise.allSettled(
+      quotesNeedingWorkspace.map((q) => ensureCustomerPortalForQuoteId(q.id))
+    );
+    created.forEach((result, i) => {
+      if (result.status === "fulfilled" && result.value?.access_token) {
+        portalTokenByQuoteId.set(quotesNeedingWorkspace[i].id, result.value.access_token);
+      }
+    });
   }
 
   const totalProjects = quoteRows.length + opsRows.length + ecomRows.length;
