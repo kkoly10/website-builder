@@ -45,10 +45,10 @@
     "metaDescription": "Independent web studio building premium websites and custom web systems — from polished marketing sites to client portals, booking flows, and custom dashboards. One workspace from scope to launch.",
     "heroLabel": "Independent web studio / est. 2024",
     "heroTitle": "Built for where you’re going, <em>not where you are.</em>",
-    "heroSub": "From a polished website to a full custom system — built by a senior practitioner who has shipped both.",
+    "heroSub": "From a polished website to a full custom system — built by a practitioner who has shipped both.",
     "ctaStart": "Start a project",
     "ctaProcess": "See the work",
-    "ctaScarcity": "Accepting 3–4 projects per quarter",
+    "ctaScarcity": "Taking on new projects",
     "whatWeBuild": {
       "label": "What we build",
       "title": "From a polished website to the system that runs the business.",
@@ -84,7 +84,7 @@
       "delivery": "SaaS platforms shipped and operating",
       "ownershipValue": "Full-stack",
       "ownership": "Design to deployment, in-house",
-      "noUpfrontValue": "Senior",
+      "noUpfrontValue": "Practitioner",
       "noUpfront": "No juniors, no subcontractors",
       "workspaceValue": "1 workspace",
       "workspace": "Every project, start to finish"
@@ -95,10 +95,10 @@
       "intro": "Two SaaS products built and operated by the studio — not client testimonials. They prove the engineering capability for the Web Apps lane.",
       "korent": {
         "name": "Korent",
-        "tagline": "Operating system for inflatable rental businesses",
-        "detail": "Multi-tenant SaaS — three surfaces, AI copilot, delivery routing.",
+        "tagline": "Management platform for inflatable rental businesses",
+        "detail": "Multi-tenant SaaS — booking, fleet tracking, delivery routing, and AI scheduling assist.",
         "chip1": "Multi-tenant",
-        "chip2": "AI copilot",
+        "chip2": "AI scheduling",
         "link": "korent.app",
         "url": "https://korent.app"
       },
@@ -143,7 +143,7 @@
     },
     "how": {
       "label": "Process",
-      "title": "Three steps. No surprises.",
+      "title": "Three steps. No guesswork.",
       "step1Phase": "/ 01 - Intake",
       "step1Title": "Tell us what the website needs to do",
       "step1Body": "You send the essentials: business, offer, pages, goals, and urgency. We scope against reality instead of guessing from a sales call.",
@@ -593,7 +593,7 @@
     },
     "customWebApps": {
       "metaTitle": "Custom Web Apps | Dashboards, Portals, and Internal Tools",
-      "metaDescription": "Custom web applications for businesses that need more than a website — dashboards, client portals, internal tools, and MVPs built by a senior practitioner."
+      "metaDescription": "Custom web applications for businesses that need more than a website — dashboards, client portals, internal tools, and MVPs built by a practitioner."
     },
     "clientPortals": {
       "metaTitle": "Client Portals | Branded Workspaces Your Clients Actually Use",
@@ -2127,12 +2127,12 @@
     "ventures": {
       "korent": {
         "name": "Korent",
-        "tagline": "Operating system for inflatable rental businesses",
+        "tagline": "Management platform for inflatable rental businesses",
         "summary": "Multi-tenant SaaS for inflatable rental businesses with three surfaces — public storefront, operator dashboard, and crew mobile workspace. Postgres with Row-Level Security for tenant isolation, delivery-route planning, document generation for rental agreements, and an AI operator copilot.",
         "chip1": "Multi-tenant",
         "chip2": "Crew mobile",
         "chip3": "Delivery routing",
-        "chip4": "AI copilot",
+        "chip4": "AI scheduling",
         "linkLabel": "Visit korent.app"
       },
       "proveo": {
