@@ -1729,6 +1729,8 @@
     "common": {
       "openWorkspace": "Ouvrir l'espace de travail",
       "continue": "Continuer",
+      "viewEstimate": "View estimate",
+      "getInTouch": "Get in touch",
       "poweredBy": "Propulsé par",
       "noStoreUrl": "Aucune URL de boutique",
       "websiteFallbackTitle": "Projet de site web",

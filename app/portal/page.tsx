@@ -334,16 +334,29 @@ export default async function PortalPage() {
                   ]}
                   action={(() => {
                     const portalToken = portalTokenByQuoteId.get(q.id);
-                    return portalToken ? (
-                      <Link
-                        href={`/portal/${portalToken}`}
-                        className="btn btnPrimary productBtnSm"
-                      >
-                        {tCommon("openWorkspace")} -&gt;
-                      </Link>
-                    ) : (
-                      <Link href="/build/intro" className="btn btnGhost productBtnSm">
-                        {tCommon("continue")} -&gt;
+                    if (portalToken) {
+                      return (
+                        <Link
+                          href={`/portal/${portalToken}`}
+                          className="btn btnPrimary productBtnSm"
+                        >
+                          {tCommon("openWorkspace")} -&gt;
+                        </Link>
+                      );
+                    }
+                    if (q.public_token) {
+                      return (
+                        <Link
+                          href={`/book?quoteId=${q.id}&token=${q.public_token}`}
+                          className="btn btnGhost productBtnSm"
+                        >
+                          {tCommon("viewEstimate")} -&gt;
+                        </Link>
+                      );
+                    }
+                    return (
+                      <Link href="/contact" className="btn btnGhost productBtnSm">
+                        {tCommon("getInTouch")} -&gt;
                       </Link>
                     );
                   })()}

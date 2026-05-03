@@ -39,8 +39,6 @@ const JOURNEY_KEYS = [
   ["launch", "pending"],
 ] as const;
 
-// Phase 1: routes that don't yet exist (custom-web-apps, client-portals,
-// website-rescue) fall back to /contact?type=... until Phase 2 ships them.
 const WHAT_WE_BUILD_CARDS = [
   { key: "websites", href: "/websites", event: "cta_home_card_websites" },
   { key: "webApps", href: "/custom-web-apps", event: "cta_home_card_web_apps" },
@@ -209,7 +207,7 @@ function HomeContent() {
                 </h3>
               </div>
 
-              <TrackLink href="/portal" event="cta_home_portal_preview" className={styles.portalCta}>
+              <TrackLink href="/demos/portal" event="cta_home_portal_preview" className={styles.portalCta}>
                 {t("diff.openPreview")} -&gt;
               </TrackLink>
             </div>
