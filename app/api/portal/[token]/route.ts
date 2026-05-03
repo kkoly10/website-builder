@@ -1,5 +1,5 @@
 // app/api/portal/[token]/route.ts
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import crypto from "node:crypto";
 import {
   acceptCustomerPortalAgreement,
@@ -16,6 +16,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { resolveQuoteOwnerAccess } from "@/lib/accessControl";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { generateAndDeliverCertificate } from "@/lib/certificates/generate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -257,17 +258,17 @@ export async function POST(
           .update({ debug: nextDebug })
           .eq("id", result.data.quote.id);
 
-        // Dual-write to agreements table for cryptographic audit trail.
-        // Fire-and-forget — does not block the response.
-        if (publishedText) {
-          void (async () => {
-            const { data: portalRow } = await supabaseAdmin
-              .from("customer_portal_projects")
-              .select("id")
-              .eq("access_token", token)
-              .maybeSingle();
-            if (!portalRow?.id) return;
-            const { error: insertError } = await supabaseAdmin.from("agreements").insert({
+        // Write to agreements table and fire certificate generation
+        const { data: portalRow } = await supabaseAdmin
+          .from("customer_portal_projects")
+          .select("id")
+          .eq("access_token", token)
+          .maybeSingle();
+
+        if (portalRow?.id) {
+          const { data: agrRow, error: insertError } = await supabaseAdmin
+            .from("agreements")
+            .insert({
               portal_project_id: portalRow.id,
               body_text: publishedText,
               body_hash: acceptanceAudit.agreementVersionHash || "",
@@ -277,13 +278,38 @@ export async function POST(
               accepted_ip: acceptanceAudit.acceptedFromIp || null,
               accepted_user_agent: audit.userAgent || null,
               status: "accepted",
+            })
+            .select("id")
+            .single();
+
+          if (insertError) {
+            console.error("[portal] agreements insert error:", insertError.message);
+          }
+
+          const agreementId = agrRow?.id ?? null;
+          const clientEmail = result.data.lead?.email ?? null;
+
+          if (agreementId && clientEmail) {
+            const certInput = {
+              agreementId,
+              quoteId: String(result.data.quote.id),
+              leadName: result.data.lead?.name || "",
+              leadEmail: clientEmail,
+              agreementText: publishedText,
+              acceptedAt: acceptanceAudit.acceptedAt,
+              acceptedByEmail: acceptanceAudit.acceptedByEmail,
+              acceptedFromIp: acceptanceAudit.acceptedFromIp,
+              agreementHash: acceptanceAudit.agreementVersionHash,
+              publishedAt: result.data.agreement?.publishedAt || new Date().toISOString(),
+            };
+            after(async () => {
+              try {
+                await generateAndDeliverCertificate(certInput);
+              } catch (err) {
+                console.error("[portal] certificate generation error:", err);
+              }
             });
-            if (insertError) {
-              console.error("[portal] agreements dual-write insert error:", insertError.message);
-            }
-          })().catch((err) => {
-            console.error("[portal] agreements dual-write error:", err);
-          });
+          }
         }
       }
 

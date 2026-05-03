@@ -385,6 +385,7 @@ export default function ProjectControlClient({
   const [message, setMessage] = useState("");
   const [messageIsError, setMessageIsError] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [certificateUrl, setCertificateUrl] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ title: string; description: string; onConfirm: () => void } | null>(null);
   const [newChangeOrder, setNewChangeOrder] = useState({ title: "", summary: "", priceImpact: "", timelineImpact: "", scopeImpact: "", status: "draft" });
   const [newInvoice, setNewInvoice] = useState({
@@ -434,6 +435,14 @@ export default function ProjectControlClient({
     const timer = setInterval(() => refreshMessages(true), 30_000);
     return () => clearInterval(timer);
   }, [activeTab, data.quoteId]);
+
+  useEffect(() => {
+    if (!data.agreementAcceptance) return;
+    fetch(`/api/internal/admin/certificates/${data.quoteId}`)
+      .then((r) => r.json())
+      .then((json) => { if (json.signedUrl) setCertificateUrl(json.signedUrl); })
+      .catch(() => {});
+  }, [data.quoteId, data.agreementAcceptance]);
 
   /* ── API ── */
   async function savePatch(payload: Record<string, any>, successMsg: string) {
@@ -1437,6 +1446,40 @@ export default function ProjectControlClient({
                   <div><strong style={{ color: "var(--ink)" }}>Email:</strong> {data.agreementAcceptance.acceptedByEmail || "Unknown"}</div>
                   <div><strong style={{ color: "var(--ink)" }}>IP:</strong> {data.agreementAcceptance.acceptedFromIp || "Unknown"}</div>
                   <div style={{ wordBreak: "break-all" }}><strong style={{ color: "var(--ink)" }}>Version hash:</strong> {data.agreementAcceptance.agreementVersionHash || "Unknown"}</div>
+                </div>
+                <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  {certificateUrl && (
+                    <a
+                      href={certificateUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btnGhost"
+                      style={{ fontSize: 12, padding: "7px 14px" }}
+                    >
+                      Download certificate →
+                    </a>
+                  )}
+                  <button
+                    className="btn btnGhost"
+                    disabled={busy}
+                    style={{ fontSize: 12, padding: "7px 14px" }}
+                    onClick={async () => {
+                      setBusy(true);
+                      try {
+                        const res = await fetch(`/api/internal/admin/certificates/${data.quoteId}`, { method: "POST" });
+                        const json = await res.json();
+                        if (json.signedUrl) setCertificateUrl(json.signedUrl);
+                        setMessage(json.ok ? "Certificate generated and sent." : (json.error || "Failed."));
+                        setMessageIsError(!json.ok);
+                      } catch {
+                        setMessage("Certificate generation failed."); setMessageIsError(true);
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
+                  >
+                    {certificateUrl ? "Regenerate certificate" : "Generate certificate"}
+                  </button>
                 </div>
               </div>
             ) : null}

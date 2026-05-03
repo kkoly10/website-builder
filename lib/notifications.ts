@@ -102,6 +102,18 @@ const templates: Record<
     toClient: false,
     toAdmin: true,
   }),
+
+  agreement_accepted: (ctx) => ({
+    subject: `Agreement accepted — ${ctx.leadName}`,
+    html: `
+      <h2>Agreement accepted</h2>
+      <p><strong>${ctx.leadName}</strong> has electronically accepted the project agreement.</p>
+      <p>A Certificate of Completion has been generated and emailed to the client.</p>
+      ${ctx.workspaceUrl ? `<p><a href="${ctx.workspaceUrl}">Open Workspace</a></p>` : ""}
+    `,
+    toClient: false,
+    toAdmin: true,
+  }),
 };
 
 export async function sendEventNotification(ctx: EventContext) {

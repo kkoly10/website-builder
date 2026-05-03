@@ -1,8 +1,15 @@
+type Attachment = {
+  filename: string;
+  content: Buffer | string;
+  content_type?: string;
+};
+
 type SendEmailArgs = {
   to: string;
   from: string;
   subject: string;
   html: string;
+  attachments?: Attachment[];
 };
 
 const MAX_RETRIES = 2;
@@ -31,6 +38,14 @@ export async function sendResendEmail(args: SendEmailArgs) {
           from: args.from,
           subject: args.subject,
           html: args.html,
+          ...(args.attachments?.length && {
+            attachments: args.attachments.map((a) => ({
+              ...a,
+              content: Buffer.isBuffer(a.content)
+                ? a.content.toString("base64")
+                : a.content,
+            })),
+          }),
         }),
       });
 

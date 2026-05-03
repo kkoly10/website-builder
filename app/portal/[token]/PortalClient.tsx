@@ -1701,13 +1701,23 @@ export default function PortalClient({
             </div>
 
             {bundle.agreement.status === "accepted" ? (
-              <div style={{
-                marginBottom: 12, padding: 10, borderRadius: 10,
-                background: "var(--success-bg)", border: "1px solid var(--success)",
-                color: "var(--success)", fontSize: 13, fontWeight: 700,
-              }}>
-                {tDetailRows("agreementAccepted")}
-              </div>
+              <>
+                <div style={{
+                  marginBottom: 8, padding: 10, borderRadius: 10,
+                  background: "var(--success-bg)", border: "1px solid var(--success)",
+                  color: "var(--success)", fontSize: 13, fontWeight: 700,
+                }}>
+                  {tDetailRows("agreementAccepted")}
+                </div>
+                <a
+                  href={`/api/portal/${token}/certificate`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ display: "inline-block", marginBottom: 12, fontSize: 13, color: "var(--accent)" }}
+                >
+                  Download signed certificate →
+                </a>
+              </>
             ) : (
               <div style={{ marginBottom: 12 }}>
                 <button
