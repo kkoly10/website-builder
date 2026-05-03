@@ -52,7 +52,33 @@ create table if not exists agreements (
   updated_at timestamptz not null default now()
 );
 
--- RLS: studio-only read/write (no client-facing queries in Phase 3)
+-- unique version numbering per proposal
+alter table proposal_versions
+  add constraint uq_proposal_versions_no unique (proposal_id, version_no);
+
+-- FK indexes for join performance
+create index on agreements (portal_project_id);
+create index on proposal_versions (proposal_id);
+
+-- auto-update updated_at on row change
+create or replace function set_updated_at()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
+create trigger proposals_updated_at
+  before update on proposals
+  for each row execute function set_updated_at();
+
+create trigger agreements_updated_at
+  before update on agreements
+  for each row execute function set_updated_at();
+
+-- RLS enabled; policies are defined per-role in service-role migrations
+-- (Phase 3 queries use supabaseAdmin which bypasses RLS)
 alter table proposals enable row level security;
 alter table proposal_versions enable row level security;
 alter table agreements enable row level security;
