@@ -29,7 +29,7 @@ export default function BrandLogo({
           fontFamily="var(--font-display, 'Sora', sans-serif)"
           letterSpacing="-0.8"
         >
-          <tspan fill="#1a1210">crecy</tspan><tspan fill="#c43e2b" fontWeight={300}>studio</tspan>
+          <tspan fill="#1a1210">Crecy</tspan><tspan fill="#c43e2b" fontWeight={300}>Studio</tspan>
         </text>
       </svg>
       {showTag ? (
