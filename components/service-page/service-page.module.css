@@ -498,3 +498,4 @@
 .founderCalloutText { margin: 0 0 .75rem; font-size: .95rem; line-height: 1.65; color: var(--ink); }
 .founderCalloutLink { font: 500 13px/1 var(--font-mono); color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 560px) { .founderCalloutInner { flex-direction: column; } }
+.riskReversal { margin-top: .75rem; font-size: .82rem; color: var(--muted); line-height: 1.5; }

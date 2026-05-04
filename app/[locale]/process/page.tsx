@@ -81,6 +81,13 @@ function ProcessContent() {
         </div>
       </section>
 
+      <section style={{ padding: "2.5rem 0", borderTop: "1px solid var(--rule)", borderBottom: "1px solid var(--rule)" }}>
+        <div className="container">
+          <p className={styles.sectionLabel}>{t("founderNoteLabel")}</p>
+          <p className={styles.sectionNote} style={{ maxWidth: 640, marginTop: "0.5rem" }}>{t("founderNote")}</p>
+        </div>
+      </section>
+
       <section className={styles.section}>
         <div className="container">
           <div className={styles.sectionHead}>

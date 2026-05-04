@@ -72,6 +72,7 @@ export type ServicePageProps = {
   // When set, appended as ?projectType=X to primaryCta and finalPrimaryCta hrefs
   projectType?: string;
   founderCallout?: boolean;
+  riskReversal?: string;
 };
 
 export default function ServicePage({
@@ -106,6 +107,7 @@ export default function ServicePage({
   finalSecondaryCta,
   projectType,
   founderCallout,
+  riskReversal,
 }: ServicePageProps) {
   const t = useTranslations("servicePage");
   const tCross = useTranslations("crossLinks");
@@ -323,6 +325,9 @@ export default function ServicePage({
                 {finalSecondaryCta.label}
               </Link>
             </div>
+            {riskReversal && (
+              <p className={styles.riskReversal}>{riskReversal}</p>
+            )}
           </div>
         </div>
       </section>

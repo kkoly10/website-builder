@@ -17,9 +17,9 @@ type ServiceData = ServicePageProps;
 
 const CROSS_LINKS: Record<ServiceId, ServicePageProps["crossLinks"]> = {
   websites: [
+    { id: "customWebApps", href: "/custom-web-apps" },
     { id: "ecommerce", href: "/ecommerce" },
     { id: "systems", href: "/systems" },
-    { id: "carePlans", href: "/care-plans" },
   ],
   systems: [
     { id: "websites", href: "/websites" },
@@ -27,9 +27,9 @@ const CROSS_LINKS: Record<ServiceId, ServicePageProps["crossLinks"]> = {
     { id: "carePlans", href: "/care-plans" },
   ],
   ecommerce: [
+    { id: "customWebApps", href: "/custom-web-apps" },
     { id: "websites", href: "/websites" },
     { id: "systems", href: "/systems" },
-    { id: "carePlans", href: "/care-plans" },
   ],
   custom_web_apps: [
     { id: "websites", href: "/websites" },
@@ -156,7 +156,7 @@ websitesData.en = {
   crossLinks: CROSS_LINKS.websites,
   finalTitle: "Ready to stop losing customers to a bad first impression?",
   finalText: "Let's make people actually call you.",
-  finalPrimaryCta: { label: "Start your free estimate", href: "/build/intro" },
+  finalPrimaryCta: { label: "Answer 5 questions, get a price", href: "/build/intro" },
   finalSecondaryCta: { label: "Talk to a human first", href: "/contact" },
 };
 
@@ -1101,9 +1101,10 @@ customWebAppsData.en = {
   finalTitle: "Ready to talk through your idea?",
   finalText:
     "The first call is free and takes 30 minutes. We'll tell you what the system is, what it isn't, and what a realistic scope looks like.",
-  finalPrimaryCta: { label: "Plan a custom app", href: "/custom-app-intake" },
+  finalPrimaryCta: { label: "Let's scope your app — free 30 min", href: "/custom-app-intake" },
   finalSecondaryCta: { label: "See our work", href: "/work" },
   founderCallout: true,
+  riskReversal: "Not sure we're a fit? The discovery call has no commitment — I'll tell you honestly if this project isn't right for us.",
 };
 
 // ─── Client Portals ──────────────────────────────────────────────────────────
@@ -1252,9 +1253,10 @@ clientPortalsData.en = {
   finalTitle: "Give your clients a workspace they'll actually use.",
   finalText:
     "Tell us about your workflow and we'll scope the right portal — add-on to an existing site or a standalone system. Thirty-minute call, no commitment.",
-  finalPrimaryCta: { label: "Start a portal project", href: "/portal-intake" },
+  finalPrimaryCta: { label: "Let's scope your portal — free 30 min", href: "/portal-intake" },
   finalSecondaryCta: { label: "See our work", href: "/work" },
   founderCallout: true,
+  riskReversal: "Not sure we're a fit? The discovery call has no commitment — I'll tell you honestly if this project isn't right for us.",
 };
 
 // ─── Website Rescue ──────────────────────────────────────────────────────────
@@ -1272,7 +1274,7 @@ websiteRescueData.en = {
     "1–2 wk turnaround",
     "No full rebuild required",
   ],
-  primaryCta: { label: "Start a rescue", href: "/rescue-intake" },
+  primaryCta: { label: "Get a site audit", href: "/rescue-intake" },
   secondaryCta: { label: "See pricing", href: "/pricing#rescue" },
   projectType: "rescue",
   whoItsForTitle: "Best for businesses with a site that works but leaks.",
@@ -1309,11 +1311,12 @@ websiteRescueData.en = {
       ],
     },
     {
-      title: "Optional next step",
+      title: "After the audit",
       items: [
-        "Documented changes and reasoning",
-        "Full rebuild quote if the audit warrants it",
-        "Handoff notes for whoever maintains the site next",
+        "Documented findings + reasoning you can act on immediately",
+        "Fixed-price sprint quote if the audit warrants it",
+        "Full rebuild proposal if the foundation is too far gone",
+        "Honest recommendation even if the answer is 'don't rebuild yet'",
       ],
     },
   ],
@@ -1344,7 +1347,7 @@ websiteRescueData.en = {
     },
   ],
   processTitle: "How a rescue works.",
-  processIntro: "You know what's wrong. We'll find out exactly how wrong — and fix the things that matter.",
+  processIntro: "Komlan reviews every site personally — no automated tools, no offshore auditors. You get a written report with findings ranked by impact and effort, then we decide together what to fix and in what order.",
   process: [
     {
       step: "01 — Audit",
@@ -1396,11 +1399,12 @@ websiteRescueData.en = {
     "Businesses that want unlimited changes with no fixed scope",
   ],
   crossLinks: CROSS_LINKS.website_rescue,
-  finalTitle: "Know what's wrong before you spend a dollar on fixes.",
+  finalTitle: "Get the full picture before you commit to anything.",
   finalText:
-    "The audit alone gives you a prioritized roadmap. Even if you don't do the sprint, you walk away knowing exactly what to fix and in what order.",
-  finalPrimaryCta: { label: "Start a rescue", href: "/rescue-intake" },
+    "The audit is a fixed-price deliverable — the written report is yours regardless of what comes next. If a repair sprint or rebuild makes sense, Komlan scopes it and gives you a fixed price. If it doesn't, you'll hear that too.",
+  finalPrimaryCta: { label: "Get a site audit", href: "/rescue-intake" },
   finalSecondaryCta: { label: "See pricing", href: "/pricing#rescue" },
+  riskReversal: "The audit report is yours regardless of what you decide next — you owe nothing beyond the initial fixed scope.",
 };
 
 // ─── Care Plans ──────────────────────────────────────────────────────────────

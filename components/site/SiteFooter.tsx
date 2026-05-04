@@ -29,6 +29,9 @@ export default function SiteFooter() {
             <Link href="/contact">{t("links.contact")}</Link>
             <Link href="/privacy">{t("links.privacy")}</Link>
             <Link href="/terms">{t("links.terms")}</Link>
+            <Link href="/refunds">{t("links.refund")}</Link>
+            <Link href="/security">{t("links.security")}</Link>
+            <Link href="/aup">{t("links.aup")}</Link>
           </div>
         </div>
 

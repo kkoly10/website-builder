@@ -32,6 +32,15 @@ export default async function PricingPage({
   return <PricingContent />;
 }
 
+const FEATURED = {
+  websites:   "growth",
+  webApps:    "standard",
+  automation: "opsSystem",
+  ecommerce:  "run",
+  rescue:     "sprint",
+  care:       "carePlus",
+} as const;
+
 function PricingContent() {
   const t = useTranslations("pricing");
 
@@ -93,20 +102,18 @@ function PricingContent() {
           </div>
 
           <div className={styles.pricingGrid}>
-            {(["starter", "growth", "premium"] as const).map((key) => (
-              <article key={key} className={styles.pricingCard}>
-                <p className={styles.cardKicker}>
-                  {t(`websitesSection.${key}.label`)}
-                </p>
-                <p className={styles.pricingValue}>
-                  {t(`websitesSection.${key}.value`)}
-                </p>
-                <p>{t(`websitesSection.${key}.detail`)}</p>
-                <div className={styles.pricingMeta}>
-                  {t(`websitesSection.${key}.meta`)}
-                </div>
-              </article>
-            ))}
+            {(["starter", "growth", "premium"] as const).map((key) => {
+              const featured = key === FEATURED.websites;
+              return (
+                <article key={key} className={`${styles.pricingCard}${featured ? ` ${styles.pricingCardFeatured}` : ""}`}>
+                  {featured && <span className={styles.pricingCardBadge}>{t("mostPopular")}</span>}
+                  <p className={styles.cardKicker}>{t(`websitesSection.${key}.label`)}</p>
+                  <p className={styles.pricingValue}>{t(`websitesSection.${key}.value`)}</p>
+                  <p>{t(`websitesSection.${key}.detail`)}</p>
+                  <div className={styles.pricingMeta}>{t(`websitesSection.${key}.meta`)}</div>
+                </article>
+              );
+            })}
           </div>
 
           <div className={styles.ctaRow}>
@@ -139,22 +146,18 @@ function PricingContent() {
           <p className={styles.sectionNote}>{t("webAppsSection.note")}</p>
 
           <div className={styles.gridTwo}>
-            {(["discovery", "mvp", "standard", "custom"] as const).map(
-              (key) => (
-                <article key={key} className={styles.pricingCard}>
-                  <p className={styles.cardKicker}>
-                    {t(`webAppsSection.${key}.label`)}
-                  </p>
-                  <p className={styles.pricingValue}>
-                    {t(`webAppsSection.${key}.value`)}
-                  </p>
+            {(["discovery", "mvp", "standard", "custom"] as const).map((key) => {
+              const featured = key === FEATURED.webApps;
+              return (
+                <article key={key} className={`${styles.pricingCard}${featured ? ` ${styles.pricingCardFeatured}` : ""}`}>
+                  {featured && <span className={styles.pricingCardBadge}>{t("mostPopular")}</span>}
+                  <p className={styles.cardKicker}>{t(`webAppsSection.${key}.label`)}</p>
+                  <p className={styles.pricingValue}>{t(`webAppsSection.${key}.value`)}</p>
                   <p>{t(`webAppsSection.${key}.detail`)}</p>
-                  <div className={styles.pricingMeta}>
-                    {t(`webAppsSection.${key}.meta`)}
-                  </div>
+                  <div className={styles.pricingMeta}>{t(`webAppsSection.${key}.meta`)}</div>
                 </article>
-              )
-            )}
+              );
+            })}
           </div>
 
           <div className={styles.ctaRow}>
@@ -182,22 +185,18 @@ function PricingContent() {
           </div>
 
           <div className={styles.pricingGrid}>
-            {(["quickFix", "opsSystem", "systemsPartner"] as const).map(
-              (key) => (
-                <article key={key} className={styles.pricingCard}>
-                  <p className={styles.cardKicker}>
-                    {t(`automationSection.${key}.label`)}
-                  </p>
-                  <p className={styles.pricingValue}>
-                    {t(`automationSection.${key}.value`)}
-                  </p>
+            {(["quickFix", "opsSystem", "systemsPartner"] as const).map((key) => {
+              const featured = key === FEATURED.automation;
+              return (
+                <article key={key} className={`${styles.pricingCard}${featured ? ` ${styles.pricingCardFeatured}` : ""}`}>
+                  {featured && <span className={styles.pricingCardBadge}>{t("mostPopular")}</span>}
+                  <p className={styles.cardKicker}>{t(`automationSection.${key}.label`)}</p>
+                  <p className={styles.pricingValue}>{t(`automationSection.${key}.value`)}</p>
                   <p>{t(`automationSection.${key}.detail`)}</p>
-                  <div className={styles.pricingMeta}>
-                    {t(`automationSection.${key}.meta`)}
-                  </div>
+                  <div className={styles.pricingMeta}>{t(`automationSection.${key}.meta`)}</div>
                 </article>
-              )
-            )}
+              );
+            })}
           </div>
 
           <div className={styles.ctaRow}>
@@ -225,20 +224,18 @@ function PricingContent() {
           </div>
 
           <div className={styles.pricingGrid}>
-            {(["build", "run", "fix"] as const).map((key) => (
-              <article key={key} className={styles.pricingCard}>
-                <p className={styles.cardKicker}>
-                  {t(`ecommerceSection.${key}.label`)}
-                </p>
-                <p className={styles.pricingValue}>
-                  {t(`ecommerceSection.${key}.value`)}
-                </p>
-                <p>{t(`ecommerceSection.${key}.detail`)}</p>
-                <div className={styles.pricingMeta}>
-                  {t(`ecommerceSection.${key}.meta`)}
-                </div>
-              </article>
-            ))}
+            {(["build", "run", "fix"] as const).map((key) => {
+              const featured = key === FEATURED.ecommerce;
+              return (
+                <article key={key} className={`${styles.pricingCard}${featured ? ` ${styles.pricingCardFeatured}` : ""}`}>
+                  {featured && <span className={styles.pricingCardBadge}>{t("mostPopular")}</span>}
+                  <p className={styles.cardKicker}>{t(`ecommerceSection.${key}.label`)}</p>
+                  <p className={styles.pricingValue}>{t(`ecommerceSection.${key}.value`)}</p>
+                  <p>{t(`ecommerceSection.${key}.detail`)}</p>
+                  <div className={styles.pricingMeta}>{t(`ecommerceSection.${key}.meta`)}</div>
+                </article>
+              );
+            })}
           </div>
 
           <div className={styles.ctaRow}>
@@ -266,20 +263,18 @@ function PricingContent() {
           </div>
 
           <div className={styles.gridTwo}>
-            {(["audit", "sprint"] as const).map((key) => (
-              <article key={key} className={styles.pricingCard}>
-                <p className={styles.cardKicker}>
-                  {t(`rescueSection.${key}.label`)}
-                </p>
-                <p className={styles.pricingValue}>
-                  {t(`rescueSection.${key}.value`)}
-                </p>
-                <p>{t(`rescueSection.${key}.detail`)}</p>
-                <div className={styles.pricingMeta}>
-                  {t(`rescueSection.${key}.meta`)}
-                </div>
-              </article>
-            ))}
+            {(["audit", "sprint"] as const).map((key) => {
+              const featured = key === FEATURED.rescue;
+              return (
+                <article key={key} className={`${styles.pricingCard}${featured ? ` ${styles.pricingCardFeatured}` : ""}`}>
+                  {featured && <span className={styles.pricingCardBadge}>{t("mostPopular")}</span>}
+                  <p className={styles.cardKicker}>{t(`rescueSection.${key}.label`)}</p>
+                  <p className={styles.pricingValue}>{t(`rescueSection.${key}.value`)}</p>
+                  <p>{t(`rescueSection.${key}.detail`)}</p>
+                  <div className={styles.pricingMeta}>{t(`rescueSection.${key}.meta`)}</div>
+                </article>
+              );
+            })}
           </div>
 
           <div className={styles.ctaRow}>
@@ -312,20 +307,18 @@ function PricingContent() {
           <p className={styles.sectionNote}>{t("careSection.note")}</p>
 
           <div className={styles.pricingGrid}>
-            {(["care", "carePlus", "carePro"] as const).map((key) => (
-              <article key={key} className={styles.pricingCard}>
-                <p className={styles.cardKicker}>
-                  {t(`careSection.${key}.label`)}
-                </p>
-                <p className={styles.pricingValue}>
-                  {t(`careSection.${key}.value`)}
-                </p>
-                <p>{t(`careSection.${key}.detail`)}</p>
-                <div className={styles.pricingMeta}>
-                  {t(`careSection.${key}.meta`)}
-                </div>
-              </article>
-            ))}
+            {(["care", "carePlus", "carePro"] as const).map((key) => {
+              const featured = key === FEATURED.care;
+              return (
+                <article key={key} className={`${styles.pricingCard}${featured ? ` ${styles.pricingCardFeatured}` : ""}`}>
+                  {featured && <span className={styles.pricingCardBadge}>{t("mostPopular")}</span>}
+                  <p className={styles.cardKicker}>{t(`careSection.${key}.label`)}</p>
+                  <p className={styles.pricingValue}>{t(`careSection.${key}.value`)}</p>
+                  <p>{t(`careSection.${key}.detail`)}</p>
+                  <div className={styles.pricingMeta}>{t(`careSection.${key}.meta`)}</div>
+                </article>
+              );
+            })}
           </div>
 
           <div className={styles.ctaRow}>

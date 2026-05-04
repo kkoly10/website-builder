@@ -12,7 +12,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "privacy" });
+  const t = await getTranslations({ locale, namespace: "refund" });
   return {
     title: t("metaTitle"),
     description: t("metaDescription"),
@@ -21,18 +21,18 @@ export async function generateMetadata({
   };
 }
 
-export default async function PrivacyPage({
+export default async function RefundsPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <PrivacyContent />;
+  return <RefundContent />;
 }
 
-function PrivacyContent() {
-  const t = useTranslations("privacy");
+function RefundContent() {
+  const t = useTranslations("refund");
 
   return (
     <main className={styles.page}>
@@ -53,72 +53,47 @@ function PrivacyContent() {
             <div className={styles.proseInner}>
 
               <section className={styles.proseSection}>
-                <h2>{t("collectHeading")}</h2>
+                <h2>{t("depositsHeading")}</h2>
+                <p>{t("depositsBody")}</p>
+              </section>
+
+              <section className={styles.proseSection}>
+                <h2>{t("milestonesHeading")}</h2>
+                <p>{t("milestonesBody")}</p>
+              </section>
+
+              <section className={styles.proseSection}>
+                <h2>{t("cancellationHeading")}</h2>
                 <ul>
-                  <li>{t("collect1")}</li>
-                  <li>{t("collect2")}</li>
-                  <li>{t("collect3")}</li>
-                  <li>{t("collect4")}</li>
-                  <li>{t("collect5")}</li>
+                  <li>{t("cancellation1")}</li>
+                  <li>{t("cancellation2")}</li>
+                  <li>{t("cancellation3")}</li>
                 </ul>
               </section>
 
               <section className={styles.proseSection}>
-                <h2>{t("useHeading")}</h2>
+                <h2>{t("thirdPartyHeading")}</h2>
+                <p>{t("thirdPartyBody")}</p>
+              </section>
+
+              <section className={styles.proseSection}>
+                <h2>{t("neverHeading")}</h2>
                 <ul>
-                  <li>{t("use1")}</li>
-                  <li>{t("use2")}</li>
-                  <li>{t("use3")}</li>
-                  <li>{t("use4")}</li>
-                  <li>{t("use5")}</li>
+                  <li>{t("never1")}</li>
+                  <li>{t("never2")}</li>
+                  <li>{t("never3")}</li>
+                  <li>{t("never4")}</li>
                 </ul>
               </section>
 
               <section className={styles.proseSection}>
-                <h2>{t("subprocessorsHeading")}</h2>
-                <p>{t("subprocessorsBody")}</p>
-                <ul>
-                  <li>{t("sp1")}</li>
-                  <li>{t("sp2")}</li>
-                  <li>{t("sp3")}</li>
-                  <li>{t("sp4")}</li>
-                </ul>
+                <h2>{t("disputesHeading")}</h2>
+                <p>{t("disputesBody")}</p>
               </section>
 
               <section className={styles.proseSection}>
-                <h2>{t("retentionHeading")}</h2>
-                <ul>
-                  <li>{t("retention1")}</li>
-                  <li>{t("retention2")}</li>
-                  <li>{t("retention3")}</li>
-                  <li>{t("retention4")}</li>
-                </ul>
-              </section>
-
-              <section className={styles.proseSection}>
-                <h2>{t("cookiesHeading")}</h2>
-                <p>{t("cookiesBody")}</p>
-              </section>
-
-              <section className={styles.proseSection}>
-                <h2>{t("rightsHeading")}</h2>
-                <p>
-                  {t("rightsBody")}{" "}
-                  <a href="mailto:hello@crecystudio.com">hello@crecystudio.com</a>.
-                </p>
-              </section>
-
-              <section className={styles.proseSection}>
-                <h2>{t("ccpaHeading")}</h2>
-                <p>{t("ccpaBody")}</p>
-              </section>
-
-              <section className={styles.proseSection}>
-                <h2>{t("contactHeading")}</h2>
-                <p>
-                  {t("contactBody")}{" "}
-                  <a href="mailto:hello@crecystudio.com">hello@crecystudio.com</a>.
-                </p>
+                <h2>{t("processHeading")}</h2>
+                <p>{t("processBody")}</p>
               </section>
 
             </div>

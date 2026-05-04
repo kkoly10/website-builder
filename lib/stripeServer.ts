@@ -38,9 +38,17 @@ export async function stripeCreateCheckoutSession(opts: {
     opts.productDescription || `Deposit for quote ${opts.quoteId || "project"}`
   );
 
+  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com";
+  params.append("consent_collection[terms_of_service]", "required");
+  params.append(
+    "custom_text[terms_of_service_acceptance][message]",
+    `I agree to the CrecyStudio [Terms of Service](${SITE_URL}/terms) and [Refund Policy](${SITE_URL}/refunds).`
+  );
+
   const metadata = {
     ...(opts.metadata || {}),
     ...(opts.quoteId ? { quoteId: opts.quoteId } : {}),
+    termsUrl: `${SITE_URL}/terms`,
   };
 
   for (const [key, value] of Object.entries(metadata)) {
