@@ -581,14 +581,42 @@
   align-self: end;
 }
 
+.startHere { padding: 2.4rem 0; border-bottom: 1px solid var(--rule); }
+.startHereGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--rule);
+  margin-top: 1.2rem;
+}
+.startHereCard {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  gap: .4rem;
+  padding: 1.1rem 1rem;
+  background: var(--paper);
+  text-decoration: none;
+  transition: background .15s ease;
+}
+.startHereCard:hover { background: var(--paper-2); }
+.startHereSituation { margin: 0; font-size: .85rem; color: var(--ink); line-height: 1.4; }
+.startHereService { margin: 0; font: 500 11px/1 var(--font-mono); text-transform: uppercase; color: var(--muted); letter-spacing: .05em; }
+.startHereArrow { font-size: .85rem; color: var(--muted); align-self: end; }
+
 @media (max-width: 880px) {
   .whatWeBuildGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .startHereGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 560px) {
   .whatWeBuildGrid {
+    grid-template-columns: 1fr;
+  }
+  .startHereGrid {
     grid-template-columns: 1fr;
   }
 }

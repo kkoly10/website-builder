@@ -490,3 +490,11 @@
     min-height: auto;
   }
 }
+
+.founderCallout { padding: 2.4rem 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.founderCalloutInner { display: flex; gap: 1.25rem; align-items: flex-start; }
+.founderCalloutImg { border-radius: 50%; flex-shrink: 0; object-fit: cover; }
+.founderCalloutName { margin: 0 0 .5rem; font: 500 11px/1 var(--font-mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.founderCalloutText { margin: 0 0 .75rem; font-size: .95rem; line-height: 1.65; color: var(--ink); }
+.founderCalloutLink { font: 500 13px/1 var(--font-mono); color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 560px) { .founderCalloutInner { flex-direction: column; } }

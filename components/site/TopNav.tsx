@@ -72,6 +72,7 @@ export default function TopNav({
   const navItems: NavItem[] = [
     { href: "/websites", label: t("websites") },
     { href: "/ecommerce", label: t("ecommerce") },
+    { href: "/website-rescue", label: t("websiteRescue") },
     { href: "/systems", label: t("systems") },
     { href: "/process", label: t("process") },
     { href: "/work", label: t("work") },

@@ -1103,6 +1103,7 @@ customWebAppsData.en = {
     "The first call is free and takes 30 minutes. We'll tell you what the system is, what it isn't, and what a realistic scope looks like.",
   finalPrimaryCta: { label: "Plan a custom app", href: "/custom-app-intake" },
   finalSecondaryCta: { label: "See our work", href: "/work" },
+  founderCallout: true,
 };
 
 // ─── Client Portals ──────────────────────────────────────────────────────────
@@ -1253,6 +1254,7 @@ clientPortalsData.en = {
     "Tell us about your workflow and we'll scope the right portal — add-on to an existing site or a standalone system. Thirty-minute call, no commitment.",
   finalPrimaryCta: { label: "Start a portal project", href: "/portal-intake" },
   finalSecondaryCta: { label: "See our work", href: "/work" },
+  founderCallout: true,
 };
 
 // ─── Website Rescue ──────────────────────────────────────────────────────────

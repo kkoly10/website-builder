@@ -153,8 +153,12 @@ a { color: inherit; text-decoration: none; }
 
 .fadeUp,.heroFadeUp,.scaleIn { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: no-preference) {
-  .fadeUp,.heroFadeUp,.scaleIn { opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s ease; }
-  .fadeUp.inView,.heroFadeUp.inView,.scaleIn.inView { opacity: 1; transform: none; }
+  :root.js-anim .fadeUp,
+  :root.js-anim .heroFadeUp,
+  :root.js-anim .scaleIn { opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s ease; }
+  :root.js-anim .fadeUp.inView,
+  :root.js-anim .heroFadeUp.inView,
+  :root.js-anim .scaleIn.inView { opacity: 1; transform: none; }
 }
 
 .portalStory { border: 1px solid var(--rule); background: var(--paper-2); padding: 1rem; margin: 1.2rem 0 1rem; }

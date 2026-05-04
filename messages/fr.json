@@ -11,6 +11,7 @@
   "nav": {
     "websites": "Sites web",
     "ecommerce": "E-commerce",
+    "websiteRescue": "Rescue de site",
     "systems": "Systèmes",
     "process": "Processus",
     "work": "Work",
@@ -45,7 +46,15 @@
   },
   "about": {
     "metaTitle": "À propos | CrecyStudio",
-    "metaDescription": "Découvrez Komlan Kouhiko, fondateur de CrecyStudio — le studio web indépendant qui conçoit des sites premium et des systèmes web personnalisés."
+    "metaDescription": "Découvrez Komlan Kouhiko, fondateur de CrecyStudio — le studio web indépendant qui conçoit des sites premium et des systèmes web personnalisés.",
+    "proof": {
+      "saas": "Plateformes SaaS en production",
+      "systems": "Systèmes d'entreprise livrés",
+      "practitioner": "Praticien sur chaque projet — pas de juniors, pas de transferts"
+    },
+    "ctaLabel": "Par où continuer",
+    "ctaLowTicket": "Obtenir une estimation de site",
+    "ctaHighTicket": "Discuter d'un projet plus ambitieux"
   },
   "home": {
     "metaTitle": "CrecyStudio | Websites and custom web systems",
@@ -88,6 +97,14 @@
           "badge": "À partir de 800 $"
         }
       }
+    },
+    "startHere": {
+      "label": "Pas sûr par où commencer ?",
+      "website":   { "situation": "J'ai besoin d'un site web professionnel pour mon entreprise",         "service": "Sites web — à partir de 1 800 $" },
+      "app":       { "situation": "J'ai une idée de logiciel ou un outil interne à créer",              "service": "Applications web sur mesure — à partir de 18 000 $" },
+      "portal":    { "situation": "Je gère des projets clients et j'ai besoin d'un vrai système client", "service": "Portails clients — à partir de 12 000 $" },
+      "rescue":    { "situation": "Mon site est cassé, lent ou perd des prospects",                      "service": "Rescue de site — à partir de 1 000 $" },
+      "ecommerce": { "situation": "J'ai besoin d'une boutique en ligne ou d'aide pour la gérer",         "service": "E-commerce — à partir de 1 800 $" }
     },
     "proof": {
       "deliveryValue": "2",
@@ -577,7 +594,12 @@
     "mostCommon": "Point de départ le plus courant",
     "scopedToProject": "Adapté à votre projet",
     "alsoOffered": "Aussi proposé",
-    "exploreLane": "Explorer"
+    "exploreLane": "Explorer",
+    "founderCallout": {
+      "name": "Komlan Kouhiko — Fondateur & Seul Praticien",
+      "body": "Chaque projet chez CrecyStudio passe par moi — pas un chef de projet, pas un junior. J'ai livré des plateformes SaaS, créé des outils internes pour de vraies entreprises et géré des opérations moi-même. Vous pouvez me contacter directement à n'importe quelle étape du projet.",
+      "link": "Lire toute l'histoire →"
+    }
   },
   "crossLinks": {
     "websites": "Axe Sites web",
