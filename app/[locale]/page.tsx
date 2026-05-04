@@ -338,7 +338,7 @@ function HomeContent() {
             {t.rich("closing.title", { em: (chunks) => <em>{chunks}</em> })}
           </h2>
           <div className={styles.closingActions}>
-            <TrackLink href="/contact" event="cta_home_closing_contact" className="btn btnPrimary">
+            <TrackLink href="/start" event="cta_home_closing_start" className="btn btnPrimary">
               {t("closing.cta")} <span className="btnArrow">-&gt;</span>
             </TrackLink>
             <TrackLink href="/build/intro" event="cta_home_closing_estimate" className="btn">

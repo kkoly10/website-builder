@@ -44,7 +44,8 @@
       "customWebApps": "Applications web sur mesure",
       "clientPortals": "Portails clients",
       "about": "À propos",
-      "aup": "Utilisation acceptable"
+      "aup": "Utilisation acceptable",
+      "start": "Réserver un appel"
     }
   },
   "about": {
@@ -68,6 +69,56 @@
       "3": "Le travail de design seul sans implication dans l'implémentation — la valeur que j'apporte est la stratégie et la construction, pas la remise de livrables.",
       "4": "Les projets où le cahier des charges change significativement après accord du périmètre — je respecte le périmètre pour que vous obteniez le prix convenu."
     }
+  },
+  "start": {
+    "metaTitle": "Réserver un appel découverte gratuit | CrecyStudio",
+    "metaDescription": "Réservez un appel découverte gratuit de 20 minutes avec Komlan. Dites-moi ce que vous construisez — sans pitch, sans engagement.",
+    "heroLabel": "Appel gratuit de 20 min",
+    "heroTitle": "Parlons de ce que vous construisez.",
+    "heroSub": "Pas de présentation commerciale. Une conversation directe sur votre projet — périmètre, faisabilité, et si nous sommes compatibles.",
+    "stepsLabel": "Ce qui se passe ensuite",
+    "step1Title": "Vous soumettez le formulaire",
+    "step1Body": "Nom, email et quelques lignes sur votre projet. Moins de deux minutes.",
+    "step2Title": "Je réponds dans les 24 heures",
+    "step2Body": "Je confirmerai un créneau ou proposerai deux options. Pas de bot de planification automatique.",
+    "step3Title": "On parle pendant 20 minutes",
+    "step3Body": "Je pose des questions précises. Vous obtenez un retour honnête sur le périmètre, le calendrier et la fourchette de prix.",
+    "anchorsLabel": "Ce que ça coûte",
+    "anchor1Value": "Gratuit",
+    "anchor1Label": "L'appel découverte — sans carte bancaire, sans engagement",
+    "anchor2Value": "1 800 $",
+    "anchor2Label": "Sites web — prix fixe, propriété totale",
+    "anchor3Value": "Sur devis",
+    "anchor3Label": "Applications, portails et automatisations — définis ensemble lors de l'appel",
+    "riskReversal": "Si nous ne sommes pas compatibles après l'appel, je vous orienterai vers qui convient. Pas de démarche commerciale forcée.",
+    "formLabel": "Réserver votre appel",
+    "nameLabel": "Votre nom",
+    "namePlaceholder": "Marie Dupont",
+    "emailLabel": "Adresse e-mail",
+    "emailPlaceholder": "marie@entreprise.com",
+    "companyLabel": "Entreprise ou nom du projet",
+    "companyPlaceholder": "Optionnel",
+    "projectTypeLabel": "Qu'est-ce que vous construisez ?",
+    "projectTypes": {
+      "website": "Site web",
+      "ecommerce": "E-commerce",
+      "custom_app": "Application sur mesure",
+      "portal": "Portail client",
+      "automation": "Automatisation / systèmes",
+      "rescue": "Rescue de site",
+      "not_sure": "Pas encore sûr"
+    },
+    "availabilityLabel": "Quand êtes-vous généralement disponible ?",
+    "availabilityPlaceholder": "ex. mar/jeu après-midi CET, ou la plupart des matins en semaine",
+    "submit": "Demander mon appel découverte",
+    "submitting": "Envoi en cours…",
+    "errorInvalidEmail": "Veuillez entrer une adresse e-mail valide.",
+    "errorNameRequired": "Veuillez entrer votre nom.",
+    "errorGeneric": "Une erreur est survenue. Veuillez réessayer ou envoyer un e-mail à hello@crecystudio.com.",
+    "successTitle": "Demande reçue.",
+    "successBody": "Je vous contacterai dans les 24 heures pour confirmer un créneau. Une copie de votre demande est en route dans votre boîte de réception.",
+    "successDetail": "En attendant, découvrez comment fonctionne le studio.",
+    "successCta": "Voir le processus"
   },
   "home": {
     "metaTitle": "CrecyStudio | Websites and custom web systems",
