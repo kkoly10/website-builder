@@ -150,7 +150,7 @@ export default function EcommerceIntakeClient() {
   function next() { setStep((s) => Math.min(s + 1, totalSteps)); }
   function back() { setStep((s) => Math.max(s - 1, 0)); }
 
-  const totalSteps = form.entryPath === "build" ? 5 : 4;
+  const totalSteps = 4;
 
   async function submit() {
     if (!form.businessName.trim() || !form.contactName.trim() || !emailValid) {
@@ -212,7 +212,7 @@ export default function EcommerceIntakeClient() {
     fix: { color: "var(--muted)", bg: "var(--paper-2)", border: "var(--rule)" },
   } as const;
 
-  const reviewStep = (step === 4 && form.entryPath !== "build") || (step === 5 && form.entryPath === "build");
+  const reviewStep = step === 4;
 
   return (
     <main className="container productWrap">
