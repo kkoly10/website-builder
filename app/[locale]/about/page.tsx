@@ -3,7 +3,6 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
-import ScrollReveal from "@/components/site/ScrollReveal";
 import styles from "../home.module.css";
 
 export const dynamic = "force-dynamic";
@@ -38,8 +37,6 @@ function AboutContent() {
 
   return (
     <main>
-      <ScrollReveal />
-
       <section className={styles.founder}>
         <div className="container">
           <div className={styles.founderInner}>
