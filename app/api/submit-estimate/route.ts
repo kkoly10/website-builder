@@ -212,12 +212,8 @@ export async function POST(req: Request) {
       owner_email_norm: normalizeEmail(leadEmail),
       tier_recommended: pricingTruth.tierLabel,
       quote_json: quoteJson,
-      intake_raw:
-        body?.intakeRaw && typeof body.intakeRaw === "object" ? body.intakeRaw : null,
-      intake_normalized:
-        body?.intakeNormalized && typeof body.intakeNormalized === "object"
-          ? body.intakeNormalized
-          : null,
+      ...(body?.intakeRaw && typeof body.intakeRaw === "object" ? { intake_raw: body.intakeRaw } : {}),
+      ...(body?.intakeNormalized && typeof body.intakeNormalized === "object" ? { intake_normalized: body.intakeNormalized } : {}),
       estimate_total: total,
       estimate_low: low,
       estimate_high: high,
