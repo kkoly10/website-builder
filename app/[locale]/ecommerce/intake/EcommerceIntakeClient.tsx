@@ -27,6 +27,11 @@ type EcomFormState = {
   budgetRange: string;
   timeline: string;
   notes: string;
+  decisionMaker: string;
+  contentSource: string;
+  migrationScope: string[];
+  compliance: string[];
+  budgetFlexibility: string;
 };
 
 const STORAGE_KEY = "ecom-intake-draft-v2";
@@ -63,12 +68,18 @@ const FIX_SERVICES = [
 
 const PLATFORMS = ["Shopify", "WooCommerce", "BigCommerce", "Squarespace", "Wix", "Amazon Seller Central", "Etsy", "Custom / other", "Don't have one yet"];
 
+const DECISION_MAKER_OPTIONS = ["solo", "partner", "manager-owner", "finance-separate"] as const;
+const CONTENT_SOURCE_OPTIONS = ["we-provide-all", "we-provide-most", "need-help", "not-sure"] as const;
+const MIGRATION_OPTIONS = ["products-under-1k", "products-1k-10k", "products-10k-plus", "customers", "orders", "no-migration"] as const;
+const ECOM_COMPLIANCE_OPTIONS = ["international", "age-restricted", "subscription", "b2b-wholesale", "complex-tax", "none"] as const;
+
 const EMPTY_FORM: EcomFormState = {
   entryPath: null,
   businessName: "", contactName: "", email: "", phone: "",
   storeUrl: "", platform: "", salesChannels: [], serviceTypes: [],
   skuCount: "", monthlyOrders: "", peakOrders: "",
   storageType: "Shelf", budgetRange: "", timeline: "", notes: "",
+  decisionMaker: "", contentSource: "", migrationScope: [], compliance: [], budgetFlexibility: "",
 };
 
 const PATH_KEYS: Exclude<EntryPath, null>[] = ["build", "run", "fix"];
@@ -133,7 +144,7 @@ export default function EcommerceIntakeClient() {
     [form]
   );
 
-  function toggleList(field: "salesChannels" | "serviceTypes", value: string) {
+  function toggleList(field: "salesChannels" | "serviceTypes" | "migrationScope" | "compliance", value: string) {
     setForm((prev) => ({
       ...prev,
       [field]: prev[field].includes(value)
@@ -186,7 +197,11 @@ export default function EcommerceIntakeClient() {
         fragile: "No",
         monthlyReturns: "",
         avgItemsPerOrder: "",
-        decisionMaker: "",
+        decisionMaker: form.decisionMaker,
+        contentSource: form.contentSource,
+        migrationScope: form.migrationScope,
+        compliance: form.compliance,
+        budgetFlexibility: form.budgetFlexibility,
       };
 
       const res = await fetch("/api/ecommerce/submit-intake", {
@@ -277,6 +292,20 @@ export default function EcommerceIntakeClient() {
                 </div>
                 <div><div className="fieldLabel">{t("step1.phoneLabel")}</div><input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder={t("step1.phonePlaceholder")} /></div>
               </div>
+              <div>
+                <div className="fieldLabel">{t("step1.decisionMakerLabel")}</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                  {DECISION_MAKER_OPTIONS.map((opt) => {
+                    const active = form.decisionMaker === opt;
+                    return (
+                      <button key={opt} type="button" onClick={() => setForm({ ...form, decisionMaker: opt })}
+                        style={{ padding: "8px 16px", borderRadius: 999, fontSize: 13, fontWeight: 600, border: `1px solid ${active ? "var(--accent)" : "var(--rule)"}`, background: active ? "var(--accent-bg)" : "transparent", color: active ? "var(--accent)" : "var(--muted)", cursor: "pointer", transition: "all 0.15s" }}>
+                        {t(`enums.decisionMaker.${opt}`)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               {form.entryPath !== "build" && (
                 <>
                   <div><div className="fieldLabel">{t("step1.storeUrlLabel")}</div><input className="input" value={form.storeUrl} onChange={(e) => setForm({ ...form, storeUrl: e.target.value })} placeholder={t("step1.storeUrlPlaceholder")} /></div>
@@ -336,11 +365,43 @@ export default function EcommerceIntakeClient() {
             <div className="portalPanelHeader"><h2 className="portalPanelTitle">{t("step3Build.heading")}</h2></div>
             <div style={{ display: "grid", gap: 14 }}>
               <div><div className="fieldLabel">{t("step3Build.skuLabel")}</div><input className="input" value={form.skuCount} onChange={(e) => setForm({ ...form, skuCount: e.target.value })} placeholder={t("step3Build.skuPlaceholder")} /></div>
+              <div>
+                <div className="fieldLabel">{t("step3Build.contentSourceLabel")}</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                  {CONTENT_SOURCE_OPTIONS.map((opt) => {
+                    const active = form.contentSource === opt;
+                    return (
+                      <button key={opt} type="button" onClick={() => setForm({ ...form, contentSource: opt })}
+                        style={{ padding: "8px 16px", borderRadius: 999, fontSize: 13, fontWeight: 600, border: `1px solid ${active ? "var(--accent)" : "var(--rule)"}`, background: active ? "var(--accent-bg)" : "transparent", color: active ? "var(--accent)" : "var(--muted)", cursor: "pointer", transition: "all 0.15s" }}>
+                        {t(`enums.contentSource.${opt}`)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div><div className="fieldLabel">{t("step3Build.budgetLabel")}</div><input className="input" value={form.budgetRange} onChange={(e) => setForm({ ...form, budgetRange: e.target.value })} placeholder={t("step3Build.budgetPlaceholder")} /></div>
                 <div><div className="fieldLabel">{t("step3Build.timelineLabel")}</div><input className="input" value={form.timeline} onChange={(e) => setForm({ ...form, timeline: e.target.value })} placeholder={t("step3Build.timelinePlaceholder")} /></div>
               </div>
+              <div>
+                <div className="fieldLabel">{t("step3.budgetFlexibilityLabel")}</div>
+                <input className="input" value={form.budgetFlexibility} onChange={(e) => setForm({ ...form, budgetFlexibility: e.target.value })} placeholder={t("step3.budgetFlexibilityPlaceholder")} />
+              </div>
               <div><div className="fieldLabel">{t("step3Build.notesLabel")}</div><textarea className="textarea" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={t("step3Build.notesPlaceholder")} /></div>
+              <div>
+                <div className="fieldLabel">{t("step3.complianceLabel")}</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                  {ECOM_COMPLIANCE_OPTIONS.map((opt) => {
+                    const active = form.compliance.includes(opt);
+                    return (
+                      <button key={opt} type="button" onClick={() => toggleList("compliance", opt)}
+                        style={{ padding: "8px 16px", borderRadius: 999, fontSize: 13, fontWeight: 600, border: `1px solid ${active ? "var(--accent)" : "var(--rule)"}`, background: active ? "var(--accent-bg)" : "transparent", color: active ? "var(--accent)" : "var(--muted)", cursor: "pointer", transition: "all 0.15s" }}>
+                        {t(`enums.compliance.${opt}`)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -354,11 +415,43 @@ export default function EcommerceIntakeClient() {
                 <div><div className="fieldLabel">{t("step3Other.peakLabel")}</div><input className="input" value={form.peakOrders} onChange={(e) => setForm({ ...form, peakOrders: e.target.value })} placeholder={t("step3Other.peakPlaceholder")} /></div>
               </div>
               <div><div className="fieldLabel">{t("step3Other.skuLabel")}</div><input className="input" value={form.skuCount} onChange={(e) => setForm({ ...form, skuCount: e.target.value })} placeholder={t("step3Other.skuPlaceholder")} /></div>
+              <div>
+                <div className="fieldLabel">{t("step3Other.migrationLabel")}</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                  {MIGRATION_OPTIONS.map((opt) => {
+                    const active = form.migrationScope.includes(opt);
+                    return (
+                      <button key={opt} type="button" onClick={() => toggleList("migrationScope", opt)}
+                        style={{ padding: "8px 16px", borderRadius: 999, fontSize: 13, fontWeight: 600, border: `1px solid ${active ? "var(--accent)" : "var(--rule)"}`, background: active ? "var(--accent-bg)" : "transparent", color: active ? "var(--accent)" : "var(--muted)", cursor: "pointer", transition: "all 0.15s" }}>
+                        {t(`enums.migration.${opt}`)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div><div className="fieldLabel">{t("step3Other.budgetLabel")}</div><input className="input" value={form.budgetRange} onChange={(e) => setForm({ ...form, budgetRange: e.target.value })} placeholder={t("step3Other.budgetPlaceholder")} /></div>
                 <div><div className="fieldLabel">{t("step3Other.timelineLabel")}</div><input className="input" value={form.timeline} onChange={(e) => setForm({ ...form, timeline: e.target.value })} placeholder={t("step3Other.timelinePlaceholder")} /></div>
               </div>
+              <div>
+                <div className="fieldLabel">{t("step3.budgetFlexibilityLabel")}</div>
+                <input className="input" value={form.budgetFlexibility} onChange={(e) => setForm({ ...form, budgetFlexibility: e.target.value })} placeholder={t("step3.budgetFlexibilityPlaceholder")} />
+              </div>
               <div><div className="fieldLabel">{t("step3Other.notesLabel")}</div><textarea className="textarea" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={t("step3Other.notesPlaceholder")} /></div>
+              <div>
+                <div className="fieldLabel">{t("step3.complianceLabel")}</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                  {ECOM_COMPLIANCE_OPTIONS.map((opt) => {
+                    const active = form.compliance.includes(opt);
+                    return (
+                      <button key={opt} type="button" onClick={() => toggleList("compliance", opt)}
+                        style={{ padding: "8px 16px", borderRadius: 999, fontSize: 13, fontWeight: 600, border: `1px solid ${active ? "var(--accent)" : "var(--rule)"}`, background: active ? "var(--accent-bg)" : "transparent", color: active ? "var(--accent)" : "var(--muted)", cursor: "pointer", transition: "all 0.15s" }}>
+                        {t(`enums.compliance.${opt}`)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         )}

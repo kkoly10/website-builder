@@ -1089,13 +1089,16 @@
       "jobVolumeLabel": "Volume mensuel de clients",
       "monthlyRevenueLabel": "Chiffre d'affaires mensuel (optionnel)",
       "currentWebsiteLabel": "Site actuel (s'il y en a un)",
-      "currentWebsitePlaceholder": "https://votresite.com"
+      "currentWebsitePlaceholder": "https://votresite.com",
+      "decisionMakerLabel": "Qui est le décideur final pour approuver et financer ce projet ?",
+      "decisionMakerPlaceholder": "ex. Moi — je suis le propriétaire · Moi + associé · Notre directeur ops avec approbation CFO"
     },
     "step2": {
       "heading": "Vos outils et points de douleur",
       "toolsLabel": "Logiciels que vous utilisez actuellement (cochez tout ce qui s'applique)",
       "painLabel": "Qu'est-ce qui pose le plus de douleur ? (cochez tout ce qui s'applique)",
-      "triedBeforeLabel": "Avez-vous déjà essayé de régler ce problème ?"
+      "triedBeforeLabel": "Avez-vous déjà essayé de régler ce problème ?",
+      "complianceLabel": "L'un des éléments suivants s'applique-t-il aux données que cette automatisation touchera ?"
     },
     "step3": {
       "heading": "Objectifs et budget",
@@ -1103,7 +1106,10 @@
       "budgetLabel": "Quelle est votre fourchette de budget ?",
       "urgencyLabel": "Quelle est l'urgence ?",
       "notesLabel": "Autre chose à savoir ?",
-      "notesPlaceholder": "Outils spécifiques, échéances, contraintes..."
+      "notesPlaceholder": "Outils spécifiques, échéances, contraintes...",
+      "budgetFlexibilityLabel": "Ce budget est-il fixe, ou y a-t-il une flexibilité si la bonne solution coûte plus cher ?",
+      "budgetFlexibilityPlaceholder": "ex. Fixe — approuvé par la finance · Flexible si le ROI est démontré",
+      "postLaunchLabel": "Après la construction des automatisations, qui les maintient ?"
     },
     "step4": {
       "recommendedEngagement": "Engagement recommandé",
@@ -1188,6 +1194,19 @@
         "Automated Follow-ups": "Relances automatisées",
         "Lead Routing & Assignment": "Routage et attribution des prospects",
         "Invoice & Payment Automation": "Automatisation des factures et paiements"
+      },
+      "compliance": {
+        "employee-hr-data": "Données personnelles des employés ou dossiers RH",
+        "client-financial-data": "Données financières clients (implications PCI)",
+        "health-medical-data": "Données de santé (HIPAA)",
+        "gdpr-eu-uk": "Données de clients UE ou RU (RGPD)",
+        "government-regulated": "Secteur gouvernemental ou réglementé",
+        "none": "Aucune de ces options"
+      },
+      "postLaunch": {
+        "crecy-retainer": "CrecyStudio en retainer — vous gérez les mises à jour et la disponibilité",
+        "internal": "Notre équipe ops / tech interne prend le relais",
+        "not-decided": "Pas encore décidé — discutons-en"
       }
     }
   },
@@ -1301,13 +1320,19 @@
       "platformLabel": "Sur quelle plateforme est votre boutique ?",
       "platformSelect": "Sélectionner la plateforme",
       "preferredPlatformLabel": "Plateforme préférée",
-      "preferredPlatformNotSure": "Pas encore sûr"
+      "preferredPlatformNotSure": "Pas encore sûr",
+      "decisionMakerLabel": "Qui approuve et signe ce projet ?"
     },
     "step2": {
       "headingBuild": "Que doit inclure la boutique ?",
       "headingRun": "Qu'avez-vous besoin que nous gérions ?",
       "headingFix": "Qu'est-ce qui doit être réparé ?",
       "channelsLabel": "Où vendez-vous ? (cochez tout)"
+    },
+    "step3": {
+      "complianceLabel": "L'un des éléments suivants s'applique-t-il à votre boutique ?",
+      "budgetFlexibilityLabel": "Votre budget est-il fixe ou flexible pour la bonne solution ?",
+      "budgetFlexibilityPlaceholder": "ex. Budget fixe · Flexible pour la bonne solution"
     },
     "step3Build": {
       "heading": "Budget et calendrier",
@@ -1318,7 +1343,8 @@
       "timelineLabel": "Calendrier",
       "timelinePlaceholder": "ex. 3 à 4 semaines",
       "notesLabel": "Autre chose à savoir ?",
-      "notesPlaceholder": "Préférences de design, fonctionnalités indispensables, exemples de concurrents..."
+      "notesPlaceholder": "Préférences de design, fonctionnalités indispensables, exemples de concurrents...",
+      "contentSourceLabel": "Qui fournit les descriptions de produits, images et prix ?"
     },
     "step3Other": {
       "heading": "Volume actuel de votre boutique",
@@ -1333,7 +1359,8 @@
       "timelineLabel": "Quand en avez-vous besoin ?",
       "timelinePlaceholder": "ex. au plus vite, le mois prochain",
       "notesLabel": "Autre chose à savoir ?",
-      "notesPlaceholder": "Points de douleur actuels, ce qui a déjà été essayé, problèmes spécifiques..."
+      "notesPlaceholder": "Points de douleur actuels, ce qui a déjà été essayé, problèmes spécifiques...",
+      "migrationLabel": "Si des données produits, clients ou commandes doivent migrer, quelle quantité ?"
     },
     "review": {
       "heading": "Vérifiez votre intake",
@@ -1411,6 +1438,34 @@
         "Product page overhaul": "Refonte des fiches produits",
         "Post-purchase flow fix": "Correctif du flux post-achat",
         "Payment & tax configuration": "Configuration paiement et taxes"
+      },
+      "decisionMaker": {
+        "solo": "Je décide seul",
+        "partner": "Mon associé et moi décidons ensemble",
+        "manager-owner": "Je recommande, le propriétaire / directeur approuve",
+        "finance-separate": "Je gère cela mais une autre personne contrôle le budget"
+      },
+      "contentSource": {
+        "we-provide-all": "Nous fournissons tout, prêt avant le début du build",
+        "we-provide-most": "Nous fournissons la plupart, peut nécessiter de l'aide pour certains",
+        "need-help": "Nous avons besoin que vous sourciez ou produisiez le contenu produit",
+        "not-sure": "Pas encore sûr"
+      },
+      "migration": {
+        "products-under-1k": "Moins de 1 000 produits",
+        "products-1k-10k": "1 000 – 10 000 produits",
+        "products-10k-plus": "10 000+ produits",
+        "customers": "Les données clients doivent aussi migrer",
+        "orders": "L'historique des commandes doit aussi migrer",
+        "no-migration": "Aucune migration nécessaire"
+      },
+      "compliance": {
+        "international": "Vente internationale (multi-devises ou expédition internationale)",
+        "age-restricted": "Produits à accès restreint par âge (alcool, tabac, compléments)",
+        "subscription": "Abonnement ou facturation récurrente",
+        "b2b-wholesale": "Prix B2B / gros avec différents paliers",
+        "complex-tax": "Règles fiscales complexes (TVA, exonérations, etc.)",
+        "none": "Aucune de ces options"
       }
     }
   },
@@ -2180,98 +2235,161 @@
       "contactPlaceholder": "Jane Smith"
     },
     "step2": {
-      "heading": "A bit more context.",
-      "targetUsersLabel": "Who will use this system?",
-      "currentSolutionLabel": "How do you handle this today?",
-      "currentSolutionPlaceholder": "e.g. We use a shared Google Sheet and text messages. It breaks down constantly.",
-      "userScaleLabel": "How many users do you expect?"
+      "heading": "Un peu plus de contexte.",
+      "targetUsersLabel": "Qui utilisera ce système ?",
+      "currentSolutionLabel": "Comment gérez-vous cela aujourd'hui ?",
+      "currentSolutionPlaceholder": "ex. Nous utilisons un Google Sheet partagé et des SMS. Ça plante constamment.",
+      "userScaleLabel": "Combien d'utilisateurs attendez-vous ?",
+      "integrationsLabel": "À quels systèmes cette application doit-elle se connecter ?",
+      "integrationNotesLabel": "Pour chaque intégration ci-dessus, décrivez si les données circulent en entrée, sortie ou les deux.",
+      "integrationNotesPlaceholder": "ex. Salesforce en lecture seule pour sync contacts, Stripe bidirectionnel pour les paiements...",
+      "complianceLabel": "L'un des éléments suivants s'applique-t-il à votre projet ?"
     },
     "step3": {
-      "heading": "Scope & timeline.",
-      "stageLabel": "Where are you in the process?",
-      "scopeLabel": "What kind of engagement are you looking for?",
-      "timelineLabel": "When do you need to be live?"
+      "heading": "Portée et calendrier.",
+      "stageLabel": "Où en êtes-vous dans le processus ?",
+      "scopeLabel": "Quel type d'engagement cherchez-vous ?",
+      "timelineLabel": "Quand devez-vous être en ligne ?",
+      "budgetLabel": "Quelle plage d'investissement avez-vous prévue ?",
+      "budgetNote": "Les applications personnalisées chez CrecyStudio débutent généralement à 15 000 $.",
+      "decisionMakerLabel": "Qui d'autre doit participer à l'approbation de ce projet ?",
+      "decisionMakerHelper": "Le contact quotidien, l'approbateur du budget et la validation technique sont souvent trois personnes différentes — c'est tout à fait normal.",
+      "decisionMakerPlaceholder": "ex. Moi — je décide · Moi + CTO pour la tech + CFO pour le budget",
+      "approvalLabel": "Que doit-il se passer en interne avant que vous soyez prêt à signer un contrat ?"
     },
     "step4": {
-      "nextStep": "What happens next",
-      "nextStepValue": "A 30-minute discovery call.",
-      "nextStepDetail": "We'll review your intake, prepare questions, and walk through scope, timeline, and the right starting point together.",
-      "summaryLabel": "Your project summary",
-      "summaryScope": "Scope:",
-      "summaryStage": "Stage:",
-      "summaryTimeline": "Timeline:",
-      "summaryUsers": "Users:",
-      "contactHeading": "Where should we send the confirmation?",
-      "emailLabel": "Email *",
-      "emailPlaceholder": "you@company.com",
-      "phoneLabel": "Phone (optional)",
+      "nextStep": "Ce qui se passe ensuite",
+      "nextStepValue": "Un appel découverte de 30 minutes.",
+      "nextStepDetail": "Nous examinerons votre intake, préparerons des questions et définirons ensemble la portée, le calendrier et le bon point de départ.",
+      "summaryLabel": "Résumé de votre projet",
+      "summaryScope": "Portée :",
+      "summaryStage": "Étape :",
+      "summaryTimeline": "Calendrier :",
+      "summaryUsers": "Utilisateurs :",
+      "contactHeading": "Où devons-nous envoyer la confirmation ?",
+      "emailLabel": "Courriel *",
+      "emailPlaceholder": "vous@entreprise.com",
+      "phoneLabel": "Téléphone (optionnel)",
       "phonePlaceholder": "(555) 555-5555",
-      "privacyNote": "We'll only use your contact info to follow up on this project. No newsletters, no spam."
+      "privacyNote": "Nous utiliserons vos coordonnées uniquement pour ce projet. Aucune newsletter, aucun spam.",
+      "postLaunchLabel": "Après le lancement, comment hébergement, maintenance et mises à jour doivent-ils être gérés ?",
+      "budgetFlexibilityLabel": "Si la bonne solution coûte 20 à 30 % de plus que la plage ci-dessus, êtes-vous ouvert à en discuter ?",
+      "budgetFlexibilityPlaceholder": "ex. Fixe — approuvé par le conseil · Flexible si le dossier commercial est solide"
     },
     "nav": {
-      "back": "Back",
-      "continue": "Continue",
-      "submitting": "Submitting...",
-      "submit": "Book discovery call"
+      "back": "Retour",
+      "continue": "Continuer",
+      "submitting": "Envoi en cours...",
+      "submit": "Réserver un appel découverte"
     },
     "validation": {
-      "validEmail": "Please enter a valid email address.",
-      "submitError": "Something went wrong. Please try again."
+      "validEmail": "Veuillez entrer une adresse courriel valide.",
+      "submitError": "Une erreur s'est produite. Veuillez réessayer."
     },
     "enums": {
       "targetUsers": {
-        "internal-team": "Internal team only",
-        "paying-customers": "Paying customers",
-        "both": "Both — internal and customer-facing",
-        "partners": "Partners or vendors"
+        "internal-team": "Équipe interne uniquement",
+        "paying-customers": "Clients payants",
+        "both": "Les deux — interne et orienté client",
+        "partners": "Partenaires ou fournisseurs"
       },
       "userScale": {
-        "under-100": "Under 100 users",
-        "100-1000": "100 – 1,000 users",
-        "1000-10k": "1,000 – 10K users",
-        "10k-plus": "10K+ users"
+        "under-100": "Moins de 100 utilisateurs",
+        "100-1000": "100 – 1 000 utilisateurs",
+        "1000-10k": "1 000 – 10K utilisateurs",
+        "10k-plus": "10K+ utilisateurs"
       },
       "stage": {
         "exploring": {
-          "label": "Exploring an idea",
-          "desc": "I haven't fully scoped this yet — I need help thinking it through."
+          "label": "Explorer une idée",
+          "desc": "Je n'ai pas encore tout défini — j'ai besoin d'aide pour y réfléchir."
         },
         "validated": {
-          "label": "Validated, ready to build",
-          "desc": "I know what I want. I need someone who can actually build it."
+          "label": "Validé, prêt à construire",
+          "desc": "Je sais ce que je veux. J'ai besoin de quelqu'un qui puisse vraiment le construire."
         },
         "funded": {
-          "label": "Funded and moving fast",
-          "desc": "Budget is approved. Timeline is the primary constraint."
+          "label": "Financé et en mouvement rapide",
+          "desc": "Le budget est approuvé. Le calendrier est la contrainte principale."
         },
         "replacing": {
-          "label": "Replacing an existing system",
-          "desc": "I have something in production that needs to be rebuilt or extended."
+          "label": "Remplacer un système existant",
+          "desc": "J'ai quelque chose en production qui doit être reconstruit ou étendu."
         }
       },
       "scope": {
         "discovery": {
-          "label": "Discovery sprint ($2,500 – $5,000)",
-          "desc": "Get a scoped architecture, data model, and budget band before committing to a full build."
+          "label": "Sprint de découverte (2 500 $ – 5 000 $)",
+          "desc": "Obtenez une architecture cadrée, un modèle de données et une fourchette budgétaire avant de vous engager dans une construction complète."
         },
         "mvp": {
-          "label": "MVP build ($18K – $35K)",
-          "desc": "Core features, production-grade, ready for real users."
+          "label": "Build MVP (18 000 $ – 35 000 $)",
+          "desc": "Fonctionnalités de base, niveau production, prêt pour de vrais utilisateurs."
         },
         "full": {
-          "label": "Full system ($35K – $75K+)",
-          "desc": "Multi-role, integrations, advanced features — the complete build."
+          "label": "Système complet (35 000 $ – 75 000 $+)",
+          "desc": "Multi-rôles, intégrations, fonctionnalités avancées — la construction complète."
         },
         "not-sure": {
-          "label": "Not sure yet",
-          "desc": "Let's talk through scope on the discovery call."
+          "label": "Pas encore sûr",
+          "desc": "Définissons la portée ensemble lors de l'appel découverte."
         }
       },
       "timeline": {
-        "asap": "As soon as possible",
-        "1-3-months": "1 – 3 months",
-        "3-6-months": "3 – 6 months",
-        "flexible": "Flexible — quality over speed"
+        "asap": "Dès que possible",
+        "1-3-months": "1 à 3 mois",
+        "3-6-months": "3 à 6 mois",
+        "flexible": "Flexible — qualité avant rapidité"
+      },
+      "integrations": {
+        "Salesforce": "Salesforce",
+        "HubSpot CRM": "HubSpot CRM",
+        "Pipedrive": "Pipedrive",
+        "Other CRM": "Autre CRM",
+        "Stripe": "Stripe",
+        "PayPal / Braintree": "PayPal / Braintree",
+        "QuickBooks / Xero": "QuickBooks / Xero",
+        "Other billing tool": "Autre outil de facturation",
+        "Google SSO": "Google SSO",
+        "Microsoft / Active Directory": "Microsoft / Active Directory",
+        "Auth0": "Auth0",
+        "Custom login system": "Système de connexion personnalisé",
+        "Slack": "Slack",
+        "Twilio SMS": "Twilio SMS",
+        "Transactional email (SendGrid / Postmark)": "Courriel transactionnel (SendGrid / Postmark)",
+        "Other comms": "Autre communication",
+        "Internal database / ERP": "Base de données interne / ERP",
+        "Google Sheets / Airtable": "Google Sheets / Airtable",
+        "External vendor API": "API fournisseur externe",
+        "Other data source": "Autre source de données"
+      },
+      "compliance": {
+        "pci": "Données financières clients (PCI / SOC2)",
+        "hipaa": "Données de santé (HIPAA)",
+        "gdpr": "Utilisateurs UE ou RU (RGPD)",
+        "wcag": "Exigences d'accessibilité (WCAG 2.1 AA)",
+        "government": "Secteur gouvernemental ou réglementé",
+        "none": "Aucune de ces options"
+      },
+      "budget": {
+        "15k-30k": "15 000 $–30 000 $",
+        "30k-60k": "30 000 $–60 000 $",
+        "60k-100k": "60 000 $–100 000 $",
+        "100k-plus": "100 000 $+",
+        "guidance": "Je souhaite vos conseils sur le budget"
+      },
+      "approval": {
+        "solo": "Je décide seul",
+        "small-team": "Alignement d'une petite équipe nécessaire",
+        "board": "Approbation du conseil ou de la direction",
+        "legal": "Révision juridique ou des achats",
+        "not-sure": "Pas encore certain"
+      },
+      "postLaunch": {
+        "crecy-manages": "CrecyStudio gère tout en mode retainer",
+        "internal": "Notre équipe interne prend en charge",
+        "full-files": "Nous voulons tous les fichiers sources et docs de déploiement",
+        "not-decided": "Pas encore décidé — discutons-en"
       }
     }
   },
@@ -2280,11 +2398,12 @@
     "metaDescription": "Parlez-nous de votre projet de portail. Nous définirons la bonne solution en 30 minutes.",
     "kicker": "Portail Client",
     "title": "Parlez-nous du portail.",
-    "stepCounter": "Étape {current} sur 3 — {stepTitle}",
+    "stepCounter": "Étape {current} sur 4 — {stepTitle}",
     "stepTitles": {
       "1": "Votre entreprise",
       "2": "Ce dont il a besoin",
-      "3": "Contact et envoi"
+      "3": "Contexte du projet",
+      "4": "Contact et envoi"
     },
     "step1": {
       "heading": "Parlez-nous de votre entreprise.",
@@ -2292,6 +2411,8 @@
       "contactPlaceholder": "Jean Dupont",
       "companyLabel": "Entreprise / Organisation",
       "companyPlaceholder": "Acme Services",
+      "userCountLabel": "Combien de personnes utiliseront ce portail au lancement ?",
+      "techTeamLabel": "Avez-vous une équipe de développeurs ou une équipe informatique impliquée ?",
       "accessLabel": "Qui accède au portail ?",
       "currentProcessLabel": "Comment gérez-vous cela aujourd'hui ?",
       "currentProcessPlaceholder": "ex. Nous envoyons des PDF par courriel et utilisons un Google Drive partagé."
@@ -2299,12 +2420,30 @@
     "step2": {
       "heading": "Que doit-il faire ?",
       "featuresLabel": "Sélectionnez tout ce qui s'applique",
-      "integrationLabel": "Intégration nécessaire ?",
+      "integrationsLabel": "À quels systèmes ce portail doit-il se connecter ?",
+      "integrationNotesLabel": "Pour les intégrations ci-dessus, décrivez le sens des données (entrée, sortie ou bidirectionnel).",
+      "integrationNotesPlaceholder": "ex. CRM en lecture seule, synchronisation facturation bidirectionnelle...",
+      "complianceLabel": "L'un des éléments suivants s'applique-t-il à votre projet ?",
       "timelineLabel": "Quand en avez-vous besoin ?"
     },
     "step3": {
+      "heading": "Contexte du projet",
+      "budgetLabel": "Quelle plage d'investissement avez-vous prévue ?",
+      "budgetNote": "Les portails personnalisés chez CrecyStudio débutent généralement à 15 000 $.",
+      "budgetFlexibilityLabel": "Cette plage est-elle fixe ou y a-t-il une flexibilité selon les exigences ?",
+      "budgetFlexibilityPlaceholder": "ex. « Fixe — approuvé par le conseil » ou « Flexible si le ROI le justifie »",
+      "deadlineLabel": "Y a-t-il une date précise à laquelle cela doit être en ligne ?",
+      "deadlineReasonLabel": "Quel événement commercial justifie cette date ?",
+      "deadlineReasonPlaceholder": "ex. l'intégration des clients commence au T3, renouvellement de contrat...",
+      "decisionMakerLabel": "Qui d'autre dans votre organisation participera à l'examen ou à l'approbation de ce projet ?",
+      "decisionMakerHelper": "Le contact quotidien, l'approbateur du budget et la validation créative sont souvent trois personnes différentes.",
+      "decisionMakerPlaceholder": "ex. « Moi — je décide » ou « Moi + DG pour le budget + DSI pour la validation technique »",
+      "approvalLabel": "À quoi ressemble votre processus d'approbation avant la signature ?"
+    },
+    "step4": {
       "heading": "Où envoyer le devis ?",
       "estimateNote": "Les projets de portail débutent généralement à 8 000 $. Un appel de 30 minutes nous aide à définir la bonne solution.",
+      "postLaunchLabel": "Après le lancement, comment hébergement et maintenance doivent-ils être gérés ?",
       "emailLabel": "Courriel *",
       "emailPlaceholder": "vous@entreprise.com",
       "phoneLabel": "Téléphone (optionnel)",
@@ -2352,6 +2491,51 @@
         "1-3-months": "1 à 3 mois",
         "3-6-months": "3 à 6 mois",
         "flexible": "Flexible — qualité avant rapidité"
+      },
+      "userCount": {
+        "under-25": "Moins de 25",
+        "25-100": "25–100",
+        "100-500": "100–500",
+        "500-2000": "500–2 000",
+        "2000-plus": "2 000+"
+      },
+      "techTeam": {
+        "yes": "Oui — nous avons une équipe technique",
+        "no": "Non — externalisation complète",
+        "one-person": "Une personne technique, non dédiée"
+      },
+      "compliance": {
+        "pci": "Données financières clients (PCI / SOC2)",
+        "hipaa": "Données de santé (HIPAA)",
+        "gdpr": "Utilisateurs UE ou RU (RGPD)",
+        "wcag": "Exigences d'accessibilité (WCAG 2.1 AA)",
+        "government": "Secteur gouvernemental ou réglementé",
+        "none": "Aucune de ces options"
+      },
+      "budget": {
+        "15k-25k": "15 000 $–25 000 $",
+        "25k-50k": "25 000 $–50 000 $",
+        "50k-100k": "50 000 $–100 000 $",
+        "100k-plus": "100 000 $+",
+        "guidance": "Je souhaite vos conseils sur le budget"
+      },
+      "deadline": {
+        "yes": "Oui — il y a une date fixe",
+        "no": "Non — le calendrier est flexible",
+        "soft": "Objectif indicatif, non fixe"
+      },
+      "approval": {
+        "solo": "Je décide seul",
+        "small-team": "Alignement d'une petite équipe nécessaire",
+        "board": "Approbation du conseil ou de la direction",
+        "legal": "Révision juridique ou des achats",
+        "not-sure": "Pas encore certain"
+      },
+      "postLaunch": {
+        "crecy-manages": "CrecyStudio gère tout en mode retainer",
+        "internal": "Notre équipe interne prend en charge",
+        "full-files": "Nous voulons tous les fichiers sources et docs de déploiement",
+        "not-decided": "Pas encore décidé — discutons-en"
       }
     }
   },
@@ -2360,11 +2544,12 @@
     "metaDescription": "Dites-nous ce qui ne fonctionne pas. Nous auditerons votre site et vous proposerons un plan de correction clair.",
     "kicker": "Sauvetage de site",
     "title": "Dites-nous ce qui est cassé.",
-    "stepCounter": "Étape {current} sur 3 — {stepTitle}",
+    "stepCounter": "Étape {current} sur 4 — {stepTitle}",
     "stepTitles": {
       "1": "Votre site",
       "2": "Les problèmes",
-      "3": "Contact et envoi"
+      "3": "Accès et historique",
+      "4": "Contact et envoi"
     },
     "step1": {
       "heading": "Parlez-nous de votre site actuel.",
@@ -2374,16 +2559,37 @@
       "companyLabel": "Entreprise / Organisation",
       "companyPlaceholder": "Acme Services",
       "contactLabel": "Votre nom *",
-      "contactPlaceholder": "Jean Dupont"
+      "contactPlaceholder": "Jean Dupont",
+      "builtWhenLabel": "Quand ce site a-t-il été construit ou remanié pour la dernière fois ?",
+      "builtByLabel": "Qui l'a construit ?",
+      "builtByPlaceholder": "ex. un freelance, une agence, en interne",
+      "previousVendorLabel": "Votre développeur ou agence précédent est-il encore impliqué ?"
     },
     "step2": {
       "heading": "Qu'est-ce qui ne va pas ?",
       "issuesLabel": "Sélectionnez tous les problèmes qui s'appliquent",
-      "urgencyLabel": "Quelle est l'urgence ?"
+      "urgencyLabel": "Quelle est l'urgence ?",
+      "alreadyTriedLabel": "Qu'a-t-on déjà tenté pour corriger ce site ?",
+      "alreadyTriedPlaceholder": "ex. un développeur a essayé d'accélérer le site le mois dernier mais il est toujours lent. Savoir ce qui a été tenté nous évite de faire double emploi."
     },
     "step3": {
+      "heading": "Accès et historique",
+      "assetAccessLabel": "À quoi avez-vous actuellement accès ?",
+      "assetAccessHelper": "Cochez tout ce qui s'applique. Nous vous demanderons les lacunes ci-dessous.",
+      "assetAccessNotesLabel": "Pour les éléments manquants ou flous, décrivez ce que vous savez de leur localisation.",
+      "assetAccessNotesPlaceholder": "ex. Je crois que mon ancienne agence a le login d'hébergement...",
+      "previousVendorReasonLabel": "Qu'est-ce qui vous pousse à chercher un nouveau partenaire maintenant ?",
+      "previousVendorReasonPlaceholder": "ex. l'agence précédente a disparu, le projet a été abandonné, litige d'accès...",
+      "seoLabel": "Votre site actuel a-t-il des classements Google ou du trafic organique à préserver ?",
+      "urlsToPreserveLabel": "Y a-t-il des URL de pages qui ne doivent pas changer ?",
+      "urlsToPreservePlaceholder": "ex. /contact, /tarifs — pages liées depuis des supports imprimés, bookmarkées par des clients ou très liées en externe"
+    },
+    "step4": {
       "heading": "Où envoyer l'audit ?",
       "estimateNote": "Les audits de sauvetage débutent à 800 $. Les corrections complètes coûtent généralement entre 1 500 $ et 4 000 $.",
+      "budgetLabel": "Quelle plage d'investissement avez-vous prévue ?",
+      "decisionMakerLabel": "Qui prend la décision finale d'approuver et financer ce projet ?",
+      "decisionMakerPlaceholder": "ex. Moi — je suis le propriétaire · Mon associé et moi · Directeur marketing avec approbation DG",
       "emailLabel": "Courriel *",
       "emailPlaceholder": "vous@entreprise.com",
       "phoneLabel": "Téléphone (optionnel)",
@@ -2435,6 +2641,44 @@
           "label": "Faible — qualité avant rapidité",
           "desc": "Je préfère que ce soit bien fait."
         }
+      },
+      "builtWhen": {
+        "2020-earlier": "2020 ou avant",
+        "2021": "2021",
+        "2022": "2022",
+        "2023": "2023",
+        "2024": "2024",
+        "2025": "2025",
+        "unknown": "Je ne sais pas"
+      },
+      "previousVendor": {
+        "active": { "label": "Oui — toujours en collaboration", "desc": "Ils ont toujours accès et nous travaillons avec eux" },
+        "ended-revoked": { "label": "Terminé — accès révoqué", "desc": "La relation est terminée et j'ai supprimé leur accès" },
+        "ended-may-still-have": { "label": "Terminé — accès incertain", "desc": "La relation est terminée mais ils ont peut-être encore accès" },
+        "self-built": { "label": "Auto-construit / pas de prestataire", "desc": "Nous l'avons construit en interne ou il n'y a pas de prestataire" },
+        "not-sure": { "label": "Je ne suis pas sûr", "desc": "Je ne suis pas certain de leur niveau d'accès" }
+      },
+      "assetAccess": {
+        "domain-registrar": "Nom de domaine (login registrar — GoDaddy, Namecheap, etc.)",
+        "cms-admin": "Admin CMS (tableau de bord WordPress, Webflow Editor, etc.)",
+        "hosting-account": "Compte d'hébergement / serveur (pas seulement FTP)",
+        "analytics": "Google Analytics ou Search Console",
+        "site-backup": "Sauvegarde récente des fichiers et de la base de données",
+        "design-files": "Fichiers de design originaux (Figma, PSD, etc.)"
+      },
+      "seo": {
+        "yes-critical": "Oui — les classements comptent et doivent être préservés",
+        "somewhat": "Partiellement — certaines pages comptent, d'autres non",
+        "no": "Non — le SEO n'est pas une priorité",
+        "dont-know": "Je ne connais pas mon classement SEO actuel"
+      },
+      "budget": {
+        "under-2k": "Moins de 2 000 $",
+        "2k-5k": "2 000 $–5 000 $",
+        "5k-10k": "5 000 $–10 000 $",
+        "10k-20k": "10 000 $–20 000 $",
+        "20k-plus": "20 000 $+",
+        "guidance": "Je souhaite vos conseils"
       }
     }
   }
