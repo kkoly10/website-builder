@@ -37,8 +37,15 @@
       "contact": "Contact",
       "privacy": "Privacy",
       "terms": "Terms",
-      "carePlans": "Care plans"
+      "carePlans": "Care plans",
+      "customWebApps": "Custom web apps",
+      "clientPortals": "Client portals",
+      "about": "About"
     }
+  },
+  "about": {
+    "metaTitle": "About | CrecyStudio",
+    "metaDescription": "Learn about Komlan Kouhiko, founder of CrecyStudio — the independent web studio building premium websites and custom systems."
   },
   "home": {
     "metaTitle": "CrecyStudio | Websites and custom web systems",
