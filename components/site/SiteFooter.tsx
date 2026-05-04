@@ -18,11 +18,14 @@ export default function SiteFooter() {
             <Link href="/websites">{t("links.websites")}</Link>
             <Link href="/ecommerce">{t("links.ecommerce")}</Link>
             <Link href="/systems">{t("links.systems")}</Link>
+            <Link href="/custom-web-apps">{t("links.customWebApps")}</Link>
+            <Link href="/client-portals">{t("links.clientPortals")}</Link>
             <Link href="/process">{t("links.process")}</Link>
             <Link href="/work">{t("links.work")}</Link>
             <Link href="/care-plans">{t("links.carePlans")}</Link>
             <Link href="/pricing">{t("links.pricing")}</Link>
             <Link href="/faq">{t("links.faq")}</Link>
+            <Link href="/about">{t("links.about")}</Link>
             <Link href="/contact">{t("links.contact")}</Link>
             <Link href="/privacy">{t("links.privacy")}</Link>
             <Link href="/terms">{t("links.terms")}</Link>
