@@ -50,12 +50,12 @@ export async function ensureWebsiteQuoteDepositLink(args: {
   if (!customerEmail && quote.lead_id) {
     const { data: lead, error: leadError } = await supabaseAdmin
       .from("leads")
-      .select("email, lead_email")
+      .select("email")
       .eq("id", quote.lead_id)
       .maybeSingle();
 
     if (leadError) throw new Error(leadError.message);
-    customerEmail = str((lead as any)?.email) || str((lead as any)?.lead_email);
+    customerEmail = str((lead as any)?.email);
   }
 
   if (!customerEmail || !customerEmail.includes("@")) {
