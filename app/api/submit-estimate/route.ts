@@ -113,43 +113,21 @@ function normalizePricing(body: LooseObj) {
 }
 
 async function findLeadByEmail(email: string) {
-  {
-    const res = await supabaseAdmin.from("leads").select("id").eq("email", email).maybeSingle();
-    if (!res.error && res.data?.id) return { id: String(res.data.id) };
-  }
-  {
-    const res = await supabaseAdmin.from("leads").select("id").eq("lead_email", email).maybeSingle();
-    if (!res.error && res.data?.id) return { id: String(res.data.id) };
-  }
+  const res = await supabaseAdmin.from("leads").select("id").eq("email", email).maybeSingle();
+  if (!res.error && res.data?.id) return { id: String(res.data.id) };
   return null;
 }
 
 async function createLead(email: string, name: string | null, preferredLocale: string) {
-  {
-    const res = await supabaseAdmin
-      .from("leads")
-      .insert({ email, preferred_locale: preferredLocale })
-      .select("id")
-      .single();
-    if (!res.error && res.data?.id) {
-      const id = String(res.data.id);
-      if (name) await supabaseAdmin.from("leads").update({ name }).eq("id", id);
-      return id;
-    }
-  }
-  {
-    const res = await supabaseAdmin
-      .from("leads")
-      .insert({ lead_email: email, preferred_locale: preferredLocale })
-      .select("id")
-      .single();
-    if (!res.error && res.data?.id) {
-      const id = String(res.data.id);
-      if (name) await supabaseAdmin.from("leads").update({ name }).eq("id", id);
-      return id;
-    }
-  }
-  throw new Error("Failed to create lead row (check leads table columns/RLS).");
+  const res = await supabaseAdmin
+    .from("leads")
+    .insert({ email, preferred_locale: preferredLocale })
+    .select("id")
+    .single();
+  if (res.error) throw new Error(res.error.message);
+  const id = String(res.data.id);
+  if (name) await supabaseAdmin.from("leads").update({ name }).eq("id", id);
+  return id;
 }
 
 async function ensureLeadId(email: string, name: string | null, preferredLocale: string) {

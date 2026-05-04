@@ -637,7 +637,7 @@ export async function loadEstimatePresentation(args: {
     quote.lead_id
       ? supabaseAdmin
           .from("leads")
-          .select("email, lead_email, phone, name")
+          .select("email, phone, name")
           .eq("id", quote.lead_id)
           .maybeSingle()
       : Promise.resolve({ data: null, error: null } as const),
