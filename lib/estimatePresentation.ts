@@ -111,7 +111,6 @@ type QuoteRow = {
 
 type LeadRow = {
   email: string | null;
-  lead_email: string | null;
   phone: string | null;
   name: string | null;
 };
@@ -731,7 +730,7 @@ export async function loadEstimatePresentation(args: {
     safeObj(quoteJson.business).name
   ) || "your business";
   const contactName = cleanString(lead.name) || null;
-  const leadEmail = firstString(lead.email, lead.lead_email, quote.lead_email) || null;
+  const leadEmail = firstString(lead.email, quote.lead_email) || null;
   const callToBook: EstimatePresentation["callToBook"] =
     variant === "fast"
       ? null
