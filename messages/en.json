@@ -1680,7 +1680,7 @@
         "Order processing & fulfillment coordination": "Order processing & fulfillment coordination",
         "Customer service & returns": "Customer service & returns",
         "Inventory tracking": "Inventory tracking",
-        "Marketplace management (Amazon, Etsy, etc.)": "Marketplace management (Amazon, Etsy, etc.)",
+        "marketplace-management": "Marketplace management (Amazon, Etsy, etc.)",
         "Monthly performance reporting": "Monthly performance reporting",
         "Promotional campaigns & pricing updates": "Promotional campaigns & pricing updates"
       },
