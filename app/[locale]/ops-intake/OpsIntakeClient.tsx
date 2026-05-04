@@ -26,6 +26,10 @@ type OpsFormState = {
   urgency: string;
   readiness: string;
   notes: string;
+  decisionMaker: string;
+  compliance: string[];
+  budgetFlexibility: string;
+  postLaunch: string;
 };
 
 const TOOLS_LIST = [
@@ -86,6 +90,21 @@ const TRIED_BEFORE_OPTIONS = [
   "Yes - using a tool but it's not working",
 ];
 
+const OPS_COMPLIANCE_OPTIONS = [
+  "employee-hr-data",
+  "client-financial-data",
+  "health-medical-data",
+  "gdpr-eu-uk",
+  "government-regulated",
+  "none",
+] as const;
+
+const OPS_POST_LAUNCH_OPTIONS = [
+  "crecy-retainer",
+  "internal",
+  "not-decided",
+] as const;
+
 const TEAM_SIZE_OPTIONS = [
   "1-5 employees",
   "6-15 employees",
@@ -114,6 +133,8 @@ export default function OpsIntakeClient() {
   const tEnumTools = useTranslations("opsIntake.enums.tools");
   const tEnumPain = useTranslations("opsIntake.enums.painPoints");
   const tEnumWorkflows = useTranslations("opsIntake.enums.workflows");
+  const tEnumCompliance = useTranslations("opsIntake.enums.compliance");
+  const tEnumPostLaunch = useTranslations("opsIntake.enums.postLaunch");
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -136,6 +157,10 @@ export default function OpsIntakeClient() {
     urgency: "Exploring options",
     readiness: "Just doing research",
     notes: "",
+    decisionMaker: "",
+    compliance: [],
+    budgetFlexibility: "",
+    postLaunch: "not-decided",
   });
 
   const recommendation = useMemo(
@@ -159,7 +184,7 @@ export default function OpsIntakeClient() {
   );
 
   const toggleArray = (
-    field: "currentTools" | "painPoints" | "workflowsNeeded",
+    field: "currentTools" | "painPoints" | "workflowsNeeded" | "compliance",
     v: string
   ) => {
     setForm((p) => ({
@@ -308,6 +333,15 @@ export default function OpsIntakeClient() {
                   </select>
                 </div>
               </div>
+              <div>
+                <label className="fieldLabel">{t("step1.decisionMakerLabel")}</label>
+                <input
+                  className="input"
+                  placeholder={t("step1.decisionMakerPlaceholder")}
+                  value={form.decisionMaker}
+                  onChange={(e) => setForm({ ...form, decisionMaker: e.target.value })}
+                />
+              </div>
               <div className="grid2">
                 <div>
                   <label className="fieldLabel">{t("step1.monthlyRevenueLabel")}</label>
@@ -375,6 +409,19 @@ export default function OpsIntakeClient() {
                   ))}
                 </select>
               </div>
+              <div style={{ paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
+                <label className="fieldLabel">{t("step2.complianceLabel")}</label>
+                <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+                  {OPS_COMPLIANCE_OPTIONS.map((c) => (
+                    <CheckRow
+                      key={c}
+                      label={tEnumCompliance(c)}
+                      checked={form.compliance.includes(c)}
+                      onChange={() => toggleArray("compliance", c)}
+                    />
+                  ))}
+                </div>
+              </div>
             </>
           )}
 
@@ -427,6 +474,27 @@ export default function OpsIntakeClient() {
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                   placeholder={t("step3.notesPlaceholder")}
                 />
+              </div>
+              <div>
+                <label className="fieldLabel">{t("step3.budgetFlexibilityLabel")}</label>
+                <input
+                  className="input"
+                  value={form.budgetFlexibility}
+                  onChange={(e) => setForm({ ...form, budgetFlexibility: e.target.value })}
+                  placeholder={t("step3.budgetFlexibilityPlaceholder")}
+                />
+              </div>
+              <div>
+                <label className="fieldLabel">{t("step3.postLaunchLabel")}</label>
+                <select
+                  className="select"
+                  value={form.postLaunch}
+                  onChange={(e) => setForm({ ...form, postLaunch: e.target.value })}
+                >
+                  {OPS_POST_LAUNCH_OPTIONS.map((o) => (
+                    <option key={o} value={o}>{tEnumPostLaunch(o)}</option>
+                  ))}
+                </select>
               </div>
             </>
           )}

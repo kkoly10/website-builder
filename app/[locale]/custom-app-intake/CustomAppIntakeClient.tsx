@@ -16,6 +16,14 @@ type CustomAppFormState = {
   stage: string;
   scopePreference: string;
   timeline: string;
+  integrations: string[];
+  integrationNotes: string;
+  compliance: string[];
+  budget: string;
+  budgetFlexibility: string;
+  decisionMaker: string;
+  approvalProcess: string;
+  postLaunch: string;
   email: string;
   phone: string;
 };
@@ -54,6 +62,92 @@ const TIMELINE_OPTIONS = [
   "3-6-months",
   "flexible",
 ] as const;
+
+const CUSTOM_APP_INTEGRATION_OPTIONS = [
+  "Salesforce",
+  "HubSpot CRM",
+  "Pipedrive",
+  "Other CRM",
+  "Stripe",
+  "PayPal / Braintree",
+  "QuickBooks / Xero",
+  "Other billing tool",
+  "Google SSO",
+  "Microsoft / Active Directory",
+  "Auth0",
+  "Custom login system",
+  "Slack",
+  "Twilio SMS",
+  "Transactional email (SendGrid / Postmark)",
+  "Other comms",
+  "Internal database / ERP",
+  "Google Sheets / Airtable",
+  "External vendor API",
+  "Other data source",
+] as const;
+
+const CUSTOM_APP_COMPLIANCE_OPTIONS = [
+  "pci",
+  "hipaa",
+  "gdpr",
+  "wcag",
+  "government",
+  "none",
+] as const;
+
+const CUSTOM_APP_BUDGET_OPTIONS = [
+  "15k-30k",
+  "30k-60k",
+  "60k-100k",
+  "100k-plus",
+  "guidance",
+] as const;
+
+const APPROVAL_OPTIONS = [
+  "solo",
+  "small-team",
+  "board",
+  "legal",
+  "not-sure",
+] as const;
+
+const POST_LAUNCH_OPTIONS = [
+  "crecy-manages",
+  "internal",
+  "full-files",
+  "not-decided",
+] as const;
+
+function CheckRow({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <label
+      className="checkRow"
+      style={{
+        cursor: "pointer",
+        background: checked ? "var(--accent-soft)" : "var(--paper-2)",
+        borderColor: checked ? "var(--accent)" : "var(--rule)",
+      }}
+    >
+      <div className="checkLeft">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={onChange}
+          style={{ accentColor: "var(--accent)" }}
+        />
+        <div className="checkLabel">{label}</div>
+      </div>
+    </label>
+  );
+}
 
 type RadioGroupProps = {
   options: readonly string[];
@@ -134,9 +228,35 @@ export default function CustomAppIntakeClient() {
     stage: "validated",
     scopePreference: "not-sure",
     timeline: "3-6-months",
+    integrations: [],
+    integrationNotes: "",
+    compliance: [],
+    budget: "",
+    budgetFlexibility: "",
+    decisionMaker: "",
+    approvalProcess: "solo",
+    postLaunch: "not-decided",
     email: "",
     phone: "",
   });
+
+  function toggleIntegration(v: string) {
+    setForm((p) => ({
+      ...p,
+      integrations: p.integrations.includes(v)
+        ? p.integrations.filter((i) => i !== v)
+        : [...p.integrations, v],
+    }));
+  }
+
+  function toggleCompliance(v: string) {
+    setForm((p) => ({
+      ...p,
+      compliance: p.compliance.includes(v)
+        ? p.compliance.filter((i) => i !== v)
+        : [...p.compliance, v],
+    }));
+  }
 
   const TOTAL_STEPS = 4;
 
@@ -175,6 +295,14 @@ export default function CustomAppIntakeClient() {
             stage: form.stage,
             scopePreference: form.scopePreference,
             timeline: form.timeline,
+            integrations: form.integrations,
+            integrationNotes: form.integrationNotes,
+            compliance: form.compliance,
+            budget: form.budget,
+            budgetFlexibility: form.budgetFlexibility,
+            decisionMaker: form.decisionMaker,
+            approvalProcess: form.approvalProcess,
+            postLaunch: form.postLaunch,
           },
         }),
       });
@@ -319,6 +447,44 @@ export default function CustomAppIntakeClient() {
                   />
                 </div>
               </div>
+
+              <div style={{ paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
+                <label className="fieldLabel">{t("step2.integrationsLabel")}</label>
+                <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+                  {CUSTOM_APP_INTEGRATION_OPTIONS.map((opt) => (
+                    <CheckRow
+                      key={opt}
+                      label={opt}
+                      checked={form.integrations.includes(opt)}
+                      onChange={() => toggleIntegration(opt)}
+                    />
+                  ))}
+                </div>
+                <div style={{ marginTop: 12 }}>
+                  <label className="fieldLabel">{t("step2.integrationNotesLabel")}</label>
+                  <textarea
+                    className="textarea"
+                    rows={2}
+                    value={form.integrationNotes}
+                    onChange={(e) => setForm({ ...form, integrationNotes: e.target.value })}
+                    placeholder={t("step2.integrationNotesPlaceholder")}
+                  />
+                </div>
+              </div>
+
+              <div style={{ paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
+                <label className="fieldLabel">{t("step2.complianceLabel")}</label>
+                <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+                  {CUSTOM_APP_COMPLIANCE_OPTIONS.map((opt) => (
+                    <CheckRow
+                      key={opt}
+                      label={t(`enums.compliance.${opt}`)}
+                      checked={form.compliance.includes(opt)}
+                      onChange={() => toggleCompliance(opt)}
+                    />
+                  ))}
+                </div>
+              </div>
             </>
           )}
 
@@ -357,6 +523,46 @@ export default function CustomAppIntakeClient() {
                     value={form.timeline}
                     onChange={(v) => setForm({ ...form, timeline: v })}
                     labelFn={(v) => t(`enums.timeline.${v}`)}
+                  />
+                </div>
+              </div>
+
+              <div style={{ paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
+                <label className="fieldLabel">{t("step3.budgetLabel")}</label>
+                <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 8, marginTop: 4 }}>
+                  {t("step3.budgetNote")}
+                </p>
+                <div style={{ marginTop: 10 }}>
+                  <RadioGroup
+                    options={CUSTOM_APP_BUDGET_OPTIONS}
+                    value={form.budget}
+                    onChange={(v) => setForm({ ...form, budget: v })}
+                    labelFn={(v) => t(`enums.budget.${v}`)}
+                  />
+                </div>
+              </div>
+
+              <div style={{ paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
+                <label className="fieldLabel">{t("step3.decisionMakerLabel")}</label>
+                <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 8, marginTop: 4 }}>
+                  {t("step3.decisionMakerHelper")}
+                </p>
+                <input
+                  className="input"
+                  value={form.decisionMaker}
+                  onChange={(e) => setForm({ ...form, decisionMaker: e.target.value })}
+                  placeholder={t("step3.decisionMakerPlaceholder")}
+                />
+              </div>
+
+              <div style={{ paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
+                <label className="fieldLabel">{t("step3.approvalLabel")}</label>
+                <div style={{ marginTop: 10 }}>
+                  <RadioGroup
+                    options={APPROVAL_OPTIONS}
+                    value={form.approvalProcess}
+                    onChange={(v) => setForm({ ...form, approvalProcess: v })}
+                    labelFn={(v) => t(`enums.approval.${v}`)}
                   />
                 </div>
               </div>
@@ -425,6 +631,28 @@ export default function CustomAppIntakeClient() {
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   />
                 </div>
+              </div>
+
+              <div style={{ paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
+                <label className="fieldLabel">{t("step4.postLaunchLabel")}</label>
+                <div style={{ marginTop: 10 }}>
+                  <RadioGroup
+                    options={POST_LAUNCH_OPTIONS}
+                    value={form.postLaunch}
+                    onChange={(v) => setForm({ ...form, postLaunch: v })}
+                    labelFn={(v) => t(`enums.postLaunch.${v}`)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="fieldLabel">{t("step4.budgetFlexibilityLabel")}</label>
+                <input
+                  className="input"
+                  value={form.budgetFlexibility}
+                  onChange={(e) => setForm({ ...form, budgetFlexibility: e.target.value })}
+                  placeholder={t("step4.budgetFlexibilityPlaceholder")}
+                />
               </div>
 
               <p style={{ fontSize: 13, color: "var(--muted)" }}>{t("step4.privacyNote")}</p>

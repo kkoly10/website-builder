@@ -13,7 +13,19 @@ type PortalFormState = {
   currentProcess: string;
   features: string[];
   integration: string;
+  integrations: string[];
+  integrationNotes: string;
+  compliance: string[];
   timeline: string;
+  userCount: string;
+  hasTechTeam: string;
+  budget: string;
+  budgetFlexibility: string;
+  hardDeadline: string;
+  deadlineReason: string;
+  decisionMaker: string;
+  approvalProcess: string;
+  postLaunch: string;
   email: string;
   phone: string;
   notes: string;
@@ -32,15 +44,40 @@ const FEATURE_OPTIONS = [
   "forms",
 ] as const;
 
+const TIMELINE_OPTIONS = ["asap", "1-3-months", "3-6-months", "flexible"] as const;
+
+const USER_COUNT_OPTIONS = ["under-25", "25-100", "100-500", "500-2000", "2000-plus"] as const;
+const TECH_TEAM_OPTIONS = ["yes", "no", "one-person"] as const;
+
 const INTEGRATION_OPTIONS = [
-  "none",
-  "crm",
-  "billing",
-  "project-mgmt",
-  "custom-api",
+  "Salesforce",
+  "HubSpot CRM",
+  "Pipedrive",
+  "Other CRM",
+  "Stripe",
+  "PayPal / Braintree",
+  "QuickBooks / Xero",
+  "Other billing tool",
+  "Google SSO",
+  "Microsoft / Active Directory",
+  "Auth0",
+  "Custom login system",
+  "Slack",
+  "Twilio SMS",
+  "Transactional email (SendGrid / Postmark)",
+  "Other comms",
+  "Internal database / ERP",
+  "Google Sheets / Airtable",
+  "External vendor API",
+  "Other data source",
 ] as const;
 
-const TIMELINE_OPTIONS = ["asap", "1-3-months", "3-6-months", "flexible"] as const;
+const COMPLIANCE_OPTIONS = ["pci", "hipaa", "gdpr", "wcag", "government", "none"] as const;
+
+const BUDGET_OPTIONS = ["15k-25k", "25k-50k", "50k-100k", "100k-plus", "guidance"] as const;
+const DEADLINE_OPTIONS = ["yes", "no", "soft"] as const;
+const APPROVAL_OPTIONS = ["solo", "small-team", "board", "legal", "not-sure"] as const;
+const POST_LAUNCH_OPTIONS = ["crecy-manages", "internal", "full-files", "not-decided"] as const;
 
 function CheckRow({
   label,
@@ -88,7 +125,19 @@ export default function PortalIntakeClient() {
     currentProcess: "",
     features: [],
     integration: "none",
+    integrations: [],
+    integrationNotes: "",
+    compliance: [],
     timeline: "1-3-months",
+    userCount: "25-100",
+    hasTechTeam: "no",
+    budget: "",
+    budgetFlexibility: "",
+    hardDeadline: "no",
+    deadlineReason: "",
+    decisionMaker: "",
+    approvalProcess: "solo",
+    postLaunch: "not-decided",
     email: "",
     phone: "",
     notes: "",
@@ -98,6 +147,24 @@ export default function PortalIntakeClient() {
     setForm((p) => ({
       ...p,
       features: p.features.includes(v) ? p.features.filter((i) => i !== v) : [...p.features, v],
+    }));
+  }
+
+  function toggleIntegration(v: string) {
+    setForm((p) => ({
+      ...p,
+      integrations: p.integrations.includes(v)
+        ? p.integrations.filter((i) => i !== v)
+        : [...p.integrations, v],
+    }));
+  }
+
+  function toggleCompliance(v: string) {
+    setForm((p) => ({
+      ...p,
+      compliance: p.compliance.includes(v)
+        ? p.compliance.filter((i) => i !== v)
+        : [...p.compliance, v],
     }));
   }
 
@@ -132,7 +199,19 @@ export default function PortalIntakeClient() {
             currentProcess: form.currentProcess,
             features: form.features,
             integration: form.integration,
+            integrations: form.integrations,
+            integrationNotes: form.integrationNotes,
+            compliance: form.compliance,
             timeline: form.timeline,
+            userCount: form.userCount,
+            hasTechTeam: form.hasTechTeam,
+            budget: form.budget,
+            budgetFlexibility: form.budgetFlexibility,
+            hardDeadline: form.hardDeadline,
+            deadlineReason: form.deadlineReason,
+            decisionMaker: form.decisionMaker,
+            approvalProcess: form.approvalProcess,
+            postLaunch: form.postLaunch,
             notes: form.notes,
           },
         }),
@@ -146,8 +225,9 @@ export default function PortalIntakeClient() {
         metadata: {
           accessType: form.accessType,
           featureCount: form.features.length,
-          integration: form.integration,
+          integrationsCount: form.integrations.length,
           timeline: form.timeline,
+          budget: form.budget,
         },
       });
 
@@ -167,7 +247,7 @@ export default function PortalIntakeClient() {
     }
   }
 
-  const progressPct = (step / 3) * 100;
+  const progressPct = (step / 4) * 100;
 
   return (
     <main className="container" style={{ padding: "48px 0 80px", maxWidth: 760 }}>
@@ -227,7 +307,96 @@ export default function PortalIntakeClient() {
                   />
                 </div>
               </div>
+
               <div>
+                <label className="fieldLabel">{t("step1.userCountLabel")}</label>
+                <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+                  {USER_COUNT_OPTIONS.map((opt) => {
+                    const active = form.userCount === opt;
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setForm({ ...form, userCount: opt })}
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "14px 1fr",
+                          gap: 14,
+                          alignItems: "center",
+                          padding: "10px 14px",
+                          borderRadius: 10,
+                          textAlign: "left",
+                          cursor: "pointer",
+                          border: `1px solid ${active ? "var(--accent)" : "var(--stroke)"}`,
+                          background: active ? "var(--accent-bg)" : "transparent",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 14,
+                            height: 14,
+                            borderRadius: "50%",
+                            border: `2px solid ${active ? "var(--accent)" : "var(--stroke)"}`,
+                            background: active ? "var(--accent)" : "transparent",
+                            flexShrink: 0,
+                            transition: "all 0.15s",
+                          }}
+                        />
+                        <div style={{ fontSize: 14, color: "var(--fg)" }}>
+                          {t(`enums.userCount.${opt}`)}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{ paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
+                <label className="fieldLabel">{t("step1.techTeamLabel")}</label>
+                <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+                  {TECH_TEAM_OPTIONS.map((opt) => {
+                    const active = form.hasTechTeam === opt;
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setForm({ ...form, hasTechTeam: opt })}
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "14px 1fr",
+                          gap: 14,
+                          alignItems: "center",
+                          padding: "10px 14px",
+                          borderRadius: 10,
+                          textAlign: "left",
+                          cursor: "pointer",
+                          border: `1px solid ${active ? "var(--accent)" : "var(--stroke)"}`,
+                          background: active ? "var(--accent-bg)" : "transparent",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 14,
+                            height: 14,
+                            borderRadius: "50%",
+                            border: `2px solid ${active ? "var(--accent)" : "var(--stroke)"}`,
+                            background: active ? "var(--accent)" : "transparent",
+                            flexShrink: 0,
+                            transition: "all 0.15s",
+                          }}
+                        />
+                        <div style={{ fontSize: 14, color: "var(--fg)" }}>
+                          {t(`enums.techTeam.${opt}`)}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{ paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
                 <label className="fieldLabel">{t("step1.accessLabel")}</label>
                 <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
                   {ACCESS_OPTIONS.map((opt) => {
@@ -270,7 +439,8 @@ export default function PortalIntakeClient() {
                   })}
                 </div>
               </div>
-              <div>
+
+              <div style={{ paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
                 <label className="fieldLabel">{t("step1.currentProcessLabel")}</label>
                 <textarea
                   className="textarea"
@@ -299,21 +469,45 @@ export default function PortalIntakeClient() {
                   ))}
                 </div>
               </div>
+
               <div style={{ paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
-                <label className="fieldLabel">{t("step2.integrationLabel")}</label>
-                <select
-                  className="select"
-                  value={form.integration}
-                  onChange={(e) => setForm({ ...form, integration: e.target.value })}
-                  style={{ marginTop: 8 }}
-                >
+                <label className="fieldLabel">{t("step2.integrationsLabel")}</label>
+                <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
                   {INTEGRATION_OPTIONS.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {t(`enums.integration.${opt}`)}
-                    </option>
+                    <CheckRow
+                      key={opt}
+                      label={opt}
+                      checked={form.integrations.includes(opt)}
+                      onChange={() => toggleIntegration(opt)}
+                    />
                   ))}
-                </select>
+                </div>
+                <div style={{ marginTop: 12 }}>
+                  <label className="fieldLabel">{t("step2.integrationNotesLabel")}</label>
+                  <textarea
+                    className="textarea"
+                    rows={2}
+                    value={form.integrationNotes}
+                    onChange={(e) => setForm({ ...form, integrationNotes: e.target.value })}
+                    placeholder={t("step2.integrationNotesPlaceholder")}
+                  />
+                </div>
               </div>
+
+              <div style={{ paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
+                <label className="fieldLabel">{t("step2.complianceLabel")}</label>
+                <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+                  {COMPLIANCE_OPTIONS.map((opt) => (
+                    <CheckRow
+                      key={opt}
+                      label={t(`enums.compliance.${opt}`)}
+                      checked={form.compliance.includes(opt)}
+                      onChange={() => toggleCompliance(opt)}
+                    />
+                  ))}
+                </div>
+              </div>
+
               <div style={{ paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
                 <label className="fieldLabel">{t("step2.timelineLabel")}</label>
                 <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
@@ -349,6 +543,154 @@ export default function PortalIntakeClient() {
           {step === 3 && (
             <>
               <h2 className="h2">{t("step3.heading")}</h2>
+
+              <div>
+                <label className="fieldLabel">{t("step3.budgetLabel")}</label>
+                <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 8, marginTop: 4 }}>
+                  {t("step3.budgetNote")}
+                </p>
+                <div style={{ display: "grid", gap: 8 }}>
+                  {BUDGET_OPTIONS.map((opt) => {
+                    const active = form.budget === opt;
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setForm({ ...form, budget: opt })}
+                        style={{
+                          padding: "10px 14px",
+                          borderRadius: 10,
+                          fontSize: 14,
+                          fontWeight: active ? 600 : 400,
+                          textAlign: "left",
+                          cursor: "pointer",
+                          border: `1px solid ${active ? "var(--accent)" : "var(--stroke)"}`,
+                          background: active ? "var(--accent-bg)" : "transparent",
+                          color: active ? "var(--accent)" : "var(--fg)",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        {t(`enums.budget.${opt}`)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{ paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
+                <label className="fieldLabel">{t("step3.budgetFlexibilityLabel")}</label>
+                <input
+                  className="input"
+                  value={form.budgetFlexibility}
+                  onChange={(e) => setForm({ ...form, budgetFlexibility: e.target.value })}
+                  placeholder={t("step3.budgetFlexibilityPlaceholder")}
+                />
+              </div>
+
+              <div style={{ paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
+                <label className="fieldLabel">{t("step3.deadlineLabel")}</label>
+                <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+                  {DEADLINE_OPTIONS.map((opt) => {
+                    const active = form.hardDeadline === opt;
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setForm({ ...form, hardDeadline: opt })}
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "14px 1fr",
+                          gap: 14,
+                          alignItems: "center",
+                          padding: "10px 14px",
+                          borderRadius: 10,
+                          textAlign: "left",
+                          cursor: "pointer",
+                          border: `1px solid ${active ? "var(--accent)" : "var(--stroke)"}`,
+                          background: active ? "var(--accent-bg)" : "transparent",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 14,
+                            height: 14,
+                            borderRadius: "50%",
+                            border: `2px solid ${active ? "var(--accent)" : "var(--stroke)"}`,
+                            background: active ? "var(--accent)" : "transparent",
+                            flexShrink: 0,
+                            transition: "all 0.15s",
+                          }}
+                        />
+                        <div style={{ fontSize: 14, color: "var(--fg)" }}>
+                          {t(`enums.deadline.${opt}`)}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                {form.hardDeadline === "yes" && (
+                  <div style={{ marginTop: 12 }}>
+                    <label className="fieldLabel">{t("step3.deadlineReasonLabel")}</label>
+                    <textarea
+                      className="textarea"
+                      rows={2}
+                      value={form.deadlineReason}
+                      onChange={(e) => setForm({ ...form, deadlineReason: e.target.value })}
+                      placeholder={t("step3.deadlineReasonPlaceholder")}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div style={{ paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
+                <label className="fieldLabel">{t("step3.decisionMakerLabel")}</label>
+                <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 8, marginTop: 4 }}>
+                  {t("step3.decisionMakerHelper")}
+                </p>
+                <input
+                  className="input"
+                  value={form.decisionMaker}
+                  onChange={(e) => setForm({ ...form, decisionMaker: e.target.value })}
+                  placeholder={t("step3.decisionMakerPlaceholder")}
+                />
+              </div>
+
+              <div style={{ paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
+                <label className="fieldLabel">{t("step3.approvalLabel")}</label>
+                <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+                  {APPROVAL_OPTIONS.map((opt) => {
+                    const active = form.approvalProcess === opt;
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setForm({ ...form, approvalProcess: opt })}
+                        style={{
+                          padding: "10px 14px",
+                          borderRadius: 10,
+                          fontSize: 14,
+                          fontWeight: active ? 600 : 400,
+                          textAlign: "left",
+                          cursor: "pointer",
+                          border: `1px solid ${active ? "var(--accent)" : "var(--stroke)"}`,
+                          background: active ? "var(--accent-bg)" : "transparent",
+                          color: active ? "var(--accent)" : "var(--fg)",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        {t(`enums.approval.${opt}`)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+
+          {step === 4 && (
+            <>
+              <h2 className="h2">{t("step4.heading")}</h2>
               <div
                 style={{
                   background: "var(--accent-bg)",
@@ -359,41 +701,75 @@ export default function PortalIntakeClient() {
                   color: "var(--muted)",
                 }}
               >
-                {t("step3.estimateNote")}
+                {t("step4.estimateNote")}
               </div>
-              <div className="grid2">
-                <div>
-                  <label className="fieldLabel">{t("step3.emailLabel")}</label>
-                  <input
-                    className="input"
-                    type="email"
-                    placeholder={t("step3.emailPlaceholder")}
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="fieldLabel">{t("step3.phoneLabel")}</label>
-                  <input
-                    className="input"
-                    type="tel"
-                    placeholder={t("step3.phonePlaceholder")}
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  />
-                </div>
-              </div>
+
               <div>
-                <label className="fieldLabel">{t("step3.notesLabel")}</label>
+                <label className="fieldLabel">{t("step4.postLaunchLabel")}</label>
+                <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+                  {POST_LAUNCH_OPTIONS.map((opt) => {
+                    const active = form.postLaunch === opt;
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setForm({ ...form, postLaunch: opt })}
+                        style={{
+                          padding: "10px 14px",
+                          borderRadius: 10,
+                          fontSize: 14,
+                          fontWeight: active ? 600 : 400,
+                          textAlign: "left",
+                          cursor: "pointer",
+                          border: `1px solid ${active ? "var(--accent)" : "var(--stroke)"}`,
+                          background: active ? "var(--accent-bg)" : "transparent",
+                          color: active ? "var(--accent)" : "var(--fg)",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        {t(`enums.postLaunch.${opt}`)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{ paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
+                <div className="grid2">
+                  <div>
+                    <label className="fieldLabel">{t("step4.emailLabel")}</label>
+                    <input
+                      className="input"
+                      type="email"
+                      placeholder={t("step4.emailPlaceholder")}
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="fieldLabel">{t("step4.phoneLabel")}</label>
+                    <input
+                      className="input"
+                      type="tel"
+                      placeholder={t("step4.phonePlaceholder")}
+                      value={form.phone}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="fieldLabel">{t("step4.notesLabel")}</label>
                 <textarea
                   className="textarea"
                   rows={3}
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                  placeholder={t("step3.notesPlaceholder")}
+                  placeholder={t("step4.notesPlaceholder")}
                 />
               </div>
-              <p style={{ fontSize: 12, color: "var(--muted)" }}>{t("step3.privacyNote")}</p>
+              <p style={{ fontSize: 12, color: "var(--muted)" }}>{t("step4.privacyNote")}</p>
               {error ? <div style={{ color: "var(--accent)", fontSize: 14 }}>{error}</div> : null}
             </>
           )}
@@ -409,7 +785,7 @@ export default function PortalIntakeClient() {
           <div />
         )}
 
-        {step < 3 ? (
+        {step < 4 ? (
           <button
             className="btn btnPrimary"
             onClick={() => setStep(step + 1)}

@@ -1089,13 +1089,16 @@
       "jobVolumeLabel": "Monthly Client Volume",
       "monthlyRevenueLabel": "Monthly Revenue (optional)",
       "currentWebsiteLabel": "Current Website (if any)",
-      "currentWebsitePlaceholder": "https://yoursite.com"
+      "currentWebsitePlaceholder": "https://yoursite.com",
+      "decisionMakerLabel": "Who is the final decision-maker on approving and funding this project?",
+      "decisionMakerPlaceholder": "e.g. Me — I'm the owner · Me + business partner · Our ops director with CFO sign-off"
     },
     "step2": {
       "heading": "Your Tools & Pain Points",
       "toolsLabel": "Software you currently use (select all that apply)",
       "painLabel": "What is causing the most pain? (select all that apply)",
-      "triedBeforeLabel": "Have you tried to fix this before?"
+      "triedBeforeLabel": "Have you tried to fix this before?",
+      "complianceLabel": "Do any of the following apply to the data this automation will touch?"
     },
     "step3": {
       "heading": "Goals & Budget",
@@ -1103,7 +1106,10 @@
       "budgetLabel": "What is your budget range?",
       "urgencyLabel": "How urgent is this?",
       "notesLabel": "Anything else we should know?",
-      "notesPlaceholder": "Specific tools, deadlines, constraints..."
+      "notesPlaceholder": "Specific tools, deadlines, constraints...",
+      "budgetFlexibilityLabel": "Is that budget fixed, or is there flexibility if the right solution costs more?",
+      "budgetFlexibilityPlaceholder": "e.g. Fixed — approved by finance · Flexible if the ROI case is strong",
+      "postLaunchLabel": "After the automations are built, who maintains them?"
     },
     "step4": {
       "recommendedEngagement": "Recommended Engagement",
@@ -1188,6 +1194,19 @@
         "Automated Follow-ups": "Automated Follow-ups",
         "Lead Routing & Assignment": "Lead Routing & Assignment",
         "Invoice & Payment Automation": "Invoice & Payment Automation"
+      },
+      "compliance": {
+        "employee-hr-data": "Employee personal data or HR records",
+        "client-financial-data": "Client financial data (PCI implications)",
+        "health-medical-data": "Health or medical data (HIPAA)",
+        "gdpr-eu-uk": "Data from EU or UK customers (GDPR)",
+        "government-regulated": "Government or regulated industry",
+        "none": "None of the above"
+      },
+      "postLaunch": {
+        "crecy-retainer": "CrecyStudio on a retainer — you manage updates and uptime",
+        "internal": "Our internal ops / tech team takes over",
+        "not-decided": "Not decided yet — let's discuss"
       }
     }
   },
@@ -1301,7 +1320,8 @@
       "platformLabel": "What platform is your store on?",
       "platformSelect": "Select platform",
       "preferredPlatformLabel": "Preferred platform",
-      "preferredPlatformNotSure": "Not sure yet"
+      "preferredPlatformNotSure": "Not sure yet",
+      "decisionMakerLabel": "Who approves and signs off on this project?"
     },
     "step2": {
       "headingBuild": "What should the store include?",
@@ -1309,10 +1329,16 @@
       "headingFix": "What needs fixing?",
       "channelsLabel": "Where do you sell? (select all)"
     },
+    "step3": {
+      "complianceLabel": "Do any of the following apply to your store?",
+      "budgetFlexibilityLabel": "Is your budget fixed or flexible for the right solution?",
+      "budgetFlexibilityPlaceholder": "e.g. Fixed budget · Flexible for the right solution"
+    },
     "step3Build": {
       "heading": "Budget & timeline",
       "skuLabel": "Approximate number of products",
       "skuPlaceholder": "e.g., 25, 100, 500+",
+      "contentSourceLabel": "Who provides product descriptions, images, and pricing?",
       "budgetLabel": "Budget range",
       "budgetPlaceholder": "e.g., $2,000–$5,000",
       "timelineLabel": "Timeline",
@@ -1328,6 +1354,7 @@
       "peakPlaceholder": "e.g., 2x normal, holiday surge",
       "skuLabel": "Approximate SKU count",
       "skuPlaceholder": "e.g., 25, 100, 500+",
+      "migrationLabel": "If product, customer, or order data needs to migrate, how much?",
       "budgetLabel": "Budget range (monthly)",
       "budgetPlaceholder": "e.g., $500–$2,000/mo",
       "timelineLabel": "When do you need this?",
@@ -1411,6 +1438,34 @@
         "Product page overhaul": "Product page overhaul",
         "Post-purchase flow fix": "Post-purchase flow fix",
         "Payment & tax configuration": "Payment & tax configuration"
+      },
+      "decisionMaker": {
+        "solo": "I decide on my own",
+        "partner": "My business partner and I decide together",
+        "manager-owner": "I recommend it, owner / manager approves",
+        "finance-separate": "I manage this but a separate person controls the budget"
+      },
+      "contentSource": {
+        "we-provide-all": "We provide everything, ready before build starts",
+        "we-provide-most": "We provide most things, may need help with some",
+        "need-help": "We need you to source or produce product content",
+        "not-sure": "Not sure yet"
+      },
+      "migration": {
+        "products-under-1k": "Under 1,000 products",
+        "products-1k-10k": "1,000–10,000 products",
+        "products-10k-plus": "10,000+ products",
+        "customers": "Customer data also needs to migrate",
+        "orders": "Order history also needs to migrate",
+        "no-migration": "No migration needed"
+      },
+      "compliance": {
+        "international": "Selling internationally (multi-currency or international shipping)",
+        "age-restricted": "Age-restricted products (alcohol, tobacco, supplements)",
+        "subscription": "Subscription or recurring billing",
+        "b2b-wholesale": "B2B / wholesale pricing with different tiers",
+        "complex-tax": "Complex tax rules (VAT, tax-exempt, etc.)",
+        "none": "None of the above"
       }
     }
   },
@@ -2184,13 +2239,23 @@
       "targetUsersLabel": "Who will use this system?",
       "currentSolutionLabel": "How do you handle this today?",
       "currentSolutionPlaceholder": "e.g. We use a shared Google Sheet and text messages. It breaks down constantly.",
-      "userScaleLabel": "How many users do you expect?"
+      "userScaleLabel": "How many users do you expect?",
+      "integrationsLabel": "Which systems does this app need to connect to?",
+      "integrationNotesLabel": "For each integration above, describe whether data flows in, out, or both directions.",
+      "integrationNotesPlaceholder": "e.g. Salesforce read-only for contact sync, Stripe bidirectional for payments...",
+      "complianceLabel": "Do any of the following apply to your project?"
     },
     "step3": {
       "heading": "Scope & timeline.",
       "stageLabel": "Where are you in the process?",
       "scopeLabel": "What kind of engagement are you looking for?",
-      "timelineLabel": "When do you need to be live?"
+      "timelineLabel": "When do you need to be live?",
+      "budgetLabel": "What investment range have you set aside?",
+      "budgetNote": "Custom apps at CrecyStudio typically start at $15,000.",
+      "decisionMakerLabel": "Who else needs to be involved in approving this project?",
+      "decisionMakerHelper": "The day-to-day contact, budget approver, and technical sign-off are often different people — totally normal.",
+      "decisionMakerPlaceholder": "e.g. Me — I decide · Me + CTO for tech + CFO for budget",
+      "approvalLabel": "What needs to happen internally before you're ready to sign a contract?"
     },
     "step4": {
       "nextStep": "What happens next",
@@ -2206,6 +2271,9 @@
       "emailPlaceholder": "you@company.com",
       "phoneLabel": "Phone (optional)",
       "phonePlaceholder": "(555) 555-5555",
+      "postLaunchLabel": "After launch, how should hosting, maintenance, and updates be handled?",
+      "budgetFlexibilityLabel": "If the right solution costs 20–30% more than the range above, are you open to a conversation about it?",
+      "budgetFlexibilityPlaceholder": "e.g. Fixed — this is board-approved · Flexible if the business case is clear",
       "privacyNote": "We'll only use your contact info to follow up on this project. No newsletters, no spam."
     },
     "nav": {
@@ -2272,6 +2340,34 @@
         "1-3-months": "1 – 3 months",
         "3-6-months": "3 – 6 months",
         "flexible": "Flexible — quality over speed"
+      },
+      "compliance": {
+        "pci": "Client financial data (PCI / SOC2)",
+        "hipaa": "Health or medical data (HIPAA)",
+        "gdpr": "EU or UK users (GDPR)",
+        "wcag": "Accessibility requirements (WCAG 2.1 AA)",
+        "government": "Government or regulated industry",
+        "none": "None of the above"
+      },
+      "budget": {
+        "15k-30k": "$15,000–$30,000",
+        "30k-60k": "$30,000–$60,000",
+        "60k-100k": "$60,000–$100,000",
+        "100k-plus": "$100,000+",
+        "guidance": "I'd like your guidance on budget"
+      },
+      "approval": {
+        "solo": "I decide on my own",
+        "small-team": "Small team alignment needed",
+        "board": "Board or executive approval",
+        "legal": "Legal or procurement review",
+        "not-sure": "Not sure yet"
+      },
+      "postLaunch": {
+        "crecy-manages": "CrecyStudio manages everything on a retainer",
+        "internal": "Our internal team takes full ownership",
+        "full-files": "We want all source files and deployment docs delivered to us",
+        "not-decided": "Not decided yet — let's discuss"
       }
     }
   },
@@ -2280,11 +2376,12 @@
     "metaDescription": "Tell us about your portal project. We'll scope the right solution in a 30-minute discovery call.",
     "kicker": "Client Portal",
     "title": "Tell us about the portal.",
-    "stepCounter": "Step {current} of 3 — {stepTitle}",
+    "stepCounter": "Step {current} of 4 — {stepTitle}",
     "stepTitles": {
       "1": "Your Business",
       "2": "What It Needs",
-      "3": "Contact & Submit"
+      "3": "Project Context",
+      "4": "Contact & Submit"
     },
     "step1": {
       "heading": "Tell us about your business.",
@@ -2292,6 +2389,8 @@
       "contactPlaceholder": "Jane Smith",
       "companyLabel": "Company / Organization",
       "companyPlaceholder": "Acme Services",
+      "userCountLabel": "How many people will use this portal at launch?",
+      "techTeamLabel": "Do you have an internal developer or IT team involved?",
       "accessLabel": "Who accesses the portal?",
       "currentProcessLabel": "How do you handle this today?",
       "currentProcessPlaceholder": "e.g. We email PDFs and use a shared Google Drive."
@@ -2299,12 +2398,30 @@
     "step2": {
       "heading": "What does it need to do?",
       "featuresLabel": "Select everything that applies",
-      "integrationLabel": "Integration needed?",
+      "integrationsLabel": "Which systems does this portal need to connect to?",
+      "integrationNotesLabel": "For the integrations above, describe what data needs to flow in, out, or both directions.",
+      "integrationNotesPlaceholder": "e.g. CRM data read-only, billing sync bidirectional...",
+      "complianceLabel": "Do any of the following apply to your project?",
       "timelineLabel": "When do you need this?"
     },
     "step3": {
+      "heading": "Project Context",
+      "budgetLabel": "What investment range have you set aside?",
+      "budgetNote": "Custom portals at CrecyStudio typically start at $15,000. The range you select helps us scope the right solution.",
+      "budgetFlexibilityLabel": "Is that range fixed, or is there flexibility depending on what the full solution requires?",
+      "budgetFlexibilityPlaceholder": "e.g. \"Fixed — board-approved\" or \"Flexible if the ROI case is clear\"",
+      "deadlineLabel": "Is there a specific date this needs to be live?",
+      "deadlineReasonLabel": "What business event drives that date?",
+      "deadlineReasonPlaceholder": "e.g. client onboarding starts Q3, contract renewal with current vendor...",
+      "decisionMakerLabel": "Who else in your organisation will be involved in reviewing or approving this project?",
+      "decisionMakerHelper": "The day-to-day contact, budget approver, and creative sign-off are often three different people — that's normal.",
+      "decisionMakerPlaceholder": "e.g. \"Me — I decide\" or \"Me + CFO for budget + CTO for technical sign-off\"",
+      "approvalLabel": "What does your approval process look like before signing?"
+    },
+    "step4": {
       "heading": "Where should we send the scope?",
       "estimateNote": "Portal projects typically start at $8,000. A 30-minute discovery call helps us scope the right solution.",
+      "postLaunchLabel": "After launch, how should hosting and maintenance be handled?",
       "emailLabel": "Email *",
       "emailPlaceholder": "you@company.com",
       "phoneLabel": "Phone (optional)",
@@ -2352,6 +2469,51 @@
         "1-3-months": "1 – 3 months",
         "3-6-months": "3 – 6 months",
         "flexible": "Flexible — quality over speed"
+      },
+      "userCount": {
+        "under-25": "Fewer than 25",
+        "25-100": "25–100",
+        "100-500": "100–500",
+        "500-2000": "500–2,000",
+        "2000-plus": "2,000+"
+      },
+      "techTeam": {
+        "yes": "Yes — we have a technical team",
+        "no": "No — outsourcing fully",
+        "one-person": "One technical person, not dedicated"
+      },
+      "compliance": {
+        "pci": "Client financial data (PCI / SOC2)",
+        "hipaa": "Health or medical data (HIPAA)",
+        "gdpr": "EU or UK users (GDPR)",
+        "wcag": "Accessibility requirements (WCAG 2.1 AA)",
+        "government": "Government or regulated industry",
+        "none": "None of the above"
+      },
+      "budget": {
+        "15k-25k": "$15,000–$25,000",
+        "25k-50k": "$25,000–$50,000",
+        "50k-100k": "$50,000–$100,000",
+        "100k-plus": "$100,000+",
+        "guidance": "I'd like your guidance on budget"
+      },
+      "deadline": {
+        "yes": "Yes — there's a hard date",
+        "no": "No — timeline is flexible",
+        "soft": "Soft target, not fixed"
+      },
+      "approval": {
+        "solo": "I decide on my own",
+        "small-team": "Small team alignment needed",
+        "board": "Board or executive approval",
+        "legal": "Legal or procurement review",
+        "not-sure": "Not sure yet"
+      },
+      "postLaunch": {
+        "crecy-manages": "CrecyStudio manages everything on a retainer",
+        "internal": "Our internal team takes full ownership",
+        "full-files": "We want all source files and deployment docs delivered to us",
+        "not-decided": "Not decided yet — let's discuss"
       }
     }
   },
@@ -2360,11 +2522,12 @@
     "metaDescription": "Tell us what's broken. We'll audit your current site and give you a clear fix plan with honest pricing.",
     "kicker": "Website Rescue",
     "title": "Tell us what's broken.",
-    "stepCounter": "Step {current} of 3 — {stepTitle}",
+    "stepCounter": "Step {current} of 4 — {stepTitle}",
     "stepTitles": {
       "1": "Your Site",
       "2": "The Problems",
-      "3": "Contact & Submit"
+      "3": "Access & History",
+      "4": "Contact & Submit"
     },
     "step1": {
       "heading": "Tell us about your current site.",
@@ -2374,16 +2537,37 @@
       "companyLabel": "Company / Organization",
       "companyPlaceholder": "Acme Services",
       "contactLabel": "Your Name *",
-      "contactPlaceholder": "Jane Smith"
+      "contactPlaceholder": "Jane Smith",
+      "builtWhenLabel": "When was this site last built or redesigned?",
+      "builtByLabel": "Who built it?",
+      "builtByPlaceholder": "e.g. a freelancer, an agency, we did it in-house",
+      "previousVendorLabel": "Is your previous developer or agency still involved?"
     },
     "step2": {
       "heading": "What's going wrong?",
       "issuesLabel": "Select every issue that applies",
-      "urgencyLabel": "How urgent is this?"
+      "urgencyLabel": "How urgent is this?",
+      "alreadyTriedLabel": "What has already been tried to fix this site?",
+      "alreadyTriedPlaceholder": "e.g. a developer tried to speed it up last month but it's still slow. Knowing what's been tried helps us avoid duplicating work."
     },
     "step3": {
+      "heading": "Access & History",
+      "assetAccessLabel": "What do you currently have access to?",
+      "assetAccessHelper": "Check everything that applies. We'll ask about gaps below.",
+      "assetAccessNotesLabel": "For any items above where access is missing or unclear, describe what you know about where those accounts are held.",
+      "assetAccessNotesPlaceholder": "e.g. I think my old agency has the hosting login...",
+      "previousVendorReasonLabel": "What's prompting you to look for a new partner now?",
+      "previousVendorReasonPlaceholder": "e.g. the previous agency went dark, the project was abandoned, we had a dispute over access...",
+      "seoLabel": "Does your current site have Google rankings or organic traffic you want to preserve?",
+      "urlsToPreserveLabel": "Are there specific page URLs that must not change?",
+      "urlsToPreservePlaceholder": "e.g. /contact, /pricing — pages linked from print materials, bookmarked by customers, or heavily linked externally"
+    },
+    "step4": {
       "heading": "Where should we send the audit?",
       "estimateNote": "Rescue audits start at $800. Full fix scopes typically run $1,500 – $4,000 depending on what we find.",
+      "budgetLabel": "What investment range have you set aside?",
+      "decisionMakerLabel": "Who makes the final call on approving and funding this project?",
+      "decisionMakerPlaceholder": "e.g. Me — I'm the owner · My business partner and I · Marketing director with CFO approval",
       "emailLabel": "Email *",
       "emailPlaceholder": "you@company.com",
       "phoneLabel": "Phone (optional)",
@@ -2435,6 +2619,59 @@
           "label": "Low — I want it right, not rushed",
           "desc": "Happy to queue it properly."
         }
+      },
+      "builtWhen": {
+        "2020-earlier": "2020 or earlier",
+        "2021": "2021",
+        "2022": "2022",
+        "2023": "2023",
+        "2024": "2024",
+        "2025": "2025",
+        "unknown": "Not sure"
+      },
+      "previousVendor": {
+        "active": {
+          "label": "Yes — still working together",
+          "desc": "They still have active access and we're working with them"
+        },
+        "ended-revoked": {
+          "label": "Ended — access revoked",
+          "desc": "The relationship is over and I've removed their access"
+        },
+        "ended-may-still-have": {
+          "label": "Ended — access unclear",
+          "desc": "The relationship ended but they may still have access"
+        },
+        "self-built": {
+          "label": "Self-built / no previous vendor",
+          "desc": "We built it in-house or there's no previous vendor"
+        },
+        "not-sure": {
+          "label": "Not sure",
+          "desc": "I'm not certain what access they have"
+        }
+      },
+      "assetAccess": {
+        "domain-registrar": "Domain name (registrar login — GoDaddy, Namecheap, etc.)",
+        "cms-admin": "CMS admin login (WordPress dashboard, Webflow Editor, etc.)",
+        "hosting-account": "Hosting / server account (not just FTP)",
+        "analytics": "Google Analytics or Search Console",
+        "site-backup": "Recent backup of site files and database",
+        "design-files": "Original design files (Figma, PSDs, etc.)"
+      },
+      "seo": {
+        "yes-critical": "Yes — rankings matter and must be preserved",
+        "somewhat": "Somewhat — some pages matter, others don't",
+        "no": "No — SEO is not a priority",
+        "dont-know": "I don't know my current SEO standing"
+      },
+      "budget": {
+        "under-2k": "Under $2,000",
+        "2k-5k": "$2,000–$5,000",
+        "5k-10k": "$5,000–$10,000",
+        "10k-20k": "$10,000–$20,000",
+        "20k-plus": "$20,000+",
+        "guidance": "I'd like your guidance"
       }
     }
   }
