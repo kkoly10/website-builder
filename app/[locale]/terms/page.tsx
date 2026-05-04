@@ -51,6 +51,7 @@ function TermsContent() {
         <div className="container">
           <div className={styles.prose}>
             <div className={styles.proseInner}>
+
               <section className={styles.proseSection}>
                 <h2>{t("scopeHeading")}</h2>
                 <p>{t("scopeBody")}</p>
@@ -62,12 +63,51 @@ function TermsContent() {
                   <li>{t("payments1")}</li>
                   <li>{t("payments2")}</li>
                   <li>{t("payments3")}</li>
+                  <li>{t("payments4")}</li>
                 </ul>
               </section>
 
               <section className={styles.proseSection}>
                 <h2>{t("ownershipHeading")}</h2>
                 <p>{t("ownershipBody")}</p>
+              </section>
+
+              <section className={styles.proseSection}>
+                <h2>{t("timelineHeading")}</h2>
+                <ul>
+                  <li>{t("timeline1")}</li>
+                  <li>{t("timeline2")}</li>
+                  <li>{t("timeline3")}</li>
+                </ul>
+              </section>
+
+              <section className={styles.proseSection}>
+                <h2>{t("revisionsHeading")}</h2>
+                <p>{t("revisionsBody")}</p>
+              </section>
+
+              <section className={styles.proseSection}>
+                <h2>{t("chargebackHeading")}</h2>
+                <ul>
+                  <li>{t("chargeback1")}</li>
+                  <li>{t("chargeback2")}</li>
+                  <li>{t("chargeback3")}</li>
+                </ul>
+              </section>
+
+              <section className={styles.proseSection}>
+                <h2>{t("cancellationHeading")}</h2>
+                <p>{t("cancellationBody")}</p>
+              </section>
+
+              <section className={styles.proseSection}>
+                <h2>{t("liabilityHeading")}</h2>
+                <p>{t("liabilityBody")}</p>
+              </section>
+
+              <section className={styles.proseSection}>
+                <h2>{t("lawHeading")}</h2>
+                <p>{t("lawBody")}</p>
               </section>
 
               <section className={styles.proseSection}>
@@ -85,8 +125,10 @@ function TermsContent() {
                   {t("questionsBody3")}
                 </p>
               </section>
+
             </div>
           </div>
+
         </div>
       </section>
     </main>
