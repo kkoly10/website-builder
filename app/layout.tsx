@@ -73,6 +73,7 @@ export default async function RootLayout({
   return (
     <html lang={locale}>
       <body>
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js-anim')" }} />
         <a href="#main-content" className="skipLink">
           {tCommon("skipToMain")}
         </a>

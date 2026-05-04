@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import Image from "next/image";
 import styles from "./service-page.module.css";
 
 type CTA = {
@@ -70,6 +71,7 @@ export type ServicePageProps = {
   finalSecondaryCta: CTA;
   // When set, appended as ?projectType=X to primaryCta and finalPrimaryCta hrefs
   projectType?: string;
+  founderCallout?: boolean;
 };
 
 export default function ServicePage({
@@ -103,6 +105,7 @@ export default function ServicePage({
   finalPrimaryCta,
   finalSecondaryCta,
   projectType,
+  founderCallout,
 }: ServicePageProps) {
   const t = useTranslations("servicePage");
   const tCross = useTranslations("crossLinks");
@@ -283,6 +286,27 @@ export default function ServicePage({
           </div>
         </div>
       </section>
+
+      {founderCallout && (
+        <section className={styles.founderCallout}>
+          <div className="container">
+            <div className={styles.founderCalloutInner}>
+              <Image
+                src="/about/komlan.jpg"
+                alt="Komlan Kouhiko"
+                width={72}
+                height={72}
+                className={styles.founderCalloutImg}
+              />
+              <div>
+                <p className={styles.founderCalloutName}>Komlan Kouhiko — Founder &amp; Sole Practitioner</p>
+                <p className={styles.founderCalloutText}>{t("founderCallout.body")}</p>
+                <Link href="/about" className={styles.founderCalloutLink}>{t("founderCallout.link")}</Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className={styles.section}>
         <div className="container">

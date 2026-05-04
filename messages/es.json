@@ -11,6 +11,7 @@
   "nav": {
     "websites": "Sitios web",
     "ecommerce": "E-commerce",
+    "websiteRescue": "Rescate web",
     "systems": "Sistemas",
     "process": "Proceso",
     "work": "Work",
@@ -45,7 +46,15 @@
   },
   "about": {
     "metaTitle": "Acerca de | CrecyStudio",
-    "metaDescription": "Conoce a Komlan Kouhiko, fundador de CrecyStudio — el estudio web independiente que construye sitios premium y sistemas web personalizados."
+    "metaDescription": "Conoce a Komlan Kouhiko, fundador de CrecyStudio — el estudio web independiente que construye sitios premium y sistemas web personalizados.",
+    "proof": {
+      "saas": "Plataformas SaaS en producción",
+      "systems": "Sistemas empresariales entregados",
+      "practitioner": "Practicante en cada proyecto — sin juniors, sin traspasos"
+    },
+    "ctaLabel": "Por dónde seguir",
+    "ctaLowTicket": "Obtener estimación de sitio web",
+    "ctaHighTicket": "Hablar de un proyecto más grande"
   },
   "home": {
     "metaTitle": "CrecyStudio | Websites and custom web systems",
@@ -88,6 +97,14 @@
           "badge": "Desde $800"
         }
       }
+    },
+    "startHere": {
+      "label": "¿No sabes por dónde empezar?",
+      "website":   { "situation": "Necesito un sitio web profesional para mi negocio",               "service": "Sitios web — desde $1,800" },
+      "app":       { "situation": "Tengo una idea de software o herramienta interna que construir",  "service": "Apps web personalizadas — desde $18K" },
+      "portal":    { "situation": "Gestiono proyectos de clientes y necesito un sistema real",       "service": "Portales de cliente — desde $12K" },
+      "rescue":    { "situation": "Mi sitio está roto, lento o pierde clientes potenciales",         "service": "Rescate web — desde $1K" },
+      "ecommerce": { "situation": "Necesito una tienda online o ayuda para gestionar la que tengo",  "service": "E-commerce — desde $1,800" }
     },
     "proof": {
       "deliveryValue": "2",
@@ -577,7 +594,11 @@
     "mostCommon": "Punto de partida más común",
     "scopedToProject": "Ajustado a tu proyecto",
     "alsoOffered": "También ofrecemos",
-    "exploreLane": "Explorar"
+    "exploreLane": "Explorar",
+    "founderCallout": {
+      "body": "Cada proyecto en CrecyStudio pasa por mí — no un gerente de proyecto, no un junior. He lanzado plataformas SaaS, construido herramientas internas para negocios reales y gestionado operaciones yo mismo. Puedes contactarme directamente en cualquier etapa del proyecto.",
+      "link": "Leer la historia completa →"
+    }
   },
   "crossLinks": {
     "websites": "Vía Sitios web",

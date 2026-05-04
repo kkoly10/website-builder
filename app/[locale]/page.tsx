@@ -2,6 +2,7 @@ import { useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import Image from "next/image";
+import { Link } from "@/i18n/navigation";
 import TrackLink from "@/components/site/TrackLink";
 import ScrollReveal from "@/components/site/ScrollReveal";
 import styles from "./home.module.css";
@@ -49,6 +50,14 @@ const WHAT_WE_BUILD_CARDS = [
 ] as const;
 
 const LOW_TICKET_KEYS = new Set(["websites", "ecommerce", "rescue"]);
+
+const START_HERE_CARDS = [
+  { key: "website",   href: "/websites"        },
+  { key: "app",       href: "/custom-web-apps" },
+  { key: "portal",    href: "/client-portals"  },
+  { key: "rescue",    href: "/website-rescue"  },
+  { key: "ecommerce", href: "/ecommerce"       },
+] as const;
 
 export default async function Home({
   params,
@@ -108,6 +117,21 @@ function HomeContent() {
               <p className={styles.proofLabel}>{item.label}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className={styles.startHere}>
+        <div className="container">
+          <p className={styles.sectionLabel}>{t("startHere.label")}</p>
+          <div className={styles.startHereGrid}>
+            {START_HERE_CARDS.map((card) => (
+              <Link key={card.key} href={card.href} className={styles.startHereCard}>
+                <p className={styles.startHereSituation}>{t(`startHere.${card.key}.situation`)}</p>
+                <p className={styles.startHereService}>{t(`startHere.${card.key}.service`)}</p>
+                <span className={styles.startHereArrow} aria-hidden>→</span>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
