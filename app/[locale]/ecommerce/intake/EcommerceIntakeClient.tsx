@@ -53,7 +53,7 @@ const RUN_SERVICES = [
   "Order processing & fulfillment coordination",
   "Customer service & returns",
   "Inventory tracking",
-  "Marketplace management (Amazon, Etsy, etc.)",
+  "marketplace-management",
   "Monthly performance reporting",
   "Promotional campaigns & pricing updates",
 ];

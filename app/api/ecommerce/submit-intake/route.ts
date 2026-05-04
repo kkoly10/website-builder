@@ -106,6 +106,10 @@ export async function POST(req: NextRequest) {
       timeline: String(body.timeline ?? "").trim() || null,
       decision_maker: String(body.decisionMaker ?? "").trim() || null,
       notes: String(body.notes ?? "").trim() || null,
+      content_source: String(body.contentSource ?? "").trim() || null,
+      migration_scope: Array.isArray(body.migrationScope) ? body.migrationScope : [],
+      compliance: Array.isArray(body.compliance) ? body.compliance : [],
+      budget_flexibility: String(body.budgetFlexibility ?? "").trim() || null,
       status: "new",
       preferred_locale: pickPreferredLocale(body?.preferredLocale ?? body?.locale),
     };
