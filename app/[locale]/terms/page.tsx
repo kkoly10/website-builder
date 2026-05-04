@@ -64,12 +64,18 @@ function TermsContent() {
                   <li>{t("payments2")}</li>
                   <li>{t("payments3")}</li>
                   <li>{t("payments4")}</li>
+                  <li>{t("payments5")}</li>
                 </ul>
               </section>
 
               <section className={styles.proseSection}>
                 <h2>{t("ownershipHeading")}</h2>
                 <p>{t("ownershipBody")}</p>
+              </section>
+
+              <section className={styles.proseSection}>
+                <h2>{t("indemnificationHeading")}</h2>
+                <p>{t("indemnificationBody")}</p>
               </section>
 
               <section className={styles.proseSection}>
@@ -87,6 +93,11 @@ function TermsContent() {
               </section>
 
               <section className={styles.proseSection}>
+                <h2>{t("nonDisparHeading")}</h2>
+                <p>{t("nonDisparBody")}</p>
+              </section>
+
+              <section className={styles.proseSection}>
                 <h2>{t("chargebackHeading")}</h2>
                 <ul>
                   <li>{t("chargeback1")}</li>
@@ -101,6 +112,16 @@ function TermsContent() {
               </section>
 
               <section className={styles.proseSection}>
+                <h2>{t("rightToCureHeading")}</h2>
+                <p>{t("rightToCureBody")}</p>
+              </section>
+
+              <section className={styles.proseSection}>
+                <h2>{t("forceMajeureHeading")}</h2>
+                <p>{t("forceMajeureBody")}</p>
+              </section>
+
+              <section className={styles.proseSection}>
                 <h2>{t("liabilityHeading")}</h2>
                 <p>{t("liabilityBody")}</p>
               </section>
@@ -108,6 +129,11 @@ function TermsContent() {
               <section className={styles.proseSection}>
                 <h2>{t("lawHeading")}</h2>
                 <p>{t("lawBody")}</p>
+              </section>
+
+              <section className={styles.proseSection}>
+                <h2>{t("entireAgreementHeading")}</h2>
+                <p>{t("entireAgreementBody")}</p>
               </section>
 
               <section className={styles.proseSection}>
