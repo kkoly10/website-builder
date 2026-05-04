@@ -44,7 +44,8 @@
       "customWebApps": "Apps web personalizadas",
       "clientPortals": "Portales de cliente",
       "about": "Acerca de",
-      "aup": "Uso aceptable"
+      "aup": "Uso aceptable",
+      "start": "Reservar una llamada"
     }
   },
   "about": {
@@ -68,6 +69,56 @@
       "3": "Trabajo solo de diseño sin participación en la implementación — el valor que aporto es estrategia y construcción, no entrega de livrables.",
       "4": "Proyectos donde el brief cambia significativamente después de acordar el alcance — mantengo el alcance para que obtengas el precio cotizado."
     }
+  },
+  "start": {
+    "metaTitle": "Reservar una llamada de descubrimiento gratuita | CrecyStudio",
+    "metaDescription": "Reserva una llamada de descubrimiento gratuita de 20 minutos con Komlan. Cuéntame qué estás construyendo — sin pitch, sin compromiso.",
+    "heroLabel": "Llamada gratuita de 20 min",
+    "heroTitle": "Hablemos de lo que estás construyendo.",
+    "heroSub": "Sin presentación de ventas. Una conversación directa sobre tu proyecto — alcance, viabilidad y si somos compatibles.",
+    "stepsLabel": "Qué pasa después",
+    "step1Title": "Envías el formulario corto",
+    "step1Body": "Nombre, email y unas líneas sobre tu proyecto. Menos de dos minutos.",
+    "step2Title": "Reviso y respondo en 24 horas",
+    "step2Body": "Confirmaré un horario o propondré dos opciones. Sin bots de programación automática.",
+    "step3Title": "Hablamos 20 minutos",
+    "step3Body": "Hago preguntas precisas. Obtienes retroalimentación honesta sobre alcance, plazos y rango de precio.",
+    "anchorsLabel": "Qué cuesta",
+    "anchor1Value": "Gratis",
+    "anchor1Label": "La llamada de descubrimiento — sin tarjeta de crédito, sin compromiso",
+    "anchor2Value": "$1,800",
+    "anchor2Label": "Sitios web — precio fijo, propiedad total",
+    "anchor3Value": "A medida",
+    "anchor3Label": "Apps, portales y automatizaciones — definidos juntos en la llamada",
+    "riskReversal": "Si no somos compatibles después de la llamada, te orientaré hacia quien sí lo sea. Sin presión comercial.",
+    "formLabel": "Reserva tu llamada",
+    "nameLabel": "Tu nombre",
+    "namePlaceholder": "María García",
+    "emailLabel": "Dirección de email",
+    "emailPlaceholder": "maria@empresa.com",
+    "companyLabel": "Empresa o nombre del proyecto",
+    "companyPlaceholder": "Opcional",
+    "projectTypeLabel": "¿Qué estás construyendo?",
+    "projectTypes": {
+      "website": "Sitio web",
+      "ecommerce": "E-commerce",
+      "custom_app": "App personalizada",
+      "portal": "Portal de cliente",
+      "automation": "Automatización / sistemas",
+      "rescue": "Rescate web",
+      "not_sure": "Aún no sé"
+    },
+    "availabilityLabel": "¿Cuándo estás disponible generalmente?",
+    "availabilityPlaceholder": "ej. mar/jue por la tarde CET, o la mayoría de mañanas entre semana",
+    "submit": "Solicitar mi llamada de descubrimiento",
+    "submitting": "Enviando…",
+    "errorInvalidEmail": "Por favor introduce una dirección de email válida.",
+    "errorNameRequired": "Por favor introduce tu nombre.",
+    "errorGeneric": "Algo salió mal. Por favor inténtalo de nuevo o envía un email a hello@crecystudio.com.",
+    "successTitle": "Solicitud recibida.",
+    "successBody": "Me pondré en contacto en 24 horas para confirmar un horario. Una copia de tu solicitud está en camino a tu bandeja de entrada.",
+    "successDetail": "Mientras tanto, descubre cómo funciona el estudio.",
+    "successCta": "Ver el proceso"
   },
   "home": {
     "metaTitle": "CrecyStudio | Websites and custom web systems",

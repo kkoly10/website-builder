@@ -44,7 +44,8 @@
       "carePlans": "Care plans",
       "customWebApps": "Custom web apps",
       "clientPortals": "Client portals",
-      "about": "About"
+      "about": "About",
+      "start": "Book a call"
     }
   },
   "about": {
@@ -68,6 +69,56 @@
       "3": "Design-only work with no involvement in implementation — the value I provide is strategy and build, not deliverable handoff.",
       "4": "Projects where the brief changes significantly after scope is agreed — I hold to the scope so you get the price I quoted."
     }
+  },
+  "start": {
+    "metaTitle": "Book a free discovery call | CrecyStudio",
+    "metaDescription": "Book a free 20-minute discovery call with Komlan. Tell me what you're building — no pitch, no commitment.",
+    "heroLabel": "Free 20-min call",
+    "heroTitle": "Let's talk about what you're building.",
+    "heroSub": "No pitch deck, no sales script. A direct conversation about your project — scope, feasibility, and whether we're a fit.",
+    "stepsLabel": "What happens next",
+    "step1Title": "You submit the short form",
+    "step1Body": "Name, email, and a few lines about your project. Takes under two minutes.",
+    "step2Title": "I review and reply within 24 hours",
+    "step2Body": "I'll confirm a time or propose two options. No auto-scheduling bots.",
+    "step3Title": "We talk for 20 minutes",
+    "step3Body": "I ask sharp questions. You get honest feedback on scope, timeline, and price range — then we decide together.",
+    "anchorsLabel": "What it costs",
+    "anchor1Value": "Free",
+    "anchor1Label": "The discovery call — no credit card, no commitment",
+    "anchor2Value": "$1,800",
+    "anchor2Label": "Websites — fixed price, full ownership",
+    "anchor3Value": "Custom",
+    "anchor3Label": "Web apps, portals, and automations — scoped together on the call",
+    "riskReversal": "If we're not a fit after the call, I'll point you toward who is. No hard sell.",
+    "formLabel": "Book your call",
+    "nameLabel": "Your name",
+    "namePlaceholder": "Jane Smith",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "jane@company.com",
+    "companyLabel": "Company or project name",
+    "companyPlaceholder": "Optional",
+    "projectTypeLabel": "What are you building?",
+    "projectTypes": {
+      "website": "Website",
+      "ecommerce": "E-commerce",
+      "custom_app": "Custom app",
+      "portal": "Client portal",
+      "automation": "Automation / systems",
+      "rescue": "Site rescue",
+      "not_sure": "Not sure yet"
+    },
+    "availabilityLabel": "When are you generally available?",
+    "availabilityPlaceholder": "e.g. Tue/Thu afternoons ET, or most weekday mornings",
+    "submit": "Request my discovery call",
+    "submitting": "Sending…",
+    "errorInvalidEmail": "Please enter a valid email address.",
+    "errorNameRequired": "Please enter your name.",
+    "errorGeneric": "Something went wrong. Please try again or email hello@crecystudio.com.",
+    "successTitle": "You're on the list.",
+    "successBody": "I'll be in touch within 24 hours to confirm a time. A copy of your request is on its way to your inbox.",
+    "successDetail": "In the meantime, take a look at how the studio works.",
+    "successCta": "See the process"
   },
   "home": {
     "metaTitle": "CrecyStudio | Websites and custom web systems",
