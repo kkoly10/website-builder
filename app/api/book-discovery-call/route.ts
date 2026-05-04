@@ -67,7 +67,6 @@ function maybeCreateCalendarEvent(
 
   void (async () => {
     try {
-      // @ts-ignore — googleapis is an optional dep; install with `npm install googleapis` when env vars are configured
       const { google } = await import("googleapis");
       const auth = new google.auth.JWT({
         email: serviceEmail,
