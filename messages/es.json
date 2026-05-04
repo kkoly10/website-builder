@@ -54,7 +54,17 @@
     },
     "ctaLabel": "Por dónde seguir",
     "ctaLowTicket": "Obtener estimación de sitio web",
-    "ctaHighTicket": "Hablar de un proyecto más grande"
+    "ctaHighTicket": "Hablar de un proyecto más grande",
+    "wontTake": {
+      "label": "El trabajo que rechazo",
+      "title": "Lo que CrecyStudio no acepta.",
+      "intro": "La selectividad es cómo mantengo la calidad en cada proyecto. No son limitaciones — son decisiones deliberadas.",
+      "0": "Proyectos que necesitan un equipo de 5 o más personas — soy un practicante independiente, no una agencia, y no lo fingiré.",
+      "1": "Clientes que quieren check-ins diarios o no están cómodos con comunicación principalmente asíncrona.",
+      "2": "Plazos ajustados combinados con un alcance indefinido — prefiero retrasar el inicio que apresurar un mal resultado.",
+      "3": "Trabajo solo de diseño sin participación en la implementación — el valor que aporto es estrategia y construcción, no entrega de livrables.",
+      "4": "Proyectos donde el brief cambia significativamente después de acordar el alcance — mantengo el alcance para que obtengas el precio cotizado."
+    }
   },
   "home": {
     "metaTitle": "CrecyStudio | Websites and custom web systems",
@@ -214,6 +224,7 @@
     "label": "Pricing",
     "title": "Clear ranges before the work starts.",
     "intro": "All prices are USD. We scope first, send a written estimate, and keep the number tied to the actual project — no hostage retainers, no surprise add-ons.",
+    "mostPopular": "El más elegido",
     "nav": {
       "aria": "Jump to pricing section",
       "websites": "Websites",
@@ -374,23 +385,25 @@
     "step1": {
       "step": "/ 01 - Intake",
       "title": "Cuéntanos qué necesita el negocio",
-      "body": "Envías el intake específico de tu vía con objetivos, restricciones, ejemplos y urgencia. Eso nos da lo suficiente para cotizar sin pretender que todos los proyectos son iguales."
+      "body": "Envías el intake específico de tu vía — objetivos, restricciones, ejemplos y urgencia. Komlan lo revisa personalmente y vuelve en 24 horas con preguntas o un borrador de alcance. No se requiere llamada de ventas para empezar."
     },
     "step2": {
       "step": "/ 02 - Alcance",
       "title": "Recibe una estimación real",
-      "body": "Revisamos la solicitud, puntuamos la complejidad y enviamos una recomendación por escrito con rango de precio, plazo y siguientes pasos."
+      "body": "Komlan envía un alcance por escrito: páginas o funcionalidades, rango de precio fijo, plazo y supuestos. Nada empieza hasta que lo hayas revisado y aprobado por escrito — sin acuerdos verbales."
     },
     "step3": {
       "step": "/ 03 - Construcción",
       "title": "Revísalo todo en el espacio de trabajo",
-      "body": "El proyecto corre por un espacio compartido para hitos, archivos, aprobaciones, vistas previas y solicitudes de revisión. Sin traspasos dispersos."
+      "body": "El trabajo pasa por tu espacio privado. Ves cada hito a medida que se entrega, envías comentarios en un solo lugar y apruebas antes de que nada salga en vivo. Komlan es la única persona construyendo — sin subcontratistas, sin traspasos."
     },
     "step4": {
       "step": "/ 04 - Lanzamiento",
       "title": "Sal en vivo con un traspaso limpio",
-      "body": "Terminamos QA, lanzamos el trabajo y entregamos los accesos con los archivos finales y el contexto operativo todavía en tus manos."
+      "body": "QA, configuración del dominio, analíticas y un traspaso documentado de todo lo que necesitas para mantener el trabajo. Eres dueño de todos los archivos. Si quieres soporte continuo, hay un plan de cuidado disponible — sin presión ni atadura."
     },
+    "founderNoteLabel": "Quién hace el trabajo",
+    "founderNote": "Cada proyecto en CrecyStudio pasa por Komlan Kouhiko — no un gerente de proyecto, no un desarrollador junior. Cuando envías un intake, Komlan lo lee. Cuando tienes una pregunta, Komlan responde. Cuando el trabajo se entrega, Komlan lo construyó.",
     "byLaneLabel": "Por vía",
     "byLaneTitle": "El ritmo se mantiene, lo que cambia es el alcance.",
     "byLaneKicker": "Lo que cambia",

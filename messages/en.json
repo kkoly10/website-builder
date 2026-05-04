@@ -54,7 +54,17 @@
     },
     "ctaLabel": "Where to go next",
     "ctaLowTicket": "Get a website estimate",
-    "ctaHighTicket": "Discuss a bigger project"
+    "ctaHighTicket": "Discuss a bigger project",
+    "wontTake": {
+      "label": "The work I turn down",
+      "title": "What CrecyStudio won't take on.",
+      "intro": "Selectivity is how I keep quality high on every project. These aren't limitations — they're design choices.",
+      "0": "Projects that need a team of 5+ people — I'm a solo practitioner, not an agency, and I won't pretend otherwise.",
+      "1": "Clients who want daily check-ins or aren't comfortable with async-first communication.",
+      "2": "Tight deadlines paired with an undefined scope — I'd rather delay the start than rush a bad outcome.",
+      "3": "Design-only work with no involvement in implementation — the value I provide is strategy and build, not deliverable handoff.",
+      "4": "Projects where the brief changes significantly after scope is agreed — I hold to the scope so you get the price I quoted."
+    }
   },
   "home": {
     "metaTitle": "CrecyStudio | Websites and custom web systems",
@@ -214,6 +224,7 @@
     "label": "Pricing",
     "title": "Clear ranges before the work starts.",
     "intro": "All prices are USD. We scope first, send a written estimate, and keep the number tied to the actual project — no hostage retainers, no surprise add-ons.",
+    "mostPopular": "Most popular",
     "nav": {
       "aria": "Jump to pricing section",
       "websites": "Websites",
@@ -374,23 +385,25 @@
     "step1": {
       "step": "/ 01 - Intake",
       "title": "Tell us what the business needs",
-      "body": "You submit the lane-specific intake with goals, constraints, examples, and urgency. That gives us enough to scope without pretending every project is the same."
+      "body": "You submit the lane-specific intake — goals, constraints, examples, and urgency. Komlan reviews it personally and comes back within 24 hours with questions or a scope draft. No sales call required to get started."
     },
     "step2": {
       "step": "/ 02 - Scope",
       "title": "Get a real estimate",
-      "body": "We review the request, score the complexity, and send back a written recommendation with price range, timeline, and next steps."
+      "body": "Komlan sends a written scope: pages or features, fixed price range, timeline, and assumptions. Nothing starts until you've reviewed and approved it in writing — no verbal agreements."
     },
     "step3": {
       "step": "/ 03 - Build",
       "title": "Review everything in the workspace",
-      "body": "The project runs through a shared workspace for milestones, files, approvals, previews, and revision requests. No scattered handoffs."
+      "body": "Work runs through your private workspace. You see every milestone as it ships, submit feedback in one place, and approve before anything goes live. Komlan is the only person building — no subcontractors, no handoffs."
     },
     "step4": {
       "step": "/ 04 - Launch",
       "title": "Go live with a clean handoff",
-      "body": "We finish QA, launch the work, and hand over access with the final files and operating context still in your hands."
+      "body": "QA, domain setup, analytics, and a documented handoff of everything you need to maintain the work. You own all the files. If you want ongoing support, a care plan is available — but there's no pressure or lock-in."
     },
+    "founderNoteLabel": "Who does the work",
+    "founderNote": "Every project at CrecyStudio runs through Komlan Kouhiko — not a project manager, not a junior developer. When you submit an intake, Komlan reviews it. When you have a question, Komlan answers it. When the work ships, Komlan built it.",
     "byLaneLabel": "By lane",
     "byLaneTitle": "The rhythm stays the same, the scope changes.",
     "byLaneKicker": "What changes",

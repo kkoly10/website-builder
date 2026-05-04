@@ -54,7 +54,17 @@
     },
     "ctaLabel": "Par où continuer",
     "ctaLowTicket": "Obtenir une estimation de site",
-    "ctaHighTicket": "Discuter d'un projet plus ambitieux"
+    "ctaHighTicket": "Discuter d'un projet plus ambitieux",
+    "wontTake": {
+      "label": "Le travail que je refuse",
+      "title": "Ce que CrecyStudio ne prend pas en charge.",
+      "intro": "La sélectivité est ma façon de maintenir la qualité sur chaque projet. Ce ne sont pas des limitations — ce sont des choix délibérés.",
+      "0": "Les projets qui nécessitent une équipe de 5 personnes ou plus — je suis un praticien solo, pas une agence, et je ne ferai pas semblant.",
+      "1": "Les clients qui veulent des points quotidiens ou ne sont pas à l'aise avec une communication principalement asynchrone.",
+      "2": "Les délais serrés combinés à un périmètre non défini — je préfère retarder le démarrage plutôt que de bâcler le résultat.",
+      "3": "Le travail de design seul sans implication dans l'implémentation — la valeur que j'apporte est la stratégie et la construction, pas la remise de livrables.",
+      "4": "Les projets où le cahier des charges change significativement après accord du périmètre — je respecte le périmètre pour que vous obteniez le prix convenu."
+    }
   },
   "home": {
     "metaTitle": "CrecyStudio | Websites and custom web systems",
@@ -214,6 +224,7 @@
     "label": "Pricing",
     "title": "Clear ranges before the work starts.",
     "intro": "All prices are USD. We scope first, send a written estimate, and keep the number tied to the actual project — no hostage retainers, no surprise add-ons.",
+    "mostPopular": "Le plus choisi",
     "nav": {
       "aria": "Jump to pricing section",
       "websites": "Websites",
@@ -374,23 +385,25 @@
     "step1": {
       "step": "/ 01 - Intake",
       "title": "Dites-nous ce dont l'entreprise a besoin",
-      "body": "Vous remplissez l'intake spécifique à votre axe avec les objectifs, les contraintes, les exemples et l'urgence. Cela nous donne assez pour chiffrer sans prétendre que tous les projets sont identiques."
+      "body": "Vous remplissez l'intake spécifique à votre axe — objectifs, contraintes, exemples et urgence. Komlan le lit personnellement et revient sous 24 heures avec des questions ou un brouillon de périmètre. Aucun appel commercial requis pour commencer."
     },
     "step2": {
       "step": "/ 02 - Portée",
       "title": "Recevez une vraie estimation",
-      "body": "Nous examinons la demande, évaluons la complexité et renvoyons une recommandation écrite avec fourchette de prix, calendrier et prochaines étapes."
+      "body": "Komlan envoie une portée écrite : pages ou fonctionnalités, fourchette de prix fixe, calendrier et hypothèses. Rien ne commence avant que vous l'ayez examinée et approuvée par écrit — aucun accord verbal."
     },
     "step3": {
       "step": "/ 03 - Construction",
       "title": "Tout passer en revue dans l'espace de travail",
-      "body": "Le projet vit dans un espace partagé pour les jalons, les fichiers, les approbations, les aperçus et les demandes de révision. Aucune transmission éparpillée."
+      "body": "Le travail passe par votre espace privé. Vous voyez chaque jalon au fur et à mesure, soumettez vos retours en un seul endroit et approuvez avant toute mise en ligne. Komlan est le seul à construire — aucun sous-traitant, aucune transmission."
     },
     "step4": {
       "step": "/ 04 - Lancement",
       "title": "Mise en ligne avec une remise propre",
-      "body": "Nous finissons la QA, lançons le travail et remettons les accès avec les fichiers finaux et le contexte d'exploitation toujours entre vos mains."
+      "body": "QA, configuration du domaine, analytics et une remise documentée de tout ce qu'il faut pour maintenir le travail. Vous possédez tous les fichiers. Si vous souhaitez un support continu, un plan de soin est disponible — sans pression ni engagement."
     },
+    "founderNoteLabel": "Qui fait le travail",
+    "founderNote": "Chaque projet chez CrecyStudio passe par Komlan Kouhiko — pas un chef de projet, pas un développeur junior. Quand vous soumettez un intake, Komlan le lit. Quand vous avez une question, Komlan répond. Quand le travail est livré, Komlan l'a construit.",
     "byLaneLabel": "Par axe",
     "byLaneTitle": "Le rythme reste le même, la portée change.",
     "byLaneKicker": "Ce qui change",

@@ -198,6 +198,9 @@
   color: var(--muted);
 }
 
+.pricingCardFeatured { border-color: var(--ink) !important; }
+.pricingCardBadge { display: inline-block; font: 600 10px/1 var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--paper); background: var(--ink); padding: 3px 8px; border-radius: 2px; margin-bottom: .85rem; }
+
 .faqCard {
   display: grid;
   gap: 0.9rem;
