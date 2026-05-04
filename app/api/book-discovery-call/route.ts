@@ -163,20 +163,28 @@ export async function POST(req: Request) {
 
     maybeCreateCalendarEvent(name, email, availabilityNote);
 
-    await sendResendEmail({
-      to: email,
-      from: FROM,
-      subject: "Discovery call request received — CrecyStudio",
-      html: buildClientEmail(name),
-    });
+    try {
+      await sendResendEmail({
+        to: email,
+        from: FROM,
+        subject: "Discovery call request received — CrecyStudio",
+        html: buildClientEmail(name),
+      });
+    } catch (emailErr) {
+      console.error("[book-discovery-call] client confirmation email failed:", emailErr);
+    }
 
     if (ADMIN) {
-      await sendResendEmail({
-        to: ADMIN,
-        from: FROM,
-        subject: `Discovery call — ${name} (${email})`,
-        html: buildAdminEmail(callId, name, email, company, projectType, availabilityNote),
-      });
+      try {
+        await sendResendEmail({
+          to: ADMIN,
+          from: FROM,
+          subject: `Discovery call — ${name} (${email})`,
+          html: buildAdminEmail(callId, name, email, company, projectType, availabilityNote),
+        });
+      } catch (emailErr) {
+        console.error("[book-discovery-call] admin notification email failed:", emailErr);
+      }
     }
 
     await recordServerEvent({
