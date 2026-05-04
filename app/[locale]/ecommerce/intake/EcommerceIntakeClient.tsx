@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { getEcommercePricing } from "@/lib/pricing";
+import ScrollReveal from "@/components/site/ScrollReveal";
 
 type EntryPath = "build" | "run" | "fix" | null;
 
@@ -231,6 +232,7 @@ export default function EcommerceIntakeClient() {
 
   return (
     <main className="container productWrap">
+      <ScrollReveal />
       <div className="ecomIntakeShell">
         <div className="portalStory heroFadeUp" style={{ paddingBottom: 24 }}>
           <div className="portalStoryKicker">
