@@ -299,7 +299,7 @@ export default function ServicePage({
                 className={styles.founderCalloutImg}
               />
               <div>
-                <p className={styles.founderCalloutName}>Komlan Kouhiko — Founder &amp; Sole Practitioner</p>
+                <p className={styles.founderCalloutName}>{t("founderCallout.name")}</p>
                 <p className={styles.founderCalloutText}>{t("founderCallout.body")}</p>
                 <Link href="/about" className={styles.founderCalloutLink}>{t("founderCallout.link")}</Link>
               </div>
