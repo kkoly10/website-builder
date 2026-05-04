@@ -84,11 +84,11 @@ export async function POST(req: Request) {
     if (quote.lead_id) {
       const { data: lead } = await supabaseAdmin
         .from("leads")
-        .select("email, lead_email, phone, name")
+        .select("email, phone, name")
         .eq("id", quote.lead_id)
         .maybeSingle();
 
-      leadEmail = (lead?.email || lead?.lead_email || leadEmail) ?? leadEmail;
+      leadEmail = (lead?.email || leadEmail) ?? leadEmail;
       leadPhone = lead?.phone ?? "";
       leadName = lead?.name ?? "";
     }

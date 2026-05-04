@@ -111,7 +111,6 @@ type QuoteRow = {
 
 type LeadRow = {
   email: string | null;
-  lead_email: string | null;
   phone: string | null;
   name: string | null;
 };
@@ -637,7 +636,7 @@ export async function loadEstimatePresentation(args: {
     quote.lead_id
       ? supabaseAdmin
           .from("leads")
-          .select("email, lead_email, phone, name")
+          .select("email, phone, name")
           .eq("id", quote.lead_id)
           .maybeSingle()
       : Promise.resolve({ data: null, error: null } as const),
@@ -731,7 +730,7 @@ export async function loadEstimatePresentation(args: {
     safeObj(quoteJson.business).name
   ) || "your business";
   const contactName = cleanString(lead.name) || null;
-  const leadEmail = firstString(lead.email, lead.lead_email, quote.lead_email) || null;
+  const leadEmail = firstString(lead.email, quote.lead_email) || null;
   const callToBook: EstimatePresentation["callToBook"] =
     variant === "fast"
       ? null

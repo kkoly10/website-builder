@@ -149,7 +149,7 @@ async function getInvoiceContextById(invoiceId: string) {
 }
 
 async function getCustomerEmail(quote: Record<string, any>, lead: Record<string, any> | null) {
-  const email = str(quote.lead_email) || str(lead?.email) || str(lead?.lead_email);
+  const email = str(quote.lead_email) || str(lead?.email);
   if (!email || !email.includes("@")) {
     throw new Error("Lead email missing; cannot send invoice.");
   }
