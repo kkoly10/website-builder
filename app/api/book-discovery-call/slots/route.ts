@@ -158,8 +158,10 @@ export async function GET() {
     }
 
     return NextResponse.json({ ok: true, slots });
-  } catch (err) {
-    console.error("[slots] error:", err);
+  } catch (err: any) {
+    console.error("[slots] error message:", err?.message);
+    console.error("[slots] error code:", err?.code);
+    console.error("[slots] error status:", err?.status ?? err?.response?.status);
     return NextResponse.json({ ok: false, noCalendar: true });
   }
 }

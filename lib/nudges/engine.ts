@@ -1,6 +1,7 @@
 import { sendResendEmail } from "@/lib/resend";
 import { logProjectActivityByPortalId } from "@/lib/projectActivity";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { emailWrap, ctaButton, callout, sig, adminBadge, adminTable, escHtml } from "@/lib/emailHelpers";
 
 const FROM_EMAIL =
   process.env.NOTIFICATION_FROM_EMAIL ||
@@ -41,14 +42,6 @@ function ensureBaseUrl(value?: string | null) {
   return raw.replace(/\/$/, "");
 }
 
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
 
 function isActiveClientPhase(portal: PortalRow, quote: QuoteRow | null) {
   const launchStatus = str(portal.launch_status).toLowerCase();
@@ -200,15 +193,22 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
         ruleId: "asset_missing_after_kickoff",
         contextKey: `kickoff:${str(portal.deposit_paid_at)}`,
         enabled: !!portal.deposit_paid_at && daysSince(portal.deposit_paid_at) >= 5 && assetCount === 0,
-        subject: "A quick reminder to upload your project assets",
+        subject: "Your project is ready for content — CrecyStudio",
         summary: "System sent a reminder to upload project assets after kickoff.",
-        html: `
-          <h2>Your project is ready for assets</h2>
-          <p>Hi ${escapeHtml(recipientName)},</p>
-          <p>Your project kickoff is complete, but we still need your assets or content to keep momentum.</p>
-          <p><a href="${workspaceUrl}">Open your project workspace</a> and upload anything you have ready.</p>
-          <p>CrecyStudio</p>
-        `,
+        html: emailWrap(`
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Time to upload your assets.</h1>
+          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Action required</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(recipientName)},</p>
+          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">Your project is kicked off and ready to go — the next step is uploading your content and assets so we can keep momentum.</p>
+          ${ctaButton(workspaceUrl, "Upload assets")}
+          ${callout("What to upload", [
+            "→&ensp;Logo files (SVG or high-res PNG)",
+            "→&ensp;Brand colors and fonts if you have them",
+            "→&ensp;Any copy or text you want on the site",
+            "→&ensp;Photos or images — or let us know if you need help sourcing them",
+          ])}
+          ${sig()}
+        `, "Reply to this email to reach Komlan directly."),
       },
       {
         ruleId: "preview_unreviewed_48h",
@@ -220,15 +220,17 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
           (!portal.preview_viewed_at ||
             new Date(str(portal.preview_viewed_at)).getTime() <
               new Date(str(portal.preview_updated_at)).getTime()),
-        subject: "Your website preview is ready to review",
+        subject: "Your preview has been waiting — CrecyStudio",
         summary: "System nudged the client to review a published preview.",
-        html: `
-          <h2>Your preview is waiting</h2>
-          <p>Hi ${escapeHtml(recipientName)},</p>
-          <p>Your website preview has been ready for review. When you have a moment, please open it and share any notes.</p>
-          <p><a href="${workspaceUrl}">Open your project workspace</a></p>
-          <p>CrecyStudio</p>
-        `,
+        html: emailWrap(`
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Your preview is still waiting.</h1>
+          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Review needed</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(recipientName)},</p>
+          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">Your website preview has been ready for 48 hours. When you have a moment, take a look and send any feedback — even a quick "looks good" keeps things moving.</p>
+          ${ctaButton(workspaceUrl, "Open preview")}
+          <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">No feedback needed? Just reply to let me know and I'll move to the next step.</p>
+          ${sig()}
+        `, "Reply to this email to reach Komlan directly."),
       },
       {
         ruleId: "revision_waiting_on_studio",
@@ -247,14 +249,18 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
           );
         })(),
         recipientEmail: ADMIN_EMAIL,
-        subject: "Revision request still needs a studio response",
+        subject: `Revision overdue — ${escHtml(recipientName)}`,
         summary: "System alerted the studio that a revision request has been waiting for a response.",
-        html: `
-          <h2>Revision response overdue</h2>
-          <p>${escapeHtml(recipientName)} submitted revisions more than 24 hours ago and no studio reply has been logged yet.</p>
-          <p><a href="${workspaceUrl}">Open your project workspace</a></p>
-          <p>CrecyStudio</p>
-        `,
+        html: emailWrap(`
+          ${adminBadge("Studio alert")}
+          <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">&#x26A0;&#xFE0F; Revision response overdue</h1>
+          ${adminTable([
+            ["Client", escHtml(recipientName)],
+            ["Waiting", "More than 24 hours"],
+          ])}
+          <p style="margin:0 0 20px;font-size:14px;color:#888;line-height:1.6">${escHtml(recipientName)} submitted a revision request more than 24 hours ago with no studio reply logged yet.</p>
+          ${ctaButton(workspaceUrl, "Open workspace")}
+        `),
         clientVisible: false,
       },
       {
@@ -273,15 +279,17 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
             ["sent", "overdue"].includes(str(item.status).toLowerCase()) &&
             daysSince(item.updated_at || item.created_at) >= 5
         ),
-        subject: "Your deposit invoice is still open",
+        subject: "Your deposit invoice is still open — CrecyStudio",
         summary: "System reminded the client that the deposit invoice is still unpaid.",
-        html: `
-          <h2>Your deposit is still open</h2>
-          <p>Hi ${escapeHtml(recipientName)},</p>
-          <p>Your deposit invoice is still open. Once it is paid, we can keep the project moving without delays.</p>
-          <p><a href="${workspaceUrl}">Open your project workspace</a></p>
-          <p>CrecyStudio</p>
-        `,
+        html: emailWrap(`
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Your deposit is still open.</h1>
+          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Payment reminder</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(recipientName)},</p>
+          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">Your deposit invoice is still unpaid. Once it's settled, the project kicks off immediately — no further delays.</p>
+          ${ctaButton(workspaceUrl, "Pay deposit")}
+          <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">Having trouble with the payment? Just reply to this email and we'll sort it out.</p>
+          ${sig()}
+        `, "Reply to this email to reach Komlan directly."),
         clientVisible: true,
       },
       {
@@ -291,15 +299,17 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
           isActiveClientPhase(portal, quote) &&
           (!!portal.deposit_paid_at || str(quote?.status).toLowerCase() === "active") &&
           (!portal.last_client_seen_at || daysSince(portal.last_client_seen_at) >= 7),
-        subject: "A quick check-in on your project",
+        subject: "A quick check-in on your project — CrecyStudio",
         summary: "System checked in after the client had been inactive during an active project phase.",
-        html: `
-          <h2>Quick check-in</h2>
-          <p>Hi ${escapeHtml(recipientName)},</p>
-          <p>We have been moving your project forward and wanted to make sure you have seen the latest updates in your workspace.</p>
-          <p><a href="${workspaceUrl}">Open your project workspace</a></p>
-          <p>CrecyStudio</p>
-        `,
+        html: emailWrap(`
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Quick check-in.</h1>
+          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Project update</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(recipientName)},</p>
+          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">Work is moving forward on your project. Swing by your workspace to catch up on the latest updates — there may be something waiting for your input.</p>
+          ${ctaButton(workspaceUrl, "Open your workspace")}
+          <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">Questions or concerns? Just reply to this email.</p>
+          ${sig()}
+        `, "Reply to this email to reach Komlan directly."),
         clientVisible: true,
       },
     ];

@@ -5,6 +5,7 @@ import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/
 import { recordServerEvent } from "@/lib/analytics/server";
 import { maybeAttachQuoteToUser, resolveQuoteAccess, sameNormalizedEmail } from "@/lib/accessControl";
 import { pickPreferredLocale } from "@/lib/preferredLocale";
+import { emailWrap, adminTable, ctaButton, adminBadge, escHtml } from "@/lib/emailHelpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,14 +17,6 @@ function normalizeBaseUrl(v: string | undefined) {
   return `https://${s}`;
 }
 
-function escapeHtml(s: string) {
-  return String(s ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
 
 export async function POST(req: Request) {
   try {
@@ -132,27 +125,23 @@ export async function POST(req: Request) {
       const internalLink = BASE ? `${BASE}/internal/preview?quoteId=${quoteId}` : "";
       const subject = `Scope call requested — ${leadEmail} — ${quoteId.slice(0, 8)}`;
 
-      const html = `
-        <div style="font-family:ui-sans-serif,system-ui;line-height:1.5">
-          <h2 style="margin:0 0 10px">New scope call request</h2>
-          <p style="margin:0 0 6px"><strong>Quote ID:</strong> ${escapeHtml(quoteId)}</p>
-          <p style="margin:0 0 6px"><strong>Lead:</strong> ${escapeHtml(leadEmail)}${
-            leadPhone ? ` • ${escapeHtml(leadPhone)}` : ""
-          }${leadName ? ` • ${escapeHtml(leadName)}` : ""}</p>
-          <p style="margin:0 0 6px"><strong>Estimate:</strong> $${Number(quote.estimate_total || 0)} • ${escapeHtml(
-        String(quote.tier_recommended ?? "—")
-      )}</p>
-          ${bestTimeToCall ? `<p style="margin:0 0 6px"><strong>Best time:</strong> ${escapeHtml(bestTimeToCall)}</p>` : ""}
-          ${preferredTimes ? `<p style="margin:0 0 6px"><strong>Preferred times:</strong> ${escapeHtml(preferredTimes)}</p>` : ""}
-          ${timezone ? `<p style="margin:0 0 6px"><strong>Timezone:</strong> ${escapeHtml(timezone)}</p>` : ""}
-          ${
-            notes
-              ? `<p style="margin:10px 0 0"><strong>Notes:</strong><br/>${escapeHtml(notes).replace(/\n/g, "<br/>")}</p>`
-              : ""
-          }
-          ${internalLink ? `<p style="margin:12px 0 0"><a href="${internalLink}">Open internal preview</a></p>` : ""}
-        </div>
-      `;
+      const rows: [string, string][] = [
+        ["Name", escHtml(leadName || "—")],
+        ["Email", `<a href="mailto:${escHtml(leadEmail)}" style="color:#111">${escHtml(leadEmail)}</a>${leadPhone ? ` &middot; ${escHtml(leadPhone)}` : ""}`],
+        ["Estimate", `$${Number(quote.estimate_total || 0)} &middot; ${escHtml(String(quote.tier_recommended ?? "—"))}`],
+        ...(bestTimeToCall ? [["Best time", escHtml(bestTimeToCall)] as [string, string]] : []),
+        ...(preferredTimes ? [["Preferred times", escHtml(preferredTimes)] as [string, string]] : []),
+        ...(timezone ? [["Timezone", escHtml(timezone)] as [string, string]] : []),
+        ...(notes ? [["Notes", escHtml(notes).replace(/\n/g, "<br/>")] as [string, string]] : []),
+        ["Quote ID", `<span style="font-family:monospace;font-size:12px;color:#888">${escHtml(quoteId)}</span>`],
+      ];
+
+      const html = emailWrap(`
+        ${adminBadge("Scope call request")}
+        <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">&#x1F4DE; New scope call request</h1>
+        ${adminTable(rows)}
+        ${internalLink ? ctaButton(internalLink, "Open internal preview") : ""}
+      `);
 
       await fetch("https://api.resend.com/emails", {
         method: "POST",
