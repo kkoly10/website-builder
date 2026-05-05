@@ -1,4 +1,5 @@
 import { sendResendEmail } from "@/lib/resend";
+import { emailWrap, ctaButton, adminTable, callout, sig, escHtml, adminBadge } from "@/lib/emailHelpers";
 
 const FROM_EMAIL = process.env.NOTIFICATION_FROM_EMAIL || "studio@10xwebsites.com";
 const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || "";
@@ -16,101 +17,130 @@ const templates: Record<
   (ctx: EventContext) => { subject: string; html: string; toClient: boolean; toAdmin: boolean }
 > = {
   agreement_published: (ctx) => ({
-    subject: `Your project agreement is ready — ${ctx.leadName}`,
-    html: `
-      <h2>Your project agreement is ready</h2>
-      <p>Hi ${ctx.leadName},</p>
-      <p>Your website project agreement has been published and is now available in your workspace.</p>
-      <p>Please review the full agreement at your earliest convenience.</p>
-      ${ctx.workspaceUrl ? `<p><a href="${ctx.workspaceUrl}">Open Your Workspace</a></p>` : ""}
-      <p>— 10x Websites Studio</p>
-    `,
+    subject: `Your project agreement is ready — CrecyStudio`,
+    html: emailWrap(`
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Your agreement is ready to sign.</h1>
+      <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Project agreement</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
+      <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">Your project agreement has been published and is waiting for your review and signature in your workspace.</p>
+      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Review agreement") : ""}
+      <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">Questions before signing? Just reply to this email.</p>
+    `, "Reply to this email to reach Komlan directly."),
     toClient: true,
     toAdmin: true,
   }),
 
   preview_ready: (ctx) => ({
-    subject: `Preview ready for review — ${ctx.leadName}`,
-    html: `
-      <h2>Your website preview is ready</h2>
-      <p>Hi ${ctx.leadName},</p>
-      <p>A preview of your website has been published and is ready for your review.</p>
-      <p>Please take a look and let us know if you have any feedback or revision requests.</p>
-      ${ctx.workspaceUrl ? `<p><a href="${ctx.workspaceUrl}">Open Your Workspace</a></p>` : ""}
-      <p>— 10x Websites Studio</p>
-    `,
+    subject: `Your website preview is ready — CrecyStudio`,
+    html: emailWrap(`
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Your preview is live.</h1>
+      <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Preview ready for review</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
+      <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">A new preview of your website is ready. Open your workspace to review it and leave any feedback or revision requests.</p>
+      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open preview") : ""}
+      ${callout("How to review", [
+        "→&ensp;Open the preview link in your workspace",
+        "→&ensp;Leave notes on anything you'd like changed",
+        "→&ensp;Submit your revision request — Komlan will respond within 24 hours",
+      ])}
+      ${sig()}
+    `, "Reply to this email to reach Komlan directly."),
     toClient: true,
     toAdmin: false,
   }),
 
   launch_ready: (ctx) => ({
-    subject: `Your website is ready for launch — ${ctx.leadName}`,
-    html: `
-      <h2>Ready for launch</h2>
-      <p>Hi ${ctx.leadName},</p>
-      <p>All launch checklist items are complete. Your website is ready to go live.</p>
-      ${ctx.workspaceUrl ? `<p><a href="${ctx.workspaceUrl}">Open Your Workspace</a></p>` : ""}
-      <p>— 10x Websites Studio</p>
-    `,
+    subject: `Your website is ready to launch — CrecyStudio`,
+    html: emailWrap(`
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Ready to go live.</h1>
+      <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Launch checklist complete</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
+      <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">All launch checklist items are complete. Your website is ready to go live whenever you say the word.</p>
+      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Approve launch") : ""}
+      <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">Just reply to this email or click the button above to confirm you're ready to launch.</p>
+      ${sig()}
+    `, "Reply to this email to reach Komlan directly."),
     toClient: true,
     toAdmin: true,
   }),
 
   site_live: (ctx) => ({
-    subject: `Your website is live! — ${ctx.leadName}`,
-    html: `
-      <h2>Your website is live</h2>
-      <p>Hi ${ctx.leadName},</p>
-      <p>Your website has been launched and is now live. You can view it in your workspace.</p>
-      ${ctx.workspaceUrl ? `<p><a href="${ctx.workspaceUrl}">Open Your Workspace</a></p>` : ""}
-      <p>— 10x Websites Studio</p>
-    `,
+    subject: `Your website is live — CrecyStudio`,
+    html: emailWrap(`
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Your site is live.</h1>
+      <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Project launched</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
+      <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">Your website is now live and published. You can find all handoff files and documentation in your workspace.</p>
+      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "View handoff") : ""}
+      <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">It was a pleasure working on this project. If you ever need updates or support, just reach out.</p>
+      ${sig()}
+    `),
     toClient: true,
     toAdmin: true,
   }),
 
   revision_submitted: (ctx) => ({
-    subject: `New revision request from ${ctx.leadName}`,
-    html: `
-      <h2>New revision request</h2>
-      <p>${ctx.leadName} submitted a revision request for quote ${ctx.quoteId.slice(0, 8)}.</p>
-      ${ctx.workspaceUrl ? `<p><a href="${ctx.workspaceUrl}">Open Workspace</a></p>` : ""}
-    `,
+    subject: `Revision request from ${escHtml(ctx.leadName)}`,
+    html: emailWrap(`
+      ${adminBadge("Admin alert")}
+      <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">New revision request</h1>
+      ${adminTable([
+        ["Client", escHtml(ctx.leadName)],
+        ["Email", `<a href="mailto:${escHtml(ctx.leadEmail)}" style="color:#111">${escHtml(ctx.leadEmail)}</a>`],
+        ["Quote ID", `<span style="font-family:monospace;font-size:12px;color:#888">${escHtml(ctx.quoteId)}</span>`],
+      ])}
+      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open workspace") : ""}
+    `),
     toClient: false,
     toAdmin: true,
   }),
 
   asset_submitted: (ctx) => ({
-    subject: `New asset from ${ctx.leadName}`,
-    html: `
-      <h2>New asset submitted</h2>
-      <p>${ctx.leadName} submitted a new asset for quote ${ctx.quoteId.slice(0, 8)}.</p>
-      ${ctx.workspaceUrl ? `<p><a href="${ctx.workspaceUrl}">Open Workspace</a></p>` : ""}
-    `,
+    subject: `New asset from ${escHtml(ctx.leadName)}`,
+    html: emailWrap(`
+      ${adminBadge("Admin alert")}
+      <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">New asset submitted</h1>
+      ${adminTable([
+        ["Client", escHtml(ctx.leadName)],
+        ["Email", `<a href="mailto:${escHtml(ctx.leadEmail)}" style="color:#111">${escHtml(ctx.leadEmail)}</a>`],
+        ["Quote ID", `<span style="font-family:monospace;font-size:12px;color:#888">${escHtml(ctx.quoteId)}</span>`],
+      ])}
+      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open workspace") : ""}
+    `),
     toClient: false,
     toAdmin: true,
   }),
 
   deposit_notice_sent: (ctx) => ({
-    subject: `Deposit notice from ${ctx.leadName}`,
-    html: `
-      <h2>Client reported deposit sent</h2>
-      <p>${ctx.leadName} reported that they sent the deposit for quote ${ctx.quoteId.slice(0, 8)}.</p>
-      <p>This is a client notification only and should still be verified before marking the deposit as paid.</p>
-      ${ctx.workspaceUrl ? `<p><a href="${ctx.workspaceUrl}">Open Workspace</a></p>` : ""}
-    `,
+    subject: `Deposit notice — ${escHtml(ctx.leadName)}`,
+    html: emailWrap(`
+      ${adminBadge("Admin alert")}
+      <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">Client reported deposit sent</h1>
+      ${adminTable([
+        ["Client", escHtml(ctx.leadName)],
+        ["Email", `<a href="mailto:${escHtml(ctx.leadEmail)}" style="color:#111">${escHtml(ctx.leadEmail)}</a>`],
+        ["Quote ID", `<span style="font-family:monospace;font-size:12px;color:#888">${escHtml(ctx.quoteId)}</span>`],
+      ])}
+      <p style="margin:0 0 20px;font-size:14px;color:#888;line-height:1.6">Verify the deposit in your bank or Stripe before marking it as paid in the admin panel.</p>
+      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open workspace") : ""}
+    `),
     toClient: false,
     toAdmin: true,
   }),
 
   agreement_accepted: (ctx) => ({
-    subject: `Agreement accepted — ${ctx.leadName}`,
-    html: `
-      <h2>Agreement accepted</h2>
-      <p><strong>${ctx.leadName}</strong> has electronically accepted the project agreement.</p>
-      <p>A Certificate of Completion has been generated and emailed to the client.</p>
-      ${ctx.workspaceUrl ? `<p><a href="${ctx.workspaceUrl}">Open Workspace</a></p>` : ""}
-    `,
+    subject: `Agreement accepted — ${escHtml(ctx.leadName)}`,
+    html: emailWrap(`
+      ${adminBadge("Admin alert")}
+      <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">&#x2705; Agreement signed</h1>
+      ${adminTable([
+        ["Client", escHtml(ctx.leadName)],
+        ["Email", `<a href="mailto:${escHtml(ctx.leadEmail)}" style="color:#111">${escHtml(ctx.leadEmail)}</a>`],
+        ["Quote ID", `<span style="font-family:monospace;font-size:12px;color:#888">${escHtml(ctx.quoteId)}</span>`],
+      ])}
+      <p style="margin:0 0 20px;font-size:14px;color:#444;line-height:1.6">A Certificate of Completion has been generated and emailed to the client.</p>
+      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open workspace") : ""}
+    `),
     toClient: false,
     toAdmin: true,
   }),
@@ -141,7 +171,7 @@ export async function sendEventNotification(ctx: EventContext) {
       sendResendEmail({
         to: ADMIN_EMAIL,
         from: FROM_EMAIL,
-        subject: `[Admin] ${tmpl.subject}`,
+        subject: tmpl.subject,
         html: tmpl.html,
       }).catch((err) => {
         console.error(`[notifications] admin email failed for ${ctx.event}:`, err);
