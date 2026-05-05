@@ -377,11 +377,30 @@ export async function getAdminProjectDataByQuoteId(quoteId: string) {
   );
 }
 
+// Lightweight pipeline list: strips heavy array fields (messages, invoices, activityFeed,
+// long proposal text) that the list sidebar doesn't display. Detail view loads these lazily.
+function toAdminProjectDataLight(full: AdminProjectData): AdminProjectData {
+  return {
+    ...full,
+    messages: [],           // polled separately via /api/internal/admin/messages
+    activityFeed: [],       // not shown in list sidebar
+    invoices: [],           // not shown in list sidebar
+    proposalText: "",       // large text — detail-only
+    preContractDraft: "",   // large text — detail-only
+    publishedAgreementText: "", // large text — detail-only
+  };
+}
+
 export async function listAdminProjectData() {
+  // Exclude raw intake submissions (status="submitted") — these are intake form completions
+  // that haven't been converted to active projects yet. Only load the active pipeline.
+  // Cap at 30 to stay within RSC serialization limits and keep the page responsive.
   const quotesRes = await supabaseAdmin
     .from("quotes")
     .select("id")
-    .order("created_at", { ascending: false });
+    .neq("status", "submitted")
+    .order("created_at", { ascending: false })
+    .limit(30);
 
   if (quotesRes.error) {
     return [];
@@ -394,5 +413,6 @@ export async function listAdminProjectData() {
   return results
     .filter((result): result is PromiseFulfilledResult<AdminProjectData | null> => result.status === "fulfilled")
     .map((result) => result.value)
-    .filter((result): result is AdminProjectData => Boolean(result));
+    .filter((result): result is AdminProjectData => Boolean(result))
+    .map(toAdminProjectDataLight); // strip heavy fields before RSC serialization
 }

@@ -1,9 +1,15 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 import { listAdminProjectData } from "@/lib/adminProjectData";
 import AdminPipelineClient from "./AdminPipelineClient";
 
 export const dynamic = "force-dynamic";
+
+async function AdminPipelineLoader() {
+  const projects = await listAdminProjectData();
+  return <AdminPipelineClient initialProjects={projects} />;
+}
 
 export default async function WebPipelinePage() {
   const supabase = await createSupabaseServerClient();
@@ -14,8 +20,6 @@ export default async function WebPipelinePage() {
   if (!user) redirect("/login?next=/internal/admin");
   const admin = await isAdminUser({ userId: user.id, email: user.email });
   if (!admin) redirect("/portal");
-
-  const projects = await listAdminProjectData();
 
   return (
     <section className="section" style={{ paddingTop: 0 }}>
@@ -33,7 +37,17 @@ export default async function WebPipelinePage() {
         </div>
       </div>
 
-      <AdminPipelineClient initialProjects={projects} />
+      <Suspense
+        fallback={
+          <div className="card" style={{ marginTop: 16 }}>
+            <div className="cardInner">
+              <p className="pDark">Loading project pipeline…</p>
+            </div>
+          </div>
+        }
+      >
+        <AdminPipelineLoader />
+      </Suspense>
     </section>
   );
 }
