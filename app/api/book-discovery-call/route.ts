@@ -33,13 +33,28 @@ function buildClientEmail(name: string): string {
 </div>`;
 }
 
+function buildClientEmailScheduled(name: string, slotLabel: string): string {
+  const safe = escapeHtml(name || "there");
+  const slot = escapeHtml(slotLabel);
+  return `<div style="font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;max-width:540px;margin:0 auto;color:#111;line-height:1.6">
+  <p style="margin:0 0 8px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#888">CrecyStudio</p>
+  <h1 style="margin:0 0 20px;font-size:1.5rem;letter-spacing:-0.03em;line-height:1.15">You're on the calendar, ${safe}.</h1>
+  <p style="margin:0 0 16px;color:#444">Your discovery call is booked for <strong>${slot}</strong>. A Google Calendar invite is on its way to your inbox.</p>
+  <p style="margin:0 0 16px;color:#444">If you need to reschedule or have questions beforehand, just reply to this email.</p>
+  <p style="margin:0 0 32px;color:#444">— Komlan<br><span style="color:#888;font-size:.85rem">Founder, CrecyStudio</span></p>
+  <hr style="border:none;border-top:1px solid #e5e5e5;margin:0 0 16px">
+  <p style="margin:0;font-size:.8rem;color:#999">CrecyStudio · <a href="${SITE_URL}" style="color:#999">${SITE_URL.replace(/^https?:\/\//, "")}</a></p>
+</div>`;
+}
+
 function buildAdminEmail(
   callId: string,
   name: string,
   email: string,
   company: string | null,
   projectType: string | null,
-  availabilityNote: string | null
+  availabilityNote: string | null,
+  slotLabel: string | null,
 ): string {
   const s = (v: string | null) => escapeHtml(v || "—");
   return `<div style="font-family:ui-sans-serif,system-ui,sans-serif;max-width:540px;margin:0 auto;color:#111;line-height:1.6">
@@ -49,16 +64,48 @@ function buildAdminEmail(
   <p style="margin:0 0 6px"><strong>Email:</strong> <a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></p>
   <p style="margin:0 0 6px"><strong>Company:</strong> ${s(company)}</p>
   <p style="margin:0 0 6px"><strong>Building:</strong> ${s(projectType)}</p>
-  <p style="margin:0 0 16px"><strong>Availability:</strong> ${s(availabilityNote)}</p>
+  <p style="margin:0 0 16px"><strong>${slotLabel ? "Scheduled" : "Availability"}:</strong> ${slotLabel ? s(slotLabel) : s(availabilityNote)}</p>
   <hr style="border:none;border-top:1px solid #e5e5e5;margin:0 0 16px">
   <p style="margin:0;font-size:.8rem;color:#999">Reply directly to <a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a> to confirm a time.</p>
 </div>`;
 }
 
+// Returns UTC offset string like "-04:00" or "-05:00" for America/New_York at the given moment
+function getEtOffsetString(referenceDate: Date): string {
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    timeZoneName: "shortOffset",
+  });
+  const parts = fmt.formatToParts(referenceDate);
+  const tzPart = parts.find((p) => p.type === "timeZoneName")?.value ?? "GMT-4";
+  // tzPart is like "GMT-4" or "GMT-5"
+  const match = tzPart.match(/GMT([+-]\d+)/);
+  if (!match) return "-04:00";
+  const hours = parseInt(match[1], 10);
+  return `${hours < 0 ? "-" : "+"}${String(Math.abs(hours)).padStart(2, "0")}:00`;
+}
+
+function parseSelectedSlot(selectedSlot: string): Date | null {
+  try {
+    // selectedSlot is "2026-05-06T09:00:00" (local ET, no offset)
+    // We compute the correct UTC offset for that moment
+    const naive = new Date(selectedSlot + "Z"); // treat as UTC first to get a Date
+    const offset = getEtOffsetString(naive);
+    const withOffset = selectedSlot + offset;
+    const result = new Date(withOffset);
+    if (isNaN(result.getTime())) return null;
+    return result;
+  } catch {
+    return null;
+  }
+}
+
 function maybeCreateCalendarEvent(
   name: string,
   email: string,
-  availabilityNote: string | null
+  availabilityNote: string | null,
+  selectedSlot: string | null,
+  slotLabel: string | null,
 ) {
   const calendarId = process.env.GOOGLE_CALENDAR_ID;
   const serviceEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
@@ -74,18 +121,39 @@ function maybeCreateCalendarEvent(
         scopes: ["https://www.googleapis.com/auth/calendar"],
       });
       const calendar = google.calendar({ version: "v3", auth });
-      const now = new Date();
-      const end = new Date(now.getTime() + 20 * 60 * 1000);
-      await calendar.events.insert({
-        calendarId,
-        requestBody: {
-          summary: `Discovery call — ${name} (${email})`,
-          description: `Availability: ${availabilityNote || "not specified"}\n\nReview at: ${SITE_URL}/internal/admin`,
-          start: { dateTime: now.toISOString() },
-          end: { dateTime: end.toISOString() },
-          status: "tentative",
-        },
-      });
+
+      if (selectedSlot) {
+        const start = parseSelectedSlot(selectedSlot);
+        if (!start) throw new Error("Could not parse selectedSlot: " + selectedSlot);
+        const end = new Date(start.getTime() + 20 * 60 * 1000);
+        await calendar.events.insert({
+          calendarId,
+          sendUpdates: "all",
+          requestBody: {
+            summary: `Discovery call — ${name}`,
+            description: `${slotLabel || selectedSlot}\n\nReview at: ${SITE_URL}/internal/admin`,
+            start: { dateTime: start.toISOString() },
+            end: { dateTime: end.toISOString() },
+            status: "confirmed",
+            attendees: [{ email, responseStatus: "needsAction" }],
+            guestsCanSeeOtherGuests: false,
+          },
+        });
+      } else {
+        // Fallback: tentative placeholder (no specific time)
+        const now = new Date();
+        const end = new Date(now.getTime() + 20 * 60 * 1000);
+        await calendar.events.insert({
+          calendarId,
+          requestBody: {
+            summary: `Discovery call — ${name} (${email})`,
+            description: `Availability: ${availabilityNote || "not specified"}\n\nReview at: ${SITE_URL}/internal/admin`,
+            start: { dateTime: now.toISOString() },
+            end: { dateTime: end.toISOString() },
+            status: "tentative",
+          },
+        });
+      }
     } catch (err) {
       console.warn("[book-discovery-call] calendar event creation failed:", err);
     }
@@ -132,6 +200,8 @@ export async function POST(req: Request) {
     const company = String(body.company ?? "").trim() || null;
     const projectType = String(body.projectType ?? "").trim() || null;
     const availabilityNote = String(body.availabilityNote ?? "").trim() || null;
+    const selectedSlot = String(body.selectedSlot ?? "").trim() || null;
+    const slotLabel = String(body.slotLabel ?? "").trim() || null;
 
     if (!name) {
       return NextResponse.json({ ok: false, error: "Name is required." }, { status: 400 });
@@ -143,6 +213,8 @@ export async function POST(req: Request) {
     const preferredLocale = pickPreferredLocale(body?.locale);
     const leadId = await ensureLeadId(email, name, preferredLocale);
 
+    const scheduledAt = selectedSlot ? parseSelectedSlot(selectedSlot)?.toISOString() ?? null : null;
+
     const { data, error } = await supabaseAdmin
       .from("discovery_calls")
       .insert({
@@ -151,9 +223,10 @@ export async function POST(req: Request) {
         lead_name: name,
         company,
         project_type: projectType,
-        availability_note: availabilityNote,
+        availability_note: slotLabel || availabilityNote,
+        scheduled_at: scheduledAt,
         preferred_locale: preferredLocale,
-        status: "pending",
+        status: scheduledAt ? "confirmed" : "pending",
       })
       .select("id")
       .single();
@@ -161,14 +234,18 @@ export async function POST(req: Request) {
     if (error) throw new Error(error.message);
     const callId = String(data.id);
 
-    maybeCreateCalendarEvent(name, email, availabilityNote);
+    maybeCreateCalendarEvent(name, email, availabilityNote, selectedSlot, slotLabel);
 
     try {
       await sendResendEmail({
         to: email,
         from: FROM,
-        subject: "Discovery call request received — CrecyStudio",
-        html: buildClientEmail(name),
+        subject: scheduledAt
+          ? "Your discovery call is booked — CrecyStudio"
+          : "Discovery call request received — CrecyStudio",
+        html: scheduledAt && slotLabel
+          ? buildClientEmailScheduled(name, slotLabel)
+          : buildClientEmail(name),
       });
     } catch (emailErr) {
       console.error("[book-discovery-call] client confirmation email failed:", emailErr);
@@ -180,7 +257,7 @@ export async function POST(req: Request) {
           to: ADMIN,
           from: FROM,
           subject: `Discovery call — ${name} (${email})`,
-          html: buildAdminEmail(callId, name, email, company, projectType, availabilityNote),
+          html: buildAdminEmail(callId, name, email, company, projectType, availabilityNote, slotLabel),
         });
       } catch (emailErr) {
         console.error("[book-discovery-call] admin notification email failed:", emailErr);
@@ -191,7 +268,7 @@ export async function POST(req: Request) {
       event: "discovery_call_requested",
       page: "/start",
       ip,
-      metadata: { callId, preferredLocale, projectType },
+      metadata: { callId, preferredLocale, projectType, scheduled: !!scheduledAt },
     });
 
     return NextResponse.json({ ok: true });
