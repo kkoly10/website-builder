@@ -20,31 +20,59 @@ function escapeHtml(str: string): string {
     .replace(/"/g, "&quot;");
 }
 
+const EMAIL_WRAPPER_OPEN = `<div style="font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;overflow:hidden;border:1px solid #e5e5e5">
+  <div style="background:#111111;padding:20px 32px">
+    <p style="margin:0;color:#ffffff;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:600">CrecyStudio</p>
+  </div>
+  <div style="padding:36px 32px">`;
+
+const EMAIL_WRAPPER_CLOSE = (siteUrl: string) => `  </div>
+  <div style="background:#f9f9f9;border-top:1px solid #e5e5e5;padding:16px 32px">
+    <p style="margin:0;font-size:12px;color:#999">CrecyStudio &middot; <a href="${siteUrl}" style="color:#999;text-decoration:none">${siteUrl.replace(/^https?:\/\//, "")}</a> &middot; Reply to this email to reach Komlan directly.</p>
+  </div>
+</div>`;
+
+function row(label: string, value: string): string {
+  return `<tr><td style="padding:6px 12px 6px 0;font-size:13px;color:#888;white-space:nowrap;vertical-align:top">${label}</td><td style="padding:6px 0;font-size:13px;color:#111">${value}</td></tr>`;
+}
+
 function buildClientEmail(name: string): string {
   const safe = escapeHtml(name || "there");
-  return `<div style="font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;max-width:540px;margin:0 auto;color:#111;line-height:1.6">
-  <p style="margin:0 0 8px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#888">CrecyStudio</p>
-  <h1 style="margin:0 0 20px;font-size:1.5rem;letter-spacing:-0.03em;line-height:1.15">Got your request, ${safe}.</h1>
-  <p style="margin:0 0 16px;color:#444">I'll be in touch within 24 hours to confirm a time for your discovery call. No automation — you'll hear from Komlan directly.</p>
-  <p style="margin:0 0 16px;color:#444">If your schedule changes or you have questions in the meantime, just reply to this email.</p>
-  <p style="margin:0 0 32px;color:#444">— Komlan<br><span style="color:#888;font-size:.85rem">Founder, CrecyStudio</span></p>
-  <hr style="border:none;border-top:1px solid #e5e5e5;margin:0 0 16px">
-  <p style="margin:0;font-size:.8rem;color:#999">CrecyStudio · <a href="${SITE_URL}" style="color:#999">${SITE_URL.replace(/^https?:\/\//, "")}</a></p>
-</div>`;
+  return EMAIL_WRAPPER_OPEN + `
+    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em;line-height:1.2">Request received, ${safe}.</h1>
+    <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Free 20-min discovery call</p>
+    <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">I'll be in touch within 24 hours to confirm a time. No automation — you'll hear from Komlan directly.</p>
+    <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">If your schedule changes or you have questions in the meantime, just reply to this email.</p>
+    <div style="background:#f5f5f5;border-left:3px solid #111;padding:16px 20px;margin:0 0 28px;border-radius:0 4px 4px 0">
+      <p style="margin:0 0 10px;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#888;font-weight:600">What happens next</p>
+      <p style="margin:0 0 6px;font-size:14px;color:#444;line-height:1.6">1&ensp;Komlan reviews your request personally</p>
+      <p style="margin:0 0 6px;font-size:14px;color:#444;line-height:1.6">2&ensp;You receive a confirmed time within 24 hours</p>
+      <p style="margin:0;font-size:14px;color:#444;line-height:1.6">3&ensp;20 minutes — scope, honest feedback, no pitch</p>
+    </div>
+    <p style="margin:0;font-size:14px;color:#666;line-height:1.6">— Komlan<br><span style="color:#999;font-size:13px">Founder, CrecyStudio</span></p>
+  ` + EMAIL_WRAPPER_CLOSE(SITE_URL);
 }
 
 function buildClientEmailScheduled(name: string, slotLabel: string): string {
   const safe = escapeHtml(name || "there");
   const slot = escapeHtml(slotLabel);
-  return `<div style="font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;max-width:540px;margin:0 auto;color:#111;line-height:1.6">
-  <p style="margin:0 0 8px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#888">CrecyStudio</p>
-  <h1 style="margin:0 0 20px;font-size:1.5rem;letter-spacing:-0.03em;line-height:1.15">You're on the calendar, ${safe}.</h1>
-  <p style="margin:0 0 16px;color:#444">Your discovery call is booked for <strong>${slot}</strong>. A Google Calendar invite is on its way to your inbox.</p>
-  <p style="margin:0 0 16px;color:#444">If you need to reschedule or have questions beforehand, just reply to this email.</p>
-  <p style="margin:0 0 32px;color:#444">— Komlan<br><span style="color:#888;font-size:.85rem">Founder, CrecyStudio</span></p>
-  <hr style="border:none;border-top:1px solid #e5e5e5;margin:0 0 16px">
-  <p style="margin:0;font-size:.8rem;color:#999">CrecyStudio · <a href="${SITE_URL}" style="color:#999">${SITE_URL.replace(/^https?:\/\//, "")}</a></p>
-</div>`;
+  return EMAIL_WRAPPER_OPEN + `
+    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em;line-height:1.2">You're on the calendar, ${safe}.</h1>
+    <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Free 20-min discovery call</p>
+    <div style="background:#f5f5f5;border-radius:4px;padding:20px 24px;margin:0 0 24px;text-align:center">
+      <p style="margin:0 0 4px;font-size:12px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Your call is booked for</p>
+      <p style="margin:0;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.01em">${slot}</p>
+    </div>
+    <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">A Google Calendar invite is on its way to your inbox. Add it to your calendar and you're all set.</p>
+    <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">Need to reschedule or have questions beforehand? Just reply to this email.</p>
+    <div style="background:#f5f5f5;border-left:3px solid #111;padding:16px 20px;margin:0 0 28px;border-radius:0 4px 4px 0">
+      <p style="margin:0 0 10px;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#888;font-weight:600">What to expect on the call</p>
+      <p style="margin:0 0 6px;font-size:14px;color:#444;line-height:1.6">→&ensp;Komlan asks sharp questions about your project</p>
+      <p style="margin:0 0 6px;font-size:14px;color:#444;line-height:1.6">→&ensp;You get honest feedback on scope, timeline, and price</p>
+      <p style="margin:0;font-size:14px;color:#444;line-height:1.6">→&ensp;No sales pitch — just a real conversation</p>
+    </div>
+    <p style="margin:0;font-size:14px;color:#666;line-height:1.6">— Komlan<br><span style="color:#999;font-size:13px">Founder, CrecyStudio</span></p>
+  ` + EMAIL_WRAPPER_CLOSE(SITE_URL);
 }
 
 function buildAdminEmail(
@@ -57,16 +85,28 @@ function buildAdminEmail(
   slotLabel: string | null,
 ): string {
   const s = (v: string | null) => escapeHtml(v || "—");
-  return `<div style="font-family:ui-sans-serif,system-ui,sans-serif;max-width:540px;margin:0 auto;color:#111;line-height:1.6">
-  <h2 style="margin:0 0 16px;font-size:1.2rem">New discovery call request</h2>
-  <p style="margin:0 0 6px"><strong>ID:</strong> ${escapeHtml(callId)}</p>
-  <p style="margin:0 0 6px"><strong>Name:</strong> ${s(name)}</p>
-  <p style="margin:0 0 6px"><strong>Email:</strong> <a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></p>
-  <p style="margin:0 0 6px"><strong>Company:</strong> ${s(company)}</p>
-  <p style="margin:0 0 6px"><strong>Building:</strong> ${s(projectType)}</p>
-  <p style="margin:0 0 16px"><strong>${slotLabel ? "Scheduled" : "Availability"}:</strong> ${slotLabel ? s(slotLabel) : s(availabilityNote)}</p>
-  <hr style="border:none;border-top:1px solid #e5e5e5;margin:0 0 16px">
-  <p style="margin:0;font-size:.8rem;color:#999">Reply directly to <a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a> to confirm a time.</p>
+  const adminUrl = `${SITE_URL}/internal/admin`;
+  return `<div style="font-family:ui-sans-serif,system-ui,sans-serif;max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e5e5e5;border-radius:6px;overflow:hidden">
+  <div style="background:#111;padding:16px 28px;display:flex;align-items:center;justify-content:space-between">
+    <p style="margin:0;color:#fff;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:600">CrecyStudio</p>
+    <p style="margin:0;color:#888;font-size:11px">Admin alert</p>
+  </div>
+  <div style="padding:28px">
+    <p style="margin:0 0 4px;font-size:18px;font-weight:700;color:#111">${slotLabel ? "&#x1F4C5; Call scheduled" : "&#x1F4E9; New discovery call request"}</p>
+    <p style="margin:0 0 20px;font-size:13px;color:#888">${slotLabel ? `Booked for ${s(slotLabel)}` : "Availability submitted — follow up to confirm a time"}</p>
+    <table style="width:100%;border-collapse:collapse;margin:0 0 20px">
+      ${row("Name", s(name))}
+      ${row("Email", `<a href="mailto:${escapeHtml(email)}" style="color:#111">${escapeHtml(email)}</a>`)}
+      ${row("Company", s(company))}
+      ${row("Building", s(projectType))}
+      ${row(slotLabel ? "Scheduled" : "Availability", slotLabel ? `<strong>${s(slotLabel)}</strong>` : s(availabilityNote))}
+      ${row("Call ID", `<span style="font-family:monospace;font-size:12px;color:#888">${escapeHtml(callId)}</span>`)}
+    </table>
+    <a href="${adminUrl}" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:10px 20px;border-radius:4px;font-size:13px;font-weight:600">View in admin panel →</a>
+  </div>
+  <div style="background:#f9f9f9;border-top:1px solid #e5e5e5;padding:14px 28px">
+    <p style="margin:0;font-size:12px;color:#999">Reply directly to <a href="mailto:${escapeHtml(email)}" style="color:#999">${escapeHtml(email)}</a> to respond to ${s(name)}.</p>
+  </div>
 </div>`;
 }
 
