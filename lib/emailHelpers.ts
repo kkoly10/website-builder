@@ -48,8 +48,18 @@ export function adminBadge(label: string): string {
   return `<p style="margin:0 0 20px;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#888;font-weight:600;background:#f5f5f5;display:inline-block;padding:4px 10px;border-radius:3px">${escHtml(label)}</p>`;
 }
 
+const LINKEDIN_URL = "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407";
+
 export function sig(): string {
-  return `<p style="margin:0;font-size:14px;color:#666;line-height:1.6">— Komlan<br><span style="color:#999;font-size:13px">Founder, CrecyStudio</span></p>`;
+  const photoUrl = `${SITE_URL}/about/komlan.jpg`;
+  return `<div style="display:flex;align-items:center;gap:14px;margin:0">
+    <img src="${photoUrl}" alt="Komlan Kouhiko" width="48" height="48" style="border-radius:50%;object-fit:cover;flex-shrink:0;display:block" />
+    <div>
+      <p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#111">Komlan Kouhiko</p>
+      <p style="margin:0 0 4px;font-size:13px;color:#888">Founder, CrecyStudio</p>
+      <a href="${LINKEDIN_URL}" style="font-size:12px;color:#0077b5;text-decoration:none;font-weight:500">LinkedIn →</a>
+    </div>
+  </div>`;
 }
 
 export { SITE_URL, SITE_DOMAIN };
