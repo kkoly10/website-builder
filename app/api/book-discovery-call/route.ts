@@ -4,6 +4,7 @@ import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/
 import { recordServerEvent } from "@/lib/analytics/server";
 import { pickPreferredLocale } from "@/lib/preferredLocale";
 import { sendResendEmail } from "@/lib/resend";
+import { sig } from "@/lib/emailHelpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,7 +50,7 @@ function buildClientEmail(name: string): string {
       <p style="margin:0 0 6px;font-size:14px;color:#444;line-height:1.6">2&ensp;You receive a confirmed time within 24 hours</p>
       <p style="margin:0;font-size:14px;color:#444;line-height:1.6">3&ensp;20 minutes — scope, honest feedback, no pitch</p>
     </div>
-    <p style="margin:0;font-size:14px;color:#666;line-height:1.6">— Komlan<br><span style="color:#999;font-size:13px">Founder, CrecyStudio</span></p>
+    ${sig()}
   ` + EMAIL_WRAPPER_CLOSE(SITE_URL);
 }
 
@@ -71,7 +72,7 @@ function buildClientEmailScheduled(name: string, slotLabel: string): string {
       <p style="margin:0 0 6px;font-size:14px;color:#444;line-height:1.6">→&ensp;You get honest feedback on scope, timeline, and price</p>
       <p style="margin:0;font-size:14px;color:#444;line-height:1.6">→&ensp;No sales pitch — just a real conversation</p>
     </div>
-    <p style="margin:0;font-size:14px;color:#666;line-height:1.6">— Komlan<br><span style="color:#999;font-size:13px">Founder, CrecyStudio</span></p>
+    ${sig()}
   ` + EMAIL_WRAPPER_CLOSE(SITE_URL);
 }
 
