@@ -226,7 +226,7 @@ export async function POST(req: Request) {
         availability_note: slotLabel || availabilityNote,
         scheduled_at: scheduledAt,
         preferred_locale: preferredLocale,
-        status: scheduledAt ? "scheduled" : "pending",
+        status: scheduledAt ? "confirmed" : "pending",
       })
       .select("id")
       .single();

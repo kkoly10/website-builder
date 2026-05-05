@@ -57,7 +57,6 @@ function etMidnightUtc(year: number, month: number, day: number): Date {
 function nextWorkingDays(count: number): string[] {
   const dates: string[] = [];
   const now = new Date();
-  const todayParts = getETDateParts(now);
   // Start from tomorrow in ET
   let cursor = new Date(now);
   cursor.setUTCHours(cursor.getUTCHours() + 24);
