@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import Image from "next/image";
 import StartClient from "./StartClient";
 import styles from "../marketing.module.css";
 
@@ -40,17 +39,7 @@ function StartContent() {
       {/* Hero */}
       <section className={styles.hero}>
         <div className={styles.heroInner}>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
-            <Image
-              src="/about/komlan.jpg"
-              alt="Komlan Kouhiko"
-              width={72}
-              height={72}
-              priority
-              style={{ borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
-            />
-            <p className={styles.sectionLabel} style={{ margin: 0 }}>{t("heroLabel")}</p>
-          </div>
+          <p className={styles.sectionLabel} style={{ marginBottom: "1.5rem" }}>{t("heroLabel")}</p>
           <h1 className={styles.title}>{t("heroTitle")}</h1>
           <p className={styles.intro}>{t("heroSub")}</p>
         </div>
