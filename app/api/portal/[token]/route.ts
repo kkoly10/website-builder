@@ -4,13 +4,17 @@ import crypto from "node:crypto";
 import {
   acceptCustomerPortalAgreement,
   getCustomerPortalViewByToken,
+  getPortalProjectByToken,
   submitAssetByPortalToken,
   submitDesignDirectionByPortalToken,
+  submitDirectionByPortalToken,
   submitRevisionByPortalToken,
   toggleMilestone,
   updateClientStatus,
 } from "@/lib/customerPortal";
 import { validateDesignDirectionInput } from "@/lib/designDirection";
+import { validateDirectionPayload } from "@/lib/directions/validate";
+import { isProjectType, type DirectionType } from "@/lib/workflows/types";
 import { sendEventNotification } from "@/lib/notifications";
 import { listProjectActivityByToken, markClientPortalSeen } from "@/lib/projectActivity";
 import { listProjectInvoicesByToken } from "@/lib/projectInvoices";
@@ -210,6 +214,59 @@ export async function POST(
         String(body?.clientStatus || "new"),
         typeof body?.clientNotes === "string" ? body.clientNotes : undefined
       );
+    } else if (actionType === "direction_submit") {
+      // Lane-agnostic direction submit (Phase 3.3) for non-website
+      // projects. The website lane keeps using design_direction_submit
+      // below — different validation, different storage path.
+      const portal = await getPortalProjectByToken(token);
+      if (!portal) {
+        return NextResponse.json({ ok: false, error: "Portal not found." }, { status: 404 });
+      }
+      const projectType = isProjectType(portal.project_type)
+        ? portal.project_type
+        : "website";
+      if (projectType === "website") {
+        return NextResponse.json(
+          { ok: false, error: "Use design_direction_submit for website projects." },
+          { status: 400 },
+        );
+      }
+      const directionType: DirectionType =
+        projectType === "web_app" ? "product_direction"
+        : projectType === "automation" ? "workflow_direction"
+        : projectType === "ecommerce" ? "store_direction"
+        : "rescue_diagnosis";
+
+      const validation = validateDirectionPayload(directionType, body?.direction);
+      if (!validation.ok || !validation.value) {
+        return NextResponse.json(
+          { ok: false, error: validation.error || "Direction payload is invalid." },
+          { status: 400 },
+        );
+      }
+
+      const supabase = await createSupabaseServerClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      try {
+        await submitDirectionByPortalToken({
+          token,
+          payload: validation.value.payload,
+          approvedDirectionTerms: validation.value.approvedDirectionTerms,
+          actor: {
+            userId: user?.id ?? null,
+            email: user?.email ?? null,
+            ip,
+          },
+        });
+      } catch (err: any) {
+        return NextResponse.json(
+          { ok: false, error: err?.message || "Direction submit failed." },
+          { status: 400 },
+        );
+      }
     } else if (actionType === "design_direction_submit") {
       const validation = validateDesignDirectionInput(body?.designDirection);
       if (!validation.ok || !validation.value) {
@@ -343,6 +400,7 @@ export async function POST(
         asset_add: "asset_submitted",
         deposit_notice_sent: "deposit_notice_sent",
         design_direction_submit: "design_direction_submitted",
+        direction_submit: "direction_submitted",
       };
 
       const event = eventMap[actionType];

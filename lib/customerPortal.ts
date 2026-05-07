@@ -12,6 +12,12 @@ import {
 } from "@/lib/designDirection";
 import { isProjectType, type ProjectType } from "@/lib/workflows/types";
 import { getWorkflowTemplate } from "@/lib/workflows/templates";
+import {
+  buildDefaultDirection,
+  hasDirection,
+  readDirection,
+} from "@/lib/directions/state";
+import type { GenericDirection } from "@/lib/directions/types";
 
 type AnyObj = Record<string, any>;
 type CustomerPortalMilestoneInput = {
@@ -332,7 +338,10 @@ async function signMessageAttachment(message: AnyObj) {
   return signed.data?.signedUrl || null;
 }
 
-async function getPortalProjectByToken(token: string) {
+// Exported for routes that need to know the project context before
+// dispatching (e.g. direction_submit needs the lane's directionType to
+// pick the validation schema).
+export async function getPortalProjectByToken(token: string) {
   if (!token) return null;
 
   // Primary: look up by access_token (the canonical portal token)
@@ -557,13 +566,41 @@ function buildWorkspaceMilestones(milestones: AnyObj[]) {
   }));
 }
 
+// Lane-aware label for "client design direction"-style waiting state.
+// Mirrors the title shown in the direction card for the lane.
+function clientDirectionLabel(projectType: string | null | undefined): string {
+  switch (projectType) {
+    case "web_app": return "Client product direction";
+    case "automation": return "Client workflow direction";
+    case "ecommerce": return "Client store direction";
+    case "rescue": return "Client rescue diagnosis";
+    case "website":
+    default: return "Client design direction";
+  }
+}
+
+function studioDirectionReviewLabel(projectType: string | null | undefined): string {
+  switch (projectType) {
+    case "web_app": return "CrecyStudio product direction review";
+    case "automation": return "CrecyStudio workflow direction review";
+    case "ecommerce": return "CrecyStudio store direction review";
+    case "rescue": return "CrecyStudio rescue diagnosis review";
+    case "website":
+    default: return "CrecyStudio design direction review";
+  }
+}
+
 function deriveWaitingOn(input: {
   depositStatus: string;
   assetsCount: number;
   previewUrl?: string | null;
   clientReviewStatus?: string | null;
   clientStatus?: string | null;
+  // Either-or depending on lane. designDirectionStatus comes from Phase 2A's
+  // record (website only). directionStatus comes from Phase 3.3's generic
+  // record (other lanes). At most one is non-null.
   designDirectionStatus?: WebsiteDesignDirectionStatus | null;
+  directionStatus?: string | null;
   projectType?: string | null;
 }) {
   if (input.depositStatus !== "paid") {
@@ -571,20 +608,21 @@ function deriveWaitingOn(input: {
     return "Client deposit step";
   }
 
-  // Design Direction gates the build for website projects. Skipped for
-  // non-website lanes until Phase 3 introduces lane-specific direction
-  // modules.
-  if (!input.projectType || input.projectType === "website") {
-    const ddStatus = input.designDirectionStatus;
-    if (ddStatus === "waiting_on_client" || ddStatus === "not_started") {
-      return "Client design direction";
-    }
-    if (ddStatus === "submitted" || ddStatus === "under_review") {
-      return "CrecyStudio design direction review";
-    }
-    if (ddStatus === "changes_requested") {
-      return "Client design clarification";
-    }
+  // Direction gates the build for every lane. Use the lane's record:
+  //   website → designDirectionStatus (Phase 2A)
+  //   other lanes → directionStatus (Phase 3.3)
+  const status =
+    input.projectType === "website" || !input.projectType
+      ? input.designDirectionStatus
+      : input.directionStatus;
+  if (status === "waiting_on_client" || status === "not_started") {
+    return clientDirectionLabel(input.projectType);
+  }
+  if (status === "submitted" || status === "under_review") {
+    return studioDirectionReviewLabel(input.projectType);
+  }
+  if (status === "changes_requested") {
+    return clientDirectionLabel(input.projectType) + " (clarification)";
   }
 
   if (input.assetsCount === 0) return "Client assets / content";
@@ -771,16 +809,18 @@ function buildWorkspaceView(
         previewUrl: cleanString(portal.preview_url) || null,
         clientReviewStatus,
         clientStatus: cleanString(portal.client_status).toLowerCase() || null,
-        // Only gate on direction status if the portal has an explicit
-        // designDirection record. Legacy portals (no record) keep their
-        // pre-Phase-2 waiting-on behavior.
+        // Lane-aware: website uses designDirection, others use direction.
+        // Legacy portals with no record on either path skip direction
+        // gating entirely (null status falls through).
         designDirectionStatus: readDesignDirection(scopeSnapshot)?.status ?? null,
+        directionStatus: readDirection(scopeSnapshot)?.status ?? null,
         projectType: cleanString(portal.project_type) || cleanString(quote.project_type) || "website",
       }),
     },
     projectType:
       cleanString(portal.project_type) || cleanString(quote.project_type) || "website",
     designDirection: readDesignDirection(scopeSnapshot),
+    direction: readDirection(scopeSnapshot),
     messages,
   };
 }
@@ -820,13 +860,15 @@ export async function ensureCustomerPortalForQuoteId(quoteId: string) {
     : "website";
   const scopeSnapshot = {
     ...buildScopeSnapshotFromQuote(quote),
-    // Seed the design direction record only for website-lane portals so the
-    // form renders on first visit without an extra round-trip. Other lanes
-    // get their own direction modules in Phase 3 — seeding the website one
-    // here would cross-contaminate.
+    // Website lane: Phase 2A's rich design direction record at
+    // scope_snapshot.designDirection (form renders on first visit).
+    // Non-website lanes: Phase 3.3 generic direction record at
+    // scope_snapshot.direction, seeded from the workflow template's
+    // default payload. The two records are mutually exclusive — the
+    // resolver picks the one that exists.
     ...(projectType === "website"
       ? { designDirection: { ...DEFAULT_WEBSITE_DESIGN_DIRECTION } }
-      : {}),
+      : { direction: buildDefaultDirection(projectType) }),
   };
 
   const { data: created, error: createErr } = await supabaseAdmin
@@ -1488,6 +1530,106 @@ export async function transitionDesignDirectionByQuoteId(input: {
   });
 
   return next;
+}
+
+// Phase 3.3: generic direction submit for non-website lanes (web_app,
+// automation, ecommerce, rescue). Mirrors submitDesignDirectionByPortalToken
+// but operates on scope_snapshot.direction with a generic payload.
+export async function submitDirectionByPortalToken(input: {
+  token: string;
+  payload: Record<string, unknown>;
+  approvedDirectionTerms: boolean;
+  actor?: { userId?: string | null; email?: string | null; ip?: string | null };
+}) {
+  if (!input.approvedDirectionTerms) {
+    throw new Error("Direction terms must be approved before submitting.");
+  }
+
+  const portal = await getPortalProjectByToken(input.token);
+  if (!portal) throw new Error("Portal not found");
+
+  // Lane gate. Resolve project type from portal column (source of truth
+  // post-Phase-3.2) with quote fallback. Refuse website lane — that's
+  // handled by Phase 2A's submitDesignDirectionByPortalToken.
+  const portalProjectType =
+    typeof portal.project_type === "string" && portal.project_type
+      ? portal.project_type
+      : null;
+  let quoteProjectType: string | null = null;
+  if (portal.quote_id) {
+    const { data: q } = await supabaseAdmin
+      .from("quotes")
+      .select("project_type")
+      .eq("id", portal.quote_id)
+      .maybeSingle();
+    quoteProjectType =
+      q && typeof q.project_type === "string" && q.project_type ? q.project_type : null;
+  }
+  const resolvedType = portalProjectType ?? quoteProjectType ?? "website";
+  if (resolvedType === "website") {
+    throw new Error(
+      "Use the design direction submit endpoint for website projects.",
+    );
+  }
+  if (!isProjectType(resolvedType)) {
+    throw new Error("Direction is not available for this project type.");
+  }
+
+  const existingScope = safeObj(portal.scope_snapshot);
+  if (!hasDirection(existingScope)) {
+    throw new Error(
+      "Direction is not enabled for this project. Contact CrecyStudio to opt in.",
+    );
+  }
+
+  const existing = readDirection(existingScope);
+  if (!existing) {
+    throw new Error("Direction record could not be read.");
+  }
+  if (existing.status === "locked") {
+    throw new Error("Direction is locked. Reach out to CrecyStudio to request a change.");
+  }
+
+  const merged: GenericDirection = {
+    ...existing,
+    payload: { ...existing.payload, ...input.payload },
+    status: "submitted",
+    submittedAt: new Date().toISOString(),
+    // Resubmissions after changes_requested clear the timestamp so the
+    // workflow shows the resubmit as the latest state. approvedAt /
+    // lockedAt stay null since we never reached those states.
+    changesRequestedAt:
+      existing.status === "changes_requested" ? null : existing.changesRequestedAt,
+  };
+
+  const nextScope = { ...existingScope, direction: merged };
+
+  const { error } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({
+      scope_snapshot: nextScope,
+      client_updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", portal.id);
+  if (error) throw error;
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "client",
+    eventType: `${merged.type}_submitted`,
+    summary: `Client submitted ${merged.type.replace(/_/g, " ")}.`,
+    payload: {
+      directionType: merged.type,
+      // Phase-gate audit trail.
+      actorUserId: input.actor?.userId ?? null,
+      actorEmail: input.actor?.email ?? null,
+      actorIp: input.actor?.ip ?? null,
+    },
+    clientVisible: true,
+  });
+
+  return merged;
 }
 
 export async function submitRevisionByPortalToken(input: {

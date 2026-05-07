@@ -3,11 +3,15 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import DesignDirectionCard from "@/components/portal/DesignDirectionCard";
+import DirectionModuleResolver from "@/components/portal/directions/DirectionModuleResolver";
 import type {
   WebsiteDesignDirection,
   WebsiteDesignDirectionInput,
 } from "@/lib/designDirection";
+import type {
+  GenericDirection,
+  GenericDirectionInput,
+} from "@/lib/directions/types";
 
 /* ═══════════════════════════════════
    TYPES
@@ -226,6 +230,9 @@ type PortalBundle = {
   // should not be applied retroactively. undefined for forward-compat with
   // older API responses.
   designDirection?: WebsiteDesignDirection | null;
+  // Phase 3.3 generic direction record for non-website lanes. Mutually
+  // exclusive with designDirection — at most one is non-null.
+  direction?: GenericDirection | null;
 };
 
 type Phase =
@@ -968,20 +975,33 @@ export default function PortalClient({
           </div>
         </div>
 
-      {/* ── Design Direction ──
-          Only renders when the portal has an explicit designDirection record.
-          Legacy portals (pre-Phase 2) have no record and intentionally
-          don't see this card so their existing workflow isn't disrupted. */}
-      {(!bundle.projectType || bundle.projectType === "website") &&
-      bundle.quote.deposit.status === "paid" &&
-      bundle.designDirection ? (
-        <DesignDirectionCard
-          value={bundle.designDirection}
-          onSubmit={async (input: WebsiteDesignDirectionInput) => {
+      {/* ── Direction module ──
+          Resolver picks the right card per lane: website uses Phase 2A's
+          rich DesignDirectionCard; web_app/automation/ecommerce/rescue
+          use Phase 3.3's generic DirectionCard. Legacy portals (no
+          record on either path) intentionally don't see anything so
+          their existing workflow isn't disrupted. */}
+      {bundle.quote.deposit.status === "paid" && (bundle.designDirection || bundle.direction) ? (
+        <DirectionModuleResolver
+          designDirection={bundle.designDirection}
+          direction={bundle.direction}
+          onSubmitDesignDirection={async (input: WebsiteDesignDirectionInput) => {
             const res = await fetch(`/api/portal/${token}`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ type: "design_direction_submit", designDirection: input }),
+            });
+            const json = await res.json();
+            if (!res.ok || !json?.ok) {
+              throw new Error(json?.error || tErrors("updateFailed"));
+            }
+            setBundle(json.data as PortalBundle);
+          }}
+          onSubmitDirection={async (input: GenericDirectionInput) => {
+            const res = await fetch(`/api/portal/${token}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ type: "direction_submit", direction: input }),
             });
             const json = await res.json();
             if (!res.ok || !json?.ok) {
