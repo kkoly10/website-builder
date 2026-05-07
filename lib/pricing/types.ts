@@ -1,4 +1,14 @@
-export type PricingLane = "website" | "ops" | "ecommerce";
+// Phase 4: pricing lanes now mirror the workflow ProjectType enum, with
+// "ops" retained as a deprecated alias for "automation" to avoid a
+// big-bang rename across ~14 callers. Both keys produce the same prices.
+// Future PR can swap callers to "automation" and remove "ops".
+export type PricingLane =
+  | "website"
+  | "ops"
+  | "automation"
+  | "ecommerce"
+  | "web_app"
+  | "rescue";
 
 export type PricingPosition = "low" | "middle" | "high" | "custom";
 
@@ -14,6 +24,10 @@ export type OpsTierKey =
   | "ongoing_systems_partner"
   | "custom_ops_scope";
 
+// Same tier set as OpsTierKey — automation is the canonical name; ops
+// is a deprecated alias that still works for existing callers.
+export type AutomationTierKey = OpsTierKey;
+
 export type EcommerceTierKey =
   | "store_launch_build"
   | "growth_store_build"
@@ -22,6 +36,21 @@ export type EcommerceTierKey =
   | "ecommerce_ops_support"
   | "managed_commerce_partner"
   | "custom_ecommerce_scope";
+
+// Phase 4 — new web_app lane. Prices reflect the audit's recommended
+// raises (custom apps and client portals were 30–50% under market).
+export type WebAppTierKey =
+  | "small_internal_tool"
+  | "portal_dashboard_mvp"
+  | "saas_mvp"
+  | "full_client_portal"
+  | "custom_web_app_scope";
+
+// Phase 4 — new rescue lane.
+export type RescueTierKey =
+  | "basic_rescue"
+  | "full_rescue_sprint"
+  | "custom_rescue_scope";
 
 export type PricingReasonImpact = "supporting" | "upward" | "custom" | "fit";
 
