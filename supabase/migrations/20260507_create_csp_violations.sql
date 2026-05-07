@@ -31,3 +31,9 @@ create index if not exists idx_csp_violations_received_at
 
 create index if not exists idx_csp_violations_directive
   on csp_violations(violated_directive, received_at desc);
+
+-- RLS: lock down by default. The table is server-only; the /api/csp-report
+-- endpoint writes via the service role (bypasses RLS). No anon/authenticated
+-- client should ever read or write this table directly. Without policies,
+-- non-service-role access is denied.
+alter table csp_violations enable row level security;
