@@ -170,11 +170,26 @@
     },
     "startHere": {
       "label": "¿No sabes por dónde empezar?",
-      "website":   { "situation": "Necesito un sitio web profesional para mi negocio",               "service": "Sitios web — desde $1,800" },
-      "app":       { "situation": "Tengo una idea de software o herramienta interna que construir",  "service": "Apps web personalizadas — desde $18K" },
-      "portal":    { "situation": "Gestiono proyectos de clientes y necesito un sistema real",       "service": "Portales de cliente — desde $12K" },
-      "rescue":    { "situation": "Mi sitio está roto, lento o pierde clientes potenciales",         "service": "Rescate web — desde $1K" },
-      "ecommerce": { "situation": "Necesito una tienda online o ayuda para gestionar la que tengo",  "service": "E-commerce — desde $1,800" }
+      "website": {
+        "situation": "Necesito un sitio web profesional para mi negocio",
+        "service": "Sitios web — desde $1,800"
+      },
+      "app": {
+        "situation": "Tengo una idea de software o herramienta interna que construir",
+        "service": "Apps web personalizadas — desde $18K"
+      },
+      "portal": {
+        "situation": "Gestiono proyectos de clientes y necesito un sistema real",
+        "service": "Portales de cliente — desde $12K"
+      },
+      "rescue": {
+        "situation": "Mi sitio está roto, lento o pierde clientes potenciales",
+        "service": "Rescate web — desde $1K"
+      },
+      "ecommerce": {
+        "situation": "Necesito una tienda online o ayuda para gestionar la que tengo",
+        "service": "E-commerce — desde $1,800"
+      }
     },
     "proof": {
       "deliveryValue": "2",
@@ -701,10 +716,18 @@
     "backups3": "Las copias de seguridad se almacenan en el mismo entorno AWS cifrado que los datos en vivo.",
     "subprocessorsHeading": "Subprocesadores",
     "subprocessorsNote": "Los datos solo se comparten con los proveedores necesarios para operar nuestra plataforma. Cada uno está contractualmente obligado a proteger tus datos.",
-    "sp1Name": "Vercel", "sp1Role": "Alojamiento y entrega en borde", "sp1Region": "Global",
-    "sp2Name": "Supabase", "sp2Role": "Base de datos, auth y almacenamiento", "sp2Region": "AWS US-Este",
-    "sp3Name": "Stripe", "sp3Role": "Procesamiento de pagos", "sp3Region": "Estados Unidos",
-    "sp4Name": "Resend", "sp4Role": "Correo electrónico transaccional", "sp4Region": "Estados Unidos",
+    "sp1Name": "Vercel",
+    "sp1Role": "Alojamiento y entrega en borde",
+    "sp1Region": "Global",
+    "sp2Name": "Supabase",
+    "sp2Role": "Base de datos, auth y almacenamiento",
+    "sp2Region": "AWS US-Este",
+    "sp3Name": "Stripe",
+    "sp3Role": "Procesamiento de pagos",
+    "sp3Region": "Estados Unidos",
+    "sp4Name": "Resend",
+    "sp4Role": "Correo electrónico transaccional",
+    "sp4Region": "Estados Unidos",
     "wontDoHeading": "Lo que no hacemos",
     "wontDo1": "No vendemos, compartimos ni licenciamos datos de clientes a terceros.",
     "wontDo2": "No subcontratamos trabajo de desarrollo. Komlan es la única persona con acceso a los entornos de clientes y código fuente.",
@@ -2040,6 +2063,48 @@
       "updateFailed": "Error al actualizar el espacio.",
       "uploadFailed": "Error al subir.",
       "messageFailed": "Error al enviar el mensaje."
+    },
+    "directionModule": {
+      "title": {
+        "design": "Design Direction",
+        "product": "Product Direction",
+        "workflow": "Workflow Direction",
+        "store": "Store Direction",
+        "rescue": "Rescue Diagnosis"
+      },
+      "statusPill": {
+        "notStarted": "Not started",
+        "waitingOnClient": "Action needed",
+        "submitted": "Submitted",
+        "underReview": "Under review",
+        "changesRequested": "Clarification needed",
+        "approved": "Approved",
+        "locked": "Locked for build"
+      },
+      "lockedNotice": "Direction is locked. Feedback should focus on functionality, content accuracy, and reasonable polish. Major changes to the approved direction may affect the timeline or require a change order.",
+      "lockedNoticeDesignDirection": "Design direction is locked. Feedback should focus on content accuracy, clarity, missing information, bugs, and reasonable polish. Major visual changes may affect the timeline or require a change order.",
+      "noteFromCrecyStudio": "Note from CrecyStudio",
+      "submitError": "Failed to submit direction.",
+      "submitDesignDirectionError": "Failed to submit design direction.",
+      "submitButton": "Submit direction",
+      "submitButtonSaving": "Submitting..."
+    },
+    "requiredActions": {
+      "title": "Action needed from you",
+      "intro": "Each step below moves the project toward launch. Pending items show what we're waiting on from you right now.",
+      "pendingCount": "{count} pending",
+      "useFormBelow": "(use the form below)",
+      "markAsDone": "Mark as done",
+      "markAsDoneSaving": "Saving...",
+      "completedOn": "Completed {date}",
+      "actionError": "Failed to mark action complete.",
+      "statusPill": {
+        "notStarted": "Not started yet",
+        "waitingOnClient": "Action needed",
+        "submitted": "Submitted",
+        "complete": "Done",
+        "blocked": "Blocked"
+      }
     }
   },
   "portal": {
@@ -2911,11 +2976,26 @@
         "unknown": "No estoy seguro"
       },
       "previousVendor": {
-        "active": { "label": "Sí — seguimos trabajando juntos", "desc": "Todavía tienen acceso activo y estamos colaborando con ellos" },
-        "ended-revoked": { "label": "Terminado — acceso revocado", "desc": "La relación terminó y he eliminado su acceso" },
-        "ended-may-still-have": { "label": "Terminado — acceso incierto", "desc": "La relación terminó pero puede que aún tengan acceso" },
-        "self-built": { "label": "Construido internamente / sin proveedor anterior", "desc": "Lo construimos en casa o no hay proveedor anterior" },
-        "not-sure": { "label": "No estoy seguro", "desc": "No sé con certeza qué acceso tienen" }
+        "active": {
+          "label": "Sí — seguimos trabajando juntos",
+          "desc": "Todavía tienen acceso activo y estamos colaborando con ellos"
+        },
+        "ended-revoked": {
+          "label": "Terminado — acceso revocado",
+          "desc": "La relación terminó y he eliminado su acceso"
+        },
+        "ended-may-still-have": {
+          "label": "Terminado — acceso incierto",
+          "desc": "La relación terminó pero puede que aún tengan acceso"
+        },
+        "self-built": {
+          "label": "Construido internamente / sin proveedor anterior",
+          "desc": "Lo construimos en casa o no hay proveedor anterior"
+        },
+        "not-sure": {
+          "label": "No estoy seguro",
+          "desc": "No sé con certeza qué acceso tienen"
+        }
       },
       "assetAccess": {
         "domain-registrar": "Nombre de dominio (login del registrador — GoDaddy, Namecheap, etc.)",

@@ -28,6 +28,25 @@ export default async function OpsPortalWorkspacePage({
   const resolved = await Promise.resolve(params);
   const opsIntakeId = resolved.opsIntakeId;
 
+  // Phase 3.8 follow-up: if the silo migration created a unified portal
+  // for this silo intake, redirect to the new tokenized URL. Makes
+  // /portal/[token] the canonical home; this silo page only renders for
+  // un-migrated rows (none today, but kept as a safety net).
+  // Filtered server-side via the project_type narrowing then matched in
+  // JS — the migrated set is ~16 rows so the overhead is negligible and
+  // we avoid supabase-js JSON-path filter syntax fragility.
+  const { data: candidates } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .select("access_token, scope_snapshot")
+    .eq("project_type", "automation");
+  const match = (candidates ?? []).find((p) => {
+    const m = (p as any)?.scope_snapshot?.silo_migration;
+    return m?.source === "ops_intake" && m?.original_id === opsIntakeId;
+  });
+  if (match?.access_token) {
+    redirect(`/portal/${match.access_token}`);
+  }
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },

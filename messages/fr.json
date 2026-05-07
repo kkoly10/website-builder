@@ -170,11 +170,26 @@
     },
     "startHere": {
       "label": "Pas sûr par où commencer ?",
-      "website":   { "situation": "J'ai besoin d'un site web professionnel pour mon entreprise",         "service": "Sites web — à partir de 1 800 $" },
-      "app":       { "situation": "J'ai une idée de logiciel ou un outil interne à créer",              "service": "Applications web sur mesure — à partir de 18 000 $" },
-      "portal":    { "situation": "Je gère des projets clients et j'ai besoin d'un vrai système client", "service": "Portails clients — à partir de 12 000 $" },
-      "rescue":    { "situation": "Mon site est cassé, lent ou perd des prospects",                      "service": "Rescue de site — à partir de 1 000 $" },
-      "ecommerce": { "situation": "J'ai besoin d'une boutique en ligne ou d'aide pour la gérer",         "service": "E-commerce — à partir de 1 800 $" }
+      "website": {
+        "situation": "J'ai besoin d'un site web professionnel pour mon entreprise",
+        "service": "Sites web — à partir de 1 800 $"
+      },
+      "app": {
+        "situation": "J'ai une idée de logiciel ou un outil interne à créer",
+        "service": "Applications web sur mesure — à partir de 18 000 $"
+      },
+      "portal": {
+        "situation": "Je gère des projets clients et j'ai besoin d'un vrai système client",
+        "service": "Portails clients — à partir de 12 000 $"
+      },
+      "rescue": {
+        "situation": "Mon site est cassé, lent ou perd des prospects",
+        "service": "Rescue de site — à partir de 1 000 $"
+      },
+      "ecommerce": {
+        "situation": "J'ai besoin d'une boutique en ligne ou d'aide pour la gérer",
+        "service": "E-commerce — à partir de 1 800 $"
+      }
     },
     "proof": {
       "deliveryValue": "2",
@@ -701,10 +716,18 @@
     "backups3": "Les sauvegardes sont stockées dans le même environnement AWS chiffré que les données en direct.",
     "subprocessorsHeading": "Sous-traitants",
     "subprocessorsNote": "Les données sont partagées uniquement avec les fournisseurs nécessaires au fonctionnement de notre plateforme. Chacun est contractuellement tenu de protéger vos données.",
-    "sp1Name": "Vercel", "sp1Role": "Hébergement et diffusion en périphérie", "sp1Region": "Mondial",
-    "sp2Name": "Supabase", "sp2Role": "Base de données, auth et stockage", "sp2Region": "AWS US-Est",
-    "sp3Name": "Stripe", "sp3Role": "Traitement des paiements", "sp3Region": "États-Unis",
-    "sp4Name": "Resend", "sp4Role": "E-mail transactionnel", "sp4Region": "États-Unis",
+    "sp1Name": "Vercel",
+    "sp1Role": "Hébergement et diffusion en périphérie",
+    "sp1Region": "Mondial",
+    "sp2Name": "Supabase",
+    "sp2Role": "Base de données, auth et stockage",
+    "sp2Region": "AWS US-Est",
+    "sp3Name": "Stripe",
+    "sp3Role": "Traitement des paiements",
+    "sp3Region": "États-Unis",
+    "sp4Name": "Resend",
+    "sp4Role": "E-mail transactionnel",
+    "sp4Region": "États-Unis",
     "wontDoHeading": "Ce que nous ne faisons pas",
     "wontDo1": "Nous ne vendons, partageons ni n'octroyons de licence sur les données clients à des tiers.",
     "wontDo2": "Nous ne sous-traitons pas le travail de développement. Komlan est la seule personne ayant accès aux environnements clients et au code source.",
@@ -2040,6 +2063,48 @@
       "updateFailed": "Échec de la mise à jour de l'espace.",
       "uploadFailed": "Échec du téléversement.",
       "messageFailed": "Échec de l'envoi du message."
+    },
+    "directionModule": {
+      "title": {
+        "design": "Design Direction",
+        "product": "Product Direction",
+        "workflow": "Workflow Direction",
+        "store": "Store Direction",
+        "rescue": "Rescue Diagnosis"
+      },
+      "statusPill": {
+        "notStarted": "Not started",
+        "waitingOnClient": "Action needed",
+        "submitted": "Submitted",
+        "underReview": "Under review",
+        "changesRequested": "Clarification needed",
+        "approved": "Approved",
+        "locked": "Locked for build"
+      },
+      "lockedNotice": "Direction is locked. Feedback should focus on functionality, content accuracy, and reasonable polish. Major changes to the approved direction may affect the timeline or require a change order.",
+      "lockedNoticeDesignDirection": "Design direction is locked. Feedback should focus on content accuracy, clarity, missing information, bugs, and reasonable polish. Major visual changes may affect the timeline or require a change order.",
+      "noteFromCrecyStudio": "Note from CrecyStudio",
+      "submitError": "Failed to submit direction.",
+      "submitDesignDirectionError": "Failed to submit design direction.",
+      "submitButton": "Submit direction",
+      "submitButtonSaving": "Submitting..."
+    },
+    "requiredActions": {
+      "title": "Action needed from you",
+      "intro": "Each step below moves the project toward launch. Pending items show what we're waiting on from you right now.",
+      "pendingCount": "{count} pending",
+      "useFormBelow": "(use the form below)",
+      "markAsDone": "Mark as done",
+      "markAsDoneSaving": "Saving...",
+      "completedOn": "Completed {date}",
+      "actionError": "Failed to mark action complete.",
+      "statusPill": {
+        "notStarted": "Not started yet",
+        "waitingOnClient": "Action needed",
+        "submitted": "Submitted",
+        "complete": "Done",
+        "blocked": "Blocked"
+      }
     }
   },
   "portal": {
@@ -2911,11 +2976,26 @@
         "unknown": "Je ne sais pas"
       },
       "previousVendor": {
-        "active": { "label": "Oui — toujours en collaboration", "desc": "Ils ont toujours accès et nous travaillons avec eux" },
-        "ended-revoked": { "label": "Terminé — accès révoqué", "desc": "La relation est terminée et j'ai supprimé leur accès" },
-        "ended-may-still-have": { "label": "Terminé — accès incertain", "desc": "La relation est terminée mais ils ont peut-être encore accès" },
-        "self-built": { "label": "Auto-construit / pas de prestataire", "desc": "Nous l'avons construit en interne ou il n'y a pas de prestataire" },
-        "not-sure": { "label": "Je ne suis pas sûr", "desc": "Je ne suis pas certain de leur niveau d'accès" }
+        "active": {
+          "label": "Oui — toujours en collaboration",
+          "desc": "Ils ont toujours accès et nous travaillons avec eux"
+        },
+        "ended-revoked": {
+          "label": "Terminé — accès révoqué",
+          "desc": "La relation est terminée et j'ai supprimé leur accès"
+        },
+        "ended-may-still-have": {
+          "label": "Terminé — accès incertain",
+          "desc": "La relation est terminée mais ils ont peut-être encore accès"
+        },
+        "self-built": {
+          "label": "Auto-construit / pas de prestataire",
+          "desc": "Nous l'avons construit en interne ou il n'y a pas de prestataire"
+        },
+        "not-sure": {
+          "label": "Je ne suis pas sûr",
+          "desc": "Je ne suis pas certain de leur niveau d'accès"
+        }
       },
       "assetAccess": {
         "domain-registrar": "Nom de domaine (login registrar — GoDaddy, Namecheap, etc.)",

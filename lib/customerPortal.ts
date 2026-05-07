@@ -11,7 +11,22 @@ import {
   readDesignDirection,
 } from "@/lib/designDirection";
 import { isProjectType, type ProjectType } from "@/lib/workflows/types";
-import { getWorkflowTemplate } from "@/lib/workflows/templates";
+import {
+  getWorkflowTemplate,
+  getDirectionApprovedMilestoneTitle,
+} from "@/lib/workflows/templates";
+import {
+  buildDefaultDirection,
+  hasDirection,
+  readDirection,
+} from "@/lib/directions/state";
+import type { GenericDirection } from "@/lib/directions/types";
+import {
+  listRequiredActionsForPortal,
+  seedRequiredActionsForPortal,
+  updateRequiredActionStatusByPortalId,
+  type RequiredAction,
+} from "@/lib/requiredActions";
 
 type AnyObj = Record<string, any>;
 type CustomerPortalMilestoneInput = {
@@ -332,7 +347,10 @@ async function signMessageAttachment(message: AnyObj) {
   return signed.data?.signedUrl || null;
 }
 
-async function getPortalProjectByToken(token: string) {
+// Exported for routes that need to know the project context before
+// dispatching (e.g. direction_submit needs the lane's directionType to
+// pick the validation schema).
+export async function getPortalProjectByToken(token: string) {
   if (!token) return null;
 
   // Primary: look up by access_token (the canonical portal token)
@@ -447,6 +465,11 @@ async function loadPortalBundle(portal: AnyObj | null) {
     }))
   );
 
+  // Phase 3.10: required actions are stored in their own table now.
+  // Fetched in parallel with the rest. Helper logs and returns []
+  // on failure so missing-table or RLS issues don't break the bundle.
+  const requiredActions = await listRequiredActionsForPortal(portal.id);
+
   return {
     portal,
     quote,
@@ -457,6 +480,7 @@ async function loadPortalBundle(portal: AnyObj | null) {
     assets,
     revisions: revisionsRes.data ?? [],
     messages,
+    requiredActions,
   };
 }
 
@@ -557,13 +581,41 @@ function buildWorkspaceMilestones(milestones: AnyObj[]) {
   }));
 }
 
+// Lane-aware label for "client design direction"-style waiting state.
+// Mirrors the title shown in the direction card for the lane.
+function clientDirectionLabel(projectType: string | null | undefined): string {
+  switch (projectType) {
+    case "web_app": return "Client product direction";
+    case "automation": return "Client workflow direction";
+    case "ecommerce": return "Client store direction";
+    case "rescue": return "Client rescue diagnosis";
+    case "website":
+    default: return "Client design direction";
+  }
+}
+
+function studioDirectionReviewLabel(projectType: string | null | undefined): string {
+  switch (projectType) {
+    case "web_app": return "CrecyStudio product direction review";
+    case "automation": return "CrecyStudio workflow direction review";
+    case "ecommerce": return "CrecyStudio store direction review";
+    case "rescue": return "CrecyStudio rescue diagnosis review";
+    case "website":
+    default: return "CrecyStudio design direction review";
+  }
+}
+
 function deriveWaitingOn(input: {
   depositStatus: string;
   assetsCount: number;
   previewUrl?: string | null;
   clientReviewStatus?: string | null;
   clientStatus?: string | null;
+  // Either-or depending on lane. designDirectionStatus comes from Phase 2A's
+  // record (website only). directionStatus comes from Phase 3.3's generic
+  // record (other lanes). At most one is non-null.
   designDirectionStatus?: WebsiteDesignDirectionStatus | null;
+  directionStatus?: string | null;
   projectType?: string | null;
 }) {
   if (input.depositStatus !== "paid") {
@@ -571,21 +623,32 @@ function deriveWaitingOn(input: {
     return "Client deposit step";
   }
 
-  // Design Direction gates the build for website projects. Skipped for
-  // non-website lanes until Phase 3 introduces lane-specific direction
-  // modules.
-  if (!input.projectType || input.projectType === "website") {
-    const ddStatus = input.designDirectionStatus;
-    if (ddStatus === "waiting_on_client" || ddStatus === "not_started") {
-      return "Client design direction";
+  // Direction gates the build for every lane. Use the lane's record:
+  //   website → designDirectionStatus (Phase 2A)
+  //   other lanes → directionStatus (Phase 3.3)
+  // Legacy portals (no record on either path) skip this gate entirely
+  // — their pre-Phase-2 workspace flow continues unchanged. Clients
+  // see normal asset/preview/revision waiting-on labels rather than
+  // a confusing "Direction not enabled" message.
+  const isWebsite = input.projectType === "website" || !input.projectType;
+  const status = isWebsite ? input.designDirectionStatus : input.directionStatus;
+  const hasDirectionRecord = status !== null && status !== undefined;
+
+  if (hasDirectionRecord) {
+    if (status === "waiting_on_client" || status === "not_started") {
+      return clientDirectionLabel(input.projectType);
     }
-    if (ddStatus === "submitted" || ddStatus === "under_review") {
-      return "CrecyStudio design direction review";
+    if (status === "submitted" || status === "under_review") {
+      return studioDirectionReviewLabel(input.projectType);
     }
-    if (ddStatus === "changes_requested") {
-      return "Client design clarification";
+    if (status === "changes_requested") {
+      return clientDirectionLabel(input.projectType) + " (clarification)";
     }
+    // status is approved or locked — fall through to asset/preview gating.
+    // Approved means client did their part; locked means build is in
+    // progress. Either way, proceed to the next non-direction signal.
   }
+  // No direction record: legacy portal. Skip direction gating entirely.
 
   if (input.assetsCount === 0) return "Client assets / content";
   if (input.previewUrl && input.clientReviewStatus === "Pending review") {
@@ -771,16 +834,19 @@ function buildWorkspaceView(
         previewUrl: cleanString(portal.preview_url) || null,
         clientReviewStatus,
         clientStatus: cleanString(portal.client_status).toLowerCase() || null,
-        // Only gate on direction status if the portal has an explicit
-        // designDirection record. Legacy portals (no record) keep their
-        // pre-Phase-2 waiting-on behavior.
+        // Lane-aware: website uses designDirection, others use direction.
+        // Legacy portals with no record on either path skip direction
+        // gating entirely (null status falls through).
         designDirectionStatus: readDesignDirection(scopeSnapshot)?.status ?? null,
+        directionStatus: readDirection(scopeSnapshot)?.status ?? null,
         projectType: cleanString(portal.project_type) || cleanString(quote.project_type) || "website",
       }),
     },
     projectType:
       cleanString(portal.project_type) || cleanString(quote.project_type) || "website",
     designDirection: readDesignDirection(scopeSnapshot),
+    direction: readDirection(scopeSnapshot),
+    requiredActions: safeArray<RequiredAction>(bundle.requiredActions),
     messages,
   };
 }
@@ -820,13 +886,15 @@ export async function ensureCustomerPortalForQuoteId(quoteId: string) {
     : "website";
   const scopeSnapshot = {
     ...buildScopeSnapshotFromQuote(quote),
-    // Seed the design direction record only for website-lane portals so the
-    // form renders on first visit without an extra round-trip. Other lanes
-    // get their own direction modules in Phase 3 — seeding the website one
-    // here would cross-contaminate.
+    // Website lane: Phase 2A's rich design direction record at
+    // scope_snapshot.designDirection (form renders on first visit).
+    // Non-website lanes: Phase 3.3 generic direction record at
+    // scope_snapshot.direction, seeded from the workflow template's
+    // default payload. The two records are mutually exclusive — the
+    // resolver picks the one that exists.
     ...(projectType === "website"
       ? { designDirection: { ...DEFAULT_WEBSITE_DESIGN_DIRECTION } }
-      : {}),
+      : { direction: buildDefaultDirection(projectType) }),
   };
 
   const { data: created, error: createErr } = await supabaseAdmin
@@ -870,6 +938,14 @@ export async function ensureCustomerPortalForQuoteId(quoteId: string) {
   if (milestoneErr) {
     console.error("Milestone seed error:", milestoneErr);
   }
+
+  // Phase 3.10: seed required actions from the workflow template. The
+  // helper handles missing-table fallback (logs and continues) so this
+  // doesn't block portal creation if the migration hasn't run yet.
+  await seedRequiredActionsForPortal({
+    portalProjectId: created.id,
+    projectType,
+  });
 
   return created;
 }
@@ -1314,6 +1390,15 @@ export async function submitDesignDirectionByPortalToken(input: {
     clientVisible: true,
   });
 
+  // Phase 3.9 sync: client submitting the form completes their part of
+  // the corresponding required action. If admin requests changes later,
+  // the transition helper re-opens the action.
+  await updateRequiredActionStatusByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actionKey: "complete_design_direction",
+    status: "complete",
+  });
+
   return merged;
 }
 
@@ -1375,8 +1460,30 @@ export async function transitionDesignDirectionByQuoteId(input: {
       if (existing.status === "locked") {
         throw new Error("Direction is locked; unlock before requesting changes.");
       }
+      // Precondition: only request changes against something the client
+      // has actually submitted. Re-opening from waiting_on_client /
+      // not_started would set a "changes requested" state on an empty
+      // payload, which is meaningless — the client never submitted
+      // anything to revise.
+      if (
+        existing.status !== "submitted" &&
+        existing.status !== "under_review" &&
+        existing.status !== "approved" &&
+        existing.status !== "changes_requested"
+      ) {
+        throw new Error(
+          "Direction must be submitted before changes can be requested.",
+        );
+      }
       next.status = "changes_requested";
       next.changesRequestedAt = now;
+      // If the direction was previously approved, clear approvedAt so
+      // the audit trail doesn't claim "approved at X" on a record whose
+      // current status is changes_requested. The original approval is
+      // still recoverable from project_activity events.
+      if (existing.status === "approved") {
+        next.approvedAt = null;
+      }
       break;
     case "approve":
       if (existing.status === "locked") {
@@ -1389,11 +1496,29 @@ export async function transitionDesignDirectionByQuoteId(input: {
       next.approvedAt = now;
       break;
     case "lock":
-      // Lock is idempotent — if already locked we still attempt the
-      // milestone update below so a retry can recover from a previous
-      // partial write where status flipped but the milestone update
-      // errored. The activity event is suppressed when there's no
-      // status change.
+      // Lock requires the client to have at least submitted the form so
+      // the studio is locking on something the client filled in (or
+      // already approved). Locking from "waiting_on_client" /
+      // "not_started" / "changes_requested" would be locking against
+      // empty payload, leaving the required action stuck open while the
+      // direction shows "locked" — a state-machine inconsistency.
+      // "locked" is allowed here as a no-op so retries (e.g. milestone
+      // recovery) still work; the if-block below skips the actual
+      // status mutation when already locked.
+      if (
+        existing.status !== "submitted" &&
+        existing.status !== "under_review" &&
+        existing.status !== "approved" &&
+        existing.status !== "locked"
+      ) {
+        throw new Error(
+          "Direction must be submitted (or approved) before it can be locked.",
+        );
+      }
+      // Idempotent — if already locked we still attempt the milestone
+      // update below so a retry can recover from a previous partial
+      // write where status flipped but the milestone update errored.
+      // The activity event is suppressed when there's no status change.
       if (existing.status !== "locked") {
         next.status = "locked";
         next.lockedAt = now;
@@ -1430,11 +1555,23 @@ export async function transitionDesignDirectionByQuoteId(input: {
   // scope update and the milestone update would leave the journey map out
   // of sync with the direction status, with no signal to the admin.
   if (input.action === "lock") {
+    // Look up the website lane's "direction approved" milestone title
+    // from the workflow template rather than hardcoding "Design direction
+    // approved". Mirrors the same pattern used for non-website lanes in
+    // transitionDirectionByQuoteId — keeps the milestone title in one
+    // place (the template) so a future label change doesn't silently
+    // break this auto-complete.
+    const milestoneTitle = getDirectionApprovedMilestoneTitle("website");
+    if (!milestoneTitle) {
+      throw new Error(
+        "Workflow template is missing the website direction-approved milestone.",
+      );
+    }
     const { error: msErr } = await supabaseAdmin
       .from("customer_portal_milestones")
       .update({ status: "done", completed_at: now, updated_at: now })
       .eq("portal_project_id", portal.id)
-      .ilike("title", "Design direction approved")
+      .ilike("title", milestoneTitle)
       .neq("status", "done");
     if (msErr) {
       throw new Error(
@@ -1487,7 +1624,377 @@ export async function transitionDesignDirectionByQuoteId(input: {
     clientVisible: true,
   });
 
+  // Phase 3.9 sync: keep the design-direction required action in step
+  // with the admin transition.
+  // - request_changes re-opens the action ("action needed" again).
+  // - approve / lock force the action to complete defensively. Normally
+  //   the client's own submit already marked it complete, but if admin
+  //   reaches approve/lock through any path where the action wasn't
+  //   already complete (e.g. admin entered direction data on the
+  //   client's behalf via direct DB edit), this keeps the journey map
+  //   and required-actions card consistent with the direction state.
+  if (input.action === "request_changes") {
+    await updateRequiredActionStatusByPortalId({
+      portalProjectId: cleanString(portal.id),
+      actionKey: "complete_design_direction",
+      status: "waiting_on_client",
+      clearCompletedAt: true,
+    });
+  } else if (input.action === "approve" || input.action === "lock") {
+    await updateRequiredActionStatusByPortalId({
+      portalProjectId: cleanString(portal.id),
+      actionKey: "complete_design_direction",
+      status: "complete",
+    });
+  }
+
   return next;
+}
+
+// Phase 3.5: generic admin transition for non-website directions. Mirrors
+// transitionDesignDirectionByQuoteId but operates on scope_snapshot.direction
+// and uses the lane's "direction approved" milestone title (looked up from
+// the workflow template) rather than hardcoding "Design direction approved".
+export type DirectionAdminAction = DesignDirectionAdminAction;
+
+export async function transitionDirectionByQuoteId(input: {
+  quoteId: string;
+  action: DirectionAdminAction;
+  publicNote?: string | null;
+  internalNote?: string | null;
+  actor: {
+    userId?: string | null;
+    email?: string | null;
+    ip?: string | null;
+    userAgent?: string | null;
+  };
+}) {
+  const { data: portal, error: portalErr } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .select("*")
+    .eq("quote_id", input.quoteId)
+    .maybeSingle();
+  if (portalErr) throw portalErr;
+  if (!portal) throw new Error("Portal not found");
+
+  // Resolve project type from quote first, then portal column. Legacy
+  // portal rows may carry the DB default of "website" while the actual
+  // lane lives on the quote — prefer the quote so non-website transitions
+  // aren't wrongly rejected.
+  const portalProjectType =
+    typeof portal.project_type === "string" && portal.project_type
+      ? portal.project_type
+      : null;
+  let quoteProjectType: string | null = null;
+  if (portal.quote_id) {
+    const { data: q } = await supabaseAdmin
+      .from("quotes")
+      .select("project_type")
+      .eq("id", portal.quote_id)
+      .maybeSingle();
+    quoteProjectType =
+      q && typeof q.project_type === "string" && q.project_type ? q.project_type : null;
+  }
+  const resolvedType = quoteProjectType ?? portalProjectType ?? "website";
+  if (!isProjectType(resolvedType)) {
+    throw new Error("Direction transitions are not available for this project type.");
+  }
+  const projectType: ProjectType = resolvedType;
+  if (projectType === "website") {
+    throw new Error(
+      "Use transitionDesignDirectionByQuoteId for website projects.",
+    );
+  }
+
+  const existingScope = safeObj(portal.scope_snapshot);
+  if (!hasDirection(existingScope)) {
+    throw new Error(
+      "Direction is not enabled for this project. The portal predates Phase 3.3.",
+    );
+  }
+
+  const existing = readDirection(existingScope);
+  if (!existing) {
+    throw new Error("Direction record could not be read.");
+  }
+
+  const now = new Date().toISOString();
+  const cleanPublicNote = input.publicNote != null ? String(input.publicNote).trim() : null;
+  const cleanInternalNote = input.internalNote != null ? String(input.internalNote).trim() : null;
+
+  const next: GenericDirection = { ...existing };
+
+  switch (input.action) {
+    case "mark_under_review":
+      if (existing.status !== "submitted" && existing.status !== "changes_requested") {
+        throw new Error("Direction can only be marked under review after submission.");
+      }
+      next.status = "under_review";
+      next.reviewedAt = now;
+      break;
+    case "request_changes":
+      if (existing.status === "locked") {
+        throw new Error("Direction is locked; unlock before requesting changes.");
+      }
+      // Precondition: only request changes against something the client
+      // has actually submitted. Re-opening from waiting_on_client /
+      // not_started would set a "changes requested" state on an empty
+      // payload, which is meaningless — the client never submitted
+      // anything to revise.
+      if (
+        existing.status !== "submitted" &&
+        existing.status !== "under_review" &&
+        existing.status !== "approved" &&
+        existing.status !== "changes_requested"
+      ) {
+        throw new Error(
+          "Direction must be submitted before changes can be requested.",
+        );
+      }
+      next.status = "changes_requested";
+      next.changesRequestedAt = now;
+      // If the direction was previously approved, clear approvedAt so
+      // the audit trail doesn't claim "approved at X" on a record whose
+      // current status is changes_requested. The original approval is
+      // still recoverable from project_activity events.
+      if (existing.status === "approved") {
+        next.approvedAt = null;
+      }
+      break;
+    case "approve":
+      if (existing.status === "locked") {
+        throw new Error("Direction is already locked.");
+      }
+      if (existing.status !== "submitted" && existing.status !== "under_review") {
+        throw new Error("Direction must be submitted before it can be approved.");
+      }
+      next.status = "approved";
+      next.approvedAt = now;
+      break;
+    case "lock":
+      if (existing.status !== "locked") {
+        next.status = "locked";
+        next.lockedAt = now;
+        next.approvedAt = next.approvedAt ?? now;
+      }
+      break;
+  }
+
+  if (cleanPublicNote !== null) next.adminPublicNote = cleanPublicNote || null;
+  if (cleanInternalNote !== null) next.adminInternalNote = cleanInternalNote || null;
+
+  const statusChanged = next.status !== existing.status;
+  const notesChanged =
+    (cleanPublicNote !== null && cleanPublicNote !== (existing.adminPublicNote ?? "")) ||
+    (cleanInternalNote !== null && cleanInternalNote !== (existing.adminInternalNote ?? ""));
+
+  if (statusChanged || notesChanged) {
+    const nextScope = { ...existingScope, direction: next };
+    const { error: updErr } = await supabaseAdmin
+      .from("customer_portal_projects")
+      .update({ scope_snapshot: nextScope, updated_at: now })
+      .eq("id", portal.id);
+    if (updErr) throw updErr;
+  }
+
+  // Lock auto-completes the lane's "direction approved" milestone (looked
+  // up from the template, not hardcoded). Same idempotent error-surfacing
+  // pattern as Phase 2B's lock path.
+  if (input.action === "lock") {
+    const milestoneTitle = getDirectionApprovedMilestoneTitle(projectType);
+    if (milestoneTitle) {
+      const { error: msErr } = await supabaseAdmin
+        .from("customer_portal_milestones")
+        .update({ status: "done", completed_at: now, updated_at: now })
+        .eq("portal_project_id", portal.id)
+        .ilike("title", milestoneTitle)
+        .neq("status", "done");
+      if (msErr) {
+        throw new Error(
+          `Direction status saved but milestone auto-complete failed: ${msErr.message}. Retry to reconcile.`,
+        );
+      }
+    }
+  }
+
+  // Skip activity event on idempotent retries.
+  if (!statusChanged) {
+    return next;
+  }
+
+  // Lane-aware event names. Same pattern as Phase 2B's events but
+  // namespaced by directionType so they don't collide with website's.
+  const eventByAction: Record<DirectionAdminAction, string> = {
+    mark_under_review: `${existing.type}_under_review`,
+    request_changes: `${existing.type}_changes_requested`,
+    approve: `${existing.type}_approved`,
+    lock: `${existing.type}_locked`,
+  };
+  const directionLabel = existing.type.replace(/_/g, " ");
+  const summaryByAction: Record<DirectionAdminAction, string> = {
+    mark_under_review: `CrecyStudio is reviewing the ${directionLabel}.`,
+    request_changes: `CrecyStudio requested clarification on the ${directionLabel}.`,
+    approve: `${directionLabel.charAt(0).toUpperCase()}${directionLabel.slice(1)} approved.`,
+    lock: `${directionLabel.charAt(0).toUpperCase()}${directionLabel.slice(1)} locked. Build can begin.`,
+  };
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "studio",
+    eventType: eventByAction[input.action],
+    summary: summaryByAction[input.action],
+    payload: {
+      action: input.action,
+      directionType: existing.type,
+      previousStatus: existing.status,
+      newStatus: next.status,
+      actorUserId: input.actor.userId ?? null,
+      actorEmail: input.actor.email ?? null,
+      actorIp: input.actor.ip ?? null,
+      actorUserAgent: input.actor.userAgent ?? null,
+      publicNote: cleanPublicNote ?? null,
+    },
+    clientVisible: true,
+  });
+
+  // Phase 3.9 sync: keep the lane's required-action in step. Action key
+  // follows the convention complete_${directionType} (matches all 4
+  // non-website templates' first required action).
+  // Same defensive sync pattern as the website lane transition above:
+  // request_changes re-opens the action; approve/lock force-complete it
+  // to keep the journey map consistent if any path bypassed the client
+  // submit's own sync.
+  const directionActionKey = `complete_${existing.type}`;
+  if (input.action === "request_changes") {
+    await updateRequiredActionStatusByPortalId({
+      portalProjectId: cleanString(portal.id),
+      actionKey: directionActionKey,
+      status: "waiting_on_client",
+      clearCompletedAt: true,
+    });
+  } else if (input.action === "approve" || input.action === "lock") {
+    await updateRequiredActionStatusByPortalId({
+      portalProjectId: cleanString(portal.id),
+      actionKey: directionActionKey,
+      status: "complete",
+    });
+  }
+
+  return next;
+}
+
+// Phase 3.3: generic direction submit for non-website lanes (web_app,
+// automation, ecommerce, rescue). Mirrors submitDesignDirectionByPortalToken
+// but operates on scope_snapshot.direction with a generic payload.
+export async function submitDirectionByPortalToken(input: {
+  token: string;
+  payload: Record<string, unknown>;
+  approvedDirectionTerms: boolean;
+  actor?: { userId?: string | null; email?: string | null; ip?: string | null };
+}) {
+  if (!input.approvedDirectionTerms) {
+    throw new Error("Direction terms must be approved before submitting.");
+  }
+
+  const portal = await getPortalProjectByToken(input.token);
+  if (!portal) throw new Error("Portal not found");
+
+  // Lane gate. Resolve project type from portal column (source of truth
+  // post-Phase-3.2) with quote fallback. Refuse website lane — that's
+  // handled by Phase 2A's submitDesignDirectionByPortalToken.
+  const portalProjectType =
+    typeof portal.project_type === "string" && portal.project_type
+      ? portal.project_type
+      : null;
+  let quoteProjectType: string | null = null;
+  if (portal.quote_id) {
+    const { data: q } = await supabaseAdmin
+      .from("quotes")
+      .select("project_type")
+      .eq("id", portal.quote_id)
+      .maybeSingle();
+    quoteProjectType =
+      q && typeof q.project_type === "string" && q.project_type ? q.project_type : null;
+  }
+  // Prefer quote over portal column. Phase 3.2 set the portal column on
+  // new portals, but legacy portals still carry the DB default of "website"
+  // which would otherwise wrongly reject non-website submissions whenever
+  // the lane lives only on the quote row.
+  const resolvedType = quoteProjectType ?? portalProjectType ?? "website";
+  if (resolvedType === "website") {
+    throw new Error(
+      "Use the design direction submit endpoint for website projects.",
+    );
+  }
+  if (!isProjectType(resolvedType)) {
+    throw new Error("Direction is not available for this project type.");
+  }
+
+  const existingScope = safeObj(portal.scope_snapshot);
+  if (!hasDirection(existingScope)) {
+    throw new Error(
+      "Direction is not enabled for this project. Contact CrecyStudio to opt in.",
+    );
+  }
+
+  const existing = readDirection(existingScope);
+  if (!existing) {
+    throw new Error("Direction record could not be read.");
+  }
+  if (existing.status === "locked") {
+    throw new Error("Direction is locked. Reach out to CrecyStudio to request a change.");
+  }
+
+  const merged: GenericDirection = {
+    ...existing,
+    payload: { ...existing.payload, ...input.payload },
+    status: "submitted",
+    submittedAt: new Date().toISOString(),
+    // Resubmissions after changes_requested clear the timestamp so the
+    // workflow shows the resubmit as the latest state. approvedAt /
+    // lockedAt stay null since we never reached those states.
+    changesRequestedAt:
+      existing.status === "changes_requested" ? null : existing.changesRequestedAt,
+  };
+
+  const nextScope = { ...existingScope, direction: merged };
+
+  const { error } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({
+      scope_snapshot: nextScope,
+      client_updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", portal.id);
+  if (error) throw error;
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "client",
+    eventType: `${merged.type}_submitted`,
+    summary: `Client submitted ${merged.type.replace(/_/g, " ")}.`,
+    payload: {
+      directionType: merged.type,
+      // Phase-gate audit trail.
+      actorUserId: input.actor?.userId ?? null,
+      actorEmail: input.actor?.email ?? null,
+      actorIp: input.actor?.ip ?? null,
+    },
+    clientVisible: true,
+  });
+
+  // Phase 3.9 sync: complete the direction-completion required action
+  // for the lane. Action key is the first requiredAction in the
+  // template (always "complete_${directionType}" by convention).
+  const directionActionKey = `complete_${merged.type}`;
+  await updateRequiredActionStatusByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actionKey: directionActionKey,
+    status: "complete",
+  });
+
+  return merged;
 }
 
 export async function submitRevisionByPortalToken(input: {

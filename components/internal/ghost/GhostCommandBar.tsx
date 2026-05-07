@@ -61,7 +61,7 @@ export default function GhostCommandBar() {
             }}
           >
             <option value="website">Website</option>
-            <option value="ops">Ops</option>
+            <option value="automation">Automation</option>
             <option value="ecommerce">E-commerce</option>
           </select>
 

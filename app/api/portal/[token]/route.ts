@@ -4,13 +4,18 @@ import crypto from "node:crypto";
 import {
   acceptCustomerPortalAgreement,
   getCustomerPortalViewByToken,
+  getPortalProjectByToken,
   submitAssetByPortalToken,
   submitDesignDirectionByPortalToken,
+  submitDirectionByPortalToken,
   submitRevisionByPortalToken,
   toggleMilestone,
   updateClientStatus,
 } from "@/lib/customerPortal";
 import { validateDesignDirectionInput } from "@/lib/designDirection";
+import { validateDirectionPayload } from "@/lib/directions/validate";
+import { isProjectType, type DirectionType } from "@/lib/workflows/types";
+import { completeRequiredActionByPortalToken } from "@/lib/requiredActions";
 import { sendEventNotification } from "@/lib/notifications";
 import { listProjectActivityByToken, markClientPortalSeen } from "@/lib/projectActivity";
 import { listProjectInvoicesByToken } from "@/lib/projectInvoices";
@@ -91,11 +96,48 @@ export async function GET(
   }
 }
 
+// Reject cross-origin POSTs to the portal write endpoint. Portal tokens
+// authenticate the user, but if a token leaks (forwarded email, screenshot,
+// shared link) a malicious site could embed a hidden form posting to this
+// endpoint and submit revisions / asset uploads / direction changes on
+// the client's behalf. Same-origin enforcement closes that vector.
+function isAllowedOrigin(origin: string | null): boolean {
+  if (!origin) {
+    // No Origin header means same-origin nav (browser strips it for
+    // safe top-level GETs and same-origin form posts in some configs).
+    // We accept this for compatibility — the endpoint is also rate-
+    // limited and token-authenticated, so the worst case is a request
+    // we'd accept anyway.
+    return true;
+  }
+  try {
+    const url = new URL(origin);
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com";
+    const siteHost = new URL(siteUrl).host;
+    if (url.host === siteHost) return true;
+    // Vercel preview deployments use *.vercel.app subdomains.
+    if (url.host.endsWith(".vercel.app")) return true;
+    // localhost for dev.
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(
   req: NextRequest,
   ctx: { params: Promise<{ token: string }> | { token: string } }
 ) {
   try {
+    const origin = req.headers.get("origin");
+    if (!isAllowedOrigin(origin)) {
+      return NextResponse.json(
+        { ok: false, error: "Cross-origin requests not allowed." },
+        { status: 403 },
+      );
+    }
+
     const ip = getIpFromHeaders(req.headers);
     const rl = await enforceRateLimitDurable({ key: `portal-write:${ip}`, limit: 20, windowMs: 60_000 });
     if (!rl.ok) return rateLimitResponse(rl.resetAt);
@@ -210,6 +252,77 @@ export async function POST(
         String(body?.clientStatus || "new"),
         typeof body?.clientNotes === "string" ? body.clientNotes : undefined
       );
+    } else if (actionType === "direction_submit") {
+      // Lane-agnostic direction submit (Phase 3.3) for non-website
+      // projects. The website lane keeps using design_direction_submit
+      // below — different validation, different storage path.
+      const portal = await getPortalProjectByToken(token);
+      if (!portal) {
+        return NextResponse.json({ ok: false, error: "Portal not found." }, { status: 404 });
+      }
+      // Prefer quote.project_type over portal column. Legacy portal rows
+      // may carry the DB default of "website" while the actual lane lives
+      // only on the quote (the audit found 56 such rows pre-Phase-3.2).
+      // Without the fallback, valid non-website clients get rejected with
+      // "Use design_direction_submit..." even though their quote lane is
+      // non-website.
+      const portalProjectType = typeof portal.project_type === "string" && portal.project_type
+        ? portal.project_type
+        : null;
+      let quoteProjectType: string | null = null;
+      if (portal.quote_id) {
+        const { data: q } = await supabaseAdmin
+          .from("quotes")
+          .select("project_type")
+          .eq("id", portal.quote_id)
+          .maybeSingle();
+        quoteProjectType =
+          q && typeof q.project_type === "string" && q.project_type ? q.project_type : null;
+      }
+      const resolvedType = quoteProjectType ?? portalProjectType ?? "website";
+      const projectType = isProjectType(resolvedType) ? resolvedType : "website";
+      if (projectType === "website") {
+        return NextResponse.json(
+          { ok: false, error: "Use design_direction_submit for website projects." },
+          { status: 400 },
+        );
+      }
+      const directionType: DirectionType =
+        projectType === "web_app" ? "product_direction"
+        : projectType === "automation" ? "workflow_direction"
+        : projectType === "ecommerce" ? "store_direction"
+        : "rescue_diagnosis";
+
+      const validation = validateDirectionPayload(directionType, body?.direction);
+      if (!validation.ok || !validation.value) {
+        return NextResponse.json(
+          { ok: false, error: validation.error || "Direction payload is invalid." },
+          { status: 400 },
+        );
+      }
+
+      const supabase = await createSupabaseServerClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      try {
+        await submitDirectionByPortalToken({
+          token,
+          payload: validation.value.payload,
+          approvedDirectionTerms: validation.value.approvedDirectionTerms,
+          actor: {
+            userId: user?.id ?? null,
+            email: user?.email ?? null,
+            ip,
+          },
+        });
+      } catch (err: any) {
+        return NextResponse.json(
+          { ok: false, error: err?.message || "Direction submit failed." },
+          { status: 400 },
+        );
+      }
     } else if (actionType === "design_direction_submit") {
       const validation = validateDesignDirectionInput(body?.designDirection);
       if (!validation.ok || !validation.value) {
@@ -233,6 +346,32 @@ export async function POST(
           ip,
         },
       });
+    } else if (actionType === "required_action_complete") {
+      // Phase 3.9: client marks a required action complete. The actual
+      // submission of action-specific data (e.g. design direction) goes
+      // through other actions (design_direction_submit, direction_submit).
+      // This action is for the simpler "I did it" actions like asset
+      // upload confirmations or read-only acknowledgements.
+      const actionKey = String(body?.actionKey || "").trim();
+      if (!actionKey) {
+        return NextResponse.json(
+          { ok: false, error: "Required action key is required." },
+          { status: 400 },
+        );
+      }
+      try {
+        await completeRequiredActionByPortalToken({
+          token,
+          actionKey,
+          payload:
+            body?.payload && typeof body.payload === "object" ? body.payload : undefined,
+        });
+      } catch (err: any) {
+        return NextResponse.json(
+          { ok: false, error: err?.message || "Failed to complete action." },
+          { status: 400 },
+        );
+      }
     } else if (actionType === "milestone_toggle") {
       const milestoneId = String(body?.key || "").trim();
       if (!milestoneId) {
@@ -343,6 +482,7 @@ export async function POST(
         asset_add: "asset_submitted",
         deposit_notice_sent: "deposit_notice_sent",
         design_direction_submit: "design_direction_submitted",
+        direction_submit: "direction_submitted",
       };
 
       const event = eventMap[actionType];

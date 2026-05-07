@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import type { WebsiteDesignDirection } from "@/lib/designDirection";
 import { CONTROL_LEVEL_OPTIONS } from "@/lib/designDirection";
 
@@ -32,6 +35,7 @@ function joinList(values: string[] | undefined | null) {
 }
 
 export default function DesignDirectionSummary({ value }: { value: WebsiteDesignDirection }) {
+  const t = useTranslations("portalToken.directionModule");
   return (
     <div style={{ display: "grid", gap: 12 }}>
       <Row label="Direction">{controlLevelLabel(value.controlLevel)}</Row>
@@ -87,7 +91,7 @@ export default function DesignDirectionSummary({ value }: { value: WebsiteDesign
           }}
         >
           <div style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>
-            Note from CrecyStudio
+            {t("noteFromCrecyStudio")}
           </div>
           {value.adminPublicNote}
         </div>

@@ -1,4 +1,10 @@
-import type { EcommerceTierKey, OpsTierKey, WebsiteTierKey } from "@/lib/pricing/types";
+import type {
+  EcommerceTierKey,
+  OpsTierKey,
+  RescueTierKey,
+  WebAppTierKey,
+  WebsiteTierKey,
+} from "@/lib/pricing/types";
 
 export const PRICING_VERSION = "startup-v2-2026-04";
 export const INTERNAL_HOURLY_RATE = 85;
@@ -7,7 +13,11 @@ export const PRICING_MESSAGES = {
   depositPolicy: "50% deposit to start, 50% on completion.",
   websiteCustom: "Custom scope — strategy call required.",
   opsCustom: "Custom ops scope — strategy call required.",
+  // Phase 4: alias for opsCustom — same copy, canonical lane name.
+  automationCustom: "Custom automation scope — strategy call required.",
   ecommerceCustom: "Custom e-commerce scope — strategy call required.",
+  webAppCustom: "Custom web app scope — strategy call required.",
+  rescueCustom: "Custom rescue scope — strategy call required.",
 };
 
 export const WEBSITE_TIER_CONFIG: Record<
@@ -31,7 +41,11 @@ export const WEBSITE_TIER_CONFIG: Record<
   },
 };
 
-export const OPS_TIER_CONFIG: Record<
+// Workflow automation pricing tiers. Renamed from OPS_TIER_CONFIG —
+// canonical name is AUTOMATION_TIER_CONFIG (lane "automation"). The
+// deprecated OPS_TIER_CONFIG export below is a value alias for callers
+// that haven't been updated yet.
+export const AUTOMATION_TIER_CONFIG: Record<
   Exclude<OpsTierKey, "custom_ops_scope">,
   { label: string; min: number; max: number; monthly?: boolean }
 > = {
@@ -41,7 +55,7 @@ export const OPS_TIER_CONFIG: Record<
     max: 1800,
   },
   ops_system_build: {
-    label: "Ops System Build",
+    label: "Automation System Build",
     min: 2000,
     max: 3800,
   },
@@ -52,6 +66,9 @@ export const OPS_TIER_CONFIG: Record<
     monthly: true,
   },
 };
+
+// Deprecated alias. Same object — labels updated to canonical names.
+export const OPS_TIER_CONFIG = AUTOMATION_TIER_CONFIG;
 
 export const ECOMMERCE_TIER_CONFIG: Record<
   Exclude<EcommerceTierKey, "custom_ecommerce_scope">,
@@ -73,10 +90,14 @@ export const ECOMMERCE_TIER_CONFIG: Record<
     projectMax: 3200,
   },
   growth_store_build: {
+    // Phase 4: bumped from $3,200–$5,200 per the audit's market check.
+    // Industry agency-led custom Shopify builds are $5k–$15k+; our
+    // previous floor was at the low edge of the freelance band even for
+    // a fully-custom theme. New range is still solo-studio competitive.
     label: "Growth Store Build",
     billingModel: "project",
-    projectMin: 3200,
-    projectMax: 5200,
+    projectMin: 3500,
+    projectMax: 6500,
   },
   commerce_repair_sprint: {
     label: "Commerce Repair Sprint",
@@ -105,6 +126,56 @@ export const ECOMMERCE_TIER_CONFIG: Record<
     setupMax: 2200,
     monthlyMin: 1800,
     monthlyMax: 3200,
+  },
+};
+
+// Phase 4 — Custom web app pricing. Audit found Phase 1 prices were
+// 30–50% under market median; these match the audit's recommended ranges
+// (industry MVP floor $8k, subscription SaaS $28k–$42k industry standard,
+// medium client portal $40k–$80k industry — solo studio can be cheaper
+// but not as cheap as the original $5k–$9k / $8k–$18k bands).
+export const WEB_APP_TIER_CONFIG: Record<
+  Exclude<WebAppTierKey, "custom_web_app_scope">,
+  { label: string; min: number; max: number }
+> = {
+  small_internal_tool: {
+    label: "Small Internal Tool",
+    min: 8000,
+    max: 15000,
+  },
+  portal_dashboard_mvp: {
+    label: "Portal / Dashboard MVP",
+    min: 15000,
+    max: 30000,
+  },
+  saas_mvp: {
+    label: "SaaS MVP / Multi-tenant",
+    min: 25000,
+    max: 50000,
+  },
+  full_client_portal: {
+    // Audit's strongest pricing recommendation — the portal is
+    // CrecyStudio's main differentiator and was severely underpriced.
+    label: "Full Client Portal (payments + files + messaging + admin)",
+    min: 22000,
+    max: 45000,
+  },
+};
+
+// Phase 4 — Website rescue pricing.
+export const RESCUE_TIER_CONFIG: Record<
+  Exclude<RescueTierKey, "custom_rescue_scope">,
+  { label: string; min: number; max: number }
+> = {
+  basic_rescue: {
+    label: "Basic Rescue",
+    min: 800,
+    max: 1500,
+  },
+  full_rescue_sprint: {
+    label: "Full Rescue Sprint",
+    min: 1500,
+    max: 3500,
   },
 };
 

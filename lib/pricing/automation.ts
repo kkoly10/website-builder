@@ -1,13 +1,18 @@
+// Workflow automation pricing engine. Renamed from lib/pricing/ops.ts —
+// the canonical lane name is "automation" (matches the workflow ProjectType
+// enum). Backward-compat aliases below preserve the old getOpsPricing
+// import path for any caller that hasn't been updated yet.
+
 import {
-  OPS_TIER_CONFIG,
+  AUTOMATION_TIER_CONFIG,
   PRICING_MESSAGES,
   PRICING_VERSION,
   formatRange,
   targetFromBand,
 } from "@/lib/pricing/config";
 import type {
+  AutomationTierKey,
   OpsPricingInput,
-  OpsTierKey,
   PricingReason,
   PricingResult,
 } from "@/lib/pricing/types";
@@ -34,9 +39,9 @@ function isUrgent(urgency: string) {
   return /asap|costing us now|urgent/i.test(String(urgency || ""));
 }
 
-export function getOpsPricing(
+export function getAutomationPricing(
   input: OpsPricingInput
-): PricingResult<OpsTierKey> {
+): PricingResult<AutomationTierKey> {
   const reasons: PricingReason[] = [];
   const flags: string[] = [];
   let complexityScore = 0;
@@ -166,18 +171,18 @@ export function getOpsPricing(
 
     return {
       version: PRICING_VERSION,
-      lane: "ops",
+      lane: "automation",
       tierKey: "custom_ops_scope",
       tierLabel: "Custom Ops Scope",
       position: "custom",
       isCustomScope: true,
       band: {
-        min: OPS_TIER_CONFIG.ops_system_build.max,
-        max: OPS_TIER_CONFIG.ops_system_build.max,
-        target: OPS_TIER_CONFIG.ops_system_build.max,
+        min: AUTOMATION_TIER_CONFIG.ops_system_build.max,
+        max: AUTOMATION_TIER_CONFIG.ops_system_build.max,
+        target: AUTOMATION_TIER_CONFIG.ops_system_build.max,
       },
-      displayRange: PRICING_MESSAGES.opsCustom,
-      publicMessage: PRICING_MESSAGES.opsCustom,
+      displayRange: PRICING_MESSAGES.automationCustom,
+      publicMessage: PRICING_MESSAGES.automationCustom,
       summary:
         "This ops request crosses the normal instant-range threshold and should be scoped manually.",
       estimatorSummary:
@@ -202,7 +207,7 @@ export function getOpsPricing(
     tierKey = "ops_system_build";
   }
 
-  const band = OPS_TIER_CONFIG[tierKey];
+  const band = AUTOMATION_TIER_CONFIG[tierKey];
   const position = choosePosition(complexityScore);
   const target = targetFromBand(band.min, band.max, position);
 
@@ -216,7 +221,7 @@ export function getOpsPricing(
 
   return {
     version: PRICING_VERSION,
-    lane: "ops",
+    lane: "automation",
     tierKey,
     tierLabel: band.label,
     position,
@@ -235,3 +240,9 @@ export function getOpsPricing(
     complexityScore,
   };
 }
+
+// Deprecated alias. Existing callers (OpsIntakeClient, opsPie,
+// depositPayments, opsWorkspace) imported getOpsPricing — keep it
+// working until they migrate to getAutomationPricing. Same function,
+// same shape, same prices.
+export const getOpsPricing = getAutomationPricing;

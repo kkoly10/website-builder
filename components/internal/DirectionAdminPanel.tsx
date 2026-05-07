@@ -1,27 +1,30 @@
 "use client";
 
+// Admin panel for non-website directions (Phase 3.5). Mirrors
+// DesignDirectionAdminPanel for the website lane, but operates on the
+// generic GenericDirection record at scope_snapshot.direction.
+
 import { useState } from "react";
-import type { WebsiteDesignDirection } from "@/lib/designDirection";
-import DesignDirectionSummary from "@/components/portal/DesignDirectionSummary";
+import type { GenericDirection } from "@/lib/directions/types";
+import { getDirectionSchema } from "@/lib/directions/schemas";
+import DirectionSummary from "@/components/portal/directions/DirectionSummary";
 
 type AdminAction = "mark_under_review" | "request_changes" | "approve" | "lock";
 
 type Props = {
   quoteId: string;
-  designDirection: WebsiteDesignDirection | null;
+  direction: GenericDirection | null;
   projectType: string;
-  // Called after a successful transition with the action and the new
-  // direction state from the server, so the parent can update local
-  // state (and optimistically toggle dependent fields like the
-  // "Design direction approved" milestone on lock).
+  // Receives the action + new direction state so the parent can update
+  // local state and optionally toggle the auto-completed milestone.
   onTransitioned?: (
     action: AdminAction,
-    next: WebsiteDesignDirection,
+    next: GenericDirection,
   ) => void | Promise<void>;
 };
 
 const STATUS_PILL: Record<
-  WebsiteDesignDirection["status"],
+  GenericDirection["status"],
   { label: string; bg: string; fg: string; border: string }
 > = {
   not_started: { label: "Not started", bg: "var(--paper-2)", fg: "var(--muted)", border: "var(--rule)" },
@@ -33,18 +36,26 @@ const STATUS_PILL: Record<
   locked: { label: "Locked", bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
 };
 
-export default function DesignDirectionAdminPanel({
+const TITLE_BY_TYPE: Record<GenericDirection["type"], string> = {
+  design_direction: "Design Direction",
+  product_direction: "Product Direction",
+  workflow_direction: "Workflow Direction",
+  store_direction: "Store Direction",
+  rescue_diagnosis: "Rescue Diagnosis",
+};
+
+export default function DirectionAdminPanel({
   quoteId,
-  designDirection,
+  direction,
   projectType,
   onTransitioned,
 }: Props) {
-  const [publicNote, setPublicNote] = useState(designDirection?.adminPublicNote ?? "");
-  const [internalNote, setInternalNote] = useState(designDirection?.adminInternalNote ?? "");
+  const [publicNote, setPublicNote] = useState(direction?.adminPublicNote ?? "");
+  const [internalNote, setInternalNote] = useState(direction?.adminInternalNote ?? "");
   const [busy, setBusy] = useState<AdminAction | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  if (projectType !== "website") {
+  if (projectType === "website") {
     return (
       <div
         style={{
@@ -56,13 +67,12 @@ export default function DesignDirectionAdminPanel({
           color: "var(--muted)",
         }}
       >
-        Design Direction is only used for website projects. This is a{" "}
-        <strong style={{ color: "var(--fg)" }}>{projectType}</strong> project.
+        Use the Design Direction panel above for website projects.
       </div>
     );
   }
 
-  if (!designDirection) {
+  if (!direction) {
     return (
       <div
         style={{
@@ -74,12 +84,14 @@ export default function DesignDirectionAdminPanel({
           color: "var(--muted)",
         }}
       >
-        Design Direction isn&apos;t enabled for this project. The portal predates Phase 2.
+        Direction isn&apos;t enabled for this project. The portal predates Phase 3.3.
       </div>
     );
   }
 
-  const pill = STATUS_PILL[designDirection.status];
+  const pill = STATUS_PILL[direction.status];
+  const title = TITLE_BY_TYPE[direction.type];
+  const schema = getDirectionSchema(direction.type);
 
   async function transition(action: AdminAction) {
     setBusy(action);
@@ -90,7 +102,7 @@ export default function DesignDirectionAdminPanel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           quoteId,
-          designDirection: {
+          direction: {
             action,
             publicNote: publicNote.trim() || null,
             internalNote: internalNote.trim() || null,
@@ -101,8 +113,8 @@ export default function DesignDirectionAdminPanel({
       if (!res.ok || !json?.ok) {
         throw new Error(json?.error || "Transition failed.");
       }
-      if (onTransitioned && json.designDirection) {
-        await onTransitioned(action, json.designDirection as WebsiteDesignDirection);
+      if (onTransitioned && json.direction) {
+        await onTransitioned(action, json.direction as GenericDirection);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Transition failed.");
@@ -111,25 +123,24 @@ export default function DesignDirectionAdminPanel({
     }
   }
 
-  // Disable transitions that don't make sense from the current state.
   const canMarkUnderReview =
-    designDirection.status === "submitted" || designDirection.status === "changes_requested";
-  const canRequestChanges = designDirection.status !== "locked";
+    direction.status === "submitted" || direction.status === "changes_requested";
+  const canRequestChanges = direction.status !== "locked";
   const canApprove =
-    designDirection.status === "submitted" || designDirection.status === "under_review";
+    direction.status === "submitted" || direction.status === "under_review";
   // Lock requires the client to have at least submitted the form (or
   // for it to already be approved). Mirrors the server precondition in
-  // transitionDesignDirectionByQuoteId.
+  // transitionDirectionByQuoteId.
   const canLock =
-    designDirection.status === "submitted" ||
-    designDirection.status === "under_review" ||
-    designDirection.status === "approved";
+    direction.status === "submitted" ||
+    direction.status === "under_review" ||
+    direction.status === "approved";
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
         <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>
-          Status
+          {title} status
         </h4>
         <span
           style={{
@@ -149,14 +160,13 @@ export default function DesignDirectionAdminPanel({
         </span>
       </div>
 
-      {/* Submitted summary */}
-      {designDirection.status !== "not_started" && designDirection.status !== "waiting_on_client" ? (
+      {schema && direction.status !== "not_started" && direction.status !== "waiting_on_client" ? (
         <details style={{ border: "1px solid var(--rule)", borderRadius: 12, padding: 12, background: "var(--paper-2)" }}>
           <summary style={{ cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--fg)" }}>
             Submitted answers
           </summary>
           <div style={{ marginTop: 12 }}>
-            <DesignDirectionSummary value={designDirection} />
+            <DirectionSummary value={direction} schema={schema} />
           </div>
         </details>
       ) : (
@@ -165,7 +175,6 @@ export default function DesignDirectionAdminPanel({
         </div>
       )}
 
-      {/* Notes */}
       <div style={{ display: "grid", gap: 8 }}>
         <label className="fieldLabel">Public note (visible to client)</label>
         <textarea
@@ -173,7 +182,7 @@ export default function DesignDirectionAdminPanel({
           rows={2}
           value={publicNote}
           onChange={(e) => setPublicNote(e.target.value)}
-          placeholder='e.g. "Direction looks great. I&apos;ll use this to guide the first preview."'
+          placeholder="Optional context for the client when you transition."
         />
       </div>
       <div style={{ display: "grid", gap: 8 }}>
@@ -203,7 +212,6 @@ export default function DesignDirectionAdminPanel({
         </div>
       ) : null}
 
-      {/* Action buttons */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         <button
           className="btn btnGhost"
@@ -248,8 +256,8 @@ export default function DesignDirectionAdminPanel({
           borderTop: "1px dashed var(--rule)",
         }}
       >
-        Locking marks the &ldquo;Design direction approved&rdquo; milestone complete and signals
-        the client that major visual changes will require a change order.
+        Locking marks the lane&apos;s direction-approved milestone complete and
+        signals the client that major changes will require a change order.
       </div>
     </div>
   );

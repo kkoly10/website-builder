@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import type { WebsiteDesignDirection, WebsiteDesignDirectionInput } from "@/lib/designDirection";
 import DesignDirectionForm from "./DesignDirectionForm";
 import DesignDirectionSummary from "./DesignDirectionSummary";
@@ -11,17 +12,29 @@ type Props = {
   onSubmit: (input: WebsiteDesignDirectionInput) => Promise<void>;
 };
 
-const STATUS_PILL: Record<
+// Style-only pill record. Labels come from i18n keys at
+// portalToken.directionModule.statusPill.*
+const STATUS_PILL_STYLE: Record<
   WebsiteDesignDirection["status"],
-  { label: string; bg: string; fg: string; border: string }
+  { bg: string; fg: string; border: string }
 > = {
-  not_started: { label: "Not started", bg: "var(--paper-2)", fg: "var(--muted)", border: "var(--rule)" },
-  waiting_on_client: { label: "Action needed", bg: "var(--accent-bg)", fg: "var(--accent-2)", border: "var(--accent)" },
-  submitted: { label: "Submitted", bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
-  under_review: { label: "Under review", bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
-  changes_requested: { label: "Clarification needed", bg: "var(--accent-bg)", fg: "var(--accent-2)", border: "var(--accent)" },
-  approved: { label: "Approved", bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
-  locked: { label: "Locked for build", bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
+  not_started: { bg: "var(--paper-2)", fg: "var(--muted)", border: "var(--rule)" },
+  waiting_on_client: { bg: "var(--accent-bg)", fg: "var(--accent-2)", border: "var(--accent)" },
+  submitted: { bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
+  under_review: { bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
+  changes_requested: { bg: "var(--accent-bg)", fg: "var(--accent-2)", border: "var(--accent)" },
+  approved: { bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
+  locked: { bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
+};
+
+const STATUS_PILL_KEY: Record<WebsiteDesignDirection["status"], string> = {
+  not_started: "notStarted",
+  waiting_on_client: "waitingOnClient",
+  submitted: "submitted",
+  under_review: "underReview",
+  changes_requested: "changesRequested",
+  approved: "approved",
+  locked: "locked",
 };
 
 const SUBTITLE: Record<WebsiteDesignDirection["status"], string> = {
@@ -42,9 +55,11 @@ const SUBTITLE: Record<WebsiteDesignDirection["status"], string> = {
 };
 
 export default function DesignDirectionCard({ value, onSubmit }: Props) {
+  const t = useTranslations("portalToken.directionModule");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const pill = STATUS_PILL[value.status];
+  const pillStyle = STATUS_PILL_STYLE[value.status];
+  const pillLabel = t(`statusPill.${STATUS_PILL_KEY[value.status]}`);
 
   async function handleSubmit(input: WebsiteDesignDirectionInput) {
     setError(null);
@@ -52,7 +67,7 @@ export default function DesignDirectionCard({ value, onSubmit }: Props) {
     try {
       await onSubmit(input);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit design direction.");
+      setError(err instanceof Error ? err.message : t("submitDesignDirectionError"));
     } finally {
       setSaving(false);
     }
@@ -67,7 +82,10 @@ export default function DesignDirectionCard({ value, onSubmit }: Props) {
     >
       <div className="portalPanelHeader">
         <div>
-          <h2 className="portalPanelTitle">Design Direction</h2>
+          <h2 className="portalPanelTitle">{t("title.design")}</h2>
+          {/* Lane-specific subtitle copy stays inline — verbose marketing
+              text per status that's better edited as code than carried as
+              messages.json bloat. */}
           <div className="portalMessageIntro">{SUBTITLE[value.status]}</div>
         </div>
         <span
@@ -78,13 +96,13 @@ export default function DesignDirectionCard({ value, onSubmit }: Props) {
             textTransform: "uppercase",
             padding: "6px 12px",
             borderRadius: 999,
-            border: `1px solid ${pill.border}`,
-            background: pill.bg,
-            color: pill.fg,
+            border: `1px solid ${pillStyle.border}`,
+            background: pillStyle.bg,
+            color: pillStyle.fg,
             whiteSpace: "nowrap",
           }}
         >
-          {pill.label}
+          {pillLabel}
         </span>
       </div>
 
@@ -113,9 +131,7 @@ export default function DesignDirectionCard({ value, onSubmit }: Props) {
               lineHeight: 1.6,
             }}
           >
-            Feedback should now focus on content accuracy, clarity, missing information, bugs, and
-            reasonable polish. Major visual style changes may affect the timeline or require a
-            change order.
+            {t("lockedNoticeDesignDirection")}
           </div>
         ) : null}
       </div>

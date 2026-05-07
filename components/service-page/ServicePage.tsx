@@ -117,8 +117,40 @@ export default function ServicePage({
   const finalPrimaryCtaHref = projectType
     ? `${finalPrimaryCta.href}?projectType=${projectType}`
     : finalPrimaryCta.href;
+
+  // SEO: JSON-LD Service schema. Each service page exposes itself as a
+  // schema.org Service offered by the Organization (declared once in
+  // the root layout). Lifts the page's own title / intro / pricing-card
+  // labels into structured data so search engines can show service-rich
+  // results. Pricing values are kept descriptive (text from the cards)
+  // rather than numeric — many cards are "Scoped to project" or use
+  // ranges that aren't a single number.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com";
+  const serviceSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: title,
+    description: intro,
+    provider: { "@type": "Organization", name: "CrecyStudio", url: siteUrl },
+    areaServed: "Worldwide",
+    offers: pricingCards.map((card) => ({
+      "@type": "Offer",
+      name: card.label,
+      description: card.detail,
+      priceSpecification: {
+        "@type": "PriceSpecification",
+        price: card.value,
+        priceCurrency: "USD",
+      },
+    })),
+  };
+
   return (
     <main className={styles.page}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
+      />
       <section className={styles.hero}>
         <div className="container">
           <div className={styles.heroInner}>

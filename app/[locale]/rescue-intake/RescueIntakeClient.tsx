@@ -5,6 +5,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { trackEvent } from "@/lib/analytics/client";
 import ScrollReveal from "@/components/site/ScrollReveal";
+import { getRescuePricing } from "@/lib/pricing";
 
 type RescueFormState = {
   contactName: string;
@@ -182,6 +183,24 @@ export default function RescueIntakeClient() {
     setError("");
 
     try {
+      // Phase 4: compute rescue pricing client-side. Same submission
+      // pattern as ops/ecommerce/web_app intakes.
+      const recommendation = getRescuePricing({
+        siteUrl: form.siteUrl,
+        platform: form.platform,
+        issues: form.issues,
+        urgency: form.urgency,
+        builtWhen: form.builtWhen,
+        builtBy: form.builtBy,
+        previousVendorStatus: form.previousVendorStatus,
+        alreadyTried: form.alreadyTried,
+        assetAccess: form.assetAccess,
+        seoPreservation: form.seoPreservation,
+        urlsToPreserve: form.urlsToPreserve,
+        budget: form.budget,
+        notes: form.notes,
+      });
+
       const res = await fetch("/api/submit-estimate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -191,6 +210,21 @@ export default function RescueIntakeClient() {
           email: form.email,
           phone: form.phone || undefined,
           preferredLocale: locale,
+          pricing: {
+            version: recommendation.version,
+            lane: recommendation.lane,
+            tierKey: recommendation.tierKey,
+            tierLabel: recommendation.tierLabel,
+            estimateCents: recommendation.band.target * 100,
+            estimateLowCents: recommendation.band.min * 100,
+            estimateHighCents: recommendation.band.max * 100,
+            displayRange: recommendation.displayRange,
+            position: recommendation.position,
+            isCustomScope: recommendation.isCustomScope,
+            reasons: recommendation.reasons,
+            complexityFlags: recommendation.complexityFlags,
+            complexityScore: recommendation.complexityScore,
+          },
           intakeRaw: {
             companyName: form.companyName,
             siteUrl: form.siteUrl,

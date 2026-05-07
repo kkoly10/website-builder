@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
 import DesignDirectionAdminPanel from "@/components/internal/DesignDirectionAdminPanel";
+import DirectionAdminPanel from "@/components/internal/DirectionAdminPanel";
 import type { WebsiteDesignDirection } from "@/lib/designDirection";
+import type { GenericDirection } from "@/lib/directions/types";
+import { getWorkflowTemplate } from "@/lib/workflows/templates";
+import { isProjectType } from "@/lib/workflows/types";
 
 /* ═══════════════════════════════════
    TYPES
@@ -66,6 +70,7 @@ type ProjectControlData = {
   quoteId: string;
   projectType: string;
   designDirection: WebsiteDesignDirection | null;
+  direction: GenericDirection | null;
   publicToken: string;
   workspaceUrl: string;
   createdAt: string;
@@ -1199,6 +1204,54 @@ export default function ProjectControlClient({
                             ...prev.portalStateAdmin,
                             milestones: prev.portalStateAdmin.milestones.map((m) =>
                               m.label.trim().toLowerCase() === "design direction approved"
+                                ? { ...m, done: true, updatedAt: completedAt }
+                                : m,
+                            ),
+                          }
+                        : prev.portalStateAdmin,
+                  }));
+                }}
+              />
+            </div>
+          ) : null}
+
+          {/* Generic direction admin panel for non-website lanes (Phase 3.5).
+              Renders only when projectType is non-website AND there's a
+              direction record. Legacy non-website portals get nothing. */}
+          {data.projectType !== "website" && data.direction ? (
+            <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+              <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>
+                {data.direction.type === "product_direction" ? "Product Direction"
+                  : data.direction.type === "workflow_direction" ? "Workflow Direction"
+                  : data.direction.type === "store_direction" ? "Store Direction"
+                  : data.direction.type === "rescue_diagnosis" ? "Rescue Diagnosis"
+                  : "Direction"}
+              </h3>
+              <DirectionAdminPanel
+                quoteId={data.quoteId}
+                direction={data.direction}
+                projectType={data.projectType}
+                onTransitioned={(action, next) => {
+                  // Optimistic milestone toggle on lock — same exact-match
+                  // pattern as the website panel. Look up the lane's
+                  // direction-approved milestone title from the template
+                  // so we match what the server wrote.
+                  const completedAt = new Date().toISOString();
+                  const lockedMilestoneTitle =
+                    action === "lock" && isProjectType(data.projectType)
+                      ? getWorkflowTemplate(data.projectType).milestones.find(
+                          (m) => m.key === getWorkflowTemplate(data.projectType).requiredActions[0]?.unlocksMilestone,
+                        )?.title?.trim().toLowerCase() ?? null
+                      : null;
+                  setData((prev) => ({
+                    ...prev,
+                    direction: next,
+                    portalStateAdmin:
+                      action === "lock" && lockedMilestoneTitle
+                        ? {
+                            ...prev.portalStateAdmin,
+                            milestones: prev.portalStateAdmin.milestones.map((m) =>
+                              m.label.trim().toLowerCase() === lockedMilestoneTitle
                                 ? { ...m, done: true, updatedAt: completedAt }
                                 : m,
                             ),

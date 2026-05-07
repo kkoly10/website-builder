@@ -17,7 +17,16 @@ function normalizeProjectId(value?: string | null) {
 }
 
 function isGhostSessionLane(value: string): value is GhostSessionLane {
-  return value === "website" || value === "ops" || value === "ecommerce" || value === "global";
+  // "ops" accepted for backward compat with legacy admin clients sending
+  // the old lane name. The rest of the system normalizes "ops" to
+  // "automation" on read.
+  return (
+    value === "website" ||
+    value === "ops" ||
+    value === "automation" ||
+    value === "ecommerce" ||
+    value === "global"
+  );
 }
 
 export async function ensureGhostSession(params: {

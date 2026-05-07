@@ -170,11 +170,26 @@
     },
     "startHere": {
       "label": "Not sure where to start?",
-      "website":   { "situation": "I need a professional website for my business",                  "service": "Websites — from $1,800" },
-      "app":       { "situation": "I have a software idea or internal tool to build",               "service": "Custom web apps — from $18K" },
-      "portal":    { "situation": "I manage client projects and need a real client system",          "service": "Client portals — from $12K" },
-      "rescue":    { "situation": "My site is broken, slow, or leaking leads",                      "service": "Website rescue — from $1K" },
-      "ecommerce": { "situation": "I need an online store or help running the one I have",          "service": "E-commerce — from $1,800" }
+      "website": {
+        "situation": "I need a professional website for my business",
+        "service": "Websites — from $1,800"
+      },
+      "app": {
+        "situation": "I have a software idea or internal tool to build",
+        "service": "Custom web apps — from $18K"
+      },
+      "portal": {
+        "situation": "I manage client projects and need a real client system",
+        "service": "Client portals — from $12K"
+      },
+      "rescue": {
+        "situation": "My site is broken, slow, or leaking leads",
+        "service": "Website rescue — from $1K"
+      },
+      "ecommerce": {
+        "situation": "I need an online store or help running the one I have",
+        "service": "E-commerce — from $1,800"
+      }
     },
     "proof": {
       "deliveryValue": "2",
@@ -701,10 +716,18 @@
     "backups3": "Backups are stored in the same encrypted AWS environment as live data.",
     "subprocessorsHeading": "Sub-processors",
     "subprocessorsNote": "Data is shared only with the vendors required to operate our platform. Each is contractually bound to protect your data.",
-    "sp1Name": "Vercel", "sp1Role": "Hosting and edge delivery", "sp1Region": "Global",
-    "sp2Name": "Supabase", "sp2Role": "Database, auth, and storage", "sp2Region": "AWS US-East",
-    "sp3Name": "Stripe", "sp3Role": "Payment processing", "sp3Region": "United States",
-    "sp4Name": "Resend", "sp4Role": "Transactional email", "sp4Region": "United States",
+    "sp1Name": "Vercel",
+    "sp1Role": "Hosting and edge delivery",
+    "sp1Region": "Global",
+    "sp2Name": "Supabase",
+    "sp2Role": "Database, auth, and storage",
+    "sp2Region": "AWS US-East",
+    "sp3Name": "Stripe",
+    "sp3Role": "Payment processing",
+    "sp3Region": "United States",
+    "sp4Name": "Resend",
+    "sp4Role": "Transactional email",
+    "sp4Region": "United States",
     "wontDoHeading": "What we don't do",
     "wontDo1": "We don't sell, share, or license client data to any third party.",
     "wontDo2": "We don't subcontract development work. Komlan is the only person with access to client environments and source code.",
@@ -2040,6 +2063,48 @@
       "updateFailed": "Failed to update workspace.",
       "uploadFailed": "Upload failed.",
       "messageFailed": "Failed to send message."
+    },
+    "directionModule": {
+      "title": {
+        "design": "Design Direction",
+        "product": "Product Direction",
+        "workflow": "Workflow Direction",
+        "store": "Store Direction",
+        "rescue": "Rescue Diagnosis"
+      },
+      "statusPill": {
+        "notStarted": "Not started",
+        "waitingOnClient": "Action needed",
+        "submitted": "Submitted",
+        "underReview": "Under review",
+        "changesRequested": "Clarification needed",
+        "approved": "Approved",
+        "locked": "Locked for build"
+      },
+      "lockedNotice": "Direction is locked. Feedback should focus on functionality, content accuracy, and reasonable polish. Major changes to the approved direction may affect the timeline or require a change order.",
+      "lockedNoticeDesignDirection": "Design direction is locked. Feedback should focus on content accuracy, clarity, missing information, bugs, and reasonable polish. Major visual changes may affect the timeline or require a change order.",
+      "noteFromCrecyStudio": "Note from CrecyStudio",
+      "submitError": "Failed to submit direction.",
+      "submitDesignDirectionError": "Failed to submit design direction.",
+      "submitButton": "Submit direction",
+      "submitButtonSaving": "Submitting..."
+    },
+    "requiredActions": {
+      "title": "Action needed from you",
+      "intro": "Each step below moves the project toward launch. Pending items show what we're waiting on from you right now.",
+      "pendingCount": "{count} pending",
+      "useFormBelow": "(use the form below)",
+      "markAsDone": "Mark as done",
+      "markAsDoneSaving": "Saving...",
+      "completedOn": "Completed {date}",
+      "actionError": "Failed to mark action complete.",
+      "statusPill": {
+        "notStarted": "Not started yet",
+        "waitingOnClient": "Action needed",
+        "submitted": "Submitted",
+        "complete": "Done",
+        "blocked": "Blocked"
+      }
     }
   },
   "portal": {

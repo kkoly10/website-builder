@@ -17,14 +17,27 @@ type HistoryItem = {
 };
 
 function normalizeLane(value: string): GhostSessionLane {
-  if (value === "website" || value === "ops" || value === "ecommerce" || value === "global") {
+  // Accept legacy "ops" and canonical "automation"; anything else falls
+  // through to the global lane.
+  if (
+    value === "website" ||
+    value === "ops" ||
+    value === "automation" ||
+    value === "ecommerce" ||
+    value === "global"
+  ) {
     return value;
   }
   return "global";
 }
 
 function isProjectLane(value: GhostSessionLane): value is GhostLane {
-  return value === "website" || value === "ops" || value === "ecommerce";
+  return (
+    value === "website" ||
+    value === "ops" ||
+    value === "automation" ||
+    value === "ecommerce"
+  );
 }
 
 function normalizeHistory(input: unknown): HistoryItem[] {
