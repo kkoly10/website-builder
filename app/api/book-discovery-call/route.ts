@@ -164,8 +164,15 @@ function maybeCreateCalendarEvent(
           },
         });
       }
-    } catch (err) {
-      console.warn("[book-discovery-call] calendar event creation failed:", err);
+    } catch (err: any) {
+      console.warn("[book-discovery-call] calendar event creation failed");
+      console.warn("[book-discovery-call] err.message:", err?.message);
+      console.warn("[book-discovery-call] err.code:", err?.code);
+      console.warn("[book-discovery-call] err.status:", err?.status ?? err?.response?.status);
+      try {
+        const body = err?.response?.data ?? err?.errors ?? null;
+        if (body) console.warn("[book-discovery-call] err.body:", JSON.stringify(body));
+      } catch {}
     }
   })();
 }
