@@ -17,7 +17,6 @@ export function escHtml(str: string): string {
 // preheader: hidden inbox-preview text (appears after subject in Gmail/Apple Mail)
 // lang: BCP-47 locale code passed through to <html lang>
 export function emailWrap(body: string, footerNote = "", preheader = "", lang = "en"): string {
-  const iconUrl = `${SITE_URL}/brand/crecy-email-icon.png`;
   const htmlLang = LOCALE_TO_LANG[lang] ?? "en";
 
   // 50 zero-width non-joiner pairs prevent inbox preview from pulling body text
@@ -47,19 +46,18 @@ ${preheaderHtml}
       <![endif]-->
       <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #e2e2e2">
 
-        <!-- Header -->
+        <!-- Header
+             Wordmark-only for now. The previous version referenced
+             /brand/crecy-email-icon.png which doesn't exist in /public —
+             every email rendered with a broken image icon. SVG isn't
+             reliable for email (Gmail/Outlook strip it), so until a
+             proper PNG is generated and committed to /public/brand/,
+             the bicolor wordmark carries the brand on its own. -->
         <tr>
           <td style="background:#111111;padding:22px 32px">
-            <table cellpadding="0" cellspacing="0" border="0" role="presentation">
-              <tr>
-                <td style="padding-right:10px;vertical-align:middle">
-                  <img src="${iconUrl}" width="28" height="28" alt="" style="display:block">
-                </td>
-                <td style="vertical-align:middle;line-height:1">
-                  <span style="font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:bold;color:#f8f1e8">crecy</span><span style="font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:normal;color:#8a7d74">studio</span>
-                </td>
-              </tr>
-            </table>
+            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:bold;line-height:1;letter-spacing:-0.01em">
+              <span style="color:#f8f1e8">crecy</span><span style="color:#8a7d74;font-weight:normal">studio</span>
+            </p>
           </td>
         </tr>
 

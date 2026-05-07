@@ -6,6 +6,7 @@ import { recordServerEvent } from "@/lib/analytics/server";
 import { maybeAttachQuoteToUser, resolveQuoteAccess, sameNormalizedEmail } from "@/lib/accessControl";
 import { pickPreferredLocale } from "@/lib/preferredLocale";
 import { emailWrap, adminTable, ctaButton, adminBadge, escHtml } from "@/lib/emailHelpers";
+import { sendResendEmail } from "@/lib/resend";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -116,12 +117,11 @@ export async function POST(req: Request) {
 
     await supabaseAdmin.from("quotes").update({ status: "call_requested" }).eq("id", quoteId);
 
-    const RESEND_API_KEY = process.env.RESEND_API_KEY;
     const FROM = process.env.RESEND_FROM_EMAIL;
     const TO = process.env.ALERT_TO_EMAIL;
     const BASE = normalizeBaseUrl(process.env.APP_BASE_URL);
 
-    if (RESEND_API_KEY && FROM && TO) {
+    if (FROM && TO) {
       const internalLink = BASE ? `${BASE}/internal/preview?quoteId=${quoteId}` : "";
       const subject = `Scope call requested — ${leadEmail} — ${quoteId.slice(0, 8)}`;
 
@@ -143,13 +143,12 @@ export async function POST(req: Request) {
         ${internalLink ? ctaButton(internalLink, "Open internal preview") : ""}
       `);
 
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ from: FROM, to: [TO], subject, html }),
+      // Use the shared sendResendEmail helper for retry logic + base64
+      // attachment encoding consistency. The previous raw fetch lost
+      // those benefits and would silently drop the alert if Resend was
+      // momentarily unhealthy.
+      await sendResendEmail({ to: TO, from: FROM, subject, html }).catch((err) => {
+        console.error("[request-call] admin alert failed:", err);
       });
     }
 

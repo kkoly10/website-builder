@@ -45,10 +45,7 @@ export type GenericDirectionInput = {
   approvedDirectionTerms: boolean;
 };
 
-// Validation result — same non-discriminated shape as the Phase 2A
-// validator to dodge Next 16 / Turbopack narrowing quirks across imports.
-export type GenericDirectionValidationResult = {
-  ok: boolean;
-  value: GenericDirectionInput | null;
-  error: string | null;
-};
+// Validation result. Use the shared Result<T> shape so callers don't
+// have to worry about Next.js / Turbopack narrowing — see lib/result.ts.
+import type { Result } from "@/lib/result";
+export type GenericDirectionValidationResult = Result<GenericDirectionInput>;

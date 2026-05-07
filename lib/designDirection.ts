@@ -210,13 +210,10 @@ export const DEFAULT_WEBSITE_DESIGN_DIRECTION: WebsiteDesignDirection = {
 
 // ─── Validation ──────────────────────────────────────────────────────────
 
-// Both fields are always present so callers don't depend on union narrowing,
-// which Next.js 16 + Turbopack has quirks with when imported across modules.
-export type DesignDirectionValidationResult = {
-  ok: boolean;
-  value: WebsiteDesignDirectionInput | null;
-  error: string | null;
-};
+// Use the shared Result<T> shape so callers don't depend on union
+// narrowing — see lib/result.ts for the rationale.
+import type { Result } from "@/lib/result";
+export type DesignDirectionValidationResult = Result<WebsiteDesignDirectionInput>;
 
 const URL_RE = /^https?:\/\//i;
 

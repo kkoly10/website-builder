@@ -3,6 +3,14 @@ import { logProjectActivityByPortalId } from "@/lib/projectActivity";
 import { sendResendEmail } from "@/lib/resend";
 import { stripeCreateCheckoutSession } from "@/lib/stripeServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import {
+  emailWrap,
+  ctaButton,
+  adminTable,
+  callout,
+  sig,
+  escHtml,
+} from "@/lib/emailHelpers";
 
 const FROM_EMAIL = process.env.NOTIFICATION_FROM_EMAIL || "studio@10xwebsites.com";
 
@@ -167,43 +175,43 @@ async function sendInvoiceEmail(args: {
   recipientEmail: string;
   notes?: string | null;
 }) {
-  const typeLabel = str(args.invoiceType).replace(/_/g, " ") || "project";
-  const dueLine = args.dueDate
-    ? `<p><strong>Due date:</strong> ${escapeHtml(
-        new Date(args.dueDate).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })
-      )}</p>`
-    : "";
-  const notesLine = str(args.notes)
-    ? `<p><strong>Notes:</strong><br/>${escapeHtml(str(args.notes)).replace(/\n/g, "<br/>")}</p>`
-    : "";
+  const typeLabel = (str(args.invoiceType).replace(/_/g, " ") || "project").trim();
+  const typeLabelTitle = typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1);
+  const formattedAmount = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(args.amount);
+  const formattedDueDate = args.dueDate
+    ? new Date(args.dueDate).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : null;
+  const safeName = escHtml(str(args.leadName) || "there");
+  const safeNotes = str(args.notes) ? escHtml(str(args.notes)).replace(/\n/g, "<br/>") : null;
+
+  const tableRows: [string, string][] = [
+    ["Amount", `<strong style="font-size:15px;color:#111111">${escHtml(formattedAmount)}</strong>`],
+    ["Type", escHtml(typeLabelTitle)],
+    ["Project", `<span style="font-family:monospace;font-size:12px;color:#888888">${escHtml(args.quoteId.slice(0, 8))}</span>`],
+  ];
+  if (formattedDueDate) tableRows.push(["Due", escHtml(formattedDueDate)]);
 
   await sendResendEmail({
     to: args.recipientEmail,
     from: FROM_EMAIL,
-    subject: `Invoice ready for your CrecyStudio project`,
-    html: `
-      <h2>Invoice ready</h2>
-      <p>Hi ${escapeHtml(str(args.leadName) || "there")},</p>
-      <p>Your ${escapeHtml(typeLabel)} invoice for project ${escapeHtml(
-        args.quoteId.slice(0, 8)
-      )} is ready.</p>
-      <p><strong>Amount:</strong> ${escapeHtml(
-        new Intl.NumberFormat("en-US", {
-          style: "currency",
-          currency: "USD",
-          maximumFractionDigits: 0,
-        }).format(args.amount)
-      )}</p>
-      ${dueLine}
-      ${notesLine}
-      <p><a href="${args.payUrl}">Pay this invoice</a></p>
-      <p><a href="${args.portalUrl}">Open your project portal</a></p>
-      <p>CrecyStudio</p>
-    `,
+    subject: `Invoice ready: ${formattedAmount} — CrecyStudio`,
+    html: emailWrap(`
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your invoice is ready, ${safeName}.</h1>
+      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(typeLabelTitle)} invoice</p>
+      ${adminTable(tableRows)}
+      ${ctaButton(args.payUrl, "Pay this invoice")}
+      ${safeNotes ? callout("Notes", [safeNotes]) : ""}
+      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">You can also access this invoice and the project workspace anytime from <a href="${escHtml(args.portalUrl)}" style="color:#111111;text-decoration:underline">your portal</a>.</p>
+      ${sig()}
+    `, "Reply to this email to reach Komlan directly.", `Invoice for ${formattedAmount} is ready to pay.`),
   });
 }
 
