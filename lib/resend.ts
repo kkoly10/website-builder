@@ -43,7 +43,7 @@ export async function sendResendEmail(args: SendEmailArgs) {
               ...a,
               content: Buffer.isBuffer(a.content)
                 ? a.content.toString("base64")
-                : a.content,
+                : Buffer.from(a.content, "utf8").toString("base64"),
             })),
           }),
         }),
