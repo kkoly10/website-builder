@@ -42,14 +42,35 @@ function formatMoney(amount?: number | null): string {
   }).format(amount);
 }
 
-const templates: Record<
-  string,
-  (ctx: EventContext) => { subject: string; html: string; toClient: boolean; toAdmin: boolean }
-> = {
+// Only render external URLs that are absolute http(s). Defense against a
+// malformed or hostile production_url ever landing in an email href —
+// the field is admin-set, but emails go to clients, so we don't trust it.
+function safeHttpUrl(url?: string | null): string | null {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+  if (!/^https?:\/\//i.test(trimmed)) return null;
+  return trimmed;
+}
+
+// adminSubject/adminHtml override the client copy when the admin needs
+// a differently-formatted version (e.g. "Hi {leadName}" makes no sense
+// in the studio inbox). Falls back to client subject/html when omitted.
+type TemplateResult = {
+  subject: string;
+  html: string;
+  toClient: boolean;
+  toAdmin: boolean;
+  adminSubject?: string;
+  adminHtml?: string;
+};
+
+const templates: Record<string, (ctx: EventContext) => TemplateResult> = {
   agreement_published: (ctx) => {
     const laneLabel = projectTypeLabel(ctx.projectType);
-    const totalLine = ctx.estimateAmount
-      ? `${formatMoney(ctx.estimateAmount)} total${ctx.depositAmount ? `, ${formatMoney(ctx.depositAmount)} deposit on signature` : ""}`
+    const hasEstimate = Number.isFinite(ctx.estimateAmount) && (ctx.estimateAmount as number) > 0;
+    const hasDeposit = Number.isFinite(ctx.depositAmount) && (ctx.depositAmount as number) > 0;
+    const totalLine = hasEstimate
+      ? `${formatMoney(ctx.estimateAmount)} total${hasDeposit ? `, ${formatMoney(ctx.depositAmount)} deposit on signature` : ""}`
       : "";
     return {
       subject: `Your ${laneLabel} agreement is ready to sign — CrecyStudio`,
@@ -65,6 +86,19 @@ const templates: Record<
       `, "Reply to this email to reach Komlan directly.", `Your ${laneLabel} agreement is ready — review and sign in your workspace.`),
       toClient: true,
       toAdmin: true,
+      adminSubject: `Agreement published — ${escHtml(ctx.leadName || ctx.leadEmail)} — ${ctx.quoteId.slice(0, 8)}`,
+      adminHtml: emailWrap(`
+        ${adminBadge("Admin alert")}
+        <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">Agreement sent for signature</h1>
+        ${adminTable([
+          ["Client", escHtml(ctx.leadName || "—")],
+          ["Email", `<a href="mailto:${escHtml(ctx.leadEmail)}" style="color:#111">${escHtml(ctx.leadEmail)}</a>`],
+          ["Lane", escHtml(laneLabel)],
+          ...(totalLine ? [["Terms", escHtml(totalLine)] as [string, string]] : []),
+          ["Quote ID", `<span style="font-family:monospace;font-size:12px;color:#888">${escHtml(ctx.quoteId)}</span>`],
+        ])}
+        ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open workspace") : ""}
+      `),
     };
   },
 
@@ -103,13 +137,25 @@ const templates: Record<
     `, "Reply to this email to reach Komlan directly.", "Everything is ready — give the word and your site goes live."),
     toClient: true,
     toAdmin: true,
+    adminSubject: `Launch ready — ${escHtml(ctx.leadName || ctx.leadEmail)} — ${ctx.quoteId.slice(0, 8)}`,
+    adminHtml: emailWrap(`
+      ${adminBadge("Admin alert")}
+      <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">Launch checklist signed off</h1>
+      ${adminTable([
+        ["Client", escHtml(ctx.leadName || "—")],
+        ["Email", `<a href="mailto:${escHtml(ctx.leadEmail)}" style="color:#111">${escHtml(ctx.leadEmail)}</a>`],
+        ["Quote ID", `<span style="font-family:monospace;font-size:12px;color:#888">${escHtml(ctx.quoteId)}</span>`],
+      ])}
+      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open workspace") : ""}
+    `),
   }),
 
   site_live: (ctx) => {
     const laneLabel = projectTypeLabel(ctx.projectType);
     const isWebsite = !ctx.projectType || ctx.projectType === "website";
-    const liveLine = ctx.productionUrl
-      ? `Your ${laneLabel} is live at <a href="${escHtml(ctx.productionUrl)}" style="color:#111111;font-weight:600;text-decoration:underline">${escHtml(ctx.productionUrl)}</a>.`
+    const productionUrl = safeHttpUrl(ctx.productionUrl);
+    const liveLine = productionUrl
+      ? `Your ${laneLabel} is live at <a href="${escHtml(productionUrl)}" style="color:#111111;font-weight:600;text-decoration:underline">${escHtml(productionUrl)}</a>.`
       : `Your ${laneLabel} is shipped and indexed.`;
     return {
       subject: `Your ${laneLabel} is live — CrecyStudio`,
@@ -128,6 +174,19 @@ const templates: Record<
       `, "", `Your ${laneLabel} is now live. Handoff and ongoing-support options are in your workspace.`),
       toClient: true,
       toAdmin: true,
+      adminSubject: `Site live — ${escHtml(ctx.leadName || ctx.leadEmail)} — ${ctx.quoteId.slice(0, 8)}`,
+      adminHtml: emailWrap(`
+        ${adminBadge("Admin alert")}
+        <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">Project marked live</h1>
+        ${adminTable([
+          ["Client", escHtml(ctx.leadName || "—")],
+          ["Email", `<a href="mailto:${escHtml(ctx.leadEmail)}" style="color:#111">${escHtml(ctx.leadEmail)}</a>`],
+          ["Lane", escHtml(laneLabel)],
+          ...(productionUrl ? [["Live URL", `<a href="${escHtml(productionUrl)}" style="color:#111">${escHtml(productionUrl)}</a>`] as [string, string]] : []),
+          ["Quote ID", `<span style="font-family:monospace;font-size:12px;color:#888">${escHtml(ctx.quoteId)}</span>`],
+        ])}
+        ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open workspace") : ""}
+      `),
     };
   },
 
@@ -223,8 +282,8 @@ export async function sendEventNotification(ctx: EventContext) {
       sendResendEmail({
         to: ADMIN_EMAIL,
         from: FROM_EMAIL,
-        subject: tmpl.subject,
-        html: tmpl.html,
+        subject: tmpl.adminSubject ?? tmpl.subject,
+        html: tmpl.adminHtml ?? tmpl.html,
       }).catch((err) => {
         console.error(`[notifications] admin email failed for ${ctx.event}:`, err);
       })

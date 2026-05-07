@@ -9,6 +9,7 @@ import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireAdminRoute } from "@/lib/routeAuth";
 import { sendEventNotification } from "@/lib/notifications";
+import { appBaseUrl } from "@/lib/emailHelpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -393,7 +394,7 @@ export async function POST(req: NextRequest) {
           leadName: lead.lead_name || "",
           leadEmail: lead.lead_email || "",
           workspaceUrl: lead.public_token
-            ? `${process.env.NEXT_PUBLIC_BASE_URL || ""}/portal/${lead.public_token}`
+            ? `${appBaseUrl()}/portal/${lead.public_token}`
             : undefined,
           projectType: typeof lead.project_type === "string" ? lead.project_type : undefined,
           productionUrl: typeof portal?.production_url === "string" && portal.production_url

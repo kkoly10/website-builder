@@ -17,6 +17,7 @@ import { validateDirectionPayload } from "@/lib/directions/validate";
 import { isProjectType, type DirectionType } from "@/lib/workflows/types";
 import { completeRequiredActionByPortalToken } from "@/lib/requiredActions";
 import { sendEventNotification } from "@/lib/notifications";
+import { appBaseUrl } from "@/lib/emailHelpers";
 import { listProjectActivityByToken, markClientPortalSeen } from "@/lib/projectActivity";
 import { listProjectInvoicesByToken } from "@/lib/projectInvoices";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -488,14 +489,8 @@ export async function POST(
       const event = eventMap[actionType];
       if (event) {
         const data = result.data as any;
-        const portalPath = data.quote?.publicToken
-          ? `/portal/${data.quote.publicToken}`
-          : undefined;
-        const base = process.env.NEXT_PUBLIC_BASE_URL || "";
-        const workspaceUrl = portalPath
-          ? base
-            ? `${base}${portalPath}`
-            : portalPath
+        const workspaceUrl = data.quote?.publicToken
+          ? `${appBaseUrl()}/portal/${data.quote.publicToken}`
           : undefined;
 
         sendEventNotification({

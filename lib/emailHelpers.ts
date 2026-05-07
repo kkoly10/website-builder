@@ -2,6 +2,18 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com";
 const SITE_DOMAIN = SITE_URL.replace(/^https?:\/\//, "");
 const LINKEDIN_URL = "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407";
 
+// Single source of truth for "what is the absolute origin to use when
+// building portal / workspace links inside transactional emails?".
+// Prefers APP_BASE_URL (server-only override for staging/preview) and
+// falls back to NEXT_PUBLIC_SITE_URL, then to the production hostname.
+// Always returns an absolute https URL with no trailing slash so callers
+// can safely concatenate `${base}${path}`.
+export function appBaseUrl(): string {
+  const raw = (process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com").trim();
+  const withProto = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+  return withProto.replace(/\/$/, "");
+}
+
 // Accepted BCP-47 locale codes → HTML lang values
 const LOCALE_TO_LANG: Record<string, string> = { en: "en", fr: "fr", es: "es" };
 
