@@ -24,15 +24,32 @@ type Props = {
 // Required actions whose completion is signalled by another flow (not by
 // clicking a "mark done" button on this card). The card still LISTS these
 // for context but doesn't render a manual "complete" button.
+//
+// Cross-referenced against lib/workflows/templates.ts requiredActions[].key
+// for all 5 lanes. Any action keyed "complete_*" or "approve_*" or
+// "review_*" or "upload_*" or "provide_*" is included — the card-button
+// shortcut would mislead the client into thinking a one-click action
+// fulfills the requirement, when the actual fulfillment is via a
+// dedicated form (direction), upload (assets/access), or admin sign-off
+// (approval/review).
 const ACTION_HAS_OWN_FLOW = new Set([
   // Direction-related: completed by submitting the direction form.
+  // submit{Design,}DirectionByPortalToken auto-marks these complete.
   "complete_design_direction",
   "complete_product_direction",
   "complete_workflow_direction",
   "complete_store_direction",
   "complete_rescue_diagnosis",
-  // MVP scope / wireframes / UAT etc. happen through admin-controlled
-  // milestones rather than client self-marking.
+  // Asset / access provision: client fulfills via the assets section
+  // (submitAssetByPortalToken) or by sharing credentials out-of-band,
+  // not by clicking "Mark as done" on the card.
+  "upload_website_assets",
+  "upload_product_catalog",
+  "provide_tool_access",
+  "provide_access",
+  // Approvals / reviews / UAT: admin-controlled state transitions on
+  // milestones or admin-triggered direction transitions, not client
+  // self-service.
   "approve_mvp_scope",
   "approve_wireframes",
   "complete_uat",

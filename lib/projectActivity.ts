@@ -138,7 +138,34 @@ export async function listProjectActivityByQuoteId(
 
   return (data ?? [])
     .map((row) => serializeActivity(row, portal))
-    .filter((row) => (options?.clientOnly ? row.clientVisible : true));
+    .filter((row) => (options?.clientOnly ? row.clientVisible : true))
+    .map((row) =>
+      // Strip admin audit fields from client-visible payloads. Admin
+      // transitions stamp actorEmail / actorIp / actorUserAgent / actorUserId
+      // into the payload for studio-side audit trails. Without this filter
+      // the activity feed exposed those values to anyone with the portal
+      // token via the GET /api/portal/[token] response.
+      options?.clientOnly ? { ...row, payload: redactClientFacingPayload(row.payload) } : row,
+    );
+}
+
+// Removes admin-side audit fields from an activity payload before it's
+// sent to a client. The DB still holds the full record for studio
+// review; only the client-facing serialization is redacted.
+function redactClientFacingPayload(payload: Record<string, any>): Record<string, any> {
+  const REDACTED = new Set([
+    "actorEmail",
+    "actorIp",
+    "actorIP",
+    "actorUserId",
+    "actorUserAgent",
+    "actorUser",
+  ]);
+  const out: Record<string, any> = {};
+  for (const [k, v] of Object.entries(payload || {})) {
+    if (!REDACTED.has(k)) out[k] = v;
+  }
+  return out;
 }
 
 export async function listProjectActivityByToken(

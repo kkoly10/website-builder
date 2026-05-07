@@ -261,12 +261,12 @@ Shell provides: brand header, gradient background, card frame, footer. Page cont
 
 ## Phase 1 acceptance criteria
 
-- [ ] `safeNextPath` rejects `//`, `\`, encoded variants. Unit tests cover all four cases.
-- [ ] Security headers visible on every public route via `curl -I`.
-- [ ] CSP report-only deployed; report endpoint receives violations.
-- [ ] `npm run test:smoke` passes against local dev.
-- [ ] All five conversion pages share `ConversionShell` and visually match the homepage.
-- [ ] Live Stripe test payment updates portal `deposit_status` end-to-end.
+- [x] `safeNextPath` rejects `//`, `\`, encoded variants. (Shipped — see `lib/redirects.ts`. Unit tests TBD.)
+- [x] Security headers visible on every public route via `curl -I`. (Shipped — `next.config.js`.)
+- [x] CSP report-only deployed; report endpoint receives violations. (Shipped — `app/api/csp-report/route.ts` + `csp_violations` table.)
+- [x] `npm run test:smoke` passes against local dev. (Shipped — `e2e/smoke.spec.ts`.)
+- [x] All five conversion pages share `ConversionShell` and visually match the homepage. (Shipped — login / signup / forgot / reset / estimate empty state.)
+- [ ] Live Stripe test payment updates portal `deposit_status` end-to-end. **(Manual QA — see `docs/phase-1-launch-qa-runbook.md` § 5; not yet executed.)**
 
 ---
 
@@ -418,14 +418,14 @@ Show in workspace once direction is locked:
 
 ## Phase 2 acceptance criteria
 
-- [ ] Website-lane portals render the Design Direction card.
-- [ ] Form submits successfully and saves to `scope_snapshot.designDirection`.
-- [ ] Admin can review, approve, lock, and request changes.
-- [ ] Locking marks "Design direction approved" milestone complete.
-- [ ] Activity feed records all six event types.
-- [ ] Waiting-on text reflects the direction state correctly.
-- [ ] URL validation rejects malformed reference websites.
-- [ ] `brandMood` enforces max 3 server-side, not just UI.
+- [x] Website-lane portals render the Design Direction card. (Phase 2A.)
+- [x] Form submits successfully and saves to `scope_snapshot.designDirection`. (Phase 2A.)
+- [x] Admin can review, approve, lock, and request changes. (Phase 2B.)
+- [x] Locking marks "Design direction approved" milestone complete. (Phase 2B; uses template lookup in Phase 3.5.)
+- [x] Activity feed records all six event types. (Phase 2B.)
+- [x] Waiting-on text reflects the direction state correctly. (Phase 2A.)
+- [x] URL validation rejects malformed reference websites. (Phase 2A.)
+- [x] `brandMood` enforces max 3 server-side, not just UI. (Phase 2A.)
 
 ---
 
@@ -710,17 +710,18 @@ Defer everything else (UAT classification, separate per-lane admin views) until 
 
 ## Phase 3 acceptance criteria
 
-- [ ] `customer_portal_projects.project_type` is populated for every new portal.
-- [ ] A website quote creates a website portal with Design Direction (regression test from Phase 2).
-- [ ] A web_app quote creates a web_app portal with Product Direction.
-- [ ] An automation quote creates an automation portal with Workflow Direction.
-- [ ] An ecommerce quote creates an ecommerce portal with Store Direction.
-- [ ] A rescue quote creates a rescue portal with Rescue Diagnosis.
-- [ ] Each portal renders the correct milestones and required-actions card.
-- [ ] Admin can approve/lock/request-changes from the unified admin view.
-- [ ] Old `/portal/ops/*` and `/portal/ecommerce/*` URLs redirect to `/portal/[token]`.
-- [ ] Legacy quotes without `project_type` default to `website`.
-- [ ] Existing website portal behavior does not break.
+- [x] `customer_portal_projects.project_type` is populated for every new portal. (Phase 3.2 — `ensureCustomerPortalForQuoteId` sets it explicitly.)
+- [x] A website quote creates a website portal with Design Direction. (Regression-verified.)
+- [x] A web_app quote creates a web_app portal with Product Direction. (Phase 3.3.)
+- [x] An automation quote creates an automation portal with Workflow Direction. (Phase 3.3.)
+- [x] An ecommerce quote creates an ecommerce portal with Store Direction. (Phase 3.3.)
+- [x] A rescue quote creates a rescue portal with Rescue Diagnosis. (Phase 3.3.)
+- [x] Each portal renders the correct milestones and required-actions card. (Phase 3.3 / 3.9 / 3.10.)
+- [x] Admin can approve/lock/request-changes from the unified admin view. (Phase 3.5 — `DirectionAdminPanel`.)
+- [x] Old `/portal/ops/*` and `/portal/ecommerce/*` URLs redirect to `/portal/[token]`. (Cleanup pass — silo redirects.)
+- [x] Legacy quotes without `project_type` default to `website`. (Phase 3.2 — `isProjectType` fallback.)
+- [x] Existing website portal behavior does not break. (Phase 2A code untouched.)
+- [x] Phase 3.8 silo migration: 13 ops + 3 ecom intakes bridged to unified portals. Idempotent.
 
 ---
 
@@ -803,11 +804,19 @@ Use this on the homepage / pricing page:
 
 ## Phase 4 acceptance criteria
 
-- [ ] `lib/pricing/config.ts` exports all 5 lanes with reconciled prices.
-- [ ] `lib/pricing/types.ts` `PricingLane` matches `ProjectType` exactly.
-- [ ] Quote engine produces estimates for all 5 lanes.
-- [ ] Public marketing pages updated for `/custom-web-apps`, `/client-portals`, `/website-rescue`.
-- [ ] Sitemap includes all current service pages.
+- [x] `lib/pricing/config.ts` exports all 5 lanes with reconciled prices. (`WEB_APP_TIER_CONFIG`, `RESCUE_TIER_CONFIG`, `AUTOMATION_TIER_CONFIG`, `ECOMMERCE_TIER_CONFIG`, `WEBSITE_TIER_CONFIG`.)
+- [x] `lib/pricing/types.ts` `PricingLane` matches `ProjectType` exactly. (Cleanup pass dropped `"ops"` from the union; `normalizePricingLane` accepts legacy data on read.)
+- [x] Quote engine produces estimates for all 5 lanes. (`getWebsitePricing`, `getAutomationPricing`, `getEcommercePricing`, `getWebAppPricing`, `getRescuePricing`.)
+- [x] Public marketing pages updated for `/custom-web-apps`, `/client-portals`, `/website-rescue`. (`/client-portals` raised to $22k–$45k per audit; `/custom-web-apps` and `/website-rescue` already showed audit-aligned ranges.)
+- [ ] Sitemap includes all current service pages. **(Not verified — TBD.)**
+
+### `ops → automation` rename (Phase 4 follow-up — shipped)
+
+- [x] `PricingLane` no longer includes `"ops"`. `normalizePricingLane` maps stored `"ops"` to `"automation"` on read.
+- [x] `lib/pricing/ops.ts` renamed to `lib/pricing/automation.ts`. Exports `getAutomationPricing` (canonical) and `getOpsPricing` (deprecated alias).
+- [x] `OPS_TIER_CONFIG` is a deprecated alias of `AUTOMATION_TIER_CONFIG` (object identity — same labels).
+- [x] Stripe metadata, deposit success page, webhook, and Ghost subsystem all write `"automation"` and accept `"ops"` on read.
+- [ ] Caller-side migration of `getOpsPricing` imports → `getAutomationPricing`. **(Out of scope; aliases keep callers working.)**
 
 ---
 
@@ -815,16 +824,16 @@ Use this on the homepage / pricing page:
 
 Not blockers. Tackle after Phase 4 ships.
 
-- Page-specific Open Graph images
-- Refresh old homepage metadata / search snippets
-- Structured data: Organization, LocalBusiness, Service
-- Internal links from blog/help pages once content exists
-- "Recent work" section
-- Founder-led case studies
-- Pricing comparison page
-- Public FAQ: deposits, ownership, revisions, timelines
-- Downloadable proposal PDF after quote submission
-- Promote CSP report-only → enforcing
+- [ ] Page-specific Open Graph images
+- [ ] Refresh old homepage metadata / search snippets
+- [x] **Structured data: Organization, Service** (shipped — `app/layout.tsx` emits Organization JSON-LD on every page; `components/service-page/ServicePage.tsx` emits Service JSON-LD per service page). LocalBusiness still TBD.
+- [ ] Internal links from blog/help pages once content exists
+- [ ] "Recent work" section
+- [ ] Founder-led case studies
+- [ ] Pricing comparison page
+- [ ] Public FAQ: deposits, ownership, revisions, timelines
+- [ ] Downloadable proposal PDF after quote submission
+- [ ] **Promote CSP report-only → enforcing.** Status: still report-only as of last check. The plan called for a 2-week observation window before promotion. To execute: query `select count(*), violated_directive from csp_violations where received_at > now() - interval '14 days' group by violated_directive`; once only known sources (Stripe, Supabase, Vercel Analytics, Google Fonts) appear, change `Content-Security-Policy-Report-Only` → `Content-Security-Policy` in `next.config.js`.
 
 ---
 

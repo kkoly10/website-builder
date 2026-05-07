@@ -626,19 +626,29 @@ function deriveWaitingOn(input: {
   // Direction gates the build for every lane. Use the lane's record:
   //   website → designDirectionStatus (Phase 2A)
   //   other lanes → directionStatus (Phase 3.3)
-  const status =
-    input.projectType === "website" || !input.projectType
-      ? input.designDirectionStatus
-      : input.directionStatus;
-  if (status === "waiting_on_client" || status === "not_started") {
-    return clientDirectionLabel(input.projectType);
+  // Legacy portals (no record on either path) skip this gate entirely
+  // — their pre-Phase-2 workspace flow continues unchanged. Clients
+  // see normal asset/preview/revision waiting-on labels rather than
+  // a confusing "Direction not enabled" message.
+  const isWebsite = input.projectType === "website" || !input.projectType;
+  const status = isWebsite ? input.designDirectionStatus : input.directionStatus;
+  const hasDirectionRecord = status !== null && status !== undefined;
+
+  if (hasDirectionRecord) {
+    if (status === "waiting_on_client" || status === "not_started") {
+      return clientDirectionLabel(input.projectType);
+    }
+    if (status === "submitted" || status === "under_review") {
+      return studioDirectionReviewLabel(input.projectType);
+    }
+    if (status === "changes_requested") {
+      return clientDirectionLabel(input.projectType) + " (clarification)";
+    }
+    // status is approved or locked — fall through to asset/preview gating.
+    // Approved means client did their part; locked means build is in
+    // progress. Either way, proceed to the next non-direction signal.
   }
-  if (status === "submitted" || status === "under_review") {
-    return studioDirectionReviewLabel(input.projectType);
-  }
-  if (status === "changes_requested") {
-    return clientDirectionLabel(input.projectType) + " (clarification)";
-  }
+  // No direction record: legacy portal. Skip direction gating entirely.
 
   if (input.assetsCount === 0) return "Client assets / content";
   if (input.previewUrl && input.clientReviewStatus === "Pending review") {
@@ -1450,8 +1460,30 @@ export async function transitionDesignDirectionByQuoteId(input: {
       if (existing.status === "locked") {
         throw new Error("Direction is locked; unlock before requesting changes.");
       }
+      // Precondition: only request changes against something the client
+      // has actually submitted. Re-opening from waiting_on_client /
+      // not_started would set a "changes requested" state on an empty
+      // payload, which is meaningless — the client never submitted
+      // anything to revise.
+      if (
+        existing.status !== "submitted" &&
+        existing.status !== "under_review" &&
+        existing.status !== "approved" &&
+        existing.status !== "changes_requested"
+      ) {
+        throw new Error(
+          "Direction must be submitted before changes can be requested.",
+        );
+      }
       next.status = "changes_requested";
       next.changesRequestedAt = now;
+      // If the direction was previously approved, clear approvedAt so
+      // the audit trail doesn't claim "approved at X" on a record whose
+      // current status is changes_requested. The original approval is
+      // still recoverable from project_activity events.
+      if (existing.status === "approved") {
+        next.approvedAt = null;
+      }
       break;
     case "approve":
       if (existing.status === "locked") {
@@ -1523,11 +1555,23 @@ export async function transitionDesignDirectionByQuoteId(input: {
   // scope update and the milestone update would leave the journey map out
   // of sync with the direction status, with no signal to the admin.
   if (input.action === "lock") {
+    // Look up the website lane's "direction approved" milestone title
+    // from the workflow template rather than hardcoding "Design direction
+    // approved". Mirrors the same pattern used for non-website lanes in
+    // transitionDirectionByQuoteId — keeps the milestone title in one
+    // place (the template) so a future label change doesn't silently
+    // break this auto-complete.
+    const milestoneTitle = getDirectionApprovedMilestoneTitle("website");
+    if (!milestoneTitle) {
+      throw new Error(
+        "Workflow template is missing the website direction-approved milestone.",
+      );
+    }
     const { error: msErr } = await supabaseAdmin
       .from("customer_portal_milestones")
       .update({ status: "done", completed_at: now, updated_at: now })
       .eq("portal_project_id", portal.id)
-      .ilike("title", "Design direction approved")
+      .ilike("title", milestoneTitle)
       .neq("status", "done");
     if (msErr) {
       throw new Error(
@@ -1581,14 +1625,26 @@ export async function transitionDesignDirectionByQuoteId(input: {
   });
 
   // Phase 3.9 sync: keep the design-direction required action in step
-  // with the admin transition. request_changes re-opens the action so
-  // the card surfaces "action needed"; everything else keeps it complete.
+  // with the admin transition.
+  // - request_changes re-opens the action ("action needed" again).
+  // - approve / lock force the action to complete defensively. Normally
+  //   the client's own submit already marked it complete, but if admin
+  //   reaches approve/lock through any path where the action wasn't
+  //   already complete (e.g. admin entered direction data on the
+  //   client's behalf via direct DB edit), this keeps the journey map
+  //   and required-actions card consistent with the direction state.
   if (input.action === "request_changes") {
     await updateRequiredActionStatusByPortalId({
       portalProjectId: cleanString(portal.id),
       actionKey: "complete_design_direction",
       status: "waiting_on_client",
       clearCompletedAt: true,
+    });
+  } else if (input.action === "approve" || input.action === "lock") {
+    await updateRequiredActionStatusByPortalId({
+      portalProjectId: cleanString(portal.id),
+      actionKey: "complete_design_direction",
+      status: "complete",
     });
   }
 
@@ -1680,8 +1736,30 @@ export async function transitionDirectionByQuoteId(input: {
       if (existing.status === "locked") {
         throw new Error("Direction is locked; unlock before requesting changes.");
       }
+      // Precondition: only request changes against something the client
+      // has actually submitted. Re-opening from waiting_on_client /
+      // not_started would set a "changes requested" state on an empty
+      // payload, which is meaningless — the client never submitted
+      // anything to revise.
+      if (
+        existing.status !== "submitted" &&
+        existing.status !== "under_review" &&
+        existing.status !== "approved" &&
+        existing.status !== "changes_requested"
+      ) {
+        throw new Error(
+          "Direction must be submitted before changes can be requested.",
+        );
+      }
       next.status = "changes_requested";
       next.changesRequestedAt = now;
+      // If the direction was previously approved, clear approvedAt so
+      // the audit trail doesn't claim "approved at X" on a record whose
+      // current status is changes_requested. The original approval is
+      // still recoverable from project_activity events.
+      if (existing.status === "approved") {
+        next.approvedAt = null;
+      }
       break;
     case "approve":
       if (existing.status === "locked") {
@@ -1782,12 +1860,23 @@ export async function transitionDirectionByQuoteId(input: {
   // Phase 3.9 sync: keep the lane's required-action in step. Action key
   // follows the convention complete_${directionType} (matches all 4
   // non-website templates' first required action).
+  // Same defensive sync pattern as the website lane transition above:
+  // request_changes re-opens the action; approve/lock force-complete it
+  // to keep the journey map consistent if any path bypassed the client
+  // submit's own sync.
+  const directionActionKey = `complete_${existing.type}`;
   if (input.action === "request_changes") {
     await updateRequiredActionStatusByPortalId({
       portalProjectId: cleanString(portal.id),
-      actionKey: `complete_${existing.type}`,
+      actionKey: directionActionKey,
       status: "waiting_on_client",
       clearCompletedAt: true,
+    });
+  } else if (input.action === "approve" || input.action === "lock") {
+    await updateRequiredActionStatusByPortalId({
+      portalProjectId: cleanString(portal.id),
+      actionKey: directionActionKey,
+      status: "complete",
     });
   }
 

@@ -96,11 +96,48 @@ export async function GET(
   }
 }
 
+// Reject cross-origin POSTs to the portal write endpoint. Portal tokens
+// authenticate the user, but if a token leaks (forwarded email, screenshot,
+// shared link) a malicious site could embed a hidden form posting to this
+// endpoint and submit revisions / asset uploads / direction changes on
+// the client's behalf. Same-origin enforcement closes that vector.
+function isAllowedOrigin(origin: string | null): boolean {
+  if (!origin) {
+    // No Origin header means same-origin nav (browser strips it for
+    // safe top-level GETs and same-origin form posts in some configs).
+    // We accept this for compatibility — the endpoint is also rate-
+    // limited and token-authenticated, so the worst case is a request
+    // we'd accept anyway.
+    return true;
+  }
+  try {
+    const url = new URL(origin);
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com";
+    const siteHost = new URL(siteUrl).host;
+    if (url.host === siteHost) return true;
+    // Vercel preview deployments use *.vercel.app subdomains.
+    if (url.host.endsWith(".vercel.app")) return true;
+    // localhost for dev.
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(
   req: NextRequest,
   ctx: { params: Promise<{ token: string }> | { token: string } }
 ) {
   try {
+    const origin = req.headers.get("origin");
+    if (!isAllowedOrigin(origin)) {
+      return NextResponse.json(
+        { ok: false, error: "Cross-origin requests not allowed." },
+        { status: 403 },
+      );
+    }
+
     const ip = getIpFromHeaders(req.headers);
     const rl = await enforceRateLimitDurable({ key: `portal-write:${ip}`, limit: 20, windowMs: 60_000 });
     if (!rl.ok) return rateLimitResponse(rl.resetAt);
