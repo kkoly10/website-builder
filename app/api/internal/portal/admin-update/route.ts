@@ -2,6 +2,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
+  editDesignDirectionPayloadByQuoteId,
+  editDirectionPayloadByQuoteId,
   ensureCustomerPortalForQuoteId,
   transitionDesignDirectionByQuoteId,
   transitionDirectionByQuoteId,
@@ -20,6 +22,7 @@ const VALID_DD_ACTIONS: DesignDirectionAdminAction[] = [
   "request_changes",
   "approve",
   "lock",
+  "unlock",
 ];
 
 const VALID_DIRECTION_ACTIONS: DirectionAdminAction[] = [
@@ -27,6 +30,7 @@ const VALID_DIRECTION_ACTIONS: DirectionAdminAction[] = [
   "request_changes",
   "approve",
   "lock",
+  "unlock",
 ];
 
 type MilestoneInput = {
@@ -175,6 +179,77 @@ export async function POST(req: Request) {
       } catch (err: any) {
         return NextResponse.json(
           { ok: false, error: err?.message || "Direction transition failed." },
+          { status: 400 },
+        );
+      }
+    }
+
+    // Admin payload edits (typo fixes, fill-ins for off-portal submits).
+    // Mutually exclusive with the transition blocks above — admin should
+    // either flip status or edit fields, not both in one call. The body
+    // shape mirrors the transition shape (designDirectionEdit /
+    // directionEdit) so dispatch is unambiguous.
+    if (body?.designDirectionEdit && typeof body.designDirectionEdit === "object") {
+      const dde = body.designDirectionEdit as Record<string, unknown>;
+      const patch = dde.patch && typeof dde.patch === "object" ? dde.patch : null;
+      if (!patch) {
+        return NextResponse.json(
+          { ok: false, error: "designDirectionEdit.patch is required." },
+          { status: 400 },
+        );
+      }
+
+      const supabase = await createSupabaseServerClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      try {
+        updatedDesignDirection = await editDesignDirectionPayloadByQuoteId({
+          quoteId,
+          patch: patch as any,
+          actor: {
+            userId: user?.id ?? null,
+            email: user?.email ?? null,
+            ip: getIpFromHeaders(req.headers),
+          },
+        });
+      } catch (err: any) {
+        return NextResponse.json(
+          { ok: false, error: err?.message || "Design direction edit failed." },
+          { status: 400 },
+        );
+      }
+    }
+
+    if (body?.directionEdit && typeof body.directionEdit === "object") {
+      const de = body.directionEdit as Record<string, unknown>;
+      const payload = de.payload && typeof de.payload === "object" ? de.payload : null;
+      if (!payload) {
+        return NextResponse.json(
+          { ok: false, error: "directionEdit.payload is required." },
+          { status: 400 },
+        );
+      }
+
+      const supabase = await createSupabaseServerClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      try {
+        updatedDirection = await editDirectionPayloadByQuoteId({
+          quoteId,
+          payload: payload as Record<string, unknown>,
+          actor: {
+            userId: user?.id ?? null,
+            email: user?.email ?? null,
+            ip: getIpFromHeaders(req.headers),
+          },
+        });
+      } catch (err: any) {
+        return NextResponse.json(
+          { ok: false, error: err?.message || "Direction edit failed." },
           { status: 400 },
         );
       }

@@ -1406,7 +1406,12 @@ export type DesignDirectionAdminAction =
   | "mark_under_review"
   | "request_changes"
   | "approve"
-  | "lock";
+  | "lock"
+  // Admin override: revert from `locked` back to `approved`. Used when
+  // an accidental lock needs to be reversed or a client requests
+  // post-lock revisions. The "design direction approved" milestone is
+  // re-opened in the same operation so the journey map stays in sync.
+  | "unlock";
 
 // Admin transitions for the design direction. Each move is logged to the
 // activity feed with the actor audit. `lock` additionally marks the
@@ -1526,6 +1531,16 @@ export async function transitionDesignDirectionByQuoteId(input: {
         next.approvedAt = next.approvedAt ?? now;
       }
       break;
+    case "unlock":
+      // Only meaningful from "locked". From any other state this is a
+      // no-op — error rather than silently flipping status backward.
+      if (existing.status !== "locked") {
+        throw new Error("Direction is not locked.");
+      }
+      next.status = "approved";
+      next.lockedAt = null;
+      // Keep approvedAt: the original approval still happened.
+      break;
   }
 
   if (cleanPublicNote !== null) next.adminPublicNote = cleanPublicNote || null;
@@ -1554,7 +1569,7 @@ export async function transitionDesignDirectionByQuoteId(input: {
   // rather than swallowing them — otherwise a partial-write between the
   // scope update and the milestone update would leave the journey map out
   // of sync with the direction status, with no signal to the admin.
-  if (input.action === "lock") {
+  if (input.action === "lock" || input.action === "unlock") {
     // Look up the website lane's "direction approved" milestone title
     // from the workflow template rather than hardcoding "Design direction
     // approved". Mirrors the same pattern used for non-website lanes in
@@ -1567,16 +1582,32 @@ export async function transitionDesignDirectionByQuoteId(input: {
         "Workflow template is missing the website direction-approved milestone.",
       );
     }
-    const { error: msErr } = await supabaseAdmin
-      .from("customer_portal_milestones")
-      .update({ status: "done", completed_at: now, updated_at: now })
-      .eq("portal_project_id", portal.id)
-      .ilike("title", milestoneTitle)
-      .neq("status", "done");
-    if (msErr) {
-      throw new Error(
-        `Direction status saved but milestone auto-complete failed: ${msErr.message}. Retry to reconcile.`,
-      );
+    if (input.action === "lock") {
+      const { error: msErr } = await supabaseAdmin
+        .from("customer_portal_milestones")
+        .update({ status: "done", completed_at: now, updated_at: now })
+        .eq("portal_project_id", portal.id)
+        .ilike("title", milestoneTitle)
+        .neq("status", "done");
+      if (msErr) {
+        throw new Error(
+          `Direction status saved but milestone auto-complete failed: ${msErr.message}. Retry to reconcile.`,
+        );
+      }
+    } else {
+      // Reopen the milestone on unlock so the journey map reflects that
+      // the gate is no longer cleared.
+      const { error: msErr } = await supabaseAdmin
+        .from("customer_portal_milestones")
+        .update({ status: "todo", completed_at: null, updated_at: now })
+        .eq("portal_project_id", portal.id)
+        .ilike("title", milestoneTitle)
+        .eq("status", "done");
+      if (msErr) {
+        throw new Error(
+          `Direction unlocked but milestone reopen failed: ${msErr.message}. Retry to reconcile.`,
+        );
+      }
     }
   }
 
@@ -1592,12 +1623,14 @@ export async function transitionDesignDirectionByQuoteId(input: {
     request_changes: "design_direction_changes_requested",
     approve: "design_direction_approved",
     lock: "design_direction_locked",
+    unlock: "design_direction_unlocked",
   };
   const summaryByAction: Record<DesignDirectionAdminAction, string> = {
     mark_under_review: "CrecyStudio is reviewing the design direction.",
     request_changes: "CrecyStudio requested clarification on the design direction.",
     approve: "Design direction approved.",
     lock: "Design direction locked. Build can begin.",
+    unlock: "CrecyStudio reopened the design direction for changes.",
   };
 
   await logProjectActivityByPortalId({
@@ -1633,7 +1666,7 @@ export async function transitionDesignDirectionByQuoteId(input: {
   //   already complete (e.g. admin entered direction data on the
   //   client's behalf via direct DB edit), this keeps the journey map
   //   and required-actions card consistent with the direction state.
-  if (input.action === "request_changes") {
+  if (input.action === "request_changes" || input.action === "unlock") {
     await updateRequiredActionStatusByPortalId({
       portalProjectId: cleanString(portal.id),
       actionKey: "complete_design_direction",
@@ -1778,6 +1811,14 @@ export async function transitionDirectionByQuoteId(input: {
         next.approvedAt = next.approvedAt ?? now;
       }
       break;
+    case "unlock":
+      // Mirrors the website-lane unlock — only meaningful from "locked".
+      if (existing.status !== "locked") {
+        throw new Error("Direction is not locked.");
+      }
+      next.status = "approved";
+      next.lockedAt = null;
+      break;
   }
 
   if (cleanPublicNote !== null) next.adminPublicNote = cleanPublicNote || null;
@@ -1798,21 +1839,34 @@ export async function transitionDirectionByQuoteId(input: {
   }
 
   // Lock auto-completes the lane's "direction approved" milestone (looked
-  // up from the template, not hardcoded). Same idempotent error-surfacing
-  // pattern as Phase 2B's lock path.
-  if (input.action === "lock") {
+  // up from the template, not hardcoded). Unlock reverses it.
+  if (input.action === "lock" || input.action === "unlock") {
     const milestoneTitle = getDirectionApprovedMilestoneTitle(projectType);
     if (milestoneTitle) {
-      const { error: msErr } = await supabaseAdmin
-        .from("customer_portal_milestones")
-        .update({ status: "done", completed_at: now, updated_at: now })
-        .eq("portal_project_id", portal.id)
-        .ilike("title", milestoneTitle)
-        .neq("status", "done");
-      if (msErr) {
-        throw new Error(
-          `Direction status saved but milestone auto-complete failed: ${msErr.message}. Retry to reconcile.`,
-        );
+      if (input.action === "lock") {
+        const { error: msErr } = await supabaseAdmin
+          .from("customer_portal_milestones")
+          .update({ status: "done", completed_at: now, updated_at: now })
+          .eq("portal_project_id", portal.id)
+          .ilike("title", milestoneTitle)
+          .neq("status", "done");
+        if (msErr) {
+          throw new Error(
+            `Direction status saved but milestone auto-complete failed: ${msErr.message}. Retry to reconcile.`,
+          );
+        }
+      } else {
+        const { error: msErr } = await supabaseAdmin
+          .from("customer_portal_milestones")
+          .update({ status: "todo", completed_at: null, updated_at: now })
+          .eq("portal_project_id", portal.id)
+          .ilike("title", milestoneTitle)
+          .eq("status", "done");
+        if (msErr) {
+          throw new Error(
+            `Direction unlocked but milestone reopen failed: ${msErr.message}. Retry to reconcile.`,
+          );
+        }
       }
     }
   }
@@ -1829,6 +1883,7 @@ export async function transitionDirectionByQuoteId(input: {
     request_changes: `${existing.type}_changes_requested`,
     approve: `${existing.type}_approved`,
     lock: `${existing.type}_locked`,
+    unlock: `${existing.type}_unlocked`,
   };
   const directionLabel = existing.type.replace(/_/g, " ");
   const summaryByAction: Record<DirectionAdminAction, string> = {
@@ -1836,6 +1891,7 @@ export async function transitionDirectionByQuoteId(input: {
     request_changes: `CrecyStudio requested clarification on the ${directionLabel}.`,
     approve: `${directionLabel.charAt(0).toUpperCase()}${directionLabel.slice(1)} approved.`,
     lock: `${directionLabel.charAt(0).toUpperCase()}${directionLabel.slice(1)} locked. Build can begin.`,
+    unlock: `CrecyStudio reopened the ${directionLabel} for changes.`,
   };
 
   await logProjectActivityByPortalId({
@@ -1865,7 +1921,7 @@ export async function transitionDirectionByQuoteId(input: {
   // to keep the journey map consistent if any path bypassed the client
   // submit's own sync.
   const directionActionKey = `complete_${existing.type}`;
-  if (input.action === "request_changes") {
+  if (input.action === "request_changes" || input.action === "unlock") {
     await updateRequiredActionStatusByPortalId({
       portalProjectId: cleanString(portal.id),
       actionKey: directionActionKey,
@@ -1879,6 +1935,150 @@ export async function transitionDirectionByQuoteId(input: {
       status: "complete",
     });
   }
+
+  return next;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Admin-side payload edits. The transition helpers above only flip
+// status fields — they don't let admin fix typos in what the client
+// submitted, or fill in missing fields if the client sent direction
+// over email instead of through the portal.
+//
+// These helpers update the editable subset of fields on the existing
+// direction record, leaving status/timestamps/notes alone. The full
+// edit (including timestamps) is reserved for the dedicated direction
+// transition flow above.
+// ─────────────────────────────────────────────────────────────────
+
+const DESIGN_DIRECTION_EDITABLE_KEYS = [
+  "controlLevel",
+  "brandMood",
+  "visualStyle",
+  "brandColorsKnown",
+  "preferredColors",
+  "colorsToAvoid",
+  "letCrecyChoosePalette",
+  "typographyFeel",
+  "imageryDirection",
+  "likedWebsites",
+  "dislikedWebsites",
+  "contentTone",
+  "hasLogo",
+  "hasBrandGuide",
+  "brandAssetsNotes",
+  "clientNotes",
+] as const;
+
+export async function editDesignDirectionPayloadByQuoteId(input: {
+  quoteId: string;
+  patch: Partial<WebsiteDesignDirectionInput>;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}): Promise<WebsiteDesignDirection> {
+  const { data: portal, error: portalErr } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .select("*")
+    .eq("quote_id", input.quoteId)
+    .maybeSingle();
+  if (portalErr) throw portalErr;
+  if (!portal) throw new Error("Portal not found");
+
+  const existingScope = safeObj(portal.scope_snapshot);
+  if (!hasDesignDirection(existingScope)) {
+    throw new Error("Design direction is not enabled for this project.");
+  }
+
+  const existing = readDesignDirection(existingScope) ?? DEFAULT_WEBSITE_DESIGN_DIRECTION;
+  const next: WebsiteDesignDirection = { ...existing };
+
+  // Only copy whitelisted fields. Prevents an admin accidentally
+  // overwriting status/timestamps via the same endpoint.
+  const changedKeys: string[] = [];
+  for (const key of DESIGN_DIRECTION_EDITABLE_KEYS) {
+    if (key in input.patch) {
+      const value = (input.patch as Record<string, unknown>)[key];
+      if (value !== undefined) {
+        (next as Record<string, unknown>)[key] = value;
+        changedKeys.push(key);
+      }
+    }
+  }
+  if (changedKeys.length === 0) return existing;
+
+  const now = new Date().toISOString();
+  const nextScope = { ...existingScope, designDirection: next };
+  const { error: updErr } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({ scope_snapshot: nextScope, updated_at: now })
+    .eq("id", portal.id);
+  if (updErr) throw updErr;
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "studio",
+    eventType: "design_direction_payload_edited",
+    summary: "CrecyStudio edited the design direction on the client's behalf.",
+    payload: {
+      changedKeys,
+      actorUserId: input.actor.userId ?? null,
+      actorEmail: input.actor.email ?? null,
+      actorIp: input.actor.ip ?? null,
+    },
+    clientVisible: false,
+  });
+
+  return next;
+}
+
+export async function editDirectionPayloadByQuoteId(input: {
+  quoteId: string;
+  payload: Record<string, unknown>;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}): Promise<GenericDirection> {
+  const { data: portal, error: portalErr } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .select("*")
+    .eq("quote_id", input.quoteId)
+    .maybeSingle();
+  if (portalErr) throw portalErr;
+  if (!portal) throw new Error("Portal not found");
+
+  const existingScope = safeObj(portal.scope_snapshot);
+  if (!hasDirection(existingScope)) {
+    throw new Error("Direction is not enabled for this project.");
+  }
+  const existing = readDirection(existingScope);
+  if (!existing) {
+    throw new Error("Direction record could not be read.");
+  }
+
+  // Generic direction stores everything inside `payload`. Merge over
+  // existing so partial edits work; pass {} to clear nothing.
+  const mergedPayload = { ...(existing.payload || {}), ...input.payload };
+  const next: GenericDirection = { ...existing, payload: mergedPayload };
+
+  const now = new Date().toISOString();
+  const nextScope = { ...existingScope, direction: next };
+  const { error: updErr } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({ scope_snapshot: nextScope, updated_at: now })
+    .eq("id", portal.id);
+  if (updErr) throw updErr;
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "studio",
+    eventType: `${existing.type}_payload_edited`,
+    summary: `CrecyStudio edited the ${existing.type.replace(/_/g, " ")} on the client's behalf.`,
+    payload: {
+      directionType: existing.type,
+      changedKeys: Object.keys(input.payload),
+      actorUserId: input.actor.userId ?? null,
+      actorEmail: input.actor.email ?? null,
+      actorIp: input.actor.ip ?? null,
+    },
+    clientVisible: false,
+  });
 
   return next;
 }

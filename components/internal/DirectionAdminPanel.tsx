@@ -9,7 +9,7 @@ import type { GenericDirection } from "@/lib/directions/types";
 import { getDirectionSchema } from "@/lib/directions/schemas";
 import DirectionSummary from "@/components/portal/directions/DirectionSummary";
 
-type AdminAction = "mark_under_review" | "request_changes" | "approve" | "lock";
+type AdminAction = "mark_under_review" | "request_changes" | "approve" | "lock" | "unlock";
 
 type Props = {
   quoteId: string;
@@ -135,6 +135,7 @@ export default function DirectionAdminPanel({
     direction.status === "submitted" ||
     direction.status === "under_review" ||
     direction.status === "approved";
+  const canUnlock = direction.status === "locked";
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -245,6 +246,17 @@ export default function DirectionAdminPanel({
         >
           {busy === "lock" ? "Locking..." : "Approve & lock for build"}
         </button>
+        {canUnlock ? (
+          <button
+            className="btn btnGhost"
+            disabled={busy !== null}
+            onClick={() => transition("unlock")}
+            style={{ fontSize: 12, padding: "8px 14px" }}
+            title="Reopen this direction so the client can revise it. Reopens the approved milestone too."
+          >
+            {busy === "unlock" ? "Unlocking..." : "Unlock for revisions"}
+          </button>
+        ) : null}
       </div>
 
       <div
