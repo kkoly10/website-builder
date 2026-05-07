@@ -5,11 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo, useState, type FormEvent } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-
-function safeNextPath(next: string | null) {
-  if (!next || !next.startsWith("/")) return "/";
-  return next;
-}
+import { safeNextPathOr } from "@/lib/redirects";
+import ConversionShell from "@/components/site/ConversionShell";
 
 export default function ForgotPasswordClient() {
   const searchParams = useSearchParams();
@@ -22,7 +19,7 @@ export default function ForgotPasswordClient() {
   const [message, setMessage] = useState<string | null>(null);
 
   const nextPath = useMemo(
-    () => safeNextPath(searchParams.get("next")),
+    () => safeNextPathOr(searchParams.get("next"), "/"),
     [searchParams]
   );
 
@@ -54,57 +51,45 @@ export default function ForgotPasswordClient() {
   }
 
   return (
-    <div className="card">
-      <div className="cardInner" >
-        <div className="kicker">
-          <span className="kickerDot" aria-hidden="true" />
-          {tForgot("kicker")}
+    <ConversionShell
+      kicker={tForgot("kicker")}
+      title={tForgot("title")}
+      subtitle={tForgot("subtitle")}
+      footer={
+        <Link href={`/login?next=${encodeURIComponent(nextPath)}`} className="btn btnGhost" style={{ margin: "0 auto" }}>
+          {t("backToLogin")}
+        </Link>
+      }
+    >
+      <form onSubmit={handleResetEmail} style={{ display: "grid", gap: "1rem" }}>
+        <input
+          className="input"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder={t("emailPlaceholder")}
+          required
+          autoComplete="email"
+        />
+
+        <button className="btn btnPrimary" type="submit" disabled={submitting}>
+          {submitting ? tForgot("submitting") : tForgot("submit")}
+          <span className="btnArrow">→</span>
+        </button>
+      </form>
+
+      {message ? (
+        <div style={{ padding: 12, border: "1px solid var(--success)", background: "var(--success-bg)", color: "var(--success)", fontSize: 13 }}>
+          {message}
         </div>
+      ) : null}
 
-        <h1 className="h2" >
-          {tForgot("title")}
-        </h1>
-
-        <p className="p" style={{ marginTop: 0 }}>
-          {tForgot("subtitle")}
-        </p>
-
-        <form onSubmit={handleResetEmail} style={{ display: "grid", gap: "1rem" }}>
-          <input
-            className="input"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder={t("emailPlaceholder")}
-            required
-            autoComplete="email"
-          />
-
-          <button className="btn btnPrimary" type="submit" disabled={submitting}>
-            {submitting ? tForgot("submitting") : tForgot("submit")}
-            <span className="btnArrow">→</span>
-          </button>
-        </form>
-
-        {message ? (
-          <div style={{ padding: 12, border: "1px solid var(--success)", background: "var(--success-bg)", color: "var(--success)", fontSize: 13 }}>
-            {message}
-          </div>
-        ) : null}
-
-        {error ? (
-          <div style={{ padding: 12, border: "1px solid var(--accent)", background: "var(--accent-bg)", color: "var(--accent-2)", fontSize: 13, fontWeight: 700 }}>
-            <strong>{t("errorPrefix")}</strong> {error}
-          </div>
-        ) : null}
-
-        <div >
-          <Link href={`/login?next=${encodeURIComponent(nextPath)}`} className="btn btnGhost">
-            {t("backToLogin")}
-          </Link>
+      {error ? (
+        <div style={{ padding: 12, border: "1px solid var(--accent)", background: "var(--accent-bg)", color: "var(--accent-2)", fontSize: 13, fontWeight: 700 }}>
+          <strong>{t("errorPrefix")}</strong> {error}
         </div>
-      </div>
-    </div>
+      ) : null}
+    </ConversionShell>
   );
 }
 

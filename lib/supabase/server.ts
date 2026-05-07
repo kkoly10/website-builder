@@ -54,31 +54,9 @@ export function getSiteUrl() {
   return siteUrl;
 }
 
-// OWASP-aligned redirect validation. Returns the path if it is a safe
-// same-origin path, otherwise null. Rejects:
-//   - non-string / empty values
-//   - paths that don't start with "/"
-//   - protocol-relative "//evil.com"
-//   - backslash-escape variants like "/\evil.com" or "\\evil.com"
-//   - URL-encoded variants of any of the above
-//   - control characters
-export function safeNextPath(next?: string | null): string | null {
-  if (!next || typeof next !== "string") return null;
-
-  let candidate: string;
-  try {
-    candidate = decodeURIComponent(next);
-  } catch {
-    return null;
-  }
-
-  if (!candidate.startsWith("/")) return null;
-  if (candidate.startsWith("//")) return null;
-  if (candidate.includes("\\")) return null;
-  if (/[\x00-\x1f\x7f]/.test(candidate)) return null;
-
-  return next;
-}
+// Re-exported from lib/redirects.ts so existing server callers keep working.
+// New code should import from "@/lib/redirects" directly.
+export { safeNextPath } from "@/lib/redirects";
 
 export function normalizeEmail(email?: string | null) {
   return String(email ?? "").trim().toLowerCase();
