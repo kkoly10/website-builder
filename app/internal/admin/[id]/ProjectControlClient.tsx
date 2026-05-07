@@ -678,6 +678,66 @@ export default function ProjectControlClient({
     await savePatch({ publishedAgreementText: data.publishedAgreementText, portalAdmin: next, _event: "agreement_published" }, "Agreement published.");
   }
 
+  // Admin agreement overrides: manual accept (offline signing) + void
+  // (accidental acceptance, contract changes, etc.). Both refresh the
+  // page to pick up the canonical agreement state from the server
+  // since these touch multiple tables.
+  async function adminAcceptAgreement() {
+    const acceptedByEmail = prompt(
+      "Email of the person who accepted offline:",
+      data.leadEmail || "",
+    );
+    if (!acceptedByEmail || !acceptedByEmail.trim()) return;
+    if (!confirm(
+      `Record offline acceptance by ${acceptedByEmail.trim()}?\n\nThe agreement will be marked accepted and an audit row written. Make sure the client truly signed.`
+    )) return;
+
+    setBusy(true); setMessage("Recording acceptance..."); setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/admin/agreement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, action: "accept", acceptedByEmail: acceptedByEmail.trim() }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      setMessageIsError(false);
+      setMessage("Acceptance recorded. Refreshing...");
+      // Hard refresh to pick up the server-side acceptance audit fields.
+      window.location.reload();
+    } catch (err) {
+      setMessageIsError(true);
+      setMessage(err instanceof Error ? err.message : "Failed.");
+      setBusy(false);
+    }
+  }
+
+  async function adminVoidAgreement() {
+    const reason = prompt("Why are you voiding this agreement? (logged to audit trail)");
+    if (!reason || !reason.trim()) return;
+    if (!confirm(
+      "Void this accepted agreement?\n\nThe acceptance fields will be cleared and the agreements row marked voided. The activity feed will show what happened. The client will see this in their portal."
+    )) return;
+
+    setBusy(true); setMessage("Voiding agreement..."); setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/admin/agreement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, action: "void", reason: reason.trim() }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      setMessageIsError(false);
+      setMessage("Agreement voided. Refreshing...");
+      window.location.reload();
+    } catch (err) {
+      setMessageIsError(true);
+      setMessage(err instanceof Error ? err.message : "Failed.");
+      setBusy(false);
+    }
+  }
+
   async function unpublishAgreement() {
     const next = { ...data.portalAdmin, agreementStatus: "Pre-draft / agreement stage", agreementPublishedAt: "" };
     setData((p) => ({ ...p, portalAdmin: next, publishedAgreementText: "" }));
@@ -1759,6 +1819,17 @@ export default function ProjectControlClient({
                 <button className="btn btnGhost" disabled={busy} style={{ fontSize: 12, padding: "7px 14px", color: "var(--accent)" }}
                   onClick={unpublishAgreement}>Unpublish</button>
               )}
+              {isAgreementPublished({ agreementStatus: data.portalAdmin.agreementStatus, publishedAgreementText: data.publishedAgreementText }) && !data.agreementAcceptance ? (
+                <button
+                  className="btn btnGhost"
+                  disabled={busy}
+                  style={{ fontSize: 12, padding: "7px 14px" }}
+                  onClick={adminAcceptAgreement}
+                  title="Record an offline / in-person acceptance on the client's behalf."
+                >
+                  Record offline acceptance →
+                </button>
+              ) : null}
             </div>
             <textarea className="textarea" rows={20} value={data.publishedAgreementText}
               onChange={(e) => setData((p) => ({ ...p, publishedAgreementText: e.target.value }))} placeholder="Agreement text shown to the client once published." />
@@ -1806,6 +1877,15 @@ export default function ProjectControlClient({
                     }}
                   >
                     {certificateUrl ? "Regenerate certificate" : "Generate certificate"}
+                  </button>
+                  <button
+                    className="btn btnGhost"
+                    disabled={busy}
+                    style={{ fontSize: 12, padding: "7px 14px", color: "var(--accent)", marginLeft: "auto" }}
+                    onClick={adminVoidAgreement}
+                    title="Clear the acceptance audit and mark the agreement row voided. Use only if the acceptance was a mistake."
+                  >
+                    Void acceptance
                   </button>
                 </div>
               </div>

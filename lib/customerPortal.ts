@@ -2547,6 +2547,146 @@ export async function acceptCustomerPortalAgreement(token: string) {
   });
 }
 
+// Admin override: record an offline acceptance (signed-in-person, sent
+// over email, etc.). Mirrors the client-side accept but stamps the
+// audit trail with the admin actor + a flag that distinguishes
+// admin-recorded acceptance from client-clicked acceptance.
+export async function adminAcceptCustomerPortalAgreementByQuoteId(input: {
+  quoteId: string;
+  acceptedByEmail: string;
+  acceptedAt?: string | null;
+  notes?: string | null;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}) {
+  const portal = await getPortalProjectByQuoteId(input.quoteId);
+  if (!portal) throw new Error("Portal not found");
+
+  const acceptedAt = safeDate(input.acceptedAt) || new Date().toISOString();
+  const now = new Date().toISOString();
+
+  const { error } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({
+      agreement_status: "accepted",
+      agreement_accepted_at: acceptedAt,
+      updated_at: now,
+    })
+    .eq("id", portal.id);
+  if (error) throw error;
+
+  // Mirror the agreements row pattern used for client-side accepts so
+  // certificate generation and downstream consumers see consistent data.
+  // Doesn't replay an existing row — admin accept assumes there isn't
+  // one yet (otherwise call void first).
+  const { data: existingAgreement } = await supabaseAdmin
+    .from("agreements")
+    .select("id")
+    .eq("portal_project_id", portal.id)
+    .eq("status", "accepted")
+    .maybeSingle();
+
+  if (!existingAgreement) {
+    const { data: scope } = await supabaseAdmin
+      .from("customer_portal_projects")
+      .select("agreement_text")
+      .eq("id", portal.id)
+      .maybeSingle();
+    const bodyText = String(scope?.agreement_text || "");
+    if (bodyText) {
+      await supabaseAdmin
+        .from("agreements")
+        .insert({
+          portal_project_id: portal.id,
+          body_text: bodyText,
+          body_hash: "",
+          published_at: acceptedAt,
+          accepted_at: acceptedAt,
+          accepted_by_email: input.acceptedByEmail.trim(),
+          accepted_ip: input.actor.ip ?? null,
+          accepted_user_agent: "admin-recorded",
+          status: "accepted",
+        });
+    }
+  }
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "studio",
+    eventType: "agreement_accepted_by_admin",
+    summary: `CrecyStudio recorded that ${input.acceptedByEmail.trim()} accepted the agreement offline.`,
+    payload: {
+      acceptedBy: input.acceptedByEmail.trim(),
+      acceptedAt,
+      notes: input.notes || null,
+      actorUserId: input.actor.userId ?? null,
+      actorEmail: input.actor.email ?? null,
+      actorIp: input.actor.ip ?? null,
+    },
+    clientVisible: true,
+  });
+}
+
+// Void an accepted agreement. Clears the acceptance fields on the
+// portal row and marks the most-recent accepted agreement row as
+// "voided" (preserved for audit, not deleted). Use sparingly —
+// every void is logged with the reason.
+export async function voidCustomerPortalAgreementByQuoteId(input: {
+  quoteId: string;
+  reason: string;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}) {
+  const portal = await getPortalProjectByQuoteId(input.quoteId);
+  if (!portal) throw new Error("Portal not found");
+
+  const reason = input.reason.trim();
+  if (!reason) throw new Error("A reason is required to void an agreement.");
+
+  const now = new Date().toISOString();
+  const { error: projectErr } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({
+      agreement_status: "draft",
+      agreement_accepted_at: null,
+      updated_at: now,
+    })
+    .eq("id", portal.id);
+  if (projectErr) throw projectErr;
+
+  // Mark the most-recent accepted agreements row as voided. Preserves
+  // history rather than deleting (the original signature audit is
+  // recoverable from the row).
+  const { data: latest } = await supabaseAdmin
+    .from("agreements")
+    .select("id")
+    .eq("portal_project_id", portal.id)
+    .eq("status", "accepted")
+    .order("accepted_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (latest?.id) {
+    await supabaseAdmin
+      .from("agreements")
+      .update({ status: "voided" })
+      .eq("id", latest.id);
+  }
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "studio",
+    eventType: "agreement_voided",
+    summary: `CrecyStudio voided the accepted agreement: ${reason}`,
+    payload: {
+      reason,
+      voidedAgreementId: latest?.id ?? null,
+      actorUserId: input.actor.userId ?? null,
+      actorEmail: input.actor.email ?? null,
+      actorIp: input.actor.ip ?? null,
+    },
+    clientVisible: true,
+  });
+}
+
 export async function markDepositPaid(
   token: string,
   paymentData?: {
