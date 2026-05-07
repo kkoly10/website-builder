@@ -5,8 +5,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
 import DesignDirectionAdminPanel from "@/components/internal/DesignDirectionAdminPanel";
 import DirectionAdminPanel from "@/components/internal/DirectionAdminPanel";
+import RequiredActionsAdminPanel from "@/components/internal/RequiredActionsAdminPanel";
 import type { WebsiteDesignDirection } from "@/lib/designDirection";
 import type { GenericDirection } from "@/lib/directions/types";
+import type { RequiredAction, RequiredActionOwner, RequiredActionStatus } from "@/lib/requiredActions";
 import { getDirectionApprovedMilestoneTitle } from "@/lib/workflows/templates";
 import { isProjectType } from "@/lib/workflows/types";
 
@@ -103,6 +105,7 @@ type ProjectControlData = {
   portalStateAdmin: { clientStatus: string; clientNotes: string; adminPublicNote: string; depositAmount: number; depositNotes: string; milestones: Milestone[] };
   clientSync: { lastClientUpdate: string; assets: ClientAsset[]; revisions: ClientRevision[] };
   invoices: ProjectInvoice[];
+  requiredActions: RequiredAction[];
   activityFeed: ProjectActivity[];
   messages: PortalMessage[];
   messageSummary: MessageSummary;
@@ -765,6 +768,108 @@ export default function ProjectControlClient({
     } finally { setBusy(false); }
   }
 
+  // Required actions admin CRUD. Each call hits the new endpoint and
+  // splices the returned action into local state so the list stays in
+  // sync without a full refresh of the project payload.
+  async function callRequiredAction(
+    payload: Record<string, any>,
+    successMsg: string,
+  ): Promise<RequiredAction | null> {
+    setBusy(true); setMessage("Saving..."); setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/admin/required-actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, ...payload }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      setMessageIsError(false); setMessage(successMsg);
+      return (json?.action as RequiredAction) || null;
+    } catch (err) {
+      setMessageIsError(true);
+      setMessage(err instanceof Error ? err.message : "Failed.");
+      return null;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function createRequiredAction(input: {
+    actionKey: string;
+    title: string;
+    owner: RequiredActionOwner;
+    description: string;
+    dueDate: string;
+  }) {
+    const created = await callRequiredAction(
+      { action: "create", ...input, dueDate: input.dueDate || null },
+      "Required action added.",
+    );
+    if (created) {
+      setData((p) => ({ ...p, requiredActions: [...p.requiredActions, created] }));
+    }
+  }
+
+  async function patchRequiredAction(actionId: string, patch: Record<string, any>) {
+    const updated = await callRequiredAction(
+      { action: "update", actionId, ...patch },
+      "Required action updated.",
+    );
+    if (updated) {
+      setData((p) => ({
+        ...p,
+        requiredActions: p.requiredActions.map((a) => (a.id === actionId ? updated : a)),
+      }));
+    }
+  }
+
+  async function forceCompleteRequiredAction(actionId: string) {
+    const updated = await callRequiredAction(
+      { action: "force_complete", actionId },
+      "Required action marked complete.",
+    );
+    if (updated) {
+      setData((p) => ({
+        ...p,
+        requiredActions: p.requiredActions.map((a) => (a.id === actionId ? updated : a)),
+      }));
+    }
+  }
+
+  async function reopenRequiredAction(actionId: string) {
+    const updated = await callRequiredAction(
+      { action: "reopen", actionId },
+      "Required action re-opened.",
+    );
+    if (updated) {
+      setData((p) => ({
+        ...p,
+        requiredActions: p.requiredActions.map((a) => (a.id === actionId ? updated : a)),
+      }));
+    }
+  }
+
+  async function deleteRequiredAction(actionId: string) {
+    if (!confirm("Delete this required action? This can't be undone.")) return;
+    setBusy(true); setMessage("Deleting..."); setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/admin/required-actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, action: "delete", actionId }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      setData((p) => ({ ...p, requiredActions: p.requiredActions.filter((a) => a.id !== actionId) }));
+      setMessageIsError(false); setMessage("Required action deleted.");
+    } catch (err) {
+      setMessageIsError(true); setMessage(err instanceof Error ? err.message : "Failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function updateAssetStatus(id: string, status: string) {
     setData((p) => ({ ...p, clientSync: { ...p.clientSync, assets: p.clientSync.assets.map((a) => a.id === id ? { ...a, status } : a) } }));
   }
@@ -1346,6 +1451,18 @@ export default function ProjectControlClient({
                   onClick={() => savePatch({ status: data.status, portalStateAdmin: data.portalStateAdmin }, "Workspace state saved.")}>Save state →</button>
               </div>
             </div>
+          </div>
+
+          <div style={{ gridColumn: "1 / -1" }}>
+            <RequiredActionsAdminPanel
+              actions={data.requiredActions}
+              busy={busy}
+              onCreate={createRequiredAction}
+              onPatch={patchRequiredAction}
+              onForceComplete={forceCompleteRequiredAction}
+              onReopen={reopenRequiredAction}
+              onDelete={deleteRequiredAction}
+            />
           </div>
 
           <div style={{ gridColumn: "1 / -1", background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>

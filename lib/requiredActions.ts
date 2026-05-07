@@ -242,3 +242,209 @@ export async function completeRequiredActionByPortalToken(input: {
 
   return action;
 }
+
+// ─────────────────────────────────────────────────────────────────
+// Admin-side CRUD. Phase 3.10's MVP shipped without these — the only
+// path to required actions was the client portal's "Mark complete"
+// button on its own owned actions. Below is the full admin surface so
+// a stuck project can be unstuck without DB intervention: list any
+// portal's actions (incl. studio-owned), add ad-hoc actions, edit
+// title / description / due / owner / status, force-complete or
+// reopen on the client's behalf, and delete bad seeds.
+// ─────────────────────────────────────────────────────────────────
+
+async function getPortalIdByQuoteId(quoteId: string): Promise<string> {
+  const { data, error } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .select("id")
+    .eq("quote_id", quoteId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data?.id) throw new Error("Portal not found for quote");
+  return data.id;
+}
+
+export async function listAllRequiredActionsForQuoteId(
+  quoteId: string,
+): Promise<RequiredAction[]> {
+  const portalId = await getPortalIdByQuoteId(quoteId);
+  return listRequiredActionsForPortal(portalId);
+}
+
+export async function createRequiredActionForQuoteId(input: {
+  quoteId: string;
+  actionKey: string;
+  title: string;
+  owner?: RequiredActionOwner;
+  description?: string | null;
+  status?: RequiredActionStatus;
+  dueDate?: string | null;
+  unlocksMilestoneKey?: string | null;
+  payload?: Record<string, unknown>;
+}): Promise<RequiredAction> {
+  const portalId = await getPortalIdByQuoteId(input.quoteId);
+  const actionKey = input.actionKey.trim();
+  const title = input.title.trim();
+  if (!actionKey) throw new Error("actionKey is required");
+  if (!title) throw new Error("title is required");
+
+  const { data, error } = await supabaseAdmin
+    .from("customer_portal_required_actions")
+    .insert({
+      portal_project_id: portalId,
+      action_key: actionKey,
+      owner: input.owner ?? "client",
+      title,
+      description: input.description ?? null,
+      status: input.status ?? "waiting_on_client",
+      due_date: input.dueDate ?? null,
+      unlocks_milestone_key: input.unlocksMilestoneKey ?? null,
+      payload: input.payload ?? {},
+    })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+
+  await logProjectActivityByPortalId({
+    portalProjectId: portalId,
+    actorRole: "studio",
+    eventType: "required_action_created",
+    summary: `Studio added required action: ${title}.`,
+    payload: { actionKey, owner: input.owner ?? "client" },
+    clientVisible: input.owner === "client" || input.owner === undefined,
+  });
+
+  return rowToAction(data);
+}
+
+// Patch fields on an existing action by id. Pass only the fields you
+// want to change. Status flips automatically maintain completed_at:
+// going to "complete" stamps it; going back from complete clears it.
+export async function updateRequiredActionForQuoteId(input: {
+  quoteId: string;
+  actionId: string;
+  patch: {
+    title?: string;
+    description?: string | null;
+    owner?: RequiredActionOwner;
+    status?: RequiredActionStatus;
+    dueDate?: string | null;
+    unlocksMilestoneKey?: string | null;
+    payload?: Record<string, unknown>;
+  };
+}): Promise<RequiredAction | null> {
+  const portalId = await getPortalIdByQuoteId(input.quoteId);
+  const now = new Date().toISOString();
+  const updates: Record<string, unknown> = { updated_at: now };
+
+  const p = input.patch;
+  if (p.title !== undefined) updates.title = p.title.trim();
+  if (p.description !== undefined) updates.description = p.description;
+  if (p.owner !== undefined) updates.owner = p.owner;
+  if (p.dueDate !== undefined) updates.due_date = p.dueDate;
+  if (p.unlocksMilestoneKey !== undefined) updates.unlocks_milestone_key = p.unlocksMilestoneKey;
+  if (p.payload !== undefined) updates.payload = p.payload;
+  if (p.status !== undefined) {
+    updates.status = p.status;
+    if (p.status === "complete") {
+      updates.completed_at = now;
+    } else {
+      updates.completed_at = null;
+    }
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("customer_portal_required_actions")
+    .update(updates)
+    .eq("id", input.actionId)
+    .eq("portal_project_id", portalId)
+    .select("*")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  await logProjectActivityByPortalId({
+    portalProjectId: portalId,
+    actorRole: "studio",
+    eventType: "required_action_updated",
+    summary: `Studio updated required action: ${data.title}.`,
+    payload: { actionId: input.actionId, fields: Object.keys(p) },
+    clientVisible: false,
+  });
+
+  return rowToAction(data);
+}
+
+// Force-complete on the client's behalf. Bypasses the owner === client
+// gate that completeRequiredActionByPortalToken enforces; admin can
+// complete studio-owned actions too.
+export async function forceCompleteRequiredActionForQuoteId(input: {
+  quoteId: string;
+  actionId: string;
+}): Promise<RequiredAction | null> {
+  const result = await updateRequiredActionForQuoteId({
+    quoteId: input.quoteId,
+    actionId: input.actionId,
+    patch: { status: "complete" },
+  });
+  if (!result) return null;
+
+  // Re-log with a clearer event type for the activity feed.
+  const portalId = await getPortalIdByQuoteId(input.quoteId);
+  await logProjectActivityByPortalId({
+    portalProjectId: portalId,
+    actorRole: "studio",
+    eventType: "required_action_force_completed",
+    summary: `Studio marked complete on client's behalf: ${result.title}.`,
+    payload: { actionId: input.actionId, actionKey: result.actionKey },
+    clientVisible: true,
+  });
+  return result;
+}
+
+export async function reopenRequiredActionForQuoteId(input: {
+  quoteId: string;
+  actionId: string;
+  status?: RequiredActionStatus; // defaults to waiting_on_client
+}): Promise<RequiredAction | null> {
+  return updateRequiredActionForQuoteId({
+    quoteId: input.quoteId,
+    actionId: input.actionId,
+    patch: { status: input.status ?? "waiting_on_client" },
+  });
+}
+
+export async function deleteRequiredActionForQuoteId(input: {
+  quoteId: string;
+  actionId: string;
+}): Promise<void> {
+  const portalId = await getPortalIdByQuoteId(input.quoteId);
+
+  const { data: existing } = await supabaseAdmin
+    .from("customer_portal_required_actions")
+    .select("title, action_key")
+    .eq("id", input.actionId)
+    .eq("portal_project_id", portalId)
+    .maybeSingle();
+
+  const { error } = await supabaseAdmin
+    .from("customer_portal_required_actions")
+    .delete()
+    .eq("id", input.actionId)
+    .eq("portal_project_id", portalId);
+
+  if (error) throw error;
+
+  if (existing?.title) {
+    await logProjectActivityByPortalId({
+      portalProjectId: portalId,
+      actorRole: "studio",
+      eventType: "required_action_deleted",
+      summary: `Studio removed required action: ${existing.title}.`,
+      payload: { actionKey: existing.action_key },
+      clientVisible: false,
+    });
+  }
+}
