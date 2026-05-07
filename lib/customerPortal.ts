@@ -10,6 +10,8 @@ import {
   mergeDesignDirection,
   readDesignDirection,
 } from "@/lib/designDirection";
+import { isProjectType } from "@/lib/workflows/types";
+import { getWorkflowTemplate } from "@/lib/workflows/templates";
 
 type AnyObj = Record<string, any>;
 type CustomerPortalMilestoneInput = {
@@ -66,35 +68,19 @@ type CustomerPortalMessageInput = {
   createdAt?: string | null;
 };
 
-// 8-step website milestone structure (Phase 2). New website portals get
-// these; existing portals keep whatever they were seeded with until an
-// admin regenerates them.
-const WEBSITE_DEFAULT_MILESTONES = [
-  { title: "Scope confirmed", status: "todo", sort_order: 10 },
-  { title: "Design direction approved", status: "todo", sort_order: 20 },
-  { title: "Content/assets received", status: "todo", sort_order: 30 },
-  { title: "First preview ready", status: "todo", sort_order: 40 },
-  { title: "Client feedback submitted", status: "todo", sort_order: 50 },
-  { title: "Revisions complete", status: "todo", sort_order: 60 },
-  { title: "Launch approved", status: "todo", sort_order: 70 },
-  { title: "Launch & handoff", status: "todo", sort_order: 80 },
-] as const;
-
-// Fallback used when project_type is anything other than "website" until
-// Phase 3 introduces lane-aware workflow templates. Matches the legacy
-// 5-step shape so non-website portals don't regress visually.
-const LEGACY_DEFAULT_MILESTONES = [
-  { title: "Kickoff & scope confirmation", status: "todo", sort_order: 10 },
-  { title: "Content/assets received", status: "todo", sort_order: 20 },
-  { title: "First build draft", status: "todo", sort_order: 30 },
-  { title: "Revision round", status: "todo", sort_order: 40 },
-  { title: "Launch & handoff", status: "todo", sort_order: 50 },
-] as const;
-
-function getDefaultMilestonesForProjectType(projectType: string | null | undefined) {
-  return projectType === "website" || !projectType
-    ? WEBSITE_DEFAULT_MILESTONES
-    : LEGACY_DEFAULT_MILESTONES;
+// Phase 3.2: milestones for new portals come from the workflow template
+// matching the project type. The website template intentionally mirrors
+// the 8-step structure shipped in Phase 2A so existing portals — and
+// regression tests — see the same titles in the same order.
+function buildSeedMilestonesForProjectType(projectType: string | null | undefined) {
+  const resolved = isProjectType(projectType) ? projectType : "website";
+  const template = getWorkflowTemplate(resolved);
+  return template.milestones.map((m) => ({
+    title: m.title,
+    status: "todo" as const,
+    sort_order: m.sortOrder,
+    notes: `Owner: ${m.owner}`,
+  }));
 }
 
 function makeToken() {
@@ -863,11 +849,11 @@ export async function ensureCustomerPortalForQuoteId(quoteId: string) {
 
   if (createErr) throw createErr;
 
-  const milestoneTemplate = getDefaultMilestonesForProjectType(projectType);
+  const seedMilestones = buildSeedMilestonesForProjectType(projectType);
   const { error: milestoneErr } = await supabaseAdmin
     .from("customer_portal_milestones")
     .insert(
-      milestoneTemplate.map((m) => ({
+      seedMilestones.map((m) => ({
         portal_project_id: created.id,
         ...m,
       }))
