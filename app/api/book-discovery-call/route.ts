@@ -12,6 +12,47 @@ export const dynamic = "force-dynamic";
 const FROM = process.env.NOTIFICATION_FROM_EMAIL || "studio@crecystudio.com";
 const ADMIN = process.env.ADMIN_NOTIFICATION_EMAIL;
 
+// Build an RFC 5545-compliant .ics calendar invite string
+function buildCalendarInvite(
+  uid: string,
+  name: string,
+  email: string,
+  adminEmail: string | null,
+  start: Date,
+  slotLabel: string,
+): string {
+  const fmt = (d: Date) => d.toISOString().replace(/[-:.]/g, "").slice(0, 15) + "Z";
+  const end = new Date(start.getTime() + 20 * 60 * 1000);
+  const now = new Date();
+  const esc = (s: string) =>
+    s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//CrecyStudio//Discovery Call//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:REQUEST",
+    "BEGIN:VEVENT",
+    `DTSTART:${fmt(start)}`,
+    `DTEND:${fmt(end)}`,
+    `DTSTAMP:${fmt(now)}`,
+    `UID:${uid}@crecystudio.com`,
+    `ORGANIZER;CN=CrecyStudio:mailto:${FROM}`,
+    `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN=${esc(name)}:mailto:${email}`,
+    ...(adminEmail
+      ? [`ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=Komlan Kouhiko:mailto:${adminEmail}`]
+      : []),
+    `SUMMARY:Discovery call — CrecyStudio`,
+    `DESCRIPTION:Your free 20-min discovery call with Komlan Kouhiko.\\n\\n${esc(slotLabel)}`,
+    "STATUS:CONFIRMED",
+    "SEQUENCE:0",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ];
+  return lines.join("\r\n");
+}
+
 function buildClientEmail(name: string): string {
   const safe = escHtml(name || "there");
   return emailWrap(`
@@ -131,27 +172,18 @@ async function maybeCreateCalendarEvent(
     });
     const calendar = google.calendar({ version: "v3", auth });
 
-    // Always include the admin (Komlan) as an attendee so he gets the invite
-    const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
-    const attendees: { email: string; responseStatus: string }[] = [
-      { email, responseStatus: "needsAction" },
-    ];
-    if (adminEmail) attendees.push({ email: adminEmail, responseStatus: "accepted" });
-
     if (selectedSlot) {
       const start = parseSelectedSlot(selectedSlot);
       if (!start) throw new Error("Could not parse selectedSlot: " + selectedSlot);
       const end = new Date(start.getTime() + 20 * 60 * 1000);
       await calendar.events.insert({
         calendarId,
-        sendUpdates: "all",
         requestBody: {
           summary: `Discovery call — ${name}`,
           description: `${slotLabel || selectedSlot}\n\nReview at: ${SITE_URL}/internal/admin`,
           start: { dateTime: start.toISOString() },
           end: { dateTime: end.toISOString() },
           status: "confirmed",
-          attendees,
           guestsCanSeeOtherGuests: false,
         },
       });
@@ -167,8 +199,6 @@ async function maybeCreateCalendarEvent(
           start: { dateTime: now.toISOString() },
           end: { dateTime: end.toISOString() },
           status: "tentative",
-          attendees,
-          guestsCanSeeOtherGuests: false,
         },
       });
     }
@@ -261,6 +291,19 @@ export async function POST(req: Request) {
 
     await maybeCreateCalendarEvent(name, email, availabilityNote, selectedSlot, slotLabel);
 
+    // Build .ics invite when a specific slot was booked
+    const icsAttachment = scheduledAt && slotLabel && selectedSlot
+      ? (() => {
+          const start = parseSelectedSlot(selectedSlot);
+          if (!start) return null;
+          return {
+            filename: "discovery-call.ics",
+            content: buildCalendarInvite(callId, name, email, ADMIN ?? null, start, slotLabel),
+            content_type: "text/calendar; method=REQUEST; charset=UTF-8",
+          };
+        })()
+      : null;
+
     console.log(`[book-discovery-call] sending client email to=${email} from=${FROM} scheduled=${!!scheduledAt}`);
     try {
       const clientRes = await sendResendEmail({
@@ -272,6 +315,7 @@ export async function POST(req: Request) {
         html: scheduledAt && slotLabel
           ? buildClientEmailScheduled(name, slotLabel)
           : buildClientEmail(name),
+        ...(icsAttachment ? { attachments: [icsAttachment] } : {}),
       });
       console.log("[book-discovery-call] client email sent id=", (clientRes as any)?.id);
     } catch (emailErr) {
@@ -285,6 +329,7 @@ export async function POST(req: Request) {
           from: FROM,
           subject: `Discovery call — ${name} (${email})`,
           html: buildAdminEmail(callId, name, email, company, projectType, availabilityNote, slotLabel),
+          ...(icsAttachment ? { attachments: [icsAttachment] } : {}),
         });
         console.log("[book-discovery-call] admin email sent id=", (adminRes as any)?.id);
       } catch (emailErr) {
