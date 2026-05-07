@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "smoke": "npx tsx scripts/smoke-test.ts",
+    "smoke:local": "BASE_URL=http://localhost:3000 npx tsx scripts/smoke-test.ts"
   },
   "dependencies": {
     "@fontsource/playfair-display": "^5.2.8",
