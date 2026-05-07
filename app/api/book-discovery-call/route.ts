@@ -59,7 +59,7 @@ function buildClientEmail(name: string): string {
     <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em;line-height:1.2">Request received, ${safe}.</h1>
     <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Free 20-min discovery call</p>
     <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">I'll be in touch within 24 hours to confirm a time. No automation — you'll hear from Komlan directly.</p>
-    <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">If your schedule changes or you have questions in the meantime, just reply to this email.</p>
+    <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">If your schedule shifts or you have questions in the meantime, reply to this email and I'll see it directly.</p>
     ${callout("What happens next", [
       "1&ensp;Komlan reviews your request personally",
       "2&ensp;You receive a confirmed time within 24 hours",
@@ -115,8 +115,8 @@ function buildClientEmailScheduled(name: string, slotLabel: string, start: Date 
       </tr>
     </table>
     ${buttons}
-    <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">A calendar invite is also attached to this email — most clients will let you add it with one click.</p>
-    <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">Need to reschedule or have questions beforehand? Just reply to this email.</p>
+    <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">A calendar invite is also attached — your email client will offer to add it with one click.</p>
+    <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">Need to reschedule or have a question beforehand? Reply to this email — Komlan will see it directly.</p>
     ${callout("What to expect on the call", [
       "→&ensp;Komlan asks sharp questions about your project",
       "→&ensp;You get honest feedback on scope, timeline, and price",

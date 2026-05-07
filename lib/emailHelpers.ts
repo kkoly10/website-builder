@@ -2,6 +2,18 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com";
 const SITE_DOMAIN = SITE_URL.replace(/^https?:\/\//, "");
 const LINKEDIN_URL = "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407";
 
+// Single source of truth for "what is the absolute origin to use when
+// building portal / workspace links inside transactional emails?".
+// Prefers APP_BASE_URL (server-only override for staging/preview) and
+// falls back to NEXT_PUBLIC_SITE_URL, then to the production hostname.
+// Always returns an absolute https URL with no trailing slash so callers
+// can safely concatenate `${base}${path}`.
+export function appBaseUrl(): string {
+  const raw = (process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com").trim();
+  const withProto = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+  return withProto.replace(/\/$/, "");
+}
+
 // Accepted BCP-47 locale codes → HTML lang values
 const LOCALE_TO_LANG: Record<string, string> = { en: "en", fr: "fr", es: "es" };
 
@@ -17,7 +29,6 @@ export function escHtml(str: string): string {
 // preheader: hidden inbox-preview text (appears after subject in Gmail/Apple Mail)
 // lang: BCP-47 locale code passed through to <html lang>
 export function emailWrap(body: string, footerNote = "", preheader = "", lang = "en"): string {
-  const iconUrl = `${SITE_URL}/brand/crecy-email-icon.png`;
   const htmlLang = LOCALE_TO_LANG[lang] ?? "en";
 
   // 50 zero-width non-joiner pairs prevent inbox preview from pulling body text
@@ -47,19 +58,14 @@ ${preheaderHtml}
       <![endif]-->
       <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #e2e2e2">
 
-        <!-- Header -->
+        <!-- Header: bitmap logo (PNG rendered at 2x for retina) with
+             text-based fallback for clients that block remote images.
+             SVG isn't reliable for email (Gmail/Outlook strip it). -->
         <tr>
           <td style="background:#111111;padding:22px 32px">
-            <table cellpadding="0" cellspacing="0" border="0" role="presentation">
-              <tr>
-                <td style="padding-right:10px;vertical-align:middle">
-                  <img src="${iconUrl}" width="28" height="28" alt="" style="display:block">
-                </td>
-                <td style="vertical-align:middle;line-height:1">
-                  <span style="font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:bold;color:#f8f1e8">crecy</span><span style="font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:normal;color:#8a7d74">studio</span>
-                </td>
-              </tr>
-            </table>
+            <a href="${SITE_URL}" style="text-decoration:none;display:inline-block">
+              <img src="${SITE_URL}/brand/crecy-email-logo.png" alt="crecystudio" width="168" height="30" style="display:block;border:0;outline:none;text-decoration:none;height:auto;max-width:168px;color:#f8f1e8;font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:bold;line-height:30px;letter-spacing:-0.01em">
+            </a>
           </td>
         </tr>
 

@@ -7,6 +7,7 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import type { ProjectType } from "@/lib/workflows/types";
 import { getWorkflowTemplate } from "@/lib/workflows/templates";
+import { logProjectActivityByPortalId } from "@/lib/projectActivity";
 
 export type RequiredActionStatus =
   | "not_started"
@@ -222,5 +223,22 @@ export async function completeRequiredActionByPortalToken(input: {
 
   if (error) throw error;
   if (!data) return null; // already complete, doesn't exist, or not client-owned
-  return rowToAction(data);
+
+  const action = rowToAction(data);
+
+  // Match the activity-log pattern of every other portal helper
+  // (submitAsset, submitDirection, toggleMilestone, ...). Without this
+  // entry the chronological feed had a gap whenever a client completed
+  // a "simple" required action that didn't route through a dedicated
+  // form.
+  await logProjectActivityByPortalId({
+    portalProjectId: portal.id,
+    actorRole: "client",
+    eventType: "required_action_completed",
+    summary: `Client completed required action: ${action.title || action.actionKey}.`,
+    payload: { actionKey: action.actionKey },
+    clientVisible: true,
+  });
+
+  return action;
 }

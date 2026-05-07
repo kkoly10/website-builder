@@ -7,6 +7,7 @@ import { sendResendEmail } from "@/lib/resend";
 import { sendEventNotification } from "@/lib/notifications";
 import { AgreementDocument } from "@/lib/certificates/AgreementDocument";
 import { CertificateDocument } from "@/lib/certificates/CertificateDocument";
+import { emailWrap, ctaButton, sig, escHtml } from "@/lib/emailHelpers";
 
 export type GenerateCertInput = {
   agreementId: string;
@@ -33,22 +34,18 @@ async function mergePdfs(a: Buffer, b: Buffer): Promise<Buffer> {
 }
 
 function buildEmailHtml(leadName: string, signedUrl: string, verificationUrl: string): string {
-  return `
-    <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
-      <h2 style="font-size:20px;margin-bottom:8px">Your signed project agreement</h2>
-      <p>Hi ${leadName},</p>
-      <p>Thank you for accepting the project agreement with CrecyStudio. Your Certificate of Completion is attached to this email as a PDF.</p>
-      <p>You can also download it or verify it online at any time:</p>
-      <p style="margin:16px 0">
-        <a href="${signedUrl}" style="background:#1a1a1a;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-size:14px">Download Certificate</a>
-      </p>
-      <p style="font-size:13px;color:#666">
-        Verify this certificate: <a href="${verificationUrl}" style="color:#1a1a1a">${verificationUrl}</a>
-      </p>
-      <hr style="border:none;border-top:1px solid #eee;margin:24px 0"/>
-      <p style="font-size:12px;color:#999">CrecyStudio · Web Design &amp; Development</p>
-    </div>
-  `;
+  const safeName = escHtml(leadName || "there");
+  const safeVerifyUrl = escHtml(verificationUrl);
+  return emailWrap(`
+    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your signed agreement, ${safeName}.</h1>
+    <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Certificate of Completion enclosed</p>
+    <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Thank you for accepting the project agreement. Your signed copy and Certificate of Completion are attached as a single PDF — keep it somewhere safe for your records.</p>
+    <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">You can re-download or independently verify the certificate at any time using the links below.</p>
+    ${ctaButton(signedUrl, "Download certificate")}
+    <p style="margin:0 0 8px;font-size:13px;color:#888888;line-height:1.6;letter-spacing:0.04em;text-transform:uppercase;font-weight:600">Independent verification</p>
+    <p style="margin:0 0 28px;font-size:13px;color:#444444;line-height:1.6;word-break:break-all"><a href="${safeVerifyUrl}" style="color:#111111;text-decoration:underline">${safeVerifyUrl}</a></p>
+    ${sig()}
+  `, "Reply to this email to reach Komlan directly.", "Your signed agreement and Certificate of Completion are attached.");
 }
 
 export async function generateAndDeliverCertificate(

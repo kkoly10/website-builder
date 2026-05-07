@@ -197,15 +197,15 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
         summary: "System sent a reminder to upload project assets after kickoff.",
         html: emailWrap(`
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Time to upload your assets.</h1>
-          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Action required</p>
+          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Action needed</p>
           <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(recipientName)},</p>
-          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">Your project is kicked off and ready to go — the next step is uploading your content and assets so we can keep momentum.</p>
+          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">The project kicked off five days ago — the next step is your content and assets. Once those land, the first preview is usually ready inside a week.</p>
           ${ctaButton(workspaceUrl, "Upload assets")}
           ${callout("What to upload", [
             "→&ensp;Logo files (SVG or high-res PNG)",
             "→&ensp;Brand colors and fonts if you have them",
-            "→&ensp;Any copy or text you want on the site",
-            "→&ensp;Photos or images — or let us know if you need help sourcing them",
+            "→&ensp;Copy or text you want on the site",
+            "→&ensp;Photos or images — or reply if you'd like help sourcing them",
           ])}
           ${sig()}
         `, "Reply to this email to reach Komlan directly."),
@@ -226,9 +226,9 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Your preview is still waiting.</h1>
           <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Review needed</p>
           <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(recipientName)},</p>
-          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">Your website preview has been ready for 48 hours. When you have a moment, take a look and send any feedback — even a quick "looks good" keeps things moving.</p>
+          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">Your website preview has been ready for 48 hours. When you have a moment, take a look and send feedback — even a quick "looks good" keeps the build moving.</p>
           ${ctaButton(workspaceUrl, "Open preview")}
-          <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">No feedback needed? Just reply to let me know and I'll move to the next step.</p>
+          <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">If you're happy with it as-is, reply with "ship it" and I'll move to the next phase.</p>
           ${sig()}
         `, "Reply to this email to reach Komlan directly."),
       },
@@ -253,7 +253,7 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
         summary: "System alerted the studio that a revision request has been waiting for a response.",
         html: emailWrap(`
           ${adminBadge("Studio alert")}
-          <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">&#x26A0;&#xFE0F; Revision response overdue</h1>
+          <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">Revision response overdue</h1>
           ${adminTable([
             ["Client", escHtml(recipientName)],
             ["Waiting", "More than 24 hours"],
@@ -285,9 +285,9 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Your deposit is still open.</h1>
           <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Payment reminder</p>
           <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(recipientName)},</p>
-          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">Your deposit invoice is still unpaid. Once it's settled, the project kicks off immediately — no further delays.</p>
+          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">Your deposit invoice is still open. The project kicks off the day it's settled — once the deposit clears, scope confirmation and design direction begin within 24 hours.</p>
           ${ctaButton(workspaceUrl, "Pay deposit")}
-          <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">Having trouble with the payment? Just reply to this email and we'll sort it out.</p>
+          <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">If anything's blocking the payment, reply and we'll work it out together.</p>
           ${sig()}
         `, "Reply to this email to reach Komlan directly."),
         clientVisible: true,
@@ -302,12 +302,12 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
         subject: "A quick check-in on your project — CrecyStudio",
         summary: "System checked in after the client had been inactive during an active project phase.",
         html: emailWrap(`
-          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Quick check-in.</h1>
-          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Project update</p>
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">There's an update waiting for you.</h1>
+          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Project status</p>
           <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(recipientName)},</p>
-          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">Work is moving forward on your project. Swing by your workspace to catch up on the latest updates — there may be something waiting for your input.</p>
-          ${ctaButton(workspaceUrl, "Open your workspace")}
-          <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">Questions or concerns? Just reply to this email.</p>
+          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">It's been about a week since you last opened your workspace. Work has continued on the project and there are likely items waiting for your review or input — usually 5 minutes is enough to keep things moving forward.</p>
+          ${ctaButton(workspaceUrl, "Open workspace")}
+          <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">Reply if anything's unclear or you'd rather walk through the latest on a quick call.</p>
           ${sig()}
         `, "Reply to this email to reach Komlan directly."),
         clientVisible: true,

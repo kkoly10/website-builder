@@ -2116,10 +2116,10 @@
       "poweredBy": "Powered by",
       "noStoreUrl": "No store URL",
       "websiteFallbackTitle": "Website project",
-      "opsFallbackTitle": "Workflow request",
+      "automationFallbackTitle": "Workflow request",
       "ecomFallbackTitle": "E-commerce request",
       "websiteScopeFallback": "Website scope",
-      "opsScopeFallback": "Workflow systems",
+      "automationScopeFallback": "Workflow systems",
       "scopedAfterReview": "Scoped after review",
       "tierPending": "Pending",
       "callNotRequested": "Not requested"
@@ -2147,7 +2147,7 @@
           "viewCta": "View website projects",
           "emptyCta": "Start a quote"
         },
-        "ops": {
+        "automation": {
           "title": "Systems",
           "label": "Workflow automation projects",
           "description": "Internal systems and automation work running in your workspace.",
