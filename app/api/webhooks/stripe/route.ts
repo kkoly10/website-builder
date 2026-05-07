@@ -153,7 +153,10 @@ export async function POST(req: NextRequest) {
     }
 
     const metadata = safeObj(session?.metadata);
-    const lane = String(metadata.lane || "").trim().toLowerCase();
+    // Normalize legacy "ops" metadata to "automation" so older Stripe
+    // sessions continue to route to the right downstream handler.
+    const rawLane = String(metadata.lane || "").trim().toLowerCase();
+    const lane = rawLane === "ops" ? "automation" : rawLane;
     const invoiceId = String(metadata.invoiceId || "").trim();
     const quoteId = String(metadata.quoteId || "").trim();
     const opsIntakeId = String(metadata.opsIntakeId || "").trim();
@@ -171,7 +174,7 @@ export async function POST(req: NextRequest) {
             customer_email: session.customer_email ?? null,
           },
         });
-      } else if (lane === "ops" && opsIntakeId) {
+      } else if (lane === "automation" && opsIntakeId) {
         await confirmOpsDepositPayment({
           opsIntakeId,
           session: {

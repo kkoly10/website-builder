@@ -1,4 +1,13 @@
-export type GhostLane = "website" | "ops" | "ecommerce";
+// "ops" retained for backward compat with stored ghost snapshots /
+// sessions whose lane was persisted before the rename. New code writes
+// "automation"; readers normalize via normalizeGhostLane().
+export type GhostLane = "website" | "ops" | "automation" | "ecommerce";
+
+export function normalizeGhostLane(lane: string | null | undefined): GhostLane {
+  if (lane === "ops" || lane === "automation") return "automation";
+  if (lane === "website" || lane === "ecommerce") return lane;
+  return "website";
+}
 
 export type GhostProjectSnapshot = {
   lane: GhostLane;

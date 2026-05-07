@@ -72,7 +72,10 @@ export default async function DepositSuccessPage({ searchParams }: { searchParam
   try {
     const session = await stripeGetCheckoutSession(sessionId);
     const metadata = safeObj(session?.metadata);
-    const lane = String(metadata.lane || "").trim().toLowerCase();
+    // Normalize legacy "ops" lane metadata to "automation" so existing
+    // Stripe sessions still route correctly after the rename.
+    const rawLane = String(metadata.lane || "").trim().toLowerCase();
+    const lane = rawLane === "ops" ? "automation" : rawLane;
     const quoteId = String(metadata.quoteId || "").trim();
     const opsIntakeId = String(metadata.opsIntakeId || "").trim();
     const ecomIntakeId = String(metadata.ecomIntakeId || "").trim();
@@ -95,7 +98,7 @@ export default async function DepositSuccessPage({ searchParams }: { searchParam
         !!claimError && String((claimError as any)?.code || "") === "23505";
 
       try {
-        if (lane === "ops" && opsIntakeId) {
+        if (lane === "automation" && opsIntakeId) {
           if (claimedHere) {
             await confirmOpsDepositPayment({
               opsIntakeId,

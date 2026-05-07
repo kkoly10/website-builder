@@ -9,7 +9,12 @@ import type { GhostLane } from "@/lib/ghost/types";
 export const dynamic = "force-dynamic";
 
 function isGhostLane(value: string): value is GhostLane {
-  return value === "website" || value === "ops" || value === "ecommerce";
+  return (
+    value === "website" ||
+    value === "ops" ||
+    value === "automation" ||
+    value === "ecommerce"
+  );
 }
 
 export async function POST(req: NextRequest) {

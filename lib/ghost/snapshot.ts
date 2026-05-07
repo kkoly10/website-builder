@@ -176,7 +176,7 @@ async function getOpsSnapshot(projectId: string): Promise<GhostProjectSnapshot |
     : "Review PIE and send ops action plan";
 
   return {
-    lane: "ops",
+    lane: "automation",
     projectId,
     phase: status,
     status,
@@ -289,6 +289,8 @@ async function getEcomSnapshot(projectId: string): Promise<GhostProjectSnapshot 
 
 export async function getGhostProjectSnapshot(lane: GhostLane, projectId: string) {
   if (lane === "website") return getWebsiteSnapshot(projectId);
-  if (lane === "ops") return getOpsSnapshot(projectId);
+  // "ops" accepted for callers passing the legacy lane name; both route
+  // to the same snapshot builder.
+  if (lane === "ops" || lane === "automation") return getOpsSnapshot(projectId);
   return getEcomSnapshot(projectId);
 }

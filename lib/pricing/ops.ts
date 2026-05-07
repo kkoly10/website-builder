@@ -166,7 +166,7 @@ export function getOpsPricing(
 
     return {
       version: PRICING_VERSION,
-      lane: "ops",
+      lane: "automation",
       tierKey: "custom_ops_scope",
       tierLabel: "Custom Ops Scope",
       position: "custom",
@@ -216,7 +216,7 @@ export function getOpsPricing(
 
   return {
     version: PRICING_VERSION,
-    lane: "ops",
+    lane: "automation",
     tierKey,
     tierLabel: band.label,
     position,

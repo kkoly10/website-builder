@@ -1,7 +1,8 @@
-// Phase 4: pricing lanes now mirror the workflow ProjectType enum, with
-// "ops" retained as a deprecated alias for "automation" to avoid a
-// big-bang rename across ~14 callers. Both keys produce the same prices.
-// Future PR can swap callers to "automation" and remove "ops".
+// Pricing lanes mirror the workflow ProjectType enum. "ops" is retained
+// as a deprecated alias accepted on read for legacy quote rows whose
+// pricing.lane was stored before the rename; new code writes "automation".
+// Use normalizePricingLane() when reading stored lane data so both names
+// resolve to the canonical value.
 export type PricingLane =
   | "website"
   | "ops"
@@ -9,6 +10,18 @@ export type PricingLane =
   | "ecommerce"
   | "web_app"
   | "rescue";
+
+// Normalize a stored lane value to the canonical name. Stored "ops" rows
+// (pre-rename) resolve to "automation". Use everywhere a lane is read
+// from quote / pricingTruth / persisted snapshots so legacy data and new
+// data compare equal.
+export function normalizePricingLane(lane: string | null | undefined): PricingLane {
+  if (lane === "ops" || lane === "automation") return "automation";
+  if (lane === "website" || lane === "ecommerce" || lane === "web_app" || lane === "rescue") {
+    return lane;
+  }
+  return "website";
+}
 
 export type PricingPosition = "low" | "middle" | "high" | "custom";
 

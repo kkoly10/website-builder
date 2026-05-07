@@ -401,7 +401,10 @@ export async function ensureOpsDepositLink(args: {
     productName: "CrecyStudio Ops Deposit",
     productDescription: `Deposit for ops project ${args.opsIntakeId}`,
     metadata: {
-      lane: "ops",
+      // New checkouts write "automation" (canonical lane name).
+      // Webhook + success page normalize legacy "ops" metadata to
+      // "automation" on read so older sessions still route correctly.
+      lane: "automation",
       opsIntakeId: args.opsIntakeId,
     },
   });
