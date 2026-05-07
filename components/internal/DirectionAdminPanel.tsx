@@ -8,6 +8,7 @@ import { useState } from "react";
 import type { GenericDirection } from "@/lib/directions/types";
 import { getDirectionSchema } from "@/lib/directions/schemas";
 import DirectionSummary from "@/components/portal/directions/DirectionSummary";
+import GenericDirectionPayloadEditor from "@/components/internal/GenericDirectionPayloadEditor";
 
 type AdminAction = "mark_under_review" | "request_changes" | "approve" | "lock" | "unlock";
 
@@ -21,6 +22,7 @@ type Props = {
     action: AdminAction,
     next: GenericDirection,
   ) => void | Promise<void>;
+  onPayloadEdited?: (next: GenericDirection) => void;
 };
 
 const STATUS_PILL: Record<
@@ -49,6 +51,7 @@ export default function DirectionAdminPanel({
   direction,
   projectType,
   onTransitioned,
+  onPayloadEdited,
 }: Props) {
   const [publicNote, setPublicNote] = useState(direction?.adminPublicNote ?? "");
   const [internalNote, setInternalNote] = useState(direction?.adminInternalNote ?? "");
@@ -168,6 +171,11 @@ export default function DirectionAdminPanel({
           </summary>
           <div style={{ marginTop: 12 }}>
             <DirectionSummary value={direction} schema={schema} />
+            <GenericDirectionPayloadEditor
+              quoteId={quoteId}
+              direction={direction}
+              onSaved={(next) => onPayloadEdited?.(next)}
+            />
           </div>
         </details>
       ) : (

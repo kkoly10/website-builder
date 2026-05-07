@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { WebsiteDesignDirection } from "@/lib/designDirection";
 import DesignDirectionSummary from "@/components/portal/DesignDirectionSummary";
+import DesignDirectionPayloadEditor from "@/components/internal/DesignDirectionPayloadEditor";
 
 type AdminAction = "mark_under_review" | "request_changes" | "approve" | "lock" | "unlock";
 
@@ -18,6 +19,9 @@ type Props = {
     action: AdminAction,
     next: WebsiteDesignDirection,
   ) => void | Promise<void>;
+  // Called after a payload edit (typo fix / fill-in). Status doesn't
+  // change so this can't be folded into onTransitioned.
+  onPayloadEdited?: (next: WebsiteDesignDirection) => void;
 };
 
 const STATUS_PILL: Record<
@@ -38,6 +42,7 @@ export default function DesignDirectionAdminPanel({
   designDirection,
   projectType,
   onTransitioned,
+  onPayloadEdited,
 }: Props) {
   const [publicNote, setPublicNote] = useState(designDirection?.adminPublicNote ?? "");
   const [internalNote, setInternalNote] = useState(designDirection?.adminInternalNote ?? "");
@@ -159,6 +164,11 @@ export default function DesignDirectionAdminPanel({
           </summary>
           <div style={{ marginTop: 12 }}>
             <DesignDirectionSummary value={designDirection} />
+            <DesignDirectionPayloadEditor
+              quoteId={quoteId}
+              designDirection={designDirection}
+              onSaved={(next) => onPayloadEdited?.(next)}
+            />
           </div>
         </details>
       ) : (

@@ -1635,6 +1635,11 @@ export default function ProjectControlClient({
                         : prev.portalStateAdmin,
                   }));
                 }}
+                onPayloadEdited={(next) => {
+                  setData((prev) => ({ ...prev, designDirection: next }));
+                  setMessageIsError(false);
+                  setMessage("Design direction edited.");
+                }}
               />
             </div>
           ) : null}
@@ -1688,6 +1693,11 @@ export default function ProjectControlClient({
                           }
                         : prev.portalStateAdmin,
                   }));
+                }}
+                onPayloadEdited={(next) => {
+                  setData((prev) => ({ ...prev, direction: next }));
+                  setMessageIsError(false);
+                  setMessage("Direction edited.");
                 }}
               />
             </div>
