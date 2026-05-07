@@ -1464,11 +1464,29 @@ export async function transitionDesignDirectionByQuoteId(input: {
       next.approvedAt = now;
       break;
     case "lock":
-      // Lock is idempotent — if already locked we still attempt the
-      // milestone update below so a retry can recover from a previous
-      // partial write where status flipped but the milestone update
-      // errored. The activity event is suppressed when there's no
-      // status change.
+      // Lock requires the client to have at least submitted the form so
+      // the studio is locking on something the client filled in (or
+      // already approved). Locking from "waiting_on_client" /
+      // "not_started" / "changes_requested" would be locking against
+      // empty payload, leaving the required action stuck open while the
+      // direction shows "locked" — a state-machine inconsistency.
+      // "locked" is allowed here as a no-op so retries (e.g. milestone
+      // recovery) still work; the if-block below skips the actual
+      // status mutation when already locked.
+      if (
+        existing.status !== "submitted" &&
+        existing.status !== "under_review" &&
+        existing.status !== "approved" &&
+        existing.status !== "locked"
+      ) {
+        throw new Error(
+          "Direction must be submitted (or approved) before it can be locked.",
+        );
+      }
+      // Idempotent — if already locked we still attempt the milestone
+      // update below so a retry can recover from a previous partial
+      // write where status flipped but the milestone update errored.
+      // The activity event is suppressed when there's no status change.
       if (existing.status !== "locked") {
         next.status = "locked";
         next.lockedAt = now;

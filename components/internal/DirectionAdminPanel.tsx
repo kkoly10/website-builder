@@ -128,7 +128,13 @@ export default function DirectionAdminPanel({
   const canRequestChanges = direction.status !== "locked";
   const canApprove =
     direction.status === "submitted" || direction.status === "under_review";
-  const canLock = direction.status !== "locked";
+  // Lock requires the client to have at least submitted the form (or
+  // for it to already be approved). Mirrors the server precondition in
+  // transitionDirectionByQuoteId.
+  const canLock =
+    direction.status === "submitted" ||
+    direction.status === "under_review" ||
+    direction.status === "approved";
 
   return (
     <div style={{ display: "grid", gap: 16 }}>

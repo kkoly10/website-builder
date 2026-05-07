@@ -117,7 +117,13 @@ export default function DesignDirectionAdminPanel({
   const canRequestChanges = designDirection.status !== "locked";
   const canApprove =
     designDirection.status === "submitted" || designDirection.status === "under_review";
-  const canLock = designDirection.status !== "locked";
+  // Lock requires the client to have at least submitted the form (or
+  // for it to already be approved). Mirrors the server precondition in
+  // transitionDesignDirectionByQuoteId.
+  const canLock =
+    designDirection.status === "submitted" ||
+    designDirection.status === "under_review" ||
+    designDirection.status === "approved";
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
