@@ -7,7 +7,7 @@ import DesignDirectionAdminPanel from "@/components/internal/DesignDirectionAdmi
 import DirectionAdminPanel from "@/components/internal/DirectionAdminPanel";
 import type { WebsiteDesignDirection } from "@/lib/designDirection";
 import type { GenericDirection } from "@/lib/directions/types";
-import { getWorkflowTemplate } from "@/lib/workflows/templates";
+import { getDirectionApprovedMilestoneTitle } from "@/lib/workflows/templates";
 import { isProjectType } from "@/lib/workflows/types";
 
 /* ═══════════════════════════════════
@@ -1237,12 +1237,18 @@ export default function ProjectControlClient({
                   // direction-approved milestone title from the template
                   // so we match what the server wrote.
                   const completedAt = new Date().toISOString();
-                  const lockedMilestoneTitle =
-                    action === "lock" && isProjectType(data.projectType)
-                      ? getWorkflowTemplate(data.projectType).milestones.find(
-                          (m) => m.key === getWorkflowTemplate(data.projectType).requiredActions[0]?.unlocksMilestone,
-                        )?.title?.trim().toLowerCase() ?? null
-                      : null;
+                  // Pin the narrowed type to a local const so the closure
+                  // in .find() below doesn't lose narrowing under
+                  // Turbopack's stricter checker. Also switches to the
+                  // shared getDirectionApprovedMilestoneTitle helper that
+                  // does this lookup in one call instead of two.
+                  const lockedMilestoneTitle = (() => {
+                    if (action !== "lock") return null;
+                    if (!isProjectType(data.projectType)) return null;
+                    const projectType = data.projectType;
+                    const title = getDirectionApprovedMilestoneTitle(projectType);
+                    return title?.trim().toLowerCase() ?? null;
+                  })();
                   setData((prev) => ({
                     ...prev,
                     direction: next,
