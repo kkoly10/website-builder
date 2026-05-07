@@ -4,76 +4,53 @@ import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/
 import { recordServerEvent } from "@/lib/analytics/server";
 import { pickPreferredLocale } from "@/lib/preferredLocale";
 import { sendResendEmail } from "@/lib/resend";
-import { sig } from "@/lib/emailHelpers";
+import { emailWrap, callout, adminTable, adminBadge, ctaButton, escHtml, sig, SITE_URL } from "@/lib/emailHelpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const FROM = process.env.NOTIFICATION_FROM_EMAIL || "studio@10xwebsites.com";
+const FROM = process.env.NOTIFICATION_FROM_EMAIL || "studio@crecystudio.com";
 const ADMIN = process.env.ADMIN_NOTIFICATION_EMAIL;
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com";
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-const EMAIL_WRAPPER_OPEN = `<div style="font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;overflow:hidden;border:1px solid #e5e5e5">
-  <div style="background:#111111;padding:20px 32px">
-    <p style="margin:0;color:#ffffff;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:600">CrecyStudio</p>
-  </div>
-  <div style="padding:36px 32px">`;
-
-const EMAIL_WRAPPER_CLOSE = (siteUrl: string) => `  </div>
-  <div style="background:#f9f9f9;border-top:1px solid #e5e5e5;padding:16px 32px">
-    <p style="margin:0;font-size:12px;color:#999">CrecyStudio &middot; <a href="${siteUrl}" style="color:#999;text-decoration:none">${siteUrl.replace(/^https?:\/\//, "")}</a> &middot; Reply to this email to reach Komlan directly.</p>
-  </div>
-</div>`;
-
-function row(label: string, value: string): string {
-  return `<tr><td style="padding:6px 12px 6px 0;font-size:13px;color:#888;white-space:nowrap;vertical-align:top">${label}</td><td style="padding:6px 0;font-size:13px;color:#111">${value}</td></tr>`;
-}
 
 function buildClientEmail(name: string): string {
-  const safe = escapeHtml(name || "there");
-  return EMAIL_WRAPPER_OPEN + `
-    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em;line-height:1.2">Request received, ${safe}.</h1>
-    <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Free 20-min discovery call</p>
-    <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">I'll be in touch within 24 hours to confirm a time. No automation — you'll hear from Komlan directly.</p>
-    <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">If your schedule changes or you have questions in the meantime, just reply to this email.</p>
-    <div style="background:#f5f5f5;border-left:3px solid #111;padding:16px 20px;margin:0 0 28px;border-radius:0 4px 4px 0">
-      <p style="margin:0 0 10px;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#888;font-weight:600">What happens next</p>
-      <p style="margin:0 0 6px;font-size:14px;color:#444;line-height:1.6">1&ensp;Komlan reviews your request personally</p>
-      <p style="margin:0 0 6px;font-size:14px;color:#444;line-height:1.6">2&ensp;You receive a confirmed time within 24 hours</p>
-      <p style="margin:0;font-size:14px;color:#444;line-height:1.6">3&ensp;20 minutes — scope, honest feedback, no pitch</p>
-    </div>
+  const safe = escHtml(name || "there");
+  return emailWrap(`
+    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em;line-height:1.2">Request received, ${safe}.</h1>
+    <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Free 20-min discovery call</p>
+    <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">I'll be in touch within 24 hours to confirm a time. No automation — you'll hear from Komlan directly.</p>
+    <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">If your schedule changes or you have questions in the meantime, just reply to this email.</p>
+    ${callout("What happens next", [
+      "1&ensp;Komlan reviews your request personally",
+      "2&ensp;You receive a confirmed time within 24 hours",
+      "3&ensp;20 minutes — scope, honest feedback, no pitch",
+    ])}
     ${sig()}
-  ` + EMAIL_WRAPPER_CLOSE(SITE_URL);
+  `, "Reply to this email to reach Komlan directly.", "I'll confirm a time for your free discovery call within 24 hours.");
 }
 
 function buildClientEmailScheduled(name: string, slotLabel: string): string {
-  const safe = escapeHtml(name || "there");
-  const slot = escapeHtml(slotLabel);
-  return EMAIL_WRAPPER_OPEN + `
-    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em;line-height:1.2">You're on the calendar, ${safe}.</h1>
-    <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Free 20-min discovery call</p>
-    <div style="background:#f5f5f5;border-radius:4px;padding:20px 24px;margin:0 0 24px;text-align:center">
-      <p style="margin:0 0 4px;font-size:12px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Your call is booked for</p>
-      <p style="margin:0;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.01em">${slot}</p>
-    </div>
-    <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">A Google Calendar invite is on its way to your inbox. Add it to your calendar and you're all set.</p>
-    <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">Need to reschedule or have questions beforehand? Just reply to this email.</p>
-    <div style="background:#f5f5f5;border-left:3px solid #111;padding:16px 20px;margin:0 0 28px;border-radius:0 4px 4px 0">
-      <p style="margin:0 0 10px;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#888;font-weight:600">What to expect on the call</p>
-      <p style="margin:0 0 6px;font-size:14px;color:#444;line-height:1.6">→&ensp;Komlan asks sharp questions about your project</p>
-      <p style="margin:0 0 6px;font-size:14px;color:#444;line-height:1.6">→&ensp;You get honest feedback on scope, timeline, and price</p>
-      <p style="margin:0;font-size:14px;color:#444;line-height:1.6">→&ensp;No sales pitch — just a real conversation</p>
-    </div>
+  const safe = escHtml(name || "there");
+  const slot = escHtml(slotLabel);
+  return emailWrap(`
+    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em;line-height:1.2">You're on the calendar, ${safe}.</h1>
+    <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Free 20-min discovery call</p>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px">
+      <tr>
+        <td style="background:#f7f7f7;border-radius:6px;padding:22px 24px;text-align:center">
+          <p style="margin:0 0 6px;font-size:11px;color:#888888;letter-spacing:0.08em;text-transform:uppercase;font-weight:600">Your call is booked for</p>
+          <p style="margin:0;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${slot}</p>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">A Google Calendar invite is on its way to your inbox. Add it to your calendar and you're all set.</p>
+    <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">Need to reschedule or have questions beforehand? Just reply to this email.</p>
+    ${callout("What to expect on the call", [
+      "→&ensp;Komlan asks sharp questions about your project",
+      "→&ensp;You get honest feedback on scope, timeline, and price",
+      "→&ensp;No sales pitch — just a real conversation",
+    ])}
     ${sig()}
-  ` + EMAIL_WRAPPER_CLOSE(SITE_URL);
+  `, "Reply to this email to reach Komlan directly.", `Your call is booked for ${slotLabel}.`);
 }
 
 function buildAdminEmail(
@@ -85,30 +62,22 @@ function buildAdminEmail(
   availabilityNote: string | null,
   slotLabel: string | null,
 ): string {
-  const s = (v: string | null) => escapeHtml(v || "—");
+  const s = (v: string | null) => escHtml(v || "—");
   const adminUrl = `${SITE_URL}/internal/admin`;
-  return `<div style="font-family:ui-sans-serif,system-ui,sans-serif;max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e5e5e5;border-radius:6px;overflow:hidden">
-  <div style="background:#111;padding:16px 28px;display:flex;align-items:center;justify-content:space-between">
-    <p style="margin:0;color:#fff;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:600">CrecyStudio</p>
-    <p style="margin:0;color:#888;font-size:11px">Admin alert</p>
-  </div>
-  <div style="padding:28px">
-    <p style="margin:0 0 4px;font-size:18px;font-weight:700;color:#111">${slotLabel ? "&#x1F4C5; Call scheduled" : "&#x1F4E9; New discovery call request"}</p>
-    <p style="margin:0 0 20px;font-size:13px;color:#888">${slotLabel ? `Booked for ${s(slotLabel)}` : "Availability submitted — follow up to confirm a time"}</p>
-    <table style="width:100%;border-collapse:collapse;margin:0 0 20px">
-      ${row("Name", s(name))}
-      ${row("Email", `<a href="mailto:${escapeHtml(email)}" style="color:#111">${escapeHtml(email)}</a>`)}
-      ${row("Company", s(company))}
-      ${row("Building", s(projectType))}
-      ${row(slotLabel ? "Scheduled" : "Availability", slotLabel ? `<strong>${s(slotLabel)}</strong>` : s(availabilityNote))}
-      ${row("Call ID", `<span style="font-family:monospace;font-size:12px;color:#888">${escapeHtml(callId)}</span>`)}
-    </table>
-    <a href="${adminUrl}" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:10px 20px;border-radius:4px;font-size:13px;font-weight:600">View in admin panel →</a>
-  </div>
-  <div style="background:#f9f9f9;border-top:1px solid #e5e5e5;padding:14px 28px">
-    <p style="margin:0;font-size:12px;color:#999">Reply directly to <a href="mailto:${escapeHtml(email)}" style="color:#999">${escapeHtml(email)}</a> to respond to ${s(name)}.</p>
-  </div>
-</div>`;
+  const rows: [string, string][] = [
+    ["Name", s(name)],
+    ["Email", `<a href="mailto:${escHtml(email)}" style="color:#111111">${escHtml(email)}</a>`],
+    ["Company", s(company)],
+    ["Building", s(projectType)],
+    [slotLabel ? "Scheduled" : "Availability", slotLabel ? `<strong>${s(slotLabel)}</strong>` : s(availabilityNote)],
+    ["Call ID", `<span style="font-family:monospace;font-size:12px;color:#888888">${escHtml(callId)}</span>`],
+  ];
+  return emailWrap(`
+    ${adminBadge("Admin alert")}
+    <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111111;letter-spacing:-0.02em">${slotLabel ? "&#x1F4C5; Call scheduled" : "&#x1F4E9; New discovery call request"}</h1>
+    ${adminTable(rows)}
+    ${ctaButton(adminUrl, "Open admin panel")}
+  `, `Reply to ${escHtml(email)} to respond directly.`);
 }
 
 // Returns UTC offset string like "-04:00" or "-05:00" for America/New_York at the given moment
