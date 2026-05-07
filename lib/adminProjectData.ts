@@ -5,6 +5,7 @@ import { listProjectInvoicesByQuoteId, type ProjectInvoiceView } from "@/lib/pro
 import { getProposalByQuoteId, type ProposalLifecycle } from "@/lib/proposals";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import type { WebsiteDesignDirection } from "@/lib/designDirection";
+import type { GenericDirection } from "@/lib/directions/types";
 
 type Milestone = { key: string; label: string; done: boolean; updatedAt?: string | null };
 type ClientAsset = {
@@ -161,6 +162,10 @@ export type AdminProjectData = {
   // Phase 2: design direction record on the portal's scope_snapshot. Null
   // for legacy portals (created before Phase 2) and for non-website lanes.
   designDirection: WebsiteDesignDirection | null;
+  // Phase 3.3: generic direction record for non-website lanes. Null for
+  // website lane (use designDirection) and for legacy non-website portals.
+  // Mutually exclusive with designDirection.
+  direction: GenericDirection | null;
   proposalText: string;
   preContractDraft: string;
   publishedAgreementText: string;
@@ -275,6 +280,7 @@ function toAdminProjectData(
     },
     scopeSnapshot: workspace.scopeSnapshot,
     designDirection: workspace.designDirection ?? null,
+    direction: workspace.direction ?? null,
     portalAdmin: {
       previewUrl: workspace.preview.url || "",
       productionUrl: workspace.preview.productionUrl || "",

@@ -4,7 +4,9 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
   ensureCustomerPortalForQuoteId,
   transitionDesignDirectionByQuoteId,
+  transitionDirectionByQuoteId,
   type DesignDirectionAdminAction,
+  type DirectionAdminAction,
 } from "@/lib/customerPortal";
 import { requireAdminRoute } from "@/lib/routeAuth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -14,6 +16,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const VALID_DD_ACTIONS: DesignDirectionAdminAction[] = [
+  "mark_under_review",
+  "request_changes",
+  "approve",
+  "lock",
+];
+
+const VALID_DIRECTION_ACTIONS: DirectionAdminAction[] = [
   "mark_under_review",
   "request_changes",
   "approve",
@@ -130,12 +139,54 @@ export async function POST(req: Request) {
       }
     }
 
+    // Phase 3.5: lane-agnostic direction transition for non-website lanes.
+    // Mutually exclusive with designDirection — admins of website projects
+    // use designDirection; admins of other lanes use direction. The route
+    // accepts both shapes so a single admin client can dispatch correctly.
+    let updatedDirection = null;
+    if (body?.direction && typeof body.direction === "object") {
+      const dd = body.direction as Record<string, unknown>;
+      const action = String(dd.action || "").trim() as DirectionAdminAction;
+      if (!VALID_DIRECTION_ACTIONS.includes(action)) {
+        return NextResponse.json(
+          { ok: false, error: "Unknown direction action." },
+          { status: 400 },
+        );
+      }
+
+      const supabase = await createSupabaseServerClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      try {
+        updatedDirection = await transitionDirectionByQuoteId({
+          quoteId,
+          action,
+          publicNote: typeof dd.publicNote === "string" ? dd.publicNote : null,
+          internalNote: typeof dd.internalNote === "string" ? dd.internalNote : null,
+          actor: {
+            userId: user?.id ?? null,
+            email: user?.email ?? null,
+            ip: getIpFromHeaders(req.headers),
+            userAgent: req.headers.get("user-agent") || null,
+          },
+        });
+      } catch (err: any) {
+        return NextResponse.json(
+          { ok: false, error: err?.message || "Direction transition failed." },
+          { status: 400 },
+        );
+      }
+    }
+
     return NextResponse.json({
       ok: true,
       portalId: portal.id,
       // Returned so the admin UI can update local state without a separate
-      // refetch. Null when the call didn't include a designDirection block.
+      // refetch. Null when the call didn't include the corresponding block.
       designDirection: updatedDesignDirection,
+      direction: updatedDirection,
     });
   } catch (err: any) {
     console.error("portal/admin-update error:", err);

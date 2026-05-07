@@ -406,3 +406,20 @@ export const WORKFLOW_TEMPLATES: Record<ProjectType, WorkflowTemplate> = {
 export function getWorkflowTemplate(projectType: ProjectType): WorkflowTemplate {
   return WORKFLOW_TEMPLATES[projectType] ?? WORKFLOW_TEMPLATES.website;
 }
+
+// Returns the milestone title that gets auto-completed when the lane's
+// direction is locked. Each template's first required action carries an
+// unlocksMilestone key — we look up the milestone by that key and return
+// its title. Used by the admin lock flow to mark the right milestone done
+// without hardcoding lane-specific titles.
+export function getDirectionApprovedMilestoneTitle(
+  projectType: ProjectType,
+): string | null {
+  const template = getWorkflowTemplate(projectType);
+  const directionAction = template.requiredActions[0];
+  if (!directionAction?.unlocksMilestone) return null;
+  const milestone = template.milestones.find(
+    (m) => m.key === directionAction.unlocksMilestone,
+  );
+  return milestone?.title ?? null;
+}

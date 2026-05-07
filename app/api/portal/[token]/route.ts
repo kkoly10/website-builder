@@ -222,9 +222,27 @@ export async function POST(
       if (!portal) {
         return NextResponse.json({ ok: false, error: "Portal not found." }, { status: 404 });
       }
-      const projectType = isProjectType(portal.project_type)
+      // Prefer quote.project_type over portal column. Legacy portal rows
+      // may carry the DB default of "website" while the actual lane lives
+      // only on the quote (the audit found 56 such rows pre-Phase-3.2).
+      // Without the fallback, valid non-website clients get rejected with
+      // "Use design_direction_submit..." even though their quote lane is
+      // non-website.
+      const portalProjectType = typeof portal.project_type === "string" && portal.project_type
         ? portal.project_type
-        : "website";
+        : null;
+      let quoteProjectType: string | null = null;
+      if (portal.quote_id) {
+        const { data: q } = await supabaseAdmin
+          .from("quotes")
+          .select("project_type")
+          .eq("id", portal.quote_id)
+          .maybeSingle();
+        quoteProjectType =
+          q && typeof q.project_type === "string" && q.project_type ? q.project_type : null;
+      }
+      const resolvedType = quoteProjectType ?? portalProjectType ?? "website";
+      const projectType = isProjectType(resolvedType) ? resolvedType : "website";
       if (projectType === "website") {
         return NextResponse.json(
           { ok: false, error: "Use design_direction_submit for website projects." },
