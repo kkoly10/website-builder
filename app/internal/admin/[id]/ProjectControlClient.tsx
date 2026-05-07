@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
+import DesignDirectionAdminPanel from "@/components/internal/DesignDirectionAdminPanel";
+import type { WebsiteDesignDirection } from "@/lib/designDirection";
 
 /* ═══════════════════════════════════
    TYPES
@@ -62,6 +64,8 @@ type MessageSummary = {
 
 type ProjectControlData = {
   quoteId: string;
+  projectType: string;
+  designDirection: WebsiteDesignDirection | null;
   publicToken: string;
   workspaceUrl: string;
   createdAt: string;
@@ -1168,6 +1172,44 @@ export default function ProjectControlClient({
 
       {/* ═══ TAB: WORKSPACE ═══ */}
       {activeTab === "workspace" && (
+        <div style={{ display: "grid", gap: 16 }}>
+          {/* Design Direction admin panel — only renders for website lane.
+              Component handles legacy / non-website fallbacks itself. */}
+          {data.projectType === "website" && data.designDirection ? (
+            <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+              <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>Design Direction</h3>
+              <DesignDirectionAdminPanel
+                quoteId={data.quoteId}
+                designDirection={data.designDirection}
+                projectType={data.projectType}
+                onTransitioned={(action, next) => {
+                  // Update local state from the server response. On lock,
+                  // optimistically toggle the "Design direction approved"
+                  // milestone so the journey map matches what the helper
+                  // wrote. Match exactly the same way the server does
+                  // (case-insensitive, exact title) — substring match
+                  // would flip milestones the server didn't.
+                  const completedAt = new Date().toISOString();
+                  setData((prev) => ({
+                    ...prev,
+                    designDirection: next,
+                    portalStateAdmin:
+                      action === "lock"
+                        ? {
+                            ...prev.portalStateAdmin,
+                            milestones: prev.portalStateAdmin.milestones.map((m) =>
+                              m.label.trim().toLowerCase() === "design direction approved"
+                                ? { ...m, done: true, updatedAt: completedAt }
+                                : m,
+                            ),
+                          }
+                        : prev.portalStateAdmin,
+                  }));
+                }}
+              />
+            </div>
+          ) : null}
+
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 16 }}>
           <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
             <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>Publishing controls</h3>
@@ -1401,6 +1443,7 @@ export default function ProjectControlClient({
               )}
             </div>
           </div>
+        </div>
         </div>
       )}
 

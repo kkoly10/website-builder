@@ -1,11 +1,24 @@
 // app/api/internal/portal/admin-update/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { ensureCustomerPortalForQuoteId } from "@/lib/customerPortal";
+import {
+  ensureCustomerPortalForQuoteId,
+  transitionDesignDirectionByQuoteId,
+  type DesignDirectionAdminAction,
+} from "@/lib/customerPortal";
 import { requireAdminRoute } from "@/lib/routeAuth";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getIpFromHeaders } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const VALID_DD_ACTIONS: DesignDirectionAdminAction[] = [
+  "mark_under_review",
+  "request_changes",
+  "approve",
+  "lock",
+];
 
 type MilestoneInput = {
   title: string;
@@ -76,7 +89,54 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ ok: true, portalId: portal.id });
+    // Design direction transition (Phase 2B). Optional — only runs if the
+    // body includes `designDirection`. The other patches above run first
+    // so admin can update notes, deposit, and milestones in the same call
+    // before flipping the direction status.
+    let updatedDesignDirection = null;
+    if (body?.designDirection && typeof body.designDirection === "object") {
+      const dd = body.designDirection as Record<string, unknown>;
+      const action = String(dd.action || "").trim() as DesignDirectionAdminAction;
+      if (!VALID_DD_ACTIONS.includes(action)) {
+        return NextResponse.json(
+          { ok: false, error: "Unknown designDirection action." },
+          { status: 400 },
+        );
+      }
+
+      const supabase = await createSupabaseServerClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      try {
+        updatedDesignDirection = await transitionDesignDirectionByQuoteId({
+          quoteId,
+          action,
+          publicNote: typeof dd.publicNote === "string" ? dd.publicNote : null,
+          internalNote: typeof dd.internalNote === "string" ? dd.internalNote : null,
+          actor: {
+            userId: user?.id ?? null,
+            email: user?.email ?? null,
+            ip: getIpFromHeaders(req.headers),
+            userAgent: req.headers.get("user-agent") || null,
+          },
+        });
+      } catch (err: any) {
+        return NextResponse.json(
+          { ok: false, error: err?.message || "Design direction transition failed." },
+          { status: 400 },
+        );
+      }
+    }
+
+    return NextResponse.json({
+      ok: true,
+      portalId: portal.id,
+      // Returned so the admin UI can update local state without a separate
+      // refetch. Null when the call didn't include a designDirection block.
+      designDirection: updatedDesignDirection,
+    });
   } catch (err: any) {
     console.error("portal/admin-update error:", err);
     return NextResponse.json(
