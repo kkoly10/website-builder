@@ -1,7 +1,7 @@
 import { sendResendEmail } from "@/lib/resend";
 import { emailWrap, ctaButton, adminTable, callout, sig, escHtml, adminBadge } from "@/lib/emailHelpers";
 
-const FROM_EMAIL = process.env.NOTIFICATION_FROM_EMAIL || "studio@10xwebsites.com";
+const FROM_EMAIL = process.env.NOTIFICATION_FROM_EMAIL || "studio@crecystudio.com";
 const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || "";
 
 type EventContext = {
@@ -19,13 +19,14 @@ const templates: Record<
   agreement_published: (ctx) => ({
     subject: `Your project agreement is ready — CrecyStudio`,
     html: emailWrap(`
-      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Your agreement is ready to sign.</h1>
-      <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Project agreement</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
-      <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">Your project agreement has been published and is waiting for your review and signature in your workspace.</p>
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your agreement is ready to sign.</h1>
+      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Project agreement</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
+      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">Your project agreement has been published and is waiting for your review and signature in your workspace.</p>
       ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Review agreement") : ""}
-      <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">Questions before signing? Just reply to this email.</p>
-    `, "Reply to this email to reach Komlan directly."),
+      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">Questions before signing? Just reply to this email.</p>
+      ${sig()}
+    `, "Reply to this email to reach Komlan directly.", "Your project agreement is ready — review and sign in your workspace."),
     toClient: true,
     toAdmin: true,
   }),
@@ -33,10 +34,10 @@ const templates: Record<
   preview_ready: (ctx) => ({
     subject: `Your website preview is ready — CrecyStudio`,
     html: emailWrap(`
-      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Your preview is live.</h1>
-      <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Preview ready for review</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
-      <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">A new preview of your website is ready. Open your workspace to review it and leave any feedback or revision requests.</p>
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your preview is live.</h1>
+      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Preview ready for review</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
+      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">A new preview of your website is ready. Open your workspace to review it and leave any feedback or revision requests.</p>
       ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open preview") : ""}
       ${callout("How to review", [
         "→&ensp;Open the preview link in your workspace",
@@ -44,7 +45,7 @@ const templates: Record<
         "→&ensp;Submit your revision request — Komlan will respond within 24 hours",
       ])}
       ${sig()}
-    `, "Reply to this email to reach Komlan directly."),
+    `, "Reply to this email to reach Komlan directly.", "Your website preview is ready — open your workspace to review it."),
     toClient: true,
     toAdmin: false,
   }),
@@ -52,14 +53,14 @@ const templates: Record<
   launch_ready: (ctx) => ({
     subject: `Your website is ready to launch — CrecyStudio`,
     html: emailWrap(`
-      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Ready to go live.</h1>
-      <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Launch checklist complete</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
-      <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">All launch checklist items are complete. Your website is ready to go live whenever you say the word.</p>
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Ready to go live.</h1>
+      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Launch checklist complete</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
+      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">All launch checklist items are complete. Your website is ready to go live whenever you say the word.</p>
       ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Approve launch") : ""}
-      <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">Just reply to this email or click the button above to confirm you're ready to launch.</p>
+      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">Just reply to this email or click the button above to confirm you're ready to launch.</p>
       ${sig()}
-    `, "Reply to this email to reach Komlan directly."),
+    `, "Reply to this email to reach Komlan directly.", "Everything is ready — give the word and your site goes live."),
     toClient: true,
     toAdmin: true,
   }),
@@ -67,14 +68,14 @@ const templates: Record<
   site_live: (ctx) => ({
     subject: `Your website is live — CrecyStudio`,
     html: emailWrap(`
-      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Your site is live.</h1>
-      <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Project launched</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
-      <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">Your website is now live and published. You can find all handoff files and documentation in your workspace.</p>
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your site is live. 🎉</h1>
+      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Project launched</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
+      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">Your website is now live and published. You can find all handoff files and documentation in your workspace.</p>
       ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "View handoff") : ""}
-      <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">It was a pleasure working on this project. If you ever need updates or support, just reach out.</p>
+      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">It was a pleasure working on this project. If you ever need updates or support, just reach out.</p>
       ${sig()}
-    `),
+    `, "", "Your website is now live and published."),
     toClient: true,
     toAdmin: true,
   }),
