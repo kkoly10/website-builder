@@ -10,7 +10,7 @@ import {
   mergeDesignDirection,
   readDesignDirection,
 } from "@/lib/designDirection";
-import { isProjectType } from "@/lib/workflows/types";
+import { isProjectType, type ProjectType } from "@/lib/workflows/types";
 import { getWorkflowTemplate } from "@/lib/workflows/templates";
 
 type AnyObj = Record<string, any>;
@@ -809,7 +809,15 @@ export async function ensureCustomerPortalForQuoteId(quoteId: string) {
   if (quoteErr) throw quoteErr;
   if (!quote) throw new Error("Quote not found");
 
-  const projectType = typeof quote.project_type === "string" ? quote.project_type : "website";
+  // Single canonical resolution for project_type. All three downstream
+  // usages — the column insert, the design-direction seed gate, and the
+  // milestone template seed — must agree on the same answer. isProjectType
+  // returns false for anything not in the enum, so unexpected values fall
+  // back to "website" rather than producing a portal with mismatched
+  // project_type / milestones / direction record.
+  const projectType: ProjectType = isProjectType(quote.project_type)
+    ? quote.project_type
+    : "website";
   const scopeSnapshot = {
     ...buildScopeSnapshotFromQuote(quote),
     // Seed the design direction record only for website-lane portals so the
