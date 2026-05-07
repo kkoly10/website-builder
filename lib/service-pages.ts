@@ -1177,24 +1177,28 @@ clientPortalsData.en = {
     "Portals can be added to a website build or scoped as their own product. Pricing depends on scope and existing stack.",
   pricingCards: [
     {
+      // Phase 4: prices align with the launch audit's recommended ranges
+      // for client portals — the audit found portal pricing 30–50%
+      // under market median. Portal is CrecyStudio's strongest
+      // differentiator, so under-pricing it sends the wrong signal.
       label: "Portal add-on",
-      value: "Scoped to project",
+      value: "$5,000–$10,000",
       detail:
         "Added to a Growth or Premium website build. Client login, milestones, messaging, file sharing.",
       meta: "Most common starting point",
     },
     {
-      label: "Standalone system",
-      value: "From $12,000",
+      label: "Standalone portal",
+      value: "$22,000–$45,000",
       detail:
-        "Portal as its own product for service businesses. Multi-client, branded workspace, invoicing.",
+        "Portal as its own product. Payments, files, messaging, admin tools, multi-client workspace.",
       meta: "Scoped to your project",
     },
     {
-      label: "Custom build",
+      label: "Custom enterprise build",
       value: "Scoped to project",
       detail:
-        "Multi-tenant, custom integrations, white-label. Requires a strategy call to scope.",
+        "Multi-tenant, custom integrations, white-label, compliance work. Requires a strategy call to scope.",
       meta: "Strategy call required",
     },
   ],
