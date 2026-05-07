@@ -1395,38 +1395,65 @@ export async function transitionDesignDirectionByQuoteId(input: {
       next.approvedAt = now;
       break;
     case "lock":
-      if (existing.status === "locked") return existing;
-      next.status = "locked";
-      next.lockedAt = now;
-      // Approved is implicit on lock if it wasn't already set.
-      next.approvedAt = next.approvedAt ?? now;
+      // Lock is idempotent — if already locked we still attempt the
+      // milestone update below so a retry can recover from a previous
+      // partial write where status flipped but the milestone update
+      // errored. The activity event is suppressed when there's no
+      // status change.
+      if (existing.status !== "locked") {
+        next.status = "locked";
+        next.lockedAt = now;
+        // Approved is implicit on lock if it wasn't already set.
+        next.approvedAt = next.approvedAt ?? now;
+      }
       break;
   }
 
   if (cleanPublicNote !== null) next.adminPublicNote = cleanPublicNote || null;
   if (cleanInternalNote !== null) next.adminInternalNote = cleanInternalNote || null;
 
-  const nextScope = { ...existingScope, designDirection: next };
+  const statusChanged = next.status !== existing.status;
+  const notesChanged =
+    (cleanPublicNote !== null && cleanPublicNote !== (existing.adminPublicNote ?? "")) ||
+    (cleanInternalNote !== null && cleanInternalNote !== (existing.adminInternalNote ?? ""));
 
-  const { error: updErr } = await supabaseAdmin
-    .from("customer_portal_projects")
-    .update({
-      scope_snapshot: nextScope,
-      updated_at: now,
-    })
-    .eq("id", portal.id);
-  if (updErr) throw updErr;
+  if (statusChanged || notesChanged) {
+    const nextScope = { ...existingScope, designDirection: next };
+    const { error: updErr } = await supabaseAdmin
+      .from("customer_portal_projects")
+      .update({
+        scope_snapshot: nextScope,
+        updated_at: now,
+      })
+      .eq("id", portal.id);
+    if (updErr) throw updErr;
+  }
 
   // On lock, mark the "Design direction approved" milestone complete so
-  // the journey map reflects the phase-gate. Idempotent — no-op if already
-  // done or if the milestone doesn't exist on this portal.
+  // the journey map reflects the phase-gate. Idempotent at the row level
+  // (the .neq filter ensures we only update todo rows). Surface DB errors
+  // rather than swallowing them — otherwise a partial-write between the
+  // scope update and the milestone update would leave the journey map out
+  // of sync with the direction status, with no signal to the admin.
   if (input.action === "lock") {
-    await supabaseAdmin
+    const { error: msErr } = await supabaseAdmin
       .from("customer_portal_milestones")
       .update({ status: "done", completed_at: now, updated_at: now })
       .eq("portal_project_id", portal.id)
       .ilike("title", "Design direction approved")
       .neq("status", "done");
+    if (msErr) {
+      throw new Error(
+        `Direction status saved but milestone auto-complete failed: ${msErr.message}. Retry to reconcile.`,
+      );
+    }
+  }
+
+  // Skip the activity event on idempotent retries (e.g. lock-after-lock)
+  // where nothing actually changed. Note changes alone don't fire an event;
+  // only state transitions do.
+  if (!statusChanged) {
+    return next;
   }
 
   const eventByAction: Record<DesignDirectionAdminAction, string> = {

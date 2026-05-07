@@ -1182,21 +1182,27 @@ export default function ProjectControlClient({
                 quoteId={data.quoteId}
                 designDirection={data.designDirection}
                 projectType={data.projectType}
-                onTransitioned={async () => {
-                  // Refetch the latest admin data after a transition.
-                  try {
-                    const res = await fetch(`/api/internal/get-quote?id=${encodeURIComponent(data.quoteId)}`);
-                    const json = await res.json().catch(() => ({}));
-                    if (res.ok && json?.data) {
-                      setData((prev) => ({
-                        ...prev,
-                        designDirection: json.data.designDirection ?? prev.designDirection,
-                        portalStateAdmin: json.data.portalStateAdmin ?? prev.portalStateAdmin,
-                      }));
-                    }
-                  } catch {
-                    // Refresh is best-effort; transition already succeeded.
-                  }
+                onTransitioned={(action, next) => {
+                  // Update local state from the server response. On lock,
+                  // optimistically toggle the "Design direction approved"
+                  // milestone so the journey map matches what the helper
+                  // wrote to customer_portal_milestones.
+                  const completedAt = new Date().toISOString();
+                  setData((prev) => ({
+                    ...prev,
+                    designDirection: next,
+                    portalStateAdmin:
+                      action === "lock"
+                        ? {
+                            ...prev.portalStateAdmin,
+                            milestones: prev.portalStateAdmin.milestones.map((m) =>
+                              /design direction approved/i.test(m.label)
+                                ? { ...m, done: true, updatedAt: completedAt }
+                                : m,
+                            ),
+                          }
+                        : prev.portalStateAdmin,
+                  }));
                 }}
               />
             </div>

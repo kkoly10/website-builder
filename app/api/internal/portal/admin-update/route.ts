@@ -93,6 +93,7 @@ export async function POST(req: Request) {
     // body includes `designDirection`. The other patches above run first
     // so admin can update notes, deposit, and milestones in the same call
     // before flipping the direction status.
+    let updatedDesignDirection = null;
     if (body?.designDirection && typeof body.designDirection === "object") {
       const dd = body.designDirection as Record<string, unknown>;
       const action = String(dd.action || "").trim() as DesignDirectionAdminAction;
@@ -109,7 +110,7 @@ export async function POST(req: Request) {
       } = await supabase.auth.getUser();
 
       try {
-        await transitionDesignDirectionByQuoteId({
+        updatedDesignDirection = await transitionDesignDirectionByQuoteId({
           quoteId,
           action,
           publicNote: typeof dd.publicNote === "string" ? dd.publicNote : null,
@@ -129,7 +130,13 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ ok: true, portalId: portal.id });
+    return NextResponse.json({
+      ok: true,
+      portalId: portal.id,
+      // Returned so the admin UI can update local state without a separate
+      // refetch. Null when the call didn't include a designDirection block.
+      designDirection: updatedDesignDirection,
+    });
   } catch (err: any) {
     console.error("portal/admin-update error:", err);
     return NextResponse.json(

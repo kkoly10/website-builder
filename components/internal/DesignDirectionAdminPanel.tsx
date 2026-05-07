@@ -10,9 +10,14 @@ type Props = {
   quoteId: string;
   designDirection: WebsiteDesignDirection | null;
   projectType: string;
-  // Called after a successful transition so the parent can re-fetch the
-  // workspace data and reflect the new status.
-  onTransitioned?: () => void | Promise<void>;
+  // Called after a successful transition with the action and the new
+  // direction state from the server, so the parent can update local
+  // state (and optimistically toggle dependent fields like the
+  // "Design direction approved" milestone on lock).
+  onTransitioned?: (
+    action: AdminAction,
+    next: WebsiteDesignDirection,
+  ) => void | Promise<void>;
 };
 
 const STATUS_PILL: Record<
@@ -96,7 +101,9 @@ export default function DesignDirectionAdminPanel({
       if (!res.ok || !json?.ok) {
         throw new Error(json?.error || "Transition failed.");
       }
-      if (onTransitioned) await onTransitioned();
+      if (onTransitioned && json.designDirection) {
+        await onTransitioned(action, json.designDirection as WebsiteDesignDirection);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Transition failed.");
     } finally {
