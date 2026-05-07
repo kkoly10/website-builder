@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import type { GenericDirection } from "@/lib/directions/types";
 import type { DirectionSchema } from "@/lib/directions/schemas";
 
@@ -47,6 +50,7 @@ export default function DirectionSummary({
   value: GenericDirection;
   schema: DirectionSchema;
 }) {
+  const t = useTranslations("portalToken.directionModule");
   return (
     <div style={{ display: "grid", gap: 12 }}>
       {schema.fields.map((field) => (
@@ -77,7 +81,7 @@ export default function DirectionSummary({
               marginBottom: 4,
             }}
           >
-            Note from CrecyStudio
+            {t("noteFromCrecyStudio")}
           </div>
           {value.adminPublicNote}
         </div>

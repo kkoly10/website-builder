@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import type { GenericDirection, GenericDirectionInput } from "@/lib/directions/types";
 import { getDirectionSchema } from "@/lib/directions/schemas";
 import DirectionForm from "./DirectionForm";
@@ -11,25 +12,40 @@ type Props = {
   onSubmit: (input: GenericDirectionInput) => Promise<void>;
 };
 
-const STATUS_PILL: Record<
+// Style-only pill record. Labels come from i18n
+// (portalToken.directionModule.statusPill.*).
+const STATUS_PILL_STYLE: Record<
   GenericDirection["status"],
-  { label: string; bg: string; fg: string; border: string }
+  { bg: string; fg: string; border: string }
 > = {
-  not_started: { label: "Not started", bg: "var(--paper-2)", fg: "var(--muted)", border: "var(--rule)" },
-  waiting_on_client: { label: "Action needed", bg: "var(--accent-bg)", fg: "var(--accent-2)", border: "var(--accent)" },
-  submitted: { label: "Submitted", bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
-  under_review: { label: "Under review", bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
-  changes_requested: { label: "Clarification needed", bg: "var(--accent-bg)", fg: "var(--accent-2)", border: "var(--accent)" },
-  approved: { label: "Approved", bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
-  locked: { label: "Locked for build", bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
+  not_started: { bg: "var(--paper-2)", fg: "var(--muted)", border: "var(--rule)" },
+  waiting_on_client: { bg: "var(--accent-bg)", fg: "var(--accent-2)", border: "var(--accent)" },
+  submitted: { bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
+  under_review: { bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
+  changes_requested: { bg: "var(--accent-bg)", fg: "var(--accent-2)", border: "var(--accent)" },
+  approved: { bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
+  locked: { bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
 };
 
-const TITLE_BY_TYPE: Record<GenericDirection["type"], string> = {
-  design_direction: "Design Direction",
-  product_direction: "Product Direction",
-  workflow_direction: "Workflow Direction",
-  store_direction: "Store Direction",
-  rescue_diagnosis: "Rescue Diagnosis",
+const STATUS_PILL_KEY: Record<GenericDirection["status"], string> = {
+  not_started: "notStarted",
+  waiting_on_client: "waitingOnClient",
+  submitted: "submitted",
+  under_review: "underReview",
+  changes_requested: "changesRequested",
+  approved: "approved",
+  locked: "locked",
+};
+
+// Maps the canonical directionType to the i18n key under
+// portalToken.directionModule.title.* (design / product / workflow /
+// store / rescue).
+const TITLE_KEY_BY_TYPE: Record<GenericDirection["type"], string> = {
+  design_direction: "design",
+  product_direction: "product",
+  workflow_direction: "workflow",
+  store_direction: "store",
+  rescue_diagnosis: "rescue",
 };
 
 const SUBTITLE_BY_TYPE_AND_STATUS: Record<
@@ -86,11 +102,13 @@ const SUBTITLE_BY_TYPE_AND_STATUS: Record<
 };
 
 export default function DirectionCard({ value, onSubmit }: Props) {
+  const t = useTranslations("portalToken.directionModule");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const schema = getDirectionSchema(value.type);
-  const pill = STATUS_PILL[value.status];
-  const title = TITLE_BY_TYPE[value.type];
+  const pillStyle = STATUS_PILL_STYLE[value.status];
+  const pillLabel = t(`statusPill.${STATUS_PILL_KEY[value.status]}`);
+  const title = t(`title.${TITLE_KEY_BY_TYPE[value.type]}`);
   const subtitle = SUBTITLE_BY_TYPE_AND_STATUS[value.type][value.status];
 
   if (!schema) {
@@ -106,7 +124,7 @@ export default function DirectionCard({ value, onSubmit }: Props) {
     try {
       await onSubmit(input);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit direction.");
+      setError(err instanceof Error ? err.message : t("submitError"));
     } finally {
       setSaving(false);
     }
@@ -141,13 +159,13 @@ export default function DirectionCard({ value, onSubmit }: Props) {
             textTransform: "uppercase",
             padding: "6px 12px",
             borderRadius: 999,
-            border: `1px solid ${pill.border}`,
-            background: pill.bg,
-            color: pill.fg,
+            border: `1px solid ${pillStyle.border}`,
+            background: pillStyle.bg,
+            color: pillStyle.fg,
             whiteSpace: "nowrap",
           }}
         >
-          {pill.label}
+          {pillLabel}
         </span>
       </div>
 
@@ -177,9 +195,7 @@ export default function DirectionCard({ value, onSubmit }: Props) {
               lineHeight: 1.6,
             }}
           >
-            Direction is locked. Feedback should focus on functionality, content accuracy, and
-            reasonable polish. Major changes to the approved direction may affect the timeline or
-            require a change order.
+            {t("lockedNotice")}
           </div>
         ) : null}
       </div>

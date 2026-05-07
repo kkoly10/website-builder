@@ -13,6 +13,7 @@
 // so we don't show a redundant "click here" CTA next to the actual form.
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import type { RequiredAction } from "@/lib/requiredActions";
 
 type Props = {
@@ -44,18 +45,29 @@ const ACTION_HAS_OWN_FLOW = new Set([
   "approve_launch",
 ]);
 
-const STATUS_PILL: Record<
+// Status-pill colors. Labels come from i18n via the
+// portalToken.requiredActions.statusPill namespace.
+const STATUS_PILL_STYLE: Record<
   RequiredAction["status"],
-  { label: string; bg: string; fg: string; border: string }
+  { bg: string; fg: string; border: string }
 > = {
-  not_started: { label: "Not started yet", bg: "var(--paper-2)", fg: "var(--muted)", border: "var(--rule)" },
-  waiting_on_client: { label: "Action needed", bg: "var(--accent-bg)", fg: "var(--accent-2)", border: "var(--accent)" },
-  submitted: { label: "Submitted", bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
-  complete: { label: "Done", bg: "var(--paper-2)", fg: "var(--muted)", border: "var(--rule)" },
-  blocked: { label: "Blocked", bg: "var(--paper-2)", fg: "var(--accent-2)", border: "var(--accent)" },
+  not_started: { bg: "var(--paper-2)", fg: "var(--muted)", border: "var(--rule)" },
+  waiting_on_client: { bg: "var(--accent-bg)", fg: "var(--accent-2)", border: "var(--accent)" },
+  submitted: { bg: "var(--paper-2)", fg: "var(--fg)", border: "var(--rule)" },
+  complete: { bg: "var(--paper-2)", fg: "var(--muted)", border: "var(--rule)" },
+  blocked: { bg: "var(--paper-2)", fg: "var(--accent-2)", border: "var(--accent)" },
+};
+
+const STATUS_PILL_KEY: Record<RequiredAction["status"], string> = {
+  not_started: "notStarted",
+  waiting_on_client: "waitingOnClient",
+  submitted: "submitted",
+  complete: "complete",
+  blocked: "blocked",
 };
 
 export default function RequiredActionsCard({ actions, onComplete }: Props) {
+  const t = useTranslations("portalToken.requiredActions");
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,7 +86,7 @@ export default function RequiredActionsCard({ actions, onComplete }: Props) {
       // Surface the error inline. Without this catch, the parent's
       // fetch error becomes an unhandled rejection swallowed by void —
       // the user sees nothing change after clicking "Mark as done".
-      setError(err instanceof Error ? err.message : "Failed to mark action complete.");
+      setError(err instanceof Error ? err.message : t("actionError"));
     } finally {
       setBusyKey(null);
     }
@@ -95,14 +107,11 @@ export default function RequiredActionsCard({ actions, onComplete }: Props) {
     >
       <div className="portalPanelHeader">
         <div>
-          <h2 className="portalPanelTitle">Action needed from you</h2>
-          <div className="portalMessageIntro">
-            Each step below moves the project toward launch. Pending items show what
-            we&apos;re waiting on from you right now.
-          </div>
+          <h2 className="portalPanelTitle">{t("title")}</h2>
+          <div className="portalMessageIntro">{t("intro")}</div>
         </div>
         <span className="portalPanelCount">
-          {sorted.filter((a) => a.status !== "complete").length} pending
+          {t("pendingCount", { count: sorted.filter((a) => a.status !== "complete").length })}
         </span>
       </div>
 
@@ -126,7 +135,8 @@ export default function RequiredActionsCard({ actions, onComplete }: Props) {
 
       <div style={{ display: "grid", gap: 10 }}>
         {sorted.map((action) => {
-          const pill = STATUS_PILL[action.status];
+          const pillStyle = STATUS_PILL_STYLE[action.status];
+          const pillLabel = t(`statusPill.${STATUS_PILL_KEY[action.status]}`);
           const isDone = action.status === "complete";
           const hasOwnFlow = ACTION_HAS_OWN_FLOW.has(action.actionKey);
           const showCompleteButton =
@@ -164,7 +174,7 @@ export default function RequiredActionsCard({ actions, onComplete }: Props) {
                         color: "var(--muted)",
                       }}
                     >
-                      (use the form below)
+                      {t("useFormBelow")}
                     </span>
                   ) : null}
                 </div>
@@ -176,13 +186,13 @@ export default function RequiredActionsCard({ actions, onComplete }: Props) {
                     textTransform: "uppercase",
                     padding: "4px 10px",
                     borderRadius: 999,
-                    border: `1px solid ${pill.border}`,
-                    background: pill.bg,
-                    color: pill.fg,
+                    border: `1px solid ${pillStyle.border}`,
+                    background: pillStyle.bg,
+                    color: pillStyle.fg,
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {pill.label}
+                  {pillLabel}
                 </span>
               </div>
               {action.description ? (
@@ -205,12 +215,12 @@ export default function RequiredActionsCard({ actions, onComplete }: Props) {
                   disabled={busyKey === action.actionKey}
                   style={{ fontSize: 12, padding: "6px 12px" }}
                 >
-                  {busyKey === action.actionKey ? "Saving..." : "Mark as done"}
+                  {busyKey === action.actionKey ? t("markAsDoneSaving") : t("markAsDone")}
                 </button>
               ) : null}
               {isDone && action.completedAt ? (
                 <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6 }}>
-                  Completed {new Date(action.completedAt).toLocaleDateString()}
+                  {t("completedOn", { date: new Date(action.completedAt).toLocaleDateString() })}
                 </div>
               ) : null}
             </div>
