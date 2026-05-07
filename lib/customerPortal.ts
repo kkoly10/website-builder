@@ -1323,6 +1323,152 @@ export async function submitDesignDirectionByPortalToken(input: {
   return merged;
 }
 
+export type DesignDirectionAdminAction =
+  | "mark_under_review"
+  | "request_changes"
+  | "approve"
+  | "lock";
+
+// Admin transitions for the design direction. Each move is logged to the
+// activity feed with the actor audit. `lock` additionally marks the
+// "Design direction approved" milestone complete so the journey map
+// reflects the gate.
+export async function transitionDesignDirectionByQuoteId(input: {
+  quoteId: string;
+  action: DesignDirectionAdminAction;
+  publicNote?: string | null;
+  internalNote?: string | null;
+  actor: {
+    userId?: string | null;
+    email?: string | null;
+    ip?: string | null;
+    userAgent?: string | null;
+  };
+}) {
+  const { data: portal, error: portalErr } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .select("*")
+    .eq("quote_id", input.quoteId)
+    .maybeSingle();
+  if (portalErr) throw portalErr;
+  if (!portal) throw new Error("Portal not found");
+
+  const existingScope = safeObj(portal.scope_snapshot);
+  if (!hasDesignDirection(existingScope)) {
+    throw new Error(
+      "Design direction is not enabled for this project. The portal predates Phase 2.",
+    );
+  }
+
+  const existing = readDesignDirection(existingScope) ?? DEFAULT_WEBSITE_DESIGN_DIRECTION;
+
+  const now = new Date().toISOString();
+  const cleanPublicNote = input.publicNote != null ? String(input.publicNote).trim() : null;
+  const cleanInternalNote = input.internalNote != null ? String(input.internalNote).trim() : null;
+
+  const next: WebsiteDesignDirection = { ...existing };
+
+  // Set status + timestamps based on the requested transition.
+  switch (input.action) {
+    case "mark_under_review":
+      if (existing.status !== "submitted" && existing.status !== "changes_requested") {
+        throw new Error("Direction can only be marked under review after submission.");
+      }
+      next.status = "under_review";
+      next.reviewedAt = now;
+      break;
+    case "request_changes":
+      if (existing.status === "locked") {
+        throw new Error("Direction is locked; unlock before requesting changes.");
+      }
+      next.status = "changes_requested";
+      next.changesRequestedAt = now;
+      break;
+    case "approve":
+      if (existing.status === "locked") {
+        throw new Error("Direction is already locked.");
+      }
+      if (existing.status !== "submitted" && existing.status !== "under_review") {
+        throw new Error("Direction must be submitted before it can be approved.");
+      }
+      next.status = "approved";
+      next.approvedAt = now;
+      break;
+    case "lock":
+      if (existing.status === "locked") return existing;
+      next.status = "locked";
+      next.lockedAt = now;
+      // Approved is implicit on lock if it wasn't already set.
+      next.approvedAt = next.approvedAt ?? now;
+      break;
+  }
+
+  if (cleanPublicNote !== null) next.adminPublicNote = cleanPublicNote || null;
+  if (cleanInternalNote !== null) next.adminInternalNote = cleanInternalNote || null;
+
+  const nextScope = { ...existingScope, designDirection: next };
+
+  const { error: updErr } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({
+      scope_snapshot: nextScope,
+      updated_at: now,
+    })
+    .eq("id", portal.id);
+  if (updErr) throw updErr;
+
+  // On lock, mark the "Design direction approved" milestone complete so
+  // the journey map reflects the phase-gate. Idempotent — no-op if already
+  // done or if the milestone doesn't exist on this portal.
+  if (input.action === "lock") {
+    await supabaseAdmin
+      .from("customer_portal_milestones")
+      .update({ status: "done", completed_at: now, updated_at: now })
+      .eq("portal_project_id", portal.id)
+      .ilike("title", "Design direction approved")
+      .neq("status", "done");
+  }
+
+  const eventByAction: Record<DesignDirectionAdminAction, string> = {
+    mark_under_review: "design_direction_under_review",
+    request_changes: "design_direction_changes_requested",
+    approve: "design_direction_approved",
+    lock: "design_direction_locked",
+  };
+  const summaryByAction: Record<DesignDirectionAdminAction, string> = {
+    mark_under_review: "CrecyStudio is reviewing the design direction.",
+    request_changes: "CrecyStudio requested clarification on the design direction.",
+    approve: "Design direction approved.",
+    lock: "Design direction locked. Build can begin.",
+  };
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "studio",
+    eventType: eventByAction[input.action],
+    summary: summaryByAction[input.action],
+    payload: {
+      action: input.action,
+      previousStatus: existing.status,
+      newStatus: next.status,
+      // Phase-gate audit trail — see launch QA runbook.
+      actorUserId: input.actor.userId ?? null,
+      actorEmail: input.actor.email ?? null,
+      actorIp: input.actor.ip ?? null,
+      actorUserAgent: input.actor.userAgent ?? null,
+      // Public note is client-visible context; internal note isn't echoed
+      // back into payloads to avoid leaking it via the client activity feed.
+      publicNote: cleanPublicNote ?? null,
+    },
+    // request_changes and lock should be visible to the client; under_review
+    // and approve are too (clients want to see "we're reviewing" and
+    // "approved"). All four are client-visible.
+    clientVisible: true,
+  });
+
+  return next;
+}
+
 export async function submitRevisionByPortalToken(input: {
   token: string;
   requestText: string;
