@@ -210,9 +210,13 @@ export const DEFAULT_WEBSITE_DESIGN_DIRECTION: WebsiteDesignDirection = {
 
 // ─── Validation ──────────────────────────────────────────────────────────
 
-export type DesignDirectionValidationResult =
-  | { ok: true; value: WebsiteDesignDirectionInput }
-  | { ok: false; error: string };
+// Both fields are always present so callers don't depend on union narrowing,
+// which Next.js 16 + Turbopack has quirks with when imported across modules.
+export type DesignDirectionValidationResult = {
+  ok: boolean;
+  value: WebsiteDesignDirectionInput | null;
+  error: string | null;
+};
 
 const URL_RE = /^https?:\/\//i;
 
@@ -255,18 +259,18 @@ export function validateDesignDirectionInput(
   raw: unknown,
 ): DesignDirectionValidationResult {
   if (!raw || typeof raw !== "object") {
-    return { ok: false, error: "Design direction payload is required." };
+    return { ok: false, value: null, error: "Design direction payload is required." };
   }
   const r = raw as Record<string, unknown>;
 
   const controlLevel = asString(r.controlLevel) as DesignControlLevel;
   if (!CONTROL_LEVEL_OPTIONS.some((o) => o.value === controlLevel)) {
-    return { ok: false, error: "Choose a design direction control level." };
+    return { ok: false, value: null, error: "Choose a design direction control level." };
   }
 
   const brandMood = asStringArray(r.brandMood);
   if (brandMood.length === 0) {
-    return { ok: false, error: "Pick at least one brand mood word." };
+    return { ok: false, value: null, error: "Pick at least one brand mood word." };
   }
   if (brandMood.length > 3) {
     return {
@@ -275,34 +279,34 @@ export function validateDesignDirectionInput(
     };
   }
   if (!brandMood.every((m) => (BRAND_MOOD_OPTIONS as readonly string[]).includes(m))) {
-    return { ok: false, error: "Brand mood values are out of range." };
+    return { ok: false, value: null, error: "Brand mood values are out of range." };
   }
 
   const visualStyle = asString(r.visualStyle, 200);
   if (!visualStyle) {
-    return { ok: false, error: "Choose a visual style." };
+    return { ok: false, value: null, error: "Choose a visual style." };
   }
   if (!(VISUAL_STYLE_OPTIONS as readonly string[]).includes(visualStyle)) {
-    return { ok: false, error: "Visual style is out of range." };
+    return { ok: false, value: null, error: "Visual style is out of range." };
   }
 
   const typographyFeel = asString(r.typographyFeel, 200);
   if (!typographyFeel) {
-    return { ok: false, error: "Choose a typography feel." };
+    return { ok: false, value: null, error: "Choose a typography feel." };
   }
   if (!(TYPOGRAPHY_FEEL_OPTIONS as readonly string[]).includes(typographyFeel)) {
-    return { ok: false, error: "Typography feel is out of range." };
+    return { ok: false, value: null, error: "Typography feel is out of range." };
   }
 
   const contentTone = asStringArray(r.contentTone, 2);
   if (contentTone.length === 0) {
-    return { ok: false, error: "Choose at least one content tone." };
+    return { ok: false, value: null, error: "Choose at least one content tone." };
   }
   if (contentTone.length > 2) {
-    return { ok: false, error: "Choose up to 2 content tone words." };
+    return { ok: false, value: null, error: "Choose up to 2 content tone words." };
   }
   if (!contentTone.every((t) => (CONTENT_TONE_OPTIONS as readonly string[]).includes(t))) {
-    return { ok: false, error: "Content tone values are out of range." };
+    return { ok: false, value: null, error: "Content tone values are out of range." };
   }
 
   const imageryDirection = asStringArray(r.imageryDirection);
@@ -310,14 +314,14 @@ export function validateDesignDirectionInput(
     imageryDirection.length > 0 &&
     !imageryDirection.every((i) => (IMAGERY_DIRECTION_OPTIONS as readonly string[]).includes(i))
   ) {
-    return { ok: false, error: "Imagery direction values are out of range." };
+    return { ok: false, value: null, error: "Imagery direction values are out of range." };
   }
 
   const liked = asReferenceList(r.likedWebsites, 3);
-  if ("error" in liked) return { ok: false, error: liked.error };
+  if ("error" in liked) return { ok: false, value: null, error: liked.error };
 
   const disliked = asReferenceList(r.dislikedWebsites, 2);
-  if ("error" in disliked) return { ok: false, error: disliked.error };
+  if ("error" in disliked) return { ok: false, value: null, error: disliked.error };
 
   const brandColorsKnownRaw = asString(r.brandColorsKnown);
   const brandColorsKnown: BrandColorsKnown =
@@ -341,6 +345,7 @@ export function validateDesignDirectionInput(
 
   return {
     ok: true,
+    error: null,
     value: {
       controlLevel,
       brandMood,

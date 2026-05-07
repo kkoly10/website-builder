@@ -212,8 +212,11 @@ export async function POST(
       );
     } else if (actionType === "design_direction_submit") {
       const validation = validateDesignDirectionInput(body?.designDirection);
-      if (!validation.ok) {
-        return NextResponse.json({ ok: false, error: validation.error }, { status: 400 });
+      if (!validation.ok || !validation.value) {
+        return NextResponse.json(
+          { ok: false, error: validation.error || "Design direction payload is invalid." },
+          { status: 400 },
+        );
       }
 
       const supabase = await createSupabaseServerClient();
