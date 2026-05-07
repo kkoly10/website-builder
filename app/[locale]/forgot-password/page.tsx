@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { useTranslations } from "next-intl";
 import { Suspense } from "react";
 import ForgotPasswordClient from "./ForgotPasswordClient";
+import ConversionShell from "@/components/site/ConversionShell";
 
 export const dynamic = "force-dynamic";
 
@@ -29,26 +30,13 @@ export default async function ForgotPasswordPage({
   const { locale } = await params;
   setRequestLocale(locale);
   return (
-    <main className="container">
-      <section className="section">
-        <Suspense fallback={<ForgotLoadingCard />}>
-          <ForgotPasswordClient />
-        </Suspense>
-      </section>
-    </main>
+    <Suspense fallback={<ForgotLoadingCard />}>
+      <ForgotPasswordClient />
+    </Suspense>
   );
 }
 
 function ForgotLoadingCard() {
   const t = useTranslations("auth.forgotPassword");
-  return (
-    <div className="card">
-      <div className="cardInner">
-        <div className="kicker">
-          <span className="kickerDot" aria-hidden="true" />
-          {t("loadingKicker")}
-        </div>
-      </div>
-    </div>
-  );
+  return <ConversionShell kicker={t("loadingKicker")} title={t("title")} />;
 }

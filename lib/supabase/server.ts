@@ -54,11 +54,9 @@ export function getSiteUrl() {
   return siteUrl;
 }
 
-export function safeNextPath(next?: string | null) {
-  if (!next) return null;
-  if (!next.startsWith("/")) return null; // block external redirects
-  return next;
-}
+// Re-exported from lib/redirects.ts so existing server callers keep working.
+// New code should import from "@/lib/redirects" directly.
+export { safeNextPath } from "@/lib/redirects";
 
 export function normalizeEmail(email?: string | null) {
   return String(email ?? "").trim().toLowerCase();

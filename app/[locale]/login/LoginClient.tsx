@@ -5,12 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo, useState, type FormEvent } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-
-function safeNextPath(next: string | null) {
-  // Enhanced: Defaults to /portal instead of /
-  if (!next || !next.startsWith("/")) return "/portal";
-  return next;
-}
+import { safeNextPathOr } from "@/lib/redirects";
+import ConversionShell from "@/components/site/ConversionShell";
 
 export default function LoginClient() {
   const searchParams = useSearchParams();
@@ -23,7 +19,7 @@ export default function LoginClient() {
   const [error, setError] = useState<string | null>(null);
 
   const nextPath = useMemo(
-    () => safeNextPath(searchParams.get("next")),
+    () => safeNextPathOr(searchParams.get("next"), "/portal"),
     [searchParams]
   );
 
@@ -59,73 +55,59 @@ export default function LoginClient() {
   }
 
   return (
-    <div className="card" style={{ border: "1px solid var(--accent)" }}>
-      <div className="cardInner" >
-
-        <div>
-          <div className="kicker">
-            <span className="kickerDot" aria-hidden="true" />
-            {tLogin("kicker")}
-          </div>
-          <h1 className="h2" >{tLogin("title")}</h1>
-          <p className="pDark" style={{ marginTop: 6 }}>
-            {tLogin("subtitle")}
-          </p>
-        </div>
-
-        {flashMessage && (
-          <div style={{ borderRadius: 8, padding: 12, border: "1px solid var(--stroke)", background: "var(--panel2)", color: "var(--fg)", fontSize: 13 }}>
-            {flashMessage}
-          </div>
-        )}
-
-        <form onSubmit={handleLogin} style={{ display: "grid", gap: "1rem" }}>
-          <div>
-            <label className="fieldLabel">{t("emailLabel")}</label>
-            <input
-              className="input"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t("emailPlaceholder")}
-              required
-              autoComplete="email"
-            />
-          </div>
-
-          <div>
-            <label className="fieldLabel">{t("passwordLabel")}</label>
-            <input
-              className="input"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t("passwordPlaceholder")}
-              required
-              autoComplete="current-password"
-            />
-          </div>
-
-          <button className="btn btnPrimary" type="submit" disabled={submitting} style={{ marginTop: 8, padding: "12px", fontSize: 15, width: "100%", justifyContent: "center" }}>
-            {submitting ? tLogin("submitting") : `${tLogin("submit")} →`}
-          </button>
-        </form>
-
-        {error && (
-          <div style={{ padding: 12, border: "1px solid var(--accent)", background: "var(--accent-bg)", color: "var(--accent-2)", fontSize: 13, fontWeight: 700 }}>
-            <strong>{t("errorPrefix")}</strong> {error}
-          </div>
-        )}
-
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--stroke)", paddingTop: 16, marginTop: 8 }}>
+    <ConversionShell
+      kicker={tLogin("kicker")}
+      title={tLogin("title")}
+      subtitle={tLogin("subtitle")}
+      flash={flashMessage}
+      footer={
+        <>
           <Link href={`/signup?next=${encodeURIComponent(nextPath)}`} style={{ color: "var(--muted)", fontSize: 13, textDecoration: "none" }}>
             {tLogin("needAccount")} <span style={{ color: "var(--fg)", fontWeight: 700 }}>{tLogin("signUpLink")}</span>
           </Link>
           <Link href={`/forgot-password?next=${encodeURIComponent(nextPath)}`} style={{ color: "var(--muted)", fontSize: 13, textDecoration: "none" }}>
             {tLogin("forgotPassword")}
           </Link>
+        </>
+      }
+    >
+      <form onSubmit={handleLogin} style={{ display: "grid", gap: "1rem" }}>
+        <div>
+          <label className="fieldLabel">{t("emailLabel")}</label>
+          <input
+            className="input"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={t("emailPlaceholder")}
+            required
+            autoComplete="email"
+          />
         </div>
-      </div>
-    </div>
+
+        <div>
+          <label className="fieldLabel">{t("passwordLabel")}</label>
+          <input
+            className="input"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={t("passwordPlaceholder")}
+            required
+            autoComplete="current-password"
+          />
+        </div>
+
+        <button className="btn btnPrimary" type="submit" disabled={submitting} style={{ marginTop: 8, padding: "12px", fontSize: 15, width: "100%", justifyContent: "center" }}>
+          {submitting ? tLogin("submitting") : `${tLogin("submit")} →`}
+        </button>
+      </form>
+
+      {error && (
+        <div style={{ padding: 12, border: "1px solid var(--accent)", background: "var(--accent-bg)", color: "var(--accent-2)", fontSize: 13, fontWeight: 700 }}>
+          <strong>{t("errorPrefix")}</strong> {error}
+        </div>
+      )}
+    </ConversionShell>
   );
 }
