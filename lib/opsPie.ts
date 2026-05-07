@@ -1,6 +1,6 @@
 // lib/opsPie.ts
 import { createHash } from "crypto";
-import { getOpsPricing } from "@/lib/pricing/ops";
+import { getOpsPricing } from "@/lib/pricing/automation";
 import { formatRange, OPS_TIER_CONFIG, PRICING_MESSAGES } from "@/lib/pricing/config";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 

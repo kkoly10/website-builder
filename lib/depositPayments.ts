@@ -1,6 +1,6 @@
 import { saveEcommerceWorkspaceState } from "@/lib/ecommerce/workspace";
 import { getWorkspaceState, saveWorkspaceState } from "@/lib/opsWorkspace/state";
-import { getOpsPricing } from "@/lib/pricing/ops";
+import { getOpsPricing } from "@/lib/pricing/automation";
 import { stripeCreateCheckoutSession } from "@/lib/stripeServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { ensureCustomerPortalForQuoteId } from "@/lib/customerPortal";

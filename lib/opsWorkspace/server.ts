@@ -1,5 +1,5 @@
 import { formatRange, OPS_TIER_CONFIG } from "@/lib/pricing/config";
-import { getOpsPricing } from "@/lib/pricing/ops";
+import { getOpsPricing } from "@/lib/pricing/automation";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 type JsonRecord = Record<string, any>;

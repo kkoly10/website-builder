@@ -41,7 +41,11 @@ export const WEBSITE_TIER_CONFIG: Record<
   },
 };
 
-export const OPS_TIER_CONFIG: Record<
+// Workflow automation pricing tiers. Renamed from OPS_TIER_CONFIG —
+// canonical name is AUTOMATION_TIER_CONFIG (lane "automation"). The
+// deprecated OPS_TIER_CONFIG export below is a value alias for callers
+// that haven't been updated yet.
+export const AUTOMATION_TIER_CONFIG: Record<
   Exclude<OpsTierKey, "custom_ops_scope">,
   { label: string; min: number; max: number; monthly?: boolean }
 > = {
@@ -51,7 +55,7 @@ export const OPS_TIER_CONFIG: Record<
     max: 1800,
   },
   ops_system_build: {
-    label: "Ops System Build",
+    label: "Automation System Build",
     min: 2000,
     max: 3800,
   },
@@ -62,6 +66,9 @@ export const OPS_TIER_CONFIG: Record<
     monthly: true,
   },
 };
+
+// Deprecated alias. Same object — labels updated to canonical names.
+export const OPS_TIER_CONFIG = AUTOMATION_TIER_CONFIG;
 
 export const ECOMMERCE_TIER_CONFIG: Record<
   Exclude<EcommerceTierKey, "custom_ecommerce_scope">,
@@ -169,23 +176,6 @@ export const RESCUE_TIER_CONFIG: Record<
     label: "Full Rescue Sprint",
     min: 1500,
     max: 3500,
-  },
-};
-
-// Automation tier config is an alias for OPS_TIER_CONFIG. Phase 4 keeps
-// both keys live so existing callers continue to work; future PR can
-// migrate callers to AUTOMATION_TIER_CONFIG and retire the ops alias.
-export const AUTOMATION_TIER_CONFIG: Record<
-  Exclude<OpsTierKey, "custom_ops_scope">,
-  { label: string; min: number; max: number; monthly?: boolean }
-> = {
-  quick_workflow_fix: { label: "Quick Workflow Fix", min: 1000, max: 1800 },
-  ops_system_build: { label: "Automation System Build", min: 2000, max: 3800 },
-  ongoing_systems_partner: {
-    label: "Ongoing Systems Partner",
-    min: 500,
-    max: 1250,
-    monthly: true,
   },
 };
 
