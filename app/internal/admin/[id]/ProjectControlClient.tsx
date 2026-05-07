@@ -544,6 +544,71 @@ export default function ProjectControlClient({
     }
   }
 
+  async function patchInvoice(invoiceId: string, body: Record<string, unknown>, successMsg: string) {
+    setBusy(true);
+    setMessage("Updating invoice...");
+    setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/admin/invoices", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, invoiceId, ...body }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      if (Array.isArray(json?.invoices)) {
+        setData((prev) => ({ ...prev, invoices: json.invoices as ProjectInvoice[] }));
+      }
+      setMessageIsError(false); setMessage(successMsg);
+    } catch (err) {
+      setMessageIsError(true);
+      setMessage(err instanceof Error ? err.message : "Failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function markInvoicePaidOffline(invoiceId: string, invoiceLabel: string) {
+    const reference = prompt(
+      `Reference for the offline payment on the ${invoiceLabel}? (wire #, check #, etc. — optional)`,
+      "",
+    );
+    // Cancel returns null; empty string is allowed (no reference).
+    if (reference === null) return;
+    if (!confirm(
+      `Mark this ${invoiceLabel} paid offline?\n\nThe portal will reflect it as paid; if it's the deposit, deposit-paid side-effects fire too. The activity feed shows the admin-recorded source.`
+    )) return;
+    await patchInvoice(invoiceId, { action: "mark_paid_offline", reference }, "Invoice marked paid.");
+  }
+
+  async function cancelInvoice(invoiceId: string, invoiceLabel: string) {
+    const reason = prompt(`Why are you cancelling the ${invoiceLabel}? (logged to audit)`);
+    if (!reason || !reason.trim()) return;
+    if (!confirm(`Cancel the ${invoiceLabel}?\n\nStatus becomes "cancelled"; the row stays for audit.`)) return;
+    await patchInvoice(invoiceId, { action: "cancel", reason: reason.trim() }, "Invoice cancelled.");
+  }
+
+  async function editInvoiceField(invoiceId: string, field: "amount" | "dueDate" | "notes", currentValue: string) {
+    const promptLabel = field === "amount" ? "New amount (USD, no symbol)" : field === "dueDate" ? "New due date (YYYY-MM-DD, blank to clear)" : "New notes (blank to clear)";
+    const next = prompt(promptLabel, currentValue);
+    if (next === null) return;
+    const trimmed = next.trim();
+    const patch: Record<string, unknown> = {};
+    if (field === "amount") {
+      const n = Number(trimmed);
+      if (!Number.isFinite(n) || n <= 0) {
+        setMessageIsError(true); setMessage("Amount must be a positive number.");
+        return;
+      }
+      patch.amount = n;
+    } else if (field === "dueDate") {
+      patch.dueDate = trimmed || null;
+    } else if (field === "notes") {
+      patch.notes = trimmed || null;
+    }
+    await patchInvoice(invoiceId, { action: "edit", patch }, "Invoice updated.");
+  }
+
   async function sendInvoice(invoiceId: string) {
     setBusy(true);
     setMessage("Sending invoice...");
@@ -1779,6 +1844,57 @@ export default function ProjectControlClient({
                           >
                             Open payment link
                           </a>
+                        ) : null}
+                        {invoice.status !== "paid" && invoice.status !== "cancelled" ? (
+                          <button
+                            className="btn btnGhost"
+                            disabled={busy}
+                            style={{ fontSize: 12, padding: "8px 14px" }}
+                            onClick={() => markInvoicePaidOffline(invoice.id, `${pretty(invoice.invoiceType)} invoice`)}
+                            title="Mark this invoice paid via wire / check / ACH / other offline method."
+                          >
+                            Mark paid offline
+                          </button>
+                        ) : null}
+                        {invoice.status !== "paid" && invoice.status !== "cancelled" ? (
+                          <button
+                            className="btn btnGhost"
+                            disabled={busy}
+                            style={{ fontSize: 12, padding: "8px 14px" }}
+                            onClick={() => editInvoiceField(invoice.id, "amount", String(invoice.amount))}
+                          >
+                            Edit amount
+                          </button>
+                        ) : null}
+                        {invoice.status !== "paid" && invoice.status !== "cancelled" ? (
+                          <button
+                            className="btn btnGhost"
+                            disabled={busy}
+                            style={{ fontSize: 12, padding: "8px 14px" }}
+                            onClick={() => editInvoiceField(invoice.id, "dueDate", invoice.dueDate || "")}
+                          >
+                            Edit due date
+                          </button>
+                        ) : null}
+                        {invoice.status !== "paid" && invoice.status !== "cancelled" ? (
+                          <button
+                            className="btn btnGhost"
+                            disabled={busy}
+                            style={{ fontSize: 12, padding: "8px 14px" }}
+                            onClick={() => editInvoiceField(invoice.id, "notes", invoice.notes || "")}
+                          >
+                            Edit notes
+                          </button>
+                        ) : null}
+                        {invoice.status !== "paid" && invoice.status !== "cancelled" ? (
+                          <button
+                            className="btn btnGhost"
+                            disabled={busy}
+                            style={{ fontSize: 12, padding: "8px 14px", color: "var(--accent)", marginLeft: "auto" }}
+                            onClick={() => cancelInvoice(invoice.id, `${pretty(invoice.invoiceType)} invoice`)}
+                          >
+                            Cancel invoice
+                          </button>
                         ) : null}
                       </div>
                     </div>

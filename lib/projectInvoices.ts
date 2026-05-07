@@ -460,3 +460,177 @@ export async function markProjectInvoicePaid(args: {
 
   return serializeInvoice(data, str(context.quote.id));
 }
+
+// ─────────────────────────────────────────────────────────────────
+// Admin-side invoice management. The Stripe webhook covers online
+// payments via markProjectInvoicePaid; below are the offline-payment,
+// edit, and cancel paths that admin needs when a client wires money,
+// drops a check, or asks for a correction before sending.
+// ─────────────────────────────────────────────────────────────────
+
+// Mark an invoice paid offline (wire, check, ACH, etc.). Wraps the
+// existing markProjectInvoicePaid by passing an admin-recorded session
+// so the deposit-side-effects (markDepositPaidForQuoteId) still fire.
+export async function markProjectInvoicePaidByAdmin(args: {
+  invoiceId: string;
+  paidAt?: string | null;
+  reference?: string | null;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}) {
+  const context = await getInvoiceContextById(args.invoiceId);
+  const paidAt = safeDate(args.paidAt) || new Date().toISOString();
+  const reference = str(args.reference);
+
+  // Reuse markProjectInvoicePaid for the actual update + deposit
+  // side-effects. The session shape lets us pass a stable reference
+  // (e.g. "wire #12345") into stripe_session_id, which makes the
+  // payment traceable in the invoice list even though Stripe wasn't
+  // involved.
+  const result = await markProjectInvoicePaid({
+    invoiceId: args.invoiceId,
+    session: {
+      id: reference ? `admin-${reference}` : `admin-${Date.now()}`,
+      amount_total: dollarsToCents(context.invoice.amount),
+      currency: str(context.invoice.currency) || "usd",
+      customer_email: null,
+    },
+    paidAt,
+  });
+
+  // Layer an admin-attribution event on top of the system-level
+  // invoice_paid so the activity feed shows it was a manual record.
+  await logProjectActivityByPortalId({
+    portalProjectId: str(context.portal.id),
+    actorRole: "studio",
+    eventType: "invoice_marked_paid_offline",
+    summary: `CrecyStudio marked the ${str(context.invoice.invoice_type)} invoice paid offline${reference ? ` (ref: ${reference})` : ""}.`,
+    payload: {
+      invoiceId: args.invoiceId,
+      reference: reference || null,
+      actorUserId: args.actor.userId ?? null,
+      actorEmail: args.actor.email ?? null,
+      actorIp: args.actor.ip ?? null,
+    },
+    clientVisible: true,
+  });
+
+  return result;
+}
+
+// Edit an unsent or unpaid invoice. Once paid, mutations are blocked —
+// changing the amount on a paid invoice would corrupt the audit
+// trail. Admin should refund/cancel and create a new one instead.
+export async function editProjectInvoice(args: {
+  invoiceId: string;
+  patch: {
+    amount?: number;
+    currency?: string;
+    invoiceType?: string;
+    notes?: string | null;
+    dueDate?: string | null;
+  };
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}) {
+  const context = await getInvoiceContextById(args.invoiceId);
+  const status = str(context.invoice.status).toLowerCase();
+  if (status === "paid") {
+    throw new Error("Paid invoices cannot be edited. Cancel and create a new one instead.");
+  }
+  if (status === "cancelled") {
+    throw new Error("Cancelled invoices cannot be edited.");
+  }
+
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (args.patch.amount !== undefined && Number.isFinite(args.patch.amount)) {
+    updates.amount = args.patch.amount;
+  }
+  if (args.patch.currency !== undefined && args.patch.currency.trim()) {
+    updates.currency = args.patch.currency.trim().toLowerCase();
+  }
+  if (args.patch.invoiceType !== undefined && args.patch.invoiceType.trim()) {
+    updates.invoice_type = args.patch.invoiceType.trim();
+  }
+  if (args.patch.notes !== undefined) {
+    updates.notes = args.patch.notes ?? null;
+  }
+  if (args.patch.dueDate !== undefined) {
+    updates.due_date = args.patch.dueDate ?? null;
+  }
+
+  if (Object.keys(updates).length <= 1) {
+    return serializeInvoice(context.invoice as InvoiceRow, str(context.quote.id));
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("project_invoices")
+    .update(updates)
+    .eq("id", args.invoiceId)
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+
+  await logProjectActivityByPortalId({
+    portalProjectId: str(context.portal.id),
+    actorRole: "studio",
+    eventType: "invoice_edited",
+    summary: `CrecyStudio edited a ${str(context.invoice.invoice_type)} invoice.`,
+    payload: {
+      invoiceId: args.invoiceId,
+      changedKeys: Object.keys(args.patch),
+      actorUserId: args.actor.userId ?? null,
+      actorEmail: args.actor.email ?? null,
+      actorIp: args.actor.ip ?? null,
+    },
+    // Internal-only — invoice fields are admin housekeeping. The
+    // client doesn't need a "studio updated invoice" feed entry.
+    clientVisible: false,
+  });
+
+  return serializeInvoice(data, str(context.quote.id));
+}
+
+// Cancel an invoice. Sets status=cancelled. Doesn't delete the row —
+// the audit trail of "we sent this, then voided it" is the point.
+export async function cancelProjectInvoice(args: {
+  invoiceId: string;
+  reason: string;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}) {
+  const context = await getInvoiceContextById(args.invoiceId);
+  const status = str(context.invoice.status).toLowerCase();
+  if (status === "paid") {
+    throw new Error(
+      "Paid invoices cannot be cancelled. If a refund is needed, process it through Stripe.",
+    );
+  }
+  const reason = args.reason.trim();
+  if (!reason) {
+    throw new Error("A reason is required to cancel an invoice.");
+  }
+
+  const now = new Date().toISOString();
+  const { data, error } = await supabaseAdmin
+    .from("project_invoices")
+    .update({ status: "cancelled", updated_at: now })
+    .eq("id", args.invoiceId)
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+
+  await logProjectActivityByPortalId({
+    portalProjectId: str(context.portal.id),
+    actorRole: "studio",
+    eventType: "invoice_cancelled",
+    summary: `CrecyStudio cancelled a ${str(context.invoice.invoice_type)} invoice: ${reason}`,
+    payload: {
+      invoiceId: args.invoiceId,
+      reason,
+      actorUserId: args.actor.userId ?? null,
+      actorEmail: args.actor.email ?? null,
+      actorIp: args.actor.ip ?? null,
+    },
+    clientVisible: true,
+  });
+
+  return serializeInvoice(data, str(context.quote.id));
+}
