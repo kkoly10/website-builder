@@ -14,6 +14,22 @@ export default async function EcommercePortalWorkspacePage({
 }) {
   const { id } = await params;
 
+  // Phase 3.8 follow-up: if the silo migration created a unified portal
+  // for this silo ecom intake, redirect to the new tokenized URL. Makes
+  // /portal/[token] the canonical home; this silo page only renders for
+  // un-migrated rows (none today, but kept as a safety net).
+  const { data: candidates } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .select("access_token, scope_snapshot")
+    .eq("project_type", "ecommerce");
+  const match = (candidates ?? []).find((p) => {
+    const m = (p as any)?.scope_snapshot?.silo_migration;
+    return m?.source === "ecom_intake" && m?.original_id === id;
+  });
+  if (match?.access_token) {
+    redirect(`/portal/${match.access_token}`);
+  }
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },

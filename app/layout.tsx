@@ -70,9 +70,40 @@ export default async function RootLayout({
     ? "/portal"
     : `/login?next=${encodeURIComponent("/portal")}`;
 
+  // SEO: JSON-LD Organization schema. Sets up the entity behind every
+  // page so search engines and rich-result panels know who CrecyStudio
+  // is. Service-specific schemas live on each service page.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com";
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "CrecyStudio",
+    url: siteUrl,
+    logo: `${siteUrl}/icon.svg`,
+    description:
+      "Premium websites, e-commerce systems, and workflow automation for growth-focused businesses.",
+    foundingDate: "2024",
+    founder: {
+      "@type": "Person",
+      name: "Komlan Kouhiko",
+    },
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer service",
+      url: `${siteUrl}/contact`,
+      availableLanguage: ["English", "French", "Spanish"],
+    },
+  };
+
   return (
     <html lang={locale}>
       <body>
+        <script
+          type="application/ld+json"
+          // Schema.org JSON-LD — read by search engines / rich result
+          // panels, not executed. Stable per render so no XSS risk.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js-anim')" }} />
         <a href="#main-content" className="skipLink">
           {tCommon("skipToMain")}
