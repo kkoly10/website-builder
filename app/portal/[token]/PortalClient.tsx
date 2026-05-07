@@ -3,6 +3,12 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import DesignDirectionCard from "@/components/portal/DesignDirectionCard";
+import {
+  DEFAULT_WEBSITE_DESIGN_DIRECTION,
+  type WebsiteDesignDirection,
+  type WebsiteDesignDirectionInput,
+} from "@/lib/designDirection";
 
 /* ═══════════════════════════════════
    TYPES
@@ -216,6 +222,8 @@ type PortalBundle = {
   invoices: ProjectInvoice[];
   activityFeed: ProjectActivity[];
   messages: PortalMessage[];
+  projectType?: string;
+  designDirection?: WebsiteDesignDirection;
 };
 
 type Phase =
@@ -957,6 +965,26 @@ export default function PortalClient({
             ) : null}
           </div>
         </div>
+
+      {/* ── Design Direction ── */}
+      {(!bundle.projectType || bundle.projectType === "website") &&
+      bundle.quote.deposit.status === "paid" ? (
+        <DesignDirectionCard
+          value={bundle.designDirection ?? DEFAULT_WEBSITE_DESIGN_DIRECTION}
+          onSubmit={async (input: WebsiteDesignDirectionInput) => {
+            const res = await fetch(`/api/portal/${token}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ type: "design_direction_submit", designDirection: input }),
+            });
+            const json = await res.json();
+            if (!res.ok || !json?.ok) {
+              throw new Error(json?.error || tErrors("updateFailed"));
+            }
+            setBundle(json.data as PortalBundle);
+          }}
+        />
+      ) : null}
 
       {/* ── Journey Map ── */}
       {bundle.portalState.milestones.length > 0 ? (

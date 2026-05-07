@@ -1,6 +1,14 @@
 import { randomBytes } from "crypto";
 import { logProjectActivityByPortalId, logProjectActivityByQuoteId } from "@/lib/projectActivity";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import {
+  type WebsiteDesignDirection,
+  type WebsiteDesignDirectionInput,
+  type WebsiteDesignDirectionStatus,
+  DEFAULT_WEBSITE_DESIGN_DIRECTION,
+  mergeDesignDirection,
+  readDesignDirection,
+} from "@/lib/designDirection";
 
 type AnyObj = Record<string, any>;
 type CustomerPortalMilestoneInput = {
@@ -57,13 +65,36 @@ type CustomerPortalMessageInput = {
   createdAt?: string | null;
 };
 
-const DEFAULT_MILESTONES = [
+// 8-step website milestone structure (Phase 2). New website portals get
+// these; existing portals keep whatever they were seeded with until an
+// admin regenerates them.
+const WEBSITE_DEFAULT_MILESTONES = [
+  { title: "Scope confirmed", status: "todo", sort_order: 10 },
+  { title: "Design direction approved", status: "todo", sort_order: 20 },
+  { title: "Content/assets received", status: "todo", sort_order: 30 },
+  { title: "First preview ready", status: "todo", sort_order: 40 },
+  { title: "Client feedback submitted", status: "todo", sort_order: 50 },
+  { title: "Revisions complete", status: "todo", sort_order: 60 },
+  { title: "Launch approved", status: "todo", sort_order: 70 },
+  { title: "Launch & handoff", status: "todo", sort_order: 80 },
+] as const;
+
+// Fallback used when project_type is anything other than "website" until
+// Phase 3 introduces lane-aware workflow templates. Matches the legacy
+// 5-step shape so non-website portals don't regress visually.
+const LEGACY_DEFAULT_MILESTONES = [
   { title: "Kickoff & scope confirmation", status: "todo", sort_order: 10 },
   { title: "Content/assets received", status: "todo", sort_order: 20 },
   { title: "First build draft", status: "todo", sort_order: 30 },
   { title: "Revision round", status: "todo", sort_order: 40 },
   { title: "Launch & handoff", status: "todo", sort_order: 50 },
 ] as const;
+
+function getDefaultMilestonesForProjectType(projectType: string | null | undefined) {
+  return projectType === "website" || !projectType
+    ? WEBSITE_DEFAULT_MILESTONES
+    : LEGACY_DEFAULT_MILESTONES;
+}
 
 function makeToken() {
   return randomBytes(24).toString("hex");
@@ -545,10 +576,28 @@ function deriveWaitingOn(input: {
   previewUrl?: string | null;
   clientReviewStatus?: string | null;
   clientStatus?: string | null;
+  designDirectionStatus?: WebsiteDesignDirectionStatus | null;
+  projectType?: string | null;
 }) {
   if (input.depositStatus !== "paid") {
     if (input.clientStatus === "deposit_sent") return "Studio payment verification";
     return "Client deposit step";
+  }
+
+  // Design Direction gates the build for website projects. Skipped for
+  // non-website lanes until Phase 3 introduces lane-specific direction
+  // modules.
+  if (!input.projectType || input.projectType === "website") {
+    const ddStatus = input.designDirectionStatus;
+    if (ddStatus === "waiting_on_client" || ddStatus === "not_started") {
+      return "Client design direction";
+    }
+    if (ddStatus === "submitted" || ddStatus === "under_review") {
+      return "CrecyStudio design direction review";
+    }
+    if (ddStatus === "changes_requested") {
+      return "Client design clarification";
+    }
   }
 
   if (input.assetsCount === 0) return "Client assets / content";
@@ -735,8 +784,13 @@ function buildWorkspaceView(
         previewUrl: cleanString(portal.preview_url) || null,
         clientReviewStatus,
         clientStatus: cleanString(portal.client_status).toLowerCase() || null,
+        designDirectionStatus: readDesignDirection(scopeSnapshot).status,
+        projectType: cleanString(portal.project_type) || cleanString(quote.project_type) || "website",
       }),
     },
+    projectType:
+      cleanString(portal.project_type) || cleanString(quote.project_type) || "website",
+    designDirection: readDesignDirection(scopeSnapshot),
     messages,
   };
 }
@@ -765,7 +819,15 @@ export async function ensureCustomerPortalForQuoteId(quoteId: string) {
   if (quoteErr) throw quoteErr;
   if (!quote) throw new Error("Quote not found");
 
-  const scopeSnapshot = buildScopeSnapshotFromQuote(quote);
+  const projectType = typeof quote.project_type === "string" ? quote.project_type : "website";
+  const scopeSnapshot = {
+    ...buildScopeSnapshotFromQuote(quote),
+    // Seed the design direction record so the client portal renders the
+    // form on first visit without an extra round-trip. Only meaningful
+    // for the website lane today; harmless for other lanes (Phase 3 will
+    // replace this with lane-specific direction modules).
+    designDirection: { ...DEFAULT_WEBSITE_DESIGN_DIRECTION },
+  };
 
   const { data: created, error: createErr } = await supabaseAdmin
     .from("customer_portal_projects")
@@ -790,10 +852,11 @@ export async function ensureCustomerPortalForQuoteId(quoteId: string) {
 
   if (createErr) throw createErr;
 
+  const milestoneTemplate = getDefaultMilestonesForProjectType(projectType);
   const { error: milestoneErr } = await supabaseAdmin
     .from("customer_portal_milestones")
     .insert(
-      DEFAULT_MILESTONES.map((m) => ({
+      milestoneTemplate.map((m) => ({
         portal_project_id: created.id,
         ...m,
       }))
@@ -1152,6 +1215,74 @@ export async function submitAssetByPortalToken(input: {
   });
 
   return data;
+}
+
+export async function submitDesignDirectionByPortalToken(input: {
+  token: string;
+  direction: WebsiteDesignDirectionInput;
+  actor?: { userId?: string | null; email?: string | null; ip?: string | null };
+}) {
+  const portal = await getPortalProjectByToken(input.token);
+  if (!portal) throw new Error("Portal not found");
+
+  const projectType =
+    typeof portal.project_type === "string" && portal.project_type
+      ? portal.project_type
+      : "website";
+  if (projectType !== "website") {
+    throw new Error("Design direction is only available for website projects.");
+  }
+
+  const existingScope = safeObj(portal.scope_snapshot);
+  const existing = readDesignDirection(existingScope);
+
+  // Once locked, the direction is immutable from the client side.
+  if (existing.status === "locked") {
+    throw new Error("Design direction is locked. Reach out to CrecyStudio to request a change.");
+  }
+
+  const merged: WebsiteDesignDirection = {
+    ...mergeDesignDirection(existing, input.direction),
+    status: "submitted",
+    submittedAt: new Date().toISOString(),
+    // Resubmissions after changes_requested keep approvedAt / lockedAt null
+    // since they were never set in those states. Don't clear adminPublicNote
+    // — admin may have left clarification copy that's still useful context.
+    changesRequestedAt:
+      existing.status === "changes_requested" ? null : existing.changesRequestedAt,
+  };
+
+  const nextScope = { ...existingScope, designDirection: merged };
+
+  const { error } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({
+      scope_snapshot: nextScope,
+      client_updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", portal.id);
+
+  if (error) throw error;
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "client",
+    eventType: "design_direction_submitted",
+    summary: "Client submitted website design direction.",
+    payload: {
+      controlLevel: merged.controlLevel,
+      visualStyle: merged.visualStyle,
+      brandMoodCount: merged.brandMood.length,
+      // Phase-gate audit trail — see launch QA runbook.
+      actorUserId: input.actor?.userId ?? null,
+      actorEmail: input.actor?.email ?? null,
+      actorIp: input.actor?.ip ?? null,
+    },
+    clientVisible: true,
+  });
+
+  return merged;
 }
 
 export async function submitRevisionByPortalToken(input: {

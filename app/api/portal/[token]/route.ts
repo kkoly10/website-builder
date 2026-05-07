@@ -5,10 +5,12 @@ import {
   acceptCustomerPortalAgreement,
   getCustomerPortalViewByToken,
   submitAssetByPortalToken,
+  submitDesignDirectionByPortalToken,
   submitRevisionByPortalToken,
   toggleMilestone,
   updateClientStatus,
 } from "@/lib/customerPortal";
+import { validateDesignDirectionInput } from "@/lib/designDirection";
 import { sendEventNotification } from "@/lib/notifications";
 import { listProjectActivityByToken, markClientPortalSeen } from "@/lib/projectActivity";
 import { listProjectInvoicesByToken } from "@/lib/projectInvoices";
@@ -208,6 +210,26 @@ export async function POST(
         String(body?.clientStatus || "new"),
         typeof body?.clientNotes === "string" ? body.clientNotes : undefined
       );
+    } else if (actionType === "design_direction_submit") {
+      const validation = validateDesignDirectionInput(body?.designDirection);
+      if (!validation.ok) {
+        return NextResponse.json({ ok: false, error: validation.error }, { status: 400 });
+      }
+
+      const supabase = await createSupabaseServerClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      await submitDesignDirectionByPortalToken({
+        token,
+        direction: validation.value,
+        actor: {
+          userId: user?.id ?? null,
+          email: user?.email ?? null,
+          ip,
+        },
+      });
     } else if (actionType === "milestone_toggle") {
       const milestoneId = String(body?.key || "").trim();
       if (!milestoneId) {
@@ -317,6 +339,7 @@ export async function POST(
         revision_add: "revision_submitted",
         asset_add: "asset_submitted",
         deposit_notice_sent: "deposit_notice_sent",
+        design_direction_submit: "design_direction_submitted",
       };
 
       const event = eventMap[actionType];
