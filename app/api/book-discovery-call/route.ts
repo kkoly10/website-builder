@@ -164,8 +164,15 @@ function maybeCreateCalendarEvent(
           },
         });
       }
-    } catch (err) {
-      console.warn("[book-discovery-call] calendar event creation failed:", err);
+    } catch (err: any) {
+      console.warn("[book-discovery-call] calendar event creation failed");
+      console.warn("[book-discovery-call] err.message:", err?.message);
+      console.warn("[book-discovery-call] err.code:", err?.code);
+      console.warn("[book-discovery-call] err.status:", err?.status ?? err?.response?.status);
+      try {
+        const body = err?.response?.data ?? err?.errors ?? null;
+        if (body) console.warn("[book-discovery-call] err.body:", JSON.stringify(body));
+      } catch {}
     }
   })();
 }
@@ -246,8 +253,9 @@ export async function POST(req: Request) {
 
     maybeCreateCalendarEvent(name, email, availabilityNote, selectedSlot, slotLabel);
 
+    console.log(`[book-discovery-call] sending client email to=${email} from=${FROM} scheduled=${!!scheduledAt}`);
     try {
-      await sendResendEmail({
+      const clientRes = await sendResendEmail({
         to: email,
         from: FROM,
         subject: scheduledAt
@@ -257,21 +265,25 @@ export async function POST(req: Request) {
           ? buildClientEmailScheduled(name, slotLabel)
           : buildClientEmail(name),
       });
+      console.log("[book-discovery-call] client email sent id=", (clientRes as any)?.id);
     } catch (emailErr) {
       console.error("[book-discovery-call] client confirmation email failed:", emailErr);
     }
 
     if (ADMIN) {
       try {
-        await sendResendEmail({
+        const adminRes = await sendResendEmail({
           to: ADMIN,
           from: FROM,
           subject: `Discovery call — ${name} (${email})`,
           html: buildAdminEmail(callId, name, email, company, projectType, availabilityNote, slotLabel),
         });
+        console.log("[book-discovery-call] admin email sent id=", (adminRes as any)?.id);
       } catch (emailErr) {
         console.error("[book-discovery-call] admin notification email failed:", emailErr);
       }
+    } else {
+      console.warn("[book-discovery-call] ADMIN_NOTIFICATION_EMAIL not set — admin alert skipped");
     }
 
     await recordServerEvent({
