@@ -1,4 +1,4 @@
-import { randomBytes } from "crypto";
+import crypto, { randomBytes } from "crypto";
 import { logProjectActivityByPortalId, logProjectActivityByQuoteId } from "@/lib/projectActivity";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
@@ -2586,19 +2586,39 @@ export async function adminAcceptCustomerPortalAgreementByQuoteId(input: {
     .maybeSingle();
 
   if (!existingAgreement) {
+    // Read agreement_text from the portal first, then fall back to
+    // quote.debug.publishedAgreementText for legacy portals where the
+    // text was only ever written to the debug blob (the canonical
+    // bundle reader at line ~811 uses the same fallback chain).
     const { data: scope } = await supabaseAdmin
       .from("customer_portal_projects")
-      .select("agreement_text")
+      .select("agreement_text, quote_id")
       .eq("id", portal.id)
       .maybeSingle();
-    const bodyText = String(scope?.agreement_text || "");
+    let bodyText = String(scope?.agreement_text || "");
+    if (!bodyText && scope?.quote_id) {
+      const { data: quoteRow } = await supabaseAdmin
+        .from("quotes")
+        .select("debug")
+        .eq("id", scope.quote_id)
+        .maybeSingle();
+      const debug = quoteRow?.debug;
+      if (debug && typeof debug === "object" && !Array.isArray(debug)) {
+        bodyText = String((debug as Record<string, unknown>).publishedAgreementText || "");
+      }
+    }
     if (bodyText) {
+      // Compute the same sha256 the client-side accept uses so version
+      // verification works identically. Without this, integrity checks
+      // (and any future "agreement changed since signature" warnings)
+      // break for admin-recorded acceptances.
+      const bodyHash = crypto.createHash("sha256").update(bodyText).digest("hex");
       await supabaseAdmin
         .from("agreements")
         .insert({
           portal_project_id: portal.id,
           body_text: bodyText,
-          body_hash: "",
+          body_hash: bodyHash,
           published_at: acceptedAt,
           accepted_at: acceptedAt,
           accepted_by_email: input.acceptedByEmail.trim(),
@@ -2958,6 +2978,15 @@ export async function editLeadInfoByQuoteId(input: {
     email: input.patch.email?.trim(),
     phone: input.patch.phone?.trim(),
   };
+  // Cheap RFC-2822 sanity check. Doesn't try to be exhaustive — the
+  // goal is to catch fat-finger typos like "alice" or "alice@" before
+  // they break portal access. Empty string is rejected to prevent
+  // accidentally clearing the email (which would lock the client out).
+  if (trimmed.email !== undefined) {
+    if (!trimmed.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed.email)) {
+      throw new Error("Email looks invalid. Format: name@example.com");
+    }
+  }
   if (trimmed.name !== undefined) { updates.name = trimmed.name; changedKeys.push("name"); }
   if (trimmed.email !== undefined) { updates.email = trimmed.email; changedKeys.push("email"); }
   if (trimmed.phone !== undefined) { updates.phone = trimmed.phone; changedKeys.push("phone"); }
@@ -3044,12 +3073,34 @@ export async function setProjectTypeByQuoteId(input: {
   if (quoteUpdErr) throw quoteUpdErr;
 
   const portal = await getPortalProjectByQuoteId(input.quoteId);
+  let seededActionKeys: string[] = [];
   if (portal) {
     const { error: portalUpdErr } = await supabaseAdmin
       .from("customer_portal_projects")
       .update({ project_type: input.projectType, updated_at: now })
       .eq("id", portal.id);
     if (portalUpdErr) throw portalUpdErr;
+
+    // Seed the new lane's required actions. seedRequiredActionsForPortal
+    // upserts with onConflict ignoreDuplicates, so existing actions
+    // (including the old lane's keys) stay; the new lane's keys get
+    // inserted fresh. Stale old-lane actions remain visible in the
+    // admin Required Actions panel — admin can delete them there. This
+    // is safer than auto-deleting: if the old lane's actions captured
+    // any client-submitted payload (e.g. a completed direction), we'd
+    // lose the audit by removing them.
+    if (input.projectType !== quote.project_type) {
+      const before = await listRequiredActionsForPortal(portal.id);
+      const beforeKeys = new Set(before.map((a) => a.actionKey));
+      await seedRequiredActionsForPortal({
+        portalProjectId: portal.id,
+        projectType: input.projectType,
+      });
+      const after = await listRequiredActionsForPortal(portal.id);
+      seededActionKeys = after
+        .filter((a) => !beforeKeys.has(a.actionKey))
+        .map((a) => a.actionKey);
+    }
 
     await logProjectActivityByPortalId({
       portalProjectId: cleanString(portal.id),
@@ -3059,6 +3110,7 @@ export async function setProjectTypeByQuoteId(input: {
       payload: {
         previousType: quote.project_type ?? null,
         newType: input.projectType,
+        seededActionKeys,
         actorUserId: input.actor.userId ?? null,
         actorEmail: input.actor.email ?? null,
         actorIp: input.actor.ip ?? null,
@@ -3067,5 +3119,9 @@ export async function setProjectTypeByQuoteId(input: {
     });
   }
 
-  return { previousType: quote.project_type ?? null, newType: input.projectType };
+  return {
+    previousType: quote.project_type ?? null,
+    newType: input.projectType,
+    seededActionKeys,
+  };
 }

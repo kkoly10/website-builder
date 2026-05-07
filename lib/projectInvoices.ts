@@ -478,6 +478,13 @@ export async function markProjectInvoicePaidByAdmin(args: {
   actor: { userId?: string | null; email?: string | null; ip?: string | null };
 }) {
   const context = await getInvoiceContextById(args.invoiceId);
+  // Idempotency guard. Without this a double-tap on the admin button
+  // (or a retry from the client) re-fires the deposit-paid side-effect
+  // and writes a duplicate invoice_paid activity entry.
+  if (str(context.invoice.status).toLowerCase() === "paid") {
+    return serializeInvoice(context.invoice as InvoiceRow, str(context.quote.id));
+  }
+
   const paidAt = safeDate(args.paidAt) || new Date().toISOString();
   const reference = str(args.reference);
 
@@ -602,6 +609,11 @@ export async function cancelProjectInvoice(args: {
     throw new Error(
       "Paid invoices cannot be cancelled. If a refund is needed, process it through Stripe.",
     );
+  }
+  if (status === "cancelled") {
+    // Idempotent — return the same shape rather than logging a second
+    // cancellation entry on retry.
+    return serializeInvoice(context.invoice as InvoiceRow, str(context.quote.id));
   }
   const reason = args.reason.trim();
   if (!reason) {
