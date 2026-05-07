@@ -19,50 +19,54 @@ function asStringArray(value: unknown, max = 20): string[] {
     .slice(0, max);
 }
 
+// Non-discriminated result so callers don't depend on union narrowing —
+// Next.js 16 / Turbopack stops narrowing across imported helpers (caught
+// twice already). Both fields always present; null fills the inactive
+// slot. Same pattern as DesignDirectionValidationResult.
 function validateField(
   field: FieldDef,
   raw: unknown,
-): { ok: true; value: unknown } | { ok: false; error: string } {
+): { ok: boolean; value: unknown; error: string | null } {
   switch (field.type) {
     case "text":
     case "textarea": {
       const value = asString(raw, field.maxLength ?? 4000);
       if (field.required && !value) {
-        return { ok: false, error: `${field.label} is required.` };
+        return { ok: false, value: null, error: `${field.label} is required.` };
       }
-      return { ok: true, value };
+      return { ok: true, value, error: null };
     }
     case "select": {
       const value = asString(raw, 500);
       if (field.required && !value) {
-        return { ok: false, error: `${field.label} is required.` };
+        return { ok: false, value: null, error: `${field.label} is required.` };
       }
       if (value && field.options && !field.options.includes(value)) {
-        return { ok: false, error: `${field.label}: invalid choice.` };
+        return { ok: false, value: null, error: `${field.label}: invalid choice.` };
       }
-      return { ok: true, value };
+      return { ok: true, value, error: null };
     }
     case "string-list": {
       const list = asStringArray(raw, field.maxItems ?? 20);
       if (field.required && list.length === 0) {
-        return { ok: false, error: `${field.label}: add at least one entry.` };
+        return { ok: false, value: null, error: `${field.label}: add at least one entry.` };
       }
-      return { ok: true, value: list };
+      return { ok: true, value: list, error: null };
     }
     case "pills-multi": {
       const list = asStringArray(raw, field.maxItems ?? 20);
       if (field.required && list.length === 0) {
-        return { ok: false, error: `${field.label}: pick at least one option.` };
+        return { ok: false, value: null, error: `${field.label}: pick at least one option.` };
       }
       if (field.options) {
         const allowed = new Set(field.options);
         for (const v of list) {
           if (!allowed.has(v)) {
-            return { ok: false, error: `${field.label}: "${v}" is not a valid option.` };
+            return { ok: false, value: null, error: `${field.label}: "${v}" is not a valid option.` };
           }
         }
       }
-      return { ok: true, value: list };
+      return { ok: true, value: list, error: null };
     }
   }
 }
