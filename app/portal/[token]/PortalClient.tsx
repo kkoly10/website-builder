@@ -15,6 +15,15 @@ import type {
 } from "@/lib/directions/types";
 import type { RequiredAction } from "@/lib/requiredActions";
 
+// 1024-base size formatter — shows MB/GB once a file crosses the
+// threshold so a 12 MB upload doesn't render as "12000 KB".
+function formatBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) return "0 KB";
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
+
 /* ═══════════════════════════════════
    TYPES
    ═══════════════════════════════════ */
@@ -1306,7 +1315,7 @@ export default function PortalClient({
                               <span>{entry.attachment.name || tMessages("attachmentFallback")}</span>
                               {entry.attachment.size ? (
                                 <span className="portalAttachmentMeta">
-                                  {(entry.attachment.size / 1024).toFixed(0)} KB
+                                  {formatBytes(entry.attachment.size)}
                                 </span>
                               ) : null}
                             </a>
@@ -1346,7 +1355,7 @@ export default function PortalClient({
               />
               {messageFile ? (
                 <div className="portalAttachmentMeta">
-                  {messageFile.name} ({(messageFile.size / 1024).toFixed(0)} KB)
+                  {messageFile.name} ({formatBytes(messageFile.size)})
                 </div>
               ) : null}
             </div>
@@ -1491,7 +1500,7 @@ export default function PortalClient({
                   />
                   {assetFile && (
                     <div style={{ marginTop: 4, fontSize: 12, color: "var(--muted-2)" }}>
-                      {assetFile.name} ({(assetFile.size / 1024).toFixed(0)} KB)
+                      {assetFile.name} ({formatBytes(assetFile.size)})
                     </div>
                   )}
                 </div>

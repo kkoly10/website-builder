@@ -2116,10 +2116,10 @@
       "poweredBy": "Desarrollado por",
       "noStoreUrl": "Sin URL de tienda",
       "websiteFallbackTitle": "Proyecto de sitio web",
-      "opsFallbackTitle": "Solicitud de flujo de trabajo",
+      "automationFallbackTitle": "Solicitud de flujo de trabajo",
       "ecomFallbackTitle": "Solicitud de e-commerce",
       "websiteScopeFallback": "Alcance del sitio web",
-      "opsScopeFallback": "Sistemas de flujo",
+      "automationScopeFallback": "Sistemas de flujo",
       "scopedAfterReview": "Definido tras revisión",
       "tierPending": "Pendiente",
       "callNotRequested": "No solicitado"
@@ -2147,7 +2147,7 @@
           "viewCta": "Ver proyectos de sitio web",
           "emptyCta": "Iniciar cotización"
         },
-        "ops": {
+        "automation": {
           "title": "Sistemas",
           "label": "Proyectos de automatización de flujo",
           "description": "Sistemas internos y trabajos de automatización activos en tu espacio.",

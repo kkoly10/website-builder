@@ -445,7 +445,7 @@ a { color: inherit; text-decoration: none; }
 .portalHubBody { margin: 0; color: var(--ink-2); line-height: 1.65; }
 .portalHubCta { color: var(--ink); }
 .portalHubSectionWebsite .productSectionDot { background: var(--accent); }
-.portalHubSectionOps .productSectionDot,
+.portalHubSectionAutomation .productSectionDot,
 .portalHubSectionEcom .productSectionDot { background: var(--ink); }
 .portalHubProjectCard { border-color: var(--rule); }
 .portalHubStatus { border: 1px solid var(--rule); background: var(--paper); color: var(--muted); border-radius: 999px; padding: .3rem .55rem; }

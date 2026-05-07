@@ -303,16 +303,16 @@ export default async function PortalPage() {
 
         <div className="portalHubSummarySecondary">
           <LaneSummaryCard
-            lane="ops"
-            title={tLanes("ops.title")}
-            description={tLanes("ops.description")}
+            lane="automation"
+            title={tLanes("automation.title")}
+            description={tLanes("automation.description")}
             countLabel={t("summaryCount", { count: opsRows.length })}
             count={opsRows.length}
-            href={opsRows.length > 0 ? "#ops-projects" : "/ops-intake"}
+            href={opsRows.length > 0 ? "#automation-projects" : "/ops-intake"}
             cta={
               opsRows.length > 0
-                ? tLanes("ops.viewCta")
-                : tLanes("ops.emptyCta")
+                ? tLanes("automation.viewCta")
+                : tLanes("automation.emptyCta")
             }
           />
           <LaneSummaryCard
@@ -390,12 +390,12 @@ export default async function PortalPage() {
       ) : null}
 
       {opsRows.length > 0 ? (
-        <section id="ops-projects" className="productSection">
+        <section id="automation-projects" className="productSection">
           <div
-            className={`portalSectionLabel productSectionLabel portalHubSectionOps`}
+            className={`portalSectionLabel productSectionLabel portalHubSectionAutomation`}
           >
             <span className="productSectionDot" />
-            {tLanes("ops.label")}
+            {tLanes("automation.label")}
           </div>
 
           <div className="productList">
@@ -408,11 +408,11 @@ export default async function PortalPage() {
               return (
                 <ProjectListCard
                   key={o.id}
-                  title={o.company_name || tCommon("opsFallbackTitle")}
+                  title={o.company_name || tCommon("automationFallbackTitle")}
                   status={<StatusPill label={labelForStatus(o.status)} />}
                   meta={[
                     fmtDate(o.created_at, locale),
-                    o.industry || tCommon("opsScopeFallback"),
+                    o.industry || tCommon("automationScopeFallback"),
                     o.recommendation_tier || tCommon("tierPending"),
                     t("callStatusLabel", { status: callStatusLabel }),
                   ]}
@@ -486,7 +486,7 @@ function LaneSummaryCard({
   cta,
   primary = false,
 }: {
-  lane: "website" | "ops" | "ecom";
+  lane: "website" | "automation" | "ecom";
   title: string;
   description: string;
   count: number;

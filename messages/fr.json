@@ -2116,10 +2116,10 @@
       "poweredBy": "Propulsé par",
       "noStoreUrl": "Aucune URL de boutique",
       "websiteFallbackTitle": "Projet de site web",
-      "opsFallbackTitle": "Demande de workflow",
+      "automationFallbackTitle": "Demande de workflow",
       "ecomFallbackTitle": "Demande e-commerce",
       "websiteScopeFallback": "Périmètre site web",
-      "opsScopeFallback": "Systèmes de workflow",
+      "automationScopeFallback": "Systèmes de workflow",
       "scopedAfterReview": "Cadré après revue",
       "tierPending": "En attente",
       "callNotRequested": "Non demandé"
@@ -2147,7 +2147,7 @@
           "viewCta": "Voir les projets de site web",
           "emptyCta": "Démarrer un devis"
         },
-        "ops": {
+        "automation": {
           "title": "Systèmes",
           "label": "Projets d'automatisation de workflow",
           "description": "Systèmes internes et travaux d'automatisation actifs dans votre espace.",
