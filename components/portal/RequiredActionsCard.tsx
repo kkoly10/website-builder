@@ -12,6 +12,7 @@
 // "mark complete" button. The card auto-hides those (see ACTION_HAS_OWN_FLOW)
 // so we don't show a redundant "click here" CTA next to the actual form.
 
+import { useState } from "react";
 import type { RequiredAction } from "@/lib/requiredActions";
 
 type Props = {
@@ -55,10 +56,29 @@ const STATUS_PILL: Record<
 };
 
 export default function RequiredActionsCard({ actions, onComplete }: Props) {
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   // Only show client-owned actions on the client portal. Studio/system
   // actions are admin-side concerns.
   const visible = actions.filter((a) => a.owner === "client");
   if (visible.length === 0) return null;
+
+  async function handleComplete(actionKey: string) {
+    if (!onComplete) return;
+    setBusyKey(actionKey);
+    setError(null);
+    try {
+      await onComplete(actionKey);
+    } catch (err) {
+      // Surface the error inline. Without this catch, the parent's
+      // fetch error becomes an unhandled rejection swallowed by void —
+      // the user sees nothing change after clicking "Mark as done".
+      setError(err instanceof Error ? err.message : "Failed to mark action complete.");
+    } finally {
+      setBusyKey(null);
+    }
+  }
 
   // Sort: incomplete first (pending action), complete last (history).
   const sorted = [...visible].sort((a, b) => {
@@ -85,6 +105,24 @@ export default function RequiredActionsCard({ actions, onComplete }: Props) {
           {sorted.filter((a) => a.status !== "complete").length} pending
         </span>
       </div>
+
+      {error ? (
+        <div
+          role="alert"
+          style={{
+            marginBottom: 12,
+            padding: 10,
+            borderRadius: 8,
+            border: "1px solid var(--accent)",
+            background: "var(--accent-bg)",
+            color: "var(--accent-2)",
+            fontSize: 13,
+            fontWeight: 600,
+          }}
+        >
+          {error}
+        </div>
+      ) : null}
 
       <div style={{ display: "grid", gap: 10 }}>
         {sorted.map((action) => {
@@ -163,10 +201,11 @@ export default function RequiredActionsCard({ actions, onComplete }: Props) {
                 <button
                   type="button"
                   className="btn btnGhost"
-                  onClick={() => void onComplete(action.actionKey)}
+                  onClick={() => void handleComplete(action.actionKey)}
+                  disabled={busyKey === action.actionKey}
                   style={{ fontSize: 12, padding: "6px 12px" }}
                 >
-                  Mark as done
+                  {busyKey === action.actionKey ? "Saving..." : "Mark as done"}
                 </button>
               ) : null}
               {isDone && action.completedAt ? (

@@ -175,15 +175,21 @@ export async function updateRequiredActionStatusByPortalId(input: {
   }
 }
 
-// Mark a required action complete. Sets status="complete" and
-// completed_at=now. Idempotent — if already complete, does nothing.
+// Mark a required action complete from the client portal. Sets
+// status="complete" and completed_at=now. Idempotent — already-complete
+// actions return null.
+//
+// Restricted to client-owned actions: a portal token authenticates the
+// client, but the action_key is whatever the client chooses to send.
+// Without the owner gate, a client could complete studio-owned actions
+// like "complete_uat" or "approve_production_launch" by guessing the key
+// — those are admin-side state transitions and shouldn't be self-served.
+// Studio actions move through admin-side helpers instead.
 export async function completeRequiredActionByPortalToken(input: {
   token: string;
   actionKey: string;
   payload?: Record<string, unknown>;
 }): Promise<RequiredAction | null> {
-  // Resolve portal by token. We can't import getPortalProjectByToken
-  // due to circular import potential, so do the lookup inline.
   const { data: portal } = await supabaseAdmin
     .from("customer_portal_projects")
     .select("id")
@@ -208,11 +214,13 @@ export async function completeRequiredActionByPortalToken(input: {
     .update(updates)
     .eq("portal_project_id", portal.id)
     .eq("action_key", input.actionKey)
+    // Lock down to client-owned actions only.
+    .eq("owner", "client")
     .neq("status", "complete")
     .select("*")
     .maybeSingle();
 
   if (error) throw error;
-  if (!data) return null; // already complete or doesn't exist
+  if (!data) return null; // already complete, doesn't exist, or not client-owned
   return rowToAction(data);
 }
