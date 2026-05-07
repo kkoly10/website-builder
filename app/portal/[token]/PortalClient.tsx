@@ -3,6 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import DesignDirectionCard from "@/components/portal/DesignDirectionCard";
+import type {
+  WebsiteDesignDirection,
+  WebsiteDesignDirectionInput,
+} from "@/lib/designDirection";
 
 /* ═══════════════════════════════════
    TYPES
@@ -216,6 +221,11 @@ type PortalBundle = {
   invoices: ProjectInvoice[];
   activityFeed: ProjectActivity[];
   messages: PortalMessage[];
+  projectType?: string;
+  // null when the portal is legacy (created before Phase 2) — the feature
+  // should not be applied retroactively. undefined for forward-compat with
+  // older API responses.
+  designDirection?: WebsiteDesignDirection | null;
 };
 
 type Phase =
@@ -957,6 +967,30 @@ export default function PortalClient({
             ) : null}
           </div>
         </div>
+
+      {/* ── Design Direction ──
+          Only renders when the portal has an explicit designDirection record.
+          Legacy portals (pre-Phase 2) have no record and intentionally
+          don't see this card so their existing workflow isn't disrupted. */}
+      {(!bundle.projectType || bundle.projectType === "website") &&
+      bundle.quote.deposit.status === "paid" &&
+      bundle.designDirection ? (
+        <DesignDirectionCard
+          value={bundle.designDirection}
+          onSubmit={async (input: WebsiteDesignDirectionInput) => {
+            const res = await fetch(`/api/portal/${token}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ type: "design_direction_submit", designDirection: input }),
+            });
+            const json = await res.json();
+            if (!res.ok || !json?.ok) {
+              throw new Error(json?.error || tErrors("updateFailed"));
+            }
+            setBundle(json.data as PortalBundle);
+          }}
+        />
+      ) : null}
 
       {/* ── Journey Map ── */}
       {bundle.portalState.milestones.length > 0 ? (
