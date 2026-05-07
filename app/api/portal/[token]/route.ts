@@ -15,6 +15,7 @@ import {
 import { validateDesignDirectionInput } from "@/lib/designDirection";
 import { validateDirectionPayload } from "@/lib/directions/validate";
 import { isProjectType, type DirectionType } from "@/lib/workflows/types";
+import { completeRequiredActionByPortalToken } from "@/lib/requiredActions";
 import { sendEventNotification } from "@/lib/notifications";
 import { listProjectActivityByToken, markClientPortalSeen } from "@/lib/projectActivity";
 import { listProjectInvoicesByToken } from "@/lib/projectInvoices";
@@ -308,6 +309,32 @@ export async function POST(
           ip,
         },
       });
+    } else if (actionType === "required_action_complete") {
+      // Phase 3.9: client marks a required action complete. The actual
+      // submission of action-specific data (e.g. design direction) goes
+      // through other actions (design_direction_submit, direction_submit).
+      // This action is for the simpler "I did it" actions like asset
+      // upload confirmations or read-only acknowledgements.
+      const actionKey = String(body?.actionKey || "").trim();
+      if (!actionKey) {
+        return NextResponse.json(
+          { ok: false, error: "Required action key is required." },
+          { status: 400 },
+        );
+      }
+      try {
+        await completeRequiredActionByPortalToken({
+          token,
+          actionKey,
+          payload:
+            body?.payload && typeof body.payload === "object" ? body.payload : undefined,
+        });
+      } catch (err: any) {
+        return NextResponse.json(
+          { ok: false, error: err?.message || "Failed to complete action." },
+          { status: 400 },
+        );
+      }
     } else if (actionType === "milestone_toggle") {
       const milestoneId = String(body?.key || "").trim();
       if (!milestoneId) {

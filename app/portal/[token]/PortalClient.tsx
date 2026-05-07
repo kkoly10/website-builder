@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import DirectionModuleResolver from "@/components/portal/directions/DirectionModuleResolver";
+import RequiredActionsCard from "@/components/portal/RequiredActionsCard";
 import type {
   WebsiteDesignDirection,
   WebsiteDesignDirectionInput,
@@ -12,6 +13,7 @@ import type {
   GenericDirection,
   GenericDirectionInput,
 } from "@/lib/directions/types";
+import type { RequiredAction } from "@/lib/requiredActions";
 
 /* ═══════════════════════════════════
    TYPES
@@ -233,6 +235,9 @@ type PortalBundle = {
   // Phase 3.3 generic direction record for non-website lanes. Mutually
   // exclusive with designDirection — at most one is non-null.
   direction?: GenericDirection | null;
+  // Phase 3.10: required actions seeded from the workflow template.
+  // Empty array for legacy portals that predate the table.
+  requiredActions?: RequiredAction[];
 };
 
 type Phase =
@@ -974,6 +979,30 @@ export default function PortalClient({
             ) : null}
           </div>
         </div>
+
+      {/* ── Required actions (Phase 3.9) ──
+          "Action needed from you" card. Sourced from the
+          customer_portal_required_actions table seeded from the lane's
+          workflow template. Auto-hides on legacy portals (empty
+          requiredActions array). Some actions defer to the direction form
+          below — the card knows which ones via ACTION_HAS_OWN_FLOW. */}
+      {bundle.requiredActions && bundle.requiredActions.length > 0 ? (
+        <RequiredActionsCard
+          actions={bundle.requiredActions}
+          onComplete={async (actionKey) => {
+            const res = await fetch(`/api/portal/${token}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ type: "required_action_complete", actionKey }),
+            });
+            const json = await res.json();
+            if (!res.ok || !json?.ok) {
+              throw new Error(json?.error || tErrors("updateFailed"));
+            }
+            setBundle(json.data as PortalBundle);
+          }}
+        />
+      ) : null}
 
       {/* ── Direction module ──
           Resolver picks the right card per lane: website uses Phase 2A's

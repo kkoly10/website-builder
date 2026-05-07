@@ -21,6 +21,12 @@ import {
   readDirection,
 } from "@/lib/directions/state";
 import type { GenericDirection } from "@/lib/directions/types";
+import {
+  listRequiredActionsForPortal,
+  seedRequiredActionsForPortal,
+  updateRequiredActionStatusByPortalId,
+  type RequiredAction,
+} from "@/lib/requiredActions";
 
 type AnyObj = Record<string, any>;
 type CustomerPortalMilestoneInput = {
@@ -459,6 +465,11 @@ async function loadPortalBundle(portal: AnyObj | null) {
     }))
   );
 
+  // Phase 3.10: required actions are stored in their own table now.
+  // Fetched in parallel with the rest. Helper logs and returns []
+  // on failure so missing-table or RLS issues don't break the bundle.
+  const requiredActions = await listRequiredActionsForPortal(portal.id);
+
   return {
     portal,
     quote,
@@ -469,6 +480,7 @@ async function loadPortalBundle(portal: AnyObj | null) {
     assets,
     revisions: revisionsRes.data ?? [],
     messages,
+    requiredActions,
   };
 }
 
@@ -824,6 +836,7 @@ function buildWorkspaceView(
       cleanString(portal.project_type) || cleanString(quote.project_type) || "website",
     designDirection: readDesignDirection(scopeSnapshot),
     direction: readDirection(scopeSnapshot),
+    requiredActions: safeArray<RequiredAction>(bundle.requiredActions),
     messages,
   };
 }
@@ -915,6 +928,14 @@ export async function ensureCustomerPortalForQuoteId(quoteId: string) {
   if (milestoneErr) {
     console.error("Milestone seed error:", milestoneErr);
   }
+
+  // Phase 3.10: seed required actions from the workflow template. The
+  // helper handles missing-table fallback (logs and continues) so this
+  // doesn't block portal creation if the migration hasn't run yet.
+  await seedRequiredActionsForPortal({
+    portalProjectId: created.id,
+    projectType,
+  });
 
   return created;
 }
@@ -1359,6 +1380,15 @@ export async function submitDesignDirectionByPortalToken(input: {
     clientVisible: true,
   });
 
+  // Phase 3.9 sync: client submitting the form completes their part of
+  // the corresponding required action. If admin requests changes later,
+  // the transition helper re-opens the action.
+  await updateRequiredActionStatusByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actionKey: "complete_design_direction",
+    status: "complete",
+  });
+
   return merged;
 }
 
@@ -1531,6 +1561,18 @@ export async function transitionDesignDirectionByQuoteId(input: {
     // "approved"). All four are client-visible.
     clientVisible: true,
   });
+
+  // Phase 3.9 sync: keep the design-direction required action in step
+  // with the admin transition. request_changes re-opens the action so
+  // the card surfaces "action needed"; everything else keeps it complete.
+  if (input.action === "request_changes") {
+    await updateRequiredActionStatusByPortalId({
+      portalProjectId: cleanString(portal.id),
+      actionKey: "complete_design_direction",
+      status: "waiting_on_client",
+      clearCompletedAt: true,
+    });
+  }
 
   return next;
 }
@@ -1719,6 +1761,18 @@ export async function transitionDirectionByQuoteId(input: {
     clientVisible: true,
   });
 
+  // Phase 3.9 sync: keep the lane's required-action in step. Action key
+  // follows the convention complete_${directionType} (matches all 4
+  // non-website templates' first required action).
+  if (input.action === "request_changes") {
+    await updateRequiredActionStatusByPortalId({
+      portalProjectId: cleanString(portal.id),
+      actionKey: `complete_${existing.type}`,
+      status: "waiting_on_client",
+      clearCompletedAt: true,
+    });
+  }
+
   return next;
 }
 
@@ -1821,6 +1875,16 @@ export async function submitDirectionByPortalToken(input: {
       actorIp: input.actor?.ip ?? null,
     },
     clientVisible: true,
+  });
+
+  // Phase 3.9 sync: complete the direction-completion required action
+  // for the lane. Action key is the first requiredAction in the
+  // template (always "complete_${directionType}" by convention).
+  const directionActionKey = `complete_${merged.type}`;
+  await updateRequiredActionStatusByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actionKey: directionActionKey,
+    status: "complete",
   });
 
   return merged;
