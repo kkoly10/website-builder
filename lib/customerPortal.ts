@@ -2926,3 +2926,146 @@ export async function savePortalClientSyncByQuoteId(
     }
   }
 }
+
+// ─────────────────────────────────────────────────────────────────
+// Lead + project-type admin edits. The most common reasons admin
+// needs these:
+//   - Client typo'd their email/name on the build form.
+//   - Client's preferred contact email differs from the form email
+//     and they want the portal to use the new one.
+//   - Project lane was misclassified at intake (rescue → website,
+//     web_app → automation, etc.). The lane drives every workflow
+//     template, so getting it right matters.
+// ─────────────────────────────────────────────────────────────────
+
+export async function editLeadInfoByQuoteId(input: {
+  quoteId: string;
+  patch: { name?: string; email?: string; phone?: string };
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}) {
+  const { data: quote, error: qErr } = await supabaseAdmin
+    .from("quotes")
+    .select("id, lead_id, lead_email, owner_email_norm")
+    .eq("id", input.quoteId)
+    .maybeSingle();
+  if (qErr) throw qErr;
+  if (!quote) throw new Error("Quote not found");
+
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  const changedKeys: string[] = [];
+  const trimmed = {
+    name: input.patch.name?.trim(),
+    email: input.patch.email?.trim(),
+    phone: input.patch.phone?.trim(),
+  };
+  if (trimmed.name !== undefined) { updates.name = trimmed.name; changedKeys.push("name"); }
+  if (trimmed.email !== undefined) { updates.email = trimmed.email; changedKeys.push("email"); }
+  if (trimmed.phone !== undefined) { updates.phone = trimmed.phone; changedKeys.push("phone"); }
+
+  if (changedKeys.length === 0 || !quote.lead_id) {
+    return { changedKeys: [] as string[] };
+  }
+
+  const { error: leadErr } = await supabaseAdmin
+    .from("leads")
+    .update(updates)
+    .eq("id", quote.lead_id);
+  if (leadErr) throw leadErr;
+
+  // Mirror email/name onto the quote and re-normalize the access-
+  // control identity if email changed. Without this, a client whose
+  // email was corrected would still not be able to log in with the
+  // new email — owner_email_norm would still hold the old one.
+  if (changedKeys.includes("email") || changedKeys.includes("name")) {
+    const quoteUpdates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (changedKeys.includes("email") && trimmed.email) {
+      quoteUpdates.lead_email = trimmed.email;
+      const normalized = trimmed.email.trim().toLowerCase();
+      if (normalized) quoteUpdates.owner_email_norm = normalized;
+    }
+    if (changedKeys.includes("name") && trimmed.name !== undefined) {
+      quoteUpdates.lead_name = trimmed.name;
+    }
+    await supabaseAdmin
+      .from("quotes")
+      .update(quoteUpdates)
+      .eq("id", input.quoteId);
+  }
+
+  // Activity entry — internal-only, since the change is admin
+  // housekeeping the client doesn't need to see in their feed.
+  // Locate the portal first.
+  const portal = await getPortalProjectByQuoteId(input.quoteId);
+  if (portal) {
+    await logProjectActivityByPortalId({
+      portalProjectId: cleanString(portal.id),
+      actorRole: "studio",
+      eventType: "lead_info_edited",
+      summary: `CrecyStudio updated lead ${changedKeys.join(", ")}.`,
+      payload: {
+        changedKeys,
+        actorUserId: input.actor.userId ?? null,
+        actorEmail: input.actor.email ?? null,
+        actorIp: input.actor.ip ?? null,
+      },
+      clientVisible: false,
+    });
+  }
+
+  return { changedKeys };
+}
+
+export async function setProjectTypeByQuoteId(input: {
+  quoteId: string;
+  projectType: ProjectType;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}) {
+  // Update both sources of truth in a coordinated pair: the quote row
+  // (used by intake / quoting) and the portal row (used by every
+  // lane-aware portal feature). Out-of-sync values cause the
+  // direction-submit dispatcher to mis-route — we saw this in the
+  // 56-row Phase-3.2 audit where portal.project_type was the column
+  // default of "website" while the actual lane lived only on the
+  // quote.
+  const now = new Date().toISOString();
+
+  const { data: quote, error: qErr } = await supabaseAdmin
+    .from("quotes")
+    .select("id, project_type")
+    .eq("id", input.quoteId)
+    .maybeSingle();
+  if (qErr) throw qErr;
+  if (!quote) throw new Error("Quote not found");
+
+  const { error: quoteUpdErr } = await supabaseAdmin
+    .from("quotes")
+    .update({ project_type: input.projectType, updated_at: now })
+    .eq("id", input.quoteId);
+  if (quoteUpdErr) throw quoteUpdErr;
+
+  const portal = await getPortalProjectByQuoteId(input.quoteId);
+  if (portal) {
+    const { error: portalUpdErr } = await supabaseAdmin
+      .from("customer_portal_projects")
+      .update({ project_type: input.projectType, updated_at: now })
+      .eq("id", portal.id);
+    if (portalUpdErr) throw portalUpdErr;
+
+    await logProjectActivityByPortalId({
+      portalProjectId: cleanString(portal.id),
+      actorRole: "studio",
+      eventType: "project_type_changed",
+      summary: `CrecyStudio reclassified the project to ${input.projectType}.`,
+      payload: {
+        previousType: quote.project_type ?? null,
+        newType: input.projectType,
+        actorUserId: input.actor.userId ?? null,
+        actorEmail: input.actor.email ?? null,
+        actorIp: input.actor.ip ?? null,
+      },
+      clientVisible: false,
+    });
+  }
+
+  return { previousType: quote.project_type ?? null, newType: input.projectType };
+}

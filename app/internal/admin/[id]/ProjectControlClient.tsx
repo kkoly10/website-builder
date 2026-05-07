@@ -743,6 +743,68 @@ export default function ProjectControlClient({
     await savePatch({ publishedAgreementText: data.publishedAgreementText, portalAdmin: next, _event: "agreement_published" }, "Agreement published.");
   }
 
+  async function adminEditLead() {
+    const name = prompt("Lead name", data.leadName);
+    if (name === null) return;
+    const email = prompt("Lead email (used for portal access — change carefully)", data.leadEmail);
+    if (email === null) return;
+    if (name === data.leadName && email === data.leadEmail) return;
+
+    setBusy(true); setMessage("Updating lead..."); setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/admin/lead-info", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, name, email }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      setData((p) => ({ ...p, leadName: name, leadEmail: email }));
+      setMessageIsError(false); setMessage("Lead updated.");
+    } catch (err) {
+      setMessageIsError(true);
+      setMessage(err instanceof Error ? err.message : "Failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function adminSetProjectType() {
+    const valid = ["website", "web_app", "automation", "ecommerce", "rescue"] as const;
+    const next = prompt(
+      `Reclassify the project lane.\n\nCurrent: ${data.projectType}\nAllowed: ${valid.join(", ")}`,
+      data.projectType,
+    );
+    if (next === null) return;
+    const trimmed = next.trim();
+    if (!trimmed || trimmed === data.projectType) return;
+    if (!(valid as readonly string[]).includes(trimmed)) {
+      setMessageIsError(true); setMessage(`Project type must be one of: ${valid.join(", ")}`);
+      return;
+    }
+    if (!confirm(
+      `Reclassify project from ${data.projectType} to ${trimmed}?\n\nThis updates both the quote and portal rows. Workflow templates, milestones, and direction routing will use the new lane on next refresh.`
+    )) return;
+
+    setBusy(true); setMessage("Updating project type..."); setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/admin/project-type", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, projectType: trimmed }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      setData((p) => ({ ...p, projectType: trimmed }));
+      setMessageIsError(false); setMessage(`Project reclassified to ${trimmed}.`);
+    } catch (err) {
+      setMessageIsError(true);
+      setMessage(err instanceof Error ? err.message : "Failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   // Admin agreement overrides: manual accept (offline signing) + void
   // (accidental acceptance, contract changes, etc.). Both refresh the
   // page to pick up the canonical agreement state from the server
@@ -1219,8 +1281,32 @@ export default function ProjectControlClient({
           }}>
             {data.leadName}
           </h1>
-          <div style={{ fontSize: 14, color: "var(--muted)" }}>
-            {data.leadEmail} · ID <code style={{ fontSize: 12 }}>{data.quoteId.slice(0, 8)}</code> · Created {fmtDate(data.createdAt)}
+          <div style={{ fontSize: 14, color: "var(--muted)", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span>{data.leadEmail}</span>
+            <span>·</span>
+            <span>ID <code style={{ fontSize: 12 }}>{data.quoteId.slice(0, 8)}</code></span>
+            <span>·</span>
+            <span>{fmtDate(data.createdAt)}</span>
+            <span>·</span>
+            <span>Lane: <strong style={{ color: "var(--ink)" }}>{data.projectType}</strong></span>
+            <button
+              className="btn btnGhost"
+              disabled={busy}
+              onClick={adminEditLead}
+              style={{ fontSize: 11, padding: "4px 10px" }}
+              title="Edit lead name / email / phone"
+            >
+              Edit lead
+            </button>
+            <button
+              className="btn btnGhost"
+              disabled={busy}
+              onClick={adminSetProjectType}
+              style={{ fontSize: 11, padding: "4px 10px" }}
+              title="Reclassify the project lane (updates quote + portal in lockstep)"
+            >
+              Reclassify lane
+            </button>
           </div>
         </div>
 
