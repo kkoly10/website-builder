@@ -361,14 +361,32 @@ export async function POST(req: NextRequest) {
     }
 
     if (typeof body?._event === "string" && body._event) {
+      // Pull a richer slice for the email templates that personalize off
+      // project type, estimate, deposit, or production URL. The
+      // sendEventNotification helper falls back to generic copy when these
+      // fields are missing, so other callers still work.
       const leadRow = await supabaseAdmin
         .from("quotes")
-        .select("lead_name, lead_email, public_token")
+        .select("lead_name, lead_email, public_token, project_type, estimate_total")
         .eq("id", quoteId)
         .maybeSingle();
 
       const lead = leadRow.data;
       if (lead) {
+        // Pull production_url + deposit_amount_cents from the portal row
+        // (lives on customer_portal_projects, not quotes).
+        const portalRow = await supabaseAdmin
+          .from("customer_portal_projects")
+          .select("production_url, deposit_amount_cents")
+          .eq("quote_id", quoteId)
+          .maybeSingle();
+        const portal = portalRow.data;
+
+        const estimateAmount = Number(lead.estimate_total) || undefined;
+        const depositAmount = portal?.deposit_amount_cents
+          ? Math.round(Number(portal.deposit_amount_cents) / 100)
+          : undefined;
+
         sendEventNotification({
           event: body._event,
           quoteId,
@@ -377,6 +395,12 @@ export async function POST(req: NextRequest) {
           workspaceUrl: lead.public_token
             ? `${process.env.NEXT_PUBLIC_BASE_URL || ""}/portal/${lead.public_token}`
             : undefined,
+          projectType: typeof lead.project_type === "string" ? lead.project_type : undefined,
+          productionUrl: typeof portal?.production_url === "string" && portal.production_url
+            ? portal.production_url
+            : undefined,
+          estimateAmount,
+          depositAmount,
         }).catch((err) => {
           console.error("[quote-admin] notification error:", err);
         });

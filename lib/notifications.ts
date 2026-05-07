@@ -10,46 +10,85 @@ type EventContext = {
   leadName: string;
   leadEmail: string;
   workspaceUrl?: string;
+  // Optional context for personalized templates. Fields are filled in
+  // by callers that have access to the data; templates fall back to
+  // generic copy when missing so older callers keep working.
+  projectType?: string;       // "website" | "web_app" | "automation" | "ecommerce" | "rescue"
+  productionUrl?: string;     // for site_live — the live URL to surface
+  estimateAmount?: number;    // dollars (not cents) — for agreement_published
+  depositAmount?: number;     // dollars (not cents) — for agreement_published
 };
+
+// Friendly label per ProjectType. Used in subject lines and headlines
+// so a custom-app client sees "your custom app" instead of generic
+// "your project".
+function projectTypeLabel(projectType?: string | null): string {
+  switch (projectType) {
+    case "website": return "website";
+    case "web_app": return "custom app";
+    case "automation": return "automation";
+    case "ecommerce": return "store";
+    case "rescue": return "site rescue";
+    default: return "project";
+  }
+}
+
+function formatMoney(amount?: number | null): string {
+  if (amount == null || !Number.isFinite(amount)) return "";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
 
 const templates: Record<
   string,
   (ctx: EventContext) => { subject: string; html: string; toClient: boolean; toAdmin: boolean }
 > = {
-  agreement_published: (ctx) => ({
-    subject: `Your project agreement is ready to sign — CrecyStudio`,
-    html: emailWrap(`
-      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your agreement is ready to sign.</h1>
-      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Project agreement &middot; ${escHtml(ctx.quoteId.slice(0, 8))}</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">The agreement covering scope, timeline, deliverables, and payment terms is ready in your workspace. Once signed, the project kicks off — no further back and forth.</p>
-      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">It's worth a careful read. If anything in it doesn't match the conversations we've had, flag it before signing.</p>
-      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Review agreement") : ""}
-      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">Reply with questions before you sign.</p>
-      ${sig()}
-    `, "Reply to this email to reach Komlan directly.", "Your project agreement is ready — review and sign in your workspace."),
-    toClient: true,
-    toAdmin: true,
-  }),
+  agreement_published: (ctx) => {
+    const laneLabel = projectTypeLabel(ctx.projectType);
+    const totalLine = ctx.estimateAmount
+      ? `${formatMoney(ctx.estimateAmount)} total${ctx.depositAmount ? `, ${formatMoney(ctx.depositAmount)} deposit on signature` : ""}`
+      : "";
+    return {
+      subject: `Your ${laneLabel} agreement is ready to sign — CrecyStudio`,
+      html: emailWrap(`
+        <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your agreement is ready to sign.</h1>
+        <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${laneLabel.charAt(0).toUpperCase() + laneLabel.slice(1)} agreement &middot; ${escHtml(ctx.quoteId.slice(0, 8))}</p>
+        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
+        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">The agreement covering scope, timeline, deliverables${totalLine ? `, and payment terms (<strong>${escHtml(totalLine)}</strong>)` : ", and payment terms"} is ready in your workspace. Once signed, the project kicks off — no further back and forth.</p>
+        <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">It's worth a careful read. If anything in it doesn't match the conversations we've had, flag it before signing.</p>
+        ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Review agreement") : ""}
+        <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">Reply with questions before you sign.</p>
+        ${sig()}
+      `, "Reply to this email to reach Komlan directly.", `Your ${laneLabel} agreement is ready — review and sign in your workspace.`),
+      toClient: true,
+      toAdmin: true,
+    };
+  },
 
-  preview_ready: (ctx) => ({
-    subject: `Your website preview is ready — CrecyStudio`,
-    html: emailWrap(`
-      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your preview is live.</h1>
-      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Preview ready for review</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
-      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">A new preview of your website is ready. Open your workspace to review it and leave feedback in one batch — that keeps revisions clean and the project moving.</p>
-      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open preview") : ""}
-      ${callout("How to review", [
-        "→&ensp;Open the preview link in your workspace",
-        "→&ensp;Leave notes on anything you'd like changed",
-        "→&ensp;Submit feedback as one batch — Komlan responds within 24 hours",
-      ])}
-      ${sig()}
-    `, "Reply to this email to reach Komlan directly.", "Your website preview is ready — open your workspace to review it."),
-    toClient: true,
-    toAdmin: false,
-  }),
+  preview_ready: (ctx) => {
+    const laneLabel = projectTypeLabel(ctx.projectType);
+    return {
+      subject: `Your ${laneLabel} preview is ready — CrecyStudio`,
+      html: emailWrap(`
+        <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your preview is live.</h1>
+        <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Preview ready for review</p>
+        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
+        <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">A new preview of your ${laneLabel} is ready. Open your workspace to review it and leave feedback in one batch — that keeps revisions clean and the project moving.</p>
+        ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open preview") : ""}
+        ${callout("How to review", [
+          "→&ensp;Open the preview link in your workspace",
+          "→&ensp;Leave notes on anything you'd like changed",
+          "→&ensp;Submit feedback as one batch — Komlan responds within 24 hours",
+        ])}
+        ${sig()}
+      `, "Reply to this email to reach Komlan directly.", `Your ${laneLabel} preview is ready — open your workspace to review it.`),
+      toClient: true,
+      toAdmin: false,
+    };
+  },
 
   launch_ready: (ctx) => ({
     subject: `Your website is ready to launch — CrecyStudio`,
@@ -66,21 +105,31 @@ const templates: Record<
     toAdmin: true,
   }),
 
-  site_live: (ctx) => ({
-    subject: `Your website is live — CrecyStudio`,
-    html: emailWrap(`
-      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your site is live.</h1>
-      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Project launched</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Your site is shipped and indexed. The full handoff — production URL, admin credentials, analytics access, and post-launch documentation — is waiting in your workspace.</p>
-      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">A live website is a starting line, not a finish line. The next 90 days are where real conversions happen — small copy and design tweaks, content updates, performance tuning. If you'd rather not handle that yourself, our Care Plans start at $199/mo and keep the site evolving instead of decaying.</p>
-      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open handoff") : ""}
-      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">It was a real pleasure building this with you. Reply anytime — for support, updates, or just to share how the launch goes.</p>
-      ${sig()}
-    `, "", "Your website is now live. Handoff and Care Plan options are in your workspace."),
-    toClient: true,
-    toAdmin: true,
-  }),
+  site_live: (ctx) => {
+    const laneLabel = projectTypeLabel(ctx.projectType);
+    const isWebsite = !ctx.projectType || ctx.projectType === "website";
+    const liveLine = ctx.productionUrl
+      ? `Your ${laneLabel} is live at <a href="${escHtml(ctx.productionUrl)}" style="color:#111111;font-weight:600;text-decoration:underline">${escHtml(ctx.productionUrl)}</a>.`
+      : `Your ${laneLabel} is shipped and indexed.`;
+    return {
+      subject: `Your ${laneLabel} is live — CrecyStudio`,
+      html: emailWrap(`
+        <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your ${laneLabel} is live.</h1>
+        <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Project launched</p>
+        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
+        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${liveLine} The full handoff — admin credentials, analytics access, and post-launch documentation — is waiting in your workspace.</p>
+        ${isWebsite
+          ? `<p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">A live website is a starting line, not a finish line. The next 90 days are where real conversions happen — small copy and design tweaks, content updates, performance tuning. If you'd rather not handle that yourself, our Care Plans start at $199/mo and keep the site evolving instead of decaying.</p>`
+          : `<p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">Launching is the easy part — the next 90 days are where real usage shapes the product. If you want ongoing engineering and tuning rather than every change becoming a new project, ask about our retainer arrangements.</p>`
+        }
+        ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open handoff") : ""}
+        <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">It was a real pleasure building this with you. Reply anytime — for support, updates, or just to share how the launch goes.</p>
+        ${sig()}
+      `, "", `Your ${laneLabel} is now live. Handoff and ongoing-support options are in your workspace.`),
+      toClient: true,
+      toAdmin: true,
+    };
+  },
 
   revision_submitted: (ctx) => ({
     subject: `Revision request from ${escHtml(ctx.leadName)}`,
