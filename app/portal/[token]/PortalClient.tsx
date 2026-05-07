@@ -4,10 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import DesignDirectionCard from "@/components/portal/DesignDirectionCard";
-import {
-  DEFAULT_WEBSITE_DESIGN_DIRECTION,
-  type WebsiteDesignDirection,
-  type WebsiteDesignDirectionInput,
+import type {
+  WebsiteDesignDirection,
+  WebsiteDesignDirectionInput,
 } from "@/lib/designDirection";
 
 /* ═══════════════════════════════════
@@ -223,7 +222,10 @@ type PortalBundle = {
   activityFeed: ProjectActivity[];
   messages: PortalMessage[];
   projectType?: string;
-  designDirection?: WebsiteDesignDirection;
+  // null when the portal is legacy (created before Phase 2) — the feature
+  // should not be applied retroactively. undefined for forward-compat with
+  // older API responses.
+  designDirection?: WebsiteDesignDirection | null;
 };
 
 type Phase =
@@ -966,11 +968,15 @@ export default function PortalClient({
           </div>
         </div>
 
-      {/* ── Design Direction ── */}
+      {/* ── Design Direction ──
+          Only renders when the portal has an explicit designDirection record.
+          Legacy portals (pre-Phase 2) have no record and intentionally
+          don't see this card so their existing workflow isn't disrupted. */}
       {(!bundle.projectType || bundle.projectType === "website") &&
-      bundle.quote.deposit.status === "paid" ? (
+      bundle.quote.deposit.status === "paid" &&
+      bundle.designDirection ? (
         <DesignDirectionCard
-          value={bundle.designDirection ?? DEFAULT_WEBSITE_DESIGN_DIRECTION}
+          value={bundle.designDirection}
           onSubmit={async (input: WebsiteDesignDirectionInput) => {
             const res = await fetch(`/api/portal/${token}`, {
               method: "POST",

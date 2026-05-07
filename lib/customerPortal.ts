@@ -6,6 +6,7 @@ import {
   type WebsiteDesignDirectionInput,
   type WebsiteDesignDirectionStatus,
   DEFAULT_WEBSITE_DESIGN_DIRECTION,
+  hasDesignDirection,
   mergeDesignDirection,
   readDesignDirection,
 } from "@/lib/designDirection";
@@ -784,7 +785,10 @@ function buildWorkspaceView(
         previewUrl: cleanString(portal.preview_url) || null,
         clientReviewStatus,
         clientStatus: cleanString(portal.client_status).toLowerCase() || null,
-        designDirectionStatus: readDesignDirection(scopeSnapshot).status,
+        // Only gate on direction status if the portal has an explicit
+        // designDirection record. Legacy portals (no record) keep their
+        // pre-Phase-2 waiting-on behavior.
+        designDirectionStatus: readDesignDirection(scopeSnapshot)?.status ?? null,
         projectType: cleanString(portal.project_type) || cleanString(quote.project_type) || "website",
       }),
     },
@@ -822,11 +826,13 @@ export async function ensureCustomerPortalForQuoteId(quoteId: string) {
   const projectType = typeof quote.project_type === "string" ? quote.project_type : "website";
   const scopeSnapshot = {
     ...buildScopeSnapshotFromQuote(quote),
-    // Seed the design direction record so the client portal renders the
-    // form on first visit without an extra round-trip. Only meaningful
-    // for the website lane today; harmless for other lanes (Phase 3 will
-    // replace this with lane-specific direction modules).
-    designDirection: { ...DEFAULT_WEBSITE_DESIGN_DIRECTION },
+    // Seed the design direction record only for website-lane portals so the
+    // form renders on first visit without an extra round-trip. Other lanes
+    // get their own direction modules in Phase 3 — seeding the website one
+    // here would cross-contaminate.
+    ...(projectType === "website"
+      ? { designDirection: { ...DEFAULT_WEBSITE_DESIGN_DIRECTION } }
+      : {}),
   };
 
   const { data: created, error: createErr } = await supabaseAdmin
@@ -834,6 +840,11 @@ export async function ensureCustomerPortalForQuoteId(quoteId: string) {
     .insert({
       quote_id: quoteId,
       access_token: makeToken(),
+      // Persist project_type explicitly so downstream gates (e.g. design
+      // direction) don't rely on the column default of 'website' for
+      // non-website quotes. The DB default is a safety net, not the
+      // source of truth.
+      project_type: projectType,
       project_status: "new",
       client_status: "new",
       deposit_status: "pending",
@@ -1225,16 +1236,43 @@ export async function submitDesignDirectionByPortalToken(input: {
   const portal = await getPortalProjectByToken(input.token);
   if (!portal) throw new Error("Portal not found");
 
-  const projectType =
+  // Resolve project type with explicit fallback chain. portal.project_type
+  // can be the column default ("website") even for non-website quotes if
+  // legacy code paths inserted without setting it explicitly, so we also
+  // check the source quote.
+  const portalProjectType =
     typeof portal.project_type === "string" && portal.project_type
       ? portal.project_type
-      : "website";
-  if (projectType !== "website") {
+      : null;
+  let quoteProjectType: string | null = null;
+  if (portal.quote_id) {
+    const { data: q } = await supabaseAdmin
+      .from("quotes")
+      .select("project_type")
+      .eq("id", portal.quote_id)
+      .maybeSingle();
+    quoteProjectType =
+      q && typeof q.project_type === "string" && q.project_type ? q.project_type : null;
+  }
+  // Both must agree (or be missing) for this to be a website project.
+  // If either says something else, refuse.
+  const projectType = quoteProjectType ?? portalProjectType ?? "website";
+  if (projectType !== "website" || (portalProjectType && portalProjectType !== "website")) {
     throw new Error("Design direction is only available for website projects.");
   }
 
   const existingScope = safeObj(portal.scope_snapshot);
-  const existing = readDesignDirection(existingScope);
+
+  // Legacy portals (created before Phase 2) don't have a designDirection
+  // record. Don't retroactively enable the feature for them — admin can
+  // regenerate via a future tool if they want to opt in.
+  if (!hasDesignDirection(existingScope)) {
+    throw new Error(
+      "Design direction is not enabled for this project. Contact CrecyStudio to opt in.",
+    );
+  }
+
+  const existing = readDesignDirection(existingScope) ?? DEFAULT_WEBSITE_DESIGN_DIRECTION;
 
   // Once locked, the direction is immutable from the client side.
   if (existing.status === "locked") {

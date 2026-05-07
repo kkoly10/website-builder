@@ -275,6 +275,7 @@ export function validateDesignDirectionInput(
   if (brandMood.length > 3) {
     return {
       ok: false,
+      value: null,
       error: "Choose up to 3 brand mood words so the direction stays focused.",
     };
   }
@@ -339,6 +340,7 @@ export function validateDesignDirectionInput(
   if (r.approvedDirectionTerms !== true) {
     return {
       ok: false,
+      value: null,
       error: "Please approve the design direction terms before submitting.",
     };
   }
@@ -382,22 +384,36 @@ export function mergeDesignDirection(
   };
 }
 
+// True iff the portal's scope_snapshot has an explicit designDirection
+// record. Legacy portals (created before Phase 2 shipped) don't have one,
+// and the design-direction feature should not be applied retroactively.
+export function hasDesignDirection(scopeSnapshot: unknown): boolean {
+  if (!scopeSnapshot || typeof scopeSnapshot !== "object") return false;
+  const raw = (scopeSnapshot as Record<string, unknown>).designDirection;
+  return Boolean(raw && typeof raw === "object");
+}
+
 // Read whatever lives at scope_snapshot.designDirection and produce a
-// full WebsiteDesignDirection (filling missing fields with defaults).
-// Tolerates legacy / partial records.
+// full WebsiteDesignDirection. Returns null when no record exists so the
+// caller can distinguish "feature not enabled for this portal" from
+// "feature enabled but in default waiting state". Use
+// readDesignDirectionOrDefault for the form initial value.
 export function readDesignDirection(
   scopeSnapshot: unknown,
-): WebsiteDesignDirection {
-  const snap =
-    scopeSnapshot && typeof scopeSnapshot === "object"
-      ? (scopeSnapshot as Record<string, unknown>)
-      : {};
-  const raw = snap.designDirection;
-  if (!raw || typeof raw !== "object") {
-    return { ...DEFAULT_WEBSITE_DESIGN_DIRECTION };
-  }
+): WebsiteDesignDirection | null {
+  if (!hasDesignDirection(scopeSnapshot)) return null;
+  const raw = (scopeSnapshot as Record<string, unknown>).designDirection;
   return {
     ...DEFAULT_WEBSITE_DESIGN_DIRECTION,
     ...(raw as Partial<WebsiteDesignDirection>),
   };
+}
+
+// Same as readDesignDirection but never returns null — falls back to
+// defaults. Use this for the form initial value where we always want a
+// concrete record to render.
+export function readDesignDirectionOrDefault(
+  scopeSnapshot: unknown,
+): WebsiteDesignDirection {
+  return readDesignDirection(scopeSnapshot) ?? { ...DEFAULT_WEBSITE_DESIGN_DIRECTION };
 }
