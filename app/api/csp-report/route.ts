@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { getIpFromHeaders } from "@/lib/rateLimit";
+import { enforceRateLimitDurable, getIpFromHeaders } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,7 +9,22 @@ export const dynamic = "force-dynamic";
 // modern report-to payloads (application/reports+json). Stores each
 // violation in csp_violations. Always returns 204 — browsers don't surface
 // errors here and we don't want to incur a penalty for a missing table.
+//
+// Rate-limited per IP: a single page load can fire several legitimate
+// reports, but we cap at 60/min to prevent floods filling the table.
 export async function POST(req: NextRequest) {
+  const ip = getIpFromHeaders(req.headers);
+  const rl = await enforceRateLimitDurable({
+    key: `csp-report:${ip}`,
+    limit: 60,
+    windowMs: 60_000,
+  });
+  if (!rl.ok) {
+    // Silently drop excess reports — never expose 429 to the browser, since
+    // browsers may stop sending future reports if they get error responses.
+    return new NextResponse(null, { status: 204 });
+  }
+
   let payload: unknown;
   try {
     payload = await req.json();
@@ -35,7 +50,6 @@ export async function POST(req: NextRequest) {
 
   const userAgent = req.headers.get("user-agent") || null;
   const referer = req.headers.get("referer") || null;
-  const ip = getIpFromHeaders(req.headers);
 
   const rows = reports.map((r) => {
     const get = (k: string) =>

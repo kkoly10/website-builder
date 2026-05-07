@@ -1,16 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
 import { existsSync } from "node:fs";
-import path from "node:path";
 
 // e2e/admin-auth-setup.ts is gitignored — only present on the original
 // developer's machine for authenticated test flows. When absent (CI or a
 // fresh clone) we skip globalSetup so smoke and intake tests still run.
-const adminAuthSetupPath = path.resolve(
-  __dirname,
-  "e2e",
-  "admin-auth-setup.ts",
-);
-const globalSetup = existsSync(adminAuthSetupPath)
+// Path is relative to playwright's working directory (project root); we
+// avoid __dirname so this works whether the config is loaded as CJS or ESM.
+const globalSetup = existsSync("e2e/admin-auth-setup.ts")
   ? "./e2e/admin-auth-setup"
   : undefined;
 
