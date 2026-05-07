@@ -1186,7 +1186,9 @@ export default function ProjectControlClient({
                   // Update local state from the server response. On lock,
                   // optimistically toggle the "Design direction approved"
                   // milestone so the journey map matches what the helper
-                  // wrote to customer_portal_milestones.
+                  // wrote. Match exactly the same way the server does
+                  // (case-insensitive, exact title) — substring match
+                  // would flip milestones the server didn't.
                   const completedAt = new Date().toISOString();
                   setData((prev) => ({
                     ...prev,
@@ -1196,7 +1198,7 @@ export default function ProjectControlClient({
                         ? {
                             ...prev.portalStateAdmin,
                             milestones: prev.portalStateAdmin.milestones.map((m) =>
-                              /design direction approved/i.test(m.label)
+                              m.label.trim().toLowerCase() === "design direction approved"
                                 ? { ...m, done: true, updatedAt: completedAt }
                                 : m,
                             ),
