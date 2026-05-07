@@ -69,9 +69,40 @@ function buildClientEmail(name: string): string {
   `, "Reply to this email to reach Komlan directly.", "I'll confirm a time for your free discovery call within 24 hours.");
 }
 
-function buildClientEmailScheduled(name: string, slotLabel: string): string {
+function buildAddToCalendarLinks(start: Date, slotLabel: string): {
+  google: string;
+  outlook: string;
+  yahoo: string;
+} {
+  const fmtCompact = (d: Date) => d.toISOString().replace(/[-:.]/g, "").slice(0, 15) + "Z";
+  const fmtIso = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, "Z");
+  const end = new Date(start.getTime() + 20 * 60 * 1000);
+  const title = "Discovery call — CrecyStudio";
+  const details = `Your free 20-min discovery call with Komlan Kouhiko.\n\n${slotLabel}`;
+
+  const google = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${fmtCompact(start)}/${fmtCompact(end)}&details=${encodeURIComponent(details)}`;
+  const outlook = `https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=${encodeURIComponent(title)}&body=${encodeURIComponent(details)}&startdt=${encodeURIComponent(fmtIso(start))}&enddt=${encodeURIComponent(fmtIso(end))}`;
+  const yahoo = `https://calendar.yahoo.com/?v=60&title=${encodeURIComponent(title)}&st=${fmtCompact(start)}&et=${fmtCompact(end)}&desc=${encodeURIComponent(details)}`;
+
+  return { google, outlook, yahoo };
+}
+
+function buildCalendarButtonsHtml(start: Date, slotLabel: string): string {
+  const links = buildAddToCalendarLinks(start, slotLabel);
+  const btn = (href: string, label: string) =>
+    `<a href="${href}" style="display:inline-block;background:#ffffff;border:1px solid #d6d6d6;color:#111111;text-decoration:none;padding:10px 16px;font-size:13px;font-weight:600;font-family:Arial,Helvetica,sans-serif;border-radius:4px;margin:0 6px 8px 0">${label}</a>`;
+  return `<div style="margin:0 0 24px">
+    <p style="margin:0 0 10px;font-size:12px;color:#888888;letter-spacing:0.06em;text-transform:uppercase;font-weight:600">Add to your calendar</p>
+    ${btn(links.google, "Google Calendar")}
+    ${btn(links.outlook, "Outlook")}
+    ${btn(links.yahoo, "Yahoo")}
+  </div>`;
+}
+
+function buildClientEmailScheduled(name: string, slotLabel: string, start: Date | null): string {
   const safe = escHtml(name || "there");
   const slot = escHtml(slotLabel);
+  const buttons = start ? buildCalendarButtonsHtml(start, slotLabel) : "";
   return emailWrap(`
     <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em;line-height:1.2">You're on the calendar, ${safe}.</h1>
     <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Free 20-min discovery call</p>
@@ -83,7 +114,8 @@ function buildClientEmailScheduled(name: string, slotLabel: string): string {
         </td>
       </tr>
     </table>
-    <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">A Google Calendar invite is on its way to your inbox. Add it to your calendar and you're all set.</p>
+    ${buttons}
+    <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">A calendar invite is also attached to this email — most clients will let you add it with one click.</p>
     <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">Need to reschedule or have questions beforehand? Just reply to this email.</p>
     ${callout("What to expect on the call", [
       "→&ensp;Komlan asks sharp questions about your project",
@@ -292,16 +324,13 @@ export async function POST(req: Request) {
     await maybeCreateCalendarEvent(name, email, availabilityNote, selectedSlot, slotLabel);
 
     // Build .ics invite when a specific slot was booked
-    const icsAttachment = scheduledAt && slotLabel && selectedSlot
-      ? (() => {
-          const start = parseSelectedSlot(selectedSlot);
-          if (!start) return null;
-          return {
-            filename: "discovery-call.ics",
-            content: buildCalendarInvite(callId, name, email, ADMIN ?? null, start, slotLabel),
-            content_type: "text/calendar; method=REQUEST; charset=UTF-8",
-          };
-        })()
+    const slotStart = scheduledAt && selectedSlot ? parseSelectedSlot(selectedSlot) : null;
+    const icsAttachment = slotStart && slotLabel
+      ? {
+          filename: "discovery-call.ics",
+          content: buildCalendarInvite(callId, name, email, ADMIN ?? null, slotStart, slotLabel),
+          content_type: "text/calendar; method=REQUEST; charset=UTF-8",
+        }
       : null;
 
     console.log(`[book-discovery-call] sending client email to=${email} from=${FROM} scheduled=${!!scheduledAt}`);
@@ -313,7 +342,7 @@ export async function POST(req: Request) {
           ? "Your discovery call is booked — CrecyStudio"
           : "Discovery call request received — CrecyStudio",
         html: scheduledAt && slotLabel
-          ? buildClientEmailScheduled(name, slotLabel)
+          ? buildClientEmailScheduled(name, slotLabel, slotStart)
           : buildClientEmail(name),
         ...(icsAttachment ? { attachments: [icsAttachment] } : {}),
       });
