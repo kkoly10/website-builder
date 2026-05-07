@@ -124,6 +124,41 @@ export type OpsPricingInput = {
   notes: string;
 };
 
+// Phase 4 — web_app pricing engine input. Mirrors the fields collected
+// in CustomAppIntakeClient. The engine uses these to pick the right
+// tier (small_internal_tool / portal_dashboard_mvp / saas_mvp /
+// full_client_portal).
+export type WebAppPricingInput = {
+  projectDescription: string;
+  targetUsers: string;          // "internal-team" | "paying-customers" | "both"
+  userScale: string;
+  stage: string;
+  scopePreference: string;
+  timeline: string;
+  integrations: string[];
+  integrationNotes: string;
+  compliance: string[];
+  budget: string;
+  budgetFlexibility: string;
+};
+
+// Phase 4 — rescue pricing engine input. Mirrors RescueIntakeClient.
+export type RescuePricingInput = {
+  siteUrl: string;
+  platform: string;
+  issues: string[];
+  urgency: string;              // "critical" | "soon" | "low"
+  builtWhen: string;
+  builtBy: string;
+  previousVendorStatus: string;
+  alreadyTried: string;
+  assetAccess: string[];
+  seoPreservation: string;
+  urlsToPreserve: string;
+  budget: string;
+  notes: string;
+};
+
 export type EcommercePricingInput = {
   entryPath?: "build" | "run" | "fix" | null;
   businessName: string;

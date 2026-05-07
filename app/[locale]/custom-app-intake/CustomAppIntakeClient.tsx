@@ -5,6 +5,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { trackEvent } from "@/lib/analytics/client";
 import ScrollReveal from "@/components/site/ScrollReveal";
+import { getWebAppPricing } from "@/lib/pricing";
 
 type CustomAppFormState = {
   projectDescription: string;
@@ -277,6 +278,23 @@ export default function CustomAppIntakeClient() {
     setError("");
 
     try {
+      // Phase 4: compute pricing client-side and pass it to submit-estimate.
+      // Mirrors the ops/ecommerce intake pattern. The server stores
+      // pricingTruth + tier label + estimate cents from the band.
+      const recommendation = getWebAppPricing({
+        projectDescription: form.projectDescription,
+        targetUsers: form.targetUsers,
+        userScale: form.userScale,
+        stage: form.stage,
+        scopePreference: form.scopePreference,
+        timeline: form.timeline,
+        integrations: form.integrations,
+        integrationNotes: form.integrationNotes,
+        compliance: form.compliance,
+        budget: form.budget,
+        budgetFlexibility: form.budgetFlexibility,
+      });
+
       const res = await fetch("/api/submit-estimate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -286,6 +304,21 @@ export default function CustomAppIntakeClient() {
           email: form.email,
           phone: form.phone || undefined,
           preferredLocale: locale,
+          pricing: {
+            version: recommendation.version,
+            lane: recommendation.lane,
+            tierKey: recommendation.tierKey,
+            tierLabel: recommendation.tierLabel,
+            estimateCents: recommendation.band.target * 100,
+            estimateLowCents: recommendation.band.min * 100,
+            estimateHighCents: recommendation.band.max * 100,
+            displayRange: recommendation.displayRange,
+            position: recommendation.position,
+            isCustomScope: recommendation.isCustomScope,
+            reasons: recommendation.reasons,
+            complexityFlags: recommendation.complexityFlags,
+            complexityScore: recommendation.complexityScore,
+          },
           intakeRaw: {
             companyName: form.companyName,
             projectDescription: form.projectDescription,
