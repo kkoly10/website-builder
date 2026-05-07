@@ -400,6 +400,8 @@ export default function ProjectControlClient({
   const [certificateUrl, setCertificateUrl] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ title: string; description: string; onConfirm: () => void } | null>(null);
   const [newChangeOrder, setNewChangeOrder] = useState({ title: "", summary: "", priceImpact: "", timelineImpact: "", scopeImpact: "", status: "draft" });
+  const [newAsset, setNewAsset] = useState({ label: "", assetUrl: "", assetType: "general", notes: "" });
+  const [newRevision, setNewRevision] = useState({ requestText: "", priority: "normal" });
   const [newInvoice, setNewInvoice] = useState({
     invoiceType: "milestone" as ProjectInvoice["invoiceType"],
     amount: initialData.portalStateAdmin.depositAmount || initialData.estimate.target || 0,
@@ -872,6 +874,112 @@ export default function ProjectControlClient({
 
   function updateAssetStatus(id: string, status: string) {
     setData((p) => ({ ...p, clientSync: { ...p.clientSync, assets: p.clientSync.assets.map((a) => a.id === id ? { ...a, status } : a) } }));
+  }
+
+  // Admin-side asset / revision actions. Edits go through the existing
+  // clientSync save flow; create + delete go through their own routes.
+  async function adminCreateAsset(input: { label: string; assetUrl: string; notes: string; assetType: string }) {
+    setBusy(true); setMessage("Creating asset..."); setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/admin/assets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, ...input }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      const created = json.asset;
+      setData((p) => ({
+        ...p,
+        clientSync: {
+          ...p.clientSync,
+          assets: [
+            {
+              id: created.id,
+              category: created.asset_type || "general",
+              label: created.label,
+              url: created.asset_url || "",
+              notes: created.notes || "",
+              status: created.status,
+              createdAt: created.created_at,
+            },
+            ...p.clientSync.assets,
+          ],
+        },
+      }));
+      setMessageIsError(false); setMessage("Asset added on client's behalf.");
+    } catch (err) {
+      setMessageIsError(true); setMessage(err instanceof Error ? err.message : "Failed.");
+    } finally { setBusy(false); }
+  }
+
+  async function adminDeleteAsset(assetId: string) {
+    if (!confirm("Delete this asset? The client will see it disappear from their portal.")) return;
+    setBusy(true); setMessage("Deleting asset..."); setMessageIsError(false);
+    try {
+      const url = `/api/internal/admin/assets?quoteId=${encodeURIComponent(data.quoteId)}&assetId=${encodeURIComponent(assetId)}`;
+      const res = await fetch(url, { method: "DELETE" });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      setData((p) => ({
+        ...p,
+        clientSync: { ...p.clientSync, assets: p.clientSync.assets.filter((a) => a.id !== assetId) },
+      }));
+      setMessageIsError(false); setMessage("Asset deleted.");
+    } catch (err) {
+      setMessageIsError(true); setMessage(err instanceof Error ? err.message : "Failed.");
+    } finally { setBusy(false); }
+  }
+
+  async function adminCreateRevision(input: { requestText: string; priority: string }) {
+    setBusy(true); setMessage("Recording revision..."); setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/admin/revisions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, ...input }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      const created = json.revision;
+      setData((p) => ({
+        ...p,
+        clientSync: {
+          ...p.clientSync,
+          revisions: [
+            {
+              id: created.id,
+              message: created.request_text,
+              priority: created.priority,
+              status: created.status,
+              createdAt: created.created_at,
+            },
+            ...p.clientSync.revisions,
+          ],
+        },
+      }));
+      setMessageIsError(false); setMessage("Revision recorded on client's behalf.");
+    } catch (err) {
+      setMessageIsError(true); setMessage(err instanceof Error ? err.message : "Failed.");
+    } finally { setBusy(false); }
+  }
+
+  async function adminDeleteRevision(revisionId: string) {
+    if (!confirm("Delete this revision? It will disappear from the client's portal.")) return;
+    setBusy(true); setMessage("Deleting revision..."); setMessageIsError(false);
+    try {
+      const url = `/api/internal/admin/revisions?quoteId=${encodeURIComponent(data.quoteId)}&revisionId=${encodeURIComponent(revisionId)}`;
+      const res = await fetch(url, { method: "DELETE" });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      setData((p) => ({
+        ...p,
+        clientSync: { ...p.clientSync, revisions: p.clientSync.revisions.filter((r) => r.id !== revisionId) },
+      }));
+      setMessageIsError(false); setMessage("Revision deleted.");
+    } catch (err) {
+      setMessageIsError(true); setMessage(err instanceof Error ? err.message : "Failed.");
+    } finally { setBusy(false); }
   }
 
   function updateRevisionStatus(id: string, status: string) {
@@ -2016,19 +2124,55 @@ export default function ProjectControlClient({
               : data.clientSync.assets.map((a) => (
                 <div key={a.id} style={{ padding: "12px 14px", border: "1px solid var(--rule)", borderRadius: 10, background: "var(--paper-2)", marginBottom: 6 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 10 }}>
-                    <div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 600, fontSize: 14, color: "var(--ink)" }}>{a.label}</div>
                       <div style={{ fontSize: 11, color: "var(--muted-2)", marginTop: 2 }}>{a.category} · {fmtDate(a.createdAt)}</div>
                       {a.notes && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>{a.notes}</div>}
-                      <a href={a.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600, marginTop: 4, display: "inline-block" }}>Open</a>
+                      {a.url ? (
+                        <a href={a.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600, marginTop: 4, display: "inline-block" }}>Open</a>
+                      ) : null}
                     </div>
-                    <select className="select" style={{ maxWidth: 120, fontSize: 12 }} value={a.status}
-                      onChange={(e) => updateAssetStatus(a.id, e.target.value)}>
-                      {assetStatusOptions.map((o) => <option key={o} value={o}>{pretty(o)}</option>)}
-                    </select>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end" }}>
+                      <select className="select" style={{ maxWidth: 130, fontSize: 12 }} value={a.status}
+                        onChange={(e) => updateAssetStatus(a.id, e.target.value)}>
+                        {assetStatusOptions.map((o) => <option key={o} value={o}>{pretty(o)}</option>)}
+                      </select>
+                      <button
+                        className="btn btnGhost"
+                        disabled={busy}
+                        onClick={() => adminDeleteAsset(a.id)}
+                        style={{ fontSize: 11, padding: "4px 10px", color: "var(--accent)" }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
+
+            {/* Admin add-on-behalf form */}
+            <div style={{ borderTop: "1px solid var(--rule)", marginTop: 14, paddingTop: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+                Add asset on client&apos;s behalf
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.2fr 0.8fr", gap: 6, marginBottom: 6 }}>
+                <input className="input" placeholder="Label" value={newAsset.label} onChange={(e) => setNewAsset((p) => ({ ...p, label: e.target.value }))} disabled={busy} style={{ fontSize: 12 }} />
+                <input className="input" placeholder="https:// link" value={newAsset.assetUrl} onChange={(e) => setNewAsset((p) => ({ ...p, assetUrl: e.target.value }))} disabled={busy} style={{ fontSize: 12 }} />
+                <input className="input" placeholder="Type" value={newAsset.assetType} onChange={(e) => setNewAsset((p) => ({ ...p, assetType: e.target.value }))} disabled={busy} style={{ fontSize: 12 }} />
+              </div>
+              <textarea className="textarea" rows={2} placeholder="Notes (optional)" value={newAsset.notes} onChange={(e) => setNewAsset((p) => ({ ...p, notes: e.target.value }))} disabled={busy} style={{ fontSize: 12, marginBottom: 6 }} />
+              <button
+                className="btn btnPrimary"
+                disabled={busy || !newAsset.label.trim()}
+                onClick={async () => {
+                  await adminCreateAsset(newAsset);
+                  setNewAsset({ label: "", assetUrl: "", assetType: "general", notes: "" });
+                }}
+                style={{ fontSize: 12, padding: "6px 14px" }}
+              >
+                Add asset →
+              </button>
+            </div>
           </div>
 
           {/* Revisions */}
@@ -2047,18 +2191,68 @@ export default function ProjectControlClient({
                   borderLeft: `3px solid ${r.priority === "high" ? "var(--accent)" : r.status === "new" ? "var(--rule)" : "var(--rule)"}`,
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 10 }}>
-                    <div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 11, fontWeight: 600, color: r.priority === "high" ? "var(--accent)" : "var(--muted-2)", textTransform: "uppercase" }}>{r.priority} priority</div>
                       <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4, lineHeight: 1.5 }}>{r.message}</div>
                       <div style={{ fontSize: 11, color: "var(--muted-2)", marginTop: 4 }}>{fmtDate(r.createdAt)}</div>
                     </div>
-                    <select className="select" style={{ maxWidth: 120, fontSize: 12 }} value={r.status}
-                      onChange={(e) => updateRevisionStatus(r.id, e.target.value)}>
-                      {revisionStatusOptions.map((o) => <option key={o} value={o}>{pretty(o)}</option>)}
-                    </select>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end" }}>
+                      <select className="select" style={{ maxWidth: 130, fontSize: 12 }} value={r.status}
+                        onChange={(e) => updateRevisionStatus(r.id, e.target.value)}>
+                        {revisionStatusOptions.map((o) => <option key={o} value={o}>{pretty(o)}</option>)}
+                      </select>
+                      <button
+                        className="btn btnGhost"
+                        disabled={busy}
+                        onClick={() => adminDeleteRevision(r.id)}
+                        style={{ fontSize: 11, padding: "4px 10px", color: "var(--accent)" }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
+
+            {/* Admin record-on-behalf form (call-in feedback) */}
+            <div style={{ borderTop: "1px solid var(--rule)", marginTop: 14, paddingTop: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+                Record revision on client&apos;s behalf
+              </div>
+              <textarea
+                className="textarea"
+                rows={2}
+                placeholder="What did the client ask for?"
+                value={newRevision.requestText}
+                onChange={(e) => setNewRevision((p) => ({ ...p, requestText: e.target.value }))}
+                disabled={busy}
+                style={{ fontSize: 12, marginBottom: 6 }}
+              />
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <select
+                  className="select"
+                  value={newRevision.priority}
+                  onChange={(e) => setNewRevision((p) => ({ ...p, priority: e.target.value }))}
+                  disabled={busy}
+                  style={{ fontSize: 12, maxWidth: 140 }}
+                >
+                  <option value="low">Low priority</option>
+                  <option value="normal">Normal priority</option>
+                  <option value="high">High priority</option>
+                </select>
+                <button
+                  className="btn btnPrimary"
+                  disabled={busy || !newRevision.requestText.trim()}
+                  onClick={async () => {
+                    await adminCreateRevision(newRevision);
+                    setNewRevision({ requestText: "", priority: "normal" });
+                  }}
+                  style={{ fontSize: 12, padding: "6px 14px" }}
+                >
+                  Record revision →
+                </button>
+              </div>
+            </div>
             <div style={{ marginTop: 14, fontSize: 12, color: "var(--muted-2)" }}>Last client update: {fmtDate(data.clientSync.lastClientUpdate)}</div>
           </div>
 

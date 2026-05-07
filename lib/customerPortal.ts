@@ -2241,6 +2241,198 @@ export async function submitRevisionByPortalToken(input: {
   return data;
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Admin-side asset/revision actions. Mirror the *ByPortalToken
+// variants but accept a quoteId, log as actorRole="studio", and skip
+// the client_status side-effects that don't make sense when the
+// admin is acting on the client's behalf.
+// ─────────────────────────────────────────────────────────────────
+
+export async function submitAssetByQuoteId(input: {
+  quoteId: string;
+  label: string;
+  assetType?: string;
+  assetUrl?: string;
+  notes?: string;
+  source?: string;
+  status?: string;
+  storageBucket?: string | null;
+  storagePath?: string | null;
+  fileName?: string | null;
+  mimeType?: string | null;
+  fileSize?: number | null;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}) {
+  const portal = await getPortalProjectByQuoteId(input.quoteId);
+  if (!portal) throw new Error("Portal not found");
+
+  const { data, error } = await supabaseAdmin
+    .from("customer_portal_assets")
+    .insert({
+      portal_project_id: portal.id,
+      label: input.label.trim(),
+      asset_type: cleanString(input.assetType) || "general",
+      asset_url: cleanString(input.assetUrl) || null,
+      notes: cleanString(input.notes) || null,
+      // Default approved when admin uploads on behalf — the studio is
+      // the one curating the asset, so it's already vetted.
+      status: normalizeAssetStatus(input.status || "approved"),
+      source: cleanString(input.source) || "admin_upload",
+      storage_bucket: cleanString(input.storageBucket) || null,
+      storage_path: cleanString(input.storagePath) || null,
+      file_name: cleanString(input.fileName) || null,
+      mime_type: cleanString(input.mimeType) || null,
+      file_size: Number(input.fileSize ?? 0) || null,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "studio",
+    eventType: "asset_uploaded_by_admin",
+    summary: `CrecyStudio added asset on client's behalf: "${input.label.trim()}".`,
+    payload: {
+      assetType: cleanString(input.assetType) || "general",
+      source: cleanString(input.source) || "admin_upload",
+      actorUserId: input.actor.userId ?? null,
+      actorEmail: input.actor.email ?? null,
+      actorIp: input.actor.ip ?? null,
+    },
+    clientVisible: true,
+  });
+
+  return data;
+}
+
+export async function deleteAssetByQuoteId(input: {
+  quoteId: string;
+  assetId: string;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}): Promise<void> {
+  const portal = await getPortalProjectByQuoteId(input.quoteId);
+  if (!portal) throw new Error("Portal not found");
+
+  // Read first so we can log a useful summary after the row is gone.
+  const { data: existing } = await supabaseAdmin
+    .from("customer_portal_assets")
+    .select("id, label, asset_type")
+    .eq("id", input.assetId)
+    .eq("portal_project_id", portal.id)
+    .maybeSingle();
+
+  const { error } = await supabaseAdmin
+    .from("customer_portal_assets")
+    .delete()
+    .eq("id", input.assetId)
+    .eq("portal_project_id", portal.id);
+  if (error) throw error;
+
+  if (existing?.id) {
+    await logProjectActivityByPortalId({
+      portalProjectId: cleanString(portal.id),
+      actorRole: "studio",
+      eventType: "asset_deleted_by_admin",
+      summary: `CrecyStudio removed asset: "${existing.label}".`,
+      payload: {
+        assetId: input.assetId,
+        assetType: existing.asset_type,
+        actorUserId: input.actor.userId ?? null,
+        actorEmail: input.actor.email ?? null,
+        actorIp: input.actor.ip ?? null,
+      },
+      // Client-visible so the audit trail shows them what disappeared.
+      clientVisible: true,
+    });
+  }
+}
+
+export async function submitRevisionByQuoteId(input: {
+  quoteId: string;
+  requestText: string;
+  priority?: string;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}) {
+  const portal = await getPortalProjectByQuoteId(input.quoteId);
+  if (!portal) throw new Error("Portal not found");
+
+  const { data, error } = await supabaseAdmin
+    .from("customer_portal_revisions")
+    .insert({
+      portal_project_id: portal.id,
+      request_text: input.requestText.trim(),
+      priority: normalizePriority(input.priority),
+      status: "new",
+    })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+
+  // Skip the client_status flip — that triggers client-facing nudges
+  // that wouldn't make sense when the admin is logging call-in
+  // feedback ("revision_requested" implies the client did the action).
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "studio",
+    eventType: "revision_recorded_by_admin",
+    summary: "CrecyStudio recorded a revision on the client's behalf.",
+    payload: {
+      priority: normalizePriority(input.priority),
+      actorUserId: input.actor.userId ?? null,
+      actorEmail: input.actor.email ?? null,
+      actorIp: input.actor.ip ?? null,
+    },
+    clientVisible: true,
+  });
+
+  return data;
+}
+
+export async function deleteRevisionByQuoteId(input: {
+  quoteId: string;
+  revisionId: string;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}): Promise<void> {
+  const portal = await getPortalProjectByQuoteId(input.quoteId);
+  if (!portal) throw new Error("Portal not found");
+
+  const { data: existing } = await supabaseAdmin
+    .from("customer_portal_revisions")
+    .select("id, priority, status")
+    .eq("id", input.revisionId)
+    .eq("portal_project_id", portal.id)
+    .maybeSingle();
+
+  const { error } = await supabaseAdmin
+    .from("customer_portal_revisions")
+    .delete()
+    .eq("id", input.revisionId)
+    .eq("portal_project_id", portal.id);
+  if (error) throw error;
+
+  if (existing?.id) {
+    await logProjectActivityByPortalId({
+      portalProjectId: cleanString(portal.id),
+      actorRole: "studio",
+      eventType: "revision_deleted_by_admin",
+      summary: "CrecyStudio removed a revision request.",
+      payload: {
+        revisionId: input.revisionId,
+        priority: existing.priority,
+        previousStatus: existing.status,
+        actorUserId: input.actor.userId ?? null,
+        actorEmail: input.actor.email ?? null,
+        actorIp: input.actor.ip ?? null,
+      },
+      clientVisible: true,
+    });
+  }
+}
+
 export async function toggleMilestone(token: string, milestoneId: string, done: boolean) {
   const portal = await getPortalProjectByToken(token);
   if (!portal) throw new Error("Portal not found");
