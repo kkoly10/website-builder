@@ -38,7 +38,7 @@ function StartContent() {
     <div className={styles.page}>
       {/* Hero */}
       <section className={styles.hero}>
-        <div className={styles.heroInner}>
+        <div className={`container ${styles.heroInner}`}>
           <p className={styles.sectionLabel} style={{ marginBottom: "1.5rem" }}>{t("heroLabel")}</p>
           <h1 className={styles.title}>{t("heroTitle")}</h1>
           <p className={styles.intro}>{t("heroSub")}</p>
