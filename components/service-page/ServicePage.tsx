@@ -3,6 +3,12 @@ import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import styles from "./service-page.module.css";
 
+// Pulled to module scope because the component destructures a `process` prop
+// (workflow ProcessStep array). Inside the component body, `process` resolves
+// to that array, not the Node global — Turbopack flagged this as a real
+// type error in the SEO JSON-LD section that read `process.env.NEXT_...`.
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com";
+
 type CTA = {
   label: string;
   href: string;
@@ -125,13 +131,12 @@ export default function ServicePage({
   // results. Pricing values are kept descriptive (text from the cards)
   // rather than numeric — many cards are "Scoped to project" or use
   // ranges that aren't a single number.
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com";
   const serviceSchema = {
     "@context": "https://schema.org",
     "@type": "Service",
     name: title,
     description: intro,
-    provider: { "@type": "Organization", name: "CrecyStudio", url: siteUrl },
+    provider: { "@type": "Organization", name: "CrecyStudio", url: SITE_URL },
     areaServed: "Worldwide",
     offers: pricingCards.map((card) => ({
       "@type": "Offer",
