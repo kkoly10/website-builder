@@ -123,9 +123,4 @@ export function sig(): string {
   </table>`;
 }
 
-// Divider line between sections
-export function divider(): string {
-  return `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:28px 0"><tr><td style="border-top:1px solid #eeeeee;font-size:0;line-height:0">&nbsp;</td></tr></table>`;
-}
-
 export { SITE_URL, SITE_DOMAIN };
