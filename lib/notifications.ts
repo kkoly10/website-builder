@@ -17,14 +17,15 @@ const templates: Record<
   (ctx: EventContext) => { subject: string; html: string; toClient: boolean; toAdmin: boolean }
 > = {
   agreement_published: (ctx) => ({
-    subject: `Your project agreement is ready — CrecyStudio`,
+    subject: `Your project agreement is ready to sign — CrecyStudio`,
     html: emailWrap(`
       <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your agreement is ready to sign.</h1>
-      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Project agreement</p>
+      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Project agreement &middot; ${escHtml(ctx.quoteId.slice(0, 8))}</p>
       <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
-      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">Your project agreement has been published and is waiting for your review and signature in your workspace.</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">The agreement covering scope, timeline, deliverables, and payment terms is ready in your workspace. Once signed, the project kicks off — no further back and forth.</p>
+      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">It's worth a careful read. If anything in it doesn't match the conversations we've had, flag it before signing.</p>
       ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Review agreement") : ""}
-      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">Questions before signing? Just reply to this email.</p>
+      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">Reply with questions before you sign.</p>
       ${sig()}
     `, "Reply to this email to reach Komlan directly.", "Your project agreement is ready — review and sign in your workspace."),
     toClient: true,
@@ -37,12 +38,12 @@ const templates: Record<
       <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your preview is live.</h1>
       <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Preview ready for review</p>
       <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
-      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">A new preview of your website is ready. Open your workspace to review it and leave any feedback or revision requests.</p>
+      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">A new preview of your website is ready. Open your workspace to review it and leave feedback in one batch — that keeps revisions clean and the project moving.</p>
       ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open preview") : ""}
       ${callout("How to review", [
         "→&ensp;Open the preview link in your workspace",
         "→&ensp;Leave notes on anything you'd like changed",
-        "→&ensp;Submit your revision request — Komlan will respond within 24 hours",
+        "→&ensp;Submit feedback as one batch — Komlan responds within 24 hours",
       ])}
       ${sig()}
     `, "Reply to this email to reach Komlan directly.", "Your website preview is ready — open your workspace to review it."),
@@ -56,9 +57,9 @@ const templates: Record<
       <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Ready to go live.</h1>
       <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Launch checklist complete</p>
       <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
-      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">All launch checklist items are complete. Your website is ready to go live whenever you say the word.</p>
+      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">Every item on the launch checklist is signed off — domain, forms, analytics, SEO, handoff. Your site goes live whenever you give the word.</p>
       ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Approve launch") : ""}
-      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">Just reply to this email or click the button above to confirm you're ready to launch.</p>
+      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">Click the button to confirm, or reply if you want one more pass before going live.</p>
       ${sig()}
     `, "Reply to this email to reach Komlan directly.", "Everything is ready — give the word and your site goes live."),
     toClient: true,
@@ -68,14 +69,15 @@ const templates: Record<
   site_live: (ctx) => ({
     subject: `Your website is live — CrecyStudio`,
     html: emailWrap(`
-      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your site is live. 🎉</h1>
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your site is live.</h1>
       <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Project launched</p>
       <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
-      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">Your website is now live and published. You can find all handoff files and documentation in your workspace.</p>
-      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "View handoff") : ""}
-      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">It was a pleasure working on this project. If you ever need updates or support, just reach out.</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Your site is shipped and indexed. The full handoff — production URL, admin credentials, analytics access, and post-launch documentation — is waiting in your workspace.</p>
+      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">A live website is a starting line, not a finish line. The next 90 days are where real conversions happen — small copy and design tweaks, content updates, performance tuning. If you'd rather not handle that yourself, our Care Plans start at $199/mo and keep the site evolving instead of decaying.</p>
+      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open handoff") : ""}
+      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">It was a real pleasure building this with you. Reply anytime — for support, updates, or just to share how the launch goes.</p>
       ${sig()}
-    `, "", "Your website is now live and published."),
+    `, "", "Your website is now live. Handoff and Care Plan options are in your workspace."),
     toClient: true,
     toAdmin: true,
   }),
