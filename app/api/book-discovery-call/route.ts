@@ -110,71 +110,79 @@ function parseSelectedSlot(selectedSlot: string): Date | null {
   }
 }
 
-function maybeCreateCalendarEvent(
+async function maybeCreateCalendarEvent(
   name: string,
   email: string,
   availabilityNote: string | null,
   selectedSlot: string | null,
   slotLabel: string | null,
-) {
+): Promise<void> {
   const calendarId = process.env.GOOGLE_CALENDAR_ID;
   const serviceEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   const serviceKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
   if (!calendarId || !serviceEmail || !serviceKey) return;
 
-  void (async () => {
-    try {
-      const { google } = await import("googleapis");
-      const auth = new google.auth.JWT({
-        email: serviceEmail,
-        key: serviceKey.replace(/\\n/g, "\n"),
-        scopes: ["https://www.googleapis.com/auth/calendar"],
-      });
-      const calendar = google.calendar({ version: "v3", auth });
+  try {
+    const { google } = await import("googleapis");
+    const auth = new google.auth.JWT({
+      email: serviceEmail,
+      key: serviceKey.replace(/\\n/g, "\n"),
+      scopes: ["https://www.googleapis.com/auth/calendar"],
+    });
+    const calendar = google.calendar({ version: "v3", auth });
 
-      if (selectedSlot) {
-        const start = parseSelectedSlot(selectedSlot);
-        if (!start) throw new Error("Could not parse selectedSlot: " + selectedSlot);
-        const end = new Date(start.getTime() + 20 * 60 * 1000);
-        await calendar.events.insert({
-          calendarId,
-          sendUpdates: "all",
-          requestBody: {
-            summary: `Discovery call — ${name}`,
-            description: `${slotLabel || selectedSlot}\n\nReview at: ${SITE_URL}/internal/admin`,
-            start: { dateTime: start.toISOString() },
-            end: { dateTime: end.toISOString() },
-            status: "confirmed",
-            attendees: [{ email, responseStatus: "needsAction" }],
-            guestsCanSeeOtherGuests: false,
-          },
-        });
-      } else {
-        // Fallback: tentative placeholder (no specific time)
-        const now = new Date();
-        const end = new Date(now.getTime() + 20 * 60 * 1000);
-        await calendar.events.insert({
-          calendarId,
-          requestBody: {
-            summary: `Discovery call — ${name} (${email})`,
-            description: `Availability: ${availabilityNote || "not specified"}\n\nReview at: ${SITE_URL}/internal/admin`,
-            start: { dateTime: now.toISOString() },
-            end: { dateTime: end.toISOString() },
-            status: "tentative",
-          },
-        });
-      }
-    } catch (err: any) {
-      console.warn("[book-discovery-call] calendar event creation failed");
-      console.warn("[book-discovery-call] err.message:", err?.message);
-      console.warn("[book-discovery-call] err.code:", err?.code);
-      console.warn("[book-discovery-call] err.status:", err?.status ?? err?.response?.status);
-      try {
-        const body = err?.response?.data ?? err?.errors ?? null;
-        if (body) console.warn("[book-discovery-call] err.body:", JSON.stringify(body));
-      } catch {}
+    // Always include the admin (Komlan) as an attendee so he gets the invite
+    const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
+    const attendees: { email: string; responseStatus: string }[] = [
+      { email, responseStatus: "needsAction" },
+    ];
+    if (adminEmail) attendees.push({ email: adminEmail, responseStatus: "accepted" });
+
+    if (selectedSlot) {
+      const start = parseSelectedSlot(selectedSlot);
+      if (!start) throw new Error("Could not parse selectedSlot: " + selectedSlot);
+      const end = new Date(start.getTime() + 20 * 60 * 1000);
+      await calendar.events.insert({
+        calendarId,
+        sendUpdates: "all",
+        requestBody: {
+          summary: `Discovery call — ${name}`,
+          description: `${slotLabel || selectedSlot}\n\nReview at: ${SITE_URL}/internal/admin`,
+          start: { dateTime: start.toISOString() },
+          end: { dateTime: end.toISOString() },
+          status: "confirmed",
+          attendees,
+          guestsCanSeeOtherGuests: false,
+        },
+      });
+    } else {
+      // Fallback: tentative placeholder (no specific time)
+      const now = new Date();
+      const end = new Date(now.getTime() + 20 * 60 * 1000);
+      await calendar.events.insert({
+        calendarId,
+        requestBody: {
+          summary: `Discovery call — ${name} (${email})`,
+          description: `Availability: ${availabilityNote || "not specified"}\n\nReview at: ${SITE_URL}/internal/admin`,
+          start: { dateTime: now.toISOString() },
+          end: { dateTime: end.toISOString() },
+          status: "tentative",
+          attendees,
+          guestsCanSeeOtherGuests: false,
+        },
+      });
     }
-  })();
+    console.log("[book-discovery-call] calendar event created ok");
+  } catch (err: any) {
+    console.warn("[book-discovery-call] calendar event creation failed");
+    console.warn("[book-discovery-call] err.message:", err?.message);
+    console.warn("[book-discovery-call] err.code:", err?.code);
+    console.warn("[book-discovery-call] err.status:", err?.status ?? err?.response?.status);
+    try {
+      const body = err?.response?.data ?? err?.errors ?? null;
+      if (body) console.warn("[book-discovery-call] err.body:", JSON.stringify(body));
+    } catch {}
+  }
 }
 
 async function findLeadByEmail(email: string) {
@@ -251,7 +259,7 @@ export async function POST(req: Request) {
     if (error) throw new Error(error.message);
     const callId = String(data.id);
 
-    maybeCreateCalendarEvent(name, email, availabilityNote, selectedSlot, slotLabel);
+    await maybeCreateCalendarEvent(name, email, availabilityNote, selectedSlot, slotLabel);
 
     console.log(`[book-discovery-call] sending client email to=${email} from=${FROM} scheduled=${!!scheduledAt}`);
     try {
