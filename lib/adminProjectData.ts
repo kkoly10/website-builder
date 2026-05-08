@@ -3,6 +3,10 @@ import { getCustomerPortalViewByQuoteId } from "@/lib/customerPortal";
 import { listProjectActivityByQuoteId, type ProjectActivityItem } from "@/lib/projectActivity";
 import { listProjectInvoicesByQuoteId, type ProjectInvoiceView } from "@/lib/projectInvoices";
 import { getProposalByQuoteId, type ProposalLifecycle } from "@/lib/proposals";
+import {
+  listAllRequiredActionsForQuoteId,
+  type RequiredAction,
+} from "@/lib/requiredActions";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import type { WebsiteDesignDirection } from "@/lib/designDirection";
 import type { GenericDirection } from "@/lib/directions/types";
@@ -152,6 +156,10 @@ export type AdminProjectData = {
     revisions: ClientRevision[];
   };
   invoices: ProjectInvoiceView[];
+  // Phase 3.10 admin coverage: required actions including studio-owned
+  // ones (the client portal only sees client-owned). Empty array on
+  // legacy portals where the table didn't exist or seeding failed.
+  requiredActions: RequiredAction[];
   activityFeed: ProjectActivityItem[];
   messages: PortalMessage[];
   messageSummary: MessageSummary;
@@ -223,6 +231,7 @@ function toAdminProjectData(
     accepted_ip: string | null;
     body_hash: string | null;
   } | null,
+  requiredActions: RequiredAction[] = [],
 ): AdminProjectData {
   const messages: PortalMessage[] = Array.isArray(workspace.messages) ? workspace.messages : [];
   return {
@@ -316,6 +325,7 @@ function toAdminProjectData(
       revisions: workspace.portalState.revisions,
     },
     invoices: Array.isArray(workspace.invoices) ? workspace.invoices : [],
+    requiredActions,
     activityFeed: Array.isArray(workspace.activityFeed) ? workspace.activityFeed : [],
     messages,
     messageSummary: summarizeMessages(messages),
@@ -344,7 +354,7 @@ function toAdminProjectData(
 }
 
 export async function getAdminProjectDataByQuoteId(quoteId: string) {
-  const [workspaceRes, quoteRes, invoices, activityFeed, proposalLifecycle, portalProjectRes] = await Promise.all([
+  const [workspaceRes, quoteRes, invoices, activityFeed, proposalLifecycle, portalProjectRes, requiredActions] = await Promise.all([
     getCustomerPortalViewByQuoteId(quoteId, { includeInternal: true }),
     supabaseAdmin
       .from("quotes")
@@ -359,6 +369,9 @@ export async function getAdminProjectDataByQuoteId(quoteId: string) {
       .select("id")
       .eq("quote_id", quoteId)
       .maybeSingle(),
+    // Fail-soft: legacy portals without the table return [] from the
+    // helper, so wrapping isn't needed.
+    listAllRequiredActionsForQuoteId(quoteId).catch(() => [] as RequiredAction[]),
   ]);
 
   if (!workspaceRes.ok || quoteRes.error || !quoteRes.data) {
@@ -385,6 +398,7 @@ export async function getAdminProjectDataByQuoteId(quoteId: string) {
     coerceProjectType((quoteRes.data as { project_type?: unknown }).project_type),
     proposalLifecycle,
     agreementRow,
+    requiredActions,
   );
 }
 
@@ -396,6 +410,7 @@ function toAdminProjectDataLight(full: AdminProjectData): AdminProjectData {
     messages: [],           // polled separately via /api/internal/admin/messages
     activityFeed: [],       // not shown in list sidebar
     invoices: [],           // not shown in list sidebar
+    requiredActions: [],    // not shown in list sidebar — detail-only
     proposalText: "",       // large text — detail-only
     preContractDraft: "",   // large text — detail-only
     publishedAgreementText: "", // large text — detail-only

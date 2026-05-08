@@ -3,8 +3,9 @@
 import { useState } from "react";
 import type { WebsiteDesignDirection } from "@/lib/designDirection";
 import DesignDirectionSummary from "@/components/portal/DesignDirectionSummary";
+import DesignDirectionPayloadEditor from "@/components/internal/DesignDirectionPayloadEditor";
 
-type AdminAction = "mark_under_review" | "request_changes" | "approve" | "lock";
+type AdminAction = "mark_under_review" | "request_changes" | "approve" | "lock" | "unlock";
 
 type Props = {
   quoteId: string;
@@ -18,6 +19,9 @@ type Props = {
     action: AdminAction,
     next: WebsiteDesignDirection,
   ) => void | Promise<void>;
+  // Called after a payload edit (typo fix / fill-in). Status doesn't
+  // change so this can't be folded into onTransitioned.
+  onPayloadEdited?: (next: WebsiteDesignDirection) => void;
 };
 
 const STATUS_PILL: Record<
@@ -38,6 +42,7 @@ export default function DesignDirectionAdminPanel({
   designDirection,
   projectType,
   onTransitioned,
+  onPayloadEdited,
 }: Props) {
   const [publicNote, setPublicNote] = useState(designDirection?.adminPublicNote ?? "");
   const [internalNote, setInternalNote] = useState(designDirection?.adminInternalNote ?? "");
@@ -124,6 +129,8 @@ export default function DesignDirectionAdminPanel({
     designDirection.status === "submitted" ||
     designDirection.status === "under_review" ||
     designDirection.status === "approved";
+  // Unlock is the inverse — only meaningful when locked.
+  const canUnlock = designDirection.status === "locked";
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -157,6 +164,11 @@ export default function DesignDirectionAdminPanel({
           </summary>
           <div style={{ marginTop: 12 }}>
             <DesignDirectionSummary value={designDirection} />
+            <DesignDirectionPayloadEditor
+              quoteId={quoteId}
+              designDirection={designDirection}
+              onSaved={(next) => onPayloadEdited?.(next)}
+            />
           </div>
         </details>
       ) : (
@@ -237,6 +249,17 @@ export default function DesignDirectionAdminPanel({
         >
           {busy === "lock" ? "Locking..." : "Approve & lock for build"}
         </button>
+        {canUnlock ? (
+          <button
+            className="btn btnGhost"
+            disabled={busy !== null}
+            onClick={() => transition("unlock")}
+            style={{ fontSize: 12, padding: "8px 14px" }}
+            title="Reopen this direction so the client can revise it. Reopens the approved milestone too."
+          >
+            {busy === "unlock" ? "Unlocking..." : "Unlock for revisions"}
+          </button>
+        ) : null}
       </div>
 
       <div

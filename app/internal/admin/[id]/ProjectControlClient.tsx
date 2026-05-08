@@ -5,8 +5,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
 import DesignDirectionAdminPanel from "@/components/internal/DesignDirectionAdminPanel";
 import DirectionAdminPanel from "@/components/internal/DirectionAdminPanel";
+import RequiredActionsAdminPanel from "@/components/internal/RequiredActionsAdminPanel";
 import type { WebsiteDesignDirection } from "@/lib/designDirection";
 import type { GenericDirection } from "@/lib/directions/types";
+import type { RequiredAction, RequiredActionOwner, RequiredActionStatus } from "@/lib/requiredActions";
 import { getDirectionApprovedMilestoneTitle } from "@/lib/workflows/templates";
 import { isProjectType } from "@/lib/workflows/types";
 
@@ -103,6 +105,7 @@ type ProjectControlData = {
   portalStateAdmin: { clientStatus: string; clientNotes: string; adminPublicNote: string; depositAmount: number; depositNotes: string; milestones: Milestone[] };
   clientSync: { lastClientUpdate: string; assets: ClientAsset[]; revisions: ClientRevision[] };
   invoices: ProjectInvoice[];
+  requiredActions: RequiredAction[];
   activityFeed: ProjectActivity[];
   messages: PortalMessage[];
   messageSummary: MessageSummary;
@@ -397,6 +400,8 @@ export default function ProjectControlClient({
   const [certificateUrl, setCertificateUrl] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ title: string; description: string; onConfirm: () => void } | null>(null);
   const [newChangeOrder, setNewChangeOrder] = useState({ title: "", summary: "", priceImpact: "", timelineImpact: "", scopeImpact: "", status: "draft" });
+  const [newAsset, setNewAsset] = useState({ label: "", assetUrl: "", assetType: "general", notes: "" });
+  const [newRevision, setNewRevision] = useState({ requestText: "", priority: "normal" });
   const [newInvoice, setNewInvoice] = useState({
     invoiceType: "milestone" as ProjectInvoice["invoiceType"],
     amount: initialData.portalStateAdmin.depositAmount || initialData.estimate.target || 0,
@@ -539,6 +544,71 @@ export default function ProjectControlClient({
     }
   }
 
+  async function patchInvoice(invoiceId: string, body: Record<string, unknown>, successMsg: string) {
+    setBusy(true);
+    setMessage("Updating invoice...");
+    setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/admin/invoices", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, invoiceId, ...body }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      if (Array.isArray(json?.invoices)) {
+        setData((prev) => ({ ...prev, invoices: json.invoices as ProjectInvoice[] }));
+      }
+      setMessageIsError(false); setMessage(successMsg);
+    } catch (err) {
+      setMessageIsError(true);
+      setMessage(err instanceof Error ? err.message : "Failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function markInvoicePaidOffline(invoiceId: string, invoiceLabel: string) {
+    const reference = prompt(
+      `Reference for the offline payment on the ${invoiceLabel}? (wire #, check #, etc. — optional)`,
+      "",
+    );
+    // Cancel returns null; empty string is allowed (no reference).
+    if (reference === null) return;
+    if (!confirm(
+      `Mark this ${invoiceLabel} paid offline?\n\nThe portal will reflect it as paid; if it's the deposit, deposit-paid side-effects fire too. The activity feed shows the admin-recorded source.`
+    )) return;
+    await patchInvoice(invoiceId, { action: "mark_paid_offline", reference }, "Invoice marked paid.");
+  }
+
+  async function cancelInvoice(invoiceId: string, invoiceLabel: string) {
+    const reason = prompt(`Why are you cancelling the ${invoiceLabel}? (logged to audit)`);
+    if (!reason || !reason.trim()) return;
+    if (!confirm(`Cancel the ${invoiceLabel}?\n\nStatus becomes "cancelled"; the row stays for audit.`)) return;
+    await patchInvoice(invoiceId, { action: "cancel", reason: reason.trim() }, "Invoice cancelled.");
+  }
+
+  async function editInvoiceField(invoiceId: string, field: "amount" | "dueDate" | "notes", currentValue: string) {
+    const promptLabel = field === "amount" ? "New amount (USD, no symbol)" : field === "dueDate" ? "New due date (YYYY-MM-DD, blank to clear)" : "New notes (blank to clear)";
+    const next = prompt(promptLabel, currentValue);
+    if (next === null) return;
+    const trimmed = next.trim();
+    const patch: Record<string, unknown> = {};
+    if (field === "amount") {
+      const n = Number(trimmed);
+      if (!Number.isFinite(n) || n <= 0) {
+        setMessageIsError(true); setMessage("Amount must be a positive number.");
+        return;
+      }
+      patch.amount = n;
+    } else if (field === "dueDate") {
+      patch.dueDate = trimmed || null;
+    } else if (field === "notes") {
+      patch.notes = trimmed || null;
+    }
+    await patchInvoice(invoiceId, { action: "edit", patch }, "Invoice updated.");
+  }
+
   async function sendInvoice(invoiceId: string) {
     setBusy(true);
     setMessage("Sending invoice...");
@@ -673,6 +743,128 @@ export default function ProjectControlClient({
     await savePatch({ publishedAgreementText: data.publishedAgreementText, portalAdmin: next, _event: "agreement_published" }, "Agreement published.");
   }
 
+  async function adminEditLead() {
+    const name = prompt("Lead name", data.leadName);
+    if (name === null) return;
+    const email = prompt("Lead email (used for portal access — change carefully)", data.leadEmail);
+    if (email === null) return;
+    if (name === data.leadName && email === data.leadEmail) return;
+
+    setBusy(true); setMessage("Updating lead..."); setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/admin/lead-info", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, name, email }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      setData((p) => ({ ...p, leadName: name, leadEmail: email }));
+      setMessageIsError(false); setMessage("Lead updated.");
+    } catch (err) {
+      setMessageIsError(true);
+      setMessage(err instanceof Error ? err.message : "Failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function adminSetProjectType() {
+    const valid = ["website", "web_app", "automation", "ecommerce", "rescue"] as const;
+    const next = prompt(
+      `Reclassify the project lane.\n\nCurrent: ${data.projectType}\nAllowed: ${valid.join(", ")}`,
+      data.projectType,
+    );
+    if (next === null) return;
+    const trimmed = next.trim();
+    if (!trimmed || trimmed === data.projectType) return;
+    if (!(valid as readonly string[]).includes(trimmed)) {
+      setMessageIsError(true); setMessage(`Project type must be one of: ${valid.join(", ")}`);
+      return;
+    }
+    if (!confirm(
+      `Reclassify project from ${data.projectType} to ${trimmed}?\n\nThis updates both the quote and portal rows. Workflow templates, milestones, and direction routing will use the new lane on next refresh.`
+    )) return;
+
+    setBusy(true); setMessage("Updating project type..."); setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/admin/project-type", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, projectType: trimmed }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      setData((p) => ({ ...p, projectType: trimmed }));
+      setMessageIsError(false); setMessage(`Project reclassified to ${trimmed}.`);
+    } catch (err) {
+      setMessageIsError(true);
+      setMessage(err instanceof Error ? err.message : "Failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Admin agreement overrides: manual accept (offline signing) + void
+  // (accidental acceptance, contract changes, etc.). Both refresh the
+  // page to pick up the canonical agreement state from the server
+  // since these touch multiple tables.
+  async function adminAcceptAgreement() {
+    const acceptedByEmail = prompt(
+      "Email of the person who accepted offline:",
+      data.leadEmail || "",
+    );
+    if (!acceptedByEmail || !acceptedByEmail.trim()) return;
+    if (!confirm(
+      `Record offline acceptance by ${acceptedByEmail.trim()}?\n\nThe agreement will be marked accepted and an audit row written. Make sure the client truly signed.`
+    )) return;
+
+    setBusy(true); setMessage("Recording acceptance..."); setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/admin/agreement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, action: "accept", acceptedByEmail: acceptedByEmail.trim() }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      setMessageIsError(false);
+      setMessage("Acceptance recorded. Refreshing...");
+      // Hard refresh to pick up the server-side acceptance audit fields.
+      window.location.reload();
+    } catch (err) {
+      setMessageIsError(true);
+      setMessage(err instanceof Error ? err.message : "Failed.");
+      setBusy(false);
+    }
+  }
+
+  async function adminVoidAgreement() {
+    const reason = prompt("Why are you voiding this agreement? (logged to audit trail)");
+    if (!reason || !reason.trim()) return;
+    if (!confirm(
+      "Void this accepted agreement?\n\nThe acceptance fields will be cleared and the agreements row marked voided. The activity feed will show what happened. The client will see this in their portal."
+    )) return;
+
+    setBusy(true); setMessage("Voiding agreement..."); setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/admin/agreement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, action: "void", reason: reason.trim() }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      setMessageIsError(false);
+      setMessage("Agreement voided. Refreshing...");
+      window.location.reload();
+    } catch (err) {
+      setMessageIsError(true);
+      setMessage(err instanceof Error ? err.message : "Failed.");
+      setBusy(false);
+    }
+  }
+
   async function unpublishAgreement() {
     const next = { ...data.portalAdmin, agreementStatus: "Pre-draft / agreement stage", agreementPublishedAt: "" };
     setData((p) => ({ ...p, portalAdmin: next, publishedAgreementText: "" }));
@@ -765,8 +957,216 @@ export default function ProjectControlClient({
     } finally { setBusy(false); }
   }
 
+  // Required actions admin CRUD. Each call hits the new endpoint and
+  // splices the returned action into local state so the list stays in
+  // sync without a full refresh of the project payload.
+  async function callRequiredAction(
+    payload: Record<string, any>,
+    successMsg: string,
+  ): Promise<RequiredAction | null> {
+    setBusy(true); setMessage("Saving..."); setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/admin/required-actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, ...payload }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      setMessageIsError(false); setMessage(successMsg);
+      return (json?.action as RequiredAction) || null;
+    } catch (err) {
+      setMessageIsError(true);
+      setMessage(err instanceof Error ? err.message : "Failed.");
+      return null;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function createRequiredAction(input: {
+    actionKey: string;
+    title: string;
+    owner: RequiredActionOwner;
+    description: string;
+    dueDate: string;
+  }) {
+    const created = await callRequiredAction(
+      { action: "create", ...input, dueDate: input.dueDate || null },
+      "Required action added.",
+    );
+    if (created) {
+      setData((p) => ({ ...p, requiredActions: [...p.requiredActions, created] }));
+    }
+  }
+
+  async function patchRequiredAction(actionId: string, patch: Record<string, any>) {
+    const updated = await callRequiredAction(
+      { action: "update", actionId, ...patch },
+      "Required action updated.",
+    );
+    if (updated) {
+      setData((p) => ({
+        ...p,
+        requiredActions: p.requiredActions.map((a) => (a.id === actionId ? updated : a)),
+      }));
+    }
+  }
+
+  async function forceCompleteRequiredAction(actionId: string) {
+    const updated = await callRequiredAction(
+      { action: "force_complete", actionId },
+      "Required action marked complete.",
+    );
+    if (updated) {
+      setData((p) => ({
+        ...p,
+        requiredActions: p.requiredActions.map((a) => (a.id === actionId ? updated : a)),
+      }));
+    }
+  }
+
+  async function reopenRequiredAction(actionId: string) {
+    const updated = await callRequiredAction(
+      { action: "reopen", actionId },
+      "Required action re-opened.",
+    );
+    if (updated) {
+      setData((p) => ({
+        ...p,
+        requiredActions: p.requiredActions.map((a) => (a.id === actionId ? updated : a)),
+      }));
+    }
+  }
+
+  async function deleteRequiredAction(actionId: string) {
+    if (!confirm("Delete this required action? This can't be undone.")) return;
+    setBusy(true); setMessage("Deleting..."); setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/admin/required-actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, action: "delete", actionId }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      setData((p) => ({ ...p, requiredActions: p.requiredActions.filter((a) => a.id !== actionId) }));
+      setMessageIsError(false); setMessage("Required action deleted.");
+    } catch (err) {
+      setMessageIsError(true); setMessage(err instanceof Error ? err.message : "Failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function updateAssetStatus(id: string, status: string) {
     setData((p) => ({ ...p, clientSync: { ...p.clientSync, assets: p.clientSync.assets.map((a) => a.id === id ? { ...a, status } : a) } }));
+  }
+
+  // Admin-side asset / revision actions. Edits go through the existing
+  // clientSync save flow; create + delete go through their own routes.
+  async function adminCreateAsset(input: { label: string; assetUrl: string; notes: string; assetType: string }) {
+    setBusy(true); setMessage("Creating asset..."); setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/admin/assets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, ...input }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      const created = json.asset;
+      setData((p) => ({
+        ...p,
+        clientSync: {
+          ...p.clientSync,
+          assets: [
+            {
+              id: created.id,
+              category: created.asset_type || "general",
+              label: created.label,
+              url: created.asset_url || "",
+              notes: created.notes || "",
+              status: created.status,
+              createdAt: created.created_at,
+            },
+            ...p.clientSync.assets,
+          ],
+        },
+      }));
+      setMessageIsError(false); setMessage("Asset added on client's behalf.");
+    } catch (err) {
+      setMessageIsError(true); setMessage(err instanceof Error ? err.message : "Failed.");
+    } finally { setBusy(false); }
+  }
+
+  async function adminDeleteAsset(assetId: string) {
+    if (!confirm("Delete this asset? The client will see it disappear from their portal.")) return;
+    setBusy(true); setMessage("Deleting asset..."); setMessageIsError(false);
+    try {
+      const url = `/api/internal/admin/assets?quoteId=${encodeURIComponent(data.quoteId)}&assetId=${encodeURIComponent(assetId)}`;
+      const res = await fetch(url, { method: "DELETE" });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      setData((p) => ({
+        ...p,
+        clientSync: { ...p.clientSync, assets: p.clientSync.assets.filter((a) => a.id !== assetId) },
+      }));
+      setMessageIsError(false); setMessage("Asset deleted.");
+    } catch (err) {
+      setMessageIsError(true); setMessage(err instanceof Error ? err.message : "Failed.");
+    } finally { setBusy(false); }
+  }
+
+  async function adminCreateRevision(input: { requestText: string; priority: string }) {
+    setBusy(true); setMessage("Recording revision..."); setMessageIsError(false);
+    try {
+      const res = await fetch("/api/internal/admin/revisions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, ...input }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      const created = json.revision;
+      setData((p) => ({
+        ...p,
+        clientSync: {
+          ...p.clientSync,
+          revisions: [
+            {
+              id: created.id,
+              message: created.request_text,
+              priority: created.priority,
+              status: created.status,
+              createdAt: created.created_at,
+            },
+            ...p.clientSync.revisions,
+          ],
+        },
+      }));
+      setMessageIsError(false); setMessage("Revision recorded on client's behalf.");
+    } catch (err) {
+      setMessageIsError(true); setMessage(err instanceof Error ? err.message : "Failed.");
+    } finally { setBusy(false); }
+  }
+
+  async function adminDeleteRevision(revisionId: string) {
+    if (!confirm("Delete this revision? It will disappear from the client's portal.")) return;
+    setBusy(true); setMessage("Deleting revision..."); setMessageIsError(false);
+    try {
+      const url = `/api/internal/admin/revisions?quoteId=${encodeURIComponent(data.quoteId)}&revisionId=${encodeURIComponent(revisionId)}`;
+      const res = await fetch(url, { method: "DELETE" });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed.");
+      setData((p) => ({
+        ...p,
+        clientSync: { ...p.clientSync, revisions: p.clientSync.revisions.filter((r) => r.id !== revisionId) },
+      }));
+      setMessageIsError(false); setMessage("Revision deleted.");
+    } catch (err) {
+      setMessageIsError(true); setMessage(err instanceof Error ? err.message : "Failed.");
+    } finally { setBusy(false); }
   }
 
   function updateRevisionStatus(id: string, status: string) {
@@ -881,8 +1281,32 @@ export default function ProjectControlClient({
           }}>
             {data.leadName}
           </h1>
-          <div style={{ fontSize: 14, color: "var(--muted)" }}>
-            {data.leadEmail} · ID <code style={{ fontSize: 12 }}>{data.quoteId.slice(0, 8)}</code> · Created {fmtDate(data.createdAt)}
+          <div style={{ fontSize: 14, color: "var(--muted)", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span>{data.leadEmail}</span>
+            <span>·</span>
+            <span>ID <code style={{ fontSize: 12 }}>{data.quoteId.slice(0, 8)}</code></span>
+            <span>·</span>
+            <span>{fmtDate(data.createdAt)}</span>
+            <span>·</span>
+            <span>Lane: <strong style={{ color: "var(--ink)" }}>{data.projectType}</strong></span>
+            <button
+              className="btn btnGhost"
+              disabled={busy}
+              onClick={adminEditLead}
+              style={{ fontSize: 11, padding: "4px 10px" }}
+              title="Edit lead name / email / phone"
+            >
+              Edit lead
+            </button>
+            <button
+              className="btn btnGhost"
+              disabled={busy}
+              onClick={adminSetProjectType}
+              style={{ fontSize: 11, padding: "4px 10px" }}
+              title="Reclassify the project lane (updates quote + portal in lockstep)"
+            >
+              Reclassify lane
+            </button>
           </div>
         </div>
 
@@ -1211,6 +1635,11 @@ export default function ProjectControlClient({
                         : prev.portalStateAdmin,
                   }));
                 }}
+                onPayloadEdited={(next) => {
+                  setData((prev) => ({ ...prev, designDirection: next }));
+                  setMessageIsError(false);
+                  setMessage("Design direction edited.");
+                }}
               />
             </div>
           ) : null}
@@ -1264,6 +1693,11 @@ export default function ProjectControlClient({
                           }
                         : prev.portalStateAdmin,
                   }));
+                }}
+                onPayloadEdited={(next) => {
+                  setData((prev) => ({ ...prev, direction: next }));
+                  setMessageIsError(false);
+                  setMessage("Direction edited.");
                 }}
               />
             </div>
@@ -1346,6 +1780,18 @@ export default function ProjectControlClient({
                   onClick={() => savePatch({ status: data.status, portalStateAdmin: data.portalStateAdmin }, "Workspace state saved.")}>Save state →</button>
               </div>
             </div>
+          </div>
+
+          <div style={{ gridColumn: "1 / -1" }}>
+            <RequiredActionsAdminPanel
+              actions={data.requiredActions}
+              busy={busy}
+              onCreate={createRequiredAction}
+              onPatch={patchRequiredAction}
+              onForceComplete={forceCompleteRequiredAction}
+              onReopen={reopenRequiredAction}
+              onDelete={deleteRequiredAction}
+            />
           </div>
 
           <div style={{ gridColumn: "1 / -1", background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
@@ -1495,6 +1941,57 @@ export default function ProjectControlClient({
                             Open payment link
                           </a>
                         ) : null}
+                        {invoice.status !== "paid" && invoice.status !== "cancelled" ? (
+                          <button
+                            className="btn btnGhost"
+                            disabled={busy}
+                            style={{ fontSize: 12, padding: "8px 14px" }}
+                            onClick={() => markInvoicePaidOffline(invoice.id, `${pretty(invoice.invoiceType)} invoice`)}
+                            title="Mark this invoice paid via wire / check / ACH / other offline method."
+                          >
+                            Mark paid offline
+                          </button>
+                        ) : null}
+                        {invoice.status !== "paid" && invoice.status !== "cancelled" ? (
+                          <button
+                            className="btn btnGhost"
+                            disabled={busy}
+                            style={{ fontSize: 12, padding: "8px 14px" }}
+                            onClick={() => editInvoiceField(invoice.id, "amount", String(invoice.amount))}
+                          >
+                            Edit amount
+                          </button>
+                        ) : null}
+                        {invoice.status !== "paid" && invoice.status !== "cancelled" ? (
+                          <button
+                            className="btn btnGhost"
+                            disabled={busy}
+                            style={{ fontSize: 12, padding: "8px 14px" }}
+                            onClick={() => editInvoiceField(invoice.id, "dueDate", invoice.dueDate || "")}
+                          >
+                            Edit due date
+                          </button>
+                        ) : null}
+                        {invoice.status !== "paid" && invoice.status !== "cancelled" ? (
+                          <button
+                            className="btn btnGhost"
+                            disabled={busy}
+                            style={{ fontSize: 12, padding: "8px 14px" }}
+                            onClick={() => editInvoiceField(invoice.id, "notes", invoice.notes || "")}
+                          >
+                            Edit notes
+                          </button>
+                        ) : null}
+                        {invoice.status !== "paid" && invoice.status !== "cancelled" ? (
+                          <button
+                            className="btn btnGhost"
+                            disabled={busy}
+                            style={{ fontSize: 12, padding: "8px 14px", color: "var(--accent)", marginLeft: "auto" }}
+                            onClick={() => cancelInvoice(invoice.id, `${pretty(invoice.invoiceType)} invoice`)}
+                          >
+                            Cancel invoice
+                          </button>
+                        ) : null}
                       </div>
                     </div>
                   );
@@ -1534,6 +2031,17 @@ export default function ProjectControlClient({
                 <button className="btn btnGhost" disabled={busy} style={{ fontSize: 12, padding: "7px 14px", color: "var(--accent)" }}
                   onClick={unpublishAgreement}>Unpublish</button>
               )}
+              {isAgreementPublished({ agreementStatus: data.portalAdmin.agreementStatus, publishedAgreementText: data.publishedAgreementText }) && !data.agreementAcceptance ? (
+                <button
+                  className="btn btnGhost"
+                  disabled={busy}
+                  style={{ fontSize: 12, padding: "7px 14px" }}
+                  onClick={adminAcceptAgreement}
+                  title="Record an offline / in-person acceptance on the client's behalf."
+                >
+                  Record offline acceptance →
+                </button>
+              ) : null}
             </div>
             <textarea className="textarea" rows={20} value={data.publishedAgreementText}
               onChange={(e) => setData((p) => ({ ...p, publishedAgreementText: e.target.value }))} placeholder="Agreement text shown to the client once published." />
@@ -1581,6 +2089,15 @@ export default function ProjectControlClient({
                     }}
                   >
                     {certificateUrl ? "Regenerate certificate" : "Generate certificate"}
+                  </button>
+                  <button
+                    className="btn btnGhost"
+                    disabled={busy}
+                    style={{ fontSize: 12, padding: "7px 14px", color: "var(--accent)", marginLeft: "auto" }}
+                    onClick={adminVoidAgreement}
+                    title="Clear the acceptance audit and mark the agreement row voided. Use only if the acceptance was a mistake."
+                  >
+                    Void acceptance
                   </button>
                 </div>
               </div>
@@ -1899,19 +2416,55 @@ export default function ProjectControlClient({
               : data.clientSync.assets.map((a) => (
                 <div key={a.id} style={{ padding: "12px 14px", border: "1px solid var(--rule)", borderRadius: 10, background: "var(--paper-2)", marginBottom: 6 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 10 }}>
-                    <div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 600, fontSize: 14, color: "var(--ink)" }}>{a.label}</div>
                       <div style={{ fontSize: 11, color: "var(--muted-2)", marginTop: 2 }}>{a.category} · {fmtDate(a.createdAt)}</div>
                       {a.notes && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>{a.notes}</div>}
-                      <a href={a.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600, marginTop: 4, display: "inline-block" }}>Open</a>
+                      {a.url ? (
+                        <a href={a.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600, marginTop: 4, display: "inline-block" }}>Open</a>
+                      ) : null}
                     </div>
-                    <select className="select" style={{ maxWidth: 120, fontSize: 12 }} value={a.status}
-                      onChange={(e) => updateAssetStatus(a.id, e.target.value)}>
-                      {assetStatusOptions.map((o) => <option key={o} value={o}>{pretty(o)}</option>)}
-                    </select>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end" }}>
+                      <select className="select" style={{ maxWidth: 130, fontSize: 12 }} value={a.status}
+                        onChange={(e) => updateAssetStatus(a.id, e.target.value)}>
+                        {assetStatusOptions.map((o) => <option key={o} value={o}>{pretty(o)}</option>)}
+                      </select>
+                      <button
+                        className="btn btnGhost"
+                        disabled={busy}
+                        onClick={() => adminDeleteAsset(a.id)}
+                        style={{ fontSize: 11, padding: "4px 10px", color: "var(--accent)" }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
+
+            {/* Admin add-on-behalf form */}
+            <div style={{ borderTop: "1px solid var(--rule)", marginTop: 14, paddingTop: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+                Add asset on client&apos;s behalf
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.2fr 0.8fr", gap: 6, marginBottom: 6 }}>
+                <input className="input" placeholder="Label" value={newAsset.label} onChange={(e) => setNewAsset((p) => ({ ...p, label: e.target.value }))} disabled={busy} style={{ fontSize: 12 }} />
+                <input className="input" placeholder="https:// link" value={newAsset.assetUrl} onChange={(e) => setNewAsset((p) => ({ ...p, assetUrl: e.target.value }))} disabled={busy} style={{ fontSize: 12 }} />
+                <input className="input" placeholder="Type" value={newAsset.assetType} onChange={(e) => setNewAsset((p) => ({ ...p, assetType: e.target.value }))} disabled={busy} style={{ fontSize: 12 }} />
+              </div>
+              <textarea className="textarea" rows={2} placeholder="Notes (optional)" value={newAsset.notes} onChange={(e) => setNewAsset((p) => ({ ...p, notes: e.target.value }))} disabled={busy} style={{ fontSize: 12, marginBottom: 6 }} />
+              <button
+                className="btn btnPrimary"
+                disabled={busy || !newAsset.label.trim()}
+                onClick={async () => {
+                  await adminCreateAsset(newAsset);
+                  setNewAsset({ label: "", assetUrl: "", assetType: "general", notes: "" });
+                }}
+                style={{ fontSize: 12, padding: "6px 14px" }}
+              >
+                Add asset →
+              </button>
+            </div>
           </div>
 
           {/* Revisions */}
@@ -1930,18 +2483,68 @@ export default function ProjectControlClient({
                   borderLeft: `3px solid ${r.priority === "high" ? "var(--accent)" : r.status === "new" ? "var(--rule)" : "var(--rule)"}`,
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 10 }}>
-                    <div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 11, fontWeight: 600, color: r.priority === "high" ? "var(--accent)" : "var(--muted-2)", textTransform: "uppercase" }}>{r.priority} priority</div>
                       <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4, lineHeight: 1.5 }}>{r.message}</div>
                       <div style={{ fontSize: 11, color: "var(--muted-2)", marginTop: 4 }}>{fmtDate(r.createdAt)}</div>
                     </div>
-                    <select className="select" style={{ maxWidth: 120, fontSize: 12 }} value={r.status}
-                      onChange={(e) => updateRevisionStatus(r.id, e.target.value)}>
-                      {revisionStatusOptions.map((o) => <option key={o} value={o}>{pretty(o)}</option>)}
-                    </select>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end" }}>
+                      <select className="select" style={{ maxWidth: 130, fontSize: 12 }} value={r.status}
+                        onChange={(e) => updateRevisionStatus(r.id, e.target.value)}>
+                        {revisionStatusOptions.map((o) => <option key={o} value={o}>{pretty(o)}</option>)}
+                      </select>
+                      <button
+                        className="btn btnGhost"
+                        disabled={busy}
+                        onClick={() => adminDeleteRevision(r.id)}
+                        style={{ fontSize: 11, padding: "4px 10px", color: "var(--accent)" }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
+
+            {/* Admin record-on-behalf form (call-in feedback) */}
+            <div style={{ borderTop: "1px solid var(--rule)", marginTop: 14, paddingTop: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+                Record revision on client&apos;s behalf
+              </div>
+              <textarea
+                className="textarea"
+                rows={2}
+                placeholder="What did the client ask for?"
+                value={newRevision.requestText}
+                onChange={(e) => setNewRevision((p) => ({ ...p, requestText: e.target.value }))}
+                disabled={busy}
+                style={{ fontSize: 12, marginBottom: 6 }}
+              />
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <select
+                  className="select"
+                  value={newRevision.priority}
+                  onChange={(e) => setNewRevision((p) => ({ ...p, priority: e.target.value }))}
+                  disabled={busy}
+                  style={{ fontSize: 12, maxWidth: 140 }}
+                >
+                  <option value="low">Low priority</option>
+                  <option value="normal">Normal priority</option>
+                  <option value="high">High priority</option>
+                </select>
+                <button
+                  className="btn btnPrimary"
+                  disabled={busy || !newRevision.requestText.trim()}
+                  onClick={async () => {
+                    await adminCreateRevision(newRevision);
+                    setNewRevision({ requestText: "", priority: "normal" });
+                  }}
+                  style={{ fontSize: 12, padding: "6px 14px" }}
+                >
+                  Record revision →
+                </button>
+              </div>
+            </div>
             <div style={{ marginTop: 14, fontSize: 12, color: "var(--muted-2)" }}>Last client update: {fmtDate(data.clientSync.lastClientUpdate)}</div>
           </div>
 

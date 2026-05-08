@@ -1,4 +1,4 @@
-import { randomBytes } from "crypto";
+import crypto, { randomBytes } from "crypto";
 import { logProjectActivityByPortalId, logProjectActivityByQuoteId } from "@/lib/projectActivity";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
@@ -1406,7 +1406,12 @@ export type DesignDirectionAdminAction =
   | "mark_under_review"
   | "request_changes"
   | "approve"
-  | "lock";
+  | "lock"
+  // Admin override: revert from `locked` back to `approved`. Used when
+  // an accidental lock needs to be reversed or a client requests
+  // post-lock revisions. The "design direction approved" milestone is
+  // re-opened in the same operation so the journey map stays in sync.
+  | "unlock";
 
 // Admin transitions for the design direction. Each move is logged to the
 // activity feed with the actor audit. `lock` additionally marks the
@@ -1526,6 +1531,16 @@ export async function transitionDesignDirectionByQuoteId(input: {
         next.approvedAt = next.approvedAt ?? now;
       }
       break;
+    case "unlock":
+      // Only meaningful from "locked". From any other state this is a
+      // no-op — error rather than silently flipping status backward.
+      if (existing.status !== "locked") {
+        throw new Error("Direction is not locked.");
+      }
+      next.status = "approved";
+      next.lockedAt = null;
+      // Keep approvedAt: the original approval still happened.
+      break;
   }
 
   if (cleanPublicNote !== null) next.adminPublicNote = cleanPublicNote || null;
@@ -1554,7 +1569,7 @@ export async function transitionDesignDirectionByQuoteId(input: {
   // rather than swallowing them — otherwise a partial-write between the
   // scope update and the milestone update would leave the journey map out
   // of sync with the direction status, with no signal to the admin.
-  if (input.action === "lock") {
+  if (input.action === "lock" || input.action === "unlock") {
     // Look up the website lane's "direction approved" milestone title
     // from the workflow template rather than hardcoding "Design direction
     // approved". Mirrors the same pattern used for non-website lanes in
@@ -1567,16 +1582,32 @@ export async function transitionDesignDirectionByQuoteId(input: {
         "Workflow template is missing the website direction-approved milestone.",
       );
     }
-    const { error: msErr } = await supabaseAdmin
-      .from("customer_portal_milestones")
-      .update({ status: "done", completed_at: now, updated_at: now })
-      .eq("portal_project_id", portal.id)
-      .ilike("title", milestoneTitle)
-      .neq("status", "done");
-    if (msErr) {
-      throw new Error(
-        `Direction status saved but milestone auto-complete failed: ${msErr.message}. Retry to reconcile.`,
-      );
+    if (input.action === "lock") {
+      const { error: msErr } = await supabaseAdmin
+        .from("customer_portal_milestones")
+        .update({ status: "done", completed_at: now, updated_at: now })
+        .eq("portal_project_id", portal.id)
+        .ilike("title", milestoneTitle)
+        .neq("status", "done");
+      if (msErr) {
+        throw new Error(
+          `Direction status saved but milestone auto-complete failed: ${msErr.message}. Retry to reconcile.`,
+        );
+      }
+    } else {
+      // Reopen the milestone on unlock so the journey map reflects that
+      // the gate is no longer cleared.
+      const { error: msErr } = await supabaseAdmin
+        .from("customer_portal_milestones")
+        .update({ status: "todo", completed_at: null, updated_at: now })
+        .eq("portal_project_id", portal.id)
+        .ilike("title", milestoneTitle)
+        .eq("status", "done");
+      if (msErr) {
+        throw new Error(
+          `Direction unlocked but milestone reopen failed: ${msErr.message}. Retry to reconcile.`,
+        );
+      }
     }
   }
 
@@ -1592,12 +1623,14 @@ export async function transitionDesignDirectionByQuoteId(input: {
     request_changes: "design_direction_changes_requested",
     approve: "design_direction_approved",
     lock: "design_direction_locked",
+    unlock: "design_direction_unlocked",
   };
   const summaryByAction: Record<DesignDirectionAdminAction, string> = {
     mark_under_review: "CrecyStudio is reviewing the design direction.",
     request_changes: "CrecyStudio requested clarification on the design direction.",
     approve: "Design direction approved.",
     lock: "Design direction locked. Build can begin.",
+    unlock: "CrecyStudio reopened the design direction for changes.",
   };
 
   await logProjectActivityByPortalId({
@@ -1633,7 +1666,7 @@ export async function transitionDesignDirectionByQuoteId(input: {
   //   already complete (e.g. admin entered direction data on the
   //   client's behalf via direct DB edit), this keeps the journey map
   //   and required-actions card consistent with the direction state.
-  if (input.action === "request_changes") {
+  if (input.action === "request_changes" || input.action === "unlock") {
     await updateRequiredActionStatusByPortalId({
       portalProjectId: cleanString(portal.id),
       actionKey: "complete_design_direction",
@@ -1778,6 +1811,14 @@ export async function transitionDirectionByQuoteId(input: {
         next.approvedAt = next.approvedAt ?? now;
       }
       break;
+    case "unlock":
+      // Mirrors the website-lane unlock — only meaningful from "locked".
+      if (existing.status !== "locked") {
+        throw new Error("Direction is not locked.");
+      }
+      next.status = "approved";
+      next.lockedAt = null;
+      break;
   }
 
   if (cleanPublicNote !== null) next.adminPublicNote = cleanPublicNote || null;
@@ -1798,21 +1839,34 @@ export async function transitionDirectionByQuoteId(input: {
   }
 
   // Lock auto-completes the lane's "direction approved" milestone (looked
-  // up from the template, not hardcoded). Same idempotent error-surfacing
-  // pattern as Phase 2B's lock path.
-  if (input.action === "lock") {
+  // up from the template, not hardcoded). Unlock reverses it.
+  if (input.action === "lock" || input.action === "unlock") {
     const milestoneTitle = getDirectionApprovedMilestoneTitle(projectType);
     if (milestoneTitle) {
-      const { error: msErr } = await supabaseAdmin
-        .from("customer_portal_milestones")
-        .update({ status: "done", completed_at: now, updated_at: now })
-        .eq("portal_project_id", portal.id)
-        .ilike("title", milestoneTitle)
-        .neq("status", "done");
-      if (msErr) {
-        throw new Error(
-          `Direction status saved but milestone auto-complete failed: ${msErr.message}. Retry to reconcile.`,
-        );
+      if (input.action === "lock") {
+        const { error: msErr } = await supabaseAdmin
+          .from("customer_portal_milestones")
+          .update({ status: "done", completed_at: now, updated_at: now })
+          .eq("portal_project_id", portal.id)
+          .ilike("title", milestoneTitle)
+          .neq("status", "done");
+        if (msErr) {
+          throw new Error(
+            `Direction status saved but milestone auto-complete failed: ${msErr.message}. Retry to reconcile.`,
+          );
+        }
+      } else {
+        const { error: msErr } = await supabaseAdmin
+          .from("customer_portal_milestones")
+          .update({ status: "todo", completed_at: null, updated_at: now })
+          .eq("portal_project_id", portal.id)
+          .ilike("title", milestoneTitle)
+          .eq("status", "done");
+        if (msErr) {
+          throw new Error(
+            `Direction unlocked but milestone reopen failed: ${msErr.message}. Retry to reconcile.`,
+          );
+        }
       }
     }
   }
@@ -1829,6 +1883,7 @@ export async function transitionDirectionByQuoteId(input: {
     request_changes: `${existing.type}_changes_requested`,
     approve: `${existing.type}_approved`,
     lock: `${existing.type}_locked`,
+    unlock: `${existing.type}_unlocked`,
   };
   const directionLabel = existing.type.replace(/_/g, " ");
   const summaryByAction: Record<DirectionAdminAction, string> = {
@@ -1836,6 +1891,7 @@ export async function transitionDirectionByQuoteId(input: {
     request_changes: `CrecyStudio requested clarification on the ${directionLabel}.`,
     approve: `${directionLabel.charAt(0).toUpperCase()}${directionLabel.slice(1)} approved.`,
     lock: `${directionLabel.charAt(0).toUpperCase()}${directionLabel.slice(1)} locked. Build can begin.`,
+    unlock: `CrecyStudio reopened the ${directionLabel} for changes.`,
   };
 
   await logProjectActivityByPortalId({
@@ -1865,7 +1921,7 @@ export async function transitionDirectionByQuoteId(input: {
   // to keep the journey map consistent if any path bypassed the client
   // submit's own sync.
   const directionActionKey = `complete_${existing.type}`;
-  if (input.action === "request_changes") {
+  if (input.action === "request_changes" || input.action === "unlock") {
     await updateRequiredActionStatusByPortalId({
       portalProjectId: cleanString(portal.id),
       actionKey: directionActionKey,
@@ -1879,6 +1935,150 @@ export async function transitionDirectionByQuoteId(input: {
       status: "complete",
     });
   }
+
+  return next;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Admin-side payload edits. The transition helpers above only flip
+// status fields — they don't let admin fix typos in what the client
+// submitted, or fill in missing fields if the client sent direction
+// over email instead of through the portal.
+//
+// These helpers update the editable subset of fields on the existing
+// direction record, leaving status/timestamps/notes alone. The full
+// edit (including timestamps) is reserved for the dedicated direction
+// transition flow above.
+// ─────────────────────────────────────────────────────────────────
+
+const DESIGN_DIRECTION_EDITABLE_KEYS = [
+  "controlLevel",
+  "brandMood",
+  "visualStyle",
+  "brandColorsKnown",
+  "preferredColors",
+  "colorsToAvoid",
+  "letCrecyChoosePalette",
+  "typographyFeel",
+  "imageryDirection",
+  "likedWebsites",
+  "dislikedWebsites",
+  "contentTone",
+  "hasLogo",
+  "hasBrandGuide",
+  "brandAssetsNotes",
+  "clientNotes",
+] as const;
+
+export async function editDesignDirectionPayloadByQuoteId(input: {
+  quoteId: string;
+  patch: Partial<WebsiteDesignDirectionInput>;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}): Promise<WebsiteDesignDirection> {
+  const { data: portal, error: portalErr } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .select("*")
+    .eq("quote_id", input.quoteId)
+    .maybeSingle();
+  if (portalErr) throw portalErr;
+  if (!portal) throw new Error("Portal not found");
+
+  const existingScope = safeObj(portal.scope_snapshot);
+  if (!hasDesignDirection(existingScope)) {
+    throw new Error("Design direction is not enabled for this project.");
+  }
+
+  const existing = readDesignDirection(existingScope) ?? DEFAULT_WEBSITE_DESIGN_DIRECTION;
+  const next: WebsiteDesignDirection = { ...existing };
+
+  // Only copy whitelisted fields. Prevents an admin accidentally
+  // overwriting status/timestamps via the same endpoint.
+  const changedKeys: string[] = [];
+  for (const key of DESIGN_DIRECTION_EDITABLE_KEYS) {
+    if (key in input.patch) {
+      const value = (input.patch as Record<string, unknown>)[key];
+      if (value !== undefined) {
+        (next as Record<string, unknown>)[key] = value;
+        changedKeys.push(key);
+      }
+    }
+  }
+  if (changedKeys.length === 0) return existing;
+
+  const now = new Date().toISOString();
+  const nextScope = { ...existingScope, designDirection: next };
+  const { error: updErr } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({ scope_snapshot: nextScope, updated_at: now })
+    .eq("id", portal.id);
+  if (updErr) throw updErr;
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "studio",
+    eventType: "design_direction_payload_edited",
+    summary: "CrecyStudio edited the design direction on the client's behalf.",
+    payload: {
+      changedKeys,
+      actorUserId: input.actor.userId ?? null,
+      actorEmail: input.actor.email ?? null,
+      actorIp: input.actor.ip ?? null,
+    },
+    clientVisible: false,
+  });
+
+  return next;
+}
+
+export async function editDirectionPayloadByQuoteId(input: {
+  quoteId: string;
+  payload: Record<string, unknown>;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}): Promise<GenericDirection> {
+  const { data: portal, error: portalErr } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .select("*")
+    .eq("quote_id", input.quoteId)
+    .maybeSingle();
+  if (portalErr) throw portalErr;
+  if (!portal) throw new Error("Portal not found");
+
+  const existingScope = safeObj(portal.scope_snapshot);
+  if (!hasDirection(existingScope)) {
+    throw new Error("Direction is not enabled for this project.");
+  }
+  const existing = readDirection(existingScope);
+  if (!existing) {
+    throw new Error("Direction record could not be read.");
+  }
+
+  // Generic direction stores everything inside `payload`. Merge over
+  // existing so partial edits work; pass {} to clear nothing.
+  const mergedPayload = { ...(existing.payload || {}), ...input.payload };
+  const next: GenericDirection = { ...existing, payload: mergedPayload };
+
+  const now = new Date().toISOString();
+  const nextScope = { ...existingScope, direction: next };
+  const { error: updErr } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({ scope_snapshot: nextScope, updated_at: now })
+    .eq("id", portal.id);
+  if (updErr) throw updErr;
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "studio",
+    eventType: `${existing.type}_payload_edited`,
+    summary: `CrecyStudio edited the ${existing.type.replace(/_/g, " ")} on the client's behalf.`,
+    payload: {
+      directionType: existing.type,
+      changedKeys: Object.keys(input.payload),
+      actorUserId: input.actor.userId ?? null,
+      actorEmail: input.actor.email ?? null,
+      actorIp: input.actor.ip ?? null,
+    },
+    clientVisible: false,
+  });
 
   return next;
 }
@@ -2041,6 +2241,198 @@ export async function submitRevisionByPortalToken(input: {
   return data;
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Admin-side asset/revision actions. Mirror the *ByPortalToken
+// variants but accept a quoteId, log as actorRole="studio", and skip
+// the client_status side-effects that don't make sense when the
+// admin is acting on the client's behalf.
+// ─────────────────────────────────────────────────────────────────
+
+export async function submitAssetByQuoteId(input: {
+  quoteId: string;
+  label: string;
+  assetType?: string;
+  assetUrl?: string;
+  notes?: string;
+  source?: string;
+  status?: string;
+  storageBucket?: string | null;
+  storagePath?: string | null;
+  fileName?: string | null;
+  mimeType?: string | null;
+  fileSize?: number | null;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}) {
+  const portal = await getPortalProjectByQuoteId(input.quoteId);
+  if (!portal) throw new Error("Portal not found");
+
+  const { data, error } = await supabaseAdmin
+    .from("customer_portal_assets")
+    .insert({
+      portal_project_id: portal.id,
+      label: input.label.trim(),
+      asset_type: cleanString(input.assetType) || "general",
+      asset_url: cleanString(input.assetUrl) || null,
+      notes: cleanString(input.notes) || null,
+      // Default approved when admin uploads on behalf — the studio is
+      // the one curating the asset, so it's already vetted.
+      status: normalizeAssetStatus(input.status || "approved"),
+      source: cleanString(input.source) || "admin_upload",
+      storage_bucket: cleanString(input.storageBucket) || null,
+      storage_path: cleanString(input.storagePath) || null,
+      file_name: cleanString(input.fileName) || null,
+      mime_type: cleanString(input.mimeType) || null,
+      file_size: Number(input.fileSize ?? 0) || null,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "studio",
+    eventType: "asset_uploaded_by_admin",
+    summary: `CrecyStudio added asset on client's behalf: "${input.label.trim()}".`,
+    payload: {
+      assetType: cleanString(input.assetType) || "general",
+      source: cleanString(input.source) || "admin_upload",
+      actorUserId: input.actor.userId ?? null,
+      actorEmail: input.actor.email ?? null,
+      actorIp: input.actor.ip ?? null,
+    },
+    clientVisible: true,
+  });
+
+  return data;
+}
+
+export async function deleteAssetByQuoteId(input: {
+  quoteId: string;
+  assetId: string;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}): Promise<void> {
+  const portal = await getPortalProjectByQuoteId(input.quoteId);
+  if (!portal) throw new Error("Portal not found");
+
+  // Read first so we can log a useful summary after the row is gone.
+  const { data: existing } = await supabaseAdmin
+    .from("customer_portal_assets")
+    .select("id, label, asset_type")
+    .eq("id", input.assetId)
+    .eq("portal_project_id", portal.id)
+    .maybeSingle();
+
+  const { error } = await supabaseAdmin
+    .from("customer_portal_assets")
+    .delete()
+    .eq("id", input.assetId)
+    .eq("portal_project_id", portal.id);
+  if (error) throw error;
+
+  if (existing?.id) {
+    await logProjectActivityByPortalId({
+      portalProjectId: cleanString(portal.id),
+      actorRole: "studio",
+      eventType: "asset_deleted_by_admin",
+      summary: `CrecyStudio removed asset: "${existing.label}".`,
+      payload: {
+        assetId: input.assetId,
+        assetType: existing.asset_type,
+        actorUserId: input.actor.userId ?? null,
+        actorEmail: input.actor.email ?? null,
+        actorIp: input.actor.ip ?? null,
+      },
+      // Client-visible so the audit trail shows them what disappeared.
+      clientVisible: true,
+    });
+  }
+}
+
+export async function submitRevisionByQuoteId(input: {
+  quoteId: string;
+  requestText: string;
+  priority?: string;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}) {
+  const portal = await getPortalProjectByQuoteId(input.quoteId);
+  if (!portal) throw new Error("Portal not found");
+
+  const { data, error } = await supabaseAdmin
+    .from("customer_portal_revisions")
+    .insert({
+      portal_project_id: portal.id,
+      request_text: input.requestText.trim(),
+      priority: normalizePriority(input.priority),
+      status: "new",
+    })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+
+  // Skip the client_status flip — that triggers client-facing nudges
+  // that wouldn't make sense when the admin is logging call-in
+  // feedback ("revision_requested" implies the client did the action).
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "studio",
+    eventType: "revision_recorded_by_admin",
+    summary: "CrecyStudio recorded a revision on the client's behalf.",
+    payload: {
+      priority: normalizePriority(input.priority),
+      actorUserId: input.actor.userId ?? null,
+      actorEmail: input.actor.email ?? null,
+      actorIp: input.actor.ip ?? null,
+    },
+    clientVisible: true,
+  });
+
+  return data;
+}
+
+export async function deleteRevisionByQuoteId(input: {
+  quoteId: string;
+  revisionId: string;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}): Promise<void> {
+  const portal = await getPortalProjectByQuoteId(input.quoteId);
+  if (!portal) throw new Error("Portal not found");
+
+  const { data: existing } = await supabaseAdmin
+    .from("customer_portal_revisions")
+    .select("id, priority, status")
+    .eq("id", input.revisionId)
+    .eq("portal_project_id", portal.id)
+    .maybeSingle();
+
+  const { error } = await supabaseAdmin
+    .from("customer_portal_revisions")
+    .delete()
+    .eq("id", input.revisionId)
+    .eq("portal_project_id", portal.id);
+  if (error) throw error;
+
+  if (existing?.id) {
+    await logProjectActivityByPortalId({
+      portalProjectId: cleanString(portal.id),
+      actorRole: "studio",
+      eventType: "revision_deleted_by_admin",
+      summary: "CrecyStudio removed a revision request.",
+      payload: {
+        revisionId: input.revisionId,
+        priority: existing.priority,
+        previousStatus: existing.status,
+        actorUserId: input.actor.userId ?? null,
+        actorEmail: input.actor.email ?? null,
+        actorIp: input.actor.ip ?? null,
+      },
+      clientVisible: true,
+    });
+  }
+}
+
 export async function toggleMilestone(token: string, milestoneId: string, done: boolean) {
   const portal = await getPortalProjectByToken(token);
   if (!portal) throw new Error("Portal not found");
@@ -2151,6 +2543,166 @@ export async function acceptCustomerPortalAgreement(token: string) {
     eventType: "agreement_accepted",
     summary: "Client accepted the project agreement.",
     payload: {},
+    clientVisible: true,
+  });
+}
+
+// Admin override: record an offline acceptance (signed-in-person, sent
+// over email, etc.). Mirrors the client-side accept but stamps the
+// audit trail with the admin actor + a flag that distinguishes
+// admin-recorded acceptance from client-clicked acceptance.
+export async function adminAcceptCustomerPortalAgreementByQuoteId(input: {
+  quoteId: string;
+  acceptedByEmail: string;
+  acceptedAt?: string | null;
+  notes?: string | null;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}) {
+  const portal = await getPortalProjectByQuoteId(input.quoteId);
+  if (!portal) throw new Error("Portal not found");
+
+  const acceptedAt = safeDate(input.acceptedAt) || new Date().toISOString();
+  const now = new Date().toISOString();
+
+  const { error } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({
+      agreement_status: "accepted",
+      agreement_accepted_at: acceptedAt,
+      updated_at: now,
+    })
+    .eq("id", portal.id);
+  if (error) throw error;
+
+  // Mirror the agreements row pattern used for client-side accepts so
+  // certificate generation and downstream consumers see consistent data.
+  // Doesn't replay an existing row — admin accept assumes there isn't
+  // one yet (otherwise call void first).
+  const { data: existingAgreement } = await supabaseAdmin
+    .from("agreements")
+    .select("id")
+    .eq("portal_project_id", portal.id)
+    .eq("status", "accepted")
+    .maybeSingle();
+
+  if (!existingAgreement) {
+    // Read agreement_text from the portal first, then fall back to
+    // quote.debug.publishedAgreementText for legacy portals where the
+    // text was only ever written to the debug blob (the canonical
+    // bundle reader at line ~811 uses the same fallback chain).
+    const { data: scope } = await supabaseAdmin
+      .from("customer_portal_projects")
+      .select("agreement_text, quote_id")
+      .eq("id", portal.id)
+      .maybeSingle();
+    let bodyText = String(scope?.agreement_text || "");
+    if (!bodyText && scope?.quote_id) {
+      const { data: quoteRow } = await supabaseAdmin
+        .from("quotes")
+        .select("debug")
+        .eq("id", scope.quote_id)
+        .maybeSingle();
+      const debug = quoteRow?.debug;
+      if (debug && typeof debug === "object" && !Array.isArray(debug)) {
+        bodyText = String((debug as Record<string, unknown>).publishedAgreementText || "");
+      }
+    }
+    if (bodyText) {
+      // Compute the same sha256 the client-side accept uses so version
+      // verification works identically. Without this, integrity checks
+      // (and any future "agreement changed since signature" warnings)
+      // break for admin-recorded acceptances.
+      const bodyHash = crypto.createHash("sha256").update(bodyText).digest("hex");
+      await supabaseAdmin
+        .from("agreements")
+        .insert({
+          portal_project_id: portal.id,
+          body_text: bodyText,
+          body_hash: bodyHash,
+          published_at: acceptedAt,
+          accepted_at: acceptedAt,
+          accepted_by_email: input.acceptedByEmail.trim(),
+          accepted_ip: input.actor.ip ?? null,
+          accepted_user_agent: "admin-recorded",
+          status: "accepted",
+        });
+    }
+  }
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "studio",
+    eventType: "agreement_accepted_by_admin",
+    summary: `CrecyStudio recorded that ${input.acceptedByEmail.trim()} accepted the agreement offline.`,
+    payload: {
+      acceptedBy: input.acceptedByEmail.trim(),
+      acceptedAt,
+      notes: input.notes || null,
+      actorUserId: input.actor.userId ?? null,
+      actorEmail: input.actor.email ?? null,
+      actorIp: input.actor.ip ?? null,
+    },
+    clientVisible: true,
+  });
+}
+
+// Void an accepted agreement. Clears the acceptance fields on the
+// portal row and marks the most-recent accepted agreement row as
+// "voided" (preserved for audit, not deleted). Use sparingly —
+// every void is logged with the reason.
+export async function voidCustomerPortalAgreementByQuoteId(input: {
+  quoteId: string;
+  reason: string;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}) {
+  const portal = await getPortalProjectByQuoteId(input.quoteId);
+  if (!portal) throw new Error("Portal not found");
+
+  const reason = input.reason.trim();
+  if (!reason) throw new Error("A reason is required to void an agreement.");
+
+  const now = new Date().toISOString();
+  const { error: projectErr } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({
+      agreement_status: "draft",
+      agreement_accepted_at: null,
+      updated_at: now,
+    })
+    .eq("id", portal.id);
+  if (projectErr) throw projectErr;
+
+  // Mark the most-recent accepted agreements row as voided. Preserves
+  // history rather than deleting (the original signature audit is
+  // recoverable from the row).
+  const { data: latest } = await supabaseAdmin
+    .from("agreements")
+    .select("id")
+    .eq("portal_project_id", portal.id)
+    .eq("status", "accepted")
+    .order("accepted_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (latest?.id) {
+    await supabaseAdmin
+      .from("agreements")
+      .update({ status: "voided" })
+      .eq("id", latest.id);
+  }
+
+  await logProjectActivityByPortalId({
+    portalProjectId: cleanString(portal.id),
+    actorRole: "studio",
+    eventType: "agreement_voided",
+    summary: `CrecyStudio voided the accepted agreement: ${reason}`,
+    payload: {
+      reason,
+      voidedAgreementId: latest?.id ?? null,
+      actorUserId: input.actor.userId ?? null,
+      actorEmail: input.actor.email ?? null,
+      actorIp: input.actor.ip ?? null,
+    },
     clientVisible: true,
   });
 }
@@ -2393,4 +2945,183 @@ export async function savePortalClientSyncByQuoteId(
       }
     }
   }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Lead + project-type admin edits. The most common reasons admin
+// needs these:
+//   - Client typo'd their email/name on the build form.
+//   - Client's preferred contact email differs from the form email
+//     and they want the portal to use the new one.
+//   - Project lane was misclassified at intake (rescue → website,
+//     web_app → automation, etc.). The lane drives every workflow
+//     template, so getting it right matters.
+// ─────────────────────────────────────────────────────────────────
+
+export async function editLeadInfoByQuoteId(input: {
+  quoteId: string;
+  patch: { name?: string; email?: string; phone?: string };
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}) {
+  const { data: quote, error: qErr } = await supabaseAdmin
+    .from("quotes")
+    .select("id, lead_id, lead_email, owner_email_norm")
+    .eq("id", input.quoteId)
+    .maybeSingle();
+  if (qErr) throw qErr;
+  if (!quote) throw new Error("Quote not found");
+
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  const changedKeys: string[] = [];
+  const trimmed = {
+    name: input.patch.name?.trim(),
+    email: input.patch.email?.trim(),
+    phone: input.patch.phone?.trim(),
+  };
+  // Cheap RFC-2822 sanity check. Doesn't try to be exhaustive — the
+  // goal is to catch fat-finger typos like "alice" or "alice@" before
+  // they break portal access. Empty string is rejected to prevent
+  // accidentally clearing the email (which would lock the client out).
+  if (trimmed.email !== undefined) {
+    if (!trimmed.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed.email)) {
+      throw new Error("Email looks invalid. Format: name@example.com");
+    }
+  }
+  if (trimmed.name !== undefined) { updates.name = trimmed.name; changedKeys.push("name"); }
+  if (trimmed.email !== undefined) { updates.email = trimmed.email; changedKeys.push("email"); }
+  if (trimmed.phone !== undefined) { updates.phone = trimmed.phone; changedKeys.push("phone"); }
+
+  if (changedKeys.length === 0 || !quote.lead_id) {
+    return { changedKeys: [] as string[] };
+  }
+
+  const { error: leadErr } = await supabaseAdmin
+    .from("leads")
+    .update(updates)
+    .eq("id", quote.lead_id);
+  if (leadErr) throw leadErr;
+
+  // Mirror email/name onto the quote and re-normalize the access-
+  // control identity if email changed. Without this, a client whose
+  // email was corrected would still not be able to log in with the
+  // new email — owner_email_norm would still hold the old one.
+  if (changedKeys.includes("email") || changedKeys.includes("name")) {
+    const quoteUpdates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (changedKeys.includes("email") && trimmed.email) {
+      quoteUpdates.lead_email = trimmed.email;
+      const normalized = trimmed.email.trim().toLowerCase();
+      if (normalized) quoteUpdates.owner_email_norm = normalized;
+    }
+    if (changedKeys.includes("name") && trimmed.name !== undefined) {
+      quoteUpdates.lead_name = trimmed.name;
+    }
+    await supabaseAdmin
+      .from("quotes")
+      .update(quoteUpdates)
+      .eq("id", input.quoteId);
+  }
+
+  // Activity entry — internal-only, since the change is admin
+  // housekeeping the client doesn't need to see in their feed.
+  // Locate the portal first.
+  const portal = await getPortalProjectByQuoteId(input.quoteId);
+  if (portal) {
+    await logProjectActivityByPortalId({
+      portalProjectId: cleanString(portal.id),
+      actorRole: "studio",
+      eventType: "lead_info_edited",
+      summary: `CrecyStudio updated lead ${changedKeys.join(", ")}.`,
+      payload: {
+        changedKeys,
+        actorUserId: input.actor.userId ?? null,
+        actorEmail: input.actor.email ?? null,
+        actorIp: input.actor.ip ?? null,
+      },
+      clientVisible: false,
+    });
+  }
+
+  return { changedKeys };
+}
+
+export async function setProjectTypeByQuoteId(input: {
+  quoteId: string;
+  projectType: ProjectType;
+  actor: { userId?: string | null; email?: string | null; ip?: string | null };
+}) {
+  // Update both sources of truth in a coordinated pair: the quote row
+  // (used by intake / quoting) and the portal row (used by every
+  // lane-aware portal feature). Out-of-sync values cause the
+  // direction-submit dispatcher to mis-route — we saw this in the
+  // 56-row Phase-3.2 audit where portal.project_type was the column
+  // default of "website" while the actual lane lived only on the
+  // quote.
+  const now = new Date().toISOString();
+
+  const { data: quote, error: qErr } = await supabaseAdmin
+    .from("quotes")
+    .select("id, project_type")
+    .eq("id", input.quoteId)
+    .maybeSingle();
+  if (qErr) throw qErr;
+  if (!quote) throw new Error("Quote not found");
+
+  const { error: quoteUpdErr } = await supabaseAdmin
+    .from("quotes")
+    .update({ project_type: input.projectType, updated_at: now })
+    .eq("id", input.quoteId);
+  if (quoteUpdErr) throw quoteUpdErr;
+
+  const portal = await getPortalProjectByQuoteId(input.quoteId);
+  let seededActionKeys: string[] = [];
+  if (portal) {
+    const { error: portalUpdErr } = await supabaseAdmin
+      .from("customer_portal_projects")
+      .update({ project_type: input.projectType, updated_at: now })
+      .eq("id", portal.id);
+    if (portalUpdErr) throw portalUpdErr;
+
+    // Seed the new lane's required actions. seedRequiredActionsForPortal
+    // upserts with onConflict ignoreDuplicates, so existing actions
+    // (including the old lane's keys) stay; the new lane's keys get
+    // inserted fresh. Stale old-lane actions remain visible in the
+    // admin Required Actions panel — admin can delete them there. This
+    // is safer than auto-deleting: if the old lane's actions captured
+    // any client-submitted payload (e.g. a completed direction), we'd
+    // lose the audit by removing them.
+    if (input.projectType !== quote.project_type) {
+      const before = await listRequiredActionsForPortal(portal.id);
+      const beforeKeys = new Set(before.map((a) => a.actionKey));
+      await seedRequiredActionsForPortal({
+        portalProjectId: portal.id,
+        projectType: input.projectType,
+      });
+      const after = await listRequiredActionsForPortal(portal.id);
+      seededActionKeys = after
+        .filter((a) => !beforeKeys.has(a.actionKey))
+        .map((a) => a.actionKey);
+    }
+
+    await logProjectActivityByPortalId({
+      portalProjectId: cleanString(portal.id),
+      actorRole: "studio",
+      eventType: "project_type_changed",
+      summary: `CrecyStudio reclassified the project to ${input.projectType}.`,
+      payload: {
+        previousType: quote.project_type ?? null,
+        newType: input.projectType,
+        seededActionKeys,
+        actorUserId: input.actor.userId ?? null,
+        actorEmail: input.actor.email ?? null,
+        actorIp: input.actor.ip ?? null,
+      },
+      clientVisible: false,
+    });
+  }
+
+  return {
+    previousType: quote.project_type ?? null,
+    newType: input.projectType,
+    seededActionKeys,
+  };
 }
