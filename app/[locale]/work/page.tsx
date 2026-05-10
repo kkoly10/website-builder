@@ -20,7 +20,7 @@ export async function generateMetadata({
   };
 }
 
-const VENTURE_KEYS = ["korent", "proveo"] as const;
+const VENTURE_KEYS = ["fleiko", "proveo"] as const;
 // Empty until a real client case is live. The placeholder card holds the
 // section so the page reads as "we're publishing cases here, not just
 // studio ventures" without inventing a fictional engagement. When a real
@@ -30,7 +30,7 @@ const VENTURE_KEYS = ["korent", "proveo"] as const;
 // External live products. Plain anchors with target=_blank since TrackLink
 // uses next-intl's locale-aware Link, which is for internal routes only.
 const VENTURE_LIVE_URL: Record<(typeof VENTURE_KEYS)[number], string> = {
-  korent: "https://fleiko.com",
+  fleiko: "https://fleiko.com",
   proveo: "https://proveohq.com",
 };
 
