@@ -30,7 +30,7 @@ const VENTURE_KEYS = ["korent", "proveo"] as const;
 // External live products. Plain anchors with target=_blank since TrackLink
 // uses next-intl's locale-aware Link, which is for internal routes only.
 const VENTURE_LIVE_URL: Record<(typeof VENTURE_KEYS)[number], string> = {
-  korent: "https://korent.app",
+  korent: "https://fleiko.com",
   proveo: "https://proveohq.com",
 };
 

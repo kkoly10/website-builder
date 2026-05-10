@@ -211,8 +211,8 @@
         "detail": "Multi-tenant SaaS — booking, fleet tracking, delivery routing, and AI scheduling assist.",
         "chip1": "Multi-tenant",
         "chip2": "AI scheduling",
-        "link": "korent.app",
-        "url": "https://korent.app"
+        "link": "fleiko.com",
+        "url": "https://fleiko.com"
       },
       "proveo": {
         "name": "Proveo",
@@ -2517,7 +2517,7 @@
         "chip2": "Crew mobile",
         "chip3": "Delivery routing",
         "chip4": "AI scheduling",
-        "linkLabel": "Visit korent.app"
+        "linkLabel": "Visit fleiko.com"
       },
       "proveo": {
         "name": "Proveo",
