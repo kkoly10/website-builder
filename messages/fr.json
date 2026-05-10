@@ -205,14 +205,14 @@
       "label": "Studio ventures",
       "title": "Real systems we’ve shipped.",
       "intro": "Two SaaS products built and operated by the studio — not client testimonials. They prove the engineering capability for the Web Apps lane.",
-      "korent": {
-        "name": "Korent",
-        "tagline": "Management platform for inflatable rental businesses",
-        "detail": "Multi-tenant SaaS — booking, fleet tracking, delivery routing, and AI scheduling assist.",
-        "chip1": "Multi-tenant",
-        "chip2": "AI scheduling",
-        "link": "korent.app",
-        "url": "https://korent.app"
+      "fleiko": {
+        "name": "Fleiko",
+        "tagline": "Fleet management platform for small businesses",
+        "detail": "Cloud SaaS — AI copilot for cost & maintenance alerts, compliance tracking, and GPS fleet monitoring.",
+        "chip1": "AI Fleet Copilot",
+        "chip2": "Compliance Alerts",
+        "link": "fleiko.com",
+        "url": "https://fleiko.com"
       },
       "proveo": {
         "name": "Proveo",
@@ -2509,15 +2509,15 @@
     "venturesIntro": "These are our own products, built and operated by the studio. They prove the engineering capability for the Web Apps lane — they're not client testimonials.",
     "ventureBadge": "Studio venture",
     "ventures": {
-      "korent": {
-        "name": "Korent",
-        "tagline": "Management platform for inflatable rental businesses",
-        "summary": "Multi-tenant SaaS for inflatable rental businesses with three surfaces — public storefront, operator dashboard, and crew mobile workspace. Postgres with Row-Level Security for tenant isolation, delivery-route planning, document generation for rental agreements, and an AI operator copilot.",
-        "chip1": "Multi-tenant",
-        "chip2": "Crew mobile",
-        "chip3": "Delivery routing",
-        "chip4": "AI scheduling",
-        "linkLabel": "Visit korent.app"
+      "fleiko": {
+        "name": "Fleiko",
+        "tagline": "Fleet management platform for small businesses",
+        "summary": "Cloud-based fleet management SaaS built for small businesses running 2–20 vehicles. Replaces spreadsheets with a centralized dashboard for vehicle records, maintenance history, and compliance documents. AI copilot flags cost outliers and upcoming maintenance needs; automated alerts for insurance, registration, and inspection expiry; optional real-time GPS tracking.",
+        "chip1": "AI Fleet Copilot",
+        "chip2": "Compliance Alerts",
+        "chip3": "GPS Tracking",
+        "chip4": "Managed Service",
+        "linkLabel": "Visit fleiko.com"
       },
       "proveo": {
         "name": "Proveo",

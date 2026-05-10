@@ -98,12 +98,12 @@ function AboutContent() {
           <p className={styles.venturesIntro}>{tHome("ventures.intro")}</p>
           <div className={styles.venturesGrid}>
             <article className={styles.ventureCard}>
-              <p className={styles.ventureName}>{tHome("ventures.korent.name")}</p>
-              <p className={styles.ventureTagline}>{tHome("ventures.korent.tagline")}</p>
-              <p className={styles.ventureDetail}>{tHome("ventures.korent.detail")}</p>
+              <p className={styles.ventureName}>{tHome("ventures.fleiko.name")}</p>
+              <p className={styles.ventureTagline}>{tHome("ventures.fleiko.tagline")}</p>
+              <p className={styles.ventureDetail}>{tHome("ventures.fleiko.detail")}</p>
               <div className={styles.ventureChips}>
-                <span className={styles.ventureChip}>{tHome("ventures.korent.chip1")}</span>
-                <span className={styles.ventureChip}>{tHome("ventures.korent.chip2")}</span>
+                <span className={styles.ventureChip}>{tHome("ventures.fleiko.chip1")}</span>
+                <span className={styles.ventureChip}>{tHome("ventures.fleiko.chip2")}</span>
               </div>
             </article>
             <article className={styles.ventureCard}>

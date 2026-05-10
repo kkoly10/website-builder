@@ -170,20 +170,20 @@ function HomeContent() {
           </div>
           <div className={styles.venturesGrid}>
             <article className={styles.ventureCard}>
-              <p className={styles.ventureName}>{t("ventures.korent.name")}</p>
-              <p className={styles.ventureTagline}>{t("ventures.korent.tagline")}</p>
-              <p className={styles.ventureDetail}>{t("ventures.korent.detail")}</p>
+              <p className={styles.ventureName}>{t("ventures.fleiko.name")}</p>
+              <p className={styles.ventureTagline}>{t("ventures.fleiko.tagline")}</p>
+              <p className={styles.ventureDetail}>{t("ventures.fleiko.detail")}</p>
               <div className={styles.ventureChips}>
-                <span className={styles.ventureChip}>{t("ventures.korent.chip1")}</span>
-                <span className={styles.ventureChip}>{t("ventures.korent.chip2")}</span>
+                <span className={styles.ventureChip}>{t("ventures.fleiko.chip1")}</span>
+                <span className={styles.ventureChip}>{t("ventures.fleiko.chip2")}</span>
               </div>
               <a
-                href={t("ventures.korent.url")}
+                href={t("ventures.fleiko.url")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.ventureLink}
               >
-                {t("ventures.korent.link")} -&gt;
+                {t("ventures.fleiko.link")} -&gt;
               </a>
             </article>
             <article className={styles.ventureCard}>
