@@ -1144,7 +1144,7 @@ clientPortalsData.en = {
   eyebrow: "Client portals",
   title: "A private workspace your customers actually use.",
   intro:
-    "Track scope, share files, send messages, sign off on milestones, view invoices — all in one place that feels like your studio, not a shared Drive folder.",
+    "Every CrecyStudio client logs into a portal built on this exact system. We didn't build it to sell it — we built it because nothing else worked for us. Now we build it for your business: branded to you, wired to your workflow, owned by you completely.",
   heroStats: [
     "Branded to your business",
     "Your code, your data",
@@ -1270,6 +1270,31 @@ clientPortalsData.en = {
       answer:
         "You own it — it's in your database on your Supabase account. Export any time, full control, no lock-in.",
     },
+    {
+      question: "Does my client need to download anything or create an account?",
+      answer:
+        "No download, no app store. Clients access their portal through a secure link in their browser — desktop or mobile. They can optionally create a password-protected account, but it's not required for read access.",
+    },
+    {
+      question: "How long does a portal build take?",
+      answer:
+        "Most portal builds launch in 6–8 weeks from scope approval. Add-ons to an existing website are typically faster. The main variable is how clearly the workflow is defined going in — we scope it together before starting.",
+    },
+    {
+      question: "What about HoneyBook, Dubsado, or other client management tools?",
+      answer:
+        "Those are great if you want to look like everyone else using the same template. Your clients have seen that portal before — they just can't name it. A custom portal is branded to you, wired to your specific workflow, and not subject to per-seat pricing or workflow limits you can't change. At 8+ clients/year with any meaningful transaction volume, the custom build pays for itself in 18–24 months — and you own the asset permanently.",
+    },
+    {
+      question: "Can we add features later without being locked into you?",
+      answer:
+        "Yes. You own the code and the handoff documentation. Any developer can extend the system. We offer a Care Pro retainer for clients who want ongoing development from us, but you're not obligated to continue working with us after the build.",
+    },
+    {
+      question: "Can it connect to Stripe, QuickBooks, or our existing tools?",
+      answer:
+        "Yes. The portal is built on a real tech stack — not a SaaS with limited integrations. If you need Stripe for payments, QuickBooks for accounting sync, or any other integration, we scope it as part of the build.",
+    },
   ],
   bestFitTitle: "Best fit for…",
   bestFit: [
@@ -1283,10 +1308,10 @@ clientPortalsData.en = {
     "B2C businesses where customers never need to log in",
   ],
   crossLinks: CROSS_LINKS.client_portals,
-  finalTitle: "Give your clients a workspace they'll actually use.",
+  finalTitle: "See the portal we use with our own clients.",
   finalText:
-    "Tell us about your workflow and we'll scope the right portal — add-on to an existing site or a standalone system. Thirty-minute call, no commitment.",
-  finalPrimaryCta: { label: "Let's scope your portal — free 30 min", href: "/portal-intake" },
+    "20-minute walkthrough — you'll see the actual system before we talk scope or pricing. No pitch. If it fits your workflow, we'll scope a version built for your business.",
+  finalPrimaryCta: { label: "Book a 20-min portal demo", href: "/portal-intake" },
   finalSecondaryCta: { label: "See our work", href: "/work" },
   founderCallout: true,
   riskReversal: "Not sure we're a fit? The discovery call has no commitment — I'll tell you honestly if this project isn't right for us.",
