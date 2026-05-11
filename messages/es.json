@@ -127,11 +127,11 @@
     "successCta": "Ver el proceso"
   },
   "home": {
-    "metaTitle": "CrecyStudio | Websites and custom web systems",
-    "metaDescription": "Independent web studio building premium websites and custom web systems — from polished marketing sites to client portals, booking flows, and custom dashboards. One workspace from scope to launch.",
+    "metaTitle": "CrecyStudio | Websites, Web Systems & AI Integration",
+    "metaDescription": "Independent web studio building premium websites, custom web systems, and AI-powered products — from polished marketing sites to custom SaaS with AI built in. One workspace from scope to launch.",
     "heroLabel": "Independent web studio / est. 2024",
     "heroTitle": "Built for where you’re going, <em>not where you are.</em>",
-    "heroSub": "From a polished website to a full custom system — built by a practitioner who has shipped both.",
+    "heroSub": "From a polished website to a full custom system with production AI built in — by a practitioner who has shipped both.",
     "ctaStart": "Start a project",
     "ctaProcess": "See the work",
     "ctaScarcity": "Taking on new projects",
@@ -141,7 +141,11 @@
       "cards": {
         "webApps": {
           "title": "Custom web apps",
-          "body": "Dashboards, portals, internal tools, MVPs."
+          "body": "Dashboards, portals, internal tools, MVPs — with AI built in where it creates real value."
+        },
+        "aiIntegration": {
+          "title": "AI integration",
+          "body": "Copilotos de IA, capas de detección y flujos inteligentes — diseñados en tu sistema desde el primer día, como se construyeron Fleiko y Proveo."
         },
         "portals": {
           "title": "Client portals",
@@ -178,6 +182,10 @@
         "situation": "Tengo una idea de software o herramienta interna que construir",
         "service": "Apps web personalizadas — desde $18K"
       },
+      "ai": {
+        "situation": "Quiero IA integrada en mi producto desde el primer día",
+        "service": "Apps web con IA — desde $18K"
+      },
       "portal": {
         "situation": "Gestiono proyectos de clientes y necesito un sistema real",
         "service": "Portales de cliente — desde $12K"
@@ -192,8 +200,8 @@
       }
     },
     "proof": {
-      "deliveryValue": "2",
-      "delivery": "SaaS platforms shipped and operating",
+      "deliveryValue": "2 AI SaaS",
+      "delivery": "platforms shipped and operating",
       "ownershipValue": "Full-stack",
       "ownership": "Design to deployment, in-house",
       "noUpfrontValue": "Practitioner",
@@ -204,7 +212,7 @@
     "ventures": {
       "label": "Studio ventures",
       "title": "Real systems we’ve shipped.",
-      "intro": "Two SaaS products built and operated by the studio — not client testimonials. They prove the engineering capability for the Web Apps lane.",
+      "intro": "I don't just integrate AI into client projects — I've built and shipped two AI-powered products I own and operate. Fleiko runs an AI copilot for real-time fleet alerts. Proveo uses AI photo detection to automate contractor workflows. That track record is what I bring to your project.",
       "fleiko": {
         "name": "Fleiko",
         "tagline": "Fleet management platform for small businesses",
