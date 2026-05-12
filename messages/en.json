@@ -2540,7 +2540,8 @@
         "chip2": "Freemium billing",
         "chip3": "CRM pipeline",
         "chip4": "Automated emails",
-        "linkLabel": "Visit proveohq.com"
+        "linkLabel": "Visit proveohq.com",
+        "caseStudyLink": "Engineering deep dive"
       }
     },
     "clientLabel": "Client work",
@@ -3059,6 +3060,79 @@
     "callout": "We didn't retrofit safety onto this system. We designed it in from day one — because that's what production software requires.",
     "closingTitle": "Building something that needs AI built in correctly?",
     "closingBody": "This is the kind of architecture work we do for clients. Not API wrappers — production systems where AI is a first-class, safe component designed from the ground up.",
+    "closingCta": "Start a conversation",
+    "closingCtaSecondary": "See how we work"
+  },
+  "workProveo": {
+    "metaTitle": "Proveo Trust Engine — Engineering Deep Dive | CrecyStudio",
+    "metaDescription": "How we built a photo authentication system for service contractors using GPT-4o vision, client-side provenance hashing, and a deterministic badge engine that AI can't override.",
+    "back": "Back to work",
+    "kicker": "Engineering case study / Proveo",
+    "title": "Building a photo trust system where AI identifies the evidence but never decides the verdict.",
+    "subtitle": "Service contractors sell with before/after photos. The problem is anyone can fake them. Proveo needed a trust layer that was verifiable by design — not just a policy.",
+    "chips": {
+      "stack": "Next.js + Supabase",
+      "vision": "GPT-4o Vision",
+      "trust": "Provenance engine",
+      "multimodel": "Multi-model architecture"
+    },
+    "s1Title": "The problem with before/after photos in home services",
+    "s1Body": "Before/after photos are the #1 sales tool for service contractors — detailers, painters, pressure washers, landscapers. They're also the easiest thing to fake. A contractor can screenshot work from someone else's portfolio, claim it as their own, and build an entirely fabricated track record.\n\nClients viewing a portfolio can't tell. There's no metadata they can inspect, no timestamp they can trust, no way to verify the work actually happened.\n\nThe naive answer is a watermark or a timestamp overlay. Neither proves anything. Watermarks can be cropped, timestamps can be Photoshopped in. The problem isn't labeling — it's evidence.",
+    "s2Title": "Layer 1 — Visual detection with GPT-4o",
+    "s2Body": "The first AI layer solves a UX problem: contractors uploading two photos shouldn't have to manually label which is \"before\" and which is \"after.\" GPT-4o Vision analyzes both images simultaneously and identifies which shows the untreated or pre-work state and which shows the finished result.\n\nThe model also detects the service category (pressure washing, painting, landscaping, detailing, concrete, etc.) and generates a suggested job title — localized in the contractor's preferred language. If the platform user has their locale set to French, the suggested title comes back in French.\n\nWorkspace-scoped rate limiting (30 requests/hour shared across all team members) prevents per-member multiplication from inflating AI costs unboundedly. If the OpenAI key isn't configured, the endpoint returns a safe default rather than erroring — the upload still works, the badge engine still runs.",
+    "s3Title": "Layer 2 — The proof state system",
+    "s3Intro": "Every enhancement preset a contractor can apply to their photos is classified server-side into one of three trust tiers. The classification is deterministic, not AI-driven — the model can't be asked to reclassify a photo's processing level:",
+    "tier1Num": "Trust tier — Raw",
+    "tier1Title": "\"original\" preset",
+    "tier1Body": "No processing applied. The image that viewers see is exactly what came off the camera. Eligible for both trust badges.",
+    "tier2Num": "Trust tier — Corrected",
+    "tier2Title": "bright_clean, cool_professional, job_site_clean, high_def, studio_light, definition",
+    "tier2Body": "Exposure, sharpness, or white-balance corrections that don't alter the scene or add artistic treatment. These improve readability without misrepresenting the work.",
+    "tier3Num": "Trust tier — Styled",
+    "tier3Title": "warm, dramatic, daylight_pop, soft_glow, vivid, vintage, and 10+ others",
+    "tier3Body": "Aesthetic treatments that change the mood or appearance in ways that go beyond correction. Trust badge eligibility is removed.",
+    "s3Outro": "The key design choice: unknown presets fall to 'styled' by default. This is a safety bias — new presets cannot accidentally inherit badge eligibility. The trust tier must be explicitly granted in the server-side registry, never assumed.",
+    "s4Title": "Layer 3 — Client-side provenance (the architectural constraint)",
+    "s4Body": "Photos upload directly from the browser to Cloudinary. The Proveo server never receives the file bytes — it only gets the Cloudinary URL after the upload completes. This is standard practice for performance and cost, but it creates a provenance problem: if the server never sees the bytes, how does it know what was uploaded?\n\nThe answer: compute the evidence before the upload.\n\nBefore each photo leaves the browser, the client computes:\n— SHA-256 hash of the raw file bytes, using the Web Crypto API (not a dependency — native browser API)\n— Capture method: 'guided' (taken within Proveo's in-app camera), 'upload' (selected from camera roll), or 'import'\n— Capture timestamp — from EXIF DateTimeOriginal when available, falling back to File.lastModified (reliable on iOS and Android even when EXIF is stripped)\n— Device signal — truncated user-agent string (not PII on its own; helps detect same-device both-shots scenarios)\n— Guided capture session ID — a random per-session token from the parent component, issued only for guided captures\n\nThis signed provenance payload is sent to the API alongside the comparison data. The server validates every field and downgrades anything malformed to the weakest method ('upload') — a bad client never accidentally earns the gold tier.",
+    "s5Title": "Layer 4 — The badge algorithm",
+    "s5Intro": "With proof state and provenance in hand, the badge resolver runs five checks in sequence. All five must pass for the top tier — \"Verified Authentic\":",
+    "check": {
+      "guided": {
+        "label": "Guided capture",
+        "value": "Both photos taken in-app, not from camera roll"
+      },
+      "raw": {
+        "label": "Raw proof state",
+        "value": "No enhancement applied (original preset)"
+      },
+      "timestampMin": {
+        "label": "Minimum time gap",
+        "value": "> 2 seconds between before and after"
+      },
+      "timestampMax": {
+        "label": "Maximum time gap",
+        "value": "< 12 hours between before and after"
+      },
+      "sha256": {
+        "label": "SHA-256 uniqueness",
+        "value": "Before and after bytes are not identical"
+      }
+    },
+    "s5Outro": "Any failed check downgrades to \"Verified Unfiltered\" (raw proof state, any capture method) or removes the badge entirely for styled/corrected output. The timestamp window — 2 seconds minimum, 12 hours maximum — is designed around real job cadence: a pressure wash takes minutes, a paint job takes hours. Two photos captured within the same second are almost certainly duplicates. Two photos 14 hours apart are plausibly from different jobs.\n\nThe badge decision is entirely deterministic. AI identifies the evidence; the algorithm decides the tier.",
+    "s6Title": "The multi-model design",
+    "s6Body": "Proveo uses two models deliberately, for different reasons:\n\nGPT-4o handles visual reasoning — identifying before vs. after, detecting service category, generating captions from the composite image. OpenAI's vision model has strong spatial and compositional reasoning for image pairs.\n\nClaude handles all language and reasoning tasks — trust audit explanations, operations copilot, help center answers, onboarding guidance. Claude follows complex multi-constraint instructions reliably and produces contractor-readable prose rather than generic AI text.\n\nThe trust audit agent (Claude) is the clearest example of the separation: it reads the computed badge tier and provenance signals, then explains the result to the contractor in plain language — including what they'd need to do differently to earn the badge next time. Claude interprets the evidence. It does not decide it.",
+    "s7Title": "What shipped",
+    "outcome": {
+      "detection": "GPT-4o identifies before/after orientation automatically — no manual labeling from the contractor",
+      "proofState": "Deterministic proof state registry maps every enhancement preset to a trust tier; unknown presets are safely rejected",
+      "provenance": "Client-side SHA-256 hashing captures file identity before upload — the server can verify evidence it never directly received",
+      "badges": "Two-tier badge system (Verified Authentic, Verified Unfiltered) earned through a chain of evidence no model can override",
+      "multimodel": "GPT-4o for visual tasks, Claude for reasoning and explanation — each model doing what it does best",
+      "audit": "Trust audit agent explains badge status in plain language to contractors and tells them specifically how to improve"
+    },
+    "callout": "AI identifies what's in the photos. Deterministic code decides whether those photos are trustworthy. We never mixed those two responsibilities.",
+    "closingTitle": "Building something where trust is a product feature, not just a policy?",
+    "closingBody": "This is the kind of architecture work we do — systems where AI and deterministic logic are each used where they're appropriate, not interchangeably.",
     "closingCta": "Start a conversation",
     "closingCtaSecondary": "See how we work"
   }
