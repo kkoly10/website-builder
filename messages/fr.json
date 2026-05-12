@@ -2544,7 +2544,7 @@
         "caseStudyLink": "Plongée technique"
       },
       "techdesk": {
-        "name": "TechDesk Pro",
+        "name": "Kocre IT Services",
         "tagline": "Helpdesk IA pour les entreprises de support IT télécommande",
         "summary": "SaaS de helpdesk pour opérateurs de support IT remote-first. Le triage IA classifie chaque ticket avec catégorie, score de confiance et indicateurs de risque à la création. Ghost Admin synthétise le contexte depuis des tickets similaires et la base de connaissances en quelques secondes. Un moteur de résolution automatique en six critères gère les demandes à faible risque sans intervention de l'opérateur. Le cron déterministe Sentinel surveille les sites clients et la conformité SLA toutes les heures.",
         "chip1": "Ghost Admin IA",
@@ -3170,10 +3170,10 @@
     "closingCtaSecondary": "Voir notre processus"
   },
   "workTechdesk": {
-    "metaTitle": "TechDesk Pro — Architecture technique | CrecyStudio",
+    "metaTitle": "Kocre IT Services — Architecture technique | CrecyStudio",
     "metaDescription": "Comment nous avons construit un helpdesk IA avec Ghost Admin, un portail de résolution automatique en six critères, un volant de connaissances auto-composé et la surveillance déterministe Sentinel.",
     "back": "Retour aux projets",
-    "kicker": "Étude de cas technique / TechDesk Pro",
+    "kicker": "Étude de cas technique / Kocre IT Services",
     "title": "Construire un helpdesk IA où la machine rédige, conseille et surveille — mais ne ferme jamais un ticket sur la seule confiance.",
     "subtitle": "Le support IT à distance repose sur la rapidité et le contexte. Ghost Admin fournit les deux en quelques secondes — sans laisser la confiance IA suffire à fermer un ticket.",
     "chips": {

@@ -2544,7 +2544,7 @@
         "caseStudyLink": "Engineering deep dive"
       },
       "techdesk": {
-        "name": "TechDesk Pro",
+        "name": "Kocre IT Services",
         "tagline": "AI-powered helpdesk for remote IT support businesses",
         "summary": "Helpdesk SaaS for remote-first IT support operators. AI triage classifies every ticket with category, confidence score, and risk flags on creation. Ghost Admin synthesizes context from similar tickets and the knowledge base in seconds. A six-gate auto-resolve engine handles low-risk requests without operator intervention. Deterministic Sentinel cron monitors client sites and SLA compliance every hour.",
         "chip1": "Ghost Admin AI",
@@ -3148,10 +3148,10 @@
     "closingCtaSecondary": "See how we work"
   },
   "workTechdesk": {
-    "metaTitle": "TechDesk Pro — Engineering Deep Dive | CrecyStudio",
+    "metaTitle": "Kocre IT Services — Engineering Deep Dive | CrecyStudio",
     "metaDescription": "How we built an AI-powered IT helpdesk with Ghost Admin context synthesis, a six-gate auto-resolve engine, a self-compounding knowledge flywheel, and deterministic Sentinel monitoring.",
     "back": "Back to work",
-    "kicker": "Engineering case study / TechDesk Pro",
+    "kicker": "Engineering case study / Kocre IT Services",
     "title": "Building an AI helpdesk where the machine drafts, advises, and monitors — but never resolves a ticket on confidence alone.",
     "subtitle": "Remote IT support runs on speed and context. Ghost Admin delivers both in seconds — without letting AI confidence be sufficient reason to close a ticket.",
     "chips": {
