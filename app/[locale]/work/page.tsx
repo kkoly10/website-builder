@@ -21,21 +21,18 @@ export async function generateMetadata({
   };
 }
 
-const VENTURE_KEYS = ["fleiko", "proveo"] as const;
-// Empty until a real client case is live. The placeholder card holds the
-// section so the page reads as "we're publishing cases here, not just
-// studio ventures" without inventing a fictional engagement. When a real
-// case lands, define keys here and re-introduce the iteration alongside
-// the matching work.clients.* entries in messages/*.json.
+const VENTURE_KEYS = ["fleiko", "proveo", "techdesk"] as const;
 
 const VENTURE_LIVE_URL: Record<(typeof VENTURE_KEYS)[number], string> = {
   fleiko: "https://fleiko.com",
   proveo: "https://proveohq.com",
+  techdesk: "https://kocreit.com",
 };
 
 const VENTURE_CASE_STUDY_HREF: Partial<Record<(typeof VENTURE_KEYS)[number], string>> = {
   fleiko: "/work/fleiko",
   proveo: "/work/proveo",
+  techdesk: "/work/techdesk",
 };
 
 export default async function WorkPage({

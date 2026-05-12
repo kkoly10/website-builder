@@ -2516,7 +2516,7 @@
     "metaDescription": "Selected systems we've shipped — including our own. Multi-tenant rental SaaS, AI-augmented service-contractor platform, and client work.",
     "kicker": "Selected work",
     "title": "Real systems we've shipped — <em>including our own.</em>",
-    "subtitle": "Two studio ventures we built, run, and operate. Plus client work where the names are sometimes anonymized.",
+    "subtitle": "Trois produits studio que nous avons construits, lançons et exploitons. Plus du travail client dont les noms sont parfois anonymisés.",
     "venturesLabel": "Studio ventures",
     "venturesIntro": "These are our own products, built and operated by the studio. They prove the engineering capability for the Web Apps lane — they're not client testimonials.",
     "ventureBadge": "Studio venture",
@@ -2541,6 +2541,17 @@
         "chip3": "CRM pipeline",
         "chip4": "Automated emails",
         "linkLabel": "Visit proveohq.com",
+        "caseStudyLink": "Plongée technique"
+      },
+      "techdesk": {
+        "name": "TechDesk Pro",
+        "tagline": "Helpdesk IA pour les entreprises de support IT télécommande",
+        "summary": "SaaS de helpdesk pour opérateurs de support IT remote-first. Le triage IA classifie chaque ticket avec catégorie, score de confiance et indicateurs de risque à la création. Ghost Admin synthétise le contexte depuis des tickets similaires et la base de connaissances en quelques secondes. Un moteur de résolution automatique en six critères gère les demandes à faible risque sans intervention de l'opérateur. Le cron déterministe Sentinel surveille les sites clients et la conformité SLA toutes les heures.",
+        "chip1": "Ghost Admin IA",
+        "chip2": "Résolution auto en 6 critères",
+        "chip3": "Volant de connaissances",
+        "chip4": "Surveillance Sentinel",
+        "linkLabel": "Visiter kocreit.com",
         "caseStudyLink": "Plongée technique"
       }
     },
@@ -3155,6 +3166,77 @@
     "callout": "L'IA identifie ce qu'il y a dans les photos. Le code déterministe décide si ces photos sont dignes de confiance. Nous n'avons jamais mélangé ces deux responsabilités.",
     "closingTitle": "Vous construisez quelque chose où la confiance est une fonctionnalité produit, pas juste une politique ?",
     "closingBody": "C'est le type de travail d'architecture que nous faisons — des systèmes où l'IA et la logique déterministe sont chacune utilisées là où elles sont appropriées, pas de manière interchangeable.",
+    "closingCta": "Démarrer une conversation",
+    "closingCtaSecondary": "Voir notre processus"
+  },
+  "workTechdesk": {
+    "metaTitle": "TechDesk Pro — Architecture technique | CrecyStudio",
+    "metaDescription": "Comment nous avons construit un helpdesk IA avec Ghost Admin, un portail de résolution automatique en six critères, un volant de connaissances auto-composé et la surveillance déterministe Sentinel.",
+    "back": "Retour aux projets",
+    "kicker": "Étude de cas technique / TechDesk Pro",
+    "title": "Construire un helpdesk IA où la machine rédige, conseille et surveille — mais ne ferme jamais un ticket sur la seule confiance.",
+    "subtitle": "Le support IT à distance repose sur la rapidité et le contexte. Ghost Admin fournit les deux en quelques secondes — sans laisser la confiance IA suffire à fermer un ticket.",
+    "chips": {
+      "stack": "Next.js + Supabase",
+      "ai": "API Claude",
+      "pattern": "Volant de connaissances",
+      "safety": "Résolution auto en 6 critères"
+    },
+    "s1Title": "Le coût opérationnel du contexte",
+    "s1Body": "Gérer le support IT pour plusieurs organisations clientes signifie porter simultanément le contexte de chacune — quelles plateformes elles utilisent, quel était leur dernier problème, ce qui a déjà été résolu, quel SLA s'applique. Sans outillage, chaque nouveau ticket commence par 10 à 15 minutes de lecture d'historique avant tout support réel.\n\nLe deuxième problème est le risque d'automatisation. Fermer automatiquement des tickets sur la seule confiance IA récupérerait ce temps — mais au détriment de la fiabilité. Un ticket mal classifié qui se résout automatiquement est un problème client que l'opérateur ne voit jamais.\n\nTechDesk Pro avait besoin d'une couche IA réellement utile pour la synthèse de contexte et la rédaction, et réellement conservative pour les actions autonomes — non pas parce que l'IA était faible, mais parce que les conditions d'action sur ses résultats devaient être non ambiguës.",
+    "s2Title": "Ghost Admin — le cerveau IA interne",
+    "s2Body": "Ghost Admin est la couche d'orchestration. Pour tout ticket ouvert, il récupère un bundle de contexte structuré avant d'appeler le modèle :\n\n— Le ticket complet avec tous les champs de triage IA\n— Jusqu'à 10 messages récents côté client\n— Tickets similaires précédemment résolus, matchés sur titre et catégorie\n— Brouillons KB/SOP déjà liés au ticket\n— Articles de connaissances publiés classés par pertinence\n— L'état de cycle de vie complet de l'organisation : statut d'accord, statut de paiement, progression d'onboarding\n\nGhost envoie ce bundle à Claude et retourne un JSON à 10 champs : ce que le ticket signifie vraiment, le blocage le plus probable, l'action suivante recommandée, un appel de portée (support_standard / surveiller_scope / travail_scoped), des signaux de cycle de vie et un avertissement opérateur.\n\nCette synthèse de contexte s'effectue en moins de 3 secondes. Ghost génère aussi des brouillons de suivi en 6 modes : réponse initiale, mise à jour de progression, résolution, collecte d'informations, mise à jour d'escalade et évaluation des besoins. Chaque brouillon puise dans le même bundle — ce qui signifie que les réponses tiennent compte de l'étape du cycle de vie du client, pas seulement de la description du problème.",
+    "s3Title": "Le portail de résolution automatique — six conditions, pas une",
+    "s3Intro": "Le triage IA peut marquer un ticket ai_can_auto_resolve: true — mais c'est une entrée dans le portail, pas une décision. Les six conditions suivantes doivent toutes être réunies simultanément :",
+    "gate1Num": "Condition 1",
+    "gate1Title": "Liste blanche de catégories",
+    "gate1Body": "Seuls les tickets portal_account et billing_scope sont éligibles à la résolution automatique. Helpdesk, email, Microsoft 365, Google Workspace et SaaS admin nécessitent une intervention humaine quelle que soit la confiance IA.",
+    "gate2Num": "Condition 2",
+    "gate2Title": "Indicateur d'éligibilité IA",
+    "gate2Body": "Le moteur de triage doit avoir défini ai_can_auto_resolve: true. Par défaut, c'est false. Seules les questions basées sur des instructions ou des politiques de portail obtiennent cet indicateur.",
+    "gate3Num": "Condition 3",
+    "gate3Title": "Seuil de confiance",
+    "gate3Body": "La confiance IA doit dépasser 0,7. En dessous, le ticket nécessite une révision humaine — le portail traite un triage peu confiant comme une classification incertaine, pas comme un candidat limite à la résolution automatique.",
+    "gate4Num": "Condition 4",
+    "gate4Title": "Aucune escalade",
+    "gate4Body": "ai_escalation_needed doit être false. Les tickets sensibles à la sécurité ou à fort impact ne sont jamais résolus automatiquement quelle que soit la confiance.",
+    "gate5Num": "Condition 5",
+    "gate5Title": "Aucun indicateur de projet",
+    "gate5Body": "ai_project_flag doit être false. Migration, installation majeure, remédiation large — tout ce qui dépasse le support courant — nécessite une gestion et un cadrage manuels.",
+    "gate6Num": "Condition 6",
+    "gate6Title": "Aucun accès requis",
+    "gate6Body": "ai_access_needed doit être false. Si la résolution nécessite un accès admin, des changements de compte ou une escalade fournisseur, le portail reste fermé.",
+    "s4Title": "Le volant de connaissances",
+    "s4Body": "Chaque ticket traité par TechDesk Pro accélère le suivant. Le volant fonctionne en quatre étapes :\n\nEnrichissement par triage : À la création du ticket, le triage IA s'exécute immédiatement — classifiant la catégorie, notant la confiance, signalant les risques d'escalade et de projet. Le ticket est enrichi de 10 champs IA avant que l'opérateur l'ouvre.\n\nConstruction du bundle de contexte : Quand Ghost Admin s'exécute sur un ticket, il récupère des tickets similaires déjà résolus. Plus il y a de tickets résolus, plus le contexte est riche.\n\nGénération de connaissances : Quand un ticket se ferme, Ghost peut générer un brouillon KB/SOP à partir du fil de résolution. Ceci est strictement limité aux tickets résolus/fermés. Les tickets en cours ne génèrent jamais de brouillons.\n\nRécupération des connaissances : Les articles KB publiés se classent dans les futurs bundles Ghost. Avec le temps, le système accumule une mémoire institutionnelle. Au 50e ticket résolu pour un client, les nouveaux tickets arrivent avec des précédents correspondants — automatiquement.",
+    "s5Title": "Sentinel — surveillance déterministe sans IA",
+    "s5Intro": "Sentinel est la couche de surveillance et l'exemple le plus clair où l'IA a été délibérément exclue. Il s'exécute en tâche Cron Vercel toutes les heures, effectuant des vérifications déterministes sur toutes les URLs clients et les données de tickets. Aucun modèle n'intervient dans les décisions de surveillance :",
+    "sentinel": {
+      "url": {
+        "label": "Surveillance des URLs",
+        "body": "Requête HEAD vers store_url et website_url de chaque client, timeout de 10 secondes. Temps de réponse > 5 000 ms retourne severity: warning. Statut non-2xx ou échec de connexion retourne severity: critical. Aucune inférence — le résultat est la réponse HTTP."
+      },
+      "sla": {
+        "label": "Détection de violation SLA",
+        "body": "Interroge les tickets ouverts sans timestamp first_response_at qui ont dépassé leur seuil sla_response_hours. Le calcul est arithmétique : heures_ouvertes > sla_response_hours. Si vrai, ça déclenche — sans jugement sur la justification de la violation."
+      },
+      "volume": {
+        "label": "Pic de volume de tickets",
+        "body": "Compare les tickets créés dans les dernières 24 heures avec la moyenne quotidienne sur 30 jours. Plus de 3× la moyenne déclenche severity: warning. Le seuil est codé en dur — non inféré par un modèle — donc l'alerte est entièrement prévisible."
+      }
+    },
+    "s5Outro": "Les résultats critiques créent automatiquement des tickets assignés à un admin. Les avertissements sont journalisés dans le log d'activité. Aucun modèle ne décide ce qui compte comme incident — Sentinel déclenche ou non, selon l'arithmétique.\n\nC'est intentionnel. Un système de surveillance qui demande à un modèle si une panne est significative introduit un risque d'hallucination dans un contexte où le déterminisme importe le plus. Quand une violation SLA survient, l'opérateur doit le savoir — pas une estimation de probabilité.",
+    "s6Title": "Ce qui a été livré",
+    "outcome": {
+      "autoResolve": "Le portail en six conditions empêche la confiance IA seule de fermer des tickets — les six conditions doivent toutes tenir simultanément, pas seulement l'indicateur IA",
+      "ghost": "Ghost Admin synthétise tickets similaires, articles KB et état de cycle de vie client en un brief de contexte de 3 secondes qu'aucun opérateur ne pourrait construire manuellement",
+      "flywheel": "Le volant de connaissances se renforce à chaque ticket résolu — brouillons KB générés à la fermeture, articles publiés classés dans les futurs bundles Ghost automatiquement",
+      "sentinel": "Sentinel surveille les URLs clients et la conformité SLA de manière déterministe toutes les heures — aucune IA, aucune inférence, aucune ambiguïté sur ce qui déclenche une alerte",
+      "triage": "Le triage IA enrichit chaque ticket de 10 champs structurés à la création — catégorie, confiance, difficulté, estimation de temps, indicateur d'escalade, indicateur de projet",
+      "audit": "Chaque action Ghost est journalisée dans une table ghost_events avec entrée, sortie et contexte complets — un journal d'audit de chaque décision assistée par IA"
+    },
+    "callout": "L'IA rédige la réponse, classifie le ticket et synthétise le contexte. Le code déterministe décide de la fermeture automatique, du déclenchement d'alertes et du franchissement des seuils de surveillance. La confiance est une entrée. Elle n'est jamais une condition suffisante.",
+    "closingTitle": "Vous construisez une opération de support qui doit évoluer sans recruter ?",
+    "closingBody": "C'est le type de système que nous construisons — une IA qui gère la charge cognitive, des portails déterministes pour les décisions importantes, et une couche de connaissances qui se renforce avec le temps.",
     "closingCta": "Démarrer une conversation",
     "closingCtaSecondary": "Voir notre processus"
   }

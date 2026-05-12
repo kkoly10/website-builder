@@ -2516,7 +2516,7 @@
     "metaDescription": "Selected systems we've shipped — including our own. Multi-tenant rental SaaS, AI-augmented service-contractor platform, and client work.",
     "kicker": "Selected work",
     "title": "Real systems we've shipped — <em>including our own.</em>",
-    "subtitle": "Two studio ventures we built, run, and operate. Plus client work where the names are sometimes anonymized.",
+    "subtitle": "Tres proyectos studio que construimos, lanzamos y operamos. Más trabajo de clientes donde los nombres a veces están anonimizados.",
     "venturesLabel": "Studio ventures",
     "venturesIntro": "These are our own products, built and operated by the studio. They prove the engineering capability for the Web Apps lane — they're not client testimonials.",
     "ventureBadge": "Studio venture",
@@ -2541,6 +2541,17 @@
         "chip3": "CRM pipeline",
         "chip4": "Automated emails",
         "linkLabel": "Visit proveohq.com",
+        "caseStudyLink": "Análisis técnico en profundidad"
+      },
+      "techdesk": {
+        "name": "TechDesk Pro",
+        "tagline": "Helpdesk IA para empresas de soporte IT remoto",
+        "summary": "SaaS de helpdesk para operadores de soporte IT remote-first. El triaje IA clasifica cada ticket con categoría, puntuación de confianza e indicadores de riesgo en la creación. Ghost Admin sintetiza contexto de tickets similares y la base de conocimiento en segundos. Un motor de resolución automática de seis condiciones gestiona solicitudes de bajo riesgo sin intervención del operador. El cron determinista Sentinel monitorea sitios de clientes y conformidad SLA cada hora.",
+        "chip1": "Ghost Admin IA",
+        "chip2": "Resolución auto en 6 condiciones",
+        "chip3": "Volante de conocimiento",
+        "chip4": "Monitoreo Sentinel",
+        "linkLabel": "Visitar kocreit.com",
         "caseStudyLink": "Análisis técnico en profundidad"
       }
     },
@@ -3155,6 +3166,77 @@
     "callout": "La IA identifica qué hay en las fotos. El código determinista decide si esas fotos son confiables. Nunca mezclamos esas dos responsabilidades.",
     "closingTitle": "¿Construyendo algo donde la confianza es una característica del producto, no solo una política?",
     "closingBody": "Este es el tipo de trabajo de arquitectura que hacemos — sistemas donde la IA y la lógica determinista se usan cada una donde son apropiadas, no de manera intercambiable.",
+    "closingCta": "Iniciar una conversación",
+    "closingCtaSecondary": "Ver cómo trabajamos"
+  },
+  "workTechdesk": {
+    "metaTitle": "TechDesk Pro — Arquitectura técnica | CrecyStudio",
+    "metaDescription": "Cómo construimos un helpdesk IA con Ghost Admin, un motor de resolución automática de seis condiciones, un volante de conocimiento auto-compuesto y monitoreo determinista Sentinel.",
+    "back": "Volver al trabajo",
+    "kicker": "Caso de estudio técnico / TechDesk Pro",
+    "title": "Construir un helpdesk IA donde la máquina redacta, asesora y monitorea — pero nunca resuelve un ticket solo por confianza.",
+    "subtitle": "El soporte IT remoto depende de la velocidad y el contexto. Ghost Admin entrega ambos en segundos — sin dejar que la confianza IA sea razón suficiente para cerrar un ticket.",
+    "chips": {
+      "stack": "Next.js + Supabase",
+      "ai": "API Claude",
+      "pattern": "Volante de conocimiento",
+      "safety": "Resolución auto en 6 condiciones"
+    },
+    "s1Title": "El costo operativo del contexto",
+    "s1Body": "Gestionar soporte IT para múltiples organizaciones clientes significa llevar contexto simultáneo de cada una — qué plataformas usan, cuál fue su último problema, qué se ha resuelto antes, qué SLA aplica. Sin herramientas, cada nuevo ticket comienza con 10-15 minutos de lectura de historial antes de cualquier soporte real.\n\nEl segundo problema es el riesgo de automatización. Cerrar tickets automáticamente basándose solo en la confianza IA recuperaría ese tiempo — pero a costa de la fiabilidad. Un ticket mal clasificado que se resuelve automáticamente es un problema del cliente que el operador nunca ve.\n\nTechDesk Pro necesitaba una capa IA genuinamente útil para síntesis de contexto y redacción, y genuinamente conservadora para acciones autónomas — no porque la IA fuera débil, sino porque las condiciones para actuar sobre su resultado debían ser inequívocas.",
+    "s2Title": "Ghost Admin — el cerebro IA interno",
+    "s2Body": "Ghost Admin es la capa de orquestación. Para cualquier ticket abierto, obtiene un paquete de contexto estructurado antes de llamar al modelo:\n\n— El ticket completo con todos los campos de triaje IA\n— Hasta 10 mensajes recientes del cliente\n— Tickets similares resueltos previamente, emparejados por título y categoría\n— Borradores KB/SOP ya vinculados al ticket\n— Artículos de conocimiento publicados clasificados por relevancia\n— El estado completo del ciclo de vida de la organización: estado del acuerdo, estado de pago, progreso de incorporación\n\nGhost envía este paquete a Claude y devuelve un JSON de 10 campos: de qué trata realmente el ticket, el bloqueo más probable, la acción recomendada, una llamada de alcance (support_estándar / vigilar_alcance / trabajo_de_alcance), señales de ciclo de vida y una advertencia corta para el operador.\n\nEsta síntesis de contexto ocurre en menos de 3 segundos. Ghost también genera borradores de seguimiento en 6 modos: respuesta inicial, actualización de progreso, resolución, recopilación de información, actualización de escalada y evaluación de necesidades. Cada borrador usa el mismo paquete — lo que significa que los borradores reflejan la etapa del ciclo de vida del cliente, no solo la descripción del problema.",
+    "s3Title": "El portal de resolución automática — seis condiciones, no una",
+    "s3Intro": "El triaje IA puede marcar un ticket ai_can_auto_resolve: true — pero esto es una entrada al portal, no una decisión. Las seis condiciones siguientes deben cumplirse simultáneamente:",
+    "gate1Num": "Condición 1",
+    "gate1Title": "Lista blanca de categorías",
+    "gate1Body": "Solo los tickets portal_account y billing_scope son elegibles para resolución automática. Helpdesk, email, Microsoft 365, Google Workspace y SaaS admin requieren manejo humano independientemente de la confianza IA.",
+    "gate2Num": "Condición 2",
+    "gate2Title": "Indicador de elegibilidad IA",
+    "gate2Body": "El motor de triaje debe haber establecido ai_can_auto_resolve: true. El valor predeterminado es false. Solo las preguntas basadas en instrucciones o políticas del portal obtienen este indicador.",
+    "gate3Num": "Condición 3",
+    "gate3Title": "Umbral de confianza",
+    "gate3Body": "La confianza IA debe superar 0,7. Cualquier valor inferior requiere revisión humana — el portal trata el triaje de baja confianza como clasificación incierta, no como candidato para resolución automática.",
+    "gate4Num": "Condición 4",
+    "gate4Title": "Sin escalada",
+    "gate4Body": "ai_escalation_needed debe ser false. Los tickets sensibles a la seguridad o de alto impacto nunca se resuelven automáticamente independientemente de otras condiciones.",
+    "gate5Num": "Condición 5",
+    "gate5Title": "Sin indicador de proyecto",
+    "gate5Body": "ai_project_flag debe ser false. Migración, configuración mayor, remediación amplia — cualquier cosa más grande que soporte rutinario — requiere manejo y alcance manual.",
+    "gate6Num": "Condición 6",
+    "gate6Title": "Sin requisito de acceso",
+    "gate6Body": "ai_access_needed debe ser false. Si resolver el ticket requiere acceso de administrador, cambios de cuenta o escalada con proveedor, el portal permanece cerrado.",
+    "s4Title": "El volante de conocimiento",
+    "s4Body": "Cada ticket que pasa por TechDesk Pro hace el siguiente más rápido. El volante funciona en cuatro etapas:\n\nEnriquecimiento por triaje: Al crear el ticket, el triaje IA se ejecuta inmediatamente — clasificando categoría, puntuando confianza, marcando riesgo de escalada y proyecto. El ticket se enriquece con 10 campos IA antes de que el operador lo abra.\n\nConstrucción del paquete de contexto: Cuando Ghost Admin se ejecuta en un ticket, extrae tickets similares resueltos previamente. Cuantos más tickets resueltos existen, más rico es el contexto.\n\nGeneración de conocimiento: Cuando un ticket se cierra, Ghost puede generar un borrador KB/SOP del hilo de resolución. Esto está estrictamente limitado a tickets resueltos/cerrados. Los tickets en progreso nunca generan borradores.\n\nRecuperación de conocimiento: Los artículos KB publicados se clasifican en futuros paquetes de Ghost. Con el tiempo, el sistema acumula memoria institucional. En el ticket 50 resuelto para un cliente, los nuevos tickets llegan con precedentes relevantes automáticamente.",
+    "s5Title": "Sentinel — monitoreo determinista sin IA",
+    "s5Intro": "Sentinel es la capa de monitoreo y el ejemplo más claro de donde la IA fue deliberadamente excluida. Se ejecuta como un Cron de Vercel cada hora, realizando verificaciones deterministas contra todas las URLs de clientes monitoreados y datos de tickets. Ningún modelo interviene en ninguna decisión de monitoreo:",
+    "sentinel": {
+      "url": {
+        "label": "Monitoreo de URLs",
+        "body": "Solicitud HEAD a store_url y website_url de cada cliente, timeout de 10 segundos. Tiempo de respuesta > 5.000 ms devuelve severity: warning. Estado no-2xx o fallo de conexión devuelve severity: critical. Sin inferencia — el resultado es la respuesta HTTP."
+      },
+      "sla": {
+        "label": "Detección de incumplimiento SLA",
+        "body": "Consulta tickets abiertos sin timestamp first_response_at que hayan superado su umbral sla_response_hours. El cálculo es aritmético: horas_abiertas > sla_response_hours. Si es verdadero, dispara — sin juzgar si el incumplimiento está justificado."
+      },
+      "volume": {
+        "label": "Pico de volumen de tickets",
+        "body": "Compara tickets creados en las últimas 24 horas con el promedio diario de 30 días. Más de 3× el promedio activa severity: warning. El umbral está codificado — no inferido por un modelo — por lo que la alerta es completamente predecible."
+      }
+    },
+    "s5Outro": "Los hallazgos críticos crean automáticamente tickets asignados a un administrador. Las advertencias se registran en el log de actividad. Ningún modelo decide qué cuenta como incidente — Sentinel dispara o no, basándose en aritmética.\n\nEsto es intencional. Un sistema de monitoreo que pregunta a un modelo si una interrupción es significativa introduce riesgo de alucinación en un contexto donde el determinismo importa más. Cuando ocurre un incumplimiento SLA, el operador necesita saberlo — no una estimación de probabilidad.",
+    "s6Title": "Lo que se entregó",
+    "outcome": {
+      "autoResolve": "El portal de seis condiciones evita que la confianza IA sola cierre tickets — las seis condiciones deben cumplirse simultáneamente, no solo el indicador IA",
+      "ghost": "Ghost Admin sintetiza tickets similares, artículos KB y estado del ciclo de vida del cliente en un brief de contexto de 3 segundos que ningún operador podría construir manualmente",
+      "flywheel": "El volante de conocimiento se compone con cada ticket resuelto — borradores KB generados al cierre, artículos publicados clasificados en futuros paquetes de Ghost automáticamente",
+      "sentinel": "Sentinel monitorea URLs de clientes y cumplimiento SLA de forma determinista cada hora — sin IA, sin inferencia, sin ambigüedad sobre qué activa una alerta",
+      "triage": "El triaje IA enriquece cada ticket con 10 campos estructurados en la creación — categoría, confianza, dificultad, estimación de tiempo, indicador de escalada, indicador de proyecto",
+      "audit": "Cada acción de Ghost se registra en una tabla ghost_events con entrada, salida y contexto completos — un rastro de auditoría completo de cada decisión asistida por IA"
+    },
+    "callout": "La IA redacta la respuesta, clasifica el ticket y sintetiza el contexto. El código determinista decide si cerrar automáticamente, si disparar una alerta y si se superó un umbral de monitoreo. La confianza es una entrada. Nunca es condición suficiente.",
+    "closingTitle": "¿Construyendo una operación de soporte que necesita escalar sin contratar más personal?",
+    "closingBody": "Este es el tipo de sistema que construimos — IA que maneja la carga cognitiva, portales deterministas para las decisiones que importan, y una capa de conocimiento que se compone con el tiempo.",
     "closingCta": "Iniciar una conversación",
     "closingCtaSecondary": "Ver cómo trabajamos"
   }
