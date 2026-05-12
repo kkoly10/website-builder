@@ -494,8 +494,8 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step1.productHeading")}</h2>
-              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step1.productSubtitle")}</p>
             </div>
+            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 12px" }}>{t("step1.productSubtitle")}</p>
             <textarea
               className="textarea"
               rows={4}
@@ -515,8 +515,8 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step1.useCaseHeading")}</h2>
-              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step1.useCaseSubtitle")}</p>
             </div>
+            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 12px" }}>{t("step1.useCaseSubtitle")}</p>
             <RadioGroup
               options={USE_CASE_OPTIONS}
               value={form.useCase}
@@ -544,8 +544,8 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step2.productTypeHeading")}</h2>
-              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step2.productTypeSubtitle")}</p>
             </div>
+            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 12px" }}>{t("step2.productTypeSubtitle")}</p>
             <RadioGroup
               options={PRODUCT_TYPE_OPTIONS}
               value={form.productType}
@@ -558,8 +558,8 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step2.stackHeading")}</h2>
-              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step2.stackSubtitle")}</p>
             </div>
+            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 12px" }}>{t("step2.stackSubtitle")}</p>
             <div style={{ display: "grid", gap: 8 }}>
               {STACK_OPTIONS.map((s) => (
                 <CheckRow
@@ -575,8 +575,8 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step2.aiUsedHeading")}</h2>
-              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step2.aiUsedSubtitle")}</p>
             </div>
+            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 12px" }}>{t("step2.aiUsedSubtitle")}</p>
             <RadioGroup
               options={AI_USED_OPTIONS}
               value={form.aiCurrentlyUsed}
@@ -602,8 +602,8 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step2.dataHeading")}</h2>
-              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step2.dataSubtitle")}</p>
             </div>
+            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 12px" }}>{t("step2.dataSubtitle")}</p>
             <div style={{ display: "grid", gap: 8 }}>
               {DATA_CLASSIFICATION_OPTIONS.map((d) => (
                 <CheckRow
@@ -646,8 +646,8 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step3.autonomyHeading")}</h2>
-              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step3.autonomySubtitle")}</p>
             </div>
+            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 12px" }}>{t("step3.autonomySubtitle")}</p>
             <RadioGroup
               options={AUTONOMY_OPTIONS}
               value={form.autonomyLevel}
@@ -673,8 +673,8 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step3.consequenceHeading")}</h2>
-              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step3.consequenceSubtitle")}</p>
             </div>
+            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 12px" }}>{t("step3.consequenceSubtitle")}</p>
             <RadioGroup
               options={CONSEQUENCE_OPTIONS}
               value={form.mistakeConsequence}
@@ -687,8 +687,8 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step3.auditHeading")}</h2>
-              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step3.auditSubtitle")}</p>
             </div>
+            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 12px" }}>{t("step3.auditSubtitle")}</p>
             <RadioGroup
               options={AUDIT_TRAIL_OPTIONS}
               value={form.auditTrail}
@@ -706,8 +706,8 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step4.volumeHeading")}</h2>
-              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step4.volumeSubtitle")}</p>
             </div>
+            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 12px" }}>{t("step4.volumeSubtitle")}</p>
             <RadioGroup
               options={VOLUME_OPTIONS}
               value={form.dailyVolume}
@@ -786,8 +786,8 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step4.approvalHeading")}</h2>
-              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step4.approvalSubtitle")}</p>
             </div>
+            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 12px" }}>{t("step4.approvalSubtitle")}</p>
             <RadioGroup
               options={APPROVAL_OPTIONS}
               value={form.approvalProcess}
