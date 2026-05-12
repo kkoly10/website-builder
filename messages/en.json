@@ -176,31 +176,31 @@
       "label": "Not sure where to start?",
       "website": {
         "situation": "I need a professional website for my business",
-        "service": "Websites — from $1,800"
+        "service": "Websites"
       },
       "app": {
         "situation": "I have a software idea or internal tool to build",
-        "service": "Custom web apps — from $18K"
+        "service": "Custom web apps"
       },
       "ai": {
         "situation": "I want AI built into my product from day one",
-        "service": "Custom web apps with AI — from $18K"
+        "service": "AI integration"
       },
       "complex": {
         "situation": "I need a senior architect-builder for a complex product",
-        "service": "Custom web apps — complex scope from $75K"
+        "service": "Custom web apps — complex scope"
       },
       "portal": {
         "situation": "I manage client projects and need a real client system",
-        "service": "Client portals — from $12K"
+        "service": "Client portals"
       },
       "rescue": {
         "situation": "My site is broken, slow, or leaking leads",
-        "service": "Website rescue — from $1K"
+        "service": "Website rescue"
       },
       "ecommerce": {
         "situation": "I need an online store or help running the one I have",
-        "service": "E-commerce — from $1,800"
+        "service": "E-commerce"
       }
     },
     "proof": {

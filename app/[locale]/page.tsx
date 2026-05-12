@@ -41,25 +41,22 @@ const JOURNEY_KEYS = [
 ] as const;
 
 const WHAT_WE_BUILD_CARDS = [
-  { key: "webApps",       href: "/custom-web-apps",  event: "cta_home_card_web_apps"        },
-  { key: "aiIntegration", href: "/custom-web-apps",  event: "cta_home_card_ai_integration"  },
-  { key: "portals",       href: "/client-portals",   event: "cta_home_card_portals"         },
-  { key: "automation",    href: "/systems",           event: "cta_home_card_automation"      },
-  { key: "websites",      href: "/websites",          event: "cta_home_card_websites"        },
-  { key: "ecommerce",     href: "/ecommerce",         event: "cta_home_card_ecommerce"       },
-  { key: "rescue",        href: "/website-rescue",    event: "cta_home_card_rescue"          },
+  { key: "webApps",       href: "/custom-web-apps",                    event: "cta_home_card_web_apps"        },
+  { key: "aiIntegration", href: "/build/intro?projectType=ai_integration", event: "cta_home_card_ai_integration"  },
+  { key: "portals",       href: "/client-portals",                     event: "cta_home_card_portals"         },
+  { key: "automation",    href: "/systems",                            event: "cta_home_card_automation"      },
+  { key: "websites",      href: "/websites",                           event: "cta_home_card_websites"        },
+  { key: "ecommerce",     href: "/ecommerce",                          event: "cta_home_card_ecommerce"       },
 ] as const;
 
-const LOW_TICKET_KEYS = new Set(["websites", "ecommerce", "rescue"]);
-
 const START_HERE_CARDS = [
-  { key: "website",   href: "/websites"        },
-  { key: "app",       href: "/custom-web-apps" },
-  { key: "ai",        href: "/custom-web-apps" },
-  { key: "complex",   href: "/custom-web-apps" },
-  { key: "portal",    href: "/client-portals"  },
-  { key: "rescue",    href: "/website-rescue"  },
-  { key: "ecommerce", href: "/ecommerce"       },
+  { key: "website",   href: "/websites"                              },
+  { key: "app",       href: "/custom-web-apps"                      },
+  { key: "ai",        href: "/build/intro?projectType=ai_integration" },
+  { key: "complex",   href: "/custom-web-apps"                      },
+  { key: "portal",    href: "/client-portals"                       },
+  { key: "rescue",    href: "/website-rescue"                       },
+  { key: "ecommerce", href: "/ecommerce"                            },
 ] as const;
 
 export default async function Home({
@@ -154,9 +151,6 @@ function HomeContent() {
               >
                 <h3 className={styles.wbCardTitle}>{t(`whatWeBuild.cards.${card.key}.title`)}</h3>
                 <p className={styles.wbCardBody}>{t(`whatWeBuild.cards.${card.key}.body`)}</p>
-                {LOW_TICKET_KEYS.has(card.key) && (
-                  <span className={styles.wbCardBadge}>{t(`whatWeBuild.cards.${card.key}.badge`)}</span>
-                )}
                 <span className={styles.wbCardArrow} aria-hidden>-&gt;</span>
               </TrackLink>
             ))}

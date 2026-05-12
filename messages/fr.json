@@ -176,31 +176,31 @@
       "label": "Pas sûr par où commencer ?",
       "website": {
         "situation": "J'ai besoin d'un site web professionnel pour mon entreprise",
-        "service": "Sites web — à partir de 1 800 $"
+        "service": "Sites web"
       },
       "app": {
         "situation": "J'ai une idée de logiciel ou un outil interne à créer",
-        "service": "Applications web sur mesure — à partir de 18 000 $"
+        "service": "Applications web sur mesure"
       },
       "ai": {
         "situation": "Je veux de l'IA intégrée dans mon produit dès le départ",
-        "service": "Applications web avec IA — à partir de 18 000 $"
+        "service": "Intégration IA"
       },
       "complex": {
         "situation": "J'ai besoin d'un architecte-développeur senior pour un produit complexe",
-        "service": "Applications web sur mesure — portée complexe à partir de 75 000 $"
+        "service": "Applications web — portée complexe"
       },
       "portal": {
         "situation": "Je gère des projets clients et j'ai besoin d'un vrai système client",
-        "service": "Portails clients — à partir de 12 000 $"
+        "service": "Portails clients"
       },
       "rescue": {
         "situation": "Mon site est cassé, lent ou perd des prospects",
-        "service": "Rescue de site — à partir de 1 000 $"
+        "service": "Rescue de site web"
       },
       "ecommerce": {
         "situation": "J'ai besoin d'une boutique en ligne ou d'aide pour la gérer",
-        "service": "E-commerce — à partir de 1 800 $"
+        "service": "E-commerce"
       }
     },
     "proof": {
