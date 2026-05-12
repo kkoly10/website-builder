@@ -50,13 +50,13 @@ const WHAT_WE_BUILD_CARDS = [
 ] as const;
 
 const START_HERE_CARDS = [
-  { key: "website",   href: "/websites"                              },
-  { key: "app",       href: "/custom-web-apps"                      },
   { key: "ai",        href: "/build/intro?projectType=ai_integration" },
   { key: "complex",   href: "/custom-web-apps"                      },
+  { key: "app",       href: "/custom-web-apps"                      },
   { key: "portal",    href: "/client-portals"                       },
-  { key: "rescue",    href: "/website-rescue"                       },
+  { key: "website",   href: "/websites"                              },
   { key: "ecommerce", href: "/ecommerce"                            },
+  { key: "rescue",    href: "/website-rescue"                       },
 ] as const;
 
 export default async function Home({
