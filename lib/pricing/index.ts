@@ -6,3 +6,4 @@ export * from "@/lib/pricing/automation";
 export * from "@/lib/pricing/ecommerce";
 export * from "@/lib/pricing/web_app";
 export * from "@/lib/pricing/rescue";
+export * from "@/lib/pricing/ai_intake";

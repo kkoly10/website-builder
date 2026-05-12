@@ -7,11 +7,12 @@ import { useEffect, useMemo, useState } from "react";
 import { trackEvent } from "@/lib/analytics/client";
 import ScrollReveal from "@/components/site/ScrollReveal";
 
-type ProjectType = "website" | "web_app" | "automation" | "ecommerce" | "rescue";
+type ProjectType = "website" | "web_app" | "ai_integration" | "automation" | "ecommerce" | "rescue";
 
 const PROJECT_TYPE_KEYS: ProjectType[] = [
   "website",
   "web_app",
+  "ai_integration",
   "automation",
   "ecommerce",
   "rescue",
@@ -19,6 +20,7 @@ const PROJECT_TYPE_KEYS: ProjectType[] = [
 
 const PROJECT_TYPE_ROUTES: Record<Exclude<ProjectType, "website">, string> = {
   web_app: "/custom-app-intake",
+  ai_integration: "/build/ai-intake",
   automation: "/ops-intake",
   ecommerce: "/ecommerce/intake",
   rescue: "/rescue-intake",

@@ -1,4 +1,5 @@
 import type {
+  AiIntakeTierKey,
   EcommerceTierKey,
   OpsTierKey,
   RescueTierKey,
@@ -176,6 +177,30 @@ export const RESCUE_TIER_CONFIG: Record<
     label: "Full Rescue Sprint",
     min: 1500,
     max: 3500,
+  },
+};
+
+// Phase 5 — AI integration pricing tiers.
+// Bands reflect the architectural complexity: single targeted feature ($8k–$15k),
+// production system with safety gates ($18k–$40k), full multi-layer architecture ($45k–$80k).
+export const AI_INTAKE_TIER_CONFIG: Record<
+  Exclude<AiIntakeTierKey, "custom_ai_scope">,
+  { label: string; min: number; max: number }
+> = {
+  ai_single_integration: {
+    label: "AI Feature Integration",
+    min: 8000,
+    max: 15000,
+  },
+  ai_production_system: {
+    label: "AI Production System",
+    min: 18000,
+    max: 40000,
+  },
+  ai_architecture_build: {
+    label: "AI Architecture Build",
+    min: 45000,
+    max: 80000,
   },
 };
 
