@@ -2516,7 +2516,7 @@
     "metaDescription": "Selected systems we've shipped — including our own. Multi-tenant rental SaaS, AI-augmented service-contractor platform, and client work.",
     "kicker": "Selected work",
     "title": "Real systems we've shipped — <em>including our own.</em>",
-    "subtitle": "Two studio ventures we built, run, and operate. Plus client work where the names are sometimes anonymized.",
+    "subtitle": "Three studio ventures we built, run, and operate. Plus client work where the names are sometimes anonymized.",
     "venturesLabel": "Studio ventures",
     "venturesIntro": "These are our own products, built and operated by the studio. They prove the engineering capability for the Web Apps lane — they're not client testimonials.",
     "ventureBadge": "Studio venture",
@@ -2541,6 +2541,17 @@
         "chip3": "CRM pipeline",
         "chip4": "Automated emails",
         "linkLabel": "Visit proveohq.com",
+        "caseStudyLink": "Engineering deep dive"
+      },
+      "techdesk": {
+        "name": "TechDesk Pro",
+        "tagline": "AI-powered helpdesk for remote IT support businesses",
+        "summary": "Helpdesk SaaS for remote-first IT support operators. AI triage classifies every ticket with category, confidence score, and risk flags on creation. Ghost Admin synthesizes context from similar tickets and the knowledge base in seconds. A six-gate auto-resolve engine handles low-risk requests without operator intervention. Deterministic Sentinel cron monitors client sites and SLA compliance every hour.",
+        "chip1": "Ghost Admin AI",
+        "chip2": "6-Gate Auto-Resolve",
+        "chip3": "Knowledge Flywheel",
+        "chip4": "Sentinel Monitoring",
+        "linkLabel": "Visit kocreit.com",
         "caseStudyLink": "Engineering deep dive"
       }
     },
@@ -3133,6 +3144,77 @@
     "callout": "AI identifies what's in the photos. Deterministic code decides whether those photos are trustworthy. We never mixed those two responsibilities.",
     "closingTitle": "Building something where trust is a product feature, not just a policy?",
     "closingBody": "This is the kind of architecture work we do — systems where AI and deterministic logic are each used where they're appropriate, not interchangeably.",
+    "closingCta": "Start a conversation",
+    "closingCtaSecondary": "See how we work"
+  },
+  "workTechdesk": {
+    "metaTitle": "TechDesk Pro — Engineering Deep Dive | CrecyStudio",
+    "metaDescription": "How we built an AI-powered IT helpdesk with Ghost Admin context synthesis, a six-gate auto-resolve engine, a self-compounding knowledge flywheel, and deterministic Sentinel monitoring.",
+    "back": "Back to work",
+    "kicker": "Engineering case study / TechDesk Pro",
+    "title": "Building an AI helpdesk where the machine drafts, advises, and monitors — but never resolves a ticket on confidence alone.",
+    "subtitle": "Remote IT support runs on speed and context. Ghost Admin delivers both in seconds — without letting AI confidence be sufficient reason to close a ticket.",
+    "chips": {
+      "stack": "Next.js + Supabase",
+      "ai": "Claude API",
+      "pattern": "Knowledge flywheel",
+      "safety": "6-gate auto-resolve"
+    },
+    "s1Title": "The operational cost of context",
+    "s1Body": "Running IT support for multiple client organizations means carrying simultaneous context for each — which platforms they're on, what their last issue was, what's been resolved before, which SLA tier they're under. Without tooling, every new ticket starts with 10–15 minutes of history-reading before any actual support happens.\n\nThe second problem is automation risk. Auto-closing tickets based on AI confidence alone would recover that time — but at the cost of reliability. A misclassified ticket that gets auto-resolved is a client problem the operator never sees. Too many false positives and the automation becomes a liability rather than a tool.\n\nTechDesk Pro needed an AI layer that was genuinely useful for context-gathering and drafting, and genuinely conservative about autonomous action — not because the AI was weak, but because the conditions for acting on its output needed to be unambiguous.",
+    "s2Title": "Ghost Admin — the internal AI brain",
+    "s2Body": "Ghost Admin is the orchestration layer. For any open ticket, it fetches a structured context bundle before calling the model:\n\n— The full ticket record with all AI triage fields populated\n— Up to 10 recent client-facing conversation messages\n— Similar previously resolved tickets, matched on title and category\n— KB/SOP drafts already linked to the ticket\n— Published knowledge articles ranked by relevance\n— The client organization's full lifecycle state: agreement status, payment status, onboarding progress, client_status, whether the account flags for human review\n\nGhost sends this bundle to Claude and returns a 10-field JSON: what the ticket is actually about, the most likely blocker, recommended next action, a scope call (standard_support / watch_scope / likely_scoped_work), client reply guidance, lifecycle signals, and a short operator warning for edge cases.\n\nThis context synthesis happens in under 3 seconds and gives the operator a starting position that would otherwise require reading the full ticket history, the client profile, and the knowledge base manually.\n\nGhost also generates follow-up drafts in 6 modes: initial response, progress update, resolution, information gathering, escalation update, and needs assessment. Each draft pulls from the same context bundle — meaning drafts reflect the client's lifecycle stage, not just the issue description.",
+    "s3Title": "The auto-resolve gate — six conditions, not one",
+    "s3Intro": "AI triage can flag a ticket ai_can_auto_resolve: true — but this is an input to the gate, not a decision. All six conditions must hold simultaneously before any ticket closes automatically:",
+    "gate1Num": "Condition 1",
+    "gate1Title": "Category allowlist",
+    "gate1Body": "Only portal_account and billing_scope tickets are auto-resolve eligible. Helpdesk, email, Microsoft 365, Google Workspace, and SaaS admin tickets require human handling regardless of AI confidence.",
+    "gate2Num": "Condition 2",
+    "gate2Title": "AI eligibility flag",
+    "gate2Body": "The triage engine must have set ai_can_auto_resolve: true. The default is false. Only instruction-based, FAQ-style, or portal/policy questions earn this flag.",
+    "gate3Num": "Condition 3",
+    "gate3Title": "Confidence threshold",
+    "gate3Body": "AI confidence must exceed 0.7. Anything below that requires human review — the gate treats low-confidence triage as uncertain classification, not as a borderline auto-resolve candidate.",
+    "gate4Num": "Condition 4",
+    "gate4Title": "No escalation flag",
+    "gate4Body": "ai_escalation_needed must be false. Security-sensitive, high-impact, or ambiguous tickets are never auto-resolved regardless of other conditions.",
+    "gate5Num": "Condition 5",
+    "gate5Title": "No project flag",
+    "gate5Body": "ai_project_flag must be false. Migration work, major setup, broad remediation — anything larger than routine support — requires manual handling and scoping.",
+    "gate6Num": "Condition 6",
+    "gate6Title": "No access requirement",
+    "gate6Body": "ai_access_needed must be false. If resolving the ticket requires admin access, account changes, or vendor escalation, the gate stays closed.",
+    "s4Title": "The knowledge flywheel",
+    "s4Body": "Every ticket that moves through TechDesk Pro makes the next one faster. The flywheel runs in four stages:\n\nTriage enrichment: On ticket creation, AI triage runs immediately — classifying category, scoring confidence, flagging escalation and project risk, estimating time. The ticket is enriched with 10 AI fields before an operator opens it.\n\nContext bundling: When Ghost Admin runs on a ticket, it pulls similar resolved tickets from the database. The more resolved tickets exist, the richer the context bundle. A new Microsoft 365 issue gets context from every previously resolved Microsoft 365 ticket for that client.\n\nKnowledge generation: When a ticket closes, Ghost can generate a KB/SOP draft from the resolution thread. This captures what the issue was, what was tried, and what fixed it — gated strictly to resolved/closed tickets. In-progress tickets never generate drafts.\n\nKnowledge retrieval: Published KB articles rank into future Ghost context bundles. Over time, the system builds institutional memory. By the 50th resolved ticket for a client, new tickets from that client arrive with matched precedents, relevant procedures, and similar past resolutions — automatically.",
+    "s5Title": "Sentinel — deterministic monitoring without AI",
+    "s5Intro": "Sentinel is the monitoring layer and the clearest example of where AI was deliberately excluded. It runs as a Vercel Cron job every hour, making deterministic checks against all monitored client URLs and ticket data. No model is involved in any monitoring decision:",
+    "sentinel": {
+      "url": {
+        "label": "URL monitoring",
+        "body": "HEAD request to each client's store_url and website_url, 10-second timeout. Response time > 5,000ms returns severity: warning. Non-2xx status or connection failure returns severity: critical. No inference — the result is the HTTP response."
+      },
+      "sla": {
+        "label": "SLA breach detection",
+        "body": "Queries open tickets without a first_response_at timestamp that have exceeded their sla_response_hours. The check is arithmetic: hours_open > sla_response_hours. If true, it fires — the system doesn't judge whether the breach is justified."
+      },
+      "volume": {
+        "label": "Ticket volume spike",
+        "body": "Compares tickets created in the last 24 hours against the 30-day daily average. Greater than 3× the average triggers severity: warning. The threshold is hardcoded — not model-inferred — so the alert is fully predictable."
+      }
+    },
+    "s5Outro": "Critical findings auto-create tickets assigned to an admin. Warning findings are logged in the activity log. No model decides what counts as an incident — Sentinel either fires or it doesn't, based on arithmetic.\n\nThis is intentional. A monitoring system that asks a model whether an outage is significant introduces hallucination risk and latency into a context where determinism matters most. When an SLA breach happens, the operator needs to know — not a probability estimate.",
+    "s6Title": "What shipped",
+    "outcome": {
+      "autoResolve": "Six-condition auto-resolve gate prevents AI confidence alone from closing tickets — all six conditions must hold simultaneously, not just the AI flag",
+      "ghost": "Ghost Admin synthesizes similar tickets, KB articles, and client lifecycle state into a 3-second context brief no operator could build manually from raw history",
+      "flywheel": "Knowledge flywheel compounds with every resolved ticket — KB drafts generated on close, published articles ranked into future Ghost bundles automatically",
+      "sentinel": "Sentinel monitors client URLs and SLA compliance deterministically every hour — no AI, no inference, no ambiguity about what triggers an alert",
+      "triage": "AI triage enriches every ticket with 10 structured fields on creation — category, confidence, difficulty, time estimate, escalation flag, project flag",
+      "audit": "Every Ghost action is logged to a ghost_events table with full input, output, and ticket context — a complete audit trail of every AI-assisted decision"
+    },
+    "callout": "AI drafts the reply, classifies the ticket, and synthesizes the context. Deterministic code decides whether to auto-close, whether to fire an alert, and whether a monitoring threshold was breached. Confidence is an input. It is never a sufficient condition.",
+    "closingTitle": "Building a support operation that needs to scale without adding headcount?",
+    "closingBody": "This is the kind of system we build — AI that handles the cognitive load, deterministic gates for the decisions that matter, and a knowledge layer that compounds over time.",
     "closingCta": "Start a conversation",
     "closingCtaSecondary": "See how we work"
   }
