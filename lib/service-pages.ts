@@ -977,17 +977,18 @@ customWebAppsData.en = {
   ],
   primaryCta: { label: "Plan a custom app", href: "/custom-app-intake" },
   secondaryCta: { label: "See our work", href: "/work" },
-  whoItsForTitle: "Best for founders and operators who've outgrown off-the-shelf tools.",
+  whoItsForTitle: "Best for founders, operators, and growth-stage teams who need a senior architect-builder.",
   whoItsFor: [
     "You have a process that lives across spreadsheets, Notion, and a dozen browser tabs.",
     "You've validated a software idea and need someone to actually build it.",
     "You need a tool your customers will log into, not just a marketing site.",
     "Your team spends more time managing workarounds than serving customers.",
+    "You're at a growth-stage company and need a senior architect-builder — not an agency that pitches senior talent and hands the project to juniors.",
   ],
   problemsTitle: "Four signs you need a custom system, not another SaaS subscription.",
   problems: [
     "You've outgrown off-the-shelf SaaS but every contractor quote starts at $80K.",
-    "You don't have a CTO, but you have real software needs.",
+    "You need a real software system — with or without a CTO in the room.",
     "You've been burned by a freelancer who shipped half a product and disappeared.",
     "You're paying for five tools that still don't talk to each other.",
   ],
@@ -1046,11 +1047,11 @@ customWebAppsData.en = {
       meta: "Scoped to your project",
     },
     {
-      label: "Custom scope",
+      label: "Complex scope",
       value: "$75,000+",
       detail:
-        "Multi-tenant SaaS, complex integrations, AI features, white-label systems, enterprise requirements.",
-      meta: "Strategy call required",
+        "Multi-tenant SaaS, complex data models, AI integration, white-label systems, or enterprise-grade architecture. Typically a 3–6 month engagement. Discovery sprint required. You own all code, IP, and documentation from day one — nothing held back.",
+      meta: "Discovery sprint required",
     },
   ],
   processTitle: "How a custom app gets built.",
@@ -1113,12 +1114,28 @@ customWebAppsData.en = {
       answer:
         "You own the code and can hire anyone to maintain it. We offer an optional Care Pro retainer for clients who want ongoing iteration from us. Most clients start without it and add it after they've validated traction.",
     },
+    {
+      question: "What happens if this engagement falls apart mid-project?",
+      answer:
+        "Your code lives in your own repository from day one — not ours. Every milestone ships with documentation so any developer can pick up where we left off. The handoff plan is part of the contract before work starts, not an afterthought at the end. You're never dependent on a single point of failure.",
+    },
+    {
+      question: "Who actually touches my code?",
+      answer:
+        "Only me. No account managers, no junior developers handed the project after the kickoff call. The person you scope with is the person who builds it, reviews it, and ships it. That's the promise agencies can't make — and it's the main reason clients come here after being burned by one.",
+    },
+    {
+      question: "What's the process when scope changes mid-project?",
+      answer:
+        "Any change to scope goes through a written change order — priced, documented, and approved before a line of new code is written. Nothing is added silently and nothing inflates the bill without your sign-off. This is built into the contract from the start, not handled informally.",
+    },
   ],
   bestFitTitle: "Best fit for…",
   bestFit: [
     "Founders shipping their first software product",
     "Operators replacing manual processes with a real system",
     "Agencies needing white-label internal tools",
+    "Growth-stage teams that need a senior architect with product judgment — not a ticket queue",
   ],
   notFitTitle: "Probably not the right call if…",
   notFit: [
@@ -1224,11 +1241,11 @@ clientPortalsData.en = {
       meta: "Scoped to your project",
     },
     {
-      label: "Custom enterprise build",
-      value: "Scoped to project",
+      label: "Enterprise build",
+      value: "From $75,000",
       detail:
-        "Multi-tenant, custom integrations, white-label, compliance work. Requires a strategy call to scope.",
-      meta: "Strategy call required",
+        "Multi-tenant architecture, custom integrations, white-label branding, compliance-ready data handling. Full IP transfer, documented handoff, code in your repository from day one. Typically a 3–5 month engagement scoped through a paid discovery sprint.",
+      meta: "Discovery sprint required",
     },
   ],
   processTitle: "How a portal gets built.",

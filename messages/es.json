@@ -186,6 +186,10 @@
         "situation": "Quiero IA integrada en mi producto desde el primer día",
         "service": "Apps web con IA — desde $18K"
       },
+      "complex": {
+        "situation": "Necesito un arquitecto-desarrollador senior para un producto complejo",
+        "service": "Apps web personalizadas — alcance complejo desde $75K"
+      },
       "portal": {
         "situation": "Gestiono proyectos de clientes y necesito un sistema real",
         "service": "Portales de cliente — desde $12K"

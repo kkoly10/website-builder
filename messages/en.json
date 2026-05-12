@@ -186,6 +186,10 @@
         "situation": "I want AI built into my product from day one",
         "service": "Custom web apps with AI — from $18K"
       },
+      "complex": {
+        "situation": "I need a senior architect-builder for a complex product",
+        "service": "Custom web apps — complex scope from $75K"
+      },
       "portal": {
         "situation": "I manage client projects and need a real client system",
         "service": "Client portals — from $12K"

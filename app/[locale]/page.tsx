@@ -56,6 +56,7 @@ const START_HERE_CARDS = [
   { key: "website",   href: "/websites"        },
   { key: "app",       href: "/custom-web-apps" },
   { key: "ai",        href: "/custom-web-apps" },
+  { key: "complex",   href: "/custom-web-apps" },
   { key: "portal",    href: "/client-portals"  },
   { key: "rescue",    href: "/website-rescue"  },
   { key: "ecommerce", href: "/ecommerce"       },
