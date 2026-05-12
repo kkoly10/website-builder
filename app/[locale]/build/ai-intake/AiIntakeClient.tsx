@@ -468,7 +468,7 @@ export default function AiIntakeClient() {
                 </label>
                 <input
                   type="text"
-                  className="inputField"
+                  className="input"
                   placeholder={t("step1.contactNamePlaceholder")}
                   value={form.contactName}
                   onChange={(e) => setForm((p) => ({ ...p, contactName: e.target.value }))}
@@ -482,7 +482,7 @@ export default function AiIntakeClient() {
                 </label>
                 <input
                   type="text"
-                  className="inputField"
+                  className="input"
                   placeholder={t("step1.companyPlaceholder")}
                   value={form.companyName}
                   onChange={(e) => setForm((p) => ({ ...p, companyName: e.target.value }))}
@@ -494,10 +494,10 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step1.productHeading")}</h2>
-              <p className="portalPanelSubtitle">{t("step1.productSubtitle")}</p>
+              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step1.productSubtitle")}</p>
             </div>
             <textarea
-              className="inputField"
+              className="textarea"
               rows={4}
               placeholder={t("step1.productPlaceholder")}
               value={form.productDescription}
@@ -515,7 +515,7 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step1.useCaseHeading")}</h2>
-              <p className="portalPanelSubtitle">{t("step1.useCaseSubtitle")}</p>
+              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step1.useCaseSubtitle")}</p>
             </div>
             <RadioGroup
               options={USE_CASE_OPTIONS}
@@ -527,7 +527,7 @@ export default function AiIntakeClient() {
             {form.useCase === "other" && (
               <input
                 type="text"
-                className="inputField"
+                className="input"
                 style={{ marginTop: 10 }}
                 placeholder={t("step1.useCaseOtherPlaceholder")}
                 value={form.useCaseOther}
@@ -544,7 +544,7 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step2.productTypeHeading")}</h2>
-              <p className="portalPanelSubtitle">{t("step2.productTypeSubtitle")}</p>
+              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step2.productTypeSubtitle")}</p>
             </div>
             <RadioGroup
               options={PRODUCT_TYPE_OPTIONS}
@@ -558,7 +558,7 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step2.stackHeading")}</h2>
-              <p className="portalPanelSubtitle">{t("step2.stackSubtitle")}</p>
+              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step2.stackSubtitle")}</p>
             </div>
             <div style={{ display: "grid", gap: 8 }}>
               {STACK_OPTIONS.map((s) => (
@@ -575,7 +575,7 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step2.aiUsedHeading")}</h2>
-              <p className="portalPanelSubtitle">{t("step2.aiUsedSubtitle")}</p>
+              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step2.aiUsedSubtitle")}</p>
             </div>
             <RadioGroup
               options={AI_USED_OPTIONS}
@@ -588,7 +588,7 @@ export default function AiIntakeClient() {
               form.aiCurrentlyUsed === "multiple") && (
               <input
                 type="text"
-                className="inputField"
+                className="input"
                 style={{ marginTop: 10 }}
                 placeholder={t("step2.aiProviderPlaceholder")}
                 value={form.aiCurrentProvider}
@@ -602,7 +602,7 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step2.dataHeading")}</h2>
-              <p className="portalPanelSubtitle">{t("step2.dataSubtitle")}</p>
+              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step2.dataSubtitle")}</p>
             </div>
             <div style={{ display: "grid", gap: 8 }}>
               {DATA_CLASSIFICATION_OPTIONS.map((d) => (
@@ -646,7 +646,7 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step3.autonomyHeading")}</h2>
-              <p className="portalPanelSubtitle">{t("step3.autonomySubtitle")}</p>
+              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step3.autonomySubtitle")}</p>
             </div>
             <RadioGroup
               options={AUTONOMY_OPTIONS}
@@ -673,7 +673,7 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step3.consequenceHeading")}</h2>
-              <p className="portalPanelSubtitle">{t("step3.consequenceSubtitle")}</p>
+              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step3.consequenceSubtitle")}</p>
             </div>
             <RadioGroup
               options={CONSEQUENCE_OPTIONS}
@@ -687,7 +687,7 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step3.auditHeading")}</h2>
-              <p className="portalPanelSubtitle">{t("step3.auditSubtitle")}</p>
+              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step3.auditSubtitle")}</p>
             </div>
             <RadioGroup
               options={AUDIT_TRAIL_OPTIONS}
@@ -706,7 +706,7 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step4.volumeHeading")}</h2>
-              <p className="portalPanelSubtitle">{t("step4.volumeSubtitle")}</p>
+              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step4.volumeSubtitle")}</p>
             </div>
             <RadioGroup
               options={VOLUME_OPTIONS}
@@ -786,7 +786,7 @@ export default function AiIntakeClient() {
           <div className="portalPanel">
             <div className="portalPanelHeader">
               <h2 className="portalPanelTitle">{t("step4.approvalHeading")}</h2>
-              <p className="portalPanelSubtitle">{t("step4.approvalSubtitle")}</p>
+              <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>{t("step4.approvalSubtitle")}</p>
             </div>
             <RadioGroup
               options={APPROVAL_OPTIONS}
@@ -810,7 +810,7 @@ export default function AiIntakeClient() {
                 </label>
                 <input
                   type="email"
-                  className="inputField"
+                  className="input"
                   placeholder={t("step4.emailPlaceholder")}
                   value={form.email}
                   onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
@@ -824,7 +824,7 @@ export default function AiIntakeClient() {
                 </label>
                 <input
                   type="tel"
-                  className="inputField"
+                  className="input"
                   placeholder={t("step4.phonePlaceholder")}
                   value={form.phone}
                   onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
@@ -838,7 +838,7 @@ export default function AiIntakeClient() {
                 </label>
                 <input
                   type="text"
-                  className="inputField"
+                  className="input"
                   placeholder={t("step4.decisionMakerPlaceholder")}
                   value={form.decisionMaker}
                   onChange={(e) => setForm((p) => ({ ...p, decisionMaker: e.target.value }))}
