@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
+import { Link } from "@/i18n/navigation";
 import TrackLink from "@/components/site/TrackLink";
 import ScrollReveal from "@/components/site/ScrollReveal";
 import styles from "./work.module.css";
@@ -27,11 +28,13 @@ const VENTURE_KEYS = ["fleiko", "proveo"] as const;
 // case lands, define keys here and re-introduce the iteration alongside
 // the matching work.clients.* entries in messages/*.json.
 
-// External live products. Plain anchors with target=_blank since TrackLink
-// uses next-intl's locale-aware Link, which is for internal routes only.
 const VENTURE_LIVE_URL: Record<(typeof VENTURE_KEYS)[number], string> = {
   fleiko: "https://fleiko.com",
   proveo: "https://proveohq.com",
+};
+
+const VENTURE_CASE_STUDY_HREF: Partial<Record<(typeof VENTURE_KEYS)[number], string>> = {
+  fleiko: "/work/fleiko",
 };
 
 export default async function WorkPage({
@@ -89,6 +92,11 @@ function WorkContent() {
                 >
                   {t(`ventures.${key}.linkLabel`)} <span aria-hidden>↗</span>
                 </a>
+                {VENTURE_CASE_STUDY_HREF[key] && (
+                  <Link href={VENTURE_CASE_STUDY_HREF[key]!} className={styles.ventureLink}>
+                    {t(`ventures.${key}.caseStudyLink`)} →
+                  </Link>
+                )}
               </article>
             ))}
           </div>
