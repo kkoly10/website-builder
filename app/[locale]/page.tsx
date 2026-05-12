@@ -89,7 +89,7 @@ function HomeContent() {
     <main className={styles.page}>
       <ScrollReveal />
 
-      <header className={`${styles.hero} heroFadeUp`}>
+      <header className={styles.hero}>
         <div className="container">
           <p className={styles.heroLabel}>{t("heroLabel")}</p>
           <h1 className={styles.heroTitle}>
@@ -111,8 +111,12 @@ function HomeContent() {
 
       <section className={styles.proof}>
         <div className={`container ${styles.proofGrid}`}>
-          {proofItems.map((item) => (
-            <article key={item.label} className={styles.proofItem}>
+          {proofItems.map((item, i) => (
+            <article
+              key={item.label}
+              className={`${styles.proofItem} fadeUp`}
+              style={{ transitionDelay: `${i * 80}ms` }}
+            >
               <p className={styles.proofValue}>{item.value}</p>
               <p className={styles.proofLabel}>{item.label}</p>
             </article>
@@ -135,19 +139,20 @@ function HomeContent() {
         </div>
       </section>
 
-      <section id="what-we-build" className={`${styles.whatWeBuild} fadeUp`}>
+      <section id="what-we-build" className={styles.whatWeBuild}>
         <div className="container">
-          <div className={styles.whatWeBuildHead}>
+          <div className={`${styles.whatWeBuildHead} fadeUp`}>
             <p className={styles.sectionLabel}>{t("whatWeBuild.label")}</p>
             <h2 className={styles.sectionTitle}>{t("whatWeBuild.title")}</h2>
           </div>
           <div className={styles.whatWeBuildGrid}>
-            {WHAT_WE_BUILD_CARDS.map((card) => (
+            {WHAT_WE_BUILD_CARDS.map((card, i) => (
               <TrackLink
                 key={card.key}
                 href={card.href}
                 event={card.event}
-                className={styles.wbCard}
+                className={`${styles.wbCard} fadeUp`}
+                style={{ transitionDelay: `${i * 70}ms` }}
               >
                 <h3 className={styles.wbCardTitle}>{t(`whatWeBuild.cards.${card.key}.title`)}</h3>
                 <p className={styles.wbCardBody}>{t(`whatWeBuild.cards.${card.key}.body`)}</p>
