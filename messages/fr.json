@@ -213,6 +213,10 @@
       "workspaceValue": "Portail de suivi",
       "workspace": "Voyez votre projet avancer en temps réel"
     },
+    "positioning": {
+      "kicker": "La différence CrecyStudio",
+      "statement": "Je ne me contente pas de créer des sites web. Je donne à mes clients un espace structuré où la portée du projet, la direction design, les fichiers, les retours, les factures, les validations et les étapes de lancement sont gérés en un seul endroit."
+    },
     "ventures": {
       "label": "Studio ventures",
       "title": "Real systems we’ve shipped.",

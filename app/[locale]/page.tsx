@@ -124,6 +124,13 @@ function HomeContent() {
         </div>
       </section>
 
+      <section className={`${styles.positioning} fadeUp`}>
+        <div className="container">
+          <p className={styles.sectionLabel}>{t("positioning.kicker")}</p>
+          <p className={styles.positioningStatement}>{t("positioning.statement")}</p>
+        </div>
+      </section>
+
       <section className={styles.startHere}>
         <div className="container">
           <p className={styles.sectionLabel}>{t("startHere.label")}</p>

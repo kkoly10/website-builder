@@ -1,7 +1,7 @@
 import { sendResendEmail } from "@/lib/resend";
 import { logProjectActivityByPortalId } from "@/lib/projectActivity";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { emailWrap, ctaButton, callout, sig, adminBadge, adminTable, escHtml } from "@/lib/emailHelpers";
+import { emailWrap, ctaButton, callout, sig, adminBadge, adminTable, escHtml, nameFromEmail } from "@/lib/emailHelpers";
 
 const FROM_EMAIL =
   process.env.NOTIFICATION_FROM_EMAIL ||
@@ -35,6 +35,37 @@ function hoursSince(value: unknown) {
   const date = safeDate(value);
   if (!date) return 0;
   return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60));
+}
+
+
+function getPendingItems(portal: PortalRow, messages: any[]): string[] {
+  const items: string[] = [];
+  const lastSeenMs = portal.last_client_seen_at
+    ? new Date(str(portal.last_client_seen_at)).getTime()
+    : 0;
+
+  const unreadFromStudio = messages.filter(
+    (m) =>
+      ["studio", "internal"].includes(str(m.sender_role).toLowerCase()) &&
+      new Date(str(m.created_at)).getTime() > lastSeenMs
+  );
+  if (unreadFromStudio.length === 1) {
+    items.push("1 message from the studio waiting on you");
+  } else if (unreadFromStudio.length > 1) {
+    items.push(`${unreadFromStudio.length} messages from the studio waiting on you`);
+  }
+
+  if (
+    portal.preview_url &&
+    portal.preview_updated_at &&
+    (!portal.preview_viewed_at ||
+      new Date(str(portal.preview_viewed_at)).getTime() <
+        new Date(str(portal.preview_updated_at)).getTime())
+  ) {
+    items.push("a preview ready for your feedback");
+  }
+
+  return items;
 }
 
 function ensureBaseUrl(value?: string | null) {
@@ -177,7 +208,7 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
     const recipientEmail = str(quote?.lead_email) || str(lead?.email);
     if (!recipientEmail || !recipientEmail.includes("@")) continue;
 
-    const recipientName = str(lead?.name) || "there";
+    const recipientName = str(lead?.name) || nameFromEmail(recipientEmail) || "there";
     const workspaceUrl = `${baseUrl}/portal/${encodeURIComponent(str(portal.access_token))}`;
     const assetCount = (assetsByPortal.get(portalId) ?? []).length;
     const revisions = (revisionsByPortal.get(portalId) ?? []).sort(
@@ -187,6 +218,14 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
       (a, b) => new Date(str(b.created_at)).getTime() - new Date(str(a.created_at)).getTime()
     );
     const invoices = invoicesByPortal.get(portalId) ?? [];
+
+    const inactivePending = getPendingItems(portal, messages);
+    const inactivePendingBlock = inactivePending.length > 0
+      ? callout("What's waiting", inactivePending.map((item) => `→&ensp;${item}`))
+      : "";
+    const inactiveIntroCopy = inactivePending.length > 0
+      ? `Work has been moving on your project. Here's what's come up since you were last in:`
+      : `Work has continued on your project — a quick check-in keeps momentum going.`;
 
     const candidates = [
       {
@@ -303,13 +342,14 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
         summary: "System checked in after the client had been inactive during an active project phase.",
         html: emailWrap(`
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">There's an update waiting for you.</h1>
-          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Project status</p>
+          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Project update</p>
           <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(recipientName)},</p>
-          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">It's been about a week since you last opened your workspace. Work has continued on the project and there are likely items waiting for your review or input — usually 5 minutes is enough to keep things moving forward.</p>
+          <p style="margin:0 0 ${inactivePending.length > 0 ? "20" : "28"}px;font-size:15px;color:#444;line-height:1.7">${inactiveIntroCopy}</p>
+          ${inactivePendingBlock}
           ${ctaButton(workspaceUrl, "Open workspace")}
-          <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">Reply if anything's unclear or you'd rather walk through the latest on a quick call.</p>
+          <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">Usually 5 minutes is enough. Reply if you'd rather hop on a quick call instead.</p>
           ${sig()}
-        `, "Reply to this email to reach Komlan directly."),
+        `, "Reply to reach Komlan directly."),
         clientVisible: true,
       },
     ];

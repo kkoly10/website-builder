@@ -17,6 +17,14 @@ export function appBaseUrl(): string {
 // Accepted BCP-47 locale codes → HTML lang values
 const LOCALE_TO_LANG: Record<string, string> = { en: "en", fr: "fr", es: "es" };
 
+export function nameFromEmail(email: string): string {
+  const local = email.split("@")[0] || "";
+  const first = local.split(/[._+\-]/)[0];
+  const cleaned = first.replace(/\d+/g, "");
+  if (cleaned.length < 2) return "";
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
+}
+
 export function escHtml(str: string): string {
   return String(str ?? "")
     .replace(/&/g, "&amp;")

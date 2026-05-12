@@ -29,6 +29,7 @@ function projectTypeLabel(projectType?: string | null): string {
     case "automation": return "automation";
     case "ecommerce": return "store";
     case "rescue": return "site rescue";
+    case "ai_integration": return "AI integration";
     default: return "project";
   }
 }

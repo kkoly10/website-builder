@@ -8,6 +8,7 @@ import {
   callout,
   sig,
   escHtml,
+  nameFromEmail,
 } from "@/lib/emailHelpers";
 
 const FROM_EMAIL = process.env.NOTIFICATION_FROM_EMAIL || "studio@crecystudio.com";
@@ -40,10 +41,11 @@ export async function sendPortalMessageNotification(params: {
     params.senderRole === "client" ? ADMIN_EMAIL : String(params.leadEmail || "").trim();
   if (!recipientEmail) return;
 
+  const recipientEmail2 = String(params.leadEmail || "").trim();
   const recipientName =
     params.senderRole === "client"
       ? null // admin recipient — no greeting
-      : String(params.leadName || "").trim() || "there";
+      : String(params.leadName || "").trim() || nameFromEmail(recipientEmail2) || "there";
 
   const safeBody = escHtml(excerpt(params.body || "Attachment included."));
   const safeBodyHtml = `<p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7;white-space:pre-wrap">${safeBody}</p>`;

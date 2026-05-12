@@ -603,6 +603,21 @@
   align-self: end;
 }
 
+.positioning {
+  padding: 3.8rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.positioningStatement {
+  font-size: clamp(1.15rem, 2.4vw, 1.45rem);
+  font-weight: 500;
+  line-height: 1.6;
+  letter-spacing: -0.02em;
+  max-width: 72ch;
+  color: var(--fg);
+  margin: 0.8rem 0 0;
+}
+
 .startHere { padding: 2.4rem 0; border-bottom: 1px solid var(--rule); }
 .startHereGrid {
   display: grid;
