@@ -2540,7 +2540,8 @@
         "chip2": "Freemium billing",
         "chip3": "CRM pipeline",
         "chip4": "Automated emails",
-        "linkLabel": "Visit proveohq.com"
+        "linkLabel": "Visit proveohq.com",
+        "caseStudyLink": "Plongée technique"
       }
     },
     "clientLabel": "Client work",
@@ -3081,6 +3082,79 @@
     "callout": "Nous n'avons pas rajouté la sécurité après coup. Nous l'avons conçue dès le premier jour — parce que c'est ce qu'exige un logiciel en production.",
     "closingTitle": "Vous construisez quelque chose qui nécessite une IA correctement intégrée ?",
     "closingBody": "C'est le type de travail d'architecture que nous faisons pour les clients. Pas des wrappers d'API — des systèmes en production où l'IA est un composant sûr conçu dès le départ.",
+    "closingCta": "Démarrer une conversation",
+    "closingCtaSecondary": "Voir notre processus"
+  },
+  "workProveo": {
+    "metaTitle": "Moteur de confiance Proveo — Architecture technique | CrecyStudio",
+    "metaDescription": "Comment nous avons construit un système d'authentification de photos pour entrepreneurs de services avec GPT-4o Vision, hachage de provenance côté client et un moteur de badge déterministe.",
+    "back": "Retour aux projets",
+    "kicker": "Étude de cas technique / Proveo",
+    "title": "Construire un système de confiance pour photos où l'IA identifie les preuves mais ne décide jamais du verdict.",
+    "subtitle": "Les entrepreneurs de services vendent avec des photos avant/après. Le problème : n'importe qui peut les falsifier. Proveo avait besoin d'une couche de confiance vérifiable par conception.",
+    "chips": {
+      "stack": "Next.js + Supabase",
+      "vision": "GPT-4o Vision",
+      "trust": "Moteur de provenance",
+      "multimodel": "Architecture multi-modèle"
+    },
+    "s1Title": "Le problème des photos avant/après dans les services à domicile",
+    "s1Body": "Les photos avant/après sont le principal outil de vente pour les entrepreneurs de services. Elles sont aussi la chose la plus facile à falsifier. Un entrepreneur peut copier le travail de quelqu'un d'autre, le revendiquer comme le sien et construire un historique entièrement fabriqué.\n\nLes clients qui consultent un portfolio ne peuvent pas faire la différence. Il n'y a pas de métadonnées à inspecter, pas d'horodatage fiable.\n\nLa réponse naïve est un filigrane ou un horodatage. Aucun ne prouve quoi que ce soit. Les filigranes peuvent être rognés, les horodatages peuvent être ajoutés en Photoshop. Le problème n'est pas l'étiquetage — c'est la preuve.",
+    "s2Title": "Couche 1 — Détection visuelle avec GPT-4o",
+    "s2Body": "La première couche IA résout un problème UX : les entrepreneurs qui téléchargent deux photos ne devraient pas avoir à étiqueter manuellement laquelle est « avant » et laquelle est « après ». GPT-4o Vision analyse les deux images simultanément et identifie laquelle montre l'état non traité et laquelle montre le résultat final.\n\nLe modèle détecte également la catégorie de service (lavage sous pression, peinture, paysagisme, etc.) et génère un titre de travail suggéré localisé dans la langue préférée de l'entrepreneur.\n\nLa limitation de débit est étendue à l'espace de travail (30 requêtes/heure partagées entre tous les membres) pour éviter la multiplication des coûts IA.",
+    "s3Title": "Couche 2 — Le système d'état de preuve",
+    "s3Intro": "Chaque préréglage d'amélioration qu'un entrepreneur peut appliquer à ses photos est classifié côté serveur dans l'un des trois niveaux de confiance. La classification est déterministe, pas pilotée par IA :",
+    "tier1Num": "Niveau de confiance — Brut",
+    "tier1Title": "Préréglage « original »",
+    "tier1Body": "Aucun traitement appliqué. L'image est exactement ce qui est sorti de l'appareil photo. Éligible aux deux badges de confiance.",
+    "tier2Num": "Niveau de confiance — Corrigé",
+    "tier2Title": "bright_clean, cool_professional, job_site_clean, high_def, studio_light, definition",
+    "tier2Body": "Corrections d'exposition, netteté ou balance des blancs qui n'altèrent pas la scène. Améliorent la lisibilité sans déformer le travail.",
+    "tier3Num": "Niveau de confiance — Stylisé",
+    "tier3Title": "warm, dramatic, daylight_pop, soft_glow, vivid, vintage, et 10+ autres",
+    "tier3Body": "Traitements esthétiques qui changent l'ambiance ou l'apparence. L'éligibilité au badge de confiance est supprimée.",
+    "s3Outro": "Le choix de conception clé : les préréglages inconnus tombent par défaut dans « stylisé ». Les nouveaux préréglages ne peuvent pas accidentellement hériter de l'éligibilité au badge. La confiance doit être accordée explicitement dans le registre côté serveur.",
+    "s4Title": "Couche 3 — Provenance côté client (la contrainte architecturale)",
+    "s4Body": "Les photos s'uploadent directement du navigateur vers Cloudinary. Le serveur Proveo ne reçoit jamais les octets du fichier — il obtient seulement l'URL Cloudinary après la fin de l'upload. Si le serveur ne voit jamais les octets, comment peut-il savoir ce qui a été uploadé ?\n\nLa réponse : calculer les preuves avant l'upload.\n\nAvant que chaque photo quitte le navigateur, le client calcule :\n— Hash SHA-256 des octets bruts du fichier, via l'API Web Crypto (natif au navigateur)\n— Méthode de capture : 'guided' (prise dans l'appli), 'upload' (depuis la pellicule), ou 'import'\n— Horodatage de capture — depuis EXIF quand disponible, avec repli sur File.lastModified\n— Signal d'appareil — chaîne user-agent tronquée\n— ID de session de capture guidée — token aléatoire par session\n\nCe payload de provenance signé est envoyé à l'API avec les données de comparaison. Le serveur valide chaque champ et dégrade tout ce qui est malformé vers la méthode la plus faible.",
+    "s5Title": "Couche 4 — L'algorithme de badge",
+    "s5Intro": "Avec l'état de preuve et la provenance en main, le résolveur de badge effectue cinq vérifications en séquence. Toutes les cinq doivent passer pour le niveau supérieur — « Vérifié Authentique » :",
+    "check": {
+      "guided": {
+        "label": "Capture guidée",
+        "value": "Les deux photos prises dans l'appli, pas depuis la pellicule"
+      },
+      "raw": {
+        "label": "État de preuve brut",
+        "value": "Aucune amélioration appliquée (préréglage original)"
+      },
+      "timestampMin": {
+        "label": "Écart de temps minimum",
+        "value": "> 2 secondes entre avant et après"
+      },
+      "timestampMax": {
+        "label": "Écart de temps maximum",
+        "value": "< 12 heures entre avant et après"
+      },
+      "sha256": {
+        "label": "Unicité SHA-256",
+        "value": "Les octets avant et après ne sont pas identiques"
+      }
+    },
+    "s5Outro": "Toute vérification échouée dégrade vers « Vérifié Non Filtré » ou supprime le badge. La fenêtre d'horodatage — 2 secondes minimum, 12 heures maximum — est conçue autour de la cadence réelle des chantiers. La décision de badge est entièrement déterministe. L'IA identifie les preuves ; l'algorithme décide du niveau.",
+    "s6Title": "La conception multi-modèle",
+    "s6Body": "Proveo utilise deux modèles délibérément, pour des raisons différentes :\n\nGPT-4o gère le raisonnement visuel — identifier avant vs. après, détecter la catégorie de service, générer des légendes depuis l'image composite.\n\nClaude gère toutes les tâches de langage et de raisonnement — explications d'audit de confiance, copilote d'opérations, réponses du centre d'aide, guidage d'intégration. Claude produit une prose lisible par les entrepreneurs plutôt qu'un texte IA générique.\n\nL'agent d'audit de confiance (Claude) est l'exemple le plus clair de la séparation : il lit le niveau de badge calculé et les signaux de provenance, puis explique le résultat à l'entrepreneur en langage simple. Claude interprète les preuves. Il ne les décide pas.",
+    "s7Title": "Ce qui a été livré",
+    "outcome": {
+      "detection": "GPT-4o identifie automatiquement l'orientation avant/après — pas d'étiquetage manuel pour l'entrepreneur",
+      "proofState": "Le registre d'état de preuve déterministe mappe chaque préréglage d'amélioration à un niveau de confiance ; les préréglages inconnus sont rejetés en toute sécurité",
+      "provenance": "Le hachage SHA-256 côté client capture l'identité du fichier avant l'upload — le serveur peut vérifier des preuves qu'il n'a jamais directement reçues",
+      "badges": "Système de badge à deux niveaux (Vérifié Authentique, Vérifié Non Filtré) gagné par une chaîne de preuves qu'aucun modèle ne peut contourner",
+      "multimodel": "GPT-4o pour les tâches visuelles, Claude pour le raisonnement et l'explication — chaque modèle fait ce qu'il fait le mieux",
+      "audit": "L'agent d'audit de confiance explique l'état du badge en langage clair et indique aux entrepreneurs comment s'améliorer"
+    },
+    "callout": "L'IA identifie ce qu'il y a dans les photos. Le code déterministe décide si ces photos sont dignes de confiance. Nous n'avons jamais mélangé ces deux responsabilités.",
+    "closingTitle": "Vous construisez quelque chose où la confiance est une fonctionnalité produit, pas juste une politique ?",
+    "closingBody": "C'est le type de travail d'architecture que nous faisons — des systèmes où l'IA et la logique déterministe sont chacune utilisées là où elles sont appropriées, pas de manière interchangeable.",
     "closingCta": "Démarrer une conversation",
     "closingCtaSecondary": "Voir notre processus"
   }

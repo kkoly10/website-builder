@@ -35,6 +35,7 @@ const VENTURE_LIVE_URL: Record<(typeof VENTURE_KEYS)[number], string> = {
 
 const VENTURE_CASE_STUDY_HREF: Partial<Record<(typeof VENTURE_KEYS)[number], string>> = {
   fleiko: "/work/fleiko",
+  proveo: "/work/proveo",
 };
 
 export default async function WorkPage({

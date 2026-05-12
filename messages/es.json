@@ -2540,7 +2540,8 @@
         "chip2": "Freemium billing",
         "chip3": "CRM pipeline",
         "chip4": "Automated emails",
-        "linkLabel": "Visit proveohq.com"
+        "linkLabel": "Visit proveohq.com",
+        "caseStudyLink": "Análisis técnico en profundidad"
       }
     },
     "clientLabel": "Client work",
@@ -3081,6 +3082,79 @@
     "callout": "No añadimos la seguridad después. La diseñamos desde el primer día — porque eso es lo que requiere el software en producción.",
     "closingTitle": "¿Construyendo algo que necesita IA integrada correctamente?",
     "closingBody": "Este es el tipo de trabajo de arquitectura que hacemos para clientes. No envoltorios de API — sistemas en producción donde la IA es un componente seguro diseñado desde cero.",
+    "closingCta": "Iniciar una conversación",
+    "closingCtaSecondary": "Ver cómo trabajamos"
+  },
+  "workProveo": {
+    "metaTitle": "Motor de confianza Proveo — Arquitectura técnica | CrecyStudio",
+    "metaDescription": "Cómo construimos un sistema de autenticación de fotos para contratistas de servicios con GPT-4o Vision, hashing de procedencia del lado del cliente y un motor de insignias determinista.",
+    "back": "Volver al trabajo",
+    "kicker": "Caso de estudio técnico / Proveo",
+    "title": "Construir un sistema de confianza fotográfica donde la IA identifica las pruebas pero nunca decide el veredicto.",
+    "subtitle": "Los contratistas de servicios venden con fotos antes/después. El problema es que cualquiera puede falsificarlas. Proveo necesitaba una capa de confianza verificable por diseño.",
+    "chips": {
+      "stack": "Next.js + Supabase",
+      "vision": "GPT-4o Vision",
+      "trust": "Motor de procedencia",
+      "multimodel": "Arquitectura multi-modelo"
+    },
+    "s1Title": "El problema con las fotos antes/después en servicios del hogar",
+    "s1Body": "Las fotos antes/después son la principal herramienta de ventas para los contratistas. También son lo más fácil de falsificar. Un contratista puede copiar el trabajo de otra persona, reclamarlo como propio y construir un historial completamente fabricado.\n\nLos clientes que ven un portafolio no pueden distinguirlas. No hay metadatos que puedan inspeccionar, no hay marca de tiempo en la que puedan confiar.\n\nLa respuesta ingenua es una marca de agua o superposición de marca de tiempo. Ninguna prueba nada. Las marcas de agua pueden recortarse, las marcas de tiempo pueden añadirse con Photoshop. El problema no es el etiquetado — es la evidencia.",
+    "s2Title": "Capa 1 — Detección visual con GPT-4o",
+    "s2Body": "La primera capa de IA resuelve un problema de UX: los contratistas que suben dos fotos no deberían tener que etiquetar manualmente cuál es el \"antes\" y cuál es el \"después\". GPT-4o Vision analiza ambas imágenes simultáneamente e identifica cuál muestra el estado sin tratar y cuál muestra el resultado final.\n\nEl modelo también detecta la categoría de servicio (lavado a presión, pintura, jardinería, detallado, etc.) y genera un título de trabajo sugerido localizado en el idioma preferido del contratista.\n\nLa limitación de velocidad es compartida por el espacio de trabajo (30 solicitudes/hora entre todos los miembros) para evitar la multiplicación de costos de IA.",
+    "s3Title": "Capa 2 — El sistema de estado de prueba",
+    "s3Intro": "Cada ajuste predeterminado de mejora que un contratista puede aplicar a sus fotos se clasifica en el servidor en uno de tres niveles de confianza. La clasificación es determinista, no impulsada por IA:",
+    "tier1Num": "Nivel de confianza — Sin procesar",
+    "tier1Title": "Ajuste predeterminado «original»",
+    "tier1Body": "Sin procesamiento aplicado. La imagen es exactamente lo que salió de la cámara. Elegible para ambas insignias de confianza.",
+    "tier2Num": "Nivel de confianza — Corregido",
+    "tier2Title": "bright_clean, cool_professional, job_site_clean, high_def, studio_light, definition",
+    "tier2Body": "Correcciones de exposición, nitidez o balance de blancos que no alteran la escena. Mejoran la legibilidad sin tergiversar el trabajo.",
+    "tier3Num": "Nivel de confianza — Estilizado",
+    "tier3Title": "warm, dramatic, daylight_pop, soft_glow, vivid, vintage, y 10+ más",
+    "tier3Body": "Tratamientos estéticos que cambian el estado de ánimo o la apariencia. La elegibilidad para la insignia de confianza se elimina.",
+    "s3Outro": "La elección de diseño clave: los ajustes predeterminados desconocidos caen en 'estilizado' por defecto. Los nuevos ajustes predeterminados no pueden heredar accidentalmente la elegibilidad para la insignia. La confianza debe otorgarse explícitamente en el registro del servidor.",
+    "s4Title": "Capa 3 — Procedencia del lado del cliente (la restricción arquitectónica)",
+    "s4Body": "Las fotos se suben directamente desde el navegador a Cloudinary. El servidor de Proveo nunca recibe los bytes del archivo. Si el servidor nunca ve los bytes, ¿cómo sabe qué se subió?\n\nLa respuesta: calcular la evidencia antes de la subida.\n\nAntes de que cada foto salga del navegador, el cliente calcula:\n— Hash SHA-256 de los bytes brutos del archivo, usando la API Web Crypto (nativa del navegador)\n— Método de captura: 'guided' (tomada dentro de la app), 'upload' (desde la galería), o 'import'\n— Marca de tiempo de captura — desde EXIF cuando esté disponible, con respaldo en File.lastModified\n— Señal del dispositivo — cadena de user-agent truncada\n— ID de sesión de captura guiada — token aleatorio por sesión\n\nEste payload de procedencia firmado se envía a la API junto con los datos de comparación. El servidor valida cada campo y degrada cualquier campo malformado al método más débil.",
+    "s5Title": "Capa 4 — El algoritmo de insignias",
+    "s5Intro": "Con el estado de prueba y la procedencia en mano, el resolvedor de insignias ejecuta cinco verificaciones en secuencia. Las cinco deben pasar para el nivel superior — \"Verificado Auténtico\":",
+    "check": {
+      "guided": {
+        "label": "Captura guiada",
+        "value": "Ambas fotos tomadas en la app, no desde la galería"
+      },
+      "raw": {
+        "label": "Estado de prueba sin procesar",
+        "value": "Sin mejora aplicada (ajuste predeterminado original)"
+      },
+      "timestampMin": {
+        "label": "Brecha de tiempo mínima",
+        "value": "> 2 segundos entre antes y después"
+      },
+      "timestampMax": {
+        "label": "Brecha de tiempo máxima",
+        "value": "< 12 horas entre antes y después"
+      },
+      "sha256": {
+        "label": "Unicidad SHA-256",
+        "value": "Los bytes de antes y después no son idénticos"
+      }
+    },
+    "s5Outro": "Cualquier verificación fallida degrada a \"Verificado Sin Filtrar\" o elimina la insignia. La ventana de marca de tiempo — 2 segundos mínimo, 12 horas máximo — está diseñada alrededor de la cadencia real del trabajo. La decisión de insignia es completamente determinista. La IA identifica la evidencia; el algoritmo decide el nivel.",
+    "s6Title": "El diseño multi-modelo",
+    "s6Body": "Proveo usa dos modelos deliberadamente, por razones diferentes:\n\nGPT-4o maneja el razonamiento visual — identificar antes vs. después, detectar la categoría de servicio, generar subtítulos desde la imagen compuesta.\n\nClaude maneja todas las tareas de lenguaje y razonamiento — explicaciones de auditoría de confianza, copiloto de operaciones, respuestas del centro de ayuda, orientación de incorporación. Claude produce prosa legible para contratistas en lugar de texto genérico de IA.\n\nEl agente de auditoría de confianza (Claude) es el ejemplo más claro de la separación: lee el nivel de insignia calculado y los señales de procedencia, luego explica el resultado al contratista en lenguaje simple. Claude interpreta la evidencia. No la decide.",
+    "s7Title": "Lo que se entregó",
+    "outcome": {
+      "detection": "GPT-4o identifica automáticamente la orientación antes/después — sin etiquetado manual del contratista",
+      "proofState": "El registro de estado de prueba determinista mapea cada ajuste de mejora a un nivel de confianza; los ajustes desconocidos son rechazados de forma segura",
+      "provenance": "El hashing SHA-256 del lado del cliente captura la identidad del archivo antes de la subida — el servidor puede verificar evidencia que nunca recibió directamente",
+      "badges": "Sistema de insignias de dos niveles (Verificado Auténtico, Verificado Sin Filtrar) ganado a través de una cadena de evidencia que ningún modelo puede anular",
+      "multimodel": "GPT-4o para tareas visuales, Claude para razonamiento y explicación — cada modelo haciendo lo que mejor hace",
+      "audit": "El agente de auditoría de confianza explica el estado de la insignia en lenguaje claro e indica a los contratistas cómo mejorar"
+    },
+    "callout": "La IA identifica qué hay en las fotos. El código determinista decide si esas fotos son confiables. Nunca mezclamos esas dos responsabilidades.",
+    "closingTitle": "¿Construyendo algo donde la confianza es una característica del producto, no solo una política?",
+    "closingBody": "Este es el tipo de trabajo de arquitectura que hacemos — sistemas donde la IA y la lógica determinista se usan cada una donde son apropiadas, no de manera intercambiable.",
     "closingCta": "Iniciar una conversación",
     "closingCtaSecondary": "Ver cómo trabajamos"
   }
