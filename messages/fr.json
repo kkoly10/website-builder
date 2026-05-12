@@ -204,14 +204,14 @@
       }
     },
     "proof": {
-      "deliveryValue": "2 AI SaaS",
-      "delivery": "platforms shipped and operating",
-      "ownershipValue": "Full-stack",
-      "ownership": "Design to deployment, in-house",
-      "noUpfrontValue": "Practitioner",
-      "noUpfront": "No juniors, no subcontractors",
-      "workspaceValue": "1 workspace",
-      "workspace": "Every project, start to finish"
+      "deliveryValue": "IA en production",
+      "delivery": "Produits en service réel, pas des démos",
+      "ownershipValue": "Bout en bout",
+      "ownership": "De la stratégie au lancement, en interne",
+      "noUpfrontValue": "Construit par le fondateur",
+      "noUpfront": "Pas de juniors, pas de sous-traitants",
+      "workspaceValue": "Portail de suivi",
+      "workspace": "Voyez votre projet avancer en temps réel"
     },
     "ventures": {
       "label": "Studio ventures",
