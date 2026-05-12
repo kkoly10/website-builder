@@ -176,31 +176,31 @@
       "label": "¿No sabes por dónde empezar?",
       "website": {
         "situation": "Necesito un sitio web profesional para mi negocio",
-        "service": "Sitios web — desde $1,800"
+        "service": "Sitios web"
       },
       "app": {
         "situation": "Tengo una idea de software o herramienta interna que construir",
-        "service": "Apps web personalizadas — desde $18K"
+        "service": "Aplicaciones web personalizadas"
       },
       "ai": {
         "situation": "Quiero IA integrada en mi producto desde el primer día",
-        "service": "Apps web con IA — desde $18K"
+        "service": "Integración de IA"
       },
       "complex": {
         "situation": "Necesito un arquitecto-desarrollador senior para un producto complejo",
-        "service": "Apps web personalizadas — alcance complejo desde $75K"
+        "service": "Aplicaciones web — alcance complejo"
       },
       "portal": {
         "situation": "Gestiono proyectos de clientes y necesito un sistema real",
-        "service": "Portales de cliente — desde $12K"
+        "service": "Portales para clientes"
       },
       "rescue": {
         "situation": "Mi sitio está roto, lento o pierde clientes potenciales",
-        "service": "Rescate web — desde $1K"
+        "service": "Rescate web"
       },
       "ecommerce": {
         "situation": "Necesito una tienda online o ayuda para gestionar la que tengo",
-        "service": "E-commerce — desde $1,800"
+        "service": "E-commerce"
       }
     },
     "proof": {
@@ -1003,6 +1003,10 @@
       "rescue": {
         "label": "Website rescue",
         "desc": "My current site isn't working."
+      },
+      "ai_integration": {
+        "label": "Integración de IA",
+        "desc": "Añadir una capa de IA de producción a un producto o sistema existente."
       }
     },
     "goalQuestion": "¿Cuál es el objetivo principal?",
@@ -3239,5 +3243,304 @@
     "closingBody": "Este es el tipo de sistema que construimos — IA que maneja la carga cognitiva, portales deterministas para las decisiones que importan, y una capa de conocimiento que se compone con el tiempo.",
     "closingCta": "Iniciar una conversación",
     "closingCtaSecondary": "Ver cómo trabajamos"
+  },
+  "aiIntake": {
+    "metaTitle": "Integración de IA — Estimación | CrecyStudio",
+    "metaDescription": "Cuéntenos sobre su producto y el comportamiento de IA que necesita. Lo scopearemos correctamente — puertas de seguridad, modelo de autonomía, requisitos de datos y todo.",
+    "kicker": "Estimación de integración IA",
+    "title": "Scopear su integración de IA",
+    "stepCounter": "Paso {current} de 4 — {stepTitle}",
+    "stepTitles": {
+      "1": "Caso de uso",
+      "2": "Contexto técnico",
+      "3": "Seguridad y autonomía",
+      "4": "Alcance y contacto"
+    },
+    "step1": {
+      "contactHeading": "¿Con quién hablamos?",
+      "contactNameLabel": "Su nombre",
+      "contactNamePlaceholder": "Jane Smith",
+      "companyLabel": "Nombre de la empresa o producto",
+      "companyPlaceholder": "Acme Inc.",
+      "productHeading": "Cuéntenos sobre el producto",
+      "productSubtitle": "¿Qué hace hoy, quién lo usa y qué problema quiere que la IA resuelva?",
+      "productPlaceholder": "ej. Gestionamos un CRM SaaS B2B. Los agentes de soporte pasan 3 horas al día triando tickets manualmente. Queremos que la IA clasifique y sugiera respuestas para que los agentes solo aprueben o editen.",
+      "productMinLength": "Agregue un poco más de detalle — al menos 20 caracteres.",
+      "useCaseHeading": "¿Cuál es el caso de uso principal de IA?",
+      "useCaseSubtitle": "Elija el que mejor describe lo que está construyendo.",
+      "useCaseOtherPlaceholder": "Describa su caso de uso..."
+    },
+    "step2": {
+      "productTypeHeading": "¿Qué tipo de producto es este?",
+      "productTypeSubtitle": "Ayuda a entender el contexto de despliegue.",
+      "stackHeading": "Stack tecnológico actual",
+      "stackSubtitle": "Marque todo lo que aplique. Evaluaremos la complejidad de integración.",
+      "aiUsedHeading": "¿Ya usa IA en este producto?",
+      "aiUsedSubtitle": "Indica si empezamos desde cero o si extendemos IA existente.",
+      "aiProviderPlaceholder": "¿Qué proveedor(es)? ej. Cohere, Mistral, Azure OpenAI...",
+      "dataHeading": "¿Qué tipos de datos procesará la IA?",
+      "dataSubtitle": "Marque todo lo que aplique. Esto determina los requisitos de cumplimiento y control de acceso."
+    },
+    "step3": {
+      "safetyNote": "Este paso determina la arquitectura de seguridad que necesita su integración. No hay respuesta incorrecta — el objetivo es adaptar el esfuerzo de ingeniería al perfil de riesgo real de su caso de uso.",
+      "autonomyHeading": "¿Qué tan autónoma debe ser la IA?",
+      "autonomySubtitle": "Piense en qué sucede después de que la IA produce un resultado.",
+      "audienceHeading": "¿Quién ve directamente la salida de la IA?",
+      "consequenceHeading": "¿Qué sucede si la IA comete un error?",
+      "consequenceSubtitle": "Peor caso realista, no una catástrofe teórica.",
+      "auditHeading": "¿Necesita un registro de auditoría completo?",
+      "auditSubtitle": "Cada decisión de IA registrada con entrada, salida, confianza y marca de tiempo."
+    },
+    "step4": {
+      "volumeHeading": "Operaciones diarias de IA esperadas",
+      "volumeSubtitle": "Estimación aproximada. Impulsa las decisiones de arquitectura sobre limitación de velocidad, presupuesto de costos y escalabilidad.",
+      "timelineHeading": "Plazo",
+      "budgetHeading": "Rango de presupuesto",
+      "approvalHeading": "¿Quién aprueba este proyecto?",
+      "approvalSubtitle": "Nos ayuda a preparar los materiales correctos para su proceso interno.",
+      "contactHeading": "¿Dónde enviamos su estimación?",
+      "emailLabel": "Dirección de correo electrónico",
+      "emailPlaceholder": "jane@empresa.com",
+      "phoneLabel": "Teléfono (opcional)",
+      "phonePlaceholder": "+1 (555) 000-0000",
+      "decisionMakerLabel": "Su rol",
+      "decisionMakerPlaceholder": "ej. CTO, Líder de Producto, Fundador"
+    },
+    "enums": {
+      "useCase": {
+        "copilot": {
+          "label": "Copiloto de IA para su equipo",
+          "desc": "La IA asiste al personal — sugiere respuestas, redacta contenido, resume, clasifica."
+        },
+        "triage": {
+          "label": "Triaje y enrutamiento automatizados",
+          "desc": "La IA lee las solicitudes entrantes y las enruta o prioriza automáticamente."
+        },
+        "generation": {
+          "label": "Generación de contenido o documentos",
+          "desc": "La IA genera informes, propuestas, correos electrónicos o salidas estructuradas a escala."
+        },
+        "vision": {
+          "label": "Análisis de imágenes o documentos",
+          "desc": "La IA lee PDFs, imágenes, facturas o formularios y extrae datos estructurados."
+        },
+        "monitoring": {
+          "label": "Monitoreo o alertas inteligentes",
+          "desc": "La IA detecta anomalías, patrones o superaciones de umbrales y los informa."
+        },
+        "other": {
+          "label": "Otra cosa",
+          "desc": "Describa su caso de uso en el siguiente campo."
+        }
+      },
+      "productType": {
+        "saas": {
+          "label": "Producto SaaS",
+          "desc": "Software multi-tenant vendido como suscripción."
+        },
+        "internal": {
+          "label": "Herramienta interna",
+          "desc": "Usada solo por su equipo o empresa."
+        },
+        "api": {
+          "label": "API o plataforma",
+          "desc": "La IA se expondrá como una API consumida por otros sistemas."
+        },
+        "mobile": {
+          "label": "Aplicación móvil",
+          "desc": "iOS, Android o multiplataforma."
+        },
+        "none": {
+          "label": "Aún no hay producto",
+          "desc": "Construimos el producto y la capa de IA juntos."
+        }
+      },
+      "aiUsed": {
+        "none": {
+          "label": "Aún no hay IA",
+          "desc": "Esta es una integración de IA en campo verde."
+        },
+        "openai": {
+          "label": "OpenAI (GPT-4, o1, etc.)",
+          "desc": "Ya usa la API de OpenAI."
+        },
+        "anthropic": {
+          "label": "Anthropic (Claude)",
+          "desc": "Ya usa la API de Claude."
+        },
+        "other_provider": {
+          "label": "Otro proveedor",
+          "desc": "Cohere, Mistral, Google, Azure OpenAI, etc."
+        },
+        "multiple": {
+          "label": "Múltiples proveedores",
+          "desc": "Usa o planea usar más de uno."
+        }
+      },
+      "autonomy": {
+        "suggest": {
+          "label": "Solo sugerencia",
+          "desc": "La IA propone una acción. Un humano siempre revisa y la ejecuta manualmente."
+        },
+        "confirm": {
+          "label": "Sugerencia + confirmación con un clic",
+          "desc": "La IA propone, el humano confirma con un clic, luego la IA ejecuta."
+        },
+        "auto_low": {
+          "label": "Manejo automático de casos rutinarios",
+          "desc": "La IA resuelve automáticamente los casos claros y de bajo riesgo. Los casos ambiguos escalan a un humano."
+        },
+        "autonomous": {
+          "label": "Totalmente autónoma",
+          "desc": "La IA actúa de extremo a extremo sin confirmación humana por decisión."
+        }
+      },
+      "audience": {
+        "internal": {
+          "label": "Solo equipo interno",
+          "desc": "Solo su personal ve la salida de la IA."
+        },
+        "clients": {
+          "label": "Clientes / usuarios finales",
+          "desc": "La salida de IA va directamente a clientes o usuarios finales."
+        },
+        "both": {
+          "label": "Interno y externo",
+          "desc": "La salida de IA es vista por el personal y los clientes."
+        }
+      },
+      "consequence": {
+        "cosmetic": {
+          "label": "Cosmético — inconveniente menor",
+          "desc": "Una mala salida de IA es levemente molesta pero inofensiva."
+        },
+        "operational": {
+          "label": "Operacional — interrupción del flujo de trabajo",
+          "desc": "Una mala salida interrumpe un flujo de trabajo pero puede corregirse rápidamente."
+        },
+        "client_facing": {
+          "label": "De cara al cliente — riesgo de reputación",
+          "desc": "Una mala salida es vista por los clientes y daña la confianza."
+        },
+        "financial_legal": {
+          "label": "Consecuencia financiera o legal",
+          "desc": "Una mala salida podría causar pérdida financiera medible o exposición legal."
+        }
+      },
+      "auditTrail": {
+        "required": {
+          "label": "Requerido",
+          "desc": "El cumplimiento, legal o política interna exige un registro de decisiones completo."
+        },
+        "preferred": {
+          "label": "Preferido pero no obligatorio",
+          "desc": "Sería útil para depurar y revisar el comportamiento de la IA."
+        },
+        "not_needed": {
+          "label": "No necesario",
+          "desc": "No hay requisitos de auditoría para este caso de uso."
+        }
+      },
+      "volume": {
+        "under_100": {
+          "label": "Menos de 100 / día",
+          "desc": "Volumen bajo — llamadas API estándar, no se necesita infraestructura especial."
+        },
+        "100_1k": {
+          "label": "100 – 1.000 / día",
+          "desc": "Volumen moderado — monitoreo y controles de costos recomendados."
+        },
+        "1k_10k": {
+          "label": "1.000 – 10.000 / día",
+          "desc": "Volumen alto — limitación de velocidad, presupuesto de costos y escalado requeridos."
+        },
+        "10k_plus": {
+          "label": "10.000+ / día",
+          "desc": "Volumen muy alto — arquitectura dedicada, colas y controles presupuestarios."
+        },
+        "not_sure": {
+          "label": "No estoy seguro aún",
+          "desc": "Aún no tenemos una estimación clara."
+        }
+      },
+      "timeline": {
+        "asap": "Lo antes posible",
+        "1-3-months": "1–3 meses",
+        "3-6-months": "3–6 meses",
+        "flexible": "Flexible — sin fecha límite estricta"
+      },
+      "budget": {
+        "5k-15k": "$5k – $15k",
+        "15k-35k": "$15k – $35k",
+        "35k-75k": "$35k – $75k",
+        "75k-plus": "$75k+",
+        "guidance": "Necesito orientación sobre el presupuesto"
+      },
+      "approval": {
+        "solo": {
+          "label": "Decido solo",
+          "desc": "No se necesita proceso de aprobación interno."
+        },
+        "small-team": {
+          "label": "Aprobación de equipo pequeño",
+          "desc": "2–4 partes interesadas necesitan alinearse."
+        },
+        "board": {
+          "label": "Aprobación de junta / ejecutivos",
+          "desc": "Esto requiere aprobación a nivel ejecutivo o de junta."
+        },
+        "legal": {
+          "label": "Revisión legal o de cumplimiento",
+          "desc": "Legal o cumplimiento debe revisar antes de poder proceder."
+        },
+        "not-sure": {
+          "label": "No estoy seguro aún",
+          "desc": "El camino de aprobación aún no está claro."
+        }
+      }
+    },
+    "stack": {
+      "nextjs": "Next.js / React",
+      "vue": "Vue / Nuxt",
+      "node": "Node.js",
+      "python": "Python / Django / FastAPI",
+      "rails": "Ruby on Rails",
+      "dotnet": ".NET / C#",
+      "php": "PHP / Laravel",
+      "other": "Otro / no listado"
+    },
+    "data": {
+      "personal": {
+        "label": "Datos personales (PII)",
+        "desc": "Nombres, correos electrónicos, direcciones, identificadores."
+      },
+      "financial": {
+        "label": "Datos financieros",
+        "desc": "Transacciones, detalles de cuenta, registros de facturación."
+      },
+      "health": {
+        "label": "Datos de salud o médicos",
+        "desc": "PHI, registros médicos, datos clínicos."
+      },
+      "legal": {
+        "label": "Información legal o privilegiada",
+        "desc": "Contratos, expedientes, comunicaciones privilegiadas."
+      },
+      "operational": {
+        "label": "Solo datos operativos / internos",
+        "desc": "Sin datos personales, financieros, de salud o legales sensibles."
+      }
+    },
+    "nav": {
+      "back": "Atrás",
+      "next": "Siguiente",
+      "submit": "Obtener mi estimación de IA",
+      "submitting": "Calculando estimación..."
+    },
+    "validation": {
+      "validEmail": "Por favor ingrese una dirección de correo electrónico válida.",
+      "requiredFields": "Por favor complete todos los campos requeridos.",
+      "submitError": "Algo salió mal. Por favor intente de nuevo o contáctenos directamente por correo electrónico."
+    }
   }
 }

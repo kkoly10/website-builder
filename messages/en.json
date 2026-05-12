@@ -176,31 +176,31 @@
       "label": "Not sure where to start?",
       "website": {
         "situation": "I need a professional website for my business",
-        "service": "Websites — from $1,800"
+        "service": "Websites"
       },
       "app": {
         "situation": "I have a software idea or internal tool to build",
-        "service": "Custom web apps — from $18K"
+        "service": "Custom web apps"
       },
       "ai": {
         "situation": "I want AI built into my product from day one",
-        "service": "Custom web apps with AI — from $18K"
+        "service": "AI integration"
       },
       "complex": {
         "situation": "I need a senior architect-builder for a complex product",
-        "service": "Custom web apps — complex scope from $75K"
+        "service": "Custom web apps — complex scope"
       },
       "portal": {
         "situation": "I manage client projects and need a real client system",
-        "service": "Client portals — from $12K"
+        "service": "Client portals"
       },
       "rescue": {
         "situation": "My site is broken, slow, or leaking leads",
-        "service": "Website rescue — from $1K"
+        "service": "Website rescue"
       },
       "ecommerce": {
         "situation": "I need an online store or help running the one I have",
-        "service": "E-commerce — from $1,800"
+        "service": "E-commerce"
       }
     },
     "proof": {
@@ -1003,6 +1003,10 @@
       "rescue": {
         "label": "Website rescue",
         "desc": "My current site isn't working."
+      },
+      "ai_integration": {
+        "label": "AI integration",
+        "desc": "Add a production AI layer to an existing product or system."
       }
     },
     "goalQuestion": "What's the primary goal?",
@@ -3217,5 +3221,304 @@
     "closingBody": "This is the kind of system we build — AI that handles the cognitive load, deterministic gates for the decisions that matter, and a knowledge layer that compounds over time.",
     "closingCta": "Start a conversation",
     "closingCtaSecondary": "See how we work"
+  },
+  "aiIntake": {
+    "metaTitle": "AI Integration Intake | CrecyStudio",
+    "metaDescription": "Tell us about your product and the AI behaviour you need. We'll scope it properly — safety gates, autonomy model, data requirements, and all.",
+    "kicker": "AI integration estimate",
+    "title": "Scope your AI integration",
+    "stepCounter": "Step {current} of 4 — {stepTitle}",
+    "stepTitles": {
+      "1": "Use case",
+      "2": "Technical context",
+      "3": "Safety & autonomy",
+      "4": "Scope & contact"
+    },
+    "step1": {
+      "contactHeading": "Who are we talking to?",
+      "contactNameLabel": "Your name",
+      "contactNamePlaceholder": "Jane Smith",
+      "companyLabel": "Company or product name",
+      "companyPlaceholder": "Acme Inc.",
+      "productHeading": "Tell us about the product",
+      "productSubtitle": "What does it do today, who uses it, and what problem do you want AI to solve?",
+      "productPlaceholder": "e.g. We run a B2B SaaS CRM. Support agents spend 3 hours a day manually triaging tickets. We want AI to classify and suggest replies so agents just approve or edit.",
+      "productMinLength": "Add a bit more detail — at least 20 characters.",
+      "useCaseHeading": "What is the primary AI use case?",
+      "useCaseSubtitle": "Pick the one that best describes what you're building.",
+      "useCaseOtherPlaceholder": "Describe your use case..."
+    },
+    "step2": {
+      "productTypeHeading": "What kind of product is this?",
+      "productTypeSubtitle": "Helps us understand the deployment context.",
+      "stackHeading": "Current tech stack",
+      "stackSubtitle": "Check everything that applies. We'll assess integration complexity.",
+      "aiUsedHeading": "Are you already using AI in this product?",
+      "aiUsedSubtitle": "Tells us whether we're starting from scratch or extending existing AI.",
+      "aiProviderPlaceholder": "Which provider(s)? e.g. Cohere, Mistral, Azure OpenAI...",
+      "dataHeading": "What kinds of data will the AI process?",
+      "dataSubtitle": "Check all that apply. This drives compliance and access control requirements."
+    },
+    "step3": {
+      "safetyNote": "This step determines the safety architecture your integration needs. There is no wrong answer — the goal is to match the engineering effort to the actual risk profile of your use case.",
+      "autonomyHeading": "How autonomous should the AI be?",
+      "autonomySubtitle": "Think about what happens after the AI produces a result.",
+      "audienceHeading": "Who sees the AI output directly?",
+      "consequenceHeading": "What happens if the AI makes a mistake?",
+      "consequenceSubtitle": "Worst realistic case, not a theoretical catastrophe.",
+      "auditHeading": "Do you need a full audit trail?",
+      "auditSubtitle": "Every AI decision logged with input, output, confidence, and timestamp."
+    },
+    "step4": {
+      "volumeHeading": "Expected daily AI operations",
+      "volumeSubtitle": "Rough estimate. Drives architecture decisions around rate limiting, cost budgeting, and scalability.",
+      "timelineHeading": "Timeline",
+      "budgetHeading": "Budget range",
+      "approvalHeading": "Who approves this project?",
+      "approvalSubtitle": "Helps us prepare the right materials for your internal process.",
+      "contactHeading": "Where do we send your estimate?",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "jane@company.com",
+      "phoneLabel": "Phone (optional)",
+      "phonePlaceholder": "+1 (555) 000-0000",
+      "decisionMakerLabel": "Your role",
+      "decisionMakerPlaceholder": "e.g. CTO, Product Lead, Founder"
+    },
+    "enums": {
+      "useCase": {
+        "copilot": {
+          "label": "AI copilot for your team",
+          "desc": "AI assists staff — suggests replies, drafts content, summarises, classifies."
+        },
+        "triage": {
+          "label": "Automated triage & routing",
+          "desc": "AI reads incoming requests and routes or prioritises them automatically."
+        },
+        "generation": {
+          "label": "Content or document generation",
+          "desc": "AI generates reports, proposals, emails, or structured outputs at scale."
+        },
+        "vision": {
+          "label": "Image or document analysis",
+          "desc": "AI reads PDFs, images, invoices, or forms and extracts structured data."
+        },
+        "monitoring": {
+          "label": "Intelligent monitoring or alerting",
+          "desc": "AI detects anomalies, patterns, or threshold breaches and surfaces them."
+        },
+        "other": {
+          "label": "Something else",
+          "desc": "Describe your use case in the next field."
+        }
+      },
+      "productType": {
+        "saas": {
+          "label": "SaaS product",
+          "desc": "Multi-tenant software sold as a subscription."
+        },
+        "internal": {
+          "label": "Internal tool",
+          "desc": "Used only by your team or company."
+        },
+        "api": {
+          "label": "API or platform",
+          "desc": "AI will be exposed as an API consumed by other systems."
+        },
+        "mobile": {
+          "label": "Mobile app",
+          "desc": "iOS, Android, or cross-platform."
+        },
+        "none": {
+          "label": "No product yet",
+          "desc": "We're building the product and the AI layer together."
+        }
+      },
+      "aiUsed": {
+        "none": {
+          "label": "No AI yet",
+          "desc": "This is a greenfield AI integration."
+        },
+        "openai": {
+          "label": "OpenAI (GPT-4, o1, etc.)",
+          "desc": "Already using OpenAI's API."
+        },
+        "anthropic": {
+          "label": "Anthropic (Claude)",
+          "desc": "Already using the Claude API."
+        },
+        "other_provider": {
+          "label": "Another provider",
+          "desc": "Cohere, Mistral, Google, Azure OpenAI, etc."
+        },
+        "multiple": {
+          "label": "Multiple providers",
+          "desc": "Using or planning to use more than one."
+        }
+      },
+      "autonomy": {
+        "suggest": {
+          "label": "Suggest only",
+          "desc": "AI proposes an action. A human always reviews and manually executes it."
+        },
+        "confirm": {
+          "label": "Suggest + one-click confirm",
+          "desc": "AI proposes, human confirms with one click, then AI executes."
+        },
+        "auto_low": {
+          "label": "Auto-handle routine cases",
+          "desc": "AI resolves clear-cut, low-risk cases automatically. Ambiguous cases escalate to a human."
+        },
+        "autonomous": {
+          "label": "Fully autonomous",
+          "desc": "AI acts end-to-end without per-decision human confirmation."
+        }
+      },
+      "audience": {
+        "internal": {
+          "label": "Internal team only",
+          "desc": "Only your staff sees the AI output."
+        },
+        "clients": {
+          "label": "Clients / end users",
+          "desc": "AI output goes directly to customers or end users."
+        },
+        "both": {
+          "label": "Both internal and external",
+          "desc": "AI output is seen by staff and customers."
+        }
+      },
+      "consequence": {
+        "cosmetic": {
+          "label": "Cosmetic — minor inconvenience",
+          "desc": "A bad AI output is slightly annoying but harmless."
+        },
+        "operational": {
+          "label": "Operational — workflow disruption",
+          "desc": "A bad output breaks a workflow but can be corrected quickly."
+        },
+        "client_facing": {
+          "label": "Client-facing — reputation risk",
+          "desc": "A bad output is seen by customers and damages trust."
+        },
+        "financial_legal": {
+          "label": "Financial or legal consequence",
+          "desc": "A bad output could cause measurable financial loss or legal exposure."
+        }
+      },
+      "auditTrail": {
+        "required": {
+          "label": "Required",
+          "desc": "Compliance, legal, or internal policy demands a full decision log."
+        },
+        "preferred": {
+          "label": "Preferred but not mandatory",
+          "desc": "Would be useful for debugging and reviewing AI behaviour."
+        },
+        "not_needed": {
+          "label": "Not needed",
+          "desc": "No audit requirements for this use case."
+        }
+      },
+      "volume": {
+        "under_100": {
+          "label": "Under 100 / day",
+          "desc": "Low volume — standard API calls, no special infrastructure needed."
+        },
+        "100_1k": {
+          "label": "100 – 1,000 / day",
+          "desc": "Moderate volume — monitoring and cost controls recommended."
+        },
+        "1k_10k": {
+          "label": "1,000 – 10,000 / day",
+          "desc": "High volume — rate limiting, cost budgeting, and scaling required."
+        },
+        "10k_plus": {
+          "label": "10,000+ / day",
+          "desc": "Very high volume — dedicated architecture, queuing, and budget controls."
+        },
+        "not_sure": {
+          "label": "Not sure yet",
+          "desc": "We don't have a clear estimate yet."
+        }
+      },
+      "timeline": {
+        "asap": "ASAP — as fast as possible",
+        "1-3-months": "1–3 months",
+        "3-6-months": "3–6 months",
+        "flexible": "Flexible — no hard deadline"
+      },
+      "budget": {
+        "5k-15k": "$5k – $15k",
+        "15k-35k": "$15k – $35k",
+        "35k-75k": "$35k – $75k",
+        "75k-plus": "$75k+",
+        "guidance": "I need guidance on budget"
+      },
+      "approval": {
+        "solo": {
+          "label": "I decide alone",
+          "desc": "No internal approval process needed."
+        },
+        "small-team": {
+          "label": "Small team sign-off",
+          "desc": "2–4 stakeholders need to align."
+        },
+        "board": {
+          "label": "Board or executive approval",
+          "desc": "This needs sign-off at the executive or board level."
+        },
+        "legal": {
+          "label": "Legal or compliance review",
+          "desc": "Legal or compliance must review before we can proceed."
+        },
+        "not-sure": {
+          "label": "Not sure yet",
+          "desc": "The approval path isn't clear yet."
+        }
+      }
+    },
+    "stack": {
+      "nextjs": "Next.js / React",
+      "vue": "Vue / Nuxt",
+      "node": "Node.js",
+      "python": "Python / Django / FastAPI",
+      "rails": "Ruby on Rails",
+      "dotnet": ".NET / C#",
+      "php": "PHP / Laravel",
+      "other": "Other / not listed"
+    },
+    "data": {
+      "personal": {
+        "label": "Personal data (PII)",
+        "desc": "Names, emails, addresses, identifiers."
+      },
+      "financial": {
+        "label": "Financial data",
+        "desc": "Transactions, account details, billing records."
+      },
+      "health": {
+        "label": "Health or medical data",
+        "desc": "PHI, medical records, clinical data."
+      },
+      "legal": {
+        "label": "Legal or privileged information",
+        "desc": "Contracts, case files, privileged communications."
+      },
+      "operational": {
+        "label": "Operational / internal data only",
+        "desc": "No sensitive personal, financial, health, or legal data."
+      }
+    },
+    "nav": {
+      "back": "Back",
+      "next": "Next",
+      "submit": "Get my AI estimate",
+      "submitting": "Calculating estimate..."
+    },
+    "validation": {
+      "validEmail": "Please enter a valid email address.",
+      "requiredFields": "Please fill in all required fields.",
+      "submitError": "Something went wrong. Please try again or email us directly."
+    }
   }
 }

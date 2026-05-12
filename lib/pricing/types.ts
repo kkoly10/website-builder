@@ -8,7 +8,8 @@ export type PricingLane =
   | "automation"
   | "ecommerce"
   | "web_app"
-  | "rescue";
+  | "rescue"
+  | "ai_integration";
 
 // Normalize a stored lane string to the canonical PricingLane. Accepts
 // the legacy "ops" value (returns "automation") so old persisted data
@@ -16,7 +17,7 @@ export type PricingLane =
 // not in the canonical set falls back to "website".
 export function normalizePricingLane(lane: string | null | undefined): PricingLane {
   if (lane === "ops" || lane === "automation") return "automation";
-  if (lane === "website" || lane === "ecommerce" || lane === "web_app" || lane === "rescue") {
+  if (lane === "website" || lane === "ecommerce" || lane === "web_app" || lane === "rescue" || lane === "ai_integration") {
     return lane;
   }
   return "website";
@@ -169,6 +170,28 @@ export type RescuePricingInput = {
   urlsToPreserve: string;
   budget: string;
   notes: string;
+};
+
+// Phase 5 — AI integration pricing engine.
+export type AiIntakeTierKey =
+  | "ai_single_integration"
+  | "ai_production_system"
+  | "ai_architecture_build"
+  | "custom_ai_scope";
+
+export type AiIntakePricingInput = {
+  useCase: string;
+  productType: string;
+  currentStack: string[];
+  aiCurrentlyUsed: string;
+  dataClassification: string[];
+  autonomyLevel: string;
+  aiOutputAudience: string;
+  mistakeConsequence: string;
+  auditTrail: string;
+  dailyVolume: string;
+  timeline: string;
+  budget: string;
 };
 
 export type EcommercePricingInput = {

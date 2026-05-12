@@ -176,31 +176,31 @@
       "label": "Pas sûr par où commencer ?",
       "website": {
         "situation": "J'ai besoin d'un site web professionnel pour mon entreprise",
-        "service": "Sites web — à partir de 1 800 $"
+        "service": "Sites web"
       },
       "app": {
         "situation": "J'ai une idée de logiciel ou un outil interne à créer",
-        "service": "Applications web sur mesure — à partir de 18 000 $"
+        "service": "Applications web sur mesure"
       },
       "ai": {
         "situation": "Je veux de l'IA intégrée dans mon produit dès le départ",
-        "service": "Applications web avec IA — à partir de 18 000 $"
+        "service": "Intégration IA"
       },
       "complex": {
         "situation": "J'ai besoin d'un architecte-développeur senior pour un produit complexe",
-        "service": "Applications web sur mesure — portée complexe à partir de 75 000 $"
+        "service": "Applications web — portée complexe"
       },
       "portal": {
         "situation": "Je gère des projets clients et j'ai besoin d'un vrai système client",
-        "service": "Portails clients — à partir de 12 000 $"
+        "service": "Portails clients"
       },
       "rescue": {
         "situation": "Mon site est cassé, lent ou perd des prospects",
-        "service": "Rescue de site — à partir de 1 000 $"
+        "service": "Rescue de site web"
       },
       "ecommerce": {
         "situation": "J'ai besoin d'une boutique en ligne ou d'aide pour la gérer",
-        "service": "E-commerce — à partir de 1 800 $"
+        "service": "E-commerce"
       }
     },
     "proof": {
@@ -1003,6 +1003,10 @@
       "rescue": {
         "label": "Website rescue",
         "desc": "My current site isn't working."
+      },
+      "ai_integration": {
+        "label": "Intégration IA",
+        "desc": "Ajouter une couche IA de production à un produit ou système existant."
       }
     },
     "goalQuestion": "Quel est l'objectif principal ?",
@@ -3239,5 +3243,304 @@
     "closingBody": "C'est le type de système que nous construisons — une IA qui gère la charge cognitive, des portails déterministes pour les décisions importantes, et une couche de connaissances qui se renforce avec le temps.",
     "closingCta": "Démarrer une conversation",
     "closingCtaSecondary": "Voir notre processus"
+  },
+  "aiIntake": {
+    "metaTitle": "Intégration IA — Estimation | CrecyStudio",
+    "metaDescription": "Décrivez votre produit et le comportement IA souhaité. Nous le scoperons correctement — portes de sécurité, modèle d'autonomie, exigences de données et tout le reste.",
+    "kicker": "Estimation intégration IA",
+    "title": "Scoper votre intégration IA",
+    "stepCounter": "Étape {current} sur 4 — {stepTitle}",
+    "stepTitles": {
+      "1": "Cas d'usage",
+      "2": "Contexte technique",
+      "3": "Sécurité et autonomie",
+      "4": "Portée et contact"
+    },
+    "step1": {
+      "contactHeading": "À qui parlons-nous ?",
+      "contactNameLabel": "Votre nom",
+      "contactNamePlaceholder": "Jane Dupont",
+      "companyLabel": "Nom de l'entreprise ou du produit",
+      "companyPlaceholder": "Acme Inc.",
+      "productHeading": "Parlez-nous du produit",
+      "productSubtitle": "Que fait-il aujourd'hui, qui l'utilise, et quel problème voulez-vous que l'IA résolve ?",
+      "productPlaceholder": "ex. Nous gérons un CRM SaaS B2B. Les agents support passent 3 heures par jour à trier les tickets manuellement. Nous voulons que l'IA classifie et suggère des réponses afin que les agents n'aient qu'à approuver ou modifier.",
+      "productMinLength": "Ajoutez un peu plus de détails — au moins 20 caractères.",
+      "useCaseHeading": "Quel est le cas d'usage IA principal ?",
+      "useCaseSubtitle": "Choisissez celui qui décrit le mieux ce que vous construisez.",
+      "useCaseOtherPlaceholder": "Décrivez votre cas d'usage..."
+    },
+    "step2": {
+      "productTypeHeading": "Quel type de produit est-ce ?",
+      "productTypeSubtitle": "Aide à comprendre le contexte de déploiement.",
+      "stackHeading": "Stack technologique actuelle",
+      "stackSubtitle": "Cochez tout ce qui s'applique. Nous évaluerons la complexité d'intégration.",
+      "aiUsedHeading": "Utilisez-vous déjà de l'IA dans ce produit ?",
+      "aiUsedSubtitle": "Indique si nous partons de zéro ou si nous étendons une IA existante.",
+      "aiProviderPlaceholder": "Quel(s) fournisseur(s) ? ex. Cohere, Mistral, Azure OpenAI...",
+      "dataHeading": "Quels types de données l'IA va-t-elle traiter ?",
+      "dataSubtitle": "Cochez tout ce qui s'applique. Cela détermine les exigences de conformité et de contrôle d'accès."
+    },
+    "step3": {
+      "safetyNote": "Cette étape détermine l'architecture de sécurité dont votre intégration a besoin. Il n'y a pas de mauvaise réponse — l'objectif est d'adapter l'effort d'ingénierie au profil de risque réel de votre cas d'usage.",
+      "autonomyHeading": "Quelle autonomie l'IA doit-elle avoir ?",
+      "autonomySubtitle": "Réfléchissez à ce qui se passe après que l'IA a produit un résultat.",
+      "audienceHeading": "Qui voit directement la sortie de l'IA ?",
+      "consequenceHeading": "Que se passe-t-il si l'IA fait une erreur ?",
+      "consequenceSubtitle": "Cas réaliste le plus défavorable, pas une catastrophe théorique.",
+      "auditHeading": "Avez-vous besoin d'une piste d'audit complète ?",
+      "auditSubtitle": "Chaque décision IA enregistrée avec entrée, sortie, confiance et horodatage."
+    },
+    "step4": {
+      "volumeHeading": "Opérations IA quotidiennes attendues",
+      "volumeSubtitle": "Estimation approximative. Conduit les décisions d'architecture autour du rate limiting, de la budgétisation des coûts et de la scalabilité.",
+      "timelineHeading": "Calendrier",
+      "budgetHeading": "Fourchette de budget",
+      "approvalHeading": "Qui approuve ce projet ?",
+      "approvalSubtitle": "Nous aide à préparer les bons éléments pour votre processus interne.",
+      "contactHeading": "Où envoyons-nous votre estimation ?",
+      "emailLabel": "Adresse e-mail",
+      "emailPlaceholder": "jane@entreprise.com",
+      "phoneLabel": "Téléphone (optionnel)",
+      "phonePlaceholder": "+33 6 00 00 00 00",
+      "decisionMakerLabel": "Votre rôle",
+      "decisionMakerPlaceholder": "ex. CTO, Responsable Produit, Fondateur"
+    },
+    "enums": {
+      "useCase": {
+        "copilot": {
+          "label": "Copilote IA pour votre équipe",
+          "desc": "L'IA assiste le personnel — suggère des réponses, rédige du contenu, résume, classifie."
+        },
+        "triage": {
+          "label": "Triage et routage automatisés",
+          "desc": "L'IA lit les demandes entrantes et les route ou les priorise automatiquement."
+        },
+        "generation": {
+          "label": "Génération de contenu ou de documents",
+          "desc": "L'IA génère des rapports, propositions, e-mails ou sorties structurées à grande échelle."
+        },
+        "vision": {
+          "label": "Analyse d'images ou de documents",
+          "desc": "L'IA lit des PDF, images, factures ou formulaires et en extrait des données structurées."
+        },
+        "monitoring": {
+          "label": "Surveillance ou alertes intelligentes",
+          "desc": "L'IA détecte les anomalies, patterns ou dépassements de seuil et les remonte."
+        },
+        "other": {
+          "label": "Autre chose",
+          "desc": "Décrivez votre cas d'usage dans le champ suivant."
+        }
+      },
+      "productType": {
+        "saas": {
+          "label": "Produit SaaS",
+          "desc": "Logiciel multi-tenant vendu par abonnement."
+        },
+        "internal": {
+          "label": "Outil interne",
+          "desc": "Utilisé uniquement par votre équipe ou entreprise."
+        },
+        "api": {
+          "label": "API ou plateforme",
+          "desc": "L'IA sera exposée en tant qu'API consommée par d'autres systèmes."
+        },
+        "mobile": {
+          "label": "Application mobile",
+          "desc": "iOS, Android ou multiplateforme."
+        },
+        "none": {
+          "label": "Pas encore de produit",
+          "desc": "Nous construisons le produit et la couche IA ensemble."
+        }
+      },
+      "aiUsed": {
+        "none": {
+          "label": "Pas encore d'IA",
+          "desc": "C'est une intégration IA en greenfield."
+        },
+        "openai": {
+          "label": "OpenAI (GPT-4, o1, etc.)",
+          "desc": "Utilise déjà l'API OpenAI."
+        },
+        "anthropic": {
+          "label": "Anthropic (Claude)",
+          "desc": "Utilise déjà l'API Claude."
+        },
+        "other_provider": {
+          "label": "Un autre fournisseur",
+          "desc": "Cohere, Mistral, Google, Azure OpenAI, etc."
+        },
+        "multiple": {
+          "label": "Plusieurs fournisseurs",
+          "desc": "Utilise ou prévoit d'utiliser plus d'un fournisseur."
+        }
+      },
+      "autonomy": {
+        "suggest": {
+          "label": "Suggestion uniquement",
+          "desc": "L'IA propose une action. Un humain examine toujours et l'exécute manuellement."
+        },
+        "confirm": {
+          "label": "Suggestion + confirmation en un clic",
+          "desc": "L'IA propose, l'humain confirme en un clic, puis l'IA exécute."
+        },
+        "auto_low": {
+          "label": "Traitement automatique des cas courants",
+          "desc": "L'IA résout automatiquement les cas clairs et peu risqués. Les cas ambigus remontent à un humain."
+        },
+        "autonomous": {
+          "label": "Totalement autonome",
+          "desc": "L'IA agit de bout en bout sans confirmation humaine par décision."
+        }
+      },
+      "audience": {
+        "internal": {
+          "label": "Équipe interne uniquement",
+          "desc": "Seul votre personnel voit la sortie de l'IA."
+        },
+        "clients": {
+          "label": "Clients / utilisateurs finaux",
+          "desc": "La sortie IA va directement aux clients ou utilisateurs finaux."
+        },
+        "both": {
+          "label": "Interne et externe",
+          "desc": "La sortie IA est vue par le personnel et les clients."
+        }
+      },
+      "consequence": {
+        "cosmetic": {
+          "label": "Cosmétique — inconvénient mineur",
+          "desc": "Une mauvaise sortie IA est légèrement gênante mais sans danger."
+        },
+        "operational": {
+          "label": "Opérationnel — perturbation du flux de travail",
+          "desc": "Une mauvaise sortie casse un workflow mais peut être corrigée rapidement."
+        },
+        "client_facing": {
+          "label": "Face aux clients — risque de réputation",
+          "desc": "Une mauvaise sortie est vue par les clients et nuit à la confiance."
+        },
+        "financial_legal": {
+          "label": "Conséquence financière ou juridique",
+          "desc": "Une mauvaise sortie pourrait causer une perte financière mesurable ou une exposition légale."
+        }
+      },
+      "auditTrail": {
+        "required": {
+          "label": "Requis",
+          "desc": "La conformité, le juridique ou la politique interne exige un journal de décisions complet."
+        },
+        "preferred": {
+          "label": "Préféré mais pas obligatoire",
+          "desc": "Serait utile pour déboguer et examiner le comportement de l'IA."
+        },
+        "not_needed": {
+          "label": "Pas nécessaire",
+          "desc": "Aucune exigence d'audit pour ce cas d'usage."
+        }
+      },
+      "volume": {
+        "under_100": {
+          "label": "Moins de 100 / jour",
+          "desc": "Faible volume — appels API standards, aucune infrastructure spéciale nécessaire."
+        },
+        "100_1k": {
+          "label": "100 – 1 000 / jour",
+          "desc": "Volume modéré — surveillance et contrôles de coûts recommandés."
+        },
+        "1k_10k": {
+          "label": "1 000 – 10 000 / jour",
+          "desc": "Volume élevé — rate limiting, budgétisation des coûts et scaling requis."
+        },
+        "10k_plus": {
+          "label": "10 000+ / jour",
+          "desc": "Très haut volume — architecture dédiée, mise en file d'attente et contrôles budgétaires."
+        },
+        "not_sure": {
+          "label": "Pas sûr encore",
+          "desc": "Nous n'avons pas encore d'estimation claire."
+        }
+      },
+      "timeline": {
+        "asap": "Dès que possible",
+        "1-3-months": "1–3 mois",
+        "3-6-months": "3–6 mois",
+        "flexible": "Flexible — pas de délai strict"
+      },
+      "budget": {
+        "5k-15k": "5 000 $ – 15 000 $",
+        "15k-35k": "15 000 $ – 35 000 $",
+        "35k-75k": "35 000 $ – 75 000 $",
+        "75k-plus": "75 000 $+",
+        "guidance": "J'ai besoin d'orientation sur le budget"
+      },
+      "approval": {
+        "solo": {
+          "label": "Je décide seul",
+          "desc": "Aucun processus d'approbation interne nécessaire."
+        },
+        "small-team": {
+          "label": "Validation par petite équipe",
+          "desc": "2–4 parties prenantes doivent s'aligner."
+        },
+        "board": {
+          "label": "Approbation conseil / direction",
+          "desc": "Cela nécessite une validation au niveau exécutif ou du conseil."
+        },
+        "legal": {
+          "label": "Examen juridique ou conformité",
+          "desc": "Le juridique ou la conformité doit examiner avant de pouvoir continuer."
+        },
+        "not-sure": {
+          "label": "Pas encore sûr",
+          "desc": "Le chemin d'approbation n'est pas encore clair."
+        }
+      }
+    },
+    "stack": {
+      "nextjs": "Next.js / React",
+      "vue": "Vue / Nuxt",
+      "node": "Node.js",
+      "python": "Python / Django / FastAPI",
+      "rails": "Ruby on Rails",
+      "dotnet": ".NET / C#",
+      "php": "PHP / Laravel",
+      "other": "Autre / non listé"
+    },
+    "data": {
+      "personal": {
+        "label": "Données personnelles (PII)",
+        "desc": "Noms, e-mails, adresses, identifiants."
+      },
+      "financial": {
+        "label": "Données financières",
+        "desc": "Transactions, détails de compte, relevés de facturation."
+      },
+      "health": {
+        "label": "Données de santé ou médicales",
+        "desc": "DMP, dossiers médicaux, données cliniques."
+      },
+      "legal": {
+        "label": "Informations juridiques ou privilégiées",
+        "desc": "Contrats, dossiers, communications privilégiées."
+      },
+      "operational": {
+        "label": "Données opérationnelles / internes uniquement",
+        "desc": "Aucune donnée personnelle, financière, de santé ou juridique sensible."
+      }
+    },
+    "nav": {
+      "back": "Retour",
+      "next": "Suivant",
+      "submit": "Obtenir mon estimation IA",
+      "submitting": "Calcul de l'estimation..."
+    },
+    "validation": {
+      "validEmail": "Veuillez saisir une adresse e-mail valide.",
+      "requiredFields": "Veuillez remplir tous les champs obligatoires.",
+      "submitError": "Une erreur s'est produite. Veuillez réessayer ou nous contacter directement par e-mail."
+    }
   }
 }
