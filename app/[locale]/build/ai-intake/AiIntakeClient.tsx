@@ -363,6 +363,7 @@ export default function AiIntakeClient() {
           },
           intakeRaw: {
             companyName: form.companyName,
+            productDescription: form.productDescription,
             useCase: form.useCase,
             useCaseOther: form.useCaseOther,
             productType: form.productType,
