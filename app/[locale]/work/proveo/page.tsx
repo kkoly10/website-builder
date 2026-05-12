@@ -77,7 +77,7 @@ function ProveoContent() {
           <section className={`${styles.section} fadeUp`}>
             <h2 className={styles.sectionTitle}>{t("s3Title")}</h2>
             <p className={styles.prose}>{t("s3Intro")}</p>
-            <div className={styles.guardrails}>
+            <div className={styles.tierCards}>
               <article className={styles.guardrailCard}>
                 <p className={styles.guardrailNum}>{t("tier1Num")}</p>
                 <p className={styles.guardrailTitle}>{t("tier1Title")}</p>

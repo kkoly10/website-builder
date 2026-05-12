@@ -227,6 +227,19 @@
   gap: 0.9rem;
 }
 
+.tierCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1.6rem;
+}
+
+@media (max-width: 900px) {
+  .tierCards {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 640px) {
   .guardrails {
     grid-template-columns: 1fr;
