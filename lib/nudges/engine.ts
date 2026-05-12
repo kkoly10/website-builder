@@ -1,7 +1,7 @@
 import { sendResendEmail } from "@/lib/resend";
 import { logProjectActivityByPortalId } from "@/lib/projectActivity";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { emailWrap, ctaButton, callout, sig, adminBadge, adminTable, escHtml } from "@/lib/emailHelpers";
+import { emailWrap, ctaButton, callout, sig, adminBadge, adminTable, escHtml, nameFromEmail } from "@/lib/emailHelpers";
 
 const FROM_EMAIL =
   process.env.NOTIFICATION_FROM_EMAIL ||
@@ -37,13 +37,6 @@ function hoursSince(value: unknown) {
   return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60));
 }
 
-function nameFromEmail(email: string): string {
-  const local = email.split("@")[0] || "";
-  const first = local.split(/[._+\-]/)[0];
-  const cleaned = first.replace(/\d+/g, "");
-  if (cleaned.length < 2) return "";
-  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
-}
 
 function getPendingItems(portal: PortalRow, messages: any[]): string[] {
   const items: string[] = [];
