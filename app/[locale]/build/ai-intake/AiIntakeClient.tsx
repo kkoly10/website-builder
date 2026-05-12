@@ -392,7 +392,7 @@ export default function AiIntakeClient() {
           useCase: form.useCase,
           autonomyLevel: form.autonomyLevel,
           mistakeConsequence: form.mistakeConsequence,
-          dataClassification: form.dataClassification,
+          dataClassification: form.dataClassification.join(","),
           tierKey: recommendation.tierKey,
           complexityScore: recommendation.complexityScore,
           isCustomScope: recommendation.isCustomScope,
