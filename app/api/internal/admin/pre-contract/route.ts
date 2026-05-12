@@ -23,35 +23,12 @@ function cleanList(values: unknown): string[] {
   if (Array.isArray(values)) {
     return values.map((v) => String(v || "").trim()).filter(Boolean);
   }
-
   if (typeof values === "string" && values.trim()) {
-    return values
-      .split(/[,|\n]/)
-      .map((v) => v.trim())
-      .filter(Boolean);
+    return values.split(/[,|\n]/).map((v) => v.trim()).filter(Boolean);
   }
-
   return [];
 }
 
-function parsePages(value: unknown): string[] {
-  const raw = String(value || "").trim();
-  if (!raw) return [];
-
-  if (raw.toLowerCase().includes("one pager")) {
-    return ["Homepage / One-page flow"];
-  }
-
-  const match = raw.match(/\d+/);
-  if (match) {
-    const count = Number(match[0]);
-    if (Number.isFinite(count) && count > 0) {
-      return Array.from({ length: count }, (_, i) => `Page ${i + 1}`);
-    }
-  }
-
-  return [raw];
-}
 
 function money(value?: number | null) {
   if (value == null || !Number.isFinite(Number(value))) return "TBD";
@@ -66,6 +43,213 @@ function textOrFallback(value: unknown, fallback: string) {
   const s = typeof value === "string" ? value.trim() : "";
   return s || fallback;
 }
+
+function listOrFallback(values: string[], fallback: string): string {
+  return values.length ? values.map((v) => `- ${v}`).join("\n") : `- ${fallback}`;
+}
+
+// ─── Lane-aware helpers ────────────────────────────────────────────────────
+
+function buildTitle(projectType: string): string {
+  switch (projectType) {
+    case "web_app":    return "CUSTOM WEB APP PRE-CONTRACT DRAFT";
+    case "automation": return "WORKFLOW AUTOMATION PRE-CONTRACT DRAFT";
+    case "ecommerce":  return "E-COMMERCE STORE PRE-CONTRACT DRAFT";
+    case "rescue":     return "WEBSITE RESCUE PRE-CONTRACT DRAFT";
+    default:           return "WEBSITE PROJECT PRE-CONTRACT DRAFT";
+  }
+}
+
+function buildProjectSummaryBlock(workspace: any, projectType: string): string {
+  const timeline = textOrFallback(
+    workspace.scopeSnapshot?.timeline,
+    "Timeline to be finalized during project kickoff"
+  );
+
+  switch (projectType) {
+    case "web_app": {
+      return `Client is engaging Provider for a custom web application project.
+- Project type: Custom web application
+- Timeline: ${timeline}`;
+    }
+    case "automation": {
+      return `Client is engaging Provider for a workflow automation project.
+- Project type: Workflow automation
+- Timeline: ${timeline}`;
+    }
+    case "ecommerce": {
+      const platform = textOrFallback(workspace.direction?.payload?.platform, "To be finalized");
+      return `Client is engaging Provider for an e-commerce store build.
+- Project type: E-commerce store
+- Platform: ${platform}
+- Timeline: ${timeline}`;
+    }
+    case "rescue": {
+      const currentUrl = textOrFallback(workspace.direction?.payload?.currentUrl, "To be provided");
+      const urgency = textOrFallback(workspace.direction?.payload?.urgency, "To be confirmed");
+      return `Client is engaging Provider for a website rescue engagement.
+- Project type: Website rescue
+- Site URL: ${currentUrl}
+- Urgency: ${urgency}
+- Timeline: ${timeline}`;
+    }
+    default: {
+      const tierLabel = workspace.scopeSnapshot?.tierLabel || workspace.quote?.tier;
+      const platform = textOrFallback(workspace.scopeSnapshot?.platform, "To be finalized");
+      const websiteType = textOrFallback(workspace.scope?.websiteType, "To be finalized");
+      return `Client is engaging Provider for a website project currently categorized as:
+- Tier / package: ${textOrFallback(tierLabel, "Website Scope")}
+- Platform: ${platform}
+- Website type: ${websiteType}
+- Timeline: ${timeline}`;
+    }
+  }
+}
+
+function buildScopeBlock(workspace: any, projectType: string): string {
+  const p = workspace.direction?.payload ?? {};
+
+  switch (projectType) {
+    case "web_app": {
+      const appPurpose = textOrFallback(p.appPurpose, "To be finalized");
+      const targetUsers = listOrFallback(cleanList(p.targetUsers), "To be finalized");
+      const keyWorkflows = textOrFallback(p.keyWorkflows, "To be finalized");
+      const integrations = listOrFallback(cleanList(p.integrations), "None specified yet");
+      const acceptanceCriteria = textOrFallback(p.acceptanceCriteria, "To be finalized");
+      return `Provider will design, build, and deliver the custom web application according to the current approved product direction.
+
+App purpose:
+${appPurpose}
+
+Target users:
+${targetUsers}
+
+Key workflows:
+${keyWorkflows}
+
+Integrations:
+${integrations}
+
+MVP acceptance criteria:
+${acceptanceCriteria}`;
+    }
+
+    case "automation": {
+      const currentProcess = textOrFallback(p.currentProcess, "To be finalized");
+      const trigger = textOrFallback(p.trigger, "To be finalized");
+      const toolsInvolved = listOrFallback(cleanList(p.toolsInvolved), "To be finalized");
+      const outputs = textOrFallback(p.outputs, "To be finalized");
+      const successMetric = textOrFallback(p.successMetric, "To be confirmed");
+      return `Provider will design, build, and deliver the workflow automation according to the current approved workflow direction.
+
+Current manual process:
+${currentProcess}
+
+Trigger:
+${trigger}
+
+Tools involved:
+${toolsInvolved}
+
+Desired outputs:
+${outputs}
+
+Success metric:
+${successMetric}`;
+    }
+
+    case "ecommerce": {
+      const platform = textOrFallback(p.platform, "To be finalized");
+      const catalogSize = textOrFallback(p.productCatalogSize, "To be confirmed");
+      const categories = listOrFallback(cleanList(p.productCategories), "To be finalized");
+      const payments = listOrFallback(cleanList(p.paymentNeeds), "To be finalized");
+      const shipping = textOrFallback(p.shippingRules, "To be finalized");
+      const policies = textOrFallback(p.policyNeeds, "To be finalized");
+      return `Provider will design, build, and deliver the e-commerce store according to the current approved store direction.
+
+Platform: ${platform}
+Approximate product count: ${catalogSize}
+
+Product categories:
+${categories}
+
+Payment methods:
+${payments}
+
+Shipping:
+${shipping}
+
+Returns / policies:
+${policies}`;
+    }
+
+    case "rescue": {
+      const currentUrl = textOrFallback(p.currentUrl, "To be provided");
+      const issues = listOrFallback(cleanList(p.reportedIssues), "To be confirmed");
+      const businessImpact = textOrFallback(p.businessImpact, "To be confirmed");
+      const priorityFixes = textOrFallback(p.priorityFixes, "To be confirmed");
+      const accessNeeded = listOrFallback(cleanList(p.accessNeeded), "To be confirmed");
+      return `Provider will diagnose and resolve the reported issues on the Client's existing website according to the current approved rescue diagnosis.
+
+Site URL: ${currentUrl}
+
+Reported issues:
+${issues}
+
+Business impact:
+${businessImpact}
+
+Priority fixes:
+${priorityFixes}
+
+Access required:
+${accessNeeded}`;
+    }
+
+    default: {
+      const pagesIncluded = cleanList(workspace.scopeSnapshot?.pagesIncluded);
+      const featuresIncluded = cleanList(workspace.scopeSnapshot?.featuresIncluded);
+      const exclusions = cleanList(workspace.scopeSnapshot?.exclusions);
+      const revisionPolicy = textOrFallback(
+        workspace.scopeSnapshot?.revisionPolicy,
+        "Revision structure aligned during scope approval"
+      );
+      return `Provider will design, build, and prepare the website project according to the current approved scope snapshot.
+
+Pages included:
+${listOrFallback(pagesIncluded, "To be finalized")}
+
+Features included:
+${listOrFallback(featuresIncluded, "To be finalized")}
+
+Exclusions:
+${listOrFallback(exclusions, "No exclusions listed yet")}
+
+4. REVISION FRAMEWORK
+The current revision policy is:
+${revisionPolicy}
+
+Any work falling outside the agreed scope, revision structure, or exclusions may require a separate change order, separate approval, or separate pricing adjustment.`;
+    }
+  }
+}
+
+function buildHandoffClause(projectType: string): string {
+  switch (projectType) {
+    case "web_app":
+      return "production environment configuration, authentication and permissions testing, database write verification, integrations testing, UAT completion, and handoff documentation";
+    case "automation":
+      return "tool connection verification, test data confirmation, error handling review, rollback plan documentation, and automation handoff documentation";
+    case "ecommerce":
+      return "payment gateway configuration, shipping and tax rule verification, store policy review, test order completion, launch approval, and handoff documentation";
+    case "rescue":
+      return "critical issue resolution, forms and mobile testing, speed baseline review, final written report delivery, and handoff";
+    default:
+      return "domain, analytics, forms, SEO basics, and handoff items reflected in the project workspace";
+  }
+}
+
+// ─── Route ────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
   const authErr = await requireAdminRoute();
@@ -104,77 +288,48 @@ export async function POST(req: NextRequest) {
     }
 
     const workspace = portalView.data;
+    const projectType = (workspace.projectType as string) || "website";
+
     const estimateTarget = workspace.quote.estimate.target;
     const depositAmount = workspace.quote.deposit.amount;
-    const pagesIncluded = workspace.scopeSnapshot.pagesIncluded;
-    const featuresIncluded = workspace.scopeSnapshot.featuresIncluded;
-    const exclusions = workspace.scopeSnapshot.exclusions;
     const clientName = workspace.lead.name || "Client";
     const clientEmail = workspace.lead.email || "[client email]";
-    const platform = textOrFallback(workspace.scopeSnapshot.platform, "To be finalized");
-    const timeline = textOrFallback(
-      workspace.scopeSnapshot.timeline,
-      "Timeline to be finalized during project kickoff"
-    );
-    const revisionPolicy = textOrFallback(
-      workspace.scopeSnapshot.revisionPolicy,
-      "Revision structure aligned during scope approval"
-    );
-    const agreementModel = textOrFallback(
-      workspace.agreement.model,
-      "Managed build agreement"
-    );
-    const ownershipModel = textOrFallback(
-      workspace.agreement.ownershipModel,
-      "Managed with project handoff options"
-    );
+    const agreementModel = textOrFallback(workspace.agreement.model, "Managed build agreement");
+    const ownershipModel = textOrFallback(workspace.agreement.ownershipModel, "Managed with project handoff options");
     const previewUrl = workspace.preview.url || "[preview URL pending]";
-    const productionUrl =
-      workspace.preview.productionUrl || "[production URL pending]";
-    const launchNotes =
-      workspace.launch.notes ||
-      "Launch readiness items will be completed before go-live.";
-    const depositNotes =
-      workspace.quote.deposit.notes ||
-      "Deposit is required before project kickoff unless otherwise agreed in writing.";
-    const tierLabel = workspace.scopeSnapshot.tierLabel || workspace.quote.tier;
-    const websiteType = workspace.scope.websiteType || "To be finalized";
+    const productionUrl = workspace.preview.productionUrl || "[production URL pending]";
+    const launchNotes = workspace.launch.notes || "Launch readiness items will be completed before go-live.";
+    const depositNotes = workspace.quote.deposit.notes || "Deposit is required before project kickoff unless otherwise agreed in writing.";
 
-    const draft = `WEBSITE PROJECT PRE-CONTRACT DRAFT
+    const title = buildTitle(projectType);
+    const projectSummary = buildProjectSummaryBlock(workspace, projectType);
+    const scopeBlock = buildScopeBlock(workspace, projectType);
+    const handoffClause = buildHandoffClause(projectType);
+
+    // Website lane inlines section 4 (Revision Framework) inside buildScopeBlock
+    // to preserve the existing document structure. All other lanes use a
+    // standalone section 4 that covers change orders generically.
+    const revisionsSection = projectType === "website" ? "" : `4. CHANGE ORDER FRAMEWORK
+Any work falling outside the agreed scope or direction may require a separate change order, separate approval, or separate pricing adjustment.
+
+`;
+
+    const draft = `${title}
 
 This draft is for internal review and refinement before being shared with the client.
 
 1. PARTIES
-This Website Project Pre-Contract (“Agreement”) is between CrecyStudio (“Provider”) and ${clientName} (“Client”).
+This Pre-Contract ("Agreement") is between CrecyStudio ("Provider") and ${clientName} ("Client").
 Client contact email: ${clientEmail}
 
 2. PROJECT SUMMARY
-Client is engaging Provider for a website project currently categorized as:
-- Tier / package: ${textOrFallback(tierLabel, "Website Scope")}
-- Platform: ${platform}
-- Website type: ${textOrFallback(websiteType, "To be finalized")}
-- Timeline: ${timeline}
+${projectSummary}
 
 3. SCOPE OF WORK
-Provider will design, build, and prepare the website project according to the current approved scope snapshot.
+${scopeBlock}
 
-Pages included:
-${pagesIncluded.length ? pagesIncluded.map((p) => `- ${p}`).join("\n") : "- To be finalized"}
-
-Features included:
-${featuresIncluded.length ? featuresIncluded.map((f) => `- ${f}`).join("\n") : "- To be finalized"}
-
-Exclusions:
-${exclusions.length ? exclusions.map((e) => `- ${e}`).join("\n") : "- No exclusions listed yet"}
-
-4. REVISION FRAMEWORK
-The current revision policy is:
-${revisionPolicy}
-
-Any work falling outside the agreed scope, revision structure, or exclusions may require a separate change order, separate approval, or separate pricing adjustment.
-
-5. PREVIEW / REVIEW PROCESS
-Provider may publish preview versions of the website for Client review.
+${revisionsSection}5. PREVIEW / REVIEW PROCESS
+Provider may publish preview or staging versions of the deliverable for Client review.
 Current preview reference:
 ${previewUrl}
 
@@ -196,14 +351,14 @@ ${agreementModel}
 Ownership model:
 ${ownershipModel}
 
-Production / launch reference:
+Production / delivery reference:
 ${productionUrl}
 
 8. LAUNCH / HANDOFF
 Current launch notes:
 ${launchNotes}
 
-Provider will prepare the site for launch according to the agreed launch checklist, including any applicable domain, analytics, forms, SEO basics, and handoff items reflected in the project workspace.
+Provider will prepare the deliverable for handoff according to the agreed launch checklist, including ${handoffClause}.
 
 9. CLIENT RESPONSIBILITIES
 Client is responsible for timely submission of required content, approvals, assets, access credentials, and feedback necessary to keep the project moving.
@@ -237,10 +392,7 @@ END OF DRAFT`;
       );
     }
 
-    return NextResponse.json({
-      ok: true,
-      draft,
-    });
+    return NextResponse.json({ ok: true, draft });
   } catch (err: any) {
     return NextResponse.json(
       { ok: false, error: err?.message || "Unknown error" },

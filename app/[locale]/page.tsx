@@ -41,12 +41,13 @@ const JOURNEY_KEYS = [
 ] as const;
 
 const WHAT_WE_BUILD_CARDS = [
-  { key: "webApps",    href: "/custom-web-apps",  event: "cta_home_card_web_apps"   },
-  { key: "portals",    href: "/client-portals",   event: "cta_home_card_portals"    },
-  { key: "automation", href: "/systems",           event: "cta_home_card_automation" },
-  { key: "websites",   href: "/websites",          event: "cta_home_card_websites"   },
-  { key: "ecommerce",  href: "/ecommerce",         event: "cta_home_card_ecommerce"  },
-  { key: "rescue",     href: "/website-rescue",    event: "cta_home_card_rescue"     },
+  { key: "webApps",       href: "/custom-web-apps",  event: "cta_home_card_web_apps"        },
+  { key: "aiIntegration", href: "/custom-web-apps",  event: "cta_home_card_ai_integration"  },
+  { key: "portals",       href: "/client-portals",   event: "cta_home_card_portals"         },
+  { key: "automation",    href: "/systems",           event: "cta_home_card_automation"      },
+  { key: "websites",      href: "/websites",          event: "cta_home_card_websites"        },
+  { key: "ecommerce",     href: "/ecommerce",         event: "cta_home_card_ecommerce"       },
+  { key: "rescue",        href: "/website-rescue",    event: "cta_home_card_rescue"          },
 ] as const;
 
 const LOW_TICKET_KEYS = new Set(["websites", "ecommerce", "rescue"]);
@@ -54,6 +55,7 @@ const LOW_TICKET_KEYS = new Set(["websites", "ecommerce", "rescue"]);
 const START_HERE_CARDS = [
   { key: "website",   href: "/websites"        },
   { key: "app",       href: "/custom-web-apps" },
+  { key: "ai",        href: "/custom-web-apps" },
   { key: "portal",    href: "/client-portals"  },
   { key: "rescue",    href: "/website-rescue"  },
   { key: "ecommerce", href: "/ecommerce"       },

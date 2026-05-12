@@ -61,7 +61,7 @@ websitesData.en = {
   eyebrow: "Website building",
   title: "A website that makes people trust your business before they even call you.",
   intro:
-    "Your website is the first thing people check. If it looks outdated, loads slow, or doesn't explain what you do — you're losing customers before they reach out. We build custom websites that look professional, convert visitors, and actually represent how good your business is.",
+    "Your website is the first thing new customers check — and if it doesn't earn trust in five seconds, they move on. You walk away from this engagement with a site that looks the part, loads fast, and turns browsers into calls. Built custom to your business, owned by you, live in 2–3 weeks.",
   heroStats: [
     "2–3 wk typical delivery",
     "Custom · no templates",
@@ -116,7 +116,7 @@ websitesData.en = {
   ],
   pricingTitle: "You see the price before you commit.",
   pricingIntro:
-    "Every project is scoped on what you actually need — no monthly hostage fees, no surprise add-ons. Pick a starting point and we'll send a fixed estimate within 24 hours.",
+    "Every project is scoped on what you actually need — no monthly hostage fees, no surprise add-ons. Pick a starting point and we'll send a fixed estimate within 24 hours. One new client from your site typically covers this investment in the first 90 days.",
   pricingCards: [
     { label: "/ STARTER", value: "$1,800 - $2,400", detail: "For a clean, credible single-page site that does one job well." },
     { label: "/ GROWTH", value: "$3,500 - $4,500", detail: "For most small businesses ready to look the part and convert." },
@@ -141,7 +141,7 @@ websitesData.en = {
   notFit: [
     "You mainly need an online store with product listings and checkout.",
     "Your biggest problem is internal workflow chaos, not your public website.",
-    "You want the cheapest possible template site with no strategy behind it.",
+    "You want a Squarespace or Wix template — we build custom. The quality and ownership difference is real, but so is the price difference.",
     "You're not ready to make decisions or share content for the next 30 days.",
   ],
   faqTitle: "Everything people ask before signing.",
@@ -152,12 +152,14 @@ websitesData.en = {
     { question: "What happens after I submit the estimate form?", answer: "You get a detailed scope with pricing within 24 hours — no sales call required. If you want to move forward, we schedule a quick planning call, you pay a 50% deposit, and we start building. Everything happens in your private project workspace." },
     { question: "What if I need ongoing changes after launch?", answer: "You own the code and can edit it yourself or hire anyone to maintain it — no lock-in. We also offer optional monthly support if you want us to handle updates, changes, and new pages on retainer. Most clients start without it and add it later if they need it." },
     { question: "What if I'm not happy with the design?", answer: "Every tier includes multiple revision rounds. We share early concepts before going deep, so course corrections happen when they're cheap — not after the whole site is built. In four years we've never had a project we couldn't bring across the finish line." },
+    { question: "I hired a web designer before and it went sideways. Why would this be different?", answer: "That's the most common thing we hear. The usual breakdown: no clear scope, no defined timeline, no place to track progress, and no accountability when things stalled. Every project here runs through a private workspace — you see every milestone, approve every deliverable, and know exactly what happens next. Scope and price are fixed before we start. No surprises." },
+    { question: "How much of my time does this actually take?", answer: "Most clients spend under 3 hours across the whole project — an intake form, one review session when the draft goes live, and a final sign-off before launch. We handle the rest. If you can turn around feedback within 48 hours of each milestone, the build stays on schedule." },
   ],
   crossLinks: CROSS_LINKS.websites,
-  finalTitle: "Ready to stop losing customers to a bad first impression?",
-  finalText: "Let's make people actually call you.",
+  finalTitle: "Your next customer is already Googling you.",
+  finalText: "Make sure they like what they find — and call.",
   finalPrimaryCta: { label: "Answer 5 questions, get a price", href: "/build/intro" },
-  finalSecondaryCta: { label: "Talk to a human first", href: "/contact" },
+  finalSecondaryCta: { label: "See recent work", href: "/work" },
 };
 
 websitesData.fr = {
@@ -372,7 +374,7 @@ systemsData.en = {
   intro:
     "If you're copying data between tools, sending the same emails manually, or losing track of client requests — your business has an operations problem. We audit what's broken, build the automation that fixes it, and document everything so it doesn't become a mystery.",
   heroStats: [
-    "Zapier, Make.com, or custom",
+    "8–12 hrs/week recovered on average",
     "Audit first, then build",
     "You own the workflows",
   ],
@@ -398,7 +400,7 @@ systemsData.en = {
       title: "Audit + Diagnosis",
       items: [
         "We map your current process and find the bottlenecks",
-        "AI-powered scoring identifies what to automate first",
+        "Workflow scoring ranks tasks by time cost and failure risk — you see what to fix first",
         "You see the before/after process map before we build anything",
       ],
     },
@@ -421,7 +423,7 @@ systemsData.en = {
   ],
   pricingTitle: "Pricing based on complexity, not guesswork",
   pricingIntro:
-    "We start with an audit so we know what we're building before we quote. Every project gets real numbers, not vague ranges.",
+    "We start with an audit so we know what we're building before we quote. Every project gets real numbers, not vague ranges. If two hours of your week go to manual data entry at $50/hour, that's $4,800/year — a $1,500 automation pays for itself in four months.",
   pricingCards: [
     { label: "Quick Workflow Fix", value: "$1,000 – $1,800", detail: "One focused automation. Best for a single process that needs to stop being manual — intake routing, follow-up emails, status notifications." },
     { label: "Ops System Build", value: "$2,000 – $3,800", detail: "Multiple connected workflows. For businesses that need 2–4 automations working together — CRM sync, billing handoff, reporting dashboards." },
@@ -455,13 +457,16 @@ systemsData.en = {
     { question: "What if I already have automations that keep breaking?", answer: "Common situation. We can audit and fix existing automations before adding new ones. Sometimes the best first step is cleaning up what's already there." },
     { question: "Will my team understand what you build?", answer: "Yes. Every workflow includes written documentation and a walkthrough. We don't build mystery automations — your team needs to understand and trust the system." },
     { question: "Can this turn into ongoing support?", answer: "Yes. The Ongoing Systems Partner retainer ($500–$1,250/mo) covers maintenance, new workflow builds, and troubleshooting as your business evolves." },
+    { question: "What if I need to change the automation later?", answer: "You own every workflow we build — the documentation means any developer (including you or someone you hire) can understand and modify it. You're not dependent on us to make changes. The retainer exists for clients who want ongoing work, not for clients who feel locked in." },
+    { question: "How do I know this won't break something that's currently working?", answer: "Every automation is built and tested in a staging environment before touching your live tools. We verify with real data before activating anything. If something breaks during a build, we fix it — that's part of the engagement." },
+    { question: "What if Zapier or Make.com changes their pricing or kills a feature?", answer: "It happens, and it's a real risk. We document every workflow so migrating to an alternative is straightforward. For critical business processes, we often recommend custom integrations that aren't dependent on third-party platforms." },
   ],
   crossLinks: CROSS_LINKS.systems,
-  finalTitle: "Ready to stop losing time to tasks a machine should handle?",
+  finalTitle: "Your most expensive workflow isn't software — it's your team's time.",
   finalText:
-    "Start with a workflow audit. We'll diagnose the bottleneck, show you the fix, and give you a real price — all within 48 hours.",
+    "Tell us what you're doing manually. We'll audit it, show you what the automated version looks like, and give you a real price — all within 48 hours.",
   finalPrimaryCta: { label: "Start Workflow Audit", href: "/ops-intake" },
-  finalSecondaryCta: { label: "Compare Services", href: "/" },
+  finalSecondaryCta: { label: "See how we work", href: "/process" },
 };
 
 systemsData.fr = {
@@ -664,7 +669,7 @@ ecommerceData.en = {
   eyebrow: "E-commerce services",
   title: "Build your store, fix what's broken, or let us run the whole thing.",
   intro:
-    "Whether you need a new online store built from scratch, a broken checkout fixed, or someone to handle your daily operations — we offer all three. Pick the service that matches where you are right now.",
+    "Most store owners come to us one of three ways: they need a store that actually works from day one, their checkout is bleeding money they can't see, or they're buried in daily ops and can't grow. We fix all three — pick the one that matches where you are right now.",
   heroStats: [
     "Build · Run · Fix",
     "Shopify, Amazon, Etsy, WooCommerce",
@@ -691,7 +696,7 @@ ecommerceData.en = {
     {
       title: "Build — New store from scratch",
       items: [
-        "Full Shopify or WooCommerce store setup",
+        "Full Shopify or WooCommerce store setup — live in 3–4 weeks",
         "Product pages, checkout, payments, and shipping configured",
         "Mobile-optimized design with post-purchase email flow",
       ],
@@ -748,11 +753,15 @@ ecommerceData.en = {
     { question: "What if I need a store built AND ongoing operations?", answer: "Start with the build. Once your store launches, we transition into a monthly operations retainer. Many clients do both." },
     { question: "What platforms do you support?", answer: "Shopify is primary. We also support WooCommerce, Amazon Seller Central, Etsy, and eBay. If you're on something else, let's talk." },
     { question: "Do you handle warehousing and shipping?", answer: "Not yet. We manage digital operations — listings, orders, customers, and reporting. If you need physical fulfillment, we can help you connect with a 3PL provider." },
+    { question: "How long does a store build actually take?", answer: "Most builds go live in 3–4 weeks from the day you approve the scope. The biggest variable is how fast you can get us product images, descriptions, and content. If assets are ready, we can move faster." },
+    { question: "Is the Run retainer a long-term contract?", answer: "No. Month-to-month. Cancel anytime with 30 days written notice. We earn the retainer every month — there's no lock-in." },
+    { question: "What if I'm not happy with the store build?", answer: "Every build includes revision rounds before launch. We share progress early so changes happen when they're inexpensive, not after everything is live. We've never shipped a build a client wasn't proud of." },
+    { question: "Will I need a developer after you're done?", answer: "No. Shopify and WooCommerce have native editing tools — you can update products, pricing, and content yourself. If you want ongoing professional management, that's what the Run retainer is for." },
   ],
   crossLinks: CROSS_LINKS.ecommerce,
-  finalTitle: "Ready to stop doing everything yourself?",
+  finalTitle: "Tell us where it's breaking.",
   finalText:
-    "Tell us what you need in a 2-minute intake. Build, run, or fix — we'll respond within 24 hours with a plan and pricing.",
+    "Whether you need a store built, a checkout fixed, or someone to run the whole thing — fill out a 2-minute intake and we'll respond within 24 hours with a plan and a price. No pitch, no pressure.",
   finalPrimaryCta: { label: "Start E-commerce Intake", href: "/ecommerce/intake" },
   finalSecondaryCta: { label: "See Full Pricing", href: "/pricing" },
 };
@@ -959,7 +968,7 @@ customWebAppsData.en = {
   eyebrow: "Custom web apps",
   title: "When a website isn't enough, we build the system that runs the business.",
   intro:
-    "Dashboards, customer portals, internal tools, MVPs — built on the same foundation we use for our own products, with one workspace from scope to launch.",
+    "We've shipped Fleiko and Proveo ourselves — two AI-powered SaaS products we own and operate. When we build your product, we treat it the same way: real architecture, documented handoff, and nothing we'd be embarrassed to run ourselves.",
   heroStats: [
     "Discovery sprint from $2,500",
     "MVP from $18K",
@@ -998,7 +1007,7 @@ customWebAppsData.en = {
       items: [
         "Next.js + Supabase by default",
         "Auth, role-based access, payments, integrations",
-        "AI features as needed",
+        "AI copilots, detection layers, and intelligent workflows — same stack as Fleiko and Proveo. We're not learning AI on your project.",
         "Milestone-based delivery with full workspace visibility",
       ],
     },
@@ -1084,6 +1093,26 @@ customWebAppsData.en = {
       answer:
         "Structured process, documented handoff, milestone-based payments, and a shared workspace you have full access to throughout. No disappearing after launch.",
     },
+    {
+      question: "How do I know this won't go over budget or timeline?",
+      answer:
+        "Scope is locked before a dollar is committed. If a change order is needed, it gets priced, approved, and documented before any new work starts — scope creep doesn't happen silently here. Discovery sprints exist specifically to prevent budget surprises on complex projects.",
+    },
+    {
+      question: "Do I need a technical background to work with you?",
+      answer:
+        "No. We translate business requirements into working software — you describe what the system needs to do, we handle the architecture. Most of our clients aren't developers. The workspace keeps you in the loop without requiring you to read code.",
+    },
+    {
+      question: "What do I actually own when the project is done?",
+      answer:
+        "Everything — the source code, the database, the hosting accounts, the domain. Full IP transfer once the final invoice is paid. We don't hold code hostage or retain any license to the work. The handoff documentation means any developer can understand and extend the system.",
+    },
+    {
+      question: "What happens after launch if I need changes?",
+      answer:
+        "You own the code and can hire anyone to maintain it. We offer an optional Care Pro retainer for clients who want ongoing iteration from us. Most clients start without it and add it after they've validated traction.",
+    },
   ],
   bestFitTitle: "Best fit for…",
   bestFit: [
@@ -1098,11 +1127,11 @@ customWebAppsData.en = {
     "You want to own zero code or documentation after delivery",
   ],
   crossLinks: CROSS_LINKS.custom_web_apps,
-  finalTitle: "Ready to talk through your idea?",
+  finalTitle: "Tell us what you're building.",
   finalText:
-    "The first call is free and takes 30 minutes. We'll tell you what the system is, what it isn't, and what a realistic scope looks like.",
-  finalPrimaryCta: { label: "Let's scope your app — free 30 min", href: "/custom-app-intake" },
-  finalSecondaryCta: { label: "See our work", href: "/work" },
+    "30 minutes. No pitch. We'll map out what you need, what it would cost, and what to do first — whether you hire us or not. We take 2–3 projects per quarter. If the scope and timeline fit, we'll know by the end of the call.",
+  finalPrimaryCta: { label: "Book a free 30-min scoping call", href: "/custom-app-intake" },
+  finalSecondaryCta: { label: "See products we've shipped", href: "/work" },
   founderCallout: true,
   riskReversal: "Not sure we're a fit? The discovery call has no commitment — I'll tell you honestly if this project isn't right for us.",
 };
@@ -1115,7 +1144,7 @@ clientPortalsData.en = {
   eyebrow: "Client portals",
   title: "A private workspace your customers actually use.",
   intro:
-    "Track scope, share files, send messages, sign off on milestones, view invoices — all in one place that feels like your studio, not a shared Drive folder.",
+    "Every CrecyStudio client logs into a portal built on this exact system. We didn't build it to sell it — we built it because nothing else worked for us. Now we build it for your business: branded to you, wired to your workflow, owned by you completely.",
   heroStats: [
     "Branded to your business",
     "Your code, your data",
@@ -1241,6 +1270,31 @@ clientPortalsData.en = {
       answer:
         "You own it — it's in your database on your Supabase account. Export any time, full control, no lock-in.",
     },
+    {
+      question: "Does my client need to download anything or create an account?",
+      answer:
+        "No download, no app store. Clients access their portal through a secure link in their browser — desktop or mobile. They can optionally create a password-protected account, but it's not required for read access.",
+    },
+    {
+      question: "How long does a portal build take?",
+      answer:
+        "Most portal builds launch in 6–8 weeks from scope approval. Add-ons to an existing website are typically faster. The main variable is how clearly the workflow is defined going in — we scope it together before starting.",
+    },
+    {
+      question: "What about HoneyBook, Dubsado, or other client management tools?",
+      answer:
+        "Those are great if you want to look like everyone else using the same template. Your clients have seen that portal before — they just can't name it. A custom portal is branded to you, wired to your specific workflow, and not subject to per-seat pricing or workflow limits you can't change. At 8+ clients/year with any meaningful transaction volume, the custom build pays for itself in 18–24 months — and you own the asset permanently.",
+    },
+    {
+      question: "Can we add features later without being locked into you?",
+      answer:
+        "Yes. You own the code and the handoff documentation. Any developer can extend the system. We offer a Care Pro retainer for clients who want ongoing development from us, but you're not obligated to continue working with us after the build.",
+    },
+    {
+      question: "Can it connect to Stripe, QuickBooks, or our existing tools?",
+      answer:
+        "Yes. The portal is built on a real tech stack — not a SaaS with limited integrations. If you need Stripe for payments, QuickBooks for accounting sync, or any other integration, we scope it as part of the build.",
+    },
   ],
   bestFitTitle: "Best fit for…",
   bestFit: [
@@ -1254,10 +1308,10 @@ clientPortalsData.en = {
     "B2C businesses where customers never need to log in",
   ],
   crossLinks: CROSS_LINKS.client_portals,
-  finalTitle: "Give your clients a workspace they'll actually use.",
+  finalTitle: "See the portal we use with our own clients.",
   finalText:
-    "Tell us about your workflow and we'll scope the right portal — add-on to an existing site or a standalone system. Thirty-minute call, no commitment.",
-  finalPrimaryCta: { label: "Let's scope your portal — free 30 min", href: "/portal-intake" },
+    "20-minute walkthrough — you'll see the actual system before we talk scope or pricing. No pitch. If it fits your workflow, we'll scope a version built for your business.",
+  finalPrimaryCta: { label: "Book a 20-min portal demo", href: "/portal-intake" },
   finalSecondaryCta: { label: "See our work", href: "/work" },
   founderCallout: true,
   riskReversal: "Not sure we're a fit? The discovery call has no commitment — I'll tell you honestly if this project isn't right for us.",
@@ -1271,7 +1325,7 @@ websiteRescueData.en = {
   eyebrow: "Website rescue",
   title: "You don't need a rebuild. You need someone to fix what's actually broken.",
   intro:
-    "A 1–2 week sprint that audits, prioritizes, and ships the changes that move the needle — without throwing away the site you have.",
+    "Every week your site loads slow, breaks on mobile, or fails to convert, you're handing leads to a competitor who figured this out. A 1–2 week sprint audits, prioritizes, and ships the changes that move the needle — without throwing away the site you already paid to build.",
   heroStats: [
     "Audit from $1,000",
     "Sprint from $3,500",
@@ -1389,6 +1443,31 @@ websiteRescueData.en = {
       answer:
         "WordPress, Webflow, Squarespace, Wix, legacy custom builds. We can't rescue sites locked inside proprietary enterprise CMSs we can't access.",
     },
+    {
+      question: "How fast can you actually start?",
+      answer:
+        "Audits start within 3–5 business days of payment. If urgency is critical — a site that's actively down or a launch deadline — mention it in the intake and we'll do our best to prioritize.",
+    },
+    {
+      question: "What if I've lost access to my site, hosting, or domain?",
+      answer:
+        "Very common. We'll walk you through recovering access from any registrar, host, or CMS. Between ICANN rules, host account recovery, and CMS admin resets, we've gotten into everything short of a completely nuked server.",
+    },
+    {
+      question: "What if the audit uncovers something bigger than expected?",
+      answer:
+        "The report will flag it clearly with context. You decide what to do next — whether that's a sprint with us, a full rebuild quote, or taking the report to another developer. No pressure, no inflated scope to justify the audit fee.",
+    },
+    {
+      question: "Do you handle ongoing maintenance after the rescue?",
+      answer:
+        "Yes — we offer a lightweight Care Plan retainer for clients who want ongoing eyes on their site. A lot of rescue clients add it after the sprint. There's no commitment to do so.",
+    },
+    {
+      question: "Is my site too old, too custom, or too broken for this?",
+      answer:
+        "Probably not. The audit phase exists specifically to figure that out before any sprint money is committed. We've reviewed sites built on decade-old WordPress installs, half-finished custom builds, and template hacks held together with prayers. If it can be rescued, the audit will tell you how. If it can't, you'll hear that too.",
+    },
   ],
   bestFitTitle: "Best fit for…",
   bestFit: [
@@ -1403,11 +1482,11 @@ websiteRescueData.en = {
     "Businesses that want unlimited changes with no fixed scope",
   ],
   crossLinks: CROSS_LINKS.website_rescue,
-  finalTitle: "Get the full picture before you commit to anything.",
+  finalTitle: "Every day you wait, your site is costing you leads.",
   finalText:
-    "The audit is a fixed-price deliverable — the written report is yours regardless of what comes next. If a repair sprint or rebuild makes sense, Komlan scopes it and gives you a fixed price. If it doesn't, you'll hear that too.",
-  finalPrimaryCta: { label: "Get a site audit", href: "/rescue-intake" },
-  finalSecondaryCta: { label: "See pricing", href: "/pricing#rescue" },
+    "The audit is a fixed-price deliverable — the report is yours regardless of what comes next. Worst case: you spend $1,000 and know exactly what's wrong. Best case: your site becomes your best salesperson. Audits start within 5 business days.",
+  finalPrimaryCta: { label: "Book my audit", href: "/rescue-intake" },
+  finalSecondaryCta: { label: "Not sure? Send me your URL", href: "/contact" },
   riskReversal: "The audit report is yours regardless of what you decide next — you owe nothing beyond the initial fixed scope.",
 };
 

@@ -176,16 +176,65 @@ function isAgreementPublished(input: { agreementStatus: string; publishedAgreeme
   return !!input.publishedAgreementText.trim() || s === "published to client" || s === "signed" || s === "kickoff ready";
 }
 
+function getMilestoneCheck(milestones: Milestone[], key: string, label: string) {
+  return { key, label, done: milestones.some((m) => m.key === key && m.done) };
+}
+
 function computeLaunchReadiness(data: ProjectControlData) {
-  const checks = [
-    { key: "agreement", label: "Agreement published", done: isAgreementPublished({ agreementStatus: data.portalAdmin.agreementStatus, publishedAgreementText: data.publishedAgreementText }) },
-    { key: "preview", label: "Preview published", done: !!data.portalAdmin.previewUrl.trim() },
-    { key: "domain", label: "Domain ready", done: isReadyState(data.portalAdmin.domainStatus) },
-    { key: "analytics", label: "Analytics ready", done: isReadyState(data.portalAdmin.analyticsStatus) },
-    { key: "forms", label: "Forms ready", done: isReadyState(data.portalAdmin.formsStatus) },
-    { key: "seo", label: "SEO basics ready", done: isReadyState(data.portalAdmin.seoStatus) },
-    { key: "handoff", label: "Handoff ready", done: isReadyState(data.portalAdmin.handoffStatus) },
-  ];
+  const milestones = data.portalStateAdmin.milestones;
+  const agreementCheck = { key: "agreement", label: "Agreement published", done: isAgreementPublished({ agreementStatus: data.portalAdmin.agreementStatus, publishedAgreementText: data.publishedAgreementText }) };
+  const previewCheck = { key: "preview", label: "Preview / staging published", done: !!data.portalAdmin.previewUrl.trim() };
+  const handoffCheck = { key: "handoff", label: "Handoff ready", done: isReadyState(data.portalAdmin.handoffStatus) };
+
+  let checks: { key: string; label: string; done: boolean }[];
+
+  switch (data.projectType) {
+    case "web_app":
+      checks = [
+        agreementCheck,
+        previewCheck,
+        getMilestoneCheck(milestones, "uat_complete", "UAT complete"),
+        getMilestoneCheck(milestones, "production_launch", "Production launch milestone done"),
+        handoffCheck,
+      ];
+      break;
+    case "automation":
+      checks = [
+        agreementCheck,
+        getMilestoneCheck(milestones, "test_run_complete", "Test run complete"),
+        getMilestoneCheck(milestones, "client_approval", "Client approval"),
+        handoffCheck,
+      ];
+      break;
+    case "ecommerce":
+      checks = [
+        agreementCheck,
+        previewCheck,
+        getMilestoneCheck(milestones, "test_order_complete", "Test order complete"),
+        getMilestoneCheck(milestones, "launch_approved", "Launch approved by client"),
+        handoffCheck,
+      ];
+      break;
+    case "rescue":
+      checks = [
+        agreementCheck,
+        getMilestoneCheck(milestones, "critical_fixes_applied", "Critical fixes applied"),
+        getMilestoneCheck(milestones, "client_review", "Client review complete"),
+        { key: "handoff", label: "Final report ready", done: isReadyState(data.portalAdmin.handoffStatus) },
+      ];
+      break;
+    default:
+      checks = [
+        agreementCheck,
+        previewCheck,
+        { key: "domain", label: "Domain ready", done: isReadyState(data.portalAdmin.domainStatus) },
+        { key: "analytics", label: "Analytics ready", done: isReadyState(data.portalAdmin.analyticsStatus) },
+        { key: "forms", label: "Forms ready", done: isReadyState(data.portalAdmin.formsStatus) },
+        { key: "seo", label: "SEO basics ready", done: isReadyState(data.portalAdmin.seoStatus) },
+        handoffCheck,
+      ];
+  }
+
   const completed = checks.filter((c) => c.done).length;
   const percent = Math.round((completed / checks.length) * 100);
   const blockers = checks.filter((c) => !c.done).map((c) => c.label);
