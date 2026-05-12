@@ -213,6 +213,10 @@
       "workspaceValue": "Live portal",
       "workspace": "See your project ship in real time"
     },
+    "positioning": {
+      "kicker": "The CrecyStudio difference",
+      "statement": "I don't just build websites. I give clients a structured workspace where scope, design direction, files, feedback, invoices, approvals, and launch steps are all managed in one place."
+    },
     "ventures": {
       "label": "Studio ventures",
       "title": "Real systems we’ve shipped.",

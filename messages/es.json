@@ -213,6 +213,10 @@
       "workspaceValue": "Portal en vivo",
       "workspace": "Vea su proyecto avanzar en tiempo real"
     },
+    "positioning": {
+      "kicker": "La diferencia CrecyStudio",
+      "statement": "No me limito a crear sitios web. Doy a mis clientes un espacio de trabajo estructurado donde el alcance, la dirección de diseño, los archivos, los comentarios, las facturas, las aprobaciones y los pasos de lanzamiento se gestionan en un solo lugar."
+    },
     "ventures": {
       "label": "Studio ventures",
       "title": "Real systems we’ve shipped.",
