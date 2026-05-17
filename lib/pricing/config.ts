@@ -19,6 +19,7 @@ export const PRICING_MESSAGES = {
   ecommerceCustom: "Custom e-commerce scope — strategy call required.",
   webAppCustom: "Custom web app scope — strategy call required.",
   rescueCustom: "Custom rescue scope — strategy call required.",
+  aiIntakeCustom: "Custom AI integration scope — discovery call required.",
 };
 
 export const WEBSITE_TIER_CONFIG: Record<

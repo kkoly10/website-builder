@@ -206,7 +206,7 @@ export function getAiIntakePricing(
       ? "Custom scope — strategy call required"
       : formatRange(band.min, band.max),
     publicMessage: isCustomScope
-      ? PRICING_MESSAGES.webAppCustom
+      ? PRICING_MESSAGES.aiIntakeCustom
       : PRICING_MESSAGES.depositPolicy,
     summary: `${tierLabel} (${isCustomScope ? "Custom scope" : formatRange(band.min, band.max)})`,
     estimatorSummary: isCustomScope

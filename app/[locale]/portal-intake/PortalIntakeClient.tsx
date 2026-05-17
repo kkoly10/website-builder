@@ -476,7 +476,7 @@ export default function PortalIntakeClient() {
                   {INTEGRATION_OPTIONS.map((opt) => (
                     <CheckRow
                       key={opt}
-                      label={opt}
+                      label={t(`enums.integrations.${opt}`)}
                       checked={form.integrations.includes(opt)}
                       onChange={() => toggleIntegration(opt)}
                     />

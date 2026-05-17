@@ -17,11 +17,13 @@ type ProjectType = (typeof PROJECT_TYPE_KEYS)[number];
 
 type SlotDay = { date: string; label: string; times: string[] };
 
-function formatTimeLabel(time: string): string {
+function formatTimeLabel(time: string, locale: string): string {
   const [h, m] = time.split(":").map(Number);
-  const period = h < 12 ? "AM" : "PM";
-  const hour = h % 12 === 0 ? 12 : h % 12;
-  return `${hour}:${String(m).padStart(2, "0")} ${period}`;
+  // Anchor to today; only hour/minute are surfaced. Intl honors each locale's
+  // 12h vs 24h convention (en → "10:00 AM", fr/es → "10:00").
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit" }).format(d);
 }
 
 const PILL_STYLE_BASE: React.CSSProperties = {
@@ -92,7 +94,10 @@ export default function StartClient() {
     }
 
     const humanLabel = !noCalendar && selectedDate && selectedTime
-      ? `${slots?.find((d) => d.date === selectedDate)?.label ?? selectedDate} at ${formatTimeLabel(selectedTime)} ET`
+      ? t("slotLabelFormat", {
+          day: slots?.find((d) => d.date === selectedDate)?.label ?? selectedDate,
+          time: formatTimeLabel(selectedTime, locale),
+        })
       : "";
 
     setLoading(true);
@@ -229,7 +234,7 @@ export default function StartClient() {
                   <button key={time} type="button"
                     onClick={() => setSelectedTime(time)}
                     style={pillStyle(selectedTime === time)}>
-                    {formatTimeLabel(time)}
+                    {formatTimeLabel(time, locale)}
                   </button>
                 ))}
               </div>

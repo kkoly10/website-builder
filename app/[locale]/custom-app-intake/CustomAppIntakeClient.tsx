@@ -487,7 +487,7 @@ export default function CustomAppIntakeClient() {
                   {CUSTOM_APP_INTEGRATION_OPTIONS.map((opt) => (
                     <CheckRow
                       key={opt}
-                      label={opt}
+                      label={t(`enums.integrations.${opt}`)}
                       checked={form.integrations.includes(opt)}
                       onChange={() => toggleIntegration(opt)}
                     />
