@@ -55,17 +55,24 @@ export async function sendResendEmail(args: SendEmailArgs) {
 
       const text = await res.text();
 
-      // Don't retry client errors (400-level) — they won't succeed on retry
-      if (res.status >= 400 && res.status < 500) {
+      // Retry on 429 (rate limited) and 5xx — both transient. Other
+      // 4xx codes (400 bad request, 401 unauthorized, 422 invalid
+      // recipient) won't succeed on retry, so throw immediately.
+      if (res.status >= 400 && res.status < 500 && res.status !== 429) {
         throw new Error(`Resend error: ${res.status} ${text}`);
       }
 
-      // Server errors (500-level) — worth retrying
+      // 429 or 5xx — worth retrying
       lastError = new Error(`Resend error: ${res.status} ${text}`);
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
-      // If it's a client error we already threw above, re-throw immediately
-      if (lastError.message.includes("Resend error: 4")) throw lastError;
+      // Re-throw non-retryable 4xx (but let 429 fall through to retry).
+      if (
+        lastError.message.startsWith("Resend error: 4") &&
+        !lastError.message.startsWith("Resend error: 429")
+      ) {
+        throw lastError;
+      }
     }
 
     if (attempt < MAX_RETRIES) {
