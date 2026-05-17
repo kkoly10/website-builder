@@ -321,6 +321,14 @@ function buildHistoryFromDebug(debug: AnyObj) {
   return { scopeVersions, changeOrders };
 }
 
+// Signed URLs are minted on every portal view render, so the TTL needs
+// to outlast a single browsing session — not just the page load. A
+// 1-hour TTL meant attachments 403'd if the user left the portal tab
+// open for over an hour and then clicked an asset. 24 hours is well
+// below Supabase's per-bucket signed-URL ceiling (default 7 days) and
+// matches typical session length for a client checking in on a project.
+const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24;
+
 async function signAssetUrl(asset: AnyObj) {
   const direct = cleanString(asset.asset_url);
   if (direct) return direct;
@@ -329,7 +337,7 @@ async function signAssetUrl(asset: AnyObj) {
   const path = cleanString(asset.storage_path);
   if (!bucket || !path) return null;
 
-  const signed = await supabaseAdmin.storage.from(bucket).createSignedUrl(path, 60 * 60);
+  const signed = await supabaseAdmin.storage.from(bucket).createSignedUrl(path, SIGNED_URL_TTL_SECONDS);
   if (signed.error) return null;
   return signed.data?.signedUrl || null;
 }
@@ -342,7 +350,7 @@ async function signMessageAttachment(message: AnyObj) {
   const path = cleanString(message.attachment_storage_path);
   if (!bucket || !path) return null;
 
-  const signed = await supabaseAdmin.storage.from(bucket).createSignedUrl(path, 60 * 60);
+  const signed = await supabaseAdmin.storage.from(bucket).createSignedUrl(path, SIGNED_URL_TTL_SECONDS);
   if (signed.error) return null;
   return signed.data?.signedUrl || null;
 }
@@ -2521,12 +2529,86 @@ export async function updateAdminNote(token: string, note: string) {
   if (error) throw error;
 }
 
-export async function acceptCustomerPortalAgreement(token: string) {
+export type AcceptAgreementResult = {
+  agreementId: string | null;
+  alreadyAccepted: boolean;
+  bodyHash: string | null;
+};
+
+// Race-safe agreement acceptance. The partial unique index
+// `agreements_accepted_unique` on (portal_project_id) where
+// status='accepted' (added in 20260518_agreements_idempotency.sql)
+// makes the insert atomic: the first concurrent writer wins, the
+// second gets a 23505 and we return the winner's row id.
+//
+// This function owns the full acceptance pipeline so callers can't
+// accidentally interleave the portal-row flip and the agreements
+// insert in the wrong order:
+//   1. Insert into `agreements` (the race-killer)
+//   2. On 23505 → fetch and return the existing winner; caller should
+//      short-circuit (no duplicate cert email)
+//   3. On success → flip the portal row + log activity
+export async function acceptCustomerPortalAgreement(
+  token: string,
+  input: {
+    publishedText: string;
+    publishedAt: string;
+    audit: {
+      acceptedByEmail: string | null;
+      acceptedIp: string | null;
+      acceptedUserAgent: string | null;
+    };
+  },
+): Promise<AcceptAgreementResult> {
   const portal = await getPortalProjectByToken(token);
   if (!portal) throw new Error("Portal not found");
 
   const now = new Date().toISOString();
-  const { error } = await supabaseAdmin
+  const bodyText = String(input.publishedText || "");
+  const bodyHash = bodyText
+    ? crypto.createHash("sha256").update(bodyText).digest("hex")
+    : "";
+
+  // Step 1: Insert agreement row. This is the race-killer — the partial
+  // unique index ensures only one accepted row can exist per portal.
+  const insert = await supabaseAdmin
+    .from("agreements")
+    .insert({
+      portal_project_id: portal.id,
+      body_text: bodyText,
+      body_hash: bodyHash,
+      published_at: input.publishedAt,
+      accepted_at: now,
+      accepted_by_email: input.audit.acceptedByEmail,
+      accepted_ip: input.audit.acceptedIp,
+      accepted_user_agent: input.audit.acceptedUserAgent,
+      status: "accepted",
+    })
+    .select("id")
+    .single();
+
+  if (insert.error?.code === "23505") {
+    // Race lost. Return the winner's row id so the caller can route
+    // any post-acceptance work (cert delivery, debug write) through the
+    // existing record instead of duplicating it.
+    const { data: existing } = await supabaseAdmin
+      .from("agreements")
+      .select("id, body_hash")
+      .eq("portal_project_id", portal.id)
+      .eq("status", "accepted")
+      .maybeSingle();
+    return {
+      agreementId: existing?.id ?? null,
+      alreadyAccepted: true,
+      bodyHash: existing?.body_hash ?? null,
+    };
+  }
+
+  if (insert.error) throw insert.error;
+  const agreementId = insert.data?.id ?? null;
+
+  // Step 2: Flip portal status. Only the winning writer reaches here.
+  await supabaseAdmin
     .from("customer_portal_projects")
     .update({
       agreement_status: "accepted",
@@ -2535,36 +2617,142 @@ export async function acceptCustomerPortalAgreement(token: string) {
     })
     .eq("id", portal.id);
 
-  if (error) throw error;
-
+  // Step 3: Log activity.
   await logProjectActivityByPortalId({
     portalProjectId: cleanString(portal.id),
     actorRole: "client",
     eventType: "agreement_accepted",
     summary: "Client accepted the project agreement.",
-    payload: {},
+    payload: { agreementId },
     clientVisible: true,
   });
+
+  return { agreementId, alreadyAccepted: false, bodyHash };
 }
 
 // Admin override: record an offline acceptance (signed-in-person, sent
 // over email, etc.). Mirrors the client-side accept but stamps the
 // audit trail with the admin actor + a flag that distinguishes
 // admin-recorded acceptance from client-clicked acceptance.
+// Validate an admin-supplied acceptedAt. Rejects values that are
+// malformed, more than ~60 minutes in the future (clock-skew tolerance),
+// or older than the underlying quote's created_at. On rejection, returns
+// `null` and logs the reason — caller falls back to `now()`.
+function validateAdminAcceptedAt(
+  candidate: string | null | undefined,
+  quoteCreatedAt: string | null | undefined,
+  actorUserId: string | null,
+): string | null {
+  if (!candidate) return null;
+  const parsed = safeDate(candidate);
+  if (!parsed) {
+    console.warn("[admin-accept] rejected acceptedAt: not a valid date", { candidate, actorUserId });
+    return null;
+  }
+  const t = new Date(parsed).getTime();
+  const nowMs = Date.now();
+  if (t > nowMs + 60 * 60 * 1000) {
+    console.warn("[admin-accept] rejected acceptedAt: more than 60 minutes in the future", { candidate, actorUserId });
+    return null;
+  }
+  if (quoteCreatedAt) {
+    const quoteT = new Date(quoteCreatedAt).getTime();
+    if (Number.isFinite(quoteT) && t < quoteT) {
+      console.warn("[admin-accept] rejected acceptedAt: earlier than quote.created_at", { candidate, quoteCreatedAt, actorUserId });
+      return null;
+    }
+  }
+  return parsed;
+}
+
 export async function adminAcceptCustomerPortalAgreementByQuoteId(input: {
   quoteId: string;
   acceptedByEmail: string;
   acceptedAt?: string | null;
   notes?: string | null;
   actor: { userId?: string | null; email?: string | null; ip?: string | null };
-}) {
+}): Promise<AcceptAgreementResult> {
   const portal = await getPortalProjectByQuoteId(input.quoteId);
   if (!portal) throw new Error("Portal not found");
 
-  const acceptedAt = safeDate(input.acceptedAt) || new Date().toISOString();
+  // Read agreement_text + quote.created_at from the portal first, then
+  // fall back to quote.debug.publishedAgreementText for legacy portals
+  // where the text was only ever written to the debug blob (the
+  // canonical bundle reader at line ~811 uses the same fallback chain).
+  const { data: scope } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .select("agreement_text, quote_id")
+    .eq("id", portal.id)
+    .maybeSingle();
+  let bodyText = String(scope?.agreement_text || "");
+  let quoteCreatedAt: string | null = null;
+  if (scope?.quote_id) {
+    const { data: quoteRow } = await supabaseAdmin
+      .from("quotes")
+      .select("debug, created_at")
+      .eq("id", scope.quote_id)
+      .maybeSingle();
+    quoteCreatedAt = quoteRow?.created_at ?? null;
+    if (!bodyText) {
+      const debug = quoteRow?.debug;
+      if (debug && typeof debug === "object" && !Array.isArray(debug)) {
+        bodyText = String((debug as Record<string, unknown>).publishedAgreementText || "");
+      }
+    }
+  }
+
+  if (!bodyText) {
+    // Used to silently no-op when both sources were empty, which left
+    // the portal flipped to "accepted" with no agreement row to anchor
+    // certificate generation. Surface this loudly so admin can publish
+    // an agreement first.
+    throw new Error("Agreement text is missing — publish the agreement before recording acceptance.");
+  }
+
+  const acceptedAt =
+    validateAdminAcceptedAt(input.acceptedAt ?? null, quoteCreatedAt, input.actor.userId ?? null) ||
+    new Date().toISOString();
   const now = new Date().toISOString();
 
-  const { error } = await supabaseAdmin
+  // Same race-safe pattern as the client-side accept: insert first,
+  // catch 23505, return the existing winner. The partial unique index
+  // makes this atomic across concurrent admin + client clicks.
+  const bodyHash = crypto.createHash("sha256").update(bodyText).digest("hex");
+  const insert = await supabaseAdmin
+    .from("agreements")
+    .insert({
+      portal_project_id: portal.id,
+      body_text: bodyText,
+      body_hash: bodyHash,
+      published_at: acceptedAt,
+      accepted_at: acceptedAt,
+      accepted_by_email: input.acceptedByEmail.trim(),
+      accepted_ip: input.actor.ip ?? null,
+      accepted_user_agent: "admin-recorded",
+      status: "accepted",
+    })
+    .select("id")
+    .single();
+
+  if (insert.error?.code === "23505") {
+    const { data: existing } = await supabaseAdmin
+      .from("agreements")
+      .select("id, body_hash")
+      .eq("portal_project_id", portal.id)
+      .eq("status", "accepted")
+      .maybeSingle();
+    return {
+      agreementId: existing?.id ?? null,
+      alreadyAccepted: true,
+      bodyHash: existing?.body_hash ?? null,
+    };
+  }
+
+  if (insert.error) throw insert.error;
+  const agreementId = insert.data?.id ?? null;
+
+  // Flip portal status now that we own the write.
+  const { error: flipErr } = await supabaseAdmin
     .from("customer_portal_projects")
     .update({
       agreement_status: "accepted",
@@ -2572,62 +2760,7 @@ export async function adminAcceptCustomerPortalAgreementByQuoteId(input: {
       updated_at: now,
     })
     .eq("id", portal.id);
-  if (error) throw error;
-
-  // Mirror the agreements row pattern used for client-side accepts so
-  // certificate generation and downstream consumers see consistent data.
-  // Doesn't replay an existing row — admin accept assumes there isn't
-  // one yet (otherwise call void first).
-  const { data: existingAgreement } = await supabaseAdmin
-    .from("agreements")
-    .select("id")
-    .eq("portal_project_id", portal.id)
-    .eq("status", "accepted")
-    .maybeSingle();
-
-  if (!existingAgreement) {
-    // Read agreement_text from the portal first, then fall back to
-    // quote.debug.publishedAgreementText for legacy portals where the
-    // text was only ever written to the debug blob (the canonical
-    // bundle reader at line ~811 uses the same fallback chain).
-    const { data: scope } = await supabaseAdmin
-      .from("customer_portal_projects")
-      .select("agreement_text, quote_id")
-      .eq("id", portal.id)
-      .maybeSingle();
-    let bodyText = String(scope?.agreement_text || "");
-    if (!bodyText && scope?.quote_id) {
-      const { data: quoteRow } = await supabaseAdmin
-        .from("quotes")
-        .select("debug")
-        .eq("id", scope.quote_id)
-        .maybeSingle();
-      const debug = quoteRow?.debug;
-      if (debug && typeof debug === "object" && !Array.isArray(debug)) {
-        bodyText = String((debug as Record<string, unknown>).publishedAgreementText || "");
-      }
-    }
-    if (bodyText) {
-      // Compute the same sha256 the client-side accept uses so version
-      // verification works identically. Without this, integrity checks
-      // (and any future "agreement changed since signature" warnings)
-      // break for admin-recorded acceptances.
-      const bodyHash = crypto.createHash("sha256").update(bodyText).digest("hex");
-      await supabaseAdmin
-        .from("agreements")
-        .insert({
-          portal_project_id: portal.id,
-          body_text: bodyText,
-          body_hash: bodyHash,
-          published_at: acceptedAt,
-          accepted_at: acceptedAt,
-          accepted_by_email: input.acceptedByEmail.trim(),
-          accepted_ip: input.actor.ip ?? null,
-          accepted_user_agent: "admin-recorded",
-          status: "accepted",
-        });
-    }
-  }
+  if (flipErr) throw flipErr;
 
   await logProjectActivityByPortalId({
     portalProjectId: cleanString(portal.id),
@@ -2635,6 +2768,7 @@ export async function adminAcceptCustomerPortalAgreementByQuoteId(input: {
     eventType: "agreement_accepted_by_admin",
     summary: `CrecyStudio recorded that ${input.acceptedByEmail.trim()} accepted the agreement offline.`,
     payload: {
+      agreementId,
       acceptedBy: input.acceptedByEmail.trim(),
       acceptedAt,
       notes: input.notes || null,
@@ -2644,6 +2778,8 @@ export async function adminAcceptCustomerPortalAgreementByQuoteId(input: {
     },
     clientVisible: true,
   });
+
+  return { agreementId, alreadyAccepted: false, bodyHash };
 }
 
 // Void an accepted agreement. Clears the acceptance fields on the

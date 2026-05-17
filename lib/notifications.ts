@@ -265,10 +265,15 @@ export async function sendEventNotification(ctx: EventContext) {
   const tmpl = builder(ctx);
   const sends: Promise<any>[] = [];
 
-  if (tmpl.toClient && ctx.leadEmail) {
+  // Trim + validate before dispatch. A whitespace-only or malformed
+  // email previously passed the truthy check but failed silently at
+  // the Resend API, leaving the caller unaware that no notification
+  // reached the client.
+  const clientTo = (ctx.leadEmail || "").trim();
+  if (tmpl.toClient && clientTo && clientTo.includes("@")) {
     sends.push(
       sendResendEmail({
-        to: ctx.leadEmail,
+        to: clientTo,
         from: FROM_EMAIL,
         subject: tmpl.subject,
         html: tmpl.html,
@@ -276,6 +281,10 @@ export async function sendEventNotification(ctx: EventContext) {
         console.error(`[notifications] client email failed for ${ctx.event}:`, err);
       })
     );
+  } else if (tmpl.toClient && (ctx.leadEmail || "").trim()) {
+    // Truthy but not a valid email (e.g. "n/a"). Log so admin can fix
+    // the lead record instead of silently never receiving updates.
+    console.warn(`[notifications] skipped client email for ${ctx.event}: invalid leadEmail "${ctx.leadEmail}"`);
   }
 
   if (tmpl.toAdmin && ADMIN_EMAIL) {
