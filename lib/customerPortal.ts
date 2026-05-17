@@ -583,6 +583,9 @@ function buildWorkspaceMilestones(milestones: AnyObj[]) {
 
 // Lane-aware label for "client design direction"-style waiting state.
 // Mirrors the title shown in the direction card for the lane.
+// Unrecognized project types fall back to the website copy and log a
+// warn so dev environments catch the gap before a new lane silently
+// ships with misleading labels in admin UI / activity feeds.
 function clientDirectionLabel(projectType: string | null | undefined): string {
   switch (projectType) {
     case "web_app": return "Client product direction";
@@ -590,7 +593,13 @@ function clientDirectionLabel(projectType: string | null | undefined): string {
     case "ecommerce": return "Client store direction";
     case "rescue": return "Client rescue diagnosis";
     case "website":
-    default: return "Client design direction";
+    case null:
+    case undefined:
+    case "":
+      return "Client design direction";
+    default:
+      console.warn(`[clientDirectionLabel] Unknown projectType="${projectType}"; falling back to "Client design direction".`);
+      return "Client design direction";
   }
 }
 
@@ -601,7 +610,13 @@ function studioDirectionReviewLabel(projectType: string | null | undefined): str
     case "ecommerce": return "CrecyStudio store direction review";
     case "rescue": return "CrecyStudio rescue diagnosis review";
     case "website":
-    default: return "CrecyStudio design direction review";
+    case null:
+    case undefined:
+    case "":
+      return "CrecyStudio design direction review";
+    default:
+      console.warn(`[studioDirectionReviewLabel] Unknown projectType="${projectType}"; falling back to "CrecyStudio design direction review".`);
+      return "CrecyStudio design direction review";
   }
 }
 

@@ -37,6 +37,26 @@ if (!supabaseUrl || !serviceRoleKey) {
   process.exit(1);
 }
 
+// Guard against accidental prod pollution. The seed script writes a row
+// with the hardcoded "demo" access token (used by /demos/portal). If a
+// mismatched .env.local points this script at prod, it'd seed prod with
+// the demo lead + quote + portal. The /api/portal/assets route has a
+// hard guard rejecting writes against the demo token, but the static
+// rows themselves would still pollute prod tables.
+//
+// Opt-in: pass --confirm-prod to acknowledge you're intentionally
+// seeding a non-local environment (e.g. staging that wants a demo).
+const isLocalUrl =
+  /localhost|127\.0\.0\.1|host\.docker\.internal/i.test(supabaseUrl);
+const confirmedProd = process.argv.includes("--confirm-prod");
+if (!isLocalUrl && !confirmedProd) {
+  console.error(
+    `Refusing to seed: NEXT_PUBLIC_SUPABASE_URL (${supabaseUrl}) looks like a non-local environment.\n` +
+    `If you really want to seed a demo portal in staging/prod, re-run with --confirm-prod.`,
+  );
+  process.exit(1);
+}
+
 const supabase = createClient(supabaseUrl, serviceRoleKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
