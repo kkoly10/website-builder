@@ -1,18 +1,40 @@
+import type { ReactElement } from "react";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { headers } from "next/headers";
+import {
+  enforceRateLimitDurable,
+  getIpFromHeaders,
+  rateLimitResponse,
+} from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 
-function fmt(iso: string | null | undefined): string {
+// Mask an email for public display: keep the first 2 characters of the
+// local part + asterisks for the rest + the full domain. "john@example.com"
+// → "jo**@example.com". Single-character locals become "j*@example.com".
+// Falls back to "—" for missing or malformed input.
+function maskEmail(email: string | null | undefined): string {
+  if (!email) return "—";
+  const at = email.indexOf("@");
+  if (at <= 0) return "—";
+  const local = email.slice(0, at);
+  const domain = email.slice(at + 1);
+  const visible = local.slice(0, 2);
+  const masked = "*".repeat(Math.max(1, local.length - 2));
+  return `${visible}${masked}@${domain}`;
+}
+
+// Date-only on the public verify page. The full timestamp is preserved
+// in the agreements table for audit; this page is for "is this real?"
+// not "exact moment of signature".
+function fmtDate(iso: string | null | undefined): string {
   if (!iso) return "—";
   try {
-    return new Date(iso).toLocaleString("en-US", {
+    return new Date(iso).toLocaleDateString("en-US", {
       month: "long",
       day: "numeric",
       year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
       timeZone: "UTC",
-      timeZoneName: "short",
     });
   } catch {
     return iso;
@@ -24,12 +46,30 @@ export default async function VerifyPage({
 }: {
   params: Promise<{ certificateId: string }>;
 }) {
+  // Certificate IDs are unguessable UUIDs, but throttle anyway to keep
+  // this from turning into an oracle for "does this ID exist?". Anyone
+  // who needs to verify can do so well under the limit; bots get cut.
+  const h = await headers();
+  const ip = getIpFromHeaders(h);
+  const rl = await enforceRateLimitDurable({
+    key: `verify:${ip}`,
+    limit: 30,
+    windowMs: 60_000,
+  });
+  if (!rl.ok) {
+    // Returning the JSON 429 from rateLimitResponse works fine here even
+    // though this is a server page — Next.js surfaces the response.
+    return rateLimitResponse(rl.resetAt) as unknown as ReactElement;
+  }
+
   const { certificateId } = await params;
 
+  // accepted_ip dropped from the public SELECT — kept in the DB for
+  // audit, but not surfaced to the public verify page.
   const { data } = await supabaseAdmin
     .from("agreements")
     .select(
-      "id, body_hash, published_at, accepted_at, accepted_by_email, accepted_ip, status, certificate_path, portal_project_id"
+      "id, body_hash, published_at, accepted_at, accepted_by_email, status, certificate_path, portal_project_id"
     )
     .eq("id", certificateId)
     .maybeSingle();
@@ -87,6 +127,8 @@ export default async function VerifyPage({
     );
   }
 
+  const maskedEmail = maskEmail(data.accepted_by_email);
+
   return (
     <main style={containerStyle}>
       {/* Header */}
@@ -126,11 +168,15 @@ export default async function VerifyPage({
         <div style={{ padding: "14px 16px", border: "1px solid #e0e0e0", borderRadius: 8 }}>
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#888", marginBottom: 6 }}>To (Client)</div>
           <div style={{ fontFamily: "Georgia, serif", fontSize: 16, fontWeight: 400, marginBottom: 2 }}>{leadName || "—"}</div>
-          <div style={{ fontFamily: "monospace", fontSize: 12, color: "#666" }}>{data.accepted_by_email || "—"}</div>
+          {/* Masked: full email kept in DB for audit, public sees first 2 chars only */}
+          <div style={{ fontFamily: "monospace", fontSize: 12, color: "#666" }}>{maskedEmail}</div>
         </div>
       </section>
 
-      {/* Audit trail */}
+      {/* Audit trail — public-safe subset. IP dropped from public view;
+         it's preserved in agreements.accepted_ip for the internal audit
+         trail. The body_hash + accepted_at give enough proof to verify
+         "this signature happened" without leaking signer details. */}
       <section style={{ marginBottom: 28 }}>
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#888", marginBottom: 10 }}>Audit Trail</div>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
@@ -138,30 +184,26 @@ export default async function VerifyPage({
             <tr style={{ background: "#f5f5f5" }}>
               <th style={{ textAlign: "left", padding: "8px 12px", fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", color: "#666", borderBottom: "1px solid #e0e0e0" }}>Event</th>
               <th style={{ textAlign: "left", padding: "8px 12px", fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", color: "#666", borderBottom: "1px solid #e0e0e0" }}>Detail</th>
-              <th style={{ textAlign: "left", padding: "8px 12px", fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", color: "#666", borderBottom: "1px solid #e0e0e0" }}>Timestamp</th>
+              <th style={{ textAlign: "left", padding: "8px 12px", fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", color: "#666", borderBottom: "1px solid #e0e0e0" }}>Date</th>
             </tr>
           </thead>
           <tbody>
             <tr style={{ borderBottom: "1px solid #e0e0e0" }}>
               <td style={{ padding: "9px 12px" }}>Agreement published</td>
               <td style={{ padding: "9px 12px", color: "#888" }}>—</td>
-              <td style={{ padding: "9px 12px", fontFamily: "monospace", fontSize: 12, color: "#555" }}>{fmt(data.published_at)}</td>
-            </tr>
-            <tr style={{ borderBottom: "1px solid #e0e0e0" }}>
-              <td style={{ padding: "9px 12px" }}>Agreement accepted</td>
-              <td style={{ padding: "9px 12px", fontFamily: "monospace", fontSize: 12 }}>{data.accepted_by_email || "—"}</td>
-              <td style={{ padding: "9px 12px", fontFamily: "monospace", fontSize: 12, color: "#555" }}>{fmt(data.accepted_at)}</td>
+              <td style={{ padding: "9px 12px", fontFamily: "monospace", fontSize: 12, color: "#555" }}>{fmtDate(data.published_at)}</td>
             </tr>
             <tr>
-              <td style={{ padding: "9px 12px" }}>IP address</td>
-              <td style={{ padding: "9px 12px", fontFamily: "monospace", fontSize: 12 }}>{data.accepted_ip || "Not recorded"}</td>
-              <td style={{ padding: "9px 12px", color: "#888" }}>—</td>
+              <td style={{ padding: "9px 12px" }}>Agreement accepted</td>
+              <td style={{ padding: "9px 12px", fontFamily: "monospace", fontSize: 12 }}>{maskedEmail}</td>
+              <td style={{ padding: "9px 12px", fontFamily: "monospace", fontSize: 12, color: "#555" }}>{fmtDate(data.accepted_at)}</td>
             </tr>
           </tbody>
         </table>
       </section>
 
-      {/* Document fingerprint */}
+      {/* Document fingerprint — the canonical proof. Anyone can rehash
+         the agreement text and compare to this value. Doesn't leak PII. */}
       <section style={{ marginBottom: 32 }}>
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#888", marginBottom: 6 }}>Document Fingerprint (SHA-256)</div>
         <div style={{ fontFamily: "monospace", fontSize: 12, wordBreak: "break-all", background: "#f5f5f5", padding: "8px 12px", borderRadius: 4, border: "1px solid #e0e0e0", color: "#444" }}>
