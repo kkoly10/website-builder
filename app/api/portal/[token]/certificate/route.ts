@@ -37,9 +37,12 @@ export async function GET(
   }
 
   const bucket = process.env.CERTIFICATES_BUCKET || "certificates";
+  // 60-second TTL is the tightest reasonable window for a click-to-
+  // download flow. The signed URL ends up in CDN / proxy access logs;
+  // the shorter the window, the smaller the replay surface.
   const { data: signed } = await supabaseAdmin.storage
     .from(bucket)
-    .createSignedUrl(agrRow.certificate_path, 60 * 5); // 5-minute download window
+    .createSignedUrl(agrRow.certificate_path, 60);
 
   if (!signed?.signedUrl) {
     return NextResponse.json(
@@ -48,5 +51,11 @@ export async function GET(
     );
   }
 
-  return NextResponse.redirect(signed.signedUrl, { status: 302 });
+  // no-store keeps the redirect itself out of intermediate caches.
+  // no-referrer prevents the signed URL leaking through the next hop's
+  // Referer header when the browser follows the 302.
+  const res = NextResponse.redirect(signed.signedUrl, { status: 302 });
+  res.headers.set("Cache-Control", "no-store");
+  res.headers.set("Referrer-Policy", "no-referrer");
+  return res;
 }
