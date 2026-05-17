@@ -302,7 +302,7 @@ export async function POST(req: Request) {
 
     const scheduledAt = selectedSlot ? parseSelectedSlot(selectedSlot)?.toISOString() ?? null : null;
 
-    const { data, error } = await supabaseAdmin
+    const insert = await supabaseAdmin
       .from("discovery_calls")
       .insert({
         lead_id: leadId,
@@ -318,8 +318,24 @@ export async function POST(req: Request) {
       .select("id")
       .single();
 
-    if (error) throw new Error(error.message);
-    const callId = String(data.id);
+    // 23505 = unique constraint violation. The partial unique index
+    // discovery_calls_slot_unique (added in 20260519) makes the slot
+    // race-safe: the second concurrent writer for the same scheduled_at
+    // gets 23505 and we return a clean 409 so the client can pick a
+    // different time. Only triggers for scheduled bookings; pending
+    // (no slot) rows are excluded by the index's WHERE clause.
+    if (insert.error?.code === "23505") {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "That slot was just booked by someone else. Please refresh and choose another time.",
+        },
+        { status: 409 },
+      );
+    }
+    if (insert.error) throw new Error(insert.error.message);
+    const callId = String(insert.data.id);
 
     await maybeCreateCalendarEvent(name, email, availabilityNote, selectedSlot, slotLabel);
 
