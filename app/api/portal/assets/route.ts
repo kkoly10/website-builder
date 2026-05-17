@@ -10,6 +10,7 @@ import {
   rateLimitResponse,
 } from "@/lib/rateLimit";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { verifyFileMagic } from "@/lib/fileMagic";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,12 +18,18 @@ export const dynamic = "force-dynamic";
 const ASSET_BUCKET = process.env.PORTAL_ASSETS_BUCKET || "portal-assets";
 const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
+// SVG intentionally NOT allowed — files of type image/svg+xml can embed
+// <script> tags or event handlers. When served via Supabase signed URL
+// with the original Content-Type, browsers render them inline and
+// execute the embedded script (stored XSS in the admin's session when
+// the admin clicks an asset link). Sanitising server-side would require
+// an SVG parser; dropping is the safer call for the asset upload path.
+// Clients who need a vector logo can upload PNG/PDF instead.
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
   "image/gif",
   "image/webp",
-  "image/svg+xml",
   "application/pdf",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -200,6 +207,19 @@ export async function POST(req: NextRequest) {
 
       const bytes = await maybeFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
+
+      // Verify the file's first bytes match the client-declared MIME
+      // type. Catches the "rename .exe to .png" class of attacks where
+      // the route would otherwise serve back the malicious bytes with
+      // an image content-type, letting the browser execute on click.
+      const magic = verifyFileMagic(buffer, mimeType);
+      if (!magic.ok) {
+        return NextResponse.json(
+          { ok: false, error: `File content does not match declared type "${mimeType}" (looks like ${magic.detected ?? "unknown"}).` },
+          { status: 400 }
+        );
+      }
+
       const safeName = sanitizeFilename(maybeFile.name || "upload.bin");
       const storagePath = `${bundle.portal.id}/${Date.now()}_${safeName}`;
 
@@ -211,19 +231,34 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const asset = await submitAssetByPortalToken({
-        token,
-        source: "portal_file",
-        assetType: String(form.get("assetType") || "file"),
-        label: String(form.get("label") || maybeFile.name || "Client file"),
-        notes: String(form.get("notes") || ""),
-        status: "submitted",
-        storageBucket: ASSET_BUCKET,
-        storagePath,
-        fileName: maybeFile.name || safeName,
-        mimeType,
-        fileSize: maybeFile.size || null,
-      });
+      // Orphan-cleanup guard: if the DB insert fails after the storage
+      // blob is written, delete the blob so the bucket doesn't accumulate
+      // dangling files with no DB row pointing at them. Best-effort —
+      // a cleanup failure logs but doesn't mask the original error.
+      let asset;
+      try {
+        asset = await submitAssetByPortalToken({
+          token,
+          source: "portal_file",
+          assetType: String(form.get("assetType") || "file"),
+          label: String(form.get("label") || maybeFile.name || "Client file"),
+          notes: String(form.get("notes") || ""),
+          status: "submitted",
+          storageBucket: ASSET_BUCKET,
+          storagePath,
+          fileName: maybeFile.name || safeName,
+          mimeType,
+          fileSize: maybeFile.size || null,
+        });
+      } catch (insertErr) {
+        await supabaseAdmin.storage
+          .from(ASSET_BUCKET)
+          .remove([storagePath])
+          .catch((cleanupErr) => {
+            console.error("[portal/assets] orphan cleanup failed:", cleanupErr);
+          });
+        throw insertErr;
+      }
 
       const notificationCtx = await getNotificationContext(token);
       if (notificationCtx) {

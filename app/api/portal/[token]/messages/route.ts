@@ -12,6 +12,7 @@ import {
 } from "@/lib/rateLimit";
 import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { verifyFileMagic } from "@/lib/fileMagic";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,12 +21,14 @@ const MESSAGE_BUCKET =
   process.env.PORTAL_MESSAGES_BUCKET || process.env.PORTAL_ASSETS_BUCKET || "portal-assets";
 const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
+// SVG removed — see app/api/portal/assets/route.ts for the same fix
+// and rationale (inline <script> + image/svg+xml content-type = stored
+// XSS in the admin's browser when they click an attachment).
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
   "image/gif",
   "image/webp",
-  "image/svg+xml",
   "application/pdf",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -83,6 +86,15 @@ async function uploadAttachment(
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
+
+  // Verify the file's first bytes match the client-declared MIME type.
+  // Catches files renamed to bypass the MIME allowlist (e.g. .exe
+  // uploaded as image/png). See lib/fileMagic.ts for coverage.
+  const magic = verifyFileMagic(buffer, mimeType);
+  if (!magic.ok) {
+    throw new Error(`File content does not match declared type "${mimeType}" (looks like ${magic.detected ?? "unknown"}).`);
+  }
+
   const safeName = sanitizeFilename(file.name || "upload.bin");
   const storagePath = `${portalProjectId}/messages/${Date.now()}_${safeName}`;
 
@@ -226,13 +238,30 @@ export async function POST(
         ? adminIdentity?.senderName || "Internal note"
         : "CrecyStudio";
 
-    const message = await createCustomerPortalMessageByToken({
-      token,
-      senderRole,
-      senderName,
-      body,
-      ...attachment,
-    });
+    // Orphan-cleanup guard: if the DB insert fails after a storage blob
+    // is written, delete the blob so the bucket doesn't accumulate
+    // dangling attachments. Best-effort — cleanup failure logs but
+    // doesn't mask the original error.
+    let message;
+    try {
+      message = await createCustomerPortalMessageByToken({
+        token,
+        senderRole,
+        senderName,
+        body,
+        ...attachment,
+      });
+    } catch (insertErr) {
+      if (attachment?.attachmentStoragePath) {
+        await supabaseAdmin.storage
+          .from(attachment.attachmentStorageBucket || MESSAGE_BUCKET)
+          .remove([attachment.attachmentStoragePath])
+          .catch((cleanupErr) => {
+            console.error("[portal/messages] orphan cleanup failed:", cleanupErr);
+          });
+      }
+      throw insertErr;
+    }
 
     if (senderRole !== "internal") {
       sendPortalMessageNotification({
