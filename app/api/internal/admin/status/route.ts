@@ -1,7 +1,7 @@
 // app/api/internal/admin/status/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { requireAdminRoute } from "@/lib/routeAuth";
+import { requireAdminRoute, enforceAdminRateLimit } from "@/lib/routeAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +24,8 @@ export async function POST(req: NextRequest) {
   try {
     const authErr = await requireAdminRoute();
     if (authErr) return authErr;
+    const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-status", limit: 30 });
+    if (rlErr) return rlErr;
 
     const body = (await req.json()) as {
       quoteId?: string;

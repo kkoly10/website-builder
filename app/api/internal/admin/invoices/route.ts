@@ -6,7 +6,7 @@ import {
   listProjectInvoicesByQuoteId,
   markProjectInvoicePaidByAdmin,
 } from "@/lib/projectInvoices";
-import { requireAdminRoute } from "@/lib/routeAuth";
+import { requireAdminRoute, enforceAdminRateLimit } from "@/lib/routeAuth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getIpFromHeaders } from "@/lib/rateLimit";
 
@@ -16,6 +16,8 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-invoices", limit: 60 });
+  if (rlErr) return rlErr;
 
   try {
     const quoteId = String(req.nextUrl.searchParams.get("quoteId") || "").trim();
@@ -36,6 +38,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-invoices", limit: 30 });
+  if (rlErr) return rlErr;
 
   try {
     const body = await req.json();
@@ -78,6 +82,8 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-invoices", limit: 30 });
+  if (rlErr) return rlErr;
 
   let body: any = {};
   try {

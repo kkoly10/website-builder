@@ -5,7 +5,7 @@ import {
   listCustomerPortalMessageConversations,
 } from "@/lib/customerPortal";
 import { sendPortalMessageNotification } from "@/lib/messaging/notify";
-import { requireAdminRoute } from "@/lib/routeAuth";
+import { requireAdminRoute, enforceAdminRateLimit } from "@/lib/routeAuth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -131,6 +131,8 @@ async function getAdminSenderName() {
 export async function GET(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-messages", limit: 60 });
+  if (rlErr) return rlErr;
 
   try {
     const quoteId = String(req.nextUrl.searchParams.get("quoteId") || "").trim();
@@ -179,6 +181,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-messages", limit: 30 });
+  if (rlErr) return rlErr;
 
   try {
     const contentType = req.headers.get("content-type") || "";

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminRoute } from "@/lib/routeAuth";
+import { requireAdminRoute, enforceAdminRateLimit } from "@/lib/routeAuth";
 import { getOpsWorkspaceBundle } from "@/lib/opsWorkspace/server";
 import type { EnrichedOpsWorkspaceBundle, ChatMessage } from "@/lib/opsWorkspace/state";
 import {
@@ -108,6 +108,8 @@ function generateStructuredFallback(userMessage: string): string {
 export async function POST(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-ops-chat", limit: 30 });
+  if (rlErr) return rlErr;
 
   try {
     const body = await req.json();
@@ -172,6 +174,8 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-ops-chat", limit: 60 });
+  if (rlErr) return rlErr;
 
   const opsIntakeId = req.nextUrl.searchParams.get("opsIntakeId");
   if (!opsIntakeId) {

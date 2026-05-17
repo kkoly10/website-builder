@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminRoute } from "@/lib/routeAuth";
+import { requireAdminRoute, enforceAdminRateLimit } from "@/lib/routeAuth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getIpFromHeaders } from "@/lib/rateLimit";
 import {
@@ -17,6 +17,8 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-revisions", limit: 30 });
+  if (rlErr) return rlErr;
 
   let body: any = {};
   try {
@@ -57,6 +59,8 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-revisions", limit: 30 });
+  if (rlErr) return rlErr;
 
   const quoteId = String(req.nextUrl.searchParams.get("quoteId") || "").trim();
   const revisionId = String(req.nextUrl.searchParams.get("revisionId") || "").trim();
