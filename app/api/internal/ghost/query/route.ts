@@ -4,6 +4,7 @@ import { getGhostProjectSnapshot } from "@/lib/ghost/snapshot";
 import { answerProjectQuestion } from "@/lib/ghost/command";
 import { ensureGhostSession } from "@/lib/ghost/session";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { enforceAdminRateLimit } from "@/lib/routeAuth";
 import type { GhostLane } from "@/lib/ghost/types";
 
 export const dynamic = "force-dynamic";
@@ -31,6 +32,11 @@ export async function POST(req: NextRequest) {
   if (!admin) {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
+
+  // Same rate-limit posture as /api/internal/ghost/message — Ghost
+  // query also invokes OpenAI per request.
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "ghost-query", limit: 20 });
+  if (rlErr) return rlErr;
 
   const body = await req.json();
   const laneRaw = String(body.lane || "").trim();
