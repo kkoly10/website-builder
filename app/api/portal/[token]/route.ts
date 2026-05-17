@@ -246,7 +246,11 @@ export async function POST(
 
       await updateClientStatus(token, "deposit_sent", note);
     } else if (actionType === "agreement_accept") {
-      await acceptCustomerPortalAgreement(token);
+      // Race-safe accept lives in phase 2 below — it needs the
+      // published agreement text from getCustomerPortalViewByToken and
+      // the partial unique index on agreements (added in 20260518) is
+      // the actual race-killer. The phase-2 branch handles insert →
+      // 23505 short-circuit → portal flip → activity log atomically.
     } else if (actionType === "client_status") {
       await updateClientStatus(
         token,
@@ -396,76 +400,63 @@ export async function POST(
       if (actionType === "agreement_accept") {
         const audit = (body as any).__actorAudit || {};
         const publishedText = String(result.data.agreement?.publishedText || "");
-        const acceptanceAudit = {
-          acceptedAt: new Date().toISOString(),
-          acceptedByUserId: audit.userId || null,
-          acceptedByEmail: audit.email || null,
-          acceptedFromIp: audit.ip || null,
-          agreementStatus: result.data.agreement?.status || "accepted",
-          agreementVersionHash: publishedText
-            ? crypto.createHash("sha256").update(publishedText).digest("hex")
-            : null,
-        };
+        const publishedAt = result.data.agreement?.publishedAt || new Date().toISOString();
 
-        const { data: existingQuote } = await supabaseAdmin
-          .from("quotes")
-          .select("debug")
-          .eq("id", result.data.quote.id)
-          .maybeSingle();
+        // Race-safe insert → portal flip → activity log inside the
+        // lib helper. Returns alreadyAccepted=true if a concurrent
+        // writer beat us (partial unique index throws 23505); in that
+        // case we short-circuit so the cert email isn't sent twice
+        // and quotes.debug isn't overwritten with our losing audit.
+        const accept = await acceptCustomerPortalAgreement(token, {
+          publishedText,
+          publishedAt,
+          audit: {
+            acceptedByEmail: audit.email || null,
+            acceptedIp: audit.ip || null,
+            acceptedUserAgent: audit.userAgent || null,
+          },
+        });
 
-        const nextDebug =
-          existingQuote?.debug && typeof existingQuote.debug === "object"
-            ? { ...existingQuote.debug, agreementAcceptance: acceptanceAudit }
-            : { agreementAcceptance: acceptanceAudit };
+        if (!accept.alreadyAccepted) {
+          const acceptedAtIso = new Date().toISOString();
+          const acceptanceAudit = {
+            acceptedAt: acceptedAtIso,
+            acceptedByUserId: audit.userId || null,
+            acceptedByEmail: audit.email || null,
+            acceptedFromIp: audit.ip || null,
+            agreementStatus: "accepted",
+            agreementVersionHash: accept.bodyHash || null,
+          };
 
-        await supabaseAdmin
-          .from("quotes")
-          .update({ debug: nextDebug })
-          .eq("id", result.data.quote.id);
+          const { data: existingQuote } = await supabaseAdmin
+            .from("quotes")
+            .select("debug")
+            .eq("id", result.data.quote.id)
+            .maybeSingle();
 
-        // Write to agreements table and fire certificate generation
-        const { data: portalRow } = await supabaseAdmin
-          .from("customer_portal_projects")
-          .select("id")
-          .eq("access_token", token)
-          .maybeSingle();
+          const nextDebug =
+            existingQuote?.debug && typeof existingQuote.debug === "object"
+              ? { ...existingQuote.debug, agreementAcceptance: acceptanceAudit }
+              : { agreementAcceptance: acceptanceAudit };
 
-        if (portalRow?.id) {
-          const { data: agrRow, error: insertError } = await supabaseAdmin
-            .from("agreements")
-            .insert({
-              portal_project_id: portalRow.id,
-              body_text: publishedText,
-              body_hash: acceptanceAudit.agreementVersionHash || "",
-              published_at: result.data.agreement?.publishedAt || new Date().toISOString(),
-              accepted_at: acceptanceAudit.acceptedAt,
-              accepted_by_email: acceptanceAudit.acceptedByEmail || null,
-              accepted_ip: acceptanceAudit.acceptedFromIp || null,
-              accepted_user_agent: audit.userAgent || null,
-              status: "accepted",
-            })
-            .select("id")
-            .single();
+          await supabaseAdmin
+            .from("quotes")
+            .update({ debug: nextDebug })
+            .eq("id", result.data.quote.id);
 
-          if (insertError) {
-            console.error("[portal] agreements insert error:", insertError.message);
-          }
-
-          const agreementId = agrRow?.id ?? null;
           const clientEmail = result.data.lead?.email ?? null;
-
-          if (agreementId && clientEmail) {
+          if (accept.agreementId && clientEmail) {
             const certInput = {
-              agreementId,
+              agreementId: accept.agreementId,
               quoteId: String(result.data.quote.id),
               leadName: result.data.lead?.name || "",
               leadEmail: clientEmail,
               agreementText: publishedText,
-              acceptedAt: acceptanceAudit.acceptedAt,
+              acceptedAt: acceptedAtIso,
               acceptedByEmail: acceptanceAudit.acceptedByEmail,
               acceptedFromIp: acceptanceAudit.acceptedFromIp,
               agreementHash: acceptanceAudit.agreementVersionHash,
-              publishedAt: result.data.agreement?.publishedAt || new Date().toISOString(),
+              publishedAt,
             };
             after(async () => {
               try {
