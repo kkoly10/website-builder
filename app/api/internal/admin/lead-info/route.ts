@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminRoute } from "@/lib/routeAuth";
+import { requireAdminRoute, enforceAdminRateLimit } from "@/lib/routeAuth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getIpFromHeaders } from "@/lib/rateLimit";
 import { editLeadInfoByQuoteId } from "@/lib/customerPortal";
@@ -14,6 +14,8 @@ export const dynamic = "force-dynamic";
 export async function PATCH(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-lead-info", limit: 30 });
+  if (rlErr) return rlErr;
 
   let body: any = {};
   try {

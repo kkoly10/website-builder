@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminRoute } from "@/lib/routeAuth";
+import { requireAdminRoute, enforceAdminRateLimit } from "@/lib/routeAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getOpsWorkspaceBundle } from "@/lib/opsWorkspace/server";
 import { enrichOpsBundle, getWorkspaceState, saveWorkspaceState } from "@/lib/opsWorkspace/state";
@@ -50,6 +50,8 @@ function getStagePreset(stage: string) {
 export async function POST(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-ops-stage", limit: 30 });
+  if (rlErr) return rlErr;
 
   try {
     const body = await req.json();

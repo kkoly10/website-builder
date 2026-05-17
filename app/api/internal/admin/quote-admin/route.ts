@@ -7,7 +7,7 @@ import {
 import { logProjectActivityByQuoteId } from "@/lib/projectActivity";
 import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { requireAdminRoute } from "@/lib/routeAuth";
+import { requireAdminRoute, enforceAdminRateLimit } from "@/lib/routeAuth";
 import { sendEventNotification } from "@/lib/notifications";
 import { appBaseUrl } from "@/lib/emailHelpers";
 
@@ -143,6 +143,8 @@ function cleanChangeOrders(values: any) {
 export async function POST(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-quote-admin", limit: 30 });
+  if (rlErr) return rlErr;
 
   try {
     const body = await req.json();

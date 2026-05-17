@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminRoute } from "@/lib/routeAuth";
+import { requireAdminRoute, enforceAdminRateLimit } from "@/lib/routeAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { generateAndDeliverCertificate } from "@/lib/certificates/generate";
 
@@ -39,6 +39,8 @@ export async function GET(
 ) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-certificates", limit: 60 });
+  if (rlErr) return rlErr;
 
   const { quoteId } = await Promise.resolve(ctx.params);
   const agr = await getAgreementForQuote(quoteId);
@@ -66,6 +68,8 @@ export async function POST(
 ) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-certificates", limit: 30 });
+  if (rlErr) return rlErr;
 
   const { quoteId } = await Promise.resolve(ctx.params);
 

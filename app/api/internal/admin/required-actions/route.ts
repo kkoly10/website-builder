@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminRoute } from "@/lib/routeAuth";
+import { requireAdminRoute, enforceAdminRateLimit } from "@/lib/routeAuth";
 import {
   createRequiredActionForQuoteId,
   deleteRequiredActionForQuoteId,
@@ -38,6 +38,8 @@ function asStatus(v: unknown): RequiredActionStatus | undefined {
 export async function GET(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-required-actions", limit: 60 });
+  if (rlErr) return rlErr;
 
   const quoteId = String(req.nextUrl.searchParams.get("quoteId") || "").trim();
   if (!quoteId) {
@@ -62,6 +64,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-required-actions", limit: 30 });
+  if (rlErr) return rlErr;
 
   let body: any = {};
   try {

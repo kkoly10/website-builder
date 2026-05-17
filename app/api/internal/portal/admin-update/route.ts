@@ -10,9 +10,10 @@ import {
   type DesignDirectionAdminAction,
   type DirectionAdminAction,
 } from "@/lib/customerPortal";
-import { requireAdminRoute } from "@/lib/routeAuth";
+import { requireAdminRoute, enforceAdminRateLimit } from "@/lib/routeAuth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getIpFromHeaders } from "@/lib/rateLimit";
+import { logProjectActivityByPortalId } from "@/lib/projectActivity";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -45,6 +46,8 @@ export async function POST(req: Request) {
   try {
     const authErr = await requireAdminRoute();
     if (authErr) return authErr;
+    const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-portal-update", limit: 30 });
+    if (rlErr) return rlErr;
 
     const body = await req.json();
     const quoteId = String(body?.quoteId || "").trim();
@@ -72,6 +75,36 @@ export async function POST(req: Request) {
         .eq("id", portal.id);
 
       if (updateErr) throw updateErr;
+
+      // Audit log for admin patches. Without this entry, status flips
+      // (deposit_status, project_status) and kickoff_notes edits left
+      // no trail in project_activity — admins couldn't reconstruct
+      // who changed what and when. Captures the actor's user_id +
+      // email + ip + the field names changed (not the values, to keep
+      // the log compact and free of sensitive payloads).
+      try {
+        const supabase = await createSupabaseServerClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        await logProjectActivityByPortalId({
+          portalProjectId: portal.id,
+          actorRole: "studio",
+          eventType: "admin_portal_update",
+          summary: `Admin updated portal fields: ${Object.keys(patch).join(", ")}.`,
+          payload: {
+            fields: Object.keys(patch),
+            actorUserId: user?.id ?? null,
+            actorEmail: user?.email ?? null,
+            actorIp: getIpFromHeaders(req.headers),
+          },
+          clientVisible: false,
+        });
+      } catch (logErr) {
+        // Non-fatal: the patch already succeeded. Log to console so
+        // we notice gaps in audit coverage but don't fail the request.
+        console.error("admin-update audit log error:", logErr);
+      }
     }
 
     if (Array.isArray(body.milestones)) {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { requireAdminRoute } from "@/lib/routeAuth";
+import { requireAdminRoute, enforceAdminRateLimit } from "@/lib/routeAuth";
 import {
   getWorkspaceState,
   saveWorkspaceState,
@@ -13,6 +13,8 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-ops-workspace", limit: 60 });
+  if (rlErr) return rlErr;
 
   const opsIntakeId = req.nextUrl.searchParams.get("opsIntakeId");
   if (!opsIntakeId) {
@@ -26,6 +28,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-ops-workspace", limit: 30 });
+  if (rlErr) return rlErr;
 
   try {
     const body = await req.json();

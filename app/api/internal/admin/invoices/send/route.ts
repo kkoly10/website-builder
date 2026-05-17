@@ -4,7 +4,7 @@ import {
   listProjectInvoicesByQuoteId,
   sendProjectInvoice,
 } from "@/lib/projectInvoices";
-import { requireAdminRoute } from "@/lib/routeAuth";
+import { requireAdminRoute, enforceAdminRateLimit } from "@/lib/routeAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,6 +12,8 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   const authErr = await requireAdminRoute();
   if (authErr) return authErr;
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-invoices-send", limit: 30 });
+  if (rlErr) return rlErr;
 
   try {
     const body = await req.json();
