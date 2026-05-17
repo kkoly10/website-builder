@@ -12,7 +12,16 @@ const PAGES: Page[] = [
   { path: "/websites", priority: 0.9, changeFrequency: "monthly" },
   { path: "/ecommerce", priority: 0.9, changeFrequency: "monthly" },
   { path: "/systems", priority: 0.9, changeFrequency: "monthly" },
+  { path: "/custom-web-apps", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/client-portals", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/website-rescue", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/care-plans", priority: 0.8, changeFrequency: "monthly" },
   { path: "/process", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/work", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/work/fleiko", priority: 0.7, changeFrequency: "monthly" },
+  { path: "/work/proveo", priority: 0.7, changeFrequency: "monthly" },
+  { path: "/work/techdesk", priority: 0.7, changeFrequency: "monthly" },
+  { path: "/about", priority: 0.7, changeFrequency: "monthly" },
   { path: "/faq", priority: 0.7, changeFrequency: "monthly" },
   { path: "/contact", priority: 0.6, changeFrequency: "yearly" },
   { path: "/pricing", priority: 0.7, changeFrequency: "monthly" },
@@ -21,6 +30,9 @@ const PAGES: Page[] = [
   { path: "/ecommerce/intake", priority: 0.8, changeFrequency: "monthly" },
   { path: "/privacy", priority: 0.3, changeFrequency: "yearly" },
   { path: "/terms", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/aup", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/refunds", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/security", priority: 0.3, changeFrequency: "yearly" },
 ];
 
 function localizedHref(siteUrl: string, locale: string, path: string) {
