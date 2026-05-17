@@ -14,8 +14,21 @@ import type {
 // Build a fresh default direction record for a given project type. Used
 // to seed scope_snapshot.direction when a new non-website portal is
 // created. Pulls the default payload from the lane's workflow template.
+//
+// getWorkflowTemplate falls back to the website template for unknown
+// projectTypes. That fallback is intentional (legacy portals shouldn't
+// crash), but if we land a new ProjectType in the enum without adding a
+// matching template, every new portal of that lane silently gets the
+// website direction flow — a confusing UX regression that's hard to
+// notice in code review. We log loudly here so dev environments catch
+// the gap before production does.
 export function buildDefaultDirection(projectType: ProjectType): GenericDirection {
   const template = getWorkflowTemplate(projectType);
+  if (template.directionType === "design_direction" && projectType !== "website") {
+    console.warn(
+      `[buildDefaultDirection] No workflow template for projectType="${projectType}"; falling back to website's design_direction. Add a template in lib/workflows/templates.ts.`,
+    );
+  }
   return {
     type: template.directionType,
     status: "waiting_on_client",
