@@ -83,11 +83,12 @@ async function handleRefundOrDispute(event: any, eventType: string) {
     const debug = safeObj(q.debug);
     const internal = safeObj(debug.internal);
     const payment = safeObj(internal.payment);
-    // Match by payment_intent OR session.id (session may have been
-    // referenced from the charge's metadata).
-    const sessionMatches =
-      String(payment.payment_intent || "") === paymentIntentId ||
-      String(payment.session_id || "") === String(charge.payment_intent || "");
+    // Match by payment_intent — populated in confirmWebsiteQuotePayment
+    // when the original session settled. A previous version of this
+    // also tried `payment.session_id === charge.payment_intent`, but
+    // those are different ID namespaces (cs_... vs pi_...) and will
+    // never match — that branch was dropped.
+    const sessionMatches = String(payment.payment_intent || "") === paymentIntentId;
     if (!sessionMatches) continue;
 
     const now = new Date().toISOString();
@@ -142,6 +143,11 @@ async function confirmWebsiteQuotePayment(session: any, quoteId: string) {
     ...prevInternal,
     payment: {
       session_id: session.id,
+      // Persist payment_intent alongside session_id so the
+      // handleRefundOrDispute matcher above can find this row when
+      // Stripe later sends a charge.refunded or charge.dispute event
+      // (those events carry payment_intent, not session.id).
+      payment_intent: session.payment_intent ?? null,
       amount_total: session.amount_total ?? null,
       currency: session.currency ?? null,
       customer_email: session.customer_email ?? null,
