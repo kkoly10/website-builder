@@ -17,8 +17,20 @@ type QuoteRow = {
   lead_email: string | null;
 };
 
+// Normalize an email for comparison. trim → lowercase is the baseline;
+// the NFC Unicode normalization step closes a class of homograph attacks
+// where two visually-identical strings have different code-point
+// sequences (e.g. precomposed "é" U+00E9 vs decomposed "e" + U+0301).
+// Without NFC, two registrations that look identical to a human would
+// compare as different strings here and bypass the quote-claim guard.
+// Domain casing is normalized by lowercase; we don't IDNA-encode because
+// the email field is treated as opaque downstream — the goal is
+// consistent equality, not canonical RFC 5891 form.
 export function normalizeEmail(value?: string | null) {
-  return String(value ?? "").trim().toLowerCase();
+  return String(value ?? "")
+    .normalize("NFC")
+    .trim()
+    .toLowerCase();
 }
 
 export function sameNormalizedEmail(a?: string | null, b?: string | null) {
@@ -148,15 +160,52 @@ export async function maybeAttachQuoteToUser(args: {
     return { ok: false as const, skipped: true as const };
   }
 
+  // Already-claimed short-circuit. If the row already has auth_user_id
+  // set and it matches this user, this is a no-op idempotent claim. If
+  // it's set and DOESN'T match this user, that's a different user
+  // claiming the same quote — refuse (canAttachOwner already guarded
+  // this case but defense in depth costs us nothing here).
+  if (access.quote.auth_user_id) {
+    if (String(access.quote.auth_user_id) === String(args.userId)) {
+      return { ok: true as const, skipped: true as const, alreadyAttached: true as const };
+    }
+    return { ok: false as const, skipped: true as const, reason: "already_claimed" as const };
+  }
+
   const patch = {
     auth_user_id: String(args.userId),
     owner_email_norm: normalizeEmail(args.userEmail),
   };
 
-  const { error } = await supabaseAdmin.from("quotes").update(patch).eq("id", args.quoteId);
+  // First-write-wins via .is("auth_user_id", null) filter on the UPDATE.
+  // Two concurrent claim attempts: the slower one's UPDATE filter no
+  // longer matches (auth_user_id became non-null), so it updates 0 rows
+  // and we fall back to a re-check. Without this filter, last-write-wins
+  // and a racing attacker could overwrite the legitimate owner's claim.
+  const { data, error } = await supabaseAdmin
+    .from("quotes")
+    .update(patch)
+    .eq("id", args.quoteId)
+    .is("auth_user_id", null)
+    .select("id, auth_user_id")
+    .maybeSingle();
 
   if (error) {
     return { ok: false as const, skipped: false as const, error: error.message };
+  }
+
+  if (!data) {
+    // Race lost — someone else claimed it between resolveQuoteAccess and
+    // the UPDATE. Re-read to see whether the winner is us or someone else.
+    const { data: latest } = await supabaseAdmin
+      .from("quotes")
+      .select("auth_user_id")
+      .eq("id", args.quoteId)
+      .maybeSingle();
+    if (latest?.auth_user_id && String(latest.auth_user_id) === String(args.userId)) {
+      return { ok: true as const, skipped: true as const, alreadyAttached: true as const };
+    }
+    return { ok: false as const, skipped: true as const, reason: "race_lost" as const };
   }
 
   return { ok: true as const, skipped: false as const };

@@ -962,8 +962,31 @@ export default function ProjectControlClient({
     await savePatch({ portalAdmin: nextPA, portalStateAdmin: nextPS }, `Launch reverted to "${targetStatus}".`);
   }
 
-  function toggleMilestone(key: string) {
-    setData((p) => ({ ...p, portalStateAdmin: { ...p.portalStateAdmin, milestones: p.portalStateAdmin.milestones.map((m) => m.key === key ? { ...m, done: !m.done } : m) } }));
+  // Toggle milestone done and persist. Previously this only mutated
+  // local state — admin checked a box, refreshed the page, the toggle
+  // was gone. Now we optimistically flip in state, fire the savePatch
+  // through quote-admin, and roll back if it fails.
+  async function toggleMilestone(key: string) {
+    const prev = data.portalStateAdmin.milestones;
+    const next = prev.map((m) => (m.key === key ? { ...m, done: !m.done } : m));
+    const nextPS = { ...data.portalStateAdmin, milestones: next };
+    setData((p) => ({ ...p, portalStateAdmin: nextPS }));
+    try {
+      const res = await fetch("/api/internal/admin/quote-admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId: data.quoteId, portalStateAdmin: nextPS }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to save milestone.");
+    } catch (err) {
+      // Rollback: revert the optimistic flip so the UI matches server
+      // state. Surface the error in the status bar so admin knows the
+      // toggle didn't stick.
+      setData((p) => ({ ...p, portalStateAdmin: { ...p.portalStateAdmin, milestones: prev } }));
+      setMessageIsError(true);
+      setMessage(err instanceof Error ? err.message : "Failed to save milestone.");
+    }
   }
 
   async function createDepositLink() {

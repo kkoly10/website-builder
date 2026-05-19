@@ -58,8 +58,16 @@ export function getSiteUrl() {
 // New code should import from "@/lib/redirects" directly.
 export { safeNextPath } from "@/lib/redirects";
 
+// NFC normalize before trim+lowercase so two visually-identical
+// strings with different code-point sequences (precomposed vs
+// decomposed Unicode) compare as equal. Mirrors lib/accessControl.ts's
+// normalizeEmail — the two helpers must agree because they're used
+// interchangeably in different parts of the auth flow.
 export function normalizeEmail(email?: string | null) {
-  return String(email ?? "").trim().toLowerCase();
+  return String(email ?? "")
+    .normalize("NFC")
+    .trim()
+    .toLowerCase();
 }
 
 // Legacy/fallback admin check (kept for compatibility)
