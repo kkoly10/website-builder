@@ -155,12 +155,28 @@ async function finishCertDelivery(
 
   const signedUrl = signedData?.signedUrl ?? `${siteUrl}/verify/${input.agreementId}`;
 
+  // Validate recipient before attempting send. lib/notifications.ts has
+  // an equivalent trim+@ check (PR 3 fix); the cert path was missing
+  // it, so a lead with leadEmail="" or "n/a" would silently fail at
+  // the Resend API and the delivery_status would flip to 'failed'
+  // without admin knowing the leadEmail itself was the problem.
+  // Flag explicitly so the error message says "fix the lead email"
+  // instead of generic "Resend rejected".
+  const recipient = (input.leadEmail || "").trim();
+  if (!recipient || !recipient.includes("@")) {
+    await supabaseAdmin
+      .from("agreements")
+      .update({ certificate_delivery_status: "failed" })
+      .eq("id", input.agreementId);
+    throw new Error(`Certificate email failed: invalid leadEmail "${input.leadEmail}".`);
+  }
+
   // Email client with PDF attachment. On failure, flag the row as
   // failed so an admin can re-trigger via the regenerate endpoint
-  // (PR 4 adds the ?force=true flag for this exact use case).
+  // (PR 4's ?force=true flag).
   try {
     await sendResendEmail({
-      to: input.leadEmail,
+      to: recipient,
       from: process.env.NOTIFICATION_FROM_EMAIL || "studio@crecystudio.com",
       subject: "Your signed project agreement — CrecyStudio",
       html: buildEmailHtml(input.leadName, signedUrl, verificationUrl),
@@ -184,8 +200,6 @@ async function finishCertDelivery(
       .eq("id", input.agreementId);
     // Don't re-throw — the certificate file is uploaded and the
     // delivery_status flag gives admin a clean re-trigger surface.
-    // Throwing here would surface as a 500 to the client even though
-    // the legal artifact (the agreement) is already accepted.
   }
 
   // Notify admin (fire-and-forget, no PDF needed)

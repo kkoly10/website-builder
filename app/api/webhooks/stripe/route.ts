@@ -44,6 +44,86 @@ function safeObj(v: unknown): Record<string, unknown> {
   return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
 }
 
+// Handle charge.refunded and charge.dispute.created.
+// Flips deposit_status to 'refunded' / 'disputed' on the matching
+// quote (matched via the original payment intent's session metadata)
+// and writes an audit row in quotes.debug.internal.history. Doesn't
+// touch invoices / ops / ecom payments yet — those have their own
+// state machines and we don't want to silently mutate them without
+// a per-lane spec. Logs loudly so admin can manually intervene for
+// non-website lanes.
+async function handleRefundOrDispute(event: any, eventType: string) {
+  const charge = event?.data?.object;
+  if (!charge) return;
+
+  // The session that originally collected the payment links back via
+  // payment_intent. We have to look up the session from our own
+  // stripe_processed_sessions table (we don't persist payment_intent
+  // mappings separately) — best-effort search by metadata.
+  const paymentIntentId = String(charge.payment_intent || "").trim();
+  if (!paymentIntentId) {
+    console.warn(`[stripe-webhook] ${eventType} with no payment_intent`, charge.id);
+    return;
+  }
+
+  // We persisted the session.id (not the payment_intent) in stripe_processed_sessions.
+  // Quotes store the session.id in quote.debug.internal.payment.session_id, so we
+  // can match there. Search quotes with this session_id.
+  const { data: matchingQuotes } = await supabaseAdmin
+    .from("quotes")
+    .select("id, debug, status, deposit_status")
+    .filter("debug->internal->payment->>session_id", "not.is", null);
+
+  if (!matchingQuotes?.length) {
+    console.warn(`[stripe-webhook] ${eventType}: no quotes with payment metadata to scan`);
+    return;
+  }
+
+  for (const q of matchingQuotes) {
+    const debug = safeObj(q.debug);
+    const internal = safeObj(debug.internal);
+    const payment = safeObj(internal.payment);
+    // Match by payment_intent — populated in confirmWebsiteQuotePayment
+    // when the original session settled. A previous version of this
+    // also tried `payment.session_id === charge.payment_intent`, but
+    // those are different ID namespaces (cs_... vs pi_...) and will
+    // never match — that branch was dropped.
+    const sessionMatches = String(payment.payment_intent || "") === paymentIntentId;
+    if (!sessionMatches) continue;
+
+    const now = new Date().toISOString();
+    const history = Array.isArray((internal as any).history) ? ((internal as any).history as any[]) : [];
+    const action = eventType === "charge.refunded" ? "refunded" : "disputed";
+    history.push({ at: now, action, eventType, eventId: event.id, chargeId: charge.id });
+
+    const nextInternal = {
+      ...internal,
+      payment: {
+        ...payment,
+        [action === "refunded" ? "refunded_at" : "disputed_at"]: now,
+        refund_amount:
+          eventType === "charge.refunded" ? Number(charge.amount_refunded ?? 0) : (payment as any).refund_amount,
+      },
+      history,
+    };
+
+    await supabaseAdmin
+      .from("quotes")
+      .update({
+        debug: { ...debug, internal: nextInternal },
+        // deposit_status reflects the new state so /portal/[token] shows
+        // it accurately instead of stale "paid".
+        deposit_status: action === "refunded" ? "refunded" : "disputed",
+      })
+      .eq("id", q.id);
+
+    console.warn(`[stripe-webhook] ${eventType} applied to quote ${q.id}`);
+    return;
+  }
+
+  console.warn(`[stripe-webhook] ${eventType}: no matching quote for payment_intent ${paymentIntentId}`);
+}
+
 async function confirmWebsiteQuotePayment(session: any, quoteId: string) {
   const { data: existing } = await supabaseAdmin
     .from("quotes")
@@ -63,6 +143,11 @@ async function confirmWebsiteQuotePayment(session: any, quoteId: string) {
     ...prevInternal,
     payment: {
       session_id: session.id,
+      // Persist payment_intent alongside session_id so the
+      // handleRefundOrDispute matcher above can find this row when
+      // Stripe later sends a charge.refunded or charge.dispute event
+      // (those events carry payment_intent, not session.id).
+      payment_intent: session.payment_intent ?? null,
       amount_total: session.amount_total ?? null,
       currency: session.currency ?? null,
       customer_email: session.customer_email ?? null,
@@ -103,6 +188,15 @@ export async function POST(req: NextRequest) {
     const event = JSON.parse(rawBody);
     const eventId = String(event?.id || "").trim();
     const eventType = String(event?.type || "");
+
+    // Refund / dispute events: flag the affected quote so the portal
+    // doesn't keep showing "paid" indefinitely after a refund or
+    // chargeback. We use the existing debug blob on quotes for the
+    // audit trail since it's already shaped for payment metadata.
+    if (eventType === "charge.refunded" || eventType === "charge.dispute.created") {
+      await handleRefundOrDispute(event, eventType);
+      return NextResponse.json({ received: true });
+    }
 
     if (eventType !== "checkout.session.completed") {
       return NextResponse.json({ received: true });

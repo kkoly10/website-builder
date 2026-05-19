@@ -10,6 +10,9 @@ export function getBaseUrl(req: Request) {
 }
 
 export async function stripeCreateCheckoutSession(opts: {
+  // Naming kept for backward-compat (all current callers pass USD).
+  // Pass `currency: "eur"` etc. when serving non-USD clients; defaults
+  // to "usd" so existing callers don't need to change.
   amountUsdCents: number;
   customerEmail: string;
   quoteId?: string;
@@ -17,6 +20,7 @@ export async function stripeCreateCheckoutSession(opts: {
   cancelUrl: string;
   productName?: string;
   productDescription?: string;
+  currency?: string;
   metadata?: Record<string, string | number | boolean | null | undefined>;
 }) {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -29,8 +33,16 @@ export async function stripeCreateCheckoutSession(opts: {
   params.append("cancel_url", opts.cancelUrl);
   params.append("customer_email", opts.customerEmail);
 
+  // Validate currency is a 3-letter ISO code so a typo doesn't reach
+  // Stripe and 400 with a confusing error. Defaults to USD when omitted
+  // or invalid — the option is opt-in for non-USD lanes.
+  const currency =
+    typeof opts.currency === "string" && /^[a-z]{3}$/i.test(opts.currency.trim())
+      ? opts.currency.trim().toLowerCase()
+      : "usd";
+
   params.append("line_items[0][quantity]", "1");
-  params.append("line_items[0][price_data][currency]", "usd");
+  params.append("line_items[0][price_data][currency]", currency);
   params.append("line_items[0][price_data][unit_amount]", String(opts.amountUsdCents));
   params.append("line_items[0][price_data][product_data][name]", opts.productName || "CrecyStudio Deposit");
   params.append(
