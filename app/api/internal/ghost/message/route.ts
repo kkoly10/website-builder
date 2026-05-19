@@ -4,6 +4,7 @@ import { analyzeClientMessage, buildReplySuggestion } from "@/lib/ghost/message"
 import { getGhostProjectSnapshot } from "@/lib/ghost/snapshot";
 import { ensureGhostSession, type GhostSessionLane } from "@/lib/ghost/session";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { enforceAdminRateLimit } from "@/lib/routeAuth";
 import type { GhostLane } from "@/lib/ghost/types";
 
 export const dynamic = "force-dynamic";
@@ -74,6 +75,13 @@ export async function POST(req: NextRequest) {
   if (!admin) {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
+
+  // Rate-limit AI calls. Ghost endpoints invoke OpenAI on every request,
+  // so a compromised admin token (or a stuck client polling loop) could
+  // burn through token budget fast. 20/min/IP is well above legitimate
+  // admin chat cadence (~1-2 messages/min during active use).
+  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "ghost-message", limit: 20 });
+  if (rlErr) return rlErr;
 
   const body = await req.json();
   const message = String(body.message || "").trim();
