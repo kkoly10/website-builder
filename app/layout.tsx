@@ -24,10 +24,24 @@ export const metadata: Metadata = {
     type: "website",
   },
   twitter: {
-    card: "summary",
+    // summary_large_image rather than summary because PR 4 ships 1200x630
+    // OG images via the file-based opengraph-image.tsx convention; the
+    // larger card surface renders those previews properly on X. Setting
+    // the type here is harmless until the images ship and avoids a sweep
+    // across every page's metadata later.
+    card: "summary_large_image",
     title: "CrecyStudio | Websites, E-commerce & Workflow Automation",
     description:
       "Premium websites, e-commerce systems, and workflow automation for growth-focused businesses.",
+  },
+  // Search Console / Webmaster Tools verification tokens. Env-driven so
+  // the actual values stay in Vercel rather than the repo; the meta tags
+  // simply omit when env vars are unset.
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.BING_SITE_VERIFICATION
+      ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION }
+      : undefined,
   },
 };
 
