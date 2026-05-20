@@ -1000,6 +1000,11 @@ const STRINGS: Record<string, LocalizedString> = {
     fr: "Quelqu'un modifie l'e-mail de votre compte CrecyStudio de cette adresse vers <strong>{{newEmail}}</strong>. Si c'était vous, aucune action n'est requise — la nouvelle adresse recevra sa propre confirmation. Si ce n'était pas vous, modifiez immédiatement votre mot de passe et contactez le support.",
     es: "Alguien está cambiando el correo de su cuenta CrecyStudio de esta dirección a <strong>{{newEmail}}</strong>. Si fue usted, no se requiere acción — la nueva dirección recibirá su propia confirmación. Si no fue usted, cambie su contraseña inmediatamente y contacte con soporte.",
   },
+  "auth.email_change.new_address_unknown": {
+    en: "a new address",
+    fr: "une nouvelle adresse",
+    es: "una nueva dirección",
+  },
 
   // ─── Project type labels ──────────────────────────────────────
   "lane.website": { en: "website", fr: "site web", es: "sitio web" },

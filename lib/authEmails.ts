@@ -186,7 +186,7 @@ export function renderAuthEmail(input: RenderInput): RenderedAuthEmail | null {
       // action is required from this address. Includes the new address
       // so the user can spot impersonation attempts. No CTA / no link
       // because clicking on the current-email side does nothing.
-      const newEmail = input.newEmail || "(new address)";
+      const newEmail = input.newEmail || t("auth.email_change.new_address_unknown", lang);
       return {
         subject: t("auth.email_change.subject", lang),
         html: emailWrap(`

@@ -25,8 +25,11 @@ function verifyStandardWebhook(args: {
   webhookSignature: string;
   secret: string;
 }): boolean {
-  // Strip Supabase's "v1,whsec_" prefix if present.
-  const cleanedSecret = args.secret.replace(/^v1,whsec_/, "");
+  // Supabase displays the hook secret in two slightly different
+  // shapes depending on dashboard version: "v1,whsec_<b64>" or just
+  // "whsec_<b64>". Strip whichever prefix(es) are present so either
+  // copy-paste works.
+  const cleanedSecret = args.secret.replace(/^v1,/, "").replace(/^whsec_/, "");
 
   let secretBytes: Buffer;
   try {
@@ -162,13 +165,22 @@ export async function POST(req: Request) {
 
   const lang = await resolveLocale(userEmail, payload.user?.user_metadata);
 
-  // For email_change_current, the email goes to the OLD address (which
-  // is `payload.user.email`). For email_change_new, the email goes to
-  // the NEW address. Older Supabase versions emit a single
-  // "email_change" event for the new address.
-  const recipient = actionType === "email_change_current" ? userEmail : (
-    actionType === "email_change_new" ? (newEmail || userEmail) : userEmail
-  );
+  // For email_change_current, the email goes to the OLD address
+  // (`payload.user.email`). For email_change_new and the legacy
+  // single-event "email_change", the email goes to the NEW address
+  // (`payload.email_data.new_email` or `payload.user.new_email`).
+  // Everything else is sent to the user's primary email.
+  const recipient = actionType === "email_change_current"
+    ? userEmail
+    : (actionType === "email_change_new" || actionType === "email_change")
+      ? (newEmail || userEmail)
+      : userEmail;
+  if (!recipient || !recipient.includes("@")) {
+    console.error(`[send-email-hook] resolved invalid recipient for ${actionType}`);
+    // Return 200 so Supabase doesn't retry forever on a permanent
+    // data issue. The error is logged for the operator to investigate.
+    return NextResponse.json({ ok: false, error: "Invalid recipient" });
+  }
 
   try {
     await sendAuthEmail({
