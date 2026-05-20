@@ -1,11 +1,16 @@
 import { chromium } from "@playwright/test";
 import { resolve } from "node:path";
-import { mkdir } from "node:fs/promises";
+import { mkdir, access } from "node:fs/promises";
 
 // Quick visual check: render a few email previews in dark mode and
 // save screenshots. Useful for spotting CTA / contrast regressions
 // before they hit a customer inbox.
 // Usage: tsx scripts/screenshot-emails.ts
+//
+// Prereq: previews must have been rendered first
+// (`npm run preview:emails`). The script checks for them up-front so
+// a missing preview surfaces as a clear error instead of a cryptic
+// Playwright navigation timeout.
 
 const PREVIEW_DIR = resolve(process.cwd(), "scripts/email-previews/auth");
 const OUT_DIR = resolve(process.cwd(), "scripts/email-previews/screenshots");
@@ -17,7 +22,23 @@ const TARGETS = [
   "email_change_current-en.html",
 ];
 
+async function ensurePreviewsExist() {
+  for (const file of TARGETS) {
+    const path = resolve(PREVIEW_DIR, file);
+    try {
+      await access(path);
+    } catch {
+      console.error(
+        `[screenshot-emails] preview file missing: ${path}\n` +
+          `Run "npm run preview:emails" first to render the HTML previews.`,
+      );
+      process.exit(1);
+    }
+  }
+}
+
 async function main() {
+  await ensurePreviewsExist();
   await mkdir(OUT_DIR, { recursive: true });
   const browser = await chromium.launch();
 
