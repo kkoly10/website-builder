@@ -16,12 +16,16 @@ const cspReportOnly = [
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob: https:",
   "media-src 'self' data: https:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://*.google-analytics.com https://*.googletagmanager.com https://va.vercel-scripts.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://*.google-analytics.com https://*.googletagmanager.com https://va.vercel-scripts.com https://*.sentry.io https://*.ingest.sentry.io",
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self' https://checkout.stripe.com",
   "object-src 'none'",
+  // Sentry Session Replay spawns a worker from blob: URLs. Allow it
+  // here so the replay integration keeps working once we promote CSP
+  // from report-only to enforcing.
+  "worker-src 'self' blob:",
   "report-uri /api/csp-report",
 ].join("; ");
 
