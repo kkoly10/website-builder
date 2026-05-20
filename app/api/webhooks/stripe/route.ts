@@ -4,6 +4,7 @@ import { markDepositPaidForQuoteId } from "@/lib/customerPortal";
 import { confirmEcommerceDepositPayment, confirmOpsDepositPayment } from "@/lib/depositPayments";
 import { markProjectInvoicePaid } from "@/lib/projectInvoices";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { sendInternalAlert } from "@/lib/internalAlert";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -135,6 +136,107 @@ async function handleRefundOrDispute(event: any, eventType: string) {
   console.warn(`[stripe-webhook] ${eventType}: no matching quote for payment_intent ${paymentIntentId}`);
 }
 
+// Handle charge.dispute.closed — the dispute lifecycle resolution event.
+// Stripe sends `status` of "won" / "lost" / "warning_closed" / "warning_refunded".
+// On "won" we restore deposit_status to "paid" (chargeback reversed); on
+// "lost" we leave it as "disputed" but add an audit row noting the loss
+// (admin may want to chase the customer or write it off). Matches the
+// quote via the same payment_intent lookup as handleRefundOrDispute.
+async function handleDisputeClosed(event: any) {
+  const dispute = event?.data?.object;
+  if (!dispute) return;
+
+  const paymentIntentId = String(dispute.payment_intent || "").trim();
+  const disputeStatus = String(dispute.status || "").trim().toLowerCase();
+  if (!paymentIntentId) {
+    console.warn("[stripe-webhook] charge.dispute.closed with no payment_intent", dispute.id);
+    return;
+  }
+
+  const { data: matchingQuotes } = await supabaseAdmin
+    .from("quotes")
+    .select("id, debug, deposit_status")
+    .filter("debug->internal->payment->>payment_intent", "eq", paymentIntentId);
+
+  if (!matchingQuotes?.length) {
+    console.warn(
+      `[stripe-webhook] charge.dispute.closed: no quote for payment_intent ${paymentIntentId}`
+    );
+    return;
+  }
+
+  for (const q of matchingQuotes) {
+    const debug = safeObj(q.debug);
+    const internal = safeObj(debug.internal);
+    const payment = safeObj(internal.payment);
+    const now = new Date().toISOString();
+    const history = Array.isArray((internal as any).history) ? ((internal as any).history as any[]) : [];
+    history.push({
+      at: now,
+      action: "dispute_closed",
+      eventType: "charge.dispute.closed",
+      eventId: event.id,
+      disputeId: dispute.id,
+      disputeStatus,
+    });
+
+    // "won" means the merchant won the dispute — the chargeback was
+    // reversed and the funds stay with us. Restore deposit_status so
+    // the portal stops showing "disputed".
+    const restorePaid = disputeStatus === "won" || disputeStatus === "warning_closed";
+
+    const nextInternal = {
+      ...internal,
+      payment: {
+        ...payment,
+        dispute_closed_at: now,
+        dispute_status: disputeStatus,
+      },
+      history,
+    };
+
+    await supabaseAdmin
+      .from("quotes")
+      .update({
+        debug: { ...debug, internal: nextInternal },
+        ...(restorePaid ? { deposit_status: "paid" } : {}),
+      })
+      .eq("id", q.id);
+
+    console.warn(
+      `[stripe-webhook] charge.dispute.closed (${disputeStatus}) applied to quote ${q.id}`
+    );
+    return;
+  }
+}
+
+// Handle payment_intent.payment_failed and payment_intent.canceled.
+// These don't necessarily correspond to a committed DB row (we only
+// confirm on checkout.session.completed), so we don't mutate state —
+// just log + alert so admin sees abandoned/failed checkouts in real
+// time. Useful for surfacing failing card flows that customers don't
+// report.
+async function handlePaymentIntentFailureOrCancel(event: any, eventType: string) {
+  const pi = event?.data?.object;
+  if (!pi) return;
+
+  const piId = String(pi.id || "");
+  const amount = Number(pi.amount || 0);
+  const currency = String(pi.currency || "").toUpperCase();
+  const lastError = pi.last_payment_error?.message || pi.cancellation_reason || "";
+  const customerEmail = pi.receipt_email || pi.metadata?.customerEmail || "";
+
+  const summary = `[stripe-webhook] ${eventType} pi=${piId} amount=${amount} ${currency} email=${customerEmail || "?"} reason=${lastError || "—"}`;
+  console.warn(summary);
+
+  // Only alert on failures, not cancels. Cancels are usually customer-
+  // initiated (closed the tab) — high volume, low signal. Failures are
+  // actually actionable (card declined, fraud check, etc.).
+  if (eventType === "payment_intent.payment_failed") {
+    await sendInternalAlert(summary);
+  }
+}
+
 async function confirmWebsiteQuotePayment(session: any, quoteId: string) {
   const { data: existing } = await supabaseAdmin
     .from("quotes")
@@ -209,7 +311,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
+    // Dispute resolution. Mirrors handleRefundOrDispute's audit-row
+    // pattern but also flips deposit_status back to "paid" when the
+    // merchant wins, so the portal stops showing the disputed flag.
+    if (eventType === "charge.dispute.closed") {
+      await handleDisputeClosed(event);
+      return NextResponse.json({ received: true });
+    }
+
+    // Failed and canceled payment intents. We don't mutate DB state
+    // (those PIs never produced a checkout.session.completed) but we
+    // log + alert on failures so admin sees declined cards / fraud
+    // checks in real time rather than guessing why deposits stalled.
+    if (
+      eventType === "payment_intent.payment_failed" ||
+      eventType === "payment_intent.canceled"
+    ) {
+      await handlePaymentIntentFailureOrCancel(event, eventType);
+      return NextResponse.json({ received: true });
+    }
+
     if (eventType !== "checkout.session.completed") {
+      // Default branch: log unhandled types at info level so we can
+      // spot new event subscriptions that aren't wired up, without
+      // alerting on every benign event Stripe sends.
+      console.log(`[stripe-webhook] unhandled event type: ${eventType} (${eventId})`);
       return NextResponse.json({ received: true });
     }
 
@@ -341,6 +467,12 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Webhook processing error";
     console.error("[stripe-webhook] Error:", message);
+    // Fire an internal alert so admin sees webhook 5xx in real time —
+    // Stripe will retry for 72h, but during those 72h the deposit
+    // status, agreement state, etc. are stuck. Best-effort: no await
+    // on the alert wouldn't hurt, but await keeps the call ordered
+    // before the response (Vercel may freeze the function on return).
+    await sendInternalAlert(`[stripe-webhook] 5xx: ${message}`);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
