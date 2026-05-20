@@ -8,6 +8,14 @@ import {
   buildDiscoveryClientEmailScheduled,
   buildDiscoveryAdminEmail,
 } from "../lib/discoveryCallEmails";
+import {
+  renderAssetMissingNudge,
+  renderPreviewUnreviewedNudge,
+  renderRevisionWaitingOnStudioAdminNudge,
+  renderDepositInvoiceUnpaidNudge,
+  renderClientInactiveNudge,
+  renderPostLaunch30dNudge,
+} from "../lib/nudges/templates";
 import { type EmailLocale, t } from "../lib/i18n/emailStrings";
 
 // Structural regression tests for the non-auth customer email
@@ -211,6 +219,58 @@ const SCENARIOS: Scenario[] = [
         "Tuesday or Wednesday afternoon ET",
         "Wed May 27 · 2:00 PM ET",
       ),
+    }),
+  },
+
+  // ─── Nudges ──────────────────────────────────────────────────
+  {
+    id: "nudge:asset-missing",
+    render: (lang) => renderAssetMissingNudge({
+      recipientName: "Alice Martin",
+      workspaceUrl: "https://crecystudio.com/portal/test-portal-token",
+      lang,
+    }),
+  },
+  {
+    id: "nudge:preview-unreviewed",
+    render: (lang) => renderPreviewUnreviewedNudge({
+      recipientName: "Alice Martin",
+      workspaceUrl: "https://crecystudio.com/portal/test-portal-token",
+      lang,
+    }),
+  },
+  {
+    id: "nudge:deposit-unpaid",
+    render: (lang) => renderDepositInvoiceUnpaidNudge({
+      recipientName: "Alice Martin",
+      workspaceUrl: "https://crecystudio.com/portal/test-portal-token",
+      lang,
+    }),
+  },
+  {
+    id: "nudge:client-inactive",
+    render: (lang) => renderClientInactiveNudge({
+      recipientName: "Alice Martin",
+      workspaceUrl: "https://crecystudio.com/portal/test-portal-token",
+      lang,
+      pendingItems: ["a preview ready for your feedback"],
+    }),
+  },
+  {
+    id: "nudge:post-launch-30d",
+    render: (lang) => renderPostLaunch30dNudge({
+      recipientName: "Alice Martin",
+      workspaceUrl: "https://crecystudio.com/portal/test-portal-token",
+      lang,
+    }),
+  },
+  {
+    id: "nudge:revision-overdue-admin",
+    englishOnly: true,
+    render: (_lang) => renderRevisionWaitingOnStudioAdminNudge({
+      recipientName: "Alice Martin",
+      recipientEmail: "alice@example.com",
+      workspaceUrl: "https://crecystudio.com/portal/test-portal-token",
     }),
   },
 ];

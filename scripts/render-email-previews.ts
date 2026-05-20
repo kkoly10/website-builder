@@ -10,6 +10,14 @@ import {
   buildDiscoveryClientEmailScheduled,
   buildDiscoveryAdminEmail,
 } from "../lib/discoveryCallEmails";
+import {
+  renderAssetMissingNudge,
+  renderPreviewUnreviewedNudge,
+  renderRevisionWaitingOnStudioAdminNudge,
+  renderDepositInvoiceUnpaidNudge,
+  renderClientInactiveNudge,
+  renderPostLaunch30dNudge,
+} from "../lib/nudges/templates";
 import { type EmailLocale, t } from "../lib/i18n/emailStrings";
 
 // Renders every customer-facing email × locale combination to disk for
@@ -315,6 +323,100 @@ addPreview({
     "Tuesday or Wednesday afternoon ET",
     "Wed May 27 · 2:00 PM ET",
   ),
+});
+
+// ─── Nudges ────────────────────────────────────────────────────────
+const nudgeCtx = (lang: EmailLocale) => ({
+  recipientName: "Alice Martin",
+  workspaceUrl: "https://crecystudio.com/portal/test-portal-token",
+  lang,
+});
+
+for (const lang of LOCALES) {
+  const assetMissing = renderAssetMissingNudge(nudgeCtx(lang));
+  addPreview({
+    category: "nudges",
+    name: "asset-missing",
+    locale: lang,
+    label: "Asset missing after kickoff",
+    subject: assetMissing.subject,
+    html: assetMissing.html,
+  });
+
+  const previewUnreviewed = renderPreviewUnreviewedNudge(nudgeCtx(lang));
+  addPreview({
+    category: "nudges",
+    name: "preview-unreviewed",
+    locale: lang,
+    label: "Preview unreviewed (48h)",
+    subject: previewUnreviewed.subject,
+    html: previewUnreviewed.html,
+  });
+
+  const depositUnpaid = renderDepositInvoiceUnpaidNudge(nudgeCtx(lang));
+  addPreview({
+    category: "nudges",
+    name: "deposit-unpaid",
+    locale: lang,
+    label: "Deposit invoice unpaid",
+    subject: depositUnpaid.subject,
+    html: depositUnpaid.html,
+  });
+
+  const inactiveWithPending = renderClientInactiveNudge({
+    ...nudgeCtx(lang),
+    pendingItems: [
+      lang === "fr" ? "2 messages du studio vous attendent"
+        : lang === "es" ? "2 mensajes del estudio le esperan"
+        : "2 messages from the studio waiting on you",
+      lang === "fr" ? "un aperçu prêt pour votre retour"
+        : lang === "es" ? "una vista previa lista para su comentario"
+        : "a preview ready for your feedback",
+    ],
+  });
+  addPreview({
+    category: "nudges",
+    name: "client-inactive-with-pending",
+    locale: lang,
+    label: "Client inactive (with pending items)",
+    subject: inactiveWithPending.subject,
+    html: inactiveWithPending.html,
+  });
+
+  const inactiveGeneric = renderClientInactiveNudge({ ...nudgeCtx(lang), pendingItems: [] });
+  addPreview({
+    category: "nudges",
+    name: "client-inactive-generic",
+    locale: lang,
+    label: "Client inactive (no specific items)",
+    subject: inactiveGeneric.subject,
+    html: inactiveGeneric.html,
+  });
+
+  const postLaunch = renderPostLaunch30dNudge(nudgeCtx(lang));
+  addPreview({
+    category: "nudges",
+    name: "post-launch-30d",
+    locale: lang,
+    label: "30-day post-launch check-in",
+    subject: postLaunch.subject,
+    html: postLaunch.html,
+  });
+}
+
+// Admin-only nudge — English.
+const revisionOverdue = renderRevisionWaitingOnStudioAdminNudge({
+  recipientName: "Alice Martin",
+  recipientEmail: "alice@example.com",
+  workspaceUrl: "https://crecystudio.com/portal/test-portal-token",
+});
+addPreview({
+  category: "nudges",
+  name: "revision-overdue-admin",
+  locale: "en",
+  label: "Revision overdue (admin alert)",
+  subject: revisionOverdue.subject,
+  html: revisionOverdue.html,
 });
 
 // ─── Write to disk + build index ──────────────────────────────────
