@@ -17,20 +17,41 @@ const COLORS = {
 // Inter Tight is the site's display font (app/globals.css line 22). Fetching
 // at render time avoids dragging webpack/turbopack config in to bundle a
 // TTF; Vercel caches the rendered PNG so this fetch only runs on first
-// generation per (locale, headline) pair.
+// generation per (locale, headline) pair. Inside a warm container we cache
+// the buffer in module scope so repeat renders skip the fetch entirely.
+const fontCache: Partial<Record<400 | 700, ArrayBuffer>> = {};
+
 async function loadInterTight(weight: 400 | 700): Promise<ArrayBuffer> {
+  if (fontCache[weight]) return fontCache[weight]!;
+
+  // Older UA forces Google Fonts to serve TTF rather than WOFF2 — Satori's
+  // WOFF2 support is version-dependent and silently falling back to "no
+  // font found" produces a blank-looking OG card. TTF is universally safe.
   const css = await fetch(
-    `https://fonts.googleapis.com/css2?family=Inter+Tight:wght@${weight}`,
-    { headers: { "User-Agent": "Mozilla/5.0" } }
+    `https://fonts.googleapis.com/css2?family=Inter+Tight:wght@${weight}&display=swap`,
+    {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/26.0.1410.65 Safari/537.36",
+      },
+    }
   ).then((r) => r.text());
 
-  const match = css.match(/src:\s*url\(([^)]+)\)\s*format\('(opentype|truetype|woff2?)'\)/);
-  if (!match) {
+  // Prefer truetype/opentype URLs over woff/woff2 in case the CSS still
+  // contains multiple formats. Walk all `src: url(...) format('...')`
+  // declarations and pick the first ttf/otf.
+  const sources = [...css.matchAll(/src:\s*url\(([^)]+)\)\s*format\('([^']+)'\)/g)];
+  const preferred =
+    sources.find(([, , fmt]) => fmt === "truetype" || fmt === "opentype") ?? sources[0];
+  if (!preferred) {
     throw new Error(`Failed to parse Inter Tight ${weight} from Google Fonts CSS`);
   }
-  const res = await fetch(match[1]);
+
+  const res = await fetch(preferred[1]);
   if (!res.ok) throw new Error(`Failed to fetch Inter Tight ${weight}: ${res.status}`);
-  return res.arrayBuffer();
+  const buffer = await res.arrayBuffer();
+  fontCache[weight] = buffer;
+  return buffer;
 }
 
 export async function renderOgImage(opts: {
