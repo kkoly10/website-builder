@@ -9,6 +9,13 @@
     "openMenu": "Open navigation menu",
     "login": "Log in"
   },
+  "consent": {
+    "title": "We use cookies",
+    "body": "We use a single analytics cookie to understand site traffic. No advertising, no cross-site tracking. You can decline without losing any functionality.",
+    "learnMore": "Privacy policy",
+    "accept": "Accept",
+    "decline": "Decline"
+  },
   "nav": {
     "websites": "Websites",
     "ecommerce": "E-commerce",
@@ -625,7 +632,11 @@
     "ccpaHeading": "California residents (CCPA)",
     "ccpaBody": "We do not sell or share personal information as defined under the CCPA. California residents may request disclosure of the categories of data we hold or ask for deletion by emailing hello@crecystudio.com.",
     "contactHeading": "Questions about this policy",
-    "contactBody": "Email"
+    "contactBody": "Email",
+    "sp5": "Google Calendar — discovery call scheduling (United States)",
+    "sp6": "Sentry — error monitoring (United States)",
+    "selfServiceHeading": "Self-service privacy controls",
+    "selfServiceBody": "Logged-in clients can download a copy of their data or delete their account at any time from account settings. Data export returns a JSON file; account deletion anonymizes records we are required to retain (invoices, tax records) and removes everything else."
   },
   "terms": {
     "metaTitle": "Terms of Service | CrecyStudio",

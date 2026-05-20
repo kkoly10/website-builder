@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import "./globals.css";
 import SiteFooter from "@/components/site/SiteFooter";
 import TopNav from "@/components/site/TopNav";
+import CookieConsentBanner from "@/components/site/CookieConsentBanner";
 import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 import { routing } from "@/i18n/routing";
 
@@ -123,6 +124,7 @@ export default async function RootLayout({
 
             <SiteFooter />
           </div>
+          <CookieConsentBanner />
         </NextIntlClientProvider>
       </body>
     </html>

@@ -82,7 +82,14 @@ function PrivacyContent() {
                   <li>{t("sp2")}</li>
                   <li>{t("sp3")}</li>
                   <li>{t("sp4")}</li>
+                  <li>{t("sp5")}</li>
+                  <li>{t("sp6")}</li>
                 </ul>
+              </section>
+
+              <section className={styles.proseSection}>
+                <h2>{t("selfServiceHeading")}</h2>
+                <p>{t("selfServiceBody")}</p>
               </section>
 
               <section className={styles.proseSection}>

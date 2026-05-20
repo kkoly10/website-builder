@@ -1,5 +1,7 @@
 "use client";
 
+import { hasAnalyticsConsent } from "@/lib/consent";
+
 type EventPayload = {
   event: string;
   page?: string;
@@ -8,6 +10,12 @@ type EventPayload = {
 
 export function trackEvent(payload: EventPayload) {
   if (typeof window === "undefined") return;
+
+  // GDPR gate: never fire before the user accepts the cookie banner.
+  // Banner stores choice in a "cc" cookie (lib/consent.ts); absent or
+  // "declined" → return silently. Declined users browse normally; they
+  // just don't show up in analytics.
+  if (!hasAnalyticsConsent()) return;
 
   const body = JSON.stringify({
     event: payload.event,
