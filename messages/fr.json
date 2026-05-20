@@ -1,6 +1,7 @@
 {
   "common": {
     "siteName": "CrecyStudio",
+    "home": "Accueil",
     "skipToMain": "Aller au contenu principal",
     "openPortal": "Ouvrir le portail",
     "signOut": "Se déconnecter",
