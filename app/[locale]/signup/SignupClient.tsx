@@ -3,7 +3,7 @@
 import { Link } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState, type FormEvent } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { safeNextPathOr } from "@/lib/redirects";
@@ -14,6 +14,7 @@ export default function SignupClient() {
   const router = useRouter();
   const t = useTranslations("auth");
   const tSignup = useTranslations("auth.signup");
+  const locale = useLocale();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,6 +37,10 @@ export default function SignupClient() {
         email: email.trim(),
         password,
         options: {
+          // Stash the current locale on the user so the Send Email
+          // Hook can translate the confirm email. New signups don't
+          // have a leads row yet, so this is the only signal we get.
+          data: { locale },
           emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
         },
       });
