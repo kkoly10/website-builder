@@ -47,6 +47,18 @@ export const UNSUBSCRIBE_EMAIL =
 // improves inbox placement (Gmail/Outlook reward consistent footers).
 const MAILING_ADDRESS = process.env.MAILING_ADDRESS_LINE || "[CrecyStudio mailing address — set MAILING_ADDRESS_LINE]";
 
+// Boot-time visibility: same rationale as the FROM_EMAIL warning above.
+// CAN-SPAM enforcement only triggers on marketing-adjacent sends (the
+// nudges engine and post_launch_30d), but a placeholder address in
+// even one outbound email is a credibility problem we want to surface
+// the moment the deploy boots, not after a real customer notices.
+if (process.env.NODE_ENV === "production" && !process.env.MAILING_ADDRESS_LINE) {
+  console.warn(
+    "[emailHelpers] MAILING_ADDRESS_LINE is not set. Emails will render a placeholder " +
+      "in the CAN-SPAM footer line. Set this before the next marketing-adjacent send.",
+  );
+}
+
 // Single source of truth for "what is the absolute origin to use when
 // building portal / workspace links inside transactional emails?".
 // Prefers APP_BASE_URL (server-only override for staging/preview) and
@@ -123,34 +135,67 @@ export function emailWrap(
     ? ` &middot; <a href="${escHtml(opts.unsubscribeUrl)}" style="color:#aaaaaa;text-decoration:underline">${escHtml(t("common.footer.unsubscribe", lang))}</a>`
     : "";
 
-  // Dark-mode media queries: Apple Mail (macOS/iOS), Outlook 2019+ for
-  // Mac, and Thunderbird honor prefers-color-scheme. Gmail strips media
-  // queries on most clients but at least respects the meta hints below.
-  // We invert the wrapper greys, keep the brand black header readable,
-  // and force CTA text to stay white on the black button.
+  // Dark-mode coverage by client:
+  //
+  //   - @media (prefers-color-scheme: dark)   → Apple Mail (macOS/iOS),
+  //     Outlook 2019+ for Mac, Thunderbird, Outlook iOS/Android, new
+  //     Outlook web. Gmail strips media queries on most renderers.
+  //
+  //   - [data-ogsc] / [data-ogsb]             → Outlook 365 on Windows
+  //     and Outlook web when the user has "force dark" enabled. Outlook
+  //     adds these attributes to elements during its color-inversion
+  //     pass, which means we can target them to pin colors back to the
+  //     palette we want instead of accepting Outlook's auto-inversion
+  //     (which leaves the CTA washed out and the card oddly tinted).
+  //
+  // Both rule sets share the same target palette so the email reads
+  // identically whichever path the client takes.
+  const darkModeBlock = `
+    body, .body-bg { background:#0f0f0f !important; }
+    .card { background:#1a1a1a !important; border-color:#2a2a2a !important; }
+    .card-body { color:#e8e8e8 !important; }
+    .card-body p, .card-body td { color:#cccccc !important; }
+    .card-body h1, .card-body h2 { color:#ffffff !important; }
+    .card-body strong { color:#ffffff !important; }
+    .card-footer { background:#141414 !important; border-color:#2a2a2a !important; }
+    .footer-text, .footer-text a { color:#888888 !important; }
+    .callout { background:#141414 !important; border-color:#ffffff !important; }
+    .callout p { color:#cccccc !important; }
+    .row-label { color:#888888 !important; }
+    .row-value { color:#e8e8e8 !important; }
+    .sig-name { color:#ffffff !important; }
+    .sig-role { color:#999999 !important; }
+    /* CTA: brand black-on-white in light mode would disappear into
+       the dark card body, so invert to white-on-black. Targets both
+       the wrapping td (Outlook reads background here) and the inner
+       <a> (everywhere else). */
+    .cta-button { background:#ffffff !important; }
+    .cta-button a { background:#ffffff !important; color:#111111 !important; }
+  `;
   const darkModeCss = `
     @media (prefers-color-scheme: dark) {
-      body, .body-bg { background:#0f0f0f !important; }
-      .card { background:#1a1a1a !important; border-color:#2a2a2a !important; }
-      .card-body { color:#e8e8e8 !important; }
-      .card-body p, .card-body td { color:#cccccc !important; }
-      .card-body h1, .card-body h2 { color:#ffffff !important; }
-      .card-body strong { color:#ffffff !important; }
-      .card-footer { background:#141414 !important; border-color:#2a2a2a !important; }
-      .footer-text, .footer-text a { color:#888888 !important; }
-      .callout { background:#141414 !important; border-color:#ffffff !important; }
-      .callout p { color:#cccccc !important; }
-      .row-label { color:#888888 !important; }
-      .row-value { color:#e8e8e8 !important; }
-      .sig-name { color:#ffffff !important; }
-      .sig-role { color:#999999 !important; }
-      /* CTA: brand black-on-white in light mode would disappear into
-         the dark card body, so invert to white-on-black. Targets both
-         the wrapping td (Outlook reads background here) and the inner
-         <a> (everywhere else). */
-      .cta-button { background:#ffffff !important; }
-      .cta-button a { background:#ffffff !important; color:#111111 !important; }
+      ${darkModeBlock}
     }
+    [data-ogsc] .body-bg { background:#0f0f0f !important; }
+    [data-ogsc] .card { background:#1a1a1a !important; border-color:#2a2a2a !important; }
+    [data-ogsc] .card-body { color:#e8e8e8 !important; }
+    [data-ogsc] .card-body p, [data-ogsc] .card-body td { color:#cccccc !important; }
+    [data-ogsc] .card-body h1, [data-ogsc] .card-body h2 { color:#ffffff !important; }
+    [data-ogsc] .card-body strong { color:#ffffff !important; }
+    [data-ogsc] .card-footer { background:#141414 !important; border-color:#2a2a2a !important; }
+    [data-ogsc] .footer-text, [data-ogsc] .footer-text a { color:#888888 !important; }
+    [data-ogsc] .callout { background:#141414 !important; border-color:#ffffff !important; }
+    [data-ogsc] .callout p { color:#cccccc !important; }
+    [data-ogsc] .row-label { color:#888888 !important; }
+    [data-ogsc] .row-value { color:#e8e8e8 !important; }
+    [data-ogsc] .sig-name { color:#ffffff !important; }
+    [data-ogsc] .sig-role { color:#999999 !important; }
+    [data-ogsc] .cta-button { background:#ffffff !important; }
+    [data-ogsc] .cta-button a { background:#ffffff !important; color:#111111 !important; }
+    [data-ogsb] .body-bg { background:#0f0f0f !important; }
+    [data-ogsb] .card { background:#1a1a1a !important; }
+    [data-ogsb] .card-footer { background:#141414 !important; }
+    [data-ogsb] .cta-button { background:#ffffff !important; }
   `;
 
   return `<!DOCTYPE html>
@@ -273,9 +318,13 @@ export function sig(lang: EmailLocale = "en"): string {
   return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:28px 0 0">
     <tr>
       <td style="padding-right:14px;vertical-align:top">
-        <img src="${photoUrl}" alt="KK" width="48" height="48" style="display:block;border:0;outline:none;text-decoration:none;border-radius:50%;background:#222222;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;text-align:center;line-height:48px">
+        <img src="${photoUrl}" alt="KK" aria-hidden="true" width="48" height="48" style="display:block;border:0;outline:none;text-decoration:none;border-radius:50%;background:#222222;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;text-align:center;line-height:48px">
       </td>
       <td style="vertical-align:top">
+        <!-- The photo above is marked aria-hidden so screen readers
+             skip "KK" (the image-blocked visual fallback) and
+             announce just the name + role from this td. The visual
+             experience is unchanged. -->
         <p class="sig-name" style="margin:0 0 2px;font-size:14px;font-weight:bold;color:#111111;font-family:Arial,Helvetica,sans-serif">Komlan Kouhiko</p>
         <p class="sig-role" style="margin:0 0 6px;font-size:13px;color:#888888;font-family:Arial,Helvetica,sans-serif">${escHtml(t("common.signature.role", lang))}</p>
         <a href="${LINKEDIN_URL}" style="font-size:12px;color:#0077b5;text-decoration:none;font-family:Arial,Helvetica,sans-serif">LinkedIn &#x2192;</a>
