@@ -5,8 +5,9 @@ import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/
 import { recordServerEvent } from "@/lib/analytics/server";
 import { maybeAttachQuoteToUser, resolveQuoteAccess, sameNormalizedEmail } from "@/lib/accessControl";
 import { pickPreferredLocale } from "@/lib/preferredLocale";
-import { emailWrap, adminTable, ctaButton, adminBadge, escHtml, appBaseUrl, FROM_EMAIL, ADMIN_EMAIL } from "@/lib/emailHelpers";
+import { appBaseUrl, FROM_EMAIL, ADMIN_EMAIL } from "@/lib/emailHelpers";
 import { sendResendEmail } from "@/lib/resend";
+import { renderScopeCallAdminEmail } from "@/lib/scopeCallEmails";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -111,29 +112,23 @@ export async function POST(req: Request) {
     await supabaseAdmin.from("quotes").update({ status: "call_requested" }).eq("id", quoteId);
 
     if (FROM_EMAIL && ADMIN_EMAIL) {
-      const internalLink = `${appBaseUrl()}/internal/preview?quoteId=${quoteId}`;
-      // Subject drops the customer email to keep PII out of lock-screen
-      // notifications. The full email is in the body row + the
-      // "Reply-To" target is one click away.
-      const subject = `Scope call requested — ${leadName || "(no name)"} — ${quoteId.slice(0, 8)}`;
-
-      const rows: [string, string][] = [
-        ["Name", escHtml(leadName || "—")],
-        ["Email", `<a href="mailto:${escHtml(leadEmail)}" style="color:#111">${escHtml(leadEmail)}</a>${leadPhone ? ` &middot; ${escHtml(leadPhone)}` : ""}`],
-        ["Estimate", `$${Number(quote.estimate_total || 0)} &middot; ${escHtml(String(quote.tier_recommended ?? "—"))}`],
-        ...(bestTimeToCall ? [["Best time", escHtml(bestTimeToCall)] as [string, string]] : []),
-        ...(preferredTimes ? [["Preferred times", escHtml(preferredTimes)] as [string, string]] : []),
-        ...(timezone ? [["Timezone", escHtml(timezone)] as [string, string]] : []),
-        ...(notes ? [["Notes", escHtml(notes).replace(/\n/g, "<br/>")] as [string, string]] : []),
-        ["Quote ID", `<span style="font-family:monospace;font-size:12px;color:#888">${escHtml(quoteId)}</span>`],
-      ];
-
-      const html = emailWrap(`
-        ${adminBadge("Scope call request")}
-        <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">New scope call request</h1>
-        ${adminTable(rows)}
-        ${internalLink ? ctaButton(internalLink, "Open internal preview") : ""}
-      `);
+      // Render via shared helper so the preview generator + Playwright
+      // spec exercise the same code path. Subject drops the customer
+      // email to keep PII out of lock-screen notifications; the full
+      // address is in the body row + Reply-To is one click away.
+      const { subject, html } = renderScopeCallAdminEmail({
+        leadName,
+        leadEmail,
+        leadPhone,
+        quoteId,
+        estimateTotal: Number(quote.estimate_total || 0),
+        tierRecommended: String(quote.tier_recommended ?? "—"),
+        bestTimeToCall: bestTimeToCall || null,
+        preferredTimes: preferredTimes || null,
+        timezone: timezone || null,
+        notes: notes || null,
+        internalLink: `${appBaseUrl()}/internal/preview?quoteId=${quoteId}`,
+      });
 
       // Use the shared sendResendEmail helper for retry logic + base64
       // attachment encoding consistency. The previous raw fetch lost

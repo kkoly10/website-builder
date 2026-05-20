@@ -16,6 +16,7 @@ import {
   renderClientInactiveNudge,
   renderPostLaunch30dNudge,
 } from "../lib/nudges/templates";
+import { renderScopeCallAdminEmail } from "../lib/scopeCallEmails";
 import { type EmailLocale, t } from "../lib/i18n/emailStrings";
 
 // Structural regression tests for the non-auth customer email
@@ -271,6 +272,25 @@ const SCENARIOS: Scenario[] = [
       recipientName: "Alice Martin",
       recipientEmail: "alice@example.com",
       workspaceUrl: "https://crecystudio.com/portal/test-portal-token",
+    }),
+  },
+
+  // ─── Scope-call admin alert ──────────────────────────────────
+  {
+    id: "scope-call:admin-alert",
+    englishOnly: true,
+    render: (_lang) => renderScopeCallAdminEmail({
+      leadName: "Alice Martin",
+      leadEmail: "alice@example.com",
+      leadPhone: "+1 555 0100",
+      quoteId: "11111111-aaaa-bbbb-cccc-222222222222",
+      estimateTotal: 12000,
+      tierRecommended: "Premium",
+      bestTimeToCall: "Weekdays after 2pm ET",
+      preferredTimes: "Tue, Wed",
+      timezone: "America/New_York",
+      notes: "We're targeting a Q3 launch. Need clarity on integrations.",
+      internalLink: "https://crecystudio.com/internal/preview?quoteId=11111111",
     }),
   },
 ];

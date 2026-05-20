@@ -1,6 +1,7 @@
 import { sendResendEmail } from "@/lib/resend";
 import { emailWrap, ctaButton, adminTable, callout, sig, escHtml, adminBadge, FROM_EMAIL, ADMIN_EMAIL, UNSUBSCRIBE_EMAIL } from "@/lib/emailHelpers";
 import { type EmailLocale, normalizeEmailLocale, t, greeting, laneLabel, invoiceTypeLabel } from "@/lib/i18n/emailStrings";
+import { renderPostLaunch30dNudge } from "@/lib/nudges/templates";
 import { captureBackgroundError } from "@/lib/sentry";
 
 export type EventContext = {
@@ -307,29 +308,23 @@ const templates: Record<string, (ctx: EventContext, lang: EmailLocale) => Templa
   }),
 
   // ─── Client-facing: 30-day post-launch check-in ───────────────
-  post_launch_30d: (ctx, lang) => ({
-    subject: t("post_launch_30d.subject", lang),
-    html: emailWrap(`
-      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("post_launch_30d.headline", lang))}</h1>
-      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("post_launch_30d.eyebrow", lang))}</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("post_launch_30d.body_intro", lang))}</p>
-      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("post_launch_30d.body_offer", lang))}</p>
-      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, t("post_launch_30d.cta", lang)) : ""}
-      ${sig(lang)}
-    `, {
-      footerNote: t("common.footer.reply_note", lang),
-      preheader: t("post_launch_30d.preheader", lang),
+  // Both the nudge engine (on a 30-day timer) and ad-hoc event
+  // triggers fire the same email — delegate to the shared renderer
+  // in lib/nudges/templates.ts so the two paths can't drift.
+  post_launch_30d: (ctx, lang) => {
+    const rendered = renderPostLaunch30dNudge({
+      recipientName: ctx.leadName,
+      workspaceUrl: ctx.workspaceUrl || "",
       lang,
-      // Soft pitch — flag as marketing-adjacent so the footer shows the
-      // unsubscribe-equivalent line. Workspace URL doubles as a
-      // preferences surface (clients can mute nudges there in future).
-      unsubscribeUrl: ctx.workspaceUrl,
-    }),
-    toClient: true,
-    toAdmin: false,
-    marketing: true,
-  }),
+    });
+    return {
+      subject: rendered.subject,
+      html: rendered.html,
+      toClient: true,
+      toAdmin: false,
+      marketing: true,
+    };
+  },
 
   // ─── Admin-only events (English) ──────────────────────────────
   revision_submitted: (ctx) => ({

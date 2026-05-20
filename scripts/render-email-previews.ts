@@ -18,6 +18,7 @@ import {
   renderClientInactiveNudge,
   renderPostLaunch30dNudge,
 } from "../lib/nudges/templates";
+import { renderScopeCallAdminEmail } from "../lib/scopeCallEmails";
 import { type EmailLocale, t } from "../lib/i18n/emailStrings";
 
 // Renders every customer-facing email × locale combination to disk for
@@ -417,6 +418,29 @@ addPreview({
   label: "Revision overdue (admin alert)",
   subject: revisionOverdue.subject,
   html: revisionOverdue.html,
+});
+
+// ─── Scope-call admin alert (English-only) ────────────────────────
+const scopeCallAdmin = renderScopeCallAdminEmail({
+  leadName: "Alice Martin",
+  leadEmail: "alice@example.com",
+  leadPhone: "+1 555 0100",
+  quoteId: "11111111-aaaa-bbbb-cccc-222222222222",
+  estimateTotal: 12000,
+  tierRecommended: "Premium",
+  bestTimeToCall: "Weekdays after 2pm ET",
+  preferredTimes: "Tue, Wed",
+  timezone: "America/New_York",
+  notes: "We're targeting a Q3 launch. Need clarity on integrations.",
+  internalLink: "https://crecystudio.com/internal/preview?quoteId=11111111",
+});
+addPreview({
+  category: "scope-call",
+  name: "admin-alert",
+  locale: "en",
+  label: "Scope call request (admin alert)",
+  subject: scopeCallAdmin.subject,
+  html: scopeCallAdmin.html,
 });
 
 // ─── Write to disk + build index ──────────────────────────────────
