@@ -71,6 +71,7 @@ export default async function FleikoPage({
       headline: tCase("title"),
       description: tCase("metaDescription"),
       datePublished: FLEIKO_PUBLISHED_AT,
+      inLanguage: locale,
     }),
     breadcrumbListNode([
       { name: tCommon("home"), url: localePrefix || "/" },

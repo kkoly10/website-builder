@@ -100,6 +100,11 @@ export function articleNode(opts: {
   datePublished: string;
   dateModified?: string;
   image?: string;
+  // BCP-47 language tag matching the page's <html lang>. Defaults to "en"
+  // for backwards compat with the original caller; callers on /fr or /es
+  // pages must pass their locale so Google doesn't see mixed signals
+  // (Article claiming English while the page lang says fr).
+  inLanguage?: string;
 }): GraphNode {
   return {
     "@type": "Article",
@@ -110,7 +115,7 @@ export function articleNode(opts: {
     dateModified: opts.dateModified ?? opts.datePublished,
     author: { "@id": FOUNDER_ID },
     publisher: { "@id": ORG_ID },
-    inLanguage: "en",
+    inLanguage: opts.inLanguage ?? "en",
     ...(opts.image && { image: absoluteUrl(opts.image) }),
   };
 }

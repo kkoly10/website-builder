@@ -55,6 +55,7 @@ export default async function TechDeskPage({
       headline: tCase("title"),
       description: tCase("metaDescription"),
       datePublished: TECHDESK_PUBLISHED_AT,
+      inLanguage: locale,
     }),
     breadcrumbListNode([
       { name: tCommon("home"), url: localePrefix || "/" },

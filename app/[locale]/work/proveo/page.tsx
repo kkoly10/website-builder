@@ -54,6 +54,7 @@ export default async function ProveoPage({
       headline: tCase("title"),
       description: tCase("metaDescription"),
       datePublished: PROVEO_PUBLISHED_AT,
+      inLanguage: locale,
     }),
     breadcrumbListNode([
       { name: tCommon("home"), url: localePrefix || "/" },
