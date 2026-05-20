@@ -27,6 +27,7 @@ import {
   updateRequiredActionStatusByPortalId,
   type RequiredAction,
 } from "@/lib/requiredActions";
+import { sendEventNotification } from "@/lib/notifications";
 
 type AnyObj = Record<string, any>;
 type CustomerPortalMilestoneInput = {
@@ -2261,7 +2262,57 @@ export async function submitRevisionByPortalToken(input: {
     clientVisible: true,
   });
 
+  // Fire-and-forget client-facing acknowledgment ("we got your
+  // revision, Komlan responds within 24h"). The admin-side revision
+  // notification is fired separately by the route that wraps this.
+  notifyRevisionReceived({
+    quoteId: cleanString((portal as AnyObj).quote_id),
+    portalToken: cleanString((portal as AnyObj).access_token),
+  }).catch((err) => console.error("[customerPortal] revision_received email failed:", err));
+
   return data;
+}
+
+async function notifyRevisionReceived(args: { quoteId: string; portalToken: string }) {
+  if (!args.quoteId) return;
+  const { data: quote } = await supabaseAdmin
+    .from("quotes")
+    .select("id, lead_id, lead_email, project_type")
+    .eq("id", args.quoteId)
+    .maybeSingle();
+  if (!quote) return;
+
+  let leadEmail = cleanString((quote as AnyObj).lead_email);
+  let leadName = "";
+  let preferredLocale: string | null = null;
+  if ((quote as AnyObj).lead_id) {
+    const { data: lead } = await supabaseAdmin
+      .from("leads")
+      .select("email, name, preferred_locale")
+      .eq("id", (quote as AnyObj).lead_id)
+      .maybeSingle();
+    if (lead) {
+      leadEmail = leadEmail || cleanString((lead as AnyObj).email);
+      leadName = cleanString((lead as AnyObj).name);
+      preferredLocale = cleanString((lead as AnyObj).preferred_locale) || null;
+    }
+  }
+  if (!leadEmail || !leadEmail.includes("@")) return;
+
+  const baseUrl = (process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com").trim().replace(/\/$/, "");
+  const workspaceUrl = args.portalToken
+    ? `${baseUrl}/portal/${encodeURIComponent(args.portalToken)}`
+    : baseUrl;
+
+  await sendEventNotification({
+    event: "revision_received",
+    quoteId: args.quoteId,
+    leadName,
+    leadEmail,
+    workspaceUrl,
+    projectType: cleanString((quote as AnyObj).project_type) || undefined,
+    lang: preferredLocale || undefined,
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -2883,6 +2934,11 @@ export async function markDepositPaidForQuoteId(
 ) {
   const portal = await ensureCustomerPortalForQuoteId(quoteId);
 
+  // Idempotency check: Stripe webhook + the success-page redirect can
+  // both call this for the same payment. Skip the client kickoff email
+  // (and double activity log) on the second call.
+  const wasAlreadyPaid = cleanString((portal as AnyObj).deposit_status).toLowerCase() === "paid";
+
   const paidAt = safeDate(paymentData?.paidAt) || new Date().toISOString();
   const amountCents =
     Number(paymentData?.amountCents ?? portal.deposit_amount_cents ?? 0) || null;
@@ -2913,16 +2969,74 @@ export async function markDepositPaidForQuoteId(
 
   if (quoteError) throw quoteError;
 
-  await logProjectActivityByQuoteId({
-    quoteId,
-    actorRole: "system",
-    eventType: "deposit_paid",
-    summary: "Deposit payment was recorded.",
-    payload: {
-      amountCents,
-      reference: cleanString(paymentData?.reference) || null,
-    },
-    clientVisible: true,
+  if (!wasAlreadyPaid) {
+    await logProjectActivityByQuoteId({
+      quoteId,
+      actorRole: "system",
+      eventType: "deposit_paid",
+      summary: "Deposit payment was recorded.",
+      payload: {
+        amountCents,
+        reference: cleanString(paymentData?.reference) || null,
+      },
+      clientVisible: true,
+    });
+
+    // Fire-and-forget client kickoff email. Failure logged but doesn't
+    // block the deposit-paid path — the activity log above is the
+    // source of truth for "deposit was recorded".
+    notifyDepositReceived({
+      quoteId,
+      portalToken: cleanString((portal as AnyObj).access_token),
+      depositCents: amountCents,
+    }).catch((err) => console.error("[customerPortal] deposit_received email failed:", err));
+  }
+}
+
+async function notifyDepositReceived(args: {
+  quoteId: string;
+  portalToken: string;
+  depositCents: number | null;
+}) {
+  const { data: quote } = await supabaseAdmin
+    .from("quotes")
+    .select("id, lead_id, lead_email, project_type")
+    .eq("id", args.quoteId)
+    .maybeSingle();
+  if (!quote) return;
+
+  let leadEmail = cleanString((quote as AnyObj).lead_email);
+  let leadName = "";
+  let preferredLocale: string | null = null;
+  if ((quote as AnyObj).lead_id) {
+    const { data: lead } = await supabaseAdmin
+      .from("leads")
+      .select("email, name, preferred_locale")
+      .eq("id", (quote as AnyObj).lead_id)
+      .maybeSingle();
+    if (lead) {
+      leadEmail = leadEmail || cleanString((lead as AnyObj).email);
+      leadName = cleanString((lead as AnyObj).name);
+      preferredLocale = cleanString((lead as AnyObj).preferred_locale) || null;
+    }
+  }
+  if (!leadEmail || !leadEmail.includes("@")) return;
+
+  const baseUrl = (process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com").trim().replace(/\/$/, "");
+  const workspaceUrl = args.portalToken
+    ? `${baseUrl}/portal/${encodeURIComponent(args.portalToken)}`
+    : baseUrl;
+  const depositDollars = args.depositCents != null ? args.depositCents / 100 : undefined;
+
+  await sendEventNotification({
+    event: "deposit_received",
+    quoteId: args.quoteId,
+    leadName,
+    leadEmail,
+    workspaceUrl,
+    projectType: cleanString((quote as AnyObj).project_type) || undefined,
+    depositAmount: depositDollars,
+    lang: preferredLocale || undefined,
   });
 }
 

@@ -267,6 +267,20 @@ export async function POST(req: NextRequest) {
     });
 
     if (senderRole === "studio" && result.ok) {
+      // Best-effort locale lookup. The portal view doesn't expose
+      // preferred_locale, so we query the leads table directly to
+      // pick the right translation. Falls through to English on error.
+      let leadLocale: string | null = null;
+      const recipientEmail = String(result.data.lead.email || "").trim().toLowerCase();
+      if (recipientEmail) {
+        const localeRes = await supabaseAdmin
+          .from("leads")
+          .select("preferred_locale")
+          .eq("email", recipientEmail)
+          .maybeSingle();
+        leadLocale = (localeRes.data?.preferred_locale as string | undefined) || null;
+      }
+
       sendPortalMessageNotification({
         senderRole,
         senderName: "CrecyStudio",
@@ -275,6 +289,7 @@ export async function POST(req: NextRequest) {
         portalToken: result.data.quote.publicToken,
         leadName: result.data.lead.name,
         leadEmail: result.data.lead.email,
+        leadLocale,
         attachmentName: attachment?.attachmentName || null,
       }).catch((err) => {
         console.error("[admin/messages] notification error:", err);

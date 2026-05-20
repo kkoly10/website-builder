@@ -1,18 +1,11 @@
 import { sendResendEmail } from "@/lib/resend";
 import { logProjectActivityByPortalId } from "@/lib/projectActivity";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { emailWrap, ctaButton, callout, sig, adminBadge, adminTable, escHtml, nameFromEmail } from "@/lib/emailHelpers";
-
-const FROM_EMAIL =
-  process.env.NOTIFICATION_FROM_EMAIL ||
-  process.env.RESEND_FROM_EMAIL ||
-  "studio@10xwebsites.com";
-const ADMIN_EMAIL =
-  process.env.ADMIN_NOTIFICATION_EMAIL || process.env.ALERT_TO_EMAIL || "";
+import { emailWrap, ctaButton, callout, sig, adminBadge, adminTable, escHtml, nameFromEmail, FROM_EMAIL, ADMIN_EMAIL } from "@/lib/emailHelpers";
+import { type EmailLocale, normalizeEmailLocale, t } from "@/lib/i18n/emailStrings";
 
 type PortalRow = Record<string, any>;
 type QuoteRow = Record<string, any>;
-type LeadRow = Record<string, any>;
 
 function str(value: unknown, fallback = "") {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
@@ -38,7 +31,7 @@ function hoursSince(value: unknown) {
 }
 
 
-function getPendingItems(portal: PortalRow, messages: any[]): string[] {
+function getPendingItems(portal: PortalRow, messages: any[], lang: EmailLocale): string[] {
   const items: string[] = [];
   const lastSeenMs = portal.last_client_seen_at
     ? new Date(str(portal.last_client_seen_at)).getTime()
@@ -50,9 +43,17 @@ function getPendingItems(portal: PortalRow, messages: any[]): string[] {
       new Date(str(m.created_at)).getTime() > lastSeenMs
   );
   if (unreadFromStudio.length === 1) {
-    items.push("1 message from the studio waiting on you");
+    items.push(
+      lang === "fr" ? "1 message du studio vous attend"
+      : lang === "es" ? "1 mensaje del estudio le espera"
+      : "1 message from the studio waiting on you"
+    );
   } else if (unreadFromStudio.length > 1) {
-    items.push(`${unreadFromStudio.length} messages from the studio waiting on you`);
+    items.push(
+      lang === "fr" ? `${unreadFromStudio.length} messages du studio vous attendent`
+      : lang === "es" ? `${unreadFromStudio.length} mensajes del estudio le esperan`
+      : `${unreadFromStudio.length} messages from the studio waiting on you`
+    );
   }
 
   if (
@@ -62,7 +63,11 @@ function getPendingItems(portal: PortalRow, messages: any[]): string[] {
       new Date(str(portal.preview_viewed_at)).getTime() <
         new Date(str(portal.preview_updated_at)).getTime())
   ) {
-    items.push("a preview ready for your feedback");
+    items.push(
+      lang === "fr" ? "un aperçu prêt pour votre retour"
+      : lang === "es" ? "una vista previa lista para su comentario"
+      : "a preview ready for your feedback"
+    );
   }
 
   return items;
@@ -119,14 +124,14 @@ async function sendNudgeEmail(args: {
 
 export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
   const baseUrl = ensureBaseUrl(args?.baseUrl);
-  const [portalsRes, quotesRes, assetsRes, revisionsRes, messagesRes, invoicesRes, logsRes] =
+  const [portalsRes, quotesRes, assetsRes, revisionsRes, messagesRes, invoicesRes, logsRes, activityRes] =
     await Promise.all([
       supabaseAdmin
         .from("customer_portal_projects")
         .select(
           "id, quote_id, access_token, client_status, launch_status, deposit_paid_at, preview_url, preview_updated_at, preview_viewed_at, last_client_seen_at"
         ),
-      supabaseAdmin.from("quotes").select("id, status, lead_id, lead_email"),
+      supabaseAdmin.from("quotes").select("id, status, lead_id, lead_email, project_type"),
       supabaseAdmin.from("customer_portal_assets").select("portal_project_id, created_at"),
       supabaseAdmin.from("customer_portal_revisions").select("id, portal_project_id, created_at"),
       supabaseAdmin
@@ -136,6 +141,13 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
         .from("project_invoices")
         .select("id, portal_project_id, invoice_type, status, created_at, updated_at"),
       supabaseAdmin.from("nudge_log").select("portal_project_id, rule_id, context_key"),
+      // site_live activity rows feed the post_launch_30d rule. We can't
+      // use customer_portal_projects.updated_at as a launch timestamp
+      // because that column changes on every edit.
+      supabaseAdmin
+        .from("project_activity")
+        .select("portal_project_id, event_type, created_at")
+        .eq("event_type", "site_live"),
     ]);
 
   if (portalsRes.error) throw new Error(portalsRes.error.message);
@@ -145,6 +157,7 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
   if (messagesRes.error) throw new Error(messagesRes.error.message);
   if (invoicesRes.error) throw new Error(invoicesRes.error.message);
   if (logsRes.error) throw new Error(logsRes.error.message);
+  if (activityRes.error) throw new Error(activityRes.error.message);
 
   const portals = portalsRes.data ?? [];
   const quotes = quotesRes.data ?? [];
@@ -152,7 +165,7 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
   const leadIds = quotes.map((quote) => str(quote.lead_id)).filter(Boolean);
 
   const leadsRes = leadIds.length
-    ? await supabaseAdmin.from("leads").select("id, name, email").in("id", leadIds)
+    ? await supabaseAdmin.from("leads").select("id, name, email, preferred_locale").in("id", leadIds)
     : ({ data: [], error: null } as const);
 
   if (leadsRes.error) throw new Error(leadsRes.error.message);
@@ -192,6 +205,20 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
     invoicesByPortal.set(key, group);
   }
 
+  // Earliest site_live event per portal — the source of truth for
+  // "when did this site go live?". Using the earliest in case the
+  // event was logged more than once (re-launch, fix, etc.).
+  const siteLiveByPortal = new Map<string, Date>();
+  for (const row of activityRes.data ?? []) {
+    const key = str(row.portal_project_id);
+    const at = safeDate(row.created_at);
+    if (!key || !at) continue;
+    const existing = siteLiveByPortal.get(key);
+    if (!existing || at.getTime() < existing.getTime()) {
+      siteLiveByPortal.set(key, at);
+    }
+  }
+
   const sentSet = new Set(
     (logsRes.data ?? []).map(
       (item) => `${str(item.portal_project_id)}:${str(item.rule_id)}:${str(item.context_key)}`
@@ -208,7 +235,8 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
     const recipientEmail = str(quote?.lead_email) || str(lead?.email);
     if (!recipientEmail || !recipientEmail.includes("@")) continue;
 
-    const recipientName = str(lead?.name) || nameFromEmail(recipientEmail) || "there";
+    const lang: EmailLocale = normalizeEmailLocale(str((lead as any)?.preferred_locale));
+    const recipientName = str(lead?.name) || nameFromEmail(recipientEmail) || (lang === "fr" ? "vous" : lang === "es" ? "usted" : "there");
     const workspaceUrl = `${baseUrl}/portal/${encodeURIComponent(str(portal.access_token))}`;
     const assetCount = (assetsByPortal.get(portalId) ?? []).length;
     const revisions = (revisionsByPortal.get(portalId) ?? []).sort(
@@ -218,36 +246,41 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
       (a, b) => new Date(str(b.created_at)).getTime() - new Date(str(a.created_at)).getTime()
     );
     const invoices = invoicesByPortal.get(portalId) ?? [];
+    const siteLiveAt = siteLiveByPortal.get(portalId) ?? null;
 
-    const inactivePending = getPendingItems(portal, messages);
+    const inactivePending = getPendingItems(portal, messages, lang);
     const inactivePendingBlock = inactivePending.length > 0
-      ? callout("What's waiting", inactivePending.map((item) => `→&ensp;${item}`))
+      ? callout(t("nudge.inactive.whats_waiting", lang), inactivePending.map((item) => `→&ensp;${item}`))
       : "";
     const inactiveIntroCopy = inactivePending.length > 0
-      ? `Work has been moving on your project. Here's what's come up since you were last in:`
-      : `Work has continued on your project — a quick check-in keeps momentum going.`;
+      ? t("nudge.inactive.body_with_pending", lang)
+      : t("nudge.inactive.body_generic", lang);
 
     const candidates = [
       {
         ruleId: "asset_missing_after_kickoff",
         contextKey: `kickoff:${str(portal.deposit_paid_at)}`,
         enabled: !!portal.deposit_paid_at && daysSince(portal.deposit_paid_at) >= 5 && assetCount === 0,
-        subject: "Your project is ready for content — CrecyStudio",
+        subject: t("nudge.asset_missing.subject", lang),
         summary: "System sent a reminder to upload project assets after kickoff.",
         html: emailWrap(`
-          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Time to upload your assets.</h1>
-          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Action needed</p>
-          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(recipientName)},</p>
-          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">The project kicked off five days ago — the next step is your content and assets. Once those land, the first preview is usually ready inside a week.</p>
-          ${ctaButton(workspaceUrl, "Upload assets")}
-          ${callout("What to upload", [
-            "→&ensp;Logo files (SVG or high-res PNG)",
-            "→&ensp;Brand colors and fonts if you have them",
-            "→&ensp;Copy or text you want on the site",
-            "→&ensp;Photos or images — or reply if you'd like help sourcing them",
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">${escHtml(t("nudge.asset_missing.headline", lang))}</h1>
+          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("nudge.asset_missing.eyebrow", lang))}</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("common.greeting", lang, { name: recipientName }))}</p>
+          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("nudge.asset_missing.body", lang))}</p>
+          ${ctaButton(workspaceUrl, t("nudge.asset_missing.cta", lang))}
+          ${callout(t("nudge.asset_missing.what_label", lang), [
+            escHtml(t("nudge.asset_missing.what_1", lang)),
+            escHtml(t("nudge.asset_missing.what_2", lang)),
+            escHtml(t("nudge.asset_missing.what_3", lang)),
+            escHtml(t("nudge.asset_missing.what_4", lang)),
           ])}
-          ${sig()}
-        `, "Reply to this email to reach Komlan directly."),
+          ${sig(lang)}
+        `, {
+          footerNote: t("common.footer.reply_note", lang),
+          lang,
+          unsubscribeUrl: workspaceUrl,
+        }),
       },
       {
         ruleId: "preview_unreviewed_48h",
@@ -259,17 +292,21 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
           (!portal.preview_viewed_at ||
             new Date(str(portal.preview_viewed_at)).getTime() <
               new Date(str(portal.preview_updated_at)).getTime()),
-        subject: "Your preview has been waiting — CrecyStudio",
+        subject: t("nudge.preview_unreviewed.subject", lang),
         summary: "System nudged the client to review a published preview.",
         html: emailWrap(`
-          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Your preview is still waiting.</h1>
-          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Review needed</p>
-          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(recipientName)},</p>
-          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">Your website preview has been ready for 48 hours. When you have a moment, take a look and send feedback — even a quick "looks good" keeps the build moving.</p>
-          ${ctaButton(workspaceUrl, "Open preview")}
-          <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">If you're happy with it as-is, reply with "ship it" and I'll move to the next phase.</p>
-          ${sig()}
-        `, "Reply to this email to reach Komlan directly."),
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">${escHtml(t("nudge.preview_unreviewed.headline", lang))}</h1>
+          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("nudge.preview_unreviewed.eyebrow", lang))}</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("common.greeting", lang, { name: recipientName }))}</p>
+          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("nudge.preview_unreviewed.body", lang))}</p>
+          ${ctaButton(workspaceUrl, t("nudge.preview_unreviewed.cta", lang))}
+          <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">${escHtml(t("nudge.preview_unreviewed.fineprint", lang))}</p>
+          ${sig(lang)}
+        `, {
+          footerNote: t("common.footer.reply_note", lang),
+          lang,
+          unsubscribeUrl: workspaceUrl,
+        }),
       },
       {
         ruleId: "revision_waiting_on_studio",
@@ -288,6 +325,7 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
           );
         })(),
         recipientEmail: ADMIN_EMAIL,
+        // Admin alert — always English.
         subject: `Revision overdue — ${escHtml(recipientName)}`,
         summary: "System alerted the studio that a revision request has been waiting for a response.",
         html: emailWrap(`
@@ -318,17 +356,20 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
             ["sent", "overdue"].includes(str(item.status).toLowerCase()) &&
             daysSince(item.updated_at || item.created_at) >= 5
         ),
-        subject: "Your deposit invoice is still open — CrecyStudio",
+        subject: t("nudge.deposit_unpaid.subject", lang),
         summary: "System reminded the client that the deposit invoice is still unpaid.",
         html: emailWrap(`
-          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">Your deposit is still open.</h1>
-          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Payment reminder</p>
-          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(recipientName)},</p>
-          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">Your deposit invoice is still open. The project kicks off the day it's settled — once the deposit clears, scope confirmation and design direction begin within 24 hours.</p>
-          ${ctaButton(workspaceUrl, "Pay deposit")}
-          <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">If anything's blocking the payment, reply and we'll work it out together.</p>
-          ${sig()}
-        `, "Reply to this email to reach Komlan directly."),
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">${escHtml(t("nudge.deposit_unpaid.headline", lang))}</h1>
+          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("nudge.deposit_unpaid.eyebrow", lang))}</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("common.greeting", lang, { name: recipientName }))}</p>
+          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("nudge.deposit_unpaid.body", lang))}</p>
+          ${ctaButton(workspaceUrl, t("nudge.deposit_unpaid.cta", lang))}
+          <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">${escHtml(t("nudge.deposit_unpaid.fineprint", lang))}</p>
+          ${sig(lang)}
+        `, {
+          footerNote: t("common.footer.reply_note", lang),
+          lang,
+        }),
         clientVisible: true,
       },
       {
@@ -338,18 +379,45 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
           isActiveClientPhase(portal, quote) &&
           (!!portal.deposit_paid_at || str(quote?.status).toLowerCase() === "active") &&
           (!portal.last_client_seen_at || daysSince(portal.last_client_seen_at) >= 7),
-        subject: "A quick check-in on your project — CrecyStudio",
+        subject: t("nudge.inactive.subject", lang),
         summary: "System checked in after the client had been inactive during an active project phase.",
         html: emailWrap(`
-          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">There's an update waiting for you.</h1>
-          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">Project update</p>
-          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">Hi ${escHtml(recipientName)},</p>
-          <p style="margin:0 0 ${inactivePending.length > 0 ? "20" : "28"}px;font-size:15px;color:#444;line-height:1.7">${inactiveIntroCopy}</p>
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">${escHtml(t("nudge.inactive.headline", lang))}</h1>
+          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("nudge.inactive.eyebrow", lang))}</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("common.greeting", lang, { name: recipientName }))}</p>
+          <p style="margin:0 0 ${inactivePending.length > 0 ? "20" : "28"}px;font-size:15px;color:#444;line-height:1.7">${escHtml(inactiveIntroCopy)}</p>
           ${inactivePendingBlock}
-          ${ctaButton(workspaceUrl, "Open workspace")}
-          <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">Usually 5 minutes is enough. Reply if you'd rather hop on a quick call instead.</p>
-          ${sig()}
-        `, "Reply to reach Komlan directly."),
+          ${ctaButton(workspaceUrl, t("nudge.inactive.cta", lang))}
+          <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">${escHtml(t("nudge.inactive.fineprint", lang))}</p>
+          ${sig(lang)}
+        `, {
+          footerNote: t("common.footer.reply_note", lang),
+          lang,
+          unsubscribeUrl: workspaceUrl,
+        }),
+        clientVisible: true,
+      },
+      // NEW: 30-day post-launch check-in. Marketing-adjacent (soft pitch
+      // for Care Plans), so we render the unsubscribe slot in the footer.
+      {
+        ruleId: "post_launch_30d",
+        contextKey: siteLiveAt ? `launched:${siteLiveAt.toISOString().slice(0, 10)}` : "",
+        enabled: !!siteLiveAt && daysSince(siteLiveAt) >= 30,
+        subject: t("post_launch_30d.subject", lang),
+        summary: "System sent the 30-day post-launch check-in.",
+        html: emailWrap(`
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">${escHtml(t("post_launch_30d.headline", lang))}</h1>
+          <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("post_launch_30d.eyebrow", lang))}</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("common.greeting", lang, { name: recipientName }))}</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("post_launch_30d.body_intro", lang))}</p>
+          <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("post_launch_30d.body_offer", lang))}</p>
+          ${ctaButton(workspaceUrl, t("post_launch_30d.cta", lang))}
+          ${sig(lang)}
+        `, {
+          footerNote: t("common.footer.reply_note", lang),
+          lang,
+          unsubscribeUrl: workspaceUrl,
+        }),
         clientVisible: true,
       },
     ];

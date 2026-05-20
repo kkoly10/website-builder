@@ -264,6 +264,22 @@ export async function POST(
     }
 
     if (senderRole !== "internal") {
+      // Best-effort locale lookup so studio→client emails land in the
+      // client's language. Admin alerts (client→admin) stay English
+      // regardless, so we only need this for studio sends.
+      let leadLocale: string | null = null;
+      if (senderRole === "studio") {
+        const recipient = String(bundle.lead?.email || "").trim().toLowerCase();
+        if (recipient) {
+          const localeRes = await supabaseAdmin
+            .from("leads")
+            .select("preferred_locale")
+            .eq("email", recipient)
+            .maybeSingle();
+          leadLocale = (localeRes.data?.preferred_locale as string | undefined) || null;
+        }
+      }
+
       sendPortalMessageNotification({
         senderRole,
         senderName,
@@ -272,6 +288,7 @@ export async function POST(
         portalToken: token,
         leadName: String(bundle.lead?.name || ""),
         leadEmail: String(bundle.lead?.email || ""),
+        leadLocale,
         attachmentName: attachment?.attachmentName || null,
       }).catch((err) => {
         console.error("[portal/messages] notification error:", err);
