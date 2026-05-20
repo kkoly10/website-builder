@@ -10,6 +10,13 @@ type SendEmailArgs = {
   subject: string;
   html: string;
   attachments?: Attachment[];
+  // Optional mailto target for List-Unsubscribe headers. Pass this on
+  // marketing-adjacent emails (nudges, post-launch check-ins) so Gmail
+  // and Outlook show a one-click unsubscribe button next to the sender
+  // name. Required by CAN-SPAM and Gmail's 2024 bulk-sender rules for
+  // anything commercial; omit on pure transactional sends (invoices,
+  // receipts, agreements).
+  listUnsubscribeEmail?: string;
 };
 
 const MAX_RETRIES = 2;
@@ -45,6 +52,17 @@ export async function sendResendEmail(args: SendEmailArgs) {
                 ? a.content.toString("base64")
                 : Buffer.from(a.content, "utf8").toString("base64"),
             })),
+          }),
+          ...(args.listUnsubscribeEmail && {
+            headers: {
+              // RFC 8058 one-click unsubscribe. Gmail expects both
+              // headers together: the mailto target for the user-
+              // visible button, and the Post header to opt into the
+              // one-click flow (without it, Gmail still renders the
+              // button but doesn't show the "easy" badge).
+              "List-Unsubscribe": `<mailto:${args.listUnsubscribeEmail}?subject=Unsubscribe>`,
+              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            },
           }),
         }),
       });

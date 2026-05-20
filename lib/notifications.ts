@@ -1,5 +1,5 @@
 import { sendResendEmail } from "@/lib/resend";
-import { emailWrap, ctaButton, adminTable, callout, sig, escHtml, adminBadge, FROM_EMAIL, ADMIN_EMAIL } from "@/lib/emailHelpers";
+import { emailWrap, ctaButton, adminTable, callout, sig, escHtml, adminBadge, FROM_EMAIL, ADMIN_EMAIL, UNSUBSCRIBE_EMAIL } from "@/lib/emailHelpers";
 import { type EmailLocale, normalizeEmailLocale, t, greeting, laneLabel, invoiceTypeLabel } from "@/lib/i18n/emailStrings";
 
 type EventContext = {
@@ -60,6 +60,11 @@ type TemplateResult = {
   toAdmin: boolean;
   adminSubject?: string;
   adminHtml?: string;
+  // Marketing-adjacent (not strictly transactional) — add the
+  // List-Unsubscribe header so Gmail/Outlook show a one-click
+  // unsubscribe button. Pure transactional events (invoices, receipts,
+  // agreements) leave this unset.
+  marketing?: boolean;
 };
 
 const templates: Record<string, (ctx: EventContext, lang: EmailLocale) => TemplateResult> = {
@@ -322,6 +327,7 @@ const templates: Record<string, (ctx: EventContext, lang: EmailLocale) => Templa
     }),
     toClient: true,
     toAdmin: false,
+    marketing: true,
   }),
 
   // ─── Admin-only events (English) ──────────────────────────────
@@ -412,6 +418,7 @@ export async function sendEventNotification(ctx: EventContext) {
         from: FROM_EMAIL,
         subject: tmpl.subject,
         html: tmpl.html,
+        ...(tmpl.marketing ? { listUnsubscribeEmail: UNSUBSCRIBE_EMAIL } : {}),
       }).catch((err) => {
         console.error(`[notifications] client email failed for ${ctx.event}:`, err);
       })

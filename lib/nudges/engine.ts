@@ -1,7 +1,7 @@
 import { sendResendEmail } from "@/lib/resend";
 import { logProjectActivityByPortalId } from "@/lib/projectActivity";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { emailWrap, ctaButton, callout, sig, adminBadge, adminTable, escHtml, nameFromEmail, FROM_EMAIL, ADMIN_EMAIL } from "@/lib/emailHelpers";
+import { emailWrap, ctaButton, callout, sig, adminBadge, adminTable, escHtml, nameFromEmail, FROM_EMAIL, ADMIN_EMAIL, UNSUBSCRIBE_EMAIL } from "@/lib/emailHelpers";
 import { type EmailLocale, normalizeEmailLocale, t, greeting } from "@/lib/i18n/emailStrings";
 
 type PortalRow = Record<string, any>;
@@ -113,12 +113,17 @@ async function sendNudgeEmail(args: {
   to: string;
   subject: string;
   html: string;
+  marketing?: boolean;
 }) {
   await sendResendEmail({
     to: args.to,
     from: FROM_EMAIL,
     subject: args.subject,
     html: args.html,
+    // All client-facing nudges are marketing-adjacent: scheduled,
+    // automated, not strictly required for a transaction in progress.
+    // Admin alerts skip the unsubscribe header entirely.
+    ...(args.marketing ? { listUnsubscribeEmail: UNSUBSCRIBE_EMAIL } : {}),
   });
 }
 
@@ -438,10 +443,16 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
       const targetEmail = candidate.recipientEmail || recipientEmail;
       if (!targetEmail || !targetEmail.includes("@")) continue;
 
+      // A candidate with `recipientEmail` overrides the default
+      // recipient (always an admin alert in current code). Everything
+      // else lands in the client's inbox and counts as marketing-
+      // adjacent for unsubscribe purposes.
+      const isAdminAlert = !!candidate.recipientEmail;
       await sendNudgeEmail({
         to: targetEmail,
         subject: candidate.subject,
         html: candidate.html,
+        marketing: !isAdminAlert,
       });
 
       await createNudgeLog({

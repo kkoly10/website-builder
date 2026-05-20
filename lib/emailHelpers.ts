@@ -15,6 +15,14 @@ export const FROM_EMAIL =
 export const ADMIN_EMAIL =
   (process.env.ADMIN_NOTIFICATION_EMAIL || process.env.ALERT_TO_EMAIL || "").trim();
 
+// Mailto target for the List-Unsubscribe header on marketing-adjacent
+// emails (nudges, post-launch check-ins). Defaults to the studio inbox
+// so manual opt-outs land somewhere a human reads. Set
+// UNSUBSCRIBE_EMAIL to a dedicated address once a real auto-unsubscribe
+// route exists.
+export const UNSUBSCRIBE_EMAIL =
+  (process.env.UNSUBSCRIBE_EMAIL || FROM_EMAIL).trim();
+
 // TODO(crecystudio-ops): Replace with the registered business mailing
 // address before sending any marketing-adjacent email. Required by
 // CAN-SPAM (US) and CASL (CA) for any commercial email. Transactional
@@ -117,6 +125,8 @@ export function emailWrap(
       .callout p { color:#cccccc !important; }
       .row-label { color:#888888 !important; }
       .row-value { color:#e8e8e8 !important; }
+      .sig-name { color:#ffffff !important; }
+      .sig-role { color:#999999 !important; }
     }
   `;
 
@@ -227,15 +237,17 @@ export function adminBadge(label: string): string {
 
 export function sig(lang: EmailLocale = "en"): string {
   const photoUrl = `${SITE_URL}/about/komlan.jpg`;
-  // object-fit not supported in Outlook/older clients; komlan.jpg is already square so no crop needed
+  // object-fit not supported in Outlook/older clients; komlan.jpg is already square so no crop needed.
+  // Class names on the name/role let the dark-mode media query bump
+  // contrast on macOS/iOS Mail without affecting light-mode rendering.
   return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:28px 0 0">
     <tr>
       <td style="padding-right:14px;vertical-align:top">
         <img src="${photoUrl}" alt="Komlan Kouhiko" width="48" height="48" style="display:block;border-radius:50%">
       </td>
       <td style="vertical-align:top">
-        <p style="margin:0 0 2px;font-size:14px;font-weight:bold;color:#111111;font-family:Arial,Helvetica,sans-serif">Komlan Kouhiko</p>
-        <p style="margin:0 0 6px;font-size:13px;color:#888888;font-family:Arial,Helvetica,sans-serif">${escHtml(t("common.signature.role", lang))}</p>
+        <p class="sig-name" style="margin:0 0 2px;font-size:14px;font-weight:bold;color:#111111;font-family:Arial,Helvetica,sans-serif">Komlan Kouhiko</p>
+        <p class="sig-role" style="margin:0 0 6px;font-size:13px;color:#888888;font-family:Arial,Helvetica,sans-serif">${escHtml(t("common.signature.role", lang))}</p>
         <a href="${LINKEDIN_URL}" style="font-size:12px;color:#0077b5;text-decoration:none;font-family:Arial,Helvetica,sans-serif">LinkedIn &#x2192;</a>
       </td>
     </tr>
