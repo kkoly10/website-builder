@@ -79,6 +79,18 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
+      <head>
+        {/*
+          Preconnect to Google Fonts. globals.css @imports Inter Tight + Inter
+          + JetBrains Mono from there; preconnecting saves ~50-200ms on first
+          paint by overlapping DNS + TLS with the rest of the HTML parse.
+          Both hosts are needed: fonts.googleapis.com serves the CSS file,
+          fonts.gstatic.com serves the actual font binaries (and requires
+          crossOrigin because fonts are CORS-restricted).
+        */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body>
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js-anim')" }} />
         <a href="#main-content" className="skipLink">

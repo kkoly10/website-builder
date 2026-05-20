@@ -28,5 +28,5 @@ export default async function ClientPortalsPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const data = getServicePageData(locale, "client_portals");
-  return <ServicePage {...data} />;
+  return <ServicePage {...data} pagePath="/client-portals" />;
 }

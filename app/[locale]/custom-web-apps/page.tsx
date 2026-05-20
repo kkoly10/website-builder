@@ -28,5 +28,5 @@ export default async function CustomWebAppsPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const data = getServicePageData(locale, "custom_web_apps");
-  return <ServicePage {...data} />;
+  return <ServicePage {...data} pagePath="/custom-web-apps" />;
 }
