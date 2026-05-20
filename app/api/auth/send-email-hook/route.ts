@@ -1,75 +1,11 @@
 import { NextResponse } from "next/server";
-import crypto from "node:crypto";
 import { sendAuthEmail, type AuthEmailActionType } from "@/lib/authEmails";
 import { normalizeEmailLocale } from "@/lib/i18n/emailStrings";
+import { verifyStandardWebhook } from "@/lib/standardWebhooks";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-// Standard Webhooks signature verification.
-// https://www.standardwebhooks.com/
-//
-// The hook secret is provisioned in the Supabase dashboard
-// (Authentication → Hooks → Send Email Hook) as a base64-encoded
-// string with a "v1,whsec_" prefix. We strip the prefix and decode
-// before computing the HMAC.
-//
-// The signature header may carry multiple comma-separated signatures
-// for key rotation. We accept the request if ANY signature matches —
-// matches the reference Standard Webhooks implementations (svix etc).
-function verifyStandardWebhook(args: {
-  rawBody: string;
-  webhookId: string;
-  webhookTimestamp: string;
-  webhookSignature: string;
-  secret: string;
-}): boolean {
-  // Supabase displays the hook secret in two slightly different
-  // shapes depending on dashboard version: "v1,whsec_<b64>" or just
-  // "whsec_<b64>". Strip whichever prefix(es) are present so either
-  // copy-paste works.
-  const cleanedSecret = args.secret.replace(/^v1,/, "").replace(/^whsec_/, "");
-
-  let secretBytes: Buffer;
-  try {
-    secretBytes = Buffer.from(cleanedSecret, "base64");
-  } catch {
-    return false;
-  }
-
-  // Timestamp tolerance: reject anything more than 5 minutes off to
-  // prevent replay of captured webhook payloads.
-  const timestampSeconds = Number(args.webhookTimestamp);
-  if (!Number.isFinite(timestampSeconds)) return false;
-  const ageSeconds = Math.abs(Date.now() / 1000 - timestampSeconds);
-  if (ageSeconds > 5 * 60) return false;
-
-  const signedPayload = `${args.webhookId}.${args.webhookTimestamp}.${args.rawBody}`;
-  const expectedSignature = crypto
-    .createHmac("sha256", secretBytes)
-    .update(signedPayload, "utf8")
-    .digest("base64");
-
-  const candidates = args.webhookSignature.split(" ").map((s) => s.trim()).filter(Boolean);
-
-  return candidates.some((candidate) => {
-    // Each candidate is "v1,<base64-signature>" — strip the version
-    // prefix before comparing. Use timing-safe equality.
-    const match = candidate.match(/^v1,(.+)$/);
-    if (!match) return false;
-    const presentedSig = match[1];
-    if (presentedSig.length !== expectedSignature.length) return false;
-    try {
-      return crypto.timingSafeEqual(
-        Buffer.from(presentedSig),
-        Buffer.from(expectedSignature),
-      );
-    } catch {
-      return false;
-    }
-  });
-}
 
 type SendEmailHookPayload = {
   user?: {
