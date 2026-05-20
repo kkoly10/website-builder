@@ -1,6 +1,8 @@
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
+import StructuredData from "@/components/seo/StructuredData";
+import { breadcrumbListNode, siteGraph } from "@/lib/seo/structuredData";
 import styles from "./service-page.module.css";
 
 // Pulled to module scope because the component destructures a `process` prop
@@ -80,6 +82,11 @@ export type ServicePageProps = {
   finalText: string;
   finalPrimaryCta: CTA;
   finalSecondaryCta: CTA;
+  // When set, ServicePage emits a BreadcrumbList JSON-LD node so the page
+  // qualifies for breadcrumb rendering in Google SERPs. Format: locale-
+  // neutral path like "/websites" — the locale prefix is prepended here
+  // from useLocale() so French/Spanish SERPs link to their own URL.
+  pagePath?: string;
   // When set, appended as ?projectType=X to primaryCta and finalPrimaryCta hrefs
   projectType?: string;
   founderCallout?: boolean;
@@ -116,12 +123,15 @@ export default function ServicePage({
   finalText,
   finalPrimaryCta,
   finalSecondaryCta,
+  pagePath,
   projectType,
   founderCallout,
   riskReversal,
 }: ServicePageProps) {
   const t = useTranslations("servicePage");
+  const tCommon = useTranslations("common");
   const tCross = useTranslations("crossLinks");
+  const locale = useLocale();
   const primaryCtaHref = projectType
     ? `${primaryCta.href}?projectType=${projectType}`
     : primaryCta.href;
@@ -155,12 +165,27 @@ export default function ServicePage({
     })),
   };
 
+  // Per-locale breadcrumb. Two levels: Home → page title. There's no
+  // "Services" landing page to insert between them, so a flat trail is
+  // accurate. URLs prepend the locale so /fr/websites's breadcrumb items
+  // point at /fr (not /), matching each language's SERP.
+  const localePrefix = locale === "en" ? "" : `/${locale}`;
+  const breadcrumbGraph = pagePath
+    ? siteGraph([
+        breadcrumbListNode([
+          { name: tCommon("home"), url: localePrefix || "/" },
+          { name: title, url: `${localePrefix}${pagePath}` },
+        ]),
+      ])
+    : null;
+
   return (
     <main className={styles.page}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
       />
+      {breadcrumbGraph && <StructuredData graph={breadcrumbGraph} />}
       <section className={styles.hero}>
         <div className="container">
           <div className={styles.heroInner}>

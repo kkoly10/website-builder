@@ -28,5 +28,5 @@ export default async function EcommercePage({
   const { locale } = await params;
   setRequestLocale(locale);
   const data = getServicePageData(locale, "ecommerce");
-  return <ServicePage {...data} />;
+  return <ServicePage {...data} pagePath="/ecommerce" />;
 }
