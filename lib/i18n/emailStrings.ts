@@ -815,6 +815,192 @@ const STRINGS: Record<string, LocalizedString> = {
   "invoice_type.retainer": { en: "Retainer", fr: "Forfait", es: "Retención" },
   "invoice_type.project": { en: "Project", fr: "Projet", es: "Proyecto" },
 
+  // ─── Auth emails (sent via Supabase Send Email Hook) ──────────
+  "auth.signup_confirm.subject": {
+    en: "Confirm your CrecyStudio account",
+    fr: "Confirmez votre compte CrecyStudio",
+    es: "Confirme su cuenta de CrecyStudio",
+  },
+  "auth.signup_confirm.preheader": {
+    en: "One click to confirm your email and finish setup.",
+    fr: "Un clic pour confirmer votre e-mail et terminer la configuration.",
+    es: "Un clic para confirmar su correo y terminar la configuración.",
+  },
+  "auth.signup_confirm.headline": {
+    en: "Confirm your email.",
+    fr: "Confirmez votre e-mail.",
+    es: "Confirme su correo.",
+  },
+  "auth.signup_confirm.eyebrow": {
+    en: "Account confirmation",
+    fr: "Confirmation de compte",
+    es: "Confirmación de cuenta",
+  },
+  "auth.signup_confirm.body": {
+    en: "Welcome. To finish creating your account and open your workspace, confirm your email with the button below. This keeps your account safe and lets us send you project updates.",
+    fr: "Bienvenue. Pour finaliser la création de votre compte et ouvrir votre espace, confirmez votre e-mail avec le bouton ci-dessous. Cela protège votre compte et nous permet de vous envoyer les mises à jour du projet.",
+    es: "Bienvenido. Para terminar de crear su cuenta y abrir su espacio, confirme su correo con el botón a continuación. Esto mantiene su cuenta segura y nos permite enviarle las actualizaciones del proyecto.",
+  },
+  "auth.signup_confirm.cta": {
+    en: "Confirm email",
+    fr: "Confirmer l'e-mail",
+    es: "Confirmar correo",
+  },
+  "auth.signup_confirm.expires": {
+    en: "This link expires in 24 hours. If you didn't create a CrecyStudio account, you can safely ignore this email.",
+    fr: "Ce lien expire dans 24 heures. Si vous n'avez pas créé de compte CrecyStudio, vous pouvez ignorer cet e-mail.",
+    es: "Este enlace caduca en 24 horas. Si no creó una cuenta de CrecyStudio, puede ignorar este correo.",
+  },
+
+  "auth.magic_link.subject": {
+    en: "Your CrecyStudio sign-in link",
+    fr: "Votre lien de connexion CrecyStudio",
+    es: "Su enlace de inicio de sesión de CrecyStudio",
+  },
+  "auth.magic_link.preheader": {
+    en: "One-click sign in to your CrecyStudio workspace.",
+    fr: "Connexion en un clic à votre espace CrecyStudio.",
+    es: "Inicio de sesión con un clic en su espacio CrecyStudio.",
+  },
+  "auth.magic_link.headline": {
+    en: "Sign in to CrecyStudio.",
+    fr: "Connectez-vous à CrecyStudio.",
+    es: "Inicie sesión en CrecyStudio.",
+  },
+  "auth.magic_link.eyebrow": {
+    en: "Sign-in link",
+    fr: "Lien de connexion",
+    es: "Enlace de inicio de sesión",
+  },
+  "auth.magic_link.body": {
+    en: "Click the button below to sign in. No password needed.",
+    fr: "Cliquez sur le bouton ci-dessous pour vous connecter. Aucun mot de passe requis.",
+    es: "Haga clic en el botón a continuación para iniciar sesión. Sin contraseña.",
+  },
+  "auth.magic_link.cta": {
+    en: "Sign in",
+    fr: "Se connecter",
+    es: "Iniciar sesión",
+  },
+  "auth.magic_link.expires": {
+    en: "This link expires in 1 hour and can only be used once. If you didn't request it, ignore this email — your account stays secure.",
+    fr: "Ce lien expire dans 1 heure et ne peut être utilisé qu'une seule fois. Si vous n'en avez pas fait la demande, ignorez cet e-mail — votre compte reste sécurisé.",
+    es: "Este enlace caduca en 1 hora y solo se puede usar una vez. Si no lo solicitó, ignore este correo — su cuenta sigue segura.",
+  },
+
+  "auth.recovery.subject": {
+    en: "Reset your CrecyStudio password",
+    fr: "Réinitialisez votre mot de passe CrecyStudio",
+    es: "Restablezca su contraseña de CrecyStudio",
+  },
+  "auth.recovery.preheader": {
+    en: "Reset your CrecyStudio password.",
+    fr: "Réinitialisez votre mot de passe CrecyStudio.",
+    es: "Restablezca su contraseña de CrecyStudio.",
+  },
+  "auth.recovery.headline": {
+    en: "Reset your password.",
+    fr: "Réinitialisez votre mot de passe.",
+    es: "Restablezca su contraseña.",
+  },
+  "auth.recovery.eyebrow": {
+    en: "Password reset",
+    fr: "Réinitialisation du mot de passe",
+    es: "Restablecimiento de contraseña",
+  },
+  "auth.recovery.body": {
+    en: "Use the button below to set a new password. The link is single-use.",
+    fr: "Utilisez le bouton ci-dessous pour définir un nouveau mot de passe. Le lien est à usage unique.",
+    es: "Use el botón a continuación para establecer una nueva contraseña. El enlace es de un solo uso.",
+  },
+  "auth.recovery.cta": {
+    en: "Set a new password",
+    fr: "Définir un nouveau mot de passe",
+    es: "Establecer nueva contraseña",
+  },
+  "auth.recovery.expires": {
+    en: "This link expires in 1 hour. If you didn't request a password reset, ignore this email — your current password keeps working.",
+    fr: "Ce lien expire dans 1 heure. Si vous n'avez pas demandé de réinitialisation, ignorez cet e-mail — votre mot de passe actuel reste valide.",
+    es: "Este enlace caduca en 1 hora. Si no solicitó el restablecimiento, ignore este correo — su contraseña actual sigue funcionando.",
+  },
+
+  "auth.invite.subject": {
+    en: "You're invited to CrecyStudio",
+    fr: "Vous êtes invité(e) sur CrecyStudio",
+    es: "Está invitado a CrecyStudio",
+  },
+  "auth.invite.preheader": {
+    en: "Accept your invite to join CrecyStudio.",
+    fr: "Acceptez votre invitation à rejoindre CrecyStudio.",
+    es: "Acepte su invitación para unirse a CrecyStudio.",
+  },
+  "auth.invite.headline": {
+    en: "You're invited.",
+    fr: "Vous êtes invité(e).",
+    es: "Está invitado.",
+  },
+  "auth.invite.eyebrow": {
+    en: "CrecyStudio invitation",
+    fr: "Invitation CrecyStudio",
+    es: "Invitación a CrecyStudio",
+  },
+  "auth.invite.body": {
+    en: "You've been invited to join CrecyStudio. Accept the invitation below to set a password and open your workspace.",
+    fr: "Vous avez été invité(e) à rejoindre CrecyStudio. Acceptez l'invitation ci-dessous pour définir un mot de passe et ouvrir votre espace.",
+    es: "Ha sido invitado a unirse a CrecyStudio. Acepte la invitación a continuación para establecer una contraseña y abrir su espacio.",
+  },
+  "auth.invite.cta": {
+    en: "Accept invitation",
+    fr: "Accepter l'invitation",
+    es: "Aceptar invitación",
+  },
+  "auth.invite.expires": {
+    en: "This invitation link expires in 7 days.",
+    fr: "Ce lien d'invitation expire dans 7 jours.",
+    es: "Este enlace de invitación caduca en 7 días.",
+  },
+
+  "auth.email_change.subject": {
+    en: "Confirm your new email address",
+    fr: "Confirmez votre nouvelle adresse e-mail",
+    es: "Confirme su nueva dirección de correo",
+  },
+  "auth.email_change.preheader": {
+    en: "Confirm the email change on your CrecyStudio account.",
+    fr: "Confirmez le changement d'e-mail sur votre compte CrecyStudio.",
+    es: "Confirme el cambio de correo en su cuenta CrecyStudio.",
+  },
+  "auth.email_change.headline": {
+    en: "Confirm your new email.",
+    fr: "Confirmez votre nouvel e-mail.",
+    es: "Confirme su nuevo correo.",
+  },
+  "auth.email_change.eyebrow": {
+    en: "Email change",
+    fr: "Changement d'e-mail",
+    es: "Cambio de correo",
+  },
+  "auth.email_change.body": {
+    en: "Confirm this email address to finish updating your CrecyStudio sign-in. Until you confirm, your previous email keeps working.",
+    fr: "Confirmez cette adresse pour finaliser la mise à jour de votre identifiant CrecyStudio. Tant que vous n'avez pas confirmé, votre ancien e-mail reste actif.",
+    es: "Confirme esta dirección para terminar de actualizar su inicio de sesión de CrecyStudio. Hasta que confirme, su correo anterior sigue funcionando.",
+  },
+  "auth.email_change.cta": {
+    en: "Confirm new email",
+    fr: "Confirmer le nouvel e-mail",
+    es: "Confirmar nuevo correo",
+  },
+  "auth.email_change.expires": {
+    en: "This link expires in 24 hours. If you didn't request this change, contact support immediately.",
+    fr: "Ce lien expire dans 24 heures. Si vous n'avez pas demandé ce changement, contactez immédiatement le support.",
+    es: "Este enlace caduca en 24 horas. Si no solicitó este cambio, contacte con soporte de inmediato.",
+  },
+  "auth.email_change.body_old": {
+    en: "Someone is changing the email on your CrecyStudio account from this address to <strong>{{newEmail}}</strong>. If this was you, no action is needed — the new address will receive its own confirmation. If this wasn't you, change your password immediately and contact support.",
+    fr: "Quelqu'un modifie l'e-mail de votre compte CrecyStudio de cette adresse vers <strong>{{newEmail}}</strong>. Si c'était vous, aucune action n'est requise — la nouvelle adresse recevra sa propre confirmation. Si ce n'était pas vous, modifiez immédiatement votre mot de passe et contactez le support.",
+    es: "Alguien está cambiando el correo de su cuenta CrecyStudio de esta dirección a <strong>{{newEmail}}</strong>. Si fue usted, no se requiere acción — la nueva dirección recibirá su propia confirmación. Si no fue usted, cambie su contraseña inmediatamente y contacte con soporte.",
+  },
+
   // ─── Project type labels ──────────────────────────────────────
   "lane.website": { en: "website", fr: "site web", es: "sitio web" },
   "lane.web_app": { en: "custom app", fr: "application sur-mesure", es: "aplicación personalizada" },
