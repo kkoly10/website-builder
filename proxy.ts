@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 import { routing } from "@/i18n/routing";
 import { updateSession } from "@/lib/supabase/proxy";
+import { sendInternalAlert } from "@/lib/internalAlert";
 
 const intlMiddleware = createIntlMiddleware(routing);
 
@@ -54,21 +55,6 @@ function isCsrfExempt(pathname: string): boolean {
 
 function isSensitivePath(pathname: string) {
   return pathname.startsWith("/internal") || pathname.startsWith("/api/internal");
-}
-
-async function sendInternalAlert(message: string) {
-  const webhook = process.env.INTERNAL_ALERT_WEBHOOK?.trim();
-  if (!webhook) return;
-
-  try {
-    await fetch(webhook, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: message }),
-    });
-  } catch {
-    // non-blocking on proxy path
-  }
 }
 
 export async function proxy(request: NextRequest) {
