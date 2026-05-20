@@ -4,7 +4,15 @@ import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import TrackLink from "@/components/site/TrackLink";
 import ScrollReveal from "@/components/site/ScrollReveal";
+import StructuredData from "@/components/seo/StructuredData";
+import {
+  articleNode,
+  breadcrumbListNode,
+  siteGraph,
+} from "@/lib/seo/structuredData";
 import styles from "./proveo.module.css";
+
+const PROVEO_PUBLISHED_AT = "2025-01-01";
 
 export async function generateMetadata({
   params,
@@ -31,7 +39,35 @@ export default async function ProveoPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <ProveoContent />;
+
+  const [tCommon, tNav, tCase] = await Promise.all([
+    getTranslations({ locale, namespace: "common" }),
+    getTranslations({ locale, namespace: "nav" }),
+    getTranslations({ locale, namespace: "workProveo" }),
+  ]);
+
+  const localePrefix = locale === "en" ? "" : `/${locale}`;
+  const caseUrl = `${localePrefix}/work/proveo`;
+  const graph = siteGraph([
+    articleNode({
+      url: caseUrl,
+      headline: tCase("title"),
+      description: tCase("metaDescription"),
+      datePublished: PROVEO_PUBLISHED_AT,
+    }),
+    breadcrumbListNode([
+      { name: tCommon("home"), url: localePrefix || "/" },
+      { name: tNav("work"), url: `${localePrefix}/work` },
+      { name: tCase("title"), url: caseUrl },
+    ]),
+  ]);
+
+  return (
+    <>
+      <StructuredData graph={graph} />
+      <ProveoContent />
+    </>
+  );
 }
 
 function ProveoContent() {

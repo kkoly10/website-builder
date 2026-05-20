@@ -5,6 +5,13 @@ import { setRequestLocale } from "next-intl/server";
 import { hasLocale } from "next-intl";
 import type { ReactNode } from "react";
 import { routing } from "@/i18n/routing";
+import StructuredData from "@/components/seo/StructuredData";
+import {
+  founderNode,
+  organizationNode,
+  siteGraph,
+  websiteNode,
+} from "@/lib/seo/structuredData";
 
 // Pages here are server-rendered on every request (auth state, locale, and
 // per-page metadata all vary). Locale validation happens in LocaleLayout
@@ -82,5 +89,18 @@ export default async function LocaleLayout({
   // Enables server-component translations for everything rendered below.
   setRequestLocale(locale);
 
-  return <>{children}</>;
+  // Base JSON-LD @graph — present on every locale page. Page-specific
+  // nodes (Service for service pages, Article for case studies) render
+  // their own additional <StructuredData> blocks; crawlers merge nodes
+  // across scripts on the same page, so the Org/Founder/WebSite entities
+  // declared here are referenced by @id from the per-page nodes without
+  // having to re-emit the full definition.
+  const baseGraph = siteGraph([organizationNode(), founderNode(), websiteNode()]);
+
+  return (
+    <>
+      <StructuredData graph={baseGraph} />
+      {children}
+    </>
+  );
 }

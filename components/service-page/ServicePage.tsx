@@ -7,7 +7,12 @@ import styles from "./service-page.module.css";
 // (workflow ProcessStep array). Inside the component body, `process` resolves
 // to that array, not the Node global — Turbopack flagged this as a real
 // type error in the SEO JSON-LD section that read `process.env.NEXT_...`.
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com";
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com").replace(/\/$/, "");
+// Kept in sync with lib/seo/structuredData.ts ORG_ID. The Service schema
+// emitted here links to Organization by @id so search engines and AI
+// crawlers resolve it against the Org node declared once in the locale
+// layout, instead of treating it as a second Organization entity.
+const ORG_ID = `${SITE_URL}/#organization`;
 
 type CTA = {
   label: string;
@@ -136,7 +141,7 @@ export default function ServicePage({
     "@type": "Service",
     name: title,
     description: intro,
-    provider: { "@type": "Organization", name: "CrecyStudio", url: SITE_URL },
+    provider: { "@id": ORG_ID },
     areaServed: "Worldwide",
     offers: pricingCards.map((card) => ({
       "@type": "Offer",

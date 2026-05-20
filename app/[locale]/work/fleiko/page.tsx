@@ -4,7 +4,19 @@ import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import TrackLink from "@/components/site/TrackLink";
 import ScrollReveal from "@/components/site/ScrollReveal";
+import StructuredData from "@/components/seo/StructuredData";
+import {
+  articleNode,
+  breadcrumbListNode,
+  siteGraph,
+} from "@/lib/seo/structuredData";
 import styles from "./fleiko.module.css";
+
+// Placeholder publication date for Article schema. Update if/when we have a
+// real authored-on date per case study. Search engines need *a* date to
+// surface Article rich results; the exact value matters less for ranking
+// than its presence + dateModified showing the page isn't stale.
+const FLEIKO_PUBLISHED_AT = "2025-01-01";
 
 export async function generateMetadata({
   params,
@@ -41,7 +53,38 @@ export default async function FleikoPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <FleikoContent />;
+
+  const [tCommon, tNav, tCase] = await Promise.all([
+    getTranslations({ locale, namespace: "common" }),
+    getTranslations({ locale, namespace: "nav" }),
+    getTranslations({ locale, namespace: "workFleiko" }),
+  ]);
+
+  // Locale-aware breadcrumb URLs so each language's SERPs link to its own
+  // path (Google honors hreflang separately, but BreadcrumbList items
+  // should point at the version actually being viewed).
+  const localePrefix = locale === "en" ? "" : `/${locale}`;
+  const caseUrl = `${localePrefix}/work/fleiko`;
+  const graph = siteGraph([
+    articleNode({
+      url: caseUrl,
+      headline: tCase("title"),
+      description: tCase("metaDescription"),
+      datePublished: FLEIKO_PUBLISHED_AT,
+    }),
+    breadcrumbListNode([
+      { name: tCommon("home"), url: localePrefix || "/" },
+      { name: tNav("work"), url: `${localePrefix}/work` },
+      { name: tCase("title"), url: caseUrl },
+    ]),
+  ]);
+
+  return (
+    <>
+      <StructuredData graph={graph} />
+      <FleikoContent />
+    </>
+  );
 }
 
 function FleikoContent() {
