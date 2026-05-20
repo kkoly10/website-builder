@@ -29,6 +29,8 @@ import {
 } from "@/lib/requiredActions";
 import { sendEventNotification } from "@/lib/notifications";
 
+import { captureBackgroundError } from "@/lib/sentry";
+
 type AnyObj = Record<string, any>;
 type CustomerPortalMilestoneInput = {
   key?: string;
@@ -2268,7 +2270,12 @@ export async function submitRevisionByPortalToken(input: {
   notifyRevisionReceived({
     quoteId: cleanString((portal as AnyObj).quote_id),
     portalToken: cleanString((portal as AnyObj).access_token),
-  }).catch((err) => console.error("[customerPortal] revision_received email failed:", err));
+  }).catch((err) =>
+    captureBackgroundError(err, {
+      where: "customerPortal.revision_received_email",
+      extra: { quoteId: cleanString((portal as AnyObj).quote_id) },
+    })
+  );
 
   return data;
 }
@@ -2989,7 +2996,12 @@ export async function markDepositPaidForQuoteId(
       quoteId,
       portalToken: cleanString((portal as AnyObj).access_token),
       depositCents: amountCents,
-    }).catch((err) => console.error("[customerPortal] deposit_received email failed:", err));
+    }).catch((err) =>
+      captureBackgroundError(err, {
+        where: "customerPortal.deposit_received_email",
+        extra: { quoteId, depositCents: amountCents },
+      })
+    );
   }
 }
 

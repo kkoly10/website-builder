@@ -9,6 +9,7 @@ import { INTERNAL_HOURLY_RATE } from "@/lib/pricing/config";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireAdminRoute, enforceAdminRateLimit } from "@/lib/routeAuth";
 import { sendEventNotification } from "@/lib/notifications";
+import { captureBackgroundError } from "@/lib/sentry";
 import { appBaseUrl } from "@/lib/emailHelpers";
 
 export const runtime = "nodejs";
@@ -417,7 +418,10 @@ export async function POST(req: NextRequest) {
           depositAmount,
           lang: leadLocale || undefined,
         }).catch((err) => {
-          console.error("[quote-admin] notification error:", err);
+          captureBackgroundError(err, {
+            where: "quote-admin.event_notification",
+            extra: { quoteId, event: body._event },
+          });
         });
       }
 

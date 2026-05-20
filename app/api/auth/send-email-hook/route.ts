@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sendAuthEmail, type AuthEmailActionType } from "@/lib/authEmails";
 import { normalizeEmailLocale } from "@/lib/i18n/emailStrings";
+import { captureBackgroundError } from "@/lib/sentry";
 import { verifyStandardWebhook } from "@/lib/standardWebhooks";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -40,7 +41,10 @@ async function resolveLocale(email: string, userMetadata: Record<string, unknown
       .maybeSingle();
     if (data?.preferred_locale) return normalizeEmailLocale(data.preferred_locale);
   } catch (err) {
-    console.error("[send-email-hook] lead locale lookup failed:", err);
+    captureBackgroundError(err, {
+      where: "send-email-hook.locale_lookup",
+      extra: { email },
+    });
   }
 
   return normalizeEmailLocale(undefined);
@@ -130,7 +134,15 @@ export async function POST(req: Request) {
       lang,
     });
   } catch (err: any) {
-    console.error("[send-email-hook] send failed:", err?.message || err);
+    // Auth emails are high-stakes — a failed signup confirm or password
+    // reset email blocks the user from getting into the app. Capture
+    // every send failure so we hear about it instead of relying on
+    // Vercel logs.
+    captureBackgroundError(err, {
+      where: "send-email-hook.send",
+      tags: { actionType },
+      extra: { recipient },
+    });
     // Returning 500 makes Supabase retry per its built-in retry policy.
     // For non-retryable issues (invalid recipient, etc.), the Resend
     // helper has already thrown a 4xx-style error which we want to

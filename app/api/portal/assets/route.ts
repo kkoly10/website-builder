@@ -9,6 +9,7 @@ import {
   getIpFromHeaders,
   rateLimitResponse,
 } from "@/lib/rateLimit";
+import { captureBackgroundError } from "@/lib/sentry";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyFileMagic } from "@/lib/fileMagic";
 
@@ -144,7 +145,10 @@ export async function POST(req: NextRequest) {
       const notificationCtx = await getNotificationContext(token);
       if (notificationCtx) {
         sendEventNotification(notificationCtx).catch((err) => {
-          console.error("[portal/assets] notification error:", err);
+          captureBackgroundError(err, {
+            where: "portal-assets.notification",
+            extra: { token },
+          });
         });
       }
 
@@ -255,7 +259,10 @@ export async function POST(req: NextRequest) {
           .from(ASSET_BUCKET)
           .remove([storagePath])
           .catch((cleanupErr) => {
-            console.error("[portal/assets] orphan cleanup failed:", cleanupErr);
+            captureBackgroundError(cleanupErr, {
+              where: "portal-assets.orphan_cleanup",
+              extra: { storagePath },
+            });
           });
         throw insertErr;
       }
@@ -263,7 +270,10 @@ export async function POST(req: NextRequest) {
       const notificationCtx = await getNotificationContext(token);
       if (notificationCtx) {
         sendEventNotification(notificationCtx).catch((err) => {
-          console.error("[portal/assets] notification error:", err);
+          captureBackgroundError(err, {
+            where: "portal-assets.notification",
+            extra: { token },
+          });
         });
       }
 

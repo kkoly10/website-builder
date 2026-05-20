@@ -5,6 +5,7 @@ import { recordServerEvent } from "@/lib/analytics/server";
 import { pickPreferredLocale } from "@/lib/preferredLocale";
 import { sendResendEmail } from "@/lib/resend";
 import { SITE_URL, FROM_EMAIL, ADMIN_EMAIL } from "@/lib/emailHelpers";
+import { captureBackgroundError } from "@/lib/sentry";
 import { type EmailLocale, normalizeEmailLocale, t } from "@/lib/i18n/emailStrings";
 import {
   buildDiscoveryClientEmail,
@@ -271,7 +272,10 @@ export async function POST(req: Request) {
       });
       console.log("[book-discovery-call] client email sent id=", (clientRes as any)?.id);
     } catch (emailErr) {
-      console.error("[book-discovery-call] client confirmation email failed:", emailErr);
+      captureBackgroundError(emailErr, {
+        where: "book-discovery-call.client_confirmation",
+        extra: { callId, email, scheduled: !!scheduledAt },
+      });
     }
 
     if (ADMIN_EMAIL) {
@@ -288,7 +292,10 @@ export async function POST(req: Request) {
         });
         console.log("[book-discovery-call] admin email sent id=", (adminRes as any)?.id);
       } catch (emailErr) {
-        console.error("[book-discovery-call] admin notification email failed:", emailErr);
+        captureBackgroundError(emailErr, {
+          where: "book-discovery-call.admin_notification",
+          extra: { callId, email, scheduled: !!scheduledAt },
+        });
       }
     } else {
       console.warn("[book-discovery-call] ADMIN_NOTIFICATION_EMAIL not set — admin alert skipped");

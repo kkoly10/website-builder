@@ -210,7 +210,12 @@ async function finishCertDelivery(
     leadName: input.leadName,
     leadEmail: input.leadEmail,
     workspaceUrl: `${siteUrl}/internal/admin/${input.quoteId}`,
-  }).catch((err) => console.error("[certificates] admin notification error:", err));
+  }).catch((err) =>
+    captureBackgroundError(err, {
+      where: "certificates.admin_notification",
+      extra: { quoteId: input.quoteId, agreementId: input.agreementId },
+    })
+  );
 
   return { certificatePath: certPath };
 }

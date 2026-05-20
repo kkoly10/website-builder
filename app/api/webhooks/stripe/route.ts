@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { markDepositPaidForQuoteId } from "@/lib/customerPortal";
 import { confirmEcommerceDepositPayment, confirmOpsDepositPayment } from "@/lib/depositPayments";
 import { markProjectInvoicePaid } from "@/lib/projectInvoices";
+import { captureBackgroundError } from "@/lib/sentry";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
@@ -340,7 +341,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Webhook processing error";
-    console.error("[stripe-webhook] Error:", message);
+    // Capture to Sentry — Stripe webhook failures are billing-critical
+    // (customer paid but the system didn't recognize it). Vercel logs
+    // alone aren't enough. Returning 500 makes Stripe retry per its
+    // built-in retry schedule, but a persistent failure still needs a
+    // human to look at it.
+    captureBackgroundError(err, {
+      where: "stripe-webhook",
+      extra: { message },
+    });
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
