@@ -17,6 +17,7 @@
   "dependencies": {
     "@fontsource/playfair-display": "^5.2.8",
     "@react-pdf/renderer": "^4.5.1",
+    "@sentry/nextjs": "^10.53.1",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.49.1",
     "googleapis": "^171.4.0",

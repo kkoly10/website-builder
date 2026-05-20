@@ -1,6 +1,7 @@
 import { sendResendEmail } from "@/lib/resend";
 import { emailWrap, ctaButton, adminTable, callout, sig, escHtml, adminBadge, FROM_EMAIL, ADMIN_EMAIL, UNSUBSCRIBE_EMAIL } from "@/lib/emailHelpers";
 import { type EmailLocale, normalizeEmailLocale, t, greeting, laneLabel, invoiceTypeLabel } from "@/lib/i18n/emailStrings";
+import { captureBackgroundError } from "@/lib/sentry";
 
 type EventContext = {
   event: string;
@@ -420,7 +421,11 @@ export async function sendEventNotification(ctx: EventContext) {
         html: tmpl.html,
         ...(tmpl.marketing ? { listUnsubscribeEmail: UNSUBSCRIBE_EMAIL } : {}),
       }).catch((err) => {
-        console.error(`[notifications] client email failed for ${ctx.event}:`, err);
+        captureBackgroundError(err, {
+          where: "notifications.clientEmail",
+          tags: { event: ctx.event },
+          extra: { leadEmail: clientTo },
+        });
       })
     );
   } else if (tmpl.toClient && (ctx.leadEmail || "").trim()) {
@@ -437,7 +442,10 @@ export async function sendEventNotification(ctx: EventContext) {
         subject: tmpl.adminSubject ?? tmpl.subject,
         html: tmpl.adminHtml ?? tmpl.html,
       }).catch((err) => {
-        console.error(`[notifications] admin email failed for ${ctx.event}:`, err);
+        captureBackgroundError(err, {
+          where: "notifications.adminEmail",
+          tags: { event: ctx.event },
+        });
       })
     );
   }

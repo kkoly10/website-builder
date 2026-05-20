@@ -5,6 +5,7 @@ import QRCode from "qrcode";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendResendEmail } from "@/lib/resend";
 import { sendEventNotification } from "@/lib/notifications";
+import { captureBackgroundError } from "@/lib/sentry";
 import { AgreementDocument } from "@/lib/certificates/AgreementDocument";
 import { CertificateDocument } from "@/lib/certificates/CertificateDocument";
 import { emailWrap, ctaButton, sig, escHtml, FROM_EMAIL } from "@/lib/emailHelpers";
@@ -206,7 +207,15 @@ async function finishCertDelivery(
       .update({ certificate_delivery_status: "sent" })
       .eq("id", input.agreementId);
   } catch (emailErr) {
-    console.error("[certificates] client email failed:", emailErr);
+    // Surface to Sentry so admin sees recipient-side delivery failures
+    // (Resend 4xx, bounces from leadEmail typos) without having to
+    // tail Vercel logs. delivery_status flag still flips so the admin
+    // regenerate flow can re-trigger.
+    captureBackgroundError(emailErr, {
+      where: "certificates.clientEmail",
+      tags: { agreementId: input.agreementId, quoteId: input.quoteId },
+      extra: { leadEmail: input.leadEmail },
+    });
     await supabaseAdmin
       .from("agreements")
       .update({ certificate_delivery_status: "failed" })
