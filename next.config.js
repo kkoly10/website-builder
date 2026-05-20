@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const path = require("path");
 const createNextIntlPlugin = require("next-intl/plugin");
+const { withSentryConfig } = require("@sentry/nextjs");
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
@@ -54,4 +55,22 @@ const nextConfig = {
   },
 };
 
-module.exports = withNextIntl(nextConfig);
+// Sentry build-time wrapper. Uploads source maps to Sentry (so stack
+// traces in the dashboard show our actual code, not minified output)
+// and wires the SDK into the Next.js webpack/turbopack pipeline. The
+// auth-token-driven steps (source map upload, release tracking) only
+// run when SENTRY_AUTH_TOKEN + SENTRY_ORG + SENTRY_PROJECT are set —
+// safe to ship without them, just means stack traces stay minified.
+const sentryWebpackPluginOptions = {
+  silent: true,
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  // Hide source maps from the public client bundle while still uploading
+  // them to Sentry — keeps reverse-engineering harder without losing
+  // readable stack traces in the dashboard.
+  hideSourceMaps: true,
+  // Tree-shake away Sentry SDK logger calls in production bundles.
+  disableLogger: true,
+};
+
+module.exports = withSentryConfig(withNextIntl(nextConfig), sentryWebpackPluginOptions);
