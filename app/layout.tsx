@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { NextIntlClientProvider } from "next-intl";
 import "./globals.css";
@@ -29,6 +29,13 @@ export const metadata: Metadata = {
     description:
       "Premium websites, e-commerce systems, and workflow automation for growth-focused businesses.",
   },
+};
+
+// Brand accent red — drives the mobile browser chrome on iOS Safari /
+// Android Chrome when the site is open. Kept in the viewport export
+// (separate from `metadata`) per Next 14+ convention.
+export const viewport: Viewport = {
+  themeColor: "#c43e2b",
 };
 
 export const dynamic = "force-dynamic";
