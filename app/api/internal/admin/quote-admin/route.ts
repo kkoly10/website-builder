@@ -370,7 +370,7 @@ export async function POST(req: NextRequest) {
       // fields are missing, so other callers still work.
       const leadRow = await supabaseAdmin
         .from("quotes")
-        .select("lead_name, lead_email, public_token, project_type, estimate_total")
+        .select("lead_id, lead_name, lead_email, public_token, project_type, estimate_total")
         .eq("id", quoteId)
         .maybeSingle();
 
@@ -384,6 +384,17 @@ export async function POST(req: NextRequest) {
           .eq("quote_id", quoteId)
           .maybeSingle();
         const portal = portalRow.data;
+
+        // Pull lead's preferred locale so the client email is translated.
+        let leadLocale: string | null = null;
+        if ((lead as any).lead_id) {
+          const localeRes = await supabaseAdmin
+            .from("leads")
+            .select("preferred_locale")
+            .eq("id", (lead as any).lead_id)
+            .maybeSingle();
+          leadLocale = (localeRes.data?.preferred_locale as string | undefined) || null;
+        }
 
         const estimateAmount = Number(lead.estimate_total) || undefined;
         const depositAmount = portal?.deposit_amount_cents
@@ -404,6 +415,7 @@ export async function POST(req: NextRequest) {
             : undefined,
           estimateAmount,
           depositAmount,
+          lang: leadLocale || undefined,
         }).catch((err) => {
           console.error("[quote-admin] notification error:", err);
         });

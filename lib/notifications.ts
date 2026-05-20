@@ -1,8 +1,6 @@
 import { sendResendEmail } from "@/lib/resend";
-import { emailWrap, ctaButton, adminTable, callout, sig, escHtml, adminBadge } from "@/lib/emailHelpers";
-
-const FROM_EMAIL = process.env.NOTIFICATION_FROM_EMAIL || "studio@crecystudio.com";
-const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || "";
+import { emailWrap, ctaButton, adminTable, callout, sig, escHtml, adminBadge, FROM_EMAIL, ADMIN_EMAIL, UNSUBSCRIBE_EMAIL } from "@/lib/emailHelpers";
+import { type EmailLocale, normalizeEmailLocale, t, greeting, laneLabel, invoiceTypeLabel } from "@/lib/i18n/emailStrings";
 
 type EventContext = {
   event: string;
@@ -17,30 +15,29 @@ type EventContext = {
   productionUrl?: string;     // for site_live — the live URL to surface
   estimateAmount?: number;    // dollars (not cents) — for agreement_published
   depositAmount?: number;     // dollars (not cents) — for agreement_published
+  // Lead's preferred locale. Client emails are translated; admin
+  // emails stay English regardless (admin is internal).
+  lang?: EmailLocale | string;
+  // For invoice_paid_receipt event:
+  paidAmount?: number;        // dollars
+  invoiceType?: string;       // deposit | milestone | final | retainer
+  paidAt?: string;            // ISO string
+  paymentReference?: string;
 };
 
-// Friendly label per ProjectType. Used in subject lines and headlines
-// so a custom-app client sees "your custom app" instead of generic
-// "your project".
-function projectTypeLabel(projectType?: string | null): string {
-  switch (projectType) {
-    case "website": return "website";
-    case "web_app": return "custom app";
-    case "automation": return "automation";
-    case "ecommerce": return "store";
-    case "rescue": return "site rescue";
-    case "ai_integration": return "AI integration";
-    default: return "project";
-  }
-}
-
-function formatMoney(amount?: number | null): string {
+function formatMoney(amount?: number | null, locale = "en-US"): string {
   if (amount == null || !Number.isFinite(amount)) return "";
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
   }).format(amount);
+}
+
+function intlLocale(lang: EmailLocale): string {
+  if (lang === "fr") return "fr-FR";
+  if (lang === "es") return "es-ES";
+  return "en-US";
 }
 
 // Only render external URLs that are absolute http(s). Defense against a
@@ -63,39 +60,51 @@ type TemplateResult = {
   toAdmin: boolean;
   adminSubject?: string;
   adminHtml?: string;
+  // Marketing-adjacent (not strictly transactional) — add the
+  // List-Unsubscribe header so Gmail/Outlook show a one-click
+  // unsubscribe button. Pure transactional events (invoices, receipts,
+  // agreements) leave this unset.
+  marketing?: boolean;
 };
 
-const templates: Record<string, (ctx: EventContext) => TemplateResult> = {
-  agreement_published: (ctx) => {
-    const laneLabel = projectTypeLabel(ctx.projectType);
+const templates: Record<string, (ctx: EventContext, lang: EmailLocale) => TemplateResult> = {
+  agreement_published: (ctx, lang) => {
+    const lane = laneLabel(ctx.projectType, lang);
+    const laneEn = laneLabel(ctx.projectType, "en");
+    const shortId = ctx.quoteId.slice(0, 8);
     const hasEstimate = Number.isFinite(ctx.estimateAmount) && (ctx.estimateAmount as number) > 0;
     const hasDeposit = Number.isFinite(ctx.depositAmount) && (ctx.depositAmount as number) > 0;
-    const totalLine = hasEstimate
-      ? `${formatMoney(ctx.estimateAmount)} total${hasDeposit ? `, ${formatMoney(ctx.depositAmount)} deposit on signature` : ""}`
+    const terms = hasEstimate
+      ? `${formatMoney(ctx.estimateAmount, intlLocale(lang))}${hasDeposit ? ` · ${formatMoney(ctx.depositAmount, intlLocale(lang))} ${lang === "fr" ? "à la signature" : lang === "es" ? "a la firma" : "deposit on signature"}` : ""}`
       : "";
+
     return {
-      subject: `Your ${laneLabel} agreement is ready to sign — CrecyStudio`,
+      subject: t("agreement_published.subject", lang, { lane }),
       html: emailWrap(`
-        <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your agreement is ready to sign.</h1>
-        <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${laneLabel.charAt(0).toUpperCase() + laneLabel.slice(1)} agreement &middot; ${escHtml(ctx.quoteId.slice(0, 8))}</p>
-        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
-        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">The agreement covering scope, timeline, deliverables${totalLine ? `, and payment terms (<strong>${escHtml(totalLine)}</strong>)` : ", and payment terms"} is ready in your workspace. Once signed, the project kicks off — no further back and forth.</p>
-        <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">It's worth a careful read. If anything in it doesn't match the conversations we've had, flag it before signing.</p>
-        ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Review agreement") : ""}
-        <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">Reply with questions before you sign.</p>
-        ${sig()}
-      `, "Reply to this email to reach Komlan directly.", `Your ${laneLabel} agreement is ready — review and sign in your workspace.`),
+        <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("agreement_published.headline", lang))}</h1>
+        <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("agreement_published.eyebrow", lang, { lane: lane.charAt(0).toUpperCase() + lane.slice(1), shortId }))}</p>
+        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
+        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${terms ? t("agreement_published.body_with_terms", lang, { terms: escHtml(terms) }) : t("agreement_published.body_no_terms", lang)}</p>
+        <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("agreement_published.body_review", lang))}</p>
+        ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, t("agreement_published.cta", lang)) : ""}
+        <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">${escHtml(t("agreement_published.fineprint", lang))}</p>
+        ${sig(lang)}
+      `, {
+        footerNote: t("common.footer.reply_note", lang),
+        preheader: t("agreement_published.preheader", lang, { lane }),
+        lang,
+      }),
       toClient: true,
       toAdmin: true,
-      adminSubject: `Agreement published — ${escHtml(ctx.leadName || ctx.leadEmail)} — ${ctx.quoteId.slice(0, 8)}`,
+      adminSubject: `Agreement published — ${escHtml(ctx.leadName || "client")} — ${shortId}`,
       adminHtml: emailWrap(`
         ${adminBadge("Admin alert")}
         <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">Agreement sent for signature</h1>
         ${adminTable([
           ["Client", escHtml(ctx.leadName || "—")],
           ["Email", `<a href="mailto:${escHtml(ctx.leadEmail)}" style="color:#111">${escHtml(ctx.leadEmail)}</a>`],
-          ["Lane", escHtml(laneLabel)],
-          ...(totalLine ? [["Terms", escHtml(totalLine)] as [string, string]] : []),
+          ["Lane", escHtml(laneEn)],
+          ...(terms ? [["Terms", escHtml(terms)] as [string, string]] : []),
           ["Quote ID", `<span style="font-family:monospace;font-size:12px;color:#888">${escHtml(ctx.quoteId)}</span>`],
         ])}
         ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open workspace") : ""}
@@ -103,42 +112,50 @@ const templates: Record<string, (ctx: EventContext) => TemplateResult> = {
     };
   },
 
-  preview_ready: (ctx) => {
-    const laneLabel = projectTypeLabel(ctx.projectType);
+  preview_ready: (ctx, lang) => {
+    const lane = laneLabel(ctx.projectType, lang);
     return {
-      subject: `Your ${laneLabel} preview is ready — CrecyStudio`,
+      subject: t("preview_ready.subject", lang, { lane }),
       html: emailWrap(`
-        <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your preview is live.</h1>
-        <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Preview ready for review</p>
-        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
-        <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">A new preview of your ${laneLabel} is ready. Open your workspace to review it and leave feedback in one batch — that keeps revisions clean and the project moving.</p>
-        ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open preview") : ""}
-        ${callout("How to review", [
-          "→&ensp;Open the preview link in your workspace",
-          "→&ensp;Leave notes on anything you'd like changed",
-          "→&ensp;Submit feedback as one batch — Komlan responds within 24 hours",
+        <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("preview_ready.headline", lang))}</h1>
+        <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("preview_ready.eyebrow", lang))}</p>
+        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
+        <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("preview_ready.body", lang, { lane }))}</p>
+        ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, t("preview_ready.cta", lang)) : ""}
+        ${callout(t("preview_ready.howto_label", lang), [
+          escHtml(t("preview_ready.howto_1", lang)),
+          escHtml(t("preview_ready.howto_2", lang)),
+          escHtml(t("preview_ready.howto_3", lang)),
         ])}
-        ${sig()}
-      `, "Reply to this email to reach Komlan directly.", `Your ${laneLabel} preview is ready — open your workspace to review it.`),
+        ${sig(lang)}
+      `, {
+        footerNote: t("common.footer.reply_note", lang),
+        preheader: t("preview_ready.preheader", lang, { lane }),
+        lang,
+      }),
       toClient: true,
       toAdmin: false,
     };
   },
 
-  launch_ready: (ctx) => ({
-    subject: `Your website is ready to launch — CrecyStudio`,
+  launch_ready: (ctx, lang) => ({
+    subject: t("launch_ready.subject", lang),
     html: emailWrap(`
-      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Ready to go live.</h1>
-      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Launch checklist complete</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
-      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">Every item on the launch checklist is signed off — domain, forms, analytics, SEO, handoff. Your site goes live whenever you give the word.</p>
-      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Approve launch") : ""}
-      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">Click the button to confirm, or reply if you want one more pass before going live.</p>
-      ${sig()}
-    `, "Reply to this email to reach Komlan directly.", "Everything is ready — give the word and your site goes live."),
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("launch_ready.headline", lang))}</h1>
+      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("launch_ready.eyebrow", lang))}</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
+      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("launch_ready.body", lang))}</p>
+      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, t("launch_ready.cta", lang)) : ""}
+      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">${escHtml(t("launch_ready.fineprint", lang))}</p>
+      ${sig(lang)}
+    `, {
+      footerNote: t("common.footer.reply_note", lang),
+      preheader: t("launch_ready.preheader", lang),
+      lang,
+    }),
     toClient: true,
     toAdmin: true,
-    adminSubject: `Launch ready — ${escHtml(ctx.leadName || ctx.leadEmail)} — ${ctx.quoteId.slice(0, 8)}`,
+    adminSubject: `Launch ready — ${escHtml(ctx.leadName || "client")} — ${ctx.quoteId.slice(0, 8)}`,
     adminHtml: emailWrap(`
       ${adminBadge("Admin alert")}
       <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">Launch checklist signed off</h1>
@@ -151,38 +168,43 @@ const templates: Record<string, (ctx: EventContext) => TemplateResult> = {
     `),
   }),
 
-  site_live: (ctx) => {
-    const laneLabel = projectTypeLabel(ctx.projectType);
+  site_live: (ctx, lang) => {
+    const lane = laneLabel(ctx.projectType, lang);
+    const laneEn = laneLabel(ctx.projectType, "en");
     const isWebsite = !ctx.projectType || ctx.projectType === "website";
     const productionUrl = safeHttpUrl(ctx.productionUrl);
     const liveLine = productionUrl
-      ? `Your ${laneLabel} is live at <a href="${escHtml(productionUrl)}" style="color:#111111;font-weight:600;text-decoration:underline">${escHtml(productionUrl)}</a>.`
-      : `Your ${laneLabel} is shipped and indexed.`;
+      ? t("site_live.body_live_at", lang, { lane, url: escHtml(productionUrl) })
+      : t("site_live.body_live_generic", lang, { lane });
+    const careLine = isWebsite
+      ? t("site_live.body_website_care", lang)
+      : t("site_live.body_app_care", lang);
+
     return {
-      subject: `Your ${laneLabel} is live — CrecyStudio`,
+      subject: t("site_live.subject", lang, { lane }),
       html: emailWrap(`
-        <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your ${laneLabel} is live.</h1>
-        <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Project launched</p>
-        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">Hi ${escHtml(ctx.leadName)},</p>
-        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${liveLine} The full handoff — admin credentials, analytics access, and post-launch documentation — is waiting in your workspace.</p>
-        ${isWebsite
-          ? `<p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">A live website is a starting line, not a finish line. The next 90 days are where real conversions happen — small copy and design tweaks, content updates, performance tuning. If you'd rather not handle that yourself, our Care Plans start at $199/mo and keep the site evolving instead of decaying.</p>`
-          : `<p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">Launching is the easy part — the next 90 days are where real usage shapes the product. If you want ongoing engineering and tuning rather than every change becoming a new project, ask about our retainer arrangements.</p>`
-        }
-        ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open handoff") : ""}
-        <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">It was a real pleasure building this with you. Reply anytime — for support, updates, or just to share how the launch goes.</p>
-        ${sig()}
-      `, "", `Your ${laneLabel} is now live. Handoff and ongoing-support options are in your workspace.`),
+        <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("site_live.headline", lang, { lane }))}</h1>
+        <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("site_live.eyebrow", lang))}</p>
+        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
+        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${liveLine}</p>
+        <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${careLine}</p>
+        ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, t("site_live.cta", lang)) : ""}
+        <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">${escHtml(t("site_live.fineprint", lang))}</p>
+        ${sig(lang)}
+      `, {
+        preheader: t("site_live.preheader", lang, { lane }),
+        lang,
+      }),
       toClient: true,
       toAdmin: true,
-      adminSubject: `Site live — ${escHtml(ctx.leadName || ctx.leadEmail)} — ${ctx.quoteId.slice(0, 8)}`,
+      adminSubject: `Site live — ${escHtml(ctx.leadName || "client")} — ${ctx.quoteId.slice(0, 8)}`,
       adminHtml: emailWrap(`
         ${adminBadge("Admin alert")}
         <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">Project marked live</h1>
         ${adminTable([
           ["Client", escHtml(ctx.leadName || "—")],
           ["Email", `<a href="mailto:${escHtml(ctx.leadEmail)}" style="color:#111">${escHtml(ctx.leadEmail)}</a>`],
-          ["Lane", escHtml(laneLabel)],
+          ["Lane", escHtml(laneEn)],
           ...(productionUrl ? [["Live URL", `<a href="${escHtml(productionUrl)}" style="color:#111">${escHtml(productionUrl)}</a>`] as [string, string]] : []),
           ["Quote ID", `<span style="font-family:monospace;font-size:12px;color:#888">${escHtml(ctx.quoteId)}</span>`],
         ])}
@@ -191,6 +213,124 @@ const templates: Record<string, (ctx: EventContext) => TemplateResult> = {
     };
   },
 
+  // ─── Client-facing: deposit received / kickoff ────────────────
+  deposit_received: (ctx, lang) => {
+    const hasAmount = Number.isFinite(ctx.depositAmount) && (ctx.depositAmount as number) > 0;
+    const intro = hasAmount
+      ? t("deposit_received.body_intro", lang, { amount: formatMoney(ctx.depositAmount, intlLocale(lang)) })
+      : t("deposit_received.body_intro_no_amount", lang);
+
+    return {
+      subject: t("deposit_received.subject", lang),
+      html: emailWrap(`
+        <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("deposit_received.headline", lang))}</h1>
+        <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("deposit_received.eyebrow", lang))}</p>
+        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
+        <p style="margin:0 0 24px;font-size:15px;color:#444444;line-height:1.7">${intro}</p>
+        ${callout(t("deposit_received.next_label", lang), [
+          escHtml(t("deposit_received.next_1", lang)),
+          escHtml(t("deposit_received.next_2", lang)),
+          escHtml(t("deposit_received.next_3", lang)),
+        ])}
+        ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, t("deposit_received.cta", lang)) : ""}
+        ${sig(lang)}
+      `, {
+        footerNote: t("common.footer.reply_note", lang),
+        preheader: t("deposit_received.preheader", lang),
+        lang,
+      }),
+      toClient: true,
+      toAdmin: false,
+    };
+  },
+
+  // ─── Client-facing: branded payment receipt ───────────────────
+  invoice_paid_receipt: (ctx, lang) => {
+    const amount = formatMoney(ctx.paidAmount, intlLocale(lang));
+    const typeLabel = invoiceTypeLabel(ctx.invoiceType, lang);
+    const paidAtDate = ctx.paidAt
+      ? new Date(ctx.paidAt).toLocaleDateString(intlLocale(lang), {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })
+      : "";
+
+    const rows: [string, string][] = [
+      [t("invoice_paid_receipt.row_amount", lang), `<strong style="font-size:15px;color:#111111">${escHtml(amount)}</strong>`],
+      [t("invoice_paid_receipt.row_type", lang), escHtml(typeLabel)],
+      [t("invoice_paid_receipt.row_date", lang), escHtml(paidAtDate)],
+      [t("invoice_paid_receipt.row_project", lang), `<span style="font-family:monospace;font-size:12px;color:#888888">${escHtml(ctx.quoteId.slice(0, 8))}</span>`],
+    ];
+    if (ctx.paymentReference) {
+      rows.push([t("invoice_paid_receipt.row_reference", lang), `<span style="font-family:monospace;font-size:12px;color:#888888">${escHtml(ctx.paymentReference)}</span>`]);
+    }
+
+    return {
+      subject: t("invoice_paid_receipt.subject", lang, { amount }),
+      html: emailWrap(`
+        <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("invoice_paid_receipt.headline", lang))}</h1>
+        <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("invoice_paid_receipt.eyebrow", lang, { type: typeLabel }))}</p>
+        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
+        <p style="margin:0 0 24px;font-size:15px;color:#444444;line-height:1.7">${t("invoice_paid_receipt.body", lang, { amount: escHtml(amount), date: escHtml(paidAtDate) })}</p>
+        ${adminTable(rows)}
+        ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, t("invoice_paid_receipt.cta", lang)) : ""}
+        ${sig(lang)}
+      `, {
+        footerNote: t("common.footer.reply_note", lang),
+        preheader: t("invoice_paid_receipt.preheader", lang, { amount }),
+        lang,
+      }),
+      toClient: true,
+      toAdmin: false,
+    };
+  },
+
+  // ─── Client-facing: revision acknowledgment ───────────────────
+  revision_received: (ctx, lang) => ({
+    subject: t("revision_received.subject", lang),
+    html: emailWrap(`
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("revision_received.headline", lang))}</h1>
+      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("revision_received.eyebrow", lang))}</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
+      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("revision_received.body", lang))}</p>
+      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, t("revision_received.cta", lang)) : ""}
+      ${sig(lang)}
+    `, {
+      footerNote: t("common.footer.reply_note", lang),
+      preheader: t("revision_received.preheader", lang),
+      lang,
+    }),
+    toClient: true,
+    toAdmin: false,
+  }),
+
+  // ─── Client-facing: 30-day post-launch check-in ───────────────
+  post_launch_30d: (ctx, lang) => ({
+    subject: t("post_launch_30d.subject", lang),
+    html: emailWrap(`
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("post_launch_30d.headline", lang))}</h1>
+      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("post_launch_30d.eyebrow", lang))}</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("post_launch_30d.body_intro", lang))}</p>
+      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("post_launch_30d.body_offer", lang))}</p>
+      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, t("post_launch_30d.cta", lang)) : ""}
+      ${sig(lang)}
+    `, {
+      footerNote: t("common.footer.reply_note", lang),
+      preheader: t("post_launch_30d.preheader", lang),
+      lang,
+      // Soft pitch — flag as marketing-adjacent so the footer shows the
+      // unsubscribe-equivalent line. Workspace URL doubles as a
+      // preferences surface (clients can mute nudges there in future).
+      unsubscribeUrl: ctx.workspaceUrl,
+    }),
+    toClient: true,
+    toAdmin: false,
+    marketing: true,
+  }),
+
+  // ─── Admin-only events (English) ──────────────────────────────
   revision_submitted: (ctx) => ({
     subject: `Revision request from ${escHtml(ctx.leadName)}`,
     html: emailWrap(`
@@ -244,7 +384,7 @@ const templates: Record<string, (ctx: EventContext) => TemplateResult> = {
     subject: `Agreement accepted — ${escHtml(ctx.leadName)}`,
     html: emailWrap(`
       ${adminBadge("Admin alert")}
-      <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">&#x2705; Agreement signed</h1>
+      <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">Agreement signed</h1>
       ${adminTable([
         ["Client", escHtml(ctx.leadName)],
         ["Email", `<a href="mailto:${escHtml(ctx.leadEmail)}" style="color:#111">${escHtml(ctx.leadEmail)}</a>`],
@@ -262,7 +402,8 @@ export async function sendEventNotification(ctx: EventContext) {
   const builder = templates[ctx.event];
   if (!builder) return;
 
-  const tmpl = builder(ctx);
+  const lang = normalizeEmailLocale(ctx.lang);
+  const tmpl = builder(ctx, lang);
   const sends: Promise<any>[] = [];
 
   // Trim + validate before dispatch. A whitespace-only or malformed
@@ -277,6 +418,7 @@ export async function sendEventNotification(ctx: EventContext) {
         from: FROM_EMAIL,
         subject: tmpl.subject,
         html: tmpl.html,
+        ...(tmpl.marketing ? { listUnsubscribeEmail: UNSUBSCRIBE_EMAIL } : {}),
       }).catch((err) => {
         console.error(`[notifications] client email failed for ${ctx.event}:`, err);
       })

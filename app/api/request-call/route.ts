@@ -5,7 +5,7 @@ import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/
 import { recordServerEvent } from "@/lib/analytics/server";
 import { maybeAttachQuoteToUser, resolveQuoteAccess, sameNormalizedEmail } from "@/lib/accessControl";
 import { pickPreferredLocale } from "@/lib/preferredLocale";
-import { emailWrap, adminTable, ctaButton, adminBadge, escHtml, appBaseUrl } from "@/lib/emailHelpers";
+import { emailWrap, adminTable, ctaButton, adminBadge, escHtml, appBaseUrl, FROM_EMAIL, ADMIN_EMAIL } from "@/lib/emailHelpers";
 import { sendResendEmail } from "@/lib/resend";
 
 export const runtime = "nodejs";
@@ -110,12 +110,12 @@ export async function POST(req: Request) {
 
     await supabaseAdmin.from("quotes").update({ status: "call_requested" }).eq("id", quoteId);
 
-    const FROM = process.env.RESEND_FROM_EMAIL;
-    const TO = process.env.ALERT_TO_EMAIL;
-
-    if (FROM && TO) {
+    if (FROM_EMAIL && ADMIN_EMAIL) {
       const internalLink = `${appBaseUrl()}/internal/preview?quoteId=${quoteId}`;
-      const subject = `Scope call requested — ${leadEmail} — ${quoteId.slice(0, 8)}`;
+      // Subject drops the customer email to keep PII out of lock-screen
+      // notifications. The full email is in the body row + the
+      // "Reply-To" target is one click away.
+      const subject = `Scope call requested — ${leadName || "(no name)"} — ${quoteId.slice(0, 8)}`;
 
       const rows: [string, string][] = [
         ["Name", escHtml(leadName || "—")],
@@ -130,7 +130,7 @@ export async function POST(req: Request) {
 
       const html = emailWrap(`
         ${adminBadge("Scope call request")}
-        <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">&#x1F4DE; New scope call request</h1>
+        <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">New scope call request</h1>
         ${adminTable(rows)}
         ${internalLink ? ctaButton(internalLink, "Open internal preview") : ""}
       `);
@@ -139,7 +139,7 @@ export async function POST(req: Request) {
       // attachment encoding consistency. The previous raw fetch lost
       // those benefits and would silently drop the alert if Resend was
       // momentarily unhealthy.
-      await sendResendEmail({ to: TO, from: FROM, subject, html }).catch((err) => {
+      await sendResendEmail({ to: ADMIN_EMAIL, from: FROM_EMAIL, subject, html }).catch((err) => {
         console.error("[request-call] admin alert failed:", err);
       });
     }

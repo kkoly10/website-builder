@@ -1,6 +1,7 @@
 import { ensureCustomerPortalForQuoteId, markDepositPaidForQuoteId } from "@/lib/customerPortal";
 import { logProjectActivityByPortalId } from "@/lib/projectActivity";
 import { sendResendEmail } from "@/lib/resend";
+import { sendEventNotification } from "@/lib/notifications";
 import { stripeCreateCheckoutSession } from "@/lib/stripeServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
@@ -10,9 +11,9 @@ import {
   callout,
   sig,
   escHtml,
+  FROM_EMAIL,
 } from "@/lib/emailHelpers";
-
-const FROM_EMAIL = process.env.NOTIFICATION_FROM_EMAIL || "studio@10xwebsites.com";
+import { normalizeEmailLocale, t, invoiceTypeLabel } from "@/lib/i18n/emailStrings";
 
 export type ProjectInvoiceView = {
   id: string;
@@ -58,13 +59,10 @@ function ensureBaseUrl(value: string) {
   return str(value).replace(/\/$/, "") || "https://crecystudio.com";
 }
 
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+function intlLocale(lang: "en" | "fr" | "es"): string {
+  if (lang === "fr") return "fr-FR";
+  if (lang === "es") return "es-ES";
+  return "en-US";
 }
 
 function deriveInvoiceStatus(row: InvoiceRow): ProjectInvoiceView["status"] {
@@ -156,6 +154,10 @@ async function getInvoiceContextById(invoiceId: string) {
   return { invoice, portal, quote, lead };
 }
 
+function getLeadLocale(lead: Record<string, any> | null) {
+  return normalizeEmailLocale(lead?.preferred_locale);
+}
+
 async function getCustomerEmail(quote: Record<string, any>, lead: Record<string, any> | null) {
   const email = str(quote.lead_email) || str(lead?.email);
   if (!email || !email.includes("@")) {
@@ -174,44 +176,52 @@ async function sendInvoiceEmail(args: {
   quoteId: string;
   recipientEmail: string;
   notes?: string | null;
+  lang?: string | null;
 }) {
-  const typeLabel = (str(args.invoiceType).replace(/_/g, " ") || "project").trim();
-  const typeLabelTitle = typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1);
-  const formattedAmount = new Intl.NumberFormat("en-US", {
+  const lang = normalizeEmailLocale(args.lang);
+  const typeLabel = invoiceTypeLabel(args.invoiceType, lang);
+  const formattedAmount = new Intl.NumberFormat(intlLocale(lang), {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
   }).format(args.amount);
   const formattedDueDate = args.dueDate
-    ? new Date(args.dueDate).toLocaleDateString("en-US", {
+    ? new Date(args.dueDate).toLocaleDateString(intlLocale(lang), {
         month: "short",
         day: "numeric",
         year: "numeric",
       })
     : null;
-  const safeName = escHtml(str(args.leadName) || "there");
+  const trimmedName = str(args.leadName);
+  const headline = trimmedName
+    ? t("invoice.headline_named", lang, { name: escHtml(trimmedName) })
+    : t("invoice.headline_unnamed", lang);
   const safeNotes = str(args.notes) ? escHtml(str(args.notes)).replace(/\n/g, "<br/>") : null;
 
   const tableRows: [string, string][] = [
-    ["Amount", `<strong style="font-size:15px;color:#111111">${escHtml(formattedAmount)}</strong>`],
-    ["Type", escHtml(typeLabelTitle)],
-    ["Project", `<span style="font-family:monospace;font-size:12px;color:#888888">${escHtml(args.quoteId.slice(0, 8))}</span>`],
+    [t("invoice.row_amount", lang), `<strong style="font-size:15px;color:#111111">${escHtml(formattedAmount)}</strong>`],
+    [t("invoice.row_type", lang), escHtml(typeLabel)],
+    [t("invoice.row_project", lang), `<span style="font-family:monospace;font-size:12px;color:#888888">${escHtml(args.quoteId.slice(0, 8))}</span>`],
   ];
-  if (formattedDueDate) tableRows.push(["Due", escHtml(formattedDueDate)]);
+  if (formattedDueDate) tableRows.push([t("invoice.row_due", lang), escHtml(formattedDueDate)]);
 
   await sendResendEmail({
     to: args.recipientEmail,
     from: FROM_EMAIL,
-    subject: `Invoice ready: ${formattedAmount} — CrecyStudio`,
+    subject: t("invoice.subject", lang, { amount: formattedAmount }),
     html: emailWrap(`
-      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">Your invoice is ready, ${safeName}.</h1>
-      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(typeLabelTitle)} invoice</p>
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${headline}</h1>
+      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("invoice.eyebrow", lang, { type: typeLabel }))}</p>
       ${adminTable(tableRows)}
-      ${ctaButton(args.payUrl, "Pay this invoice")}
-      ${safeNotes ? callout("Notes", [safeNotes]) : ""}
-      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">You can also access this invoice and the project workspace anytime from <a href="${escHtml(args.portalUrl)}" style="color:#111111;text-decoration:underline">your portal</a>.</p>
-      ${sig()}
-    `, "Reply to this email to reach Komlan directly.", `Invoice for ${formattedAmount} is ready to pay.`),
+      ${ctaButton(args.payUrl, t("invoice.cta", lang))}
+      ${safeNotes ? callout(t("invoice.notes_label", lang), [safeNotes]) : ""}
+      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">${t("invoice.portal_link", lang, { url: escHtml(args.portalUrl) })}</p>
+      ${sig(lang)}
+    `, {
+      footerNote: t("common.footer.reply_note", lang),
+      preheader: t("invoice.preheader", lang, { amount: formattedAmount }),
+      lang,
+    }),
   });
 }
 
@@ -390,6 +400,7 @@ export async function sendProjectInvoice(args: {
     quoteId: str(context.quote.id),
     recipientEmail: customerEmail,
     notes: str(context.invoice.notes),
+    lang: getLeadLocale(context.lead),
   });
 
   await logProjectActivityByPortalId({
@@ -457,6 +468,32 @@ export async function markProjectInvoicePaid(args: {
     },
     clientVisible: true,
   });
+
+  // Send branded payment receipt to the client. Deposit-paid is already
+  // covered by the deposit_received kickoff email fired elsewhere; we
+  // skip the generic receipt for deposits so the client doesn't get two
+  // emails for the same payment.
+  const invoiceTypeLower = str(context.invoice.invoice_type).toLowerCase();
+  if (invoiceTypeLower !== "deposit") {
+    const recipient = str(context.quote.lead_email) || str(context.lead?.email);
+    if (recipient && recipient.includes("@")) {
+      const portalToken = str(context.portal.access_token);
+      const baseUrl = (process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com").trim().replace(/\/$/, "");
+      const workspaceUrl = portalToken ? `${baseUrl}/portal/${encodeURIComponent(portalToken)}` : baseUrl;
+      sendEventNotification({
+        event: "invoice_paid_receipt",
+        quoteId: str(context.quote.id),
+        leadName: str(context.lead?.name) || "",
+        leadEmail: recipient,
+        workspaceUrl,
+        paidAmount: Number(context.invoice.amount) || 0,
+        invoiceType: invoiceTypeLower,
+        paidAt,
+        paymentReference: str(args.session.id) || undefined,
+        lang: getLeadLocale(context.lead),
+      }).catch((err) => console.error("[projectInvoices] receipt email failed:", err));
+    }
+  }
 
   return serializeInvoice(data, str(context.quote.id));
 }

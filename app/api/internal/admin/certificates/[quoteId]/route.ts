@@ -119,7 +119,7 @@ export async function POST(
   // Fetch lead info from quote
   const { data: quote } = await supabaseAdmin
     .from("quotes")
-    .select("id, lead_name, lead_email")
+    .select("id, lead_id, lead_name, lead_email")
     .eq("id", quoteId)
     .maybeSingle();
 
@@ -130,12 +130,24 @@ export async function POST(
     );
   }
 
+  // Pull preferred locale so the certificate email is translated.
+  let leadLocale: string | null = null;
+  if ((quote as any).lead_id) {
+    const localeRes = await supabaseAdmin
+      .from("leads")
+      .select("preferred_locale")
+      .eq("id", (quote as any).lead_id)
+      .maybeSingle();
+    leadLocale = (localeRes.data?.preferred_locale as string | undefined) || null;
+  }
+
   try {
     await generateAndDeliverCertificate({
       agreementId: agr.id,
       quoteId,
       leadName: quote.lead_name || "",
       leadEmail: quote.lead_email,
+      leadLocale,
       agreementText: agr.body_text,
       acceptedAt: agr.accepted_at || new Date().toISOString(),
       acceptedByEmail: agr.accepted_by_email,

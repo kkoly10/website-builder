@@ -9,10 +9,10 @@ import {
   sig,
   escHtml,
   nameFromEmail,
+  FROM_EMAIL,
+  ADMIN_EMAIL,
 } from "@/lib/emailHelpers";
-
-const FROM_EMAIL = process.env.NOTIFICATION_FROM_EMAIL || "studio@crecystudio.com";
-const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || "";
+import { normalizeEmailLocale, t } from "@/lib/i18n/emailStrings";
 
 function excerpt(value: string, max = 280) {
   const normalized = value.trim().replace(/\s+/g, " ");
@@ -28,10 +28,12 @@ export async function sendPortalMessageNotification(params: {
   portalToken?: string | null;
   leadName?: string | null;
   leadEmail?: string | null;
+  leadLocale?: string | null;
   attachmentName?: string | null;
 }) {
   if (params.senderRole === "internal") return;
 
+  const lang = normalizeEmailLocale(params.leadLocale);
   const siteUrl = getSiteUrl();
   const workspaceUrl = params.portalToken
     ? new URL(`portal/${params.portalToken}`, siteUrl).toString()
@@ -41,17 +43,17 @@ export async function sendPortalMessageNotification(params: {
     params.senderRole === "client" ? ADMIN_EMAIL : String(params.leadEmail || "").trim();
   if (!recipientEmail) return;
 
-  const recipientEmail2 = String(params.leadEmail || "").trim();
+  const leadEmailTrimmed = String(params.leadEmail || "").trim();
   const recipientName =
     params.senderRole === "client"
       ? null // admin recipient — no greeting
-      : String(params.leadName || "").trim() || nameFromEmail(recipientEmail2) || "there";
+      : String(params.leadName || "").trim() || nameFromEmail(leadEmailTrimmed) || "";
 
   const safeBody = escHtml(excerpt(params.body || "Attachment included."));
-  const safeBodyHtml = `<p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7;white-space:pre-wrap">${safeBody}</p>`;
+  const previewHtml = safeBody;
 
   if (params.senderRole === "client") {
-    // Client → admin notification. Branded admin alert.
+    // Client → admin notification. Branded admin alert. Always English.
     const subject = `New portal message from ${params.senderName}`;
     const rows: [string, string][] = [
       ["From", `${escHtml(params.senderName)} (client)`],
@@ -69,17 +71,27 @@ export async function sendPortalMessageNotification(params: {
         ${adminBadge("Portal message")}
         <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111111;letter-spacing:-0.02em">New message from ${escHtml(params.senderName)}</h1>
         ${adminTable(rows)}
-        ${callout("Message", [safeBody])}
+        ${callout("Message", [previewHtml])}
         ${ctaButton(workspaceUrl, "Open workspace")}
-      `, "", subject),
+      `, {
+        preheader: subject,
+      }),
     });
     return;
   }
 
-  // Studio → client notification. Branded client email with sig.
-  const subject = `New message from CrecyStudio about your project`;
+  // Studio → client notification. Branded, translated. Workspace-first:
+  // the body steers clients into the workspace for replies (where
+  // threading + attachments live) instead of fragmenting the thread
+  // across email.
+  const subject = t("messaging.subject", lang);
+  // Pick the named or anonymous headline so we don't render a clumsy
+  // "A new message is waiting for you, you." when no name is known.
+  const headlineHtml = recipientName
+    ? escHtml(t("messaging.headline", lang, { name: recipientName }))
+    : escHtml(t("messaging.headline_anon", lang));
   const attachmentNote = params.attachmentName
-    ? `<p style="margin:0 0 16px;font-size:13px;color:#888888;line-height:1.6">📎 Attachment: ${escHtml(params.attachmentName)}</p>`
+    ? `<p style="margin:0 0 16px;font-size:13px;color:#888888;line-height:1.6">${escHtml(t("messaging.attachment_label", lang, { name: params.attachmentName }))}</p>`
     : "";
 
   await sendResendEmail({
@@ -87,13 +99,19 @@ export async function sendPortalMessageNotification(params: {
     from: FROM_EMAIL,
     subject,
     html: emailWrap(`
-      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">A new message is waiting for you, ${escHtml(recipientName ?? "there")}.</h1>
-      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">From ${escHtml(params.senderName)} at CrecyStudio</p>
-      ${callout("Preview", [safeBody])}
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${headlineHtml}</h1>
+      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("messaging.eyebrow", lang, { sender: params.senderName }))}</p>
+      ${callout(t("messaging.preview_label", lang), [previewHtml])}
       ${attachmentNote}
-      ${ctaButton(workspaceUrl, "Open workspace")}
-      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">Reply directly in your workspace to keep the thread together — that way nothing gets lost in email.</p>
-      ${sig()}
-    `, "Reply to this email to reach Komlan directly.", `${params.senderName} sent you a new message in your project workspace.`),
+      ${ctaButton(workspaceUrl, t("messaging.cta", lang))}
+      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">${escHtml(t("messaging.reply_note", lang))}</p>
+      ${sig(lang)}
+    `, {
+      // Intentionally NO footerNote pointing at email-reply — the body
+      // copy already says "reply in your workspace." Conflicting CTAs
+      // (reply here / reply there) split the thread.
+      preheader: t("messaging.preheader", lang, { sender: params.senderName }),
+      lang,
+    }),
   });
 }

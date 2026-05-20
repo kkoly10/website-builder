@@ -446,11 +446,29 @@ export async function POST(
 
           const clientEmail = result.data.lead?.email ?? null;
           if (accept.agreementId && clientEmail) {
+            // Best-effort preferred-locale lookup for the certificate
+            // email translation. Falls through to English on miss.
+            let leadLocale: string | null = null;
+            try {
+              const recipient = String(clientEmail).trim().toLowerCase();
+              if (recipient) {
+                const localeRes = await supabaseAdmin
+                  .from("leads")
+                  .select("preferred_locale")
+                  .eq("email", recipient)
+                  .maybeSingle();
+                leadLocale = (localeRes.data?.preferred_locale as string | undefined) || null;
+              }
+            } catch (err) {
+              console.error("[portal] preferred_locale lookup failed:", err);
+            }
+
             const certInput = {
               agreementId: accept.agreementId,
               quoteId: String(result.data.quote.id),
               leadName: result.data.lead?.name || "",
               leadEmail: clientEmail,
+              leadLocale,
               agreementText: publishedText,
               acceptedAt: acceptedAtIso,
               acceptedByEmail: acceptanceAudit.acceptedByEmail,
@@ -484,6 +502,9 @@ export async function POST(
           ? `${appBaseUrl()}/portal/${data.quote.publicToken}`
           : undefined;
 
+        // These are admin alerts (revision_submitted, asset_submitted,
+        // etc.) — admin emails stay English regardless. lang is left
+        // unset and notifications.ts defaults to "en".
         sendEventNotification({
           event,
           quoteId: data.quote?.id || "",

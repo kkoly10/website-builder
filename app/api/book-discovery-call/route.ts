@@ -4,13 +4,11 @@ import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/
 import { recordServerEvent } from "@/lib/analytics/server";
 import { pickPreferredLocale } from "@/lib/preferredLocale";
 import { sendResendEmail } from "@/lib/resend";
-import { emailWrap, callout, adminTable, adminBadge, ctaButton, escHtml, sig, SITE_URL } from "@/lib/emailHelpers";
+import { emailWrap, callout, adminTable, adminBadge, ctaButton, escHtml, sig, SITE_URL, FROM_EMAIL, ADMIN_EMAIL } from "@/lib/emailHelpers";
+import { type EmailLocale, normalizeEmailLocale, t } from "@/lib/i18n/emailStrings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const FROM = process.env.NOTIFICATION_FROM_EMAIL || "studio@crecystudio.com";
-const ADMIN = process.env.ADMIN_NOTIFICATION_EMAIL;
 
 // Build an RFC 5545-compliant .ics calendar invite string
 function buildCalendarInvite(
@@ -38,13 +36,16 @@ function buildCalendarInvite(
     `DTEND:${fmt(end)}`,
     `DTSTAMP:${fmt(now)}`,
     `UID:${uid}@crecystudio.com`,
-    `ORGANIZER;CN=CrecyStudio:mailto:${FROM}`,
+    `ORGANIZER;CN=CrecyStudio:mailto:${FROM_EMAIL}`,
     `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN=${esc(name)}:mailto:${email}`,
     ...(adminEmail
       ? [`ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=Komlan Kouhiko:mailto:${adminEmail}`]
       : []),
     `SUMMARY:Discovery call — CrecyStudio`,
-    `DESCRIPTION:Your free 20-min discovery call with Komlan Kouhiko.\\n\\n${esc(slotLabel)}`,
+    // Drop the duplicated "free" from the description — premium brands
+    // don't emphasise "free" three times. The marketing page sets that
+    // expectation; the calendar entry just states the meeting.
+    `DESCRIPTION:Your 20-min discovery call with Komlan Kouhiko.\\n\\n${esc(slotLabel)}`,
     "STATUS:CONFIRMED",
     "SEQUENCE:0",
     "END:VEVENT",
@@ -53,20 +54,29 @@ function buildCalendarInvite(
   return lines.join("\r\n");
 }
 
-function buildClientEmail(name: string): string {
-  const safe = escHtml(name || "there");
+function buildClientEmail(name: string, lang: EmailLocale): string {
+  const trimmedName = name.trim();
+  // Drop the comma+name when no name is available. Premium copy reads
+  // cleaner as "Request received." than "Request received, ."
+  const headlineHtml = trimmedName
+    ? escHtml(t("discovery.headline_pending", lang, { name: trimmedName }))
+    : escHtml(t("discovery.headline_pending_anon", lang));
   return emailWrap(`
-    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em;line-height:1.2">Request received, ${safe}.</h1>
-    <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Free 20-min discovery call</p>
-    <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">I'll be in touch within 24 hours to confirm a time. No automation — you'll hear from Komlan directly.</p>
-    <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">If your schedule shifts or you have questions in the meantime, reply to this email and I'll see it directly.</p>
-    ${callout("What happens next", [
-      "1&ensp;Komlan reviews your request personally",
-      "2&ensp;You receive a confirmed time within 24 hours",
-      "3&ensp;20 minutes — scope, honest feedback, no pitch",
+    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em;line-height:1.2">${headlineHtml}</h1>
+    <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("discovery.eyebrow", lang))}</p>
+    <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("discovery.body_pending_1", lang))}</p>
+    <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("discovery.body_pending_2", lang))}</p>
+    ${callout(t("discovery.nextsteps_label", lang), [
+      escHtml(t("discovery.nextsteps_1", lang)),
+      escHtml(t("discovery.nextsteps_2", lang)),
+      escHtml(t("discovery.nextsteps_3", lang)),
     ])}
-    ${sig()}
-  `, "Reply to this email to reach Komlan directly.", "I'll confirm a time for your free discovery call within 24 hours.");
+    ${sig(lang)}
+  `, {
+    footerNote: t("common.footer.reply_note", lang),
+    preheader: t("discovery.preheader_pending", lang),
+    lang,
+  });
 }
 
 function buildAddToCalendarLinks(start: Date, slotLabel: string): {
@@ -78,7 +88,7 @@ function buildAddToCalendarLinks(start: Date, slotLabel: string): {
   const fmtIso = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, "Z");
   const end = new Date(start.getTime() + 20 * 60 * 1000);
   const title = "Discovery call — CrecyStudio";
-  const details = `Your free 20-min discovery call with Komlan Kouhiko.\n\n${slotLabel}`;
+  const details = `Your 20-min discovery call with Komlan Kouhiko.\n\n${slotLabel}`;
 
   const google = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${fmtCompact(start)}/${fmtCompact(end)}&details=${encodeURIComponent(details)}`;
   const outlook = `https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=${encodeURIComponent(title)}&body=${encodeURIComponent(details)}&startdt=${encodeURIComponent(fmtIso(start))}&enddt=${encodeURIComponent(fmtIso(end))}`;
@@ -87,43 +97,50 @@ function buildAddToCalendarLinks(start: Date, slotLabel: string): {
   return { google, outlook, yahoo };
 }
 
-function buildCalendarButtonsHtml(start: Date, slotLabel: string): string {
+function buildCalendarButtonsHtml(start: Date, slotLabel: string, lang: EmailLocale): string {
   const links = buildAddToCalendarLinks(start, slotLabel);
   const btn = (href: string, label: string) =>
     `<a href="${href}" style="display:inline-block;background:#ffffff;border:1px solid #d6d6d6;color:#111111;text-decoration:none;padding:10px 16px;font-size:13px;font-weight:600;font-family:Arial,Helvetica,sans-serif;border-radius:4px;margin:0 6px 8px 0">${label}</a>`;
   return `<div style="margin:0 0 24px">
-    <p style="margin:0 0 10px;font-size:12px;color:#888888;letter-spacing:0.06em;text-transform:uppercase;font-weight:600">Add to your calendar</p>
+    <p style="margin:0 0 10px;font-size:12px;color:#888888;letter-spacing:0.06em;text-transform:uppercase;font-weight:600">${escHtml(t("discovery.add_to_calendar", lang))}</p>
     ${btn(links.google, "Google Calendar")}
     ${btn(links.outlook, "Outlook")}
     ${btn(links.yahoo, "Yahoo")}
   </div>`;
 }
 
-function buildClientEmailScheduled(name: string, slotLabel: string, start: Date | null): string {
-  const safe = escHtml(name || "there");
+function buildClientEmailScheduled(name: string, slotLabel: string, start: Date | null, lang: EmailLocale): string {
+  const trimmedName = name.trim();
+  const headlineHtml = trimmedName
+    ? escHtml(t("discovery.headline_scheduled", lang, { name: trimmedName }))
+    : escHtml(t("discovery.headline_scheduled_anon", lang));
   const slot = escHtml(slotLabel);
-  const buttons = start ? buildCalendarButtonsHtml(start, slotLabel) : "";
+  const buttons = start ? buildCalendarButtonsHtml(start, slotLabel, lang) : "";
   return emailWrap(`
-    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em;line-height:1.2">You're on the calendar, ${safe}.</h1>
-    <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">Free 20-min discovery call</p>
+    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em;line-height:1.2">${headlineHtml}</h1>
+    <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("discovery.eyebrow", lang))}</p>
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px">
       <tr>
         <td style="background:#f7f7f7;border-radius:6px;padding:22px 24px;text-align:center">
-          <p style="margin:0 0 6px;font-size:11px;color:#888888;letter-spacing:0.08em;text-transform:uppercase;font-weight:600">Your call is booked for</p>
+          <p style="margin:0 0 6px;font-size:11px;color:#888888;letter-spacing:0.08em;text-transform:uppercase;font-weight:600">${escHtml(t("discovery.booked_for_label", lang))}</p>
           <p style="margin:0;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${slot}</p>
         </td>
       </tr>
     </table>
     ${buttons}
-    <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">A calendar invite is also attached — your email client will offer to add it with one click.</p>
-    <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">Need to reschedule or have a question beforehand? Reply to this email — Komlan will see it directly.</p>
-    ${callout("What to expect on the call", [
-      "→&ensp;Komlan asks sharp questions about your project",
-      "→&ensp;You get honest feedback on scope, timeline, and price",
-      "→&ensp;No sales pitch — just a real conversation",
+    <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("discovery.scheduled_attachment_note", lang))}</p>
+    <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("discovery.scheduled_reply_note", lang))}</p>
+    ${callout(t("discovery.expect_label", lang), [
+      escHtml(t("discovery.expect_1", lang)),
+      escHtml(t("discovery.expect_2", lang)),
+      escHtml(t("discovery.expect_3", lang)),
     ])}
-    ${sig()}
-  `, "Reply to this email to reach Komlan directly.", `Your call is booked for ${slotLabel}.`);
+    ${sig(lang)}
+  `, {
+    footerNote: t("common.footer.reply_note", lang),
+    preheader: t("discovery.preheader_scheduled", lang, { slot: slotLabel }),
+    lang,
+  });
 }
 
 function buildAdminEmail(
@@ -147,7 +164,7 @@ function buildAdminEmail(
   ];
   return emailWrap(`
     ${adminBadge("Admin alert")}
-    <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111111;letter-spacing:-0.02em">${slotLabel ? "&#x1F4C5; Call scheduled" : "&#x1F4E9; New discovery call request"}</h1>
+    <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111111;letter-spacing:-0.02em">${slotLabel ? "Call scheduled" : "New discovery call request"}</h1>
     ${adminTable(rows)}
     ${ctaButton(adminUrl, "Open admin panel")}
   `, `Reply to ${escHtml(email)} to respond directly.`);
@@ -298,6 +315,7 @@ export async function POST(req: Request) {
     }
 
     const preferredLocale = pickPreferredLocale(body?.locale);
+    const emailLang: EmailLocale = normalizeEmailLocale(preferredLocale);
     const leadId = await ensureLeadId(email, name, preferredLocale);
 
     const scheduledAt = selectedSlot ? parseSelectedSlot(selectedSlot)?.toISOString() ?? null : null;
@@ -344,22 +362,22 @@ export async function POST(req: Request) {
     const icsAttachment = slotStart && slotLabel
       ? {
           filename: "discovery-call.ics",
-          content: buildCalendarInvite(callId, name, email, ADMIN ?? null, slotStart, slotLabel),
+          content: buildCalendarInvite(callId, name, email, ADMIN_EMAIL || null, slotStart, slotLabel),
           content_type: "text/calendar; method=REQUEST; charset=UTF-8",
         }
       : null;
 
-    console.log(`[book-discovery-call] sending client email to=${email} from=${FROM} scheduled=${!!scheduledAt}`);
+    console.log(`[book-discovery-call] sending client email to=${email} from=${FROM_EMAIL} scheduled=${!!scheduledAt}`);
     try {
       const clientRes = await sendResendEmail({
         to: email,
-        from: FROM,
+        from: FROM_EMAIL,
         subject: scheduledAt
-          ? "Your discovery call is booked — CrecyStudio"
-          : "Discovery call request received — CrecyStudio",
+          ? t("discovery.subject_scheduled", emailLang)
+          : t("discovery.subject_pending", emailLang),
         html: scheduledAt && slotLabel
-          ? buildClientEmailScheduled(name, slotLabel, slotStart)
-          : buildClientEmail(name),
+          ? buildClientEmailScheduled(name, slotLabel, slotStart, emailLang)
+          : buildClientEmail(name, emailLang),
         ...(icsAttachment ? { attachments: [icsAttachment] } : {}),
       });
       console.log("[book-discovery-call] client email sent id=", (clientRes as any)?.id);
@@ -367,12 +385,15 @@ export async function POST(req: Request) {
       console.error("[book-discovery-call] client confirmation email failed:", emailErr);
     }
 
-    if (ADMIN) {
+    if (ADMIN_EMAIL) {
       try {
+        // Admin subject leaves out the email address on purpose. Leaving
+        // it in the subject leaked PII into lock-screen notifications and
+        // any shared screen; the full email is one click away in the body.
         const adminRes = await sendResendEmail({
-          to: ADMIN,
-          from: FROM,
-          subject: `Discovery call — ${name} (${email})`,
+          to: ADMIN_EMAIL,
+          from: FROM_EMAIL,
+          subject: `Discovery call — ${name}${slotLabel ? " · scheduled" : " · request"}`,
           html: buildAdminEmail(callId, name, email, company, projectType, availabilityNote, slotLabel),
           ...(icsAttachment ? { attachments: [icsAttachment] } : {}),
         });
