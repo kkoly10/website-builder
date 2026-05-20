@@ -638,6 +638,13 @@ export default function PortalClient({
   const [assetFile, setAssetFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Submit-button enable rule. Without this, an empty label or a
+  // "file mode but no file picked" state silently no-op'd on submit
+  // and the button looked broken to the customer.
+  const canSubmitAsset =
+    assetLabel.trim().length > 0 &&
+    (assetMode === "file" ? assetFile !== null : assetUrl.trim().length > 0);
+
   /* ── Feedback form state ── */
   const [revisionMessage, setRevisionMessage] = useState("");
   const [revisionPriority, setRevisionPriority] = useState<"low" | "normal" | "high">("normal");
@@ -705,15 +712,20 @@ export default function PortalClient({
 
   async function submitAsset(e: React.FormEvent) {
     e.preventDefault();
+    // Defense-in-depth — the submit button is disabled when these
+    // conditions aren't met, but a stray Enter press in a textarea
+    // can still fire onSubmit. Validate explicitly.
     if (!assetLabel.trim()) return;
+    if (assetMode === "file" && !assetFile) return;
+    if (assetMode === "link" && !assetUrl.trim()) return;
 
-    if (assetMode === "file" && assetFile) {
+    if (assetMode === "file") {
       setSaving(true);
       setError("");
       try {
         const form = new FormData();
         form.append("token", token);
-        form.append("file", assetFile);
+        form.append("file", assetFile as File);
         form.append("label", assetLabel.trim());
         form.append("assetType", assetCategory);
         form.append("notes", assetNotes.trim());
@@ -727,7 +739,6 @@ export default function PortalClient({
         setSaving(false);
       }
     } else {
-      if (!assetUrl.trim()) return;
       setSaving(true);
       setError("");
       try {
@@ -1439,6 +1450,7 @@ export default function PortalClient({
                   value={assetLabel}
                   onChange={(e) => setAssetLabel(e.target.value)}
                   placeholder={tAssets("labelPlaceholder")}
+                  required
                 />
               </div>
 
@@ -1483,9 +1495,11 @@ export default function PortalClient({
                   <div className="fieldLabel">{tAssets("urlLabel")}</div>
                   <input
                     className="input"
+                    type="url"
                     value={assetUrl}
                     onChange={(e) => setAssetUrl(e.target.value)}
                     placeholder={tAssets("urlPlaceholder")}
+                    required
                   />
                 </div>
               ) : (
@@ -1497,6 +1511,7 @@ export default function PortalClient({
                     className="input"
                     style={{ padding: 8 }}
                     onChange={(e) => setAssetFile(e.target.files?.[0] ?? null)}
+                    required
                   />
                   {assetFile && (
                     <div style={{ marginTop: 4, fontSize: 12, color: "var(--muted-2)" }}>
@@ -1518,7 +1533,11 @@ export default function PortalClient({
               </div>
 
               <div className="row" style={{ gap: 8 }}>
-                <button type="submit" className="btn btnPrimary" disabled={saving}>
+                <button
+                  type="submit"
+                  className="btn btnPrimary"
+                  disabled={saving || !canSubmitAsset}
+                >
                   {saving ? tAssets("submitting") : tAssets("submit")} <span className="btnArrow">→</span>
                 </button>
                 <button
