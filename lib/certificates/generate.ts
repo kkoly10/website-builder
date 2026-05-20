@@ -40,13 +40,9 @@ function buildEmailHtml(leadName: string, signedUrl: string, verificationUrl: st
   // don't have a real name. Premium emails should never address the
   // client as "there."
   const trimmed = leadName.trim();
-  const safeName = escHtml(trimmed || (lang === "fr" ? "à vous" : lang === "es" ? "para usted" : ""));
-  const headlineKey = trimmed ? "certificate.headline" : "certificate.subject";
-  // Use the named headline if we have a name; otherwise fall back to a
-  // de-personalized phrasing that still reads premium.
   const headlineHtml = trimmed
-    ? t("certificate.headline", lang, { name: safeName })
-    : (lang === "fr" ? "Votre contrat signé." : lang === "es" ? "Su contrato firmado." : "Your signed agreement.");
+    ? escHtml(t("certificate.headline", lang, { name: trimmed }))
+    : escHtml(t("certificate.headline_anon", lang));
   const safeVerifyUrl = escHtml(verificationUrl);
   return emailWrap(`
     <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${headlineHtml}</h1>

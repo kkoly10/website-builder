@@ -2,7 +2,7 @@ import { sendResendEmail } from "@/lib/resend";
 import { logProjectActivityByPortalId } from "@/lib/projectActivity";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { emailWrap, ctaButton, callout, sig, adminBadge, adminTable, escHtml, nameFromEmail, FROM_EMAIL, ADMIN_EMAIL } from "@/lib/emailHelpers";
-import { type EmailLocale, normalizeEmailLocale, t } from "@/lib/i18n/emailStrings";
+import { type EmailLocale, normalizeEmailLocale, t, greeting } from "@/lib/i18n/emailStrings";
 
 type PortalRow = Record<string, any>;
 type QuoteRow = Record<string, any>;
@@ -236,7 +236,13 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
     if (!recipientEmail || !recipientEmail.includes("@")) continue;
 
     const lang: EmailLocale = normalizeEmailLocale(str((lead as any)?.preferred_locale));
-    const recipientName = str(lead?.name) || nameFromEmail(recipientEmail) || (lang === "fr" ? "vous" : lang === "es" ? "usted" : "there");
+    // Name for non-greeting interpolations (admin alert subject, etc.).
+    // Falls back to the email-local part — we'd rather guess from the
+    // address than render "there" or an empty string.
+    const recipientName = str(lead?.name) || nameFromEmail(recipientEmail);
+    // Greeting uses the dedicated helper so an unknown name renders
+    // "Hi," / "Bonjour," instead of an awkward "Hi there,".
+    const greetingHtml = escHtml(greeting(recipientName, lang));
     const workspaceUrl = `${baseUrl}/portal/${encodeURIComponent(str(portal.access_token))}`;
     const assetCount = (assetsByPortal.get(portalId) ?? []).length;
     const revisions = (revisionsByPortal.get(portalId) ?? []).sort(
@@ -266,7 +272,7 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
         html: emailWrap(`
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">${escHtml(t("nudge.asset_missing.headline", lang))}</h1>
           <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("nudge.asset_missing.eyebrow", lang))}</p>
-          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("common.greeting", lang, { name: recipientName }))}</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">${greetingHtml}</p>
           <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("nudge.asset_missing.body", lang))}</p>
           ${ctaButton(workspaceUrl, t("nudge.asset_missing.cta", lang))}
           ${callout(t("nudge.asset_missing.what_label", lang), [
@@ -297,7 +303,7 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
         html: emailWrap(`
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">${escHtml(t("nudge.preview_unreviewed.headline", lang))}</h1>
           <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("nudge.preview_unreviewed.eyebrow", lang))}</p>
-          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("common.greeting", lang, { name: recipientName }))}</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">${greetingHtml}</p>
           <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("nudge.preview_unreviewed.body", lang))}</p>
           ${ctaButton(workspaceUrl, t("nudge.preview_unreviewed.cta", lang))}
           <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">${escHtml(t("nudge.preview_unreviewed.fineprint", lang))}</p>
@@ -325,17 +331,19 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
           );
         })(),
         recipientEmail: ADMIN_EMAIL,
-        // Admin alert — always English.
-        subject: `Revision overdue — ${escHtml(recipientName)}`,
+        // Admin alert — always English. Falls back to the email
+        // address when no name (or email-local-part guess) is known,
+        // since admin still needs something identifying.
+        subject: `Revision overdue — ${escHtml(recipientName || recipientEmail)}`,
         summary: "System alerted the studio that a revision request has been waiting for a response.",
         html: emailWrap(`
           ${adminBadge("Studio alert")}
           <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">Revision response overdue</h1>
           ${adminTable([
-            ["Client", escHtml(recipientName)],
+            ["Client", escHtml(recipientName || recipientEmail)],
             ["Waiting", "More than 24 hours"],
           ])}
-          <p style="margin:0 0 20px;font-size:14px;color:#888;line-height:1.6">${escHtml(recipientName)} submitted a revision request more than 24 hours ago with no studio reply logged yet.</p>
+          <p style="margin:0 0 20px;font-size:14px;color:#888;line-height:1.6">${escHtml(recipientName || recipientEmail)} submitted a revision request more than 24 hours ago with no studio reply logged yet.</p>
           ${ctaButton(workspaceUrl, "Open workspace")}
         `),
         clientVisible: false,
@@ -361,7 +369,7 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
         html: emailWrap(`
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">${escHtml(t("nudge.deposit_unpaid.headline", lang))}</h1>
           <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("nudge.deposit_unpaid.eyebrow", lang))}</p>
-          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("common.greeting", lang, { name: recipientName }))}</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">${greetingHtml}</p>
           <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("nudge.deposit_unpaid.body", lang))}</p>
           ${ctaButton(workspaceUrl, t("nudge.deposit_unpaid.cta", lang))}
           <p style="margin:28px 0 0;font-size:13px;color:#999;line-height:1.6">${escHtml(t("nudge.deposit_unpaid.fineprint", lang))}</p>
@@ -384,7 +392,7 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
         html: emailWrap(`
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">${escHtml(t("nudge.inactive.headline", lang))}</h1>
           <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("nudge.inactive.eyebrow", lang))}</p>
-          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("common.greeting", lang, { name: recipientName }))}</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">${greetingHtml}</p>
           <p style="margin:0 0 ${inactivePending.length > 0 ? "20" : "28"}px;font-size:15px;color:#444;line-height:1.7">${escHtml(inactiveIntroCopy)}</p>
           ${inactivePendingBlock}
           ${ctaButton(workspaceUrl, t("nudge.inactive.cta", lang))}
@@ -408,7 +416,7 @@ export async function runNudgeEngine(args?: { baseUrl?: string | null }) {
         html: emailWrap(`
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111;letter-spacing:-0.02em">${escHtml(t("post_launch_30d.headline", lang))}</h1>
           <p style="margin:0 0 24px;font-size:13px;color:#888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("post_launch_30d.eyebrow", lang))}</p>
-          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("common.greeting", lang, { name: recipientName }))}</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">${greetingHtml}</p>
           <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("post_launch_30d.body_intro", lang))}</p>
           <p style="margin:0 0 28px;font-size:15px;color:#444;line-height:1.7">${escHtml(t("post_launch_30d.body_offer", lang))}</p>
           ${ctaButton(workspaceUrl, t("post_launch_30d.cta", lang))}

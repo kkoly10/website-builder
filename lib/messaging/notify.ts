@@ -85,7 +85,11 @@ export async function sendPortalMessageNotification(params: {
   // threading + attachments live) instead of fragmenting the thread
   // across email.
   const subject = t("messaging.subject", lang);
-  const headlineName = recipientName || (lang === "fr" ? "vous" : lang === "es" ? "usted" : "you");
+  // Pick the named or anonymous headline so we don't render a clumsy
+  // "A new message is waiting for you, you." when no name is known.
+  const headlineHtml = recipientName
+    ? escHtml(t("messaging.headline", lang, { name: recipientName }))
+    : escHtml(t("messaging.headline_anon", lang));
   const attachmentNote = params.attachmentName
     ? `<p style="margin:0 0 16px;font-size:13px;color:#888888;line-height:1.6">${escHtml(t("messaging.attachment_label", lang, { name: params.attachmentName }))}</p>`
     : "";
@@ -95,7 +99,7 @@ export async function sendPortalMessageNotification(params: {
     from: FROM_EMAIL,
     subject,
     html: emailWrap(`
-      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("messaging.headline", lang, { name: headlineName }))}</h1>
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${headlineHtml}</h1>
       <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("messaging.eyebrow", lang, { sender: params.senderName }))}</p>
       ${callout(t("messaging.preview_label", lang), [previewHtml])}
       ${attachmentNote}

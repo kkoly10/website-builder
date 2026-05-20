@@ -1,6 +1,6 @@
 import { sendResendEmail } from "@/lib/resend";
 import { emailWrap, ctaButton, adminTable, callout, sig, escHtml, adminBadge, FROM_EMAIL, ADMIN_EMAIL } from "@/lib/emailHelpers";
-import { type EmailLocale, normalizeEmailLocale, t, laneLabel, invoiceTypeLabel } from "@/lib/i18n/emailStrings";
+import { type EmailLocale, normalizeEmailLocale, t, greeting, laneLabel, invoiceTypeLabel } from "@/lib/i18n/emailStrings";
 
 type EventContext = {
   event: string;
@@ -78,7 +78,7 @@ const templates: Record<string, (ctx: EventContext, lang: EmailLocale) => Templa
       html: emailWrap(`
         <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("agreement_published.headline", lang))}</h1>
         <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("agreement_published.eyebrow", lang, { lane: lane.charAt(0).toUpperCase() + lane.slice(1), shortId }))}</p>
-        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("common.greeting", lang, { name: ctx.leadName }))}</p>
+        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
         <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${terms ? t("agreement_published.body_with_terms", lang, { terms: escHtml(terms) }) : t("agreement_published.body_no_terms", lang)}</p>
         <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("agreement_published.body_review", lang))}</p>
         ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, t("agreement_published.cta", lang)) : ""}
@@ -114,7 +114,7 @@ const templates: Record<string, (ctx: EventContext, lang: EmailLocale) => Templa
       html: emailWrap(`
         <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("preview_ready.headline", lang))}</h1>
         <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("preview_ready.eyebrow", lang))}</p>
-        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("common.greeting", lang, { name: ctx.leadName }))}</p>
+        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
         <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("preview_ready.body", lang, { lane }))}</p>
         ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, t("preview_ready.cta", lang)) : ""}
         ${callout(t("preview_ready.howto_label", lang), [
@@ -138,7 +138,7 @@ const templates: Record<string, (ctx: EventContext, lang: EmailLocale) => Templa
     html: emailWrap(`
       <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("launch_ready.headline", lang))}</h1>
       <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("launch_ready.eyebrow", lang))}</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("common.greeting", lang, { name: ctx.leadName }))}</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
       <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("launch_ready.body", lang))}</p>
       ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, t("launch_ready.cta", lang)) : ""}
       <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">${escHtml(t("launch_ready.fineprint", lang))}</p>
@@ -180,7 +180,7 @@ const templates: Record<string, (ctx: EventContext, lang: EmailLocale) => Templa
       html: emailWrap(`
         <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("site_live.headline", lang, { lane }))}</h1>
         <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("site_live.eyebrow", lang))}</p>
-        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("common.greeting", lang, { name: ctx.leadName }))}</p>
+        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
         <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${liveLine}</p>
         <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${careLine}</p>
         ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, t("site_live.cta", lang)) : ""}
@@ -220,7 +220,7 @@ const templates: Record<string, (ctx: EventContext, lang: EmailLocale) => Templa
       html: emailWrap(`
         <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("deposit_received.headline", lang))}</h1>
         <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("deposit_received.eyebrow", lang))}</p>
-        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("common.greeting", lang, { name: ctx.leadName }))}</p>
+        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
         <p style="margin:0 0 24px;font-size:15px;color:#444444;line-height:1.7">${intro}</p>
         ${callout(t("deposit_received.next_label", lang), [
           escHtml(t("deposit_received.next_1", lang)),
@@ -266,7 +266,7 @@ const templates: Record<string, (ctx: EventContext, lang: EmailLocale) => Templa
       html: emailWrap(`
         <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("invoice_paid_receipt.headline", lang))}</h1>
         <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("invoice_paid_receipt.eyebrow", lang, { type: typeLabel }))}</p>
-        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("common.greeting", lang, { name: ctx.leadName }))}</p>
+        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
         <p style="margin:0 0 24px;font-size:15px;color:#444444;line-height:1.7">${t("invoice_paid_receipt.body", lang, { amount: escHtml(amount), date: escHtml(paidAtDate) })}</p>
         ${adminTable(rows)}
         ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, t("invoice_paid_receipt.cta", lang)) : ""}
@@ -287,7 +287,7 @@ const templates: Record<string, (ctx: EventContext, lang: EmailLocale) => Templa
     html: emailWrap(`
       <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("revision_received.headline", lang))}</h1>
       <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("revision_received.eyebrow", lang))}</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("common.greeting", lang, { name: ctx.leadName }))}</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
       <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("revision_received.body", lang))}</p>
       ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, t("revision_received.cta", lang)) : ""}
       ${sig(lang)}
@@ -306,7 +306,7 @@ const templates: Record<string, (ctx: EventContext, lang: EmailLocale) => Templa
     html: emailWrap(`
       <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("post_launch_30d.headline", lang))}</h1>
       <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("post_launch_30d.eyebrow", lang))}</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("common.greeting", lang, { name: ctx.leadName }))}</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
       <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("post_launch_30d.body_intro", lang))}</p>
       <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("post_launch_30d.body_offer", lang))}</p>
       ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, t("post_launch_30d.cta", lang)) : ""}

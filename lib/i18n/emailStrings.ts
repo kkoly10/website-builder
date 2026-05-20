@@ -28,6 +28,13 @@ const STRINGS: Record<string, LocalizedString> = {
     fr: "Bonjour {{name}},",
     es: "Hola {{name}},",
   },
+  // Use when no name is available — premium brands never address a
+  // client as "Hi there," or "Bonjour vous,".
+  "common.greeting_anon": {
+    en: "Hi,",
+    fr: "Bonjour,",
+    es: "Hola,",
+  },
   "common.signature.role": {
     en: "Founder, CrecyStudio",
     fr: "Fondateur, CrecyStudio",
@@ -453,6 +460,11 @@ const STRINGS: Record<string, LocalizedString> = {
     fr: "Votre contrat signé, {{name}}.",
     es: "Su contrato firmado, {{name}}.",
   },
+  "certificate.headline_anon": {
+    en: "Your signed agreement.",
+    fr: "Votre contrat signé.",
+    es: "Su contrato firmado.",
+  },
   "certificate.eyebrow": {
     en: "Certificate of Completion enclosed",
     fr: "Certificat d'achèvement inclus",
@@ -495,6 +507,11 @@ const STRINGS: Record<string, LocalizedString> = {
     fr: "Un nouveau message vous attend, {{name}}.",
     es: "Un nuevo mensaje le espera, {{name}}.",
   },
+  "messaging.headline_anon": {
+    en: "A new message is waiting for you.",
+    fr: "Un nouveau message vous attend.",
+    es: "Un nuevo mensaje le espera.",
+  },
   "messaging.eyebrow": {
     en: "From {{sender}} at CrecyStudio",
     fr: "De {{sender}} chez CrecyStudio",
@@ -532,6 +549,11 @@ const STRINGS: Record<string, LocalizedString> = {
     en: "Request received, {{name}}.",
     fr: "Demande reçue, {{name}}.",
     es: "Solicitud recibida, {{name}}.",
+  },
+  "discovery.headline_pending_anon": {
+    en: "Request received.",
+    fr: "Demande reçue.",
+    es: "Solicitud recibida.",
   },
   "discovery.eyebrow": {
     en: "20-min discovery call",
@@ -584,6 +606,11 @@ const STRINGS: Record<string, LocalizedString> = {
     en: "You're on the calendar, {{name}}.",
     fr: "Vous êtes au calendrier, {{name}}.",
     es: "Ya está en el calendario, {{name}}.",
+  },
+  "discovery.headline_scheduled_anon": {
+    en: "You're on the calendar.",
+    fr: "Vous êtes au calendrier.",
+    es: "Ya está en el calendario.",
   },
   "discovery.booked_for_label": {
     en: "Your call is booked for",
@@ -824,6 +851,17 @@ export function t(
 export function laneLabel(projectType: string | null | undefined, lang: EmailLocale): string {
   const key = `lane.${(projectType || "project").toLowerCase()}`;
   return t(STRINGS[key] ? key : "lane.project", lang);
+}
+
+// Returns the right greeting based on whether a name is available.
+// `name` should be raw (not HTML-escaped); the helper does NOT escape
+// for you. Callers that put the result inside HTML must wrap it in
+// escHtml when name is interpolated.
+export function greeting(name: string | null | undefined, lang: EmailLocale): string {
+  const trimmed = (name || "").trim();
+  return trimmed
+    ? t("common.greeting", lang, { name: trimmed })
+    : t("common.greeting_anon", lang);
 }
 
 export function invoiceTypeLabel(type: string | null | undefined, lang: EmailLocale): string {

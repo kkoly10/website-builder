@@ -55,9 +55,14 @@ function buildCalendarInvite(
 }
 
 function buildClientEmail(name: string, lang: EmailLocale): string {
-  const safe = escHtml(name || (lang === "fr" ? "à vous" : lang === "es" ? "para usted" : ""));
+  const trimmedName = name.trim();
+  // Drop the comma+name when no name is available. Premium copy reads
+  // cleaner as "Request received." than "Request received, ."
+  const headlineHtml = trimmedName
+    ? escHtml(t("discovery.headline_pending", lang, { name: trimmedName }))
+    : escHtml(t("discovery.headline_pending_anon", lang));
   return emailWrap(`
-    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em;line-height:1.2">${escHtml(t("discovery.headline_pending", lang, { name: safe }))}</h1>
+    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em;line-height:1.2">${headlineHtml}</h1>
     <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("discovery.eyebrow", lang))}</p>
     <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("discovery.body_pending_1", lang))}</p>
     <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("discovery.body_pending_2", lang))}</p>
@@ -105,11 +110,14 @@ function buildCalendarButtonsHtml(start: Date, slotLabel: string, lang: EmailLoc
 }
 
 function buildClientEmailScheduled(name: string, slotLabel: string, start: Date | null, lang: EmailLocale): string {
-  const safe = escHtml(name || (lang === "fr" ? "à vous" : lang === "es" ? "para usted" : ""));
+  const trimmedName = name.trim();
+  const headlineHtml = trimmedName
+    ? escHtml(t("discovery.headline_scheduled", lang, { name: trimmedName }))
+    : escHtml(t("discovery.headline_scheduled_anon", lang));
   const slot = escHtml(slotLabel);
   const buttons = start ? buildCalendarButtonsHtml(start, slotLabel, lang) : "";
   return emailWrap(`
-    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em;line-height:1.2">${escHtml(t("discovery.headline_scheduled", lang, { name: safe }))}</h1>
+    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em;line-height:1.2">${headlineHtml}</h1>
     <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("discovery.eyebrow", lang))}</p>
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px">
       <tr>
