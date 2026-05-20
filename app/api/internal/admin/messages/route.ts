@@ -6,6 +6,7 @@ import {
 } from "@/lib/customerPortal";
 import { sendPortalMessageNotification } from "@/lib/messaging/notify";
 import { requireAdminRoute, enforceAdminRateLimit } from "@/lib/routeAuth";
+import { captureBackgroundError } from "@/lib/sentry";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyFileMagic } from "@/lib/fileMagic";
@@ -256,7 +257,10 @@ export async function POST(req: NextRequest) {
           .from(attachment.attachmentStorageBucket || MESSAGE_BUCKET)
           .remove([attachment.attachmentStoragePath])
           .catch((cleanupErr) => {
-            console.error("[admin/messages] orphan cleanup failed:", cleanupErr);
+            captureBackgroundError(cleanupErr, {
+              where: "admin-messages.orphan_cleanup",
+              extra: { storagePath: attachment.attachmentStoragePath },
+            });
           });
       }
       throw insertErr;
@@ -292,7 +296,10 @@ export async function POST(req: NextRequest) {
         leadLocale,
         attachmentName: attachment?.attachmentName || null,
       }).catch((err) => {
-        console.error("[admin/messages] notification error:", err);
+        captureBackgroundError(err, {
+          where: "admin-messages.notification",
+          extra: { quoteId },
+        });
       });
     }
 

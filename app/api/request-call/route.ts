@@ -8,6 +8,7 @@ import { pickPreferredLocale } from "@/lib/preferredLocale";
 import { appBaseUrl, FROM_EMAIL, ADMIN_EMAIL } from "@/lib/emailHelpers";
 import { sendResendEmail } from "@/lib/resend";
 import { renderScopeCallAdminEmail } from "@/lib/scopeCallEmails";
+import { captureBackgroundError } from "@/lib/sentry";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -135,7 +136,10 @@ export async function POST(req: Request) {
       // those benefits and would silently drop the alert if Resend was
       // momentarily unhealthy.
       await sendResendEmail({ to: ADMIN_EMAIL, from: FROM_EMAIL, subject, html }).catch((err) => {
-        console.error("[request-call] admin alert failed:", err);
+        captureBackgroundError(err, {
+          where: "request-call.admin_alert",
+          extra: { quoteId },
+        });
       });
     }
 

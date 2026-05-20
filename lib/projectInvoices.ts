@@ -2,6 +2,7 @@ import { ensureCustomerPortalForQuoteId, markDepositPaidForQuoteId } from "@/lib
 import { logProjectActivityByPortalId } from "@/lib/projectActivity";
 import { sendResendEmail } from "@/lib/resend";
 import { sendEventNotification } from "@/lib/notifications";
+import { captureBackgroundError } from "@/lib/sentry";
 import { stripeCreateCheckoutSession } from "@/lib/stripeServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { FROM_EMAIL } from "@/lib/emailHelpers";
@@ -440,7 +441,17 @@ export async function markProjectInvoicePaid(args: {
         paidAt,
         paymentReference: str(args.session.id) || undefined,
         lang: getLeadLocale(context.lead),
-      }).catch((err) => console.error("[projectInvoices] receipt email failed:", err));
+      }).catch((err) =>
+        captureBackgroundError(err, {
+          where: "projectInvoices.receipt_email",
+          tags: { invoiceType: invoiceTypeLower },
+          extra: {
+            invoiceId: args.invoiceId,
+            quoteId: str(context.quote.id),
+            recipient,
+          },
+        })
+      );
     }
   }
 
