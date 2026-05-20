@@ -8,8 +8,9 @@ import { sendEventNotification } from "@/lib/notifications";
 import { captureBackgroundError } from "@/lib/sentry";
 import { AgreementDocument } from "@/lib/certificates/AgreementDocument";
 import { CertificateDocument } from "@/lib/certificates/CertificateDocument";
-import { emailWrap, ctaButton, sig, escHtml, FROM_EMAIL } from "@/lib/emailHelpers";
-import { type EmailLocale, normalizeEmailLocale, t } from "@/lib/i18n/emailStrings";
+import { FROM_EMAIL } from "@/lib/emailHelpers";
+import { normalizeEmailLocale, t } from "@/lib/i18n/emailStrings";
+import { buildCertificateEmailHtml } from "@/lib/certificates/email";
 
 export type GenerateCertInput = {
   agreementId: string;
@@ -36,30 +37,8 @@ async function mergePdfs(a: Buffer, b: Buffer): Promise<Buffer> {
   return Buffer.from(await merged.save());
 }
 
-function buildEmailHtml(leadName: string, signedUrl: string, verificationUrl: string, lang: EmailLocale): string {
-  // Drop the "there" fallback by rendering an unnamed variant when we
-  // don't have a real name. Premium emails should never address the
-  // client as "there."
-  const trimmed = leadName.trim();
-  const headlineHtml = trimmed
-    ? escHtml(t("certificate.headline", lang, { name: trimmed }))
-    : escHtml(t("certificate.headline_anon", lang));
-  const safeVerifyUrl = escHtml(verificationUrl);
-  return emailWrap(`
-    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${headlineHtml}</h1>
-    <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("certificate.eyebrow", lang))}</p>
-    <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("certificate.body_thanks", lang))}</p>
-    <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("certificate.body_verify", lang))}</p>
-    ${ctaButton(signedUrl, t("certificate.cta", lang))}
-    <p style="margin:0 0 8px;font-size:13px;color:#888888;line-height:1.6;letter-spacing:0.04em;text-transform:uppercase;font-weight:600">${escHtml(t("certificate.verify_label", lang))}</p>
-    <p style="margin:0 0 28px;font-size:13px;color:#444444;line-height:1.6;word-break:break-all"><a href="${safeVerifyUrl}" style="color:#111111;text-decoration:underline">${safeVerifyUrl}</a></p>
-    ${sig(lang)}
-  `, {
-    footerNote: t("common.footer.reply_note", lang),
-    preheader: t("certificate.preheader", lang),
-    lang,
-  });
-}
+// Re-export for callers that still pull this from lib/certificates/generate.
+export { buildCertificateEmailHtml };
 
 export async function generateAndDeliverCertificate(
   input: GenerateCertInput
@@ -193,7 +172,7 @@ async function finishCertDelivery(
       to: recipient,
       from: FROM_EMAIL,
       subject: t("certificate.subject", lang),
-      html: buildEmailHtml(input.leadName, signedUrl, verificationUrl, lang),
+      html: buildCertificateEmailHtml(input.leadName, signedUrl, verificationUrl, lang),
       attachments: [
         {
           filename: "CrecyStudio-Agreement-Certificate.pdf",

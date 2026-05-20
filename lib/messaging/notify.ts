@@ -1,5 +1,4 @@
 import { sendResendEmail } from "@/lib/resend";
-import { getSiteUrl } from "@/lib/supabase/server";
 import {
   emailWrap,
   ctaButton,
@@ -9,6 +8,7 @@ import {
   sig,
   escHtml,
   nameFromEmail,
+  appBaseUrl,
   FROM_EMAIL,
   ADMIN_EMAIL,
 } from "@/lib/emailHelpers";
@@ -20,7 +20,7 @@ function excerpt(value: string, max = 280) {
   return `${normalized.slice(0, max - 1)}…`;
 }
 
-export async function sendPortalMessageNotification(params: {
+export type PortalMessageNotificationParams = {
   senderRole: "client" | "studio" | "internal";
   senderName: string;
   body: string;
@@ -30,18 +30,39 @@ export async function sendPortalMessageNotification(params: {
   leadEmail?: string | null;
   leadLocale?: string | null;
   attachmentName?: string | null;
-}) {
-  if (params.senderRole === "internal") return;
+};
+
+export type PortalMessageNotificationRender = {
+  recipientEmail: string;
+  subject: string;
+  html: string;
+  // Helps callers distinguish a deliberate skip (internal message,
+  // missing recipient) from a failed render.
+  skipReason?: "internal_role" | "no_recipient";
+};
+
+// Render-only entry point. Returns the dispatch metadata for tests +
+// preview tooling without sending. When the caller would have been
+// skipped (internal role, missing recipient), returns the skip reason
+// so tests can assert on that branch too.
+export function renderPortalMessageNotification(
+  params: PortalMessageNotificationParams,
+): PortalMessageNotificationRender {
+  if (params.senderRole === "internal") {
+    return { recipientEmail: "", subject: "", html: "", skipReason: "internal_role" };
+  }
 
   const lang = normalizeEmailLocale(params.leadLocale);
-  const siteUrl = getSiteUrl();
+  const siteUrl = appBaseUrl();
   const workspaceUrl = params.portalToken
-    ? new URL(`portal/${params.portalToken}`, siteUrl).toString()
+    ? `${siteUrl}/portal/${encodeURIComponent(params.portalToken)}`
     : siteUrl;
 
   const recipientEmail =
     params.senderRole === "client" ? ADMIN_EMAIL : String(params.leadEmail || "").trim();
-  if (!recipientEmail) return;
+  if (!recipientEmail) {
+    return { recipientEmail: "", subject: "", html: "", skipReason: "no_recipient" };
+  }
 
   const leadEmailTrimmed = String(params.leadEmail || "").trim();
   const recipientName =
@@ -63,9 +84,8 @@ export async function sendPortalMessageNotification(params: {
       rows.push(["Attachment", escHtml(params.attachmentName)]);
     }
 
-    await sendResendEmail({
-      to: recipientEmail,
-      from: FROM_EMAIL,
+    return {
+      recipientEmail,
       subject,
       html: emailWrap(`
         ${adminBadge("Portal message")}
@@ -76,8 +96,7 @@ export async function sendPortalMessageNotification(params: {
       `, {
         preheader: subject,
       }),
-    });
-    return;
+    };
   }
 
   // Studio → client notification. Branded, translated. Workspace-first:
@@ -94,9 +113,8 @@ export async function sendPortalMessageNotification(params: {
     ? `<p style="margin:0 0 16px;font-size:13px;color:#888888;line-height:1.6">${escHtml(t("messaging.attachment_label", lang, { name: params.attachmentName }))}</p>`
     : "";
 
-  await sendResendEmail({
-    to: recipientEmail,
-    from: FROM_EMAIL,
+  return {
+    recipientEmail,
     subject,
     html: emailWrap(`
       <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${headlineHtml}</h1>
@@ -113,5 +131,18 @@ export async function sendPortalMessageNotification(params: {
       preheader: t("messaging.preheader", lang, { sender: params.senderName }),
       lang,
     }),
+  };
+}
+
+export async function sendPortalMessageNotification(
+  params: PortalMessageNotificationParams,
+) {
+  const rendered = renderPortalMessageNotification(params);
+  if (rendered.skipReason) return;
+  await sendResendEmail({
+    to: rendered.recipientEmail,
+    from: FROM_EMAIL,
+    subject: rendered.subject,
+    html: rendered.html,
   });
 }
