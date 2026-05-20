@@ -1,13 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import {
+  enforceRateLimitDurable,
+  getIpFromHeaders,
+  rateLimitResponse,
+} from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   ctx: { params: Promise<{ token: string }> | { token: string } }
 ) {
+  // Each call generates a Supabase signed URL (real $ cost) plus
+  // returns a 60s download link. 30/min is plenty for a legitimate
+  // client clicking re-download a few times; anything higher is a
+  // signal someone is automating the endpoint.
+  const ip = getIpFromHeaders(req.headers);
+  const rl = await enforceRateLimitDurable({
+    key: `portal-certificate:${ip}`,
+    limit: 30,
+    windowMs: 60_000,
+  });
+  if (!rl.ok) return rateLimitResponse(rl.resetAt);
+
   const { token } = await Promise.resolve(ctx.params);
 
   const { data: portalRow } = await supabaseAdmin

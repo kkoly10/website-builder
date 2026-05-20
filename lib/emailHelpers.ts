@@ -12,6 +12,23 @@ const LINKEDIN_URL = "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60
 export const FROM_EMAIL =
   (process.env.NOTIFICATION_FROM_EMAIL || process.env.RESEND_FROM_EMAIL || "studio@crecystudio.com").trim();
 
+// Boot-time visibility for misconfigured prod deploys. The FROM_EMAIL
+// fallback to "studio@crecystudio.com" works *if* crecystudio.com is
+// verified in Resend, but new deploys often miss the env var entirely
+// and silently rely on the fallback. Warning loudly in prod logs makes
+// the drift obvious during the first uptime check rather than after
+// the first email lands in spam.
+if (
+  process.env.NODE_ENV === "production" &&
+  !process.env.NOTIFICATION_FROM_EMAIL &&
+  !process.env.RESEND_FROM_EMAIL
+) {
+  console.warn(
+    "[emailHelpers] Neither NOTIFICATION_FROM_EMAIL nor RESEND_FROM_EMAIL is set. " +
+      `Falling back to ${FROM_EMAIL}. Verify the sender domain in Resend before launch.`
+  );
+}
+
 export const ADMIN_EMAIL =
   (process.env.ADMIN_NOTIFICATION_EMAIL || process.env.ALERT_TO_EMAIL || "").trim();
 

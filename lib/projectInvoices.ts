@@ -257,13 +257,20 @@ async function syncDepositInvoiceLink(args: {
   if (quoteError) throw new Error(quoteError.message);
 }
 
+// Hard cap on invoices returned per project. Realistic project invoice
+// counts are <20 (deposit + 1-3 milestone invoices + final). 100 is a
+// generous defensive bound that prevents an unbounded query if a bug
+// or malicious admin inflates the table.
+const INVOICE_LIST_LIMIT = 100;
+
 export async function listProjectInvoicesByQuoteId(quoteId: string) {
   const portal = await ensureCustomerPortalForQuoteId(quoteId);
   const { data, error } = await supabaseAdmin
     .from("project_invoices")
     .select("*")
     .eq("portal_project_id", portal.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(INVOICE_LIST_LIMIT);
 
   if (error) throw new Error(error.message);
   return (data ?? []).map((invoice) => serializeInvoice(invoice, str(portal.quote_id)));
@@ -277,7 +284,8 @@ export async function listProjectInvoicesByToken(token: string) {
     .from("project_invoices")
     .select("*")
     .eq("portal_project_id", portal.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(INVOICE_LIST_LIMIT);
 
   if (error) throw new Error(error.message);
   return (data ?? []).map((invoice) => serializeInvoice(invoice, str(portal.quote_id)));

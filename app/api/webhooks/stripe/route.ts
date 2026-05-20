@@ -44,6 +44,17 @@ function safeObj(v: unknown): Record<string, unknown> {
   return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
 }
 
+// UUID v4 (and adjacent variants) validation for metadata IDs that
+// Stripe relays back from session creation. Test sessions or admin
+// typos can put garbage in metadata.quoteId — without this gate the
+// downstream `.eq("id", quoteId)` queries silently return 0 rows and
+// the webhook acks 200 while doing nothing. Logging + skipping is
+// strictly better than silent no-op.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isUuid(value: string): boolean {
+  return UUID_RE.test(value);
+}
+
 // Handle charge.refunded and charge.dispute.created.
 // Flips deposit_status to 'refunded' / 'disputed' on the matching
 // quote (matched via the original payment intent's session metadata)
@@ -251,11 +262,27 @@ export async function POST(req: NextRequest) {
     // sessions continue to route to the right downstream handler.
     const rawLane = String(metadata.lane || "").trim().toLowerCase();
     const lane = rawLane === "ops" ? "automation" : rawLane;
-    const invoiceId = String(metadata.invoiceId || "").trim();
-    const quoteId = String(metadata.quoteId || "").trim();
-    const opsIntakeId = String(metadata.opsIntakeId || "").trim();
-    const ecomIntakeId = String(metadata.ecomIntakeId || "").trim();
-    const ecomQuoteId = String(metadata.ecomQuoteId || "").trim();
+
+    // Strict UUID validation on every ID we route on. If a test session
+    // or admin typo puts garbage in metadata, we log and skip rather
+    // than running a no-op .eq("id", "garbage") against the DB. Empty
+    // string passes through (treated as "absent") so the existing
+    // "if (invoiceId)" branch logic still works correctly.
+    const validateId = (raw: unknown, field: string): string => {
+      const v = String(raw || "").trim();
+      if (!v) return "";
+      if (!isUuid(v)) {
+        console.warn(`[stripe-webhook] non-UUID ${field} in metadata: ${v}`);
+        return "";
+      }
+      return v;
+    };
+
+    const invoiceId = validateId(metadata.invoiceId, "invoiceId");
+    const quoteId = validateId(metadata.quoteId, "quoteId");
+    const opsIntakeId = validateId(metadata.opsIntakeId, "opsIntakeId");
+    const ecomIntakeId = validateId(metadata.ecomIntakeId, "ecomIntakeId");
+    const ecomQuoteId = validateId(metadata.ecomQuoteId, "ecomQuoteId");
 
     try {
       if (invoiceId) {

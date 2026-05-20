@@ -147,10 +147,22 @@ async function getOptionalAdminIdentity() {
 }
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   ctx: { params: Promise<{ token: string }> | { token: string } }
 ) {
   try {
+    // Per-IP read limit. Portal tokens are secret but if one leaks, an
+    // attacker could poll-loop the GET to scrape messages. 60/min is
+    // generous for legitimate client behavior (open page, refresh a few
+    // times) but cuts off automated scrapers.
+    const ip = getIpFromHeaders(req.headers);
+    const rl = await enforceRateLimitDurable({
+      key: `portal-messages-read:${ip}`,
+      limit: 60,
+      windowMs: 60_000,
+    });
+    if (!rl.ok) return rateLimitResponse(rl.resetAt);
+
     const { token } = await getParams(ctx);
     const result = await getCustomerPortalViewByToken(token, { markReadAs: "client" });
 
