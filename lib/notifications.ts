@@ -3,7 +3,7 @@ import { emailWrap, ctaButton, adminTable, callout, sig, escHtml, adminBadge, FR
 import { type EmailLocale, normalizeEmailLocale, t, greeting, laneLabel, invoiceTypeLabel } from "@/lib/i18n/emailStrings";
 import { captureBackgroundError } from "@/lib/sentry";
 
-type EventContext = {
+export type EventContext = {
   event: string;
   quoteId: string;
   leadName: string;
@@ -54,7 +54,7 @@ function safeHttpUrl(url?: string | null): string | null {
 // adminSubject/adminHtml override the client copy when the admin needs
 // a differently-formatted version (e.g. "Hi {leadName}" makes no sense
 // in the studio inbox). Falls back to client subject/html when omitted.
-type TemplateResult = {
+export type TemplateResult = {
   subject: string;
   html: string;
   toClient: boolean;
@@ -398,6 +398,21 @@ const templates: Record<string, (ctx: EventContext, lang: EmailLocale) => Templa
     toAdmin: true,
   }),
 };
+
+// Render-only entry point: returns the resolved template for tests +
+// preview tooling without sending anything. `null` when the event is
+// unknown so callers can distinguish "skip" from "broken template".
+export function renderEventNotification(ctx: EventContext): TemplateResult | null {
+  const builder = templates[ctx.event];
+  if (!builder) return null;
+  const lang = normalizeEmailLocale(ctx.lang);
+  return builder(ctx, lang);
+}
+
+// All event types backed by a template — handy for test enumeration.
+export function listEventTypes(): string[] {
+  return Object.keys(templates);
+}
 
 export async function sendEventNotification(ctx: EventContext) {
   const builder = templates[ctx.event];

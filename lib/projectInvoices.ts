@@ -4,16 +4,12 @@ import { sendResendEmail } from "@/lib/resend";
 import { sendEventNotification } from "@/lib/notifications";
 import { stripeCreateCheckoutSession } from "@/lib/stripeServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import {
-  emailWrap,
-  ctaButton,
-  adminTable,
-  callout,
-  sig,
-  escHtml,
-  FROM_EMAIL,
-} from "@/lib/emailHelpers";
-import { normalizeEmailLocale, t, invoiceTypeLabel } from "@/lib/i18n/emailStrings";
+import { FROM_EMAIL } from "@/lib/emailHelpers";
+import { renderInvoiceEmail, type InvoiceEmailArgs } from "@/lib/invoiceEmail";
+import { normalizeEmailLocale } from "@/lib/i18n/emailStrings";
+
+// Re-export for callers that already pull this from projectInvoices.
+export { renderInvoiceEmail, type InvoiceEmailArgs };
 
 export type ProjectInvoiceView = {
   id: string;
@@ -57,12 +53,6 @@ function dollarsToCents(value: unknown) {
 
 function ensureBaseUrl(value: string) {
   return str(value).replace(/\/$/, "") || "https://crecystudio.com";
-}
-
-function intlLocale(lang: "en" | "fr" | "es"): string {
-  if (lang === "fr") return "fr-FR";
-  if (lang === "es") return "es-ES";
-  return "en-US";
 }
 
 function deriveInvoiceStatus(row: InvoiceRow): ProjectInvoiceView["status"] {
@@ -166,62 +156,13 @@ async function getCustomerEmail(quote: Record<string, any>, lead: Record<string,
   return email;
 }
 
-async function sendInvoiceEmail(args: {
-  amount: number;
-  dueDate?: string | null;
-  invoiceType: string;
-  leadName?: string | null;
-  payUrl: string;
-  portalUrl: string;
-  quoteId: string;
-  recipientEmail: string;
-  notes?: string | null;
-  lang?: string | null;
-}) {
-  const lang = normalizeEmailLocale(args.lang);
-  const typeLabel = invoiceTypeLabel(args.invoiceType, lang);
-  const formattedAmount = new Intl.NumberFormat(intlLocale(lang), {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(args.amount);
-  const formattedDueDate = args.dueDate
-    ? new Date(args.dueDate).toLocaleDateString(intlLocale(lang), {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
-    : null;
-  const trimmedName = str(args.leadName);
-  const headline = trimmedName
-    ? t("invoice.headline_named", lang, { name: escHtml(trimmedName) })
-    : t("invoice.headline_unnamed", lang);
-  const safeNotes = str(args.notes) ? escHtml(str(args.notes)).replace(/\n/g, "<br/>") : null;
-
-  const tableRows: [string, string][] = [
-    [t("invoice.row_amount", lang), `<strong style="font-size:15px;color:#111111">${escHtml(formattedAmount)}</strong>`],
-    [t("invoice.row_type", lang), escHtml(typeLabel)],
-    [t("invoice.row_project", lang), `<span style="font-family:monospace;font-size:12px;color:#888888">${escHtml(args.quoteId.slice(0, 8))}</span>`],
-  ];
-  if (formattedDueDate) tableRows.push([t("invoice.row_due", lang), escHtml(formattedDueDate)]);
-
+async function sendInvoiceEmail(args: InvoiceEmailArgs) {
+  const { subject, html } = renderInvoiceEmail(args);
   await sendResendEmail({
     to: args.recipientEmail,
     from: FROM_EMAIL,
-    subject: t("invoice.subject", lang, { amount: formattedAmount }),
-    html: emailWrap(`
-      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${headline}</h1>
-      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("invoice.eyebrow", lang, { type: typeLabel }))}</p>
-      ${adminTable(tableRows)}
-      ${ctaButton(args.payUrl, t("invoice.cta", lang))}
-      ${safeNotes ? callout(t("invoice.notes_label", lang), [safeNotes]) : ""}
-      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">${t("invoice.portal_link", lang, { url: escHtml(args.portalUrl) })}</p>
-      ${sig(lang)}
-    `, {
-      footerNote: t("common.footer.reply_note", lang),
-      preheader: t("invoice.preheader", lang, { amount: formattedAmount }),
-      lang,
-    }),
+    subject,
+    html,
   });
 }
 
