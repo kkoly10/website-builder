@@ -25,6 +25,7 @@ export async function generateMetadata({
     description: t("metaDescription"),
     openGraph: { title: t("metaTitle"), description: t("metaDescription") },
     twitter: { title: t("metaTitle"), description: t("metaDescription") },
+    robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
   };
 }
 
