@@ -52,11 +52,23 @@ export async function generateMetadata({
     ""
   ) || "/";
 
+  // Self-canonical: each locale page canonicalizes to itself, with hreflang
+  // alternates pointing at the other locales. This is what Google recommends
+  // for multilingual sites — canonicalizing all locales to one URL would
+  // cause non-English pages to drop from their localized SERPs.
+  const localePrefix = locale === routing.defaultLocale ? "" : `/${locale}`;
+  const canonicalPath =
+    unprefixed === "/" ? (localePrefix || "/") : `${localePrefix}${unprefixed}`;
+
   return {
     alternates: {
+      canonical: canonicalPath,
       languages: localeAwareLanguages(unprefixed),
     },
     openGraph: {
+      // Per-page locale-aware OG URL so social previews link back to the
+      // exact locale the user is reading, not the root.
+      url: canonicalPath,
       locale: OG_LOCALES[locale] ?? OG_LOCALES[routing.defaultLocale],
       alternateLocale: routing.locales
         .filter((l) => l !== locale)

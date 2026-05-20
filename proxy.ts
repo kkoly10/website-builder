@@ -174,6 +174,17 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // Content-Language for locale-bearing HTML responses. Some crawlers prefer
+  // the HTTP header over the html lang attribute when deciding which version
+  // to serve in localized SERPs; skip for API/internal/portal which aren't
+  // customer-facing content surfaces.
+  if (!isLocaleAgnostic(pathname)) {
+    const localeFromPath = routing.locales.find(
+      (code) => pathname === `/${code}` || pathname.startsWith(`/${code}/`)
+    );
+    response.headers.set("Content-Language", localeFromPath ?? routing.defaultLocale);
+  }
+
   return response;
 }
 
