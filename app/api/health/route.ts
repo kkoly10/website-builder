@@ -15,12 +15,14 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const startedAt = Date.now();
   try {
-    // SELECT 1-style probe. Cheap because of the LIMIT and because
-    // we're not joining or filtering on any column. If Supabase is
-    // down or the service-role key is wrong, this throws.
+    // SELECT 1-style probe. LIMIT 1 keeps the query sub-millisecond
+    // regardless of table size — avoid count:"exact" here because it
+    // forces a full COUNT(*) over the quotes table, which gets slower
+    // as the table grows. We don't need the actual row count, just to
+    // verify Supabase is reachable and the service-role key is valid.
     const { error } = await supabaseAdmin
       .from("quotes")
-      .select("id", { head: true, count: "exact" })
+      .select("id")
       .limit(1);
 
     if (error) {
