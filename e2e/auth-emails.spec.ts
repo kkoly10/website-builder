@@ -95,6 +95,24 @@ for (const scenario of SCENARIOS) {
         "mailing-address footer line present (set MAILING_ADDRESS_LINE in prod)",
       ).toContain("MAILING_ADDRESS_LINE");
 
+      // Outlook 365 dark-mode hooks ([data-ogsc] + [data-ogsb]) sit
+      // alongside the prefers-color-scheme rules so Outlook's color
+      // inversion still lands on the brand palette instead of its
+      // own washed-out auto-darkening. Easy to drop accidentally
+      // when editing the CSS block — assert both selectors stay.
+      expect(fullHtml, "Outlook 365 [data-ogsc] dark-mode hook present").toContain("[data-ogsc]");
+      expect(fullHtml, "Outlook 365 [data-ogsb] dark-mode hook present").toContain("[data-ogsb]");
+
+      // Signature photo is decorative — the name + role appear in
+      // adjacent text. aria-hidden="true" stops screen readers
+      // announcing the "KK" image-blocked visual fallback.
+      const sigImg = page.locator('img[alt="KK"]');
+      const sigCount = await sigImg.count();
+      if (sigCount > 0) {
+        const ariaHidden = await sigImg.first().getAttribute("aria-hidden");
+        expect(ariaHidden, "sig photo carries aria-hidden=true").toBe("true");
+      }
+
       // CTA assertions
       if (scenario.hasCta) {
         // CTA buttons in our templates are rendered as <a> inside a <td>
