@@ -111,6 +111,15 @@ for (const scenario of SCENARIOS) {
           ? "email_change"
           : scenario.actionType;
         expect(ctaHref, `CTA type=${verifyType}`).toContain(`type=${verifyType}`);
+
+        // Dark-mode CTA invert: without this the black button vanishes
+        // into a #1a1a1a dark card. Assert both the class hook on the
+        // td and the matching CSS rule are present so we catch either
+        // half of the contract being removed.
+        expect(fullHtml, ".cta-button class hook on CTA td").toContain('class="cta-button"');
+        expect(fullHtml, "dark-mode CTA invert rule present").toMatch(
+          /\.cta-button[^{]*\{[^}]*background:\s*#ffffff/i,
+        );
       } else {
         // email_change_current must NOT contain a Supabase verify link
         // — clicking from the old address shouldn't confirm anything.

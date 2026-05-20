@@ -127,6 +127,12 @@ export function emailWrap(
       .row-value { color:#e8e8e8 !important; }
       .sig-name { color:#ffffff !important; }
       .sig-role { color:#999999 !important; }
+      /* CTA: brand black-on-white in light mode would disappear into
+         the dark card body, so invert to white-on-black. Targets both
+         the wrapping td (Outlook reads background here) and the inner
+         <a> (everywhere else). */
+      .cta-button { background:#ffffff !important; }
+      .cta-button a { background:#ffffff !important; color:#111111 !important; }
     }
   `;
 
@@ -194,10 +200,12 @@ ${preheaderHtml}
 }
 
 export function ctaButton(href: string, label: string): string {
-  // Double background (td + a) is required for Outlook: Outlook ignores background on <a>
+  // Double background (td + a) is required for Outlook: Outlook ignores background on <a>.
+  // .cta-button class lets the dark-mode media query invert this to
+  // white-on-black so the button doesn't disappear into a #1a1a1a card.
   return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:4px 0 28px">
     <tr>
-      <td style="background:#111111">
+      <td class="cta-button" style="background:#111111">
         <a href="${escHtml(href)}" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;padding:13px 26px;font-size:14px;font-weight:bold;font-family:Arial,Helvetica,sans-serif">${escHtml(label)} &#x2192;</a>
       </td>
     </tr>
@@ -237,13 +245,18 @@ export function adminBadge(label: string): string {
 
 export function sig(lang: EmailLocale = "en"): string {
   const photoUrl = `${SITE_URL}/about/komlan.jpg`;
-  // object-fit not supported in Outlook/older clients; komlan.jpg is already square so no crop needed.
+  // object-fit not supported in Outlook/older clients; komlan.jpg is
+  // already square so no crop needed.
+  // The img carries its own background + alt-text styling so when the
+  // remote image is blocked (Gmail / iOS Mail default for unverified
+  // senders) you see "KK" on a dark circle instead of a broken-icon
+  // placeholder. When images load, the photo covers the background.
   // Class names on the name/role let the dark-mode media query bump
   // contrast on macOS/iOS Mail without affecting light-mode rendering.
   return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:28px 0 0">
     <tr>
       <td style="padding-right:14px;vertical-align:top">
-        <img src="${photoUrl}" alt="Komlan Kouhiko" width="48" height="48" style="display:block;border-radius:50%">
+        <img src="${photoUrl}" alt="KK" width="48" height="48" style="display:block;border:0;outline:none;text-decoration:none;border-radius:50%;background:#222222;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;text-align:center;line-height:48px">
       </td>
       <td style="vertical-align:top">
         <p class="sig-name" style="margin:0 0 2px;font-size:14px;font-weight:bold;color:#111111;font-family:Arial,Helvetica,sans-serif">Komlan Kouhiko</p>
