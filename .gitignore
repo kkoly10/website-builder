@@ -21,6 +21,10 @@ e2e/authenticated-flows.spec.ts
 e2e/admin-auth-setup.ts
 e2e/.auth/
 
+# Generated email previews (regenerate with `npm run preview:emails`).
+# Source-of-truth is the renderer, not the rendered HTML.
+scripts/email-previews/
+
 .env.local
 .env
 

@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "tsc --noEmit",
     "test:unit": "tsx --test lib/__tests__/*.test.ts",
+    "test:emails": "playwright test --config=playwright.emails.config.ts",
+    "preview:emails": "tsx scripts/render-email-previews.ts",
     "test:e2e": "playwright test",
     "test:smoke": "playwright test e2e/smoke.spec.ts",
     "test:routes": "playwright test e2e/smoke.spec.ts"
