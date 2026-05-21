@@ -12,7 +12,7 @@
 // "mark complete" button. The card auto-hides those (see ACTION_HAS_OWN_FLOW)
 // so we don't show a redundant "click here" CTA next to the actual form.
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { RequiredAction } from "@/lib/requiredActions";
 
@@ -87,6 +87,16 @@ export default function RequiredActionsCard({ actions, onComplete }: Props) {
   const t = useTranslations("portalToken.requiredActions");
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // The error banner renders at the TOP of this card. When the customer
+  // clicks "Mark as done" on an action below the fold, the banner appears
+  // out of their viewport — they see the button re-enable but never see
+  // why it failed. Same UX bug we already fixed on PortalClient.
+  const errorRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [error]);
 
   // Only show client-owned actions on the client portal. Studio/system
   // actions are admin-side concerns.
@@ -139,6 +149,7 @@ export default function RequiredActionsCard({ actions, onComplete }: Props) {
 
       {error ? (
         <div
+          ref={errorRef}
           role="alert"
           style={{
             marginBottom: 12,

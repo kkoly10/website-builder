@@ -73,6 +73,13 @@ export default function BuildClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState<number>(0);
+  // submitting + error state. Previously this flow swallowed every
+  // failure into `alert()`, which (a) is dismissable so the customer
+  // can't re-read the error and (b) doesn't disable the submit button,
+  // letting impatient double-clicks fire multiple /api/submit-estimate
+  // POSTs in parallel.
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState<FormState>({
     mode: "chooser", websiteType: "Business", intent: "Marketing", intentOther: "",
@@ -132,8 +139,11 @@ export default function BuildClient() {
   }
 
   async function submit() {
+    if (submitting) return; // double-click guard
+    setError(null);
     const leadEmail = form.leadEmail.trim();
-    if (!leadEmail || !leadEmail.includes("@")) { alert(t("validation.validEmail")); return; }
+    if (!leadEmail || !leadEmail.includes("@")) { setError(t("validation.validEmail")); return; }
+    setSubmitting(true);
     const pricingInput: Parameters<typeof getWebsitePricing>[0] = {
       websiteType: form.websiteType.toLowerCase() as "business" | "ecommerce" | "portfolio" | "landing",
       pages: normalizePagesBucket(form.pages),
@@ -189,8 +199,9 @@ export default function BuildClient() {
       } catch {}
 
       router.push(String(json.nextUrl));
-    } catch (error) {
-      alert(error instanceof Error ? error.message : t("validation.estimateError"));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("validation.estimateError"));
+      setSubmitting(false);
     }
   }
 
@@ -457,14 +468,35 @@ export default function BuildClient() {
         </div>
       )}
 
+      {/* Inline error — replaces the old alert() so the customer can
+          read what happened, retry, and isn't blocked by a dismiss-and-
+          forget modal. role="alert" lets screen readers announce it. */}
+      {error ? (
+        <div
+          role="alert"
+          style={{
+            marginTop: 16,
+            padding: 12,
+            borderRadius: 8,
+            border: "1px solid var(--accent)",
+            background: "var(--accent-bg)",
+            color: "var(--accent-2)",
+            fontSize: 13,
+            fontWeight: 600,
+          }}
+        >
+          {error}
+        </div>
+      ) : null}
+
       {/* Navigation */}
       {step > 0 && (
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 20 }}>
-          <button className="btn btnGhost" onClick={back}>← {t("nav.back")}</button>
+          <button className="btn btnGhost" onClick={back} disabled={submitting}>← {t("nav.back")}</button>
           {step < TOTAL_STEPS ? (
             <button className="btn btnPrimary" onClick={next}>{t("nav.continue")} <span className="btnArrow">→</span></button>
           ) : (
-            <button className="btn btnPrimary" onClick={submit}>{t("nav.generateEstimate")} <span className="btnArrow">→</span></button>
+            <button className="btn btnPrimary" onClick={submit} disabled={submitting}>{t("nav.generateEstimate")} <span className="btnArrow">→</span></button>
           )}
         </div>
       )}
