@@ -152,14 +152,14 @@ const STRINGS: Record<string, LocalizedString> = {
 
   // ─── launch_ready ─────────────────────────────────────────────
   "launch_ready.subject": {
-    en: "Your website is ready to launch — CrecyStudio",
-    fr: "Votre site est prêt à être lancé — CrecyStudio",
-    es: "Su sitio está listo para lanzarse — CrecyStudio",
+    en: "Your {{lane}} is ready to launch — CrecyStudio",
+    fr: "Prêt pour le lancement de votre {{lane}} — CrecyStudio",
+    es: "Su {{lane}} ya puede lanzarse — CrecyStudio",
   },
   "launch_ready.preheader": {
-    en: "Everything is ready — give the word and your site goes live.",
-    fr: "Tout est prêt — donnez le feu vert et votre site sera en ligne.",
-    es: "Todo está listo — dé la palabra y su sitio estará en línea.",
+    en: "Everything is ready — give the word and your {{lane}} goes live.",
+    fr: "Tout est prêt — donnez le feu vert et votre {{lane}} sera en ligne.",
+    es: "Todo está listo — dé la palabra y su {{lane}} estará en línea.",
   },
   "launch_ready.headline": {
     en: "Ready to go live.",
@@ -172,9 +172,9 @@ const STRINGS: Record<string, LocalizedString> = {
     es: "Lista de lanzamiento completa",
   },
   "launch_ready.body": {
-    en: "Every item on the launch checklist is signed off — domain, forms, analytics, SEO, handoff. Your site goes live whenever you give the word.",
-    fr: "Chaque élément de la liste de lancement est validé — domaine, formulaires, analyses, SEO, remise. Votre site sera mis en ligne dès que vous le souhaitez.",
-    es: "Cada elemento de la lista de lanzamiento está aprobado — dominio, formularios, analítica, SEO, entrega. Su sitio se publicará cuando lo decida.",
+    en: "Every item on the launch checklist is signed off — domain, forms, analytics, SEO, handoff. Your {{lane}} goes live whenever you give the word.",
+    fr: "Chaque élément de la liste de lancement est validé — domaine, formulaires, analyses, SEO, remise. Votre {{lane}} passe en ligne dès que vous le souhaitez.",
+    es: "Cada elemento de la lista de lanzamiento está aprobado — dominio, formularios, analítica, SEO, entrega. Su {{lane}} se publicará cuando lo decida.",
   },
   "launch_ready.cta": {
     en: "Approve launch",
@@ -219,14 +219,14 @@ const STRINGS: Record<string, LocalizedString> = {
     es: "Su {{lane}} está entregado e indexado. La entrega completa — credenciales de administración, acceso a analítica y documentación post-lanzamiento — le espera en su espacio.",
   },
   "site_live.body_website_care": {
-    en: "A live website is a starting line, not a finish line. The next 90 days are where real conversions happen — small copy and design tweaks, content updates, performance tuning. If you'd rather not handle that yourself, our Care Plans start at $199/mo and keep the site working harder for you each month.",
-    fr: "Un site en ligne est un point de départ, pas une ligne d'arrivée. Les 90 prochains jours sont décisifs — petites retouches de texte et de design, mises à jour de contenu, optimisation des performances. Si vous préférez ne pas vous en occuper, nos forfaits Care commencent à 199 $/mois et font travailler votre site un peu plus chaque mois.",
-    es: "Un sitio en línea es un punto de partida, no una meta. Los próximos 90 días son decisivos — pequeños ajustes de texto y diseño, actualizaciones de contenido, optimización de rendimiento. Si prefiere no encargarse, nuestros planes Care comienzan en 199 $/mes y hacen que su sitio rinda más cada mes.",
+    en: "A live website is a starting line, not a finish line. The next 90 days are where real conversions happen — small copy and design tweaks, content updates, performance tuning. If you'd rather not handle that yourself, our Care Plans start at $400/mo and keep the site working harder for you each month.",
+    fr: "Un site en ligne est un point de départ, pas une ligne d'arrivée. Les 90 prochains jours sont décisifs — petites retouches de texte et de design, mises à jour de contenu, optimisation des performances. Si vous préférez ne pas vous en occuper, nos forfaits Care commencent à 400 $/mois et font travailler votre site un peu plus chaque mois.",
+    es: "Un sitio en línea es un punto de partida, no una meta. Los próximos 90 días son decisivos — pequeños ajustes de texto y diseño, actualizaciones de contenido, optimización de rendimiento. Si prefiere no encargarse, nuestros planes Care comienzan en 400 $/mes y hacen que su sitio rinda más cada mes.",
   },
   "site_live.body_app_care": {
-    en: "Launching is the easy part — the next 90 days are where real usage shapes the product. If you want ongoing engineering and tuning rather than every change becoming a new project, ask about our retainer arrangements.",
-    fr: "Lancer est la partie facile — les 90 prochains jours, c'est l'usage réel qui façonne le produit. Si vous voulez un développement et un réglage continus plutôt que de transformer chaque changement en nouveau projet, demandez nos formules en régie.",
-    es: "Lanzar es la parte fácil — los próximos 90 días son cuando el uso real moldea el producto. Si desea ingeniería y ajustes continuos en vez de convertir cada cambio en un nuevo proyecto, pregunte por nuestros acuerdos de retención.",
+    en: "Launching is the easy part — the next 90 days are where real usage shapes the product. If you want ongoing engineering and tuning rather than every change becoming a new project, our Care Plans cover that too and start at $400/mo.",
+    fr: "Lancer est la partie facile — les 90 prochains jours, c'est l'usage réel qui façonne le produit. Si vous voulez un développement et un réglage continus plutôt que de transformer chaque changement en nouveau projet, nos forfaits Care couvrent cela aussi et commencent à 400 $/mois.",
+    es: "Lanzar es la parte fácil — los próximos 90 días son cuando el uso real moldea el producto. Si desea ingeniería y ajustes continuos en vez de convertir cada cambio en un nuevo proyecto, nuestros planes Care también cubren eso y comienzan en 400 $/mes.",
   },
   "site_live.cta": {
     en: "Open handoff",
@@ -298,9 +298,9 @@ const STRINGS: Record<string, LocalizedString> = {
 
   // ─── invoice_paid_receipt (NEW) ───────────────────────────────
   "invoice_paid_receipt.subject": {
-    en: "Receipt: {{amount}} received — CrecyStudio",
-    fr: "Reçu : {{amount}} reçus — CrecyStudio",
-    es: "Recibo: {{amount}} recibidos — CrecyStudio",
+    en: "Payment received: {{amount}} — CrecyStudio",
+    fr: "Paiement reçu : {{amount}} — CrecyStudio",
+    es: "Pago recibido: {{amount}} — CrecyStudio",
   },
   "invoice_paid_receipt.preheader": {
     en: "Payment of {{amount}} received. Receipt enclosed.",
@@ -392,9 +392,9 @@ const STRINGS: Record<string, LocalizedString> = {
     es: "Ha pasado aproximadamente un mes desde el lanzamiento. El primer mes suele ser cuando aparecen las pequeñas fricciones — un texto de botón confuso, un campo de formulario que ralentiza, una sección que no aporta lo suficiente.",
   },
   "post_launch_30d.body_offer": {
-    en: "Reply with anything you've noticed — I'll look at it directly. If you'd like ongoing tuning instead of one-off fixes, our Care Plans cover that and start at $199/mo.",
-    fr: "Répondez en partageant ce que vous avez remarqué — j'y jetterai un œil directement. Si vous préférez un réglage continu plutôt que des correctifs ponctuels, nos forfaits Care couvrent cela à partir de 199 $/mois.",
-    es: "Responda con lo que haya notado — lo revisaré directamente. Si prefiere un ajuste continuo en lugar de correcciones puntuales, nuestros planes Care cubren eso desde 199 $/mes.",
+    en: "Reply with anything you've noticed — I'll look at it directly. If you'd like ongoing tuning instead of one-off fixes, our Care Plans cover that and start at $400/mo.",
+    fr: "Répondez en partageant ce que vous avez remarqué — j'y jetterai un œil directement. Si vous préférez un réglage continu plutôt que des correctifs ponctuels, nos forfaits Care couvrent cela à partir de 400 $/mois.",
+    es: "Responda con lo que haya notado — lo revisaré directamente. Si prefiere un ajuste continuo en lugar de correcciones puntuales, nuestros planes Care cubren eso desde 400 $/mes.",
   },
   "post_launch_30d.cta": {
     en: "Open workspace",
@@ -576,19 +576,19 @@ const STRINGS: Record<string, LocalizedString> = {
     es: "Qué sigue",
   },
   "discovery.nextsteps_1": {
-    en: "1 Komlan reviews your request personally",
-    fr: "1 Komlan examine votre demande personnellement",
-    es: "1 Komlan revisa su solicitud personalmente",
+    en: "→ Komlan reviews your request personally",
+    fr: "→ Komlan examine votre demande personnellement",
+    es: "→ Komlan revisa su solicitud personalmente",
   },
   "discovery.nextsteps_2": {
-    en: "2 You receive a confirmed time within 24 hours",
-    fr: "2 Vous recevez un horaire confirmé sous 24 heures",
-    es: "2 Recibe un horario confirmado en 24 horas",
+    en: "→ You receive a confirmed time within 24 hours",
+    fr: "→ Vous recevez un horaire confirmé sous 24 heures",
+    es: "→ Recibe un horario confirmado en 24 horas",
   },
   "discovery.nextsteps_3": {
-    en: "3 20 minutes — scope, honest feedback, no pitch",
-    fr: "3 20 minutes — portée, retour franc, sans démarchage",
-    es: "3 20 minutos — alcance, retroalimentación honesta, sin argumento de venta",
+    en: "→ 20 minutes — scope, honest feedback, no pitch",
+    fr: "→ 20 minutes — portée, retour franc, sans démarchage",
+    es: "→ 20 minutos — alcance, retroalimentación honesta, sin argumento de venta",
   },
 
   // ─── discovery call (scheduled) ───────────────────────────────
@@ -965,15 +965,30 @@ const STRINGS: Record<string, LocalizedString> = {
     fr: "Confirmez votre nouvelle adresse e-mail",
     es: "Confirme su nueva dirección de correo",
   },
+  "auth.email_change.subject_old": {
+    en: "Email change requested on your CrecyStudio account",
+    fr: "Demande de changement d'e-mail sur votre compte CrecyStudio",
+    es: "Cambio de correo solicitado en su cuenta CrecyStudio",
+  },
   "auth.email_change.preheader": {
     en: "Confirm the email change on your CrecyStudio account.",
     fr: "Confirmez le changement d'e-mail sur votre compte CrecyStudio.",
     es: "Confirme el cambio de correo en su cuenta CrecyStudio.",
   },
+  "auth.email_change.preheader_old": {
+    en: "A change to your account email was just requested.",
+    fr: "Un changement d'e-mail de votre compte vient d'être demandé.",
+    es: "Se acaba de solicitar un cambio de correo en su cuenta.",
+  },
   "auth.email_change.headline": {
     en: "Confirm your new email.",
     fr: "Confirmez votre nouvel e-mail.",
     es: "Confirme su nuevo correo.",
+  },
+  "auth.email_change.headline_old": {
+    en: "Email change requested.",
+    fr: "Changement d'e-mail demandé.",
+    es: "Cambio de correo solicitado.",
   },
   "auth.email_change.eyebrow": {
     en: "Email change",
