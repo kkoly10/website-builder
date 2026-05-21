@@ -188,15 +188,15 @@ export function renderAuthEmail(input: RenderInput): RenderedAuthEmail | null {
       // because clicking on the current-email side does nothing.
       const newEmail = input.newEmail || t("auth.email_change.new_address_unknown", lang);
       return {
-        subject: t("auth.email_change.subject", lang),
+        subject: t("auth.email_change.subject_old", lang),
         html: emailWrap(`
-          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("auth.email_change.headline", lang))}</h1>
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("auth.email_change.headline_old", lang))}</h1>
           <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("auth.email_change.eyebrow", lang))}</p>
           <p style="margin:0 0 24px;font-size:15px;color:#444444;line-height:1.7">${t("auth.email_change.body_old", lang, { newEmail: escHtml(newEmail) })}</p>
           <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">${escHtml(t("auth.email_change.expires", lang))}</p>
           ${sig(lang)}
         `, {
-          preheader: t("auth.email_change.preheader", lang),
+          preheader: t("auth.email_change.preheader_old", lang),
           lang,
         }),
       };
