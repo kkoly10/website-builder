@@ -6,6 +6,11 @@ import { useRouter } from "next/navigation";
 export default function AIBuilderPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
+  // Inline error replaces the three alert() dialogs the old version
+  // used for required-field validation. Modal alerts are dismissable
+  // and leave no visible cue once dismissed, so a customer who
+  // dismissed the alert had no idea why "Generate" wasn't progressing.
+  const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     businessName: "",
@@ -16,26 +21,32 @@ export default function AIBuilderPage() {
   });
 
   function next() {
+    setError(null);
     setStep((s) => s + 1);
   }
 
   function back() {
+    setError(null);
     setStep((s) => s - 1);
   }
 
   function generate() {
     if (!form.businessName.trim()) {
-      alert("Please enter your business name.");
+      setError("Please enter your business name.");
+      setStep(1);
       return;
     }
     if (!form.industry.trim()) {
-      alert("Please select an industry.");
+      setError("Please select an industry.");
+      setStep(2);
       return;
     }
     if (!form.goal.trim()) {
-      alert("Please select your main goal.");
+      setError("Please select your main goal.");
+      setStep(3);
       return;
     }
+    setError(null);
 
     const params = new URLSearchParams({
       businessName: form.businessName,
@@ -135,6 +146,25 @@ export default function AIBuilderPage() {
           )}
         </>
       )}
+
+      {error ? (
+        <div
+          role="alert"
+          style={{
+            marginTop: 16,
+            marginBottom: 16,
+            padding: 12,
+            borderRadius: 8,
+            border: "1px solid var(--accent, #c43e2b)",
+            background: "var(--accent-bg, #fff2ef)",
+            color: "var(--accent-2, #8a2a1e)",
+            fontSize: 14,
+            fontWeight: 600,
+          }}
+        >
+          {error}
+        </div>
+      ) : null}
 
       <div>
         {step > 1 && (

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { EnrichedOpsWorkspaceBundle } from "@/lib/opsWorkspace/state";
 
@@ -130,6 +130,15 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  // Error banner renders near the top of the ops workspace, but
+  // "Accept Agreement" / "Prepare Deposit" buttons live ~280 lines
+  // below. Without this, a scrolled customer hits an error invisibly.
+  const errorRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [error]);
 
   const phase = useMemo(() => getOpsPhase(bundle), [bundle]);
 
@@ -201,7 +210,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
         </div>
       </div>
 
-      {error && <div className="portalError">{error}</div>}
+      {error && <div ref={errorRef} role="alert" className="portalError">{error}</div>}
 
       {bundle.workspace.adminPublicNote && (
         <div className="portalNote fadeUp">

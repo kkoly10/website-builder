@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { EcommerceWorkspaceBundle } from "@/lib/ecommerce/workspace";
 
@@ -159,6 +159,17 @@ export default function EcomPortalClient({ data }: { data: EcommerceWorkspaceBun
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  // Error banner renders near the top of the workspace, but the
+  // primary action buttons ("Accept Agreement", "Prepare Deposit")
+  // live much further down. Without this, a customer who triggers
+  // an error while scrolled to the bottom sees the button re-enable
+  // and assumes silent success.
+  const errorRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [error]);
 
   const { intake, quote, call, workspace } = bundle;
   const storyKey = useMemo(() => getStoryKey(workspace.mode, workspace.phase), [workspace.mode, workspace.phase]);
@@ -245,7 +256,7 @@ export default function EcomPortalClient({ data }: { data: EcommerceWorkspaceBun
         </div>
       </div>
 
-      {error ? <div className="portalError">{error}</div> : null}
+      {error ? <div ref={errorRef} role="alert" className="portalError">{error}</div> : null}
 
       {workspace.adminPublicNote ? (
         <div className="portalNote fadeUp">
