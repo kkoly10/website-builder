@@ -143,33 +143,33 @@ const templates: Record<string, (ctx: EventContext, lang: EmailLocale) => Templa
   launch_ready: (ctx, lang) => {
     const lane = laneLabel(ctx.projectType, lang);
     return {
-    subject: t("launch_ready.subject", lang, { lane }),
-    html: emailWrap(`
-      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("launch_ready.headline", lang))}</h1>
-      <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("launch_ready.eyebrow", lang))}</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
-      <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("launch_ready.body", lang, { lane }))}</p>
-      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, t("launch_ready.cta", lang)) : ""}
-      <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">${escHtml(t("launch_ready.fineprint", lang))}</p>
-      ${sig(lang)}
-    `, {
-      footerNote: t("common.footer.reply_note", lang),
-      preheader: t("launch_ready.preheader", lang, { lane }),
-      lang,
-    }),
-    toClient: true,
-    toAdmin: true,
-    adminSubject: `Launch ready — ${escHtml(ctx.leadName || "client")} — ${ctx.quoteId.slice(0, 8)}`,
-    adminHtml: emailWrap(`
-      ${adminBadge("Admin alert")}
-      <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">Launch checklist signed off</h1>
-      ${adminTable([
-        ["Client", escHtml(ctx.leadName || "—")],
-        ["Email", `<a href="mailto:${escHtml(ctx.leadEmail)}" style="color:#111">${escHtml(ctx.leadEmail)}</a>`],
-        ["Quote ID", `<span style="font-family:monospace;font-size:12px;color:#888">${escHtml(ctx.quoteId)}</span>`],
-      ])}
-      ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open workspace") : ""}
-    `),
+      subject: t("launch_ready.subject", lang, { lane }),
+      html: emailWrap(`
+        <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em">${escHtml(t("launch_ready.headline", lang))}</h1>
+        <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("launch_ready.eyebrow", lang))}</p>
+        <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(greeting(ctx.leadName, lang))}</p>
+        <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("launch_ready.body", lang, { lane }))}</p>
+        ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, t("launch_ready.cta", lang)) : ""}
+        <p style="margin:8px 0 28px;font-size:13px;color:#999999;line-height:1.6">${escHtml(t("launch_ready.fineprint", lang))}</p>
+        ${sig(lang)}
+      `, {
+        footerNote: t("common.footer.reply_note", lang),
+        preheader: t("launch_ready.preheader", lang, { lane }),
+        lang,
+      }),
+      toClient: true,
+      toAdmin: true,
+      adminSubject: `Launch ready — ${escHtml(ctx.leadName || "client")} — ${ctx.quoteId.slice(0, 8)}`,
+      adminHtml: emailWrap(`
+        ${adminBadge("Admin alert")}
+        <h1 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#111;letter-spacing:-0.02em">Launch checklist signed off</h1>
+        ${adminTable([
+          ["Client", escHtml(ctx.leadName || "—")],
+          ["Email", `<a href="mailto:${escHtml(ctx.leadEmail)}" style="color:#111">${escHtml(ctx.leadEmail)}</a>`],
+          ["Quote ID", `<span style="font-family:monospace;font-size:12px;color:#888">${escHtml(ctx.quoteId)}</span>`],
+        ])}
+        ${ctx.workspaceUrl ? ctaButton(ctx.workspaceUrl, "Open workspace") : ""}
+      `),
     };
   },
 

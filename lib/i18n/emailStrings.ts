@@ -153,8 +153,8 @@ const STRINGS: Record<string, LocalizedString> = {
   // ─── launch_ready ─────────────────────────────────────────────
   "launch_ready.subject": {
     en: "Your {{lane}} is ready to launch — CrecyStudio",
-    fr: "Votre {{lane}} est prêt à être lancé — CrecyStudio",
-    es: "Su {{lane}} está listo para lanzarse — CrecyStudio",
+    fr: "Prêt pour le lancement de votre {{lane}} — CrecyStudio",
+    es: "Su {{lane}} ya puede lanzarse — CrecyStudio",
   },
   "launch_ready.preheader": {
     en: "Everything is ready — give the word and your {{lane}} goes live.",
@@ -173,7 +173,7 @@ const STRINGS: Record<string, LocalizedString> = {
   },
   "launch_ready.body": {
     en: "Every item on the launch checklist is signed off — domain, forms, analytics, SEO, handoff. Your {{lane}} goes live whenever you give the word.",
-    fr: "Chaque élément de la liste de lancement est validé — domaine, formulaires, analyses, SEO, remise. Votre {{lane}} sera mis en ligne dès que vous le souhaitez.",
+    fr: "Chaque élément de la liste de lancement est validé — domaine, formulaires, analyses, SEO, remise. Votre {{lane}} passe en ligne dès que vous le souhaitez.",
     es: "Cada elemento de la lista de lanzamiento está aprobado — dominio, formularios, analítica, SEO, entrega. Su {{lane}} se publicará cuando lo decida.",
   },
   "launch_ready.cta": {
@@ -224,9 +224,9 @@ const STRINGS: Record<string, LocalizedString> = {
     es: "Un sitio en línea es un punto de partida, no una meta. Los próximos 90 días son decisivos — pequeños ajustes de texto y diseño, actualizaciones de contenido, optimización de rendimiento. Si prefiere no encargarse, nuestros planes Care comienzan en 400 $/mes y hacen que su sitio rinda más cada mes.",
   },
   "site_live.body_app_care": {
-    en: "Launching is the easy part — the next 90 days are where real usage shapes the product. If you want ongoing engineering and tuning rather than every change becoming a new project, our Care Plans cover custom apps too and start at $400/mo.",
-    fr: "Lancer est la partie facile — les 90 prochains jours, c'est l'usage réel qui façonne le produit. Si vous voulez un développement et un réglage continus plutôt que de transformer chaque changement en nouveau projet, nos forfaits Care couvrent aussi les applications sur mesure et commencent à 400 $/mois.",
-    es: "Lanzar es la parte fácil — los próximos 90 días son cuando el uso real moldea el producto. Si desea ingeniería y ajustes continuos en vez de convertir cada cambio en un nuevo proyecto, nuestros planes Care también cubren apps personalizadas y comienzan en 400 $/mes.",
+    en: "Launching is the easy part — the next 90 days are where real usage shapes the product. If you want ongoing engineering and tuning rather than every change becoming a new project, our Care Plans cover that too and start at $400/mo.",
+    fr: "Lancer est la partie facile — les 90 prochains jours, c'est l'usage réel qui façonne le produit. Si vous voulez un développement et un réglage continus plutôt que de transformer chaque changement en nouveau projet, nos forfaits Care couvrent cela aussi et commencent à 400 $/mois.",
+    es: "Lanzar es la parte fácil — los próximos 90 días son cuando el uso real moldea el producto. Si desea ingeniería y ajustes continuos en vez de convertir cada cambio en un nuevo proyecto, nuestros planes Care también cubren eso y comienzan en 400 $/mes.",
   },
   "site_live.cta": {
     en: "Open handoff",
