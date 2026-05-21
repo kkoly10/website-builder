@@ -354,6 +354,9 @@ export default function CustomAppIntakeClient() {
       });
       const quoteId = data?.quoteId;
       const quoteToken = data?.quoteToken;
+      // Reset before navigating: if router.push is interrupted the
+      // customer would otherwise return to a stuck "Submitting..." button.
+      setLoading(false);
       if (quoteId) {
         const bookUrl = quoteToken
           ? `/book?quoteId=${encodeURIComponent(quoteId)}&token=${encodeURIComponent(quoteToken)}`

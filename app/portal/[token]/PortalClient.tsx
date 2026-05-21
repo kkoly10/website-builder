@@ -713,7 +713,7 @@ export default function PortalClient({
   );
 
   /* ── Actions ── */
-  async function applyAction(body: Record<string, unknown>) {
+  async function applyAction(body: Record<string, unknown>): Promise<boolean> {
     setSaving(true);
     setError("");
     try {
@@ -725,8 +725,10 @@ export default function PortalClient({
       const json = await res.json();
       if (!res.ok || !json?.ok) throw new Error(json?.error || tErrors("updateFailed"));
       setBundle(json.data as PortalBundle);
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : tErrors("updateFailed"));
+      return false;
     } finally {
       setSaving(false);
     }
@@ -740,6 +742,13 @@ export default function PortalClient({
     if (!assetLabel.trim()) return;
     if (assetMode === "file" && !assetFile) return;
     if (assetMode === "link" && !assetUrl.trim()) return;
+
+    // The form-reset block at the end was previously outside both
+    // try/catches — so a failed upload (e.g. the production 500 we're
+    // currently hitting) wiped the customer's typed label / URL /
+    // notes anyway, forcing them to re-enter everything before they
+    // could even retry. Track success so we only reset on a real win.
+    let succeeded = false;
 
     if (assetMode === "file") {
       setSaving(true);
@@ -755,6 +764,7 @@ export default function PortalClient({
         const json = await res.json();
         if (!res.ok || !json?.ok) throw new Error(json?.error || tErrors("uploadFailed"));
         await refreshBundle(true);
+        succeeded = true;
       } catch (err) {
         setError(err instanceof Error ? err.message : tErrors("uploadFailed"));
       } finally {
@@ -778,12 +788,15 @@ export default function PortalClient({
         const json = await res.json();
         if (!res.ok || !json?.ok) throw new Error(json?.error || tErrors("uploadFailed"));
         await refreshBundle(true);
+        succeeded = true;
       } catch (err) {
         setError(err instanceof Error ? err.message : tErrors("uploadFailed"));
       } finally {
         setSaving(false);
       }
     }
+
+    if (!succeeded) return;
 
     setAssetLabel("");
     setAssetUrl("");
@@ -796,10 +809,14 @@ export default function PortalClient({
   async function submitRevision(e: React.FormEvent) {
     e.preventDefault();
     if (!revisionMessage.trim()) return;
-    await applyAction({
+    // Only reset the form when the POST actually succeeded — otherwise
+    // the customer types out detailed feedback, hits a 500, and watches
+    // their entire message get wiped before they can retry.
+    const ok = await applyAction({
       type: "revision_add",
       revision: { message: revisionMessage.trim(), priority: revisionPriority },
     });
+    if (!ok) return;
     setRevisionMessage("");
     setRevisionPriority("normal");
   }

@@ -46,6 +46,10 @@ export default function SignupClient() {
       });
 
       if (signUpError) throw signUpError;
+      // Reset before navigating: if router.push is interrupted (back
+      // button, slow nav, etc.) the customer would otherwise return to
+      // a permanently-disabled "Submitting..." button.
+      setSubmitting(false);
       router.push(`/login?signup=1&next=${encodeURIComponent(nextPath)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : tSignup("error"));
