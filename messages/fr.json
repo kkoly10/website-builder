@@ -32,7 +32,7 @@
     "footerAria": "Pied de page"
   },
   "footer": {
-    "blurb": "Independent web studio building premium websites and custom web systems. One workspace from scope to launch.",
+    "blurb": "Studio web indépendant qui construit des sites web premium et des systèmes web sur mesure. Un seul espace de travail du cadrage au lancement.",
     "rightsReserved": "Tous droits réservés.",
     "links": {
       "aria": "Pied de page",
@@ -69,14 +69,14 @@
     "ctaLowTicket": "Obtenir une estimation de site",
     "ctaHighTicket": "Discuter d'un projet plus ambitieux",
     "wontTake": {
-      "label": "Le travail que je refuse",
-      "title": "Ce que CrecyStudio ne prend pas en charge.",
-      "intro": "La sélectivité est ma façon de maintenir la qualité sur chaque projet. Ce ne sont pas des limitations — ce sont des choix délibérés.",
       "0": "Les projets qui nécessitent une équipe de 5 personnes ou plus — je suis un praticien solo, pas une agence, et je ne ferai pas semblant.",
       "1": "Les clients qui veulent des points quotidiens ou ne sont pas à l'aise avec une communication principalement asynchrone.",
       "2": "Les délais serrés combinés à un périmètre non défini — je préfère retarder le démarrage plutôt que de bâcler le résultat.",
       "3": "Le travail de design seul sans implication dans l'implémentation — la valeur que j'apporte est la stratégie et la construction, pas la remise de livrables.",
-      "4": "Les projets où le cahier des charges change significativement après accord du périmètre — je respecte le périmètre pour que vous obteniez le prix convenu."
+      "4": "Les projets où le cahier des charges change significativement après accord du périmètre — je respecte le périmètre pour que vous obteniez le prix convenu.",
+      "label": "Le travail que je refuse",
+      "title": "Ce que CrecyStudio ne prend pas en charge.",
+      "intro": "La sélectivité est ma façon de maintenir la qualité sur chaque projet. Ce ne sont pas des limitations — ce sont des choix délibérés."
     }
   },
   "start": {
@@ -139,35 +139,35 @@
   "home": {
     "metaTitle": "CrecyStudio | Sites web, systèmes web et IA",
     "metaDescription": "Studio web indépendant. Sites premium, systèmes web sur mesure et produits dopés à l'IA — par un praticien. Un espace unique du devis au lancement.",
-    "heroLabel": "Independent web studio / est. 2024",
-    "heroTitle": "Built for where you’re going, <em>not where you are.</em>",
-    "heroSub": "From a polished website to a full custom system with production AI built in — by a practitioner who has shipped both.",
-    "ctaStart": "Start a project",
-    "ctaProcess": "See the work",
-    "ctaScarcity": "Taking on new projects",
+    "heroLabel": "Studio web indépendant / depuis 2024",
+    "heroTitle": "Conçu pour là où vous allez, <em>pas pour là où vous êtes.</em>",
+    "heroSub": "D'un site web soigné à un système sur mesure complet avec IA de production intégrée — par un praticien qui a livré les deux.",
+    "ctaStart": "Démarrer un projet",
+    "ctaProcess": "Voir les réalisations",
+    "ctaScarcity": "Nouveaux projets acceptés",
     "whatWeBuild": {
-      "label": "What we build",
-      "title": "From a polished website to the system that runs the business.",
+      "label": "Ce que nous construisons",
+      "title": "D'un site web soigné au système qui fait tourner l'entreprise.",
       "cards": {
         "webApps": {
-          "title": "Custom web apps",
-          "body": "Dashboards, portals, internal tools, MVPs — with AI built in where it creates real value."
+          "title": "Applications web sur mesure",
+          "body": "Tableaux de bord, portails, outils internes, MVPs — avec IA intégrée là où elle apporte une vraie valeur."
         },
         "aiIntegration": {
-          "title": "AI integration",
+          "title": "Intégration IA",
           "body": "Copilotes IA, couches de détection et flux intelligents — intégrés dans votre système dès le départ, comme Fleiko et Proveo ont été construits."
         },
         "portals": {
-          "title": "Client portals",
-          "body": "A private workspace your customers actually use."
+          "title": "Portails clients",
+          "body": "Un espace de travail privé que vos clients utilisent vraiment."
         },
         "automation": {
-          "title": "Workflow automation",
-          "body": "Stop doing the same task twice."
+          "title": "Automatisation des flux",
+          "body": "Arrêtez de refaire la même tâche deux fois."
         },
         "websites": {
-          "title": "Websites",
-          "body": "Get found, get trusted, get the call.",
+          "title": "Sites web",
+          "body": "Soyez trouvé, soyez crédible, recevez l'appel.",
           "badge": "À partir de 1 800 $"
         },
         "ecommerce": {
@@ -176,8 +176,8 @@
           "badge": "À partir de 1 800 $"
         },
         "rescue": {
-          "title": "Website rescue",
-          "body": "Fix what you have without a full rebuild.",
+          "title": "Sauvetage de site web",
+          "body": "Réparez l'existant sans tout reconstruire.",
           "badge": "À partir de 800 $"
         }
       }
@@ -228,252 +228,252 @@
       "statement": "Je ne me contente pas de créer des sites web. Je donne à mes clients un espace structuré où la portée du projet, la direction design, les fichiers, les retours, les factures, les validations et les étapes de lancement sont gérés en un seul endroit."
     },
     "ventures": {
-      "label": "Studio ventures",
-      "title": "Real systems we’ve shipped.",
-      "intro": "I don't just integrate AI into client projects — I've built and shipped two AI-powered products I own and operate. Fleiko runs an AI copilot for real-time fleet alerts. Proveo uses AI photo detection to automate contractor workflows. That track record is what I bring to your project.",
+      "label": "Projets du studio",
+      "title": "De vrais systèmes que nous avons livrés.",
+      "intro": "Je n'intègre pas seulement l'IA dans les projets clients — j'ai construit et lancé deux produits propulsés par l'IA que je possède et exploite. Fleiko fait tourner un copilote IA pour des alertes flotte en temps réel. Proveo utilise la détection photo par IA pour automatiser les flux de travail des contractants. C'est ce parcours que j'apporte à votre projet.",
       "fleiko": {
         "name": "Fleiko",
-        "tagline": "Fleet management platform for small businesses",
-        "detail": "Cloud SaaS — AI copilot for cost & maintenance alerts, compliance tracking, and GPS fleet monitoring.",
-        "chip1": "AI Fleet Copilot",
-        "chip2": "Compliance Alerts",
+        "tagline": "Plateforme de gestion de flotte pour PME",
+        "detail": "SaaS cloud — copilote IA pour les alertes de coûts et de maintenance, suivi de conformité, et surveillance GPS de flotte.",
+        "chip1": "Copilote IA flotte",
+        "chip2": "Alertes de conformité",
         "link": "fleiko.com",
         "url": "https://fleiko.com"
       },
       "proveo": {
         "name": "Proveo",
-        "tagline": "Photo proof + CRM for service contractors",
-        "detail": "AI photo detection, freemium billing, CRM pipeline, automated lifecycle emails.",
-        "chip1": "AI detection",
-        "chip2": "Freemium SaaS",
+        "tagline": "Preuve photo + CRM pour les contractants de service",
+        "detail": "Détection photo par IA, facturation freemium, pipeline CRM, e-mails automatisés tout au long du cycle de vie.",
+        "chip1": "Détection IA",
+        "chip2": "SaaS freemium",
         "link": "proveohq.com",
         "url": "https://proveohq.com"
       },
-      "cta": "Full case studies"
+      "cta": "Études de cas complètes"
     },
     "diff": {
-      "label": "The difference",
-      "title": "Your project lives in a workspace.",
-      "lede": "Most studios disappear between invoice and launch. We built a client workspace so you can track milestones, upload assets, review the live preview, and leave feedback in one place.",
-      "kicker": "Workspace preview",
+      "label": "La différence",
+      "title": "Votre projet vit dans un espace de travail.",
+      "lede": "La plupart des studios disparaissent entre la facture et le lancement. Nous avons construit un espace de travail client pour que vous puissiez suivre les jalons, téléverser des fichiers, examiner l'aperçu en direct et laisser des commentaires au même endroit.",
+      "kicker": "Aperçu de l'espace de travail",
       "url": "crecy.studio/portal/your-project",
-      "eyebrow": "Website project",
-      "ready": "Your build is <em>ready for review.</em>",
-      "openPreview": "Open preview",
-      "currentMilestone": "Current milestone",
-      "currentMilestoneValue": "Client review",
-      "currentMilestoneMeta": "2 of 3 revisions used",
-      "deposit": "Deposit",
-      "depositValue": "Paid",
-      "depositMeta": "50% received before build",
-      "launchTarget": "Launch target",
-      "launchTargetValue": "On track",
-      "launchTargetMeta": "Within scoped delivery window",
+      "eyebrow": "Projet de site web",
+      "ready": "Votre build est <em>prêt pour révision.</em>",
+      "openPreview": "Ouvrir l'aperçu",
+      "currentMilestone": "Jalon actuel",
+      "currentMilestoneValue": "Révision client",
+      "currentMilestoneMeta": "2 révisions sur 3 utilisées",
+      "deposit": "Acompte",
+      "depositValue": "Payé",
+      "depositMeta": "50 % reçus avant la construction",
+      "launchTarget": "Objectif de lancement",
+      "launchTargetValue": "Dans les temps",
+      "launchTargetMeta": "Dans la fenêtre de livraison prévue",
       "journey": {
         "intake": "Intake",
-        "agreement": "Agreement",
-        "deposit": "Deposit",
-        "content": "Content",
-        "build": "Build",
-        "review": "Review",
-        "launch": "Launch"
+        "agreement": "Accord",
+        "deposit": "Acompte",
+        "content": "Contenu",
+        "build": "Construction",
+        "review": "Révision",
+        "launch": "Lancement"
       }
     },
     "how": {
-      "label": "Process",
-      "title": "Three steps. No guesswork.",
+      "label": "Processus",
+      "title": "Trois étapes. Aucune devinette.",
       "step1Phase": "/ 01 - Intake",
-      "step1Title": "Tell us what the website needs to do",
-      "step1Body": "You send the essentials: business, offer, pages, goals, and urgency. We scope against reality instead of guessing from a sales call.",
-      "step2Phase": "/ 02 - Build",
-      "step2Title": "Track the whole project in one workspace",
-      "step2Body": "You review milestones, previews, files, and next steps in one place. No scattered email chain and no wondering what happens next.",
-      "step3Phase": "/ 03 - Launch",
-      "step3Title": "Go live with ownership intact",
-      "step3Body": "We connect the domain, test the forms, and hand over the finished system. Your code, content, and accounts stay yours."
+      "step1Title": "Dites-nous ce que le site doit accomplir",
+      "step1Body": "Vous envoyez l'essentiel : entreprise, offre, pages, objectifs, urgence. On cadre selon la réalité, sans deviner depuis un appel commercial.",
+      "step2Phase": "/ 02 - Construction",
+      "step2Title": "Suivez tout le projet dans un seul espace de travail",
+      "step2Body": "Vous consultez les jalons, aperçus, fichiers et prochaines étapes au même endroit. Pas de chaîne d'e-mails éparpillée ni de questions sur la suite.",
+      "step3Phase": "/ 03 - Lancement",
+      "step3Title": "Passez en production avec la propriété intacte",
+      "step3Body": "On connecte le domaine, on teste les formulaires et on livre le système fini. Votre code, votre contenu et vos comptes vous appartiennent."
     },
     "founder": {
-      "label": "/ Who you’re working with",
+      "label": "/ Avec qui vous travaillez",
       "name": "Komlan Kouhiko",
-      "role": "Founder & sole practitioner",
-      "bio1": "I didn’t come up through an agency or a computer science program. In 2024, I launched a car rental business in Northern Virginia with 7 cars and a commercial insurance policy. Turo was taking a significant cut of every booking, so I taught myself to build my own platform — a full booking and fleet management system — and kept the profits. I ran that business for over a year, managing operations, customers, and the codebase simultaneously.",
-      "bio2": "When operational costs pushed me to pivot, I posted on Facebook Marketplace offering to build websites. Got a few clients. They liked the work. Since then I’ve shipped operating platforms for a repair center, a dropshipping store, IT services, and fleet management — and two SaaS products that are live today.",
-      "bio3": "Every project at CrecyStudio comes through me. No juniors, no handoffs. You get a builder who has sat on your side of the table.",
-      "linkedin": "Connect on LinkedIn →",
+      "role": "Fondateur et praticien unique",
+      "bio1": "Je ne suis pas passé par une agence ni par un cursus en informatique. En 2024, j'ai lancé une activité de location de voitures en Virginie du Nord avec 7 véhicules et une police d'assurance commerciale. Turo prélevait une part importante de chaque réservation, alors j'ai appris à construire ma propre plateforme — un système complet de réservation et de gestion de flotte — et j'ai gardé les bénéfices. J'ai opéré cette entreprise pendant plus d'un an, en gérant simultanément les opérations, les clients et le code.",
+      "bio2": "Quand les coûts opérationnels m'ont poussé à pivoter, j'ai publié sur Facebook Marketplace en proposant de construire des sites web. J'ai obtenu quelques clients. Ils ont apprécié le travail. Depuis, j'ai livré des plateformes opérationnelles pour un centre de réparation, une boutique de dropshipping, des services IT et la gestion de flotte — ainsi que deux produits SaaS en production aujourd'hui.",
+      "bio3": "Chaque projet chez CrecyStudio passe par moi. Pas de juniors, pas de transferts. Vous travaillez avec un constructeur qui s'est assis à votre place.",
+      "linkedin": "Connectons-nous sur LinkedIn →",
       "linkedinHref": "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407"
     },
     "closing": {
-      "label": "Ready when you are.",
-      "title": "Let’s build something <em>worth talking about.</em>",
-      "cta": "Let’s talk",
-      "ctaSecondary": "Start an estimate",
-      "ctaPricing": "See all pricing"
+      "label": "Prêt quand vous l'êtes.",
+      "title": "Construisons quelque chose <em>dont on parle.</em>",
+      "cta": "Parlons-en",
+      "ctaSecondary": "Démarrer une estimation",
+      "ctaPricing": "Voir tous les tarifs"
     },
     "also": {
-      "label": "Also offered",
-      "systemsTitle": "Workflow systems",
-      "systemsBody": "Automation for teams buried in spreadsheet ops, repetitive handoffs, and manual client follow-up.",
-      "systemsLink": "Explore systems",
-      "ecomTitle": "E-commerce fixes",
-      "ecomBody": "Storefront, checkout, and ops cleanup for online shops leaking time or conversions.",
-      "ecomLink": "Explore e-commerce"
+      "label": "Également proposé",
+      "systemsTitle": "Systèmes de workflow",
+      "systemsBody": "Automatisation pour les équipes ensevelies sous les opérations en tableur, les transferts répétitifs et le suivi client manuel.",
+      "systemsLink": "Explorer les systèmes",
+      "ecomTitle": "Corrections e-commerce",
+      "ecomBody": "Vitrine, paiement et nettoyage opérationnel pour les boutiques en ligne qui perdent du temps ou des conversions.",
+      "ecomLink": "Explorer l'e-commerce"
     }
   },
   "pricing": {
-    "metaTitle": "Pricing | CrecyStudio",
-    "metaDescription": "Clear pricing ranges before the work starts. Fixed estimates scoped to your project, with no hostage retainers or surprise add-ons.",
-    "label": "Pricing",
-    "title": "Clear ranges before the work starts.",
-    "intro": "All prices are USD. We scope first, send a written estimate, and keep the number tied to the actual project — no hostage retainers, no surprise add-ons.",
+    "metaTitle": "Tarifs | CrecyStudio",
+    "metaDescription": "Fourchettes de prix claires avant le début des travaux. Estimations fixes cadrées sur votre projet, sans rétention forcée ni surprises.",
+    "label": "Tarifs",
+    "title": "Fourchettes claires avant le début des travaux.",
+    "intro": "Tous les prix sont en USD. On cadre d'abord, on envoie une estimation écrite, et on garde le chiffre aligné sur le projet réel — pas de rétention forcée, pas de surprises.",
     "mostPopular": "Le plus choisi",
     "nav": {
-      "aria": "Jump to pricing section",
-      "websites": "Websites",
-      "webApps": "Web Apps",
-      "automation": "Automation",
+      "aria": "Aller à la section tarifs",
+      "websites": "Sites web",
+      "webApps": "Applications",
+      "automation": "Automatisation",
       "ecommerce": "E-commerce",
-      "rescue": "Rescue",
-      "care": "Care plans"
+      "rescue": "Sauvetage",
+      "care": "Maintenance"
     },
     "websitesSection": {
-      "sectionLabel": "Website tiers",
-      "sectionTitle": "Most website projects land in one of these bands.",
+      "sectionLabel": "Paliers de sites web",
+      "sectionTitle": "La plupart des sites tombent dans l'une de ces bandes.",
       "starter": {
         "label": "/ Starter",
         "value": "$1,800 – $2,400",
-        "detail": "For a clean, credible single-page site that needs to do one job well.",
-        "meta": "Single-page / mobile-first / fast launch"
+        "detail": "Pour un site mono-page net et crédible qui doit bien faire une seule chose.",
+        "meta": "Mono-page / mobile-first / lancement rapide"
       },
       "growth": {
-        "label": "/ Growth",
+        "label": "/ Croissance",
         "value": "$3,500 – $4,500",
-        "detail": "For most service businesses that need a multi-page site and a stronger first impression.",
-        "meta": "4–6 pages / lead capture / workspace review"
+        "detail": "Pour la plupart des entreprises de services qui ont besoin d'un site multi-pages et d'une meilleure première impression.",
+        "meta": "4–6 pages / capture de leads / espace de révision"
       },
       "premium": {
         "label": "/ Premium",
         "value": "$6,500 – $10,000+",
-        "detail": "For businesses that need content depth, integrations, and more architectural lift.",
-        "meta": "8+ pages / advanced scope / deeper implementation"
+        "detail": "Pour les entreprises qui ont besoin de profondeur de contenu, d'intégrations et d'une portée architecturale plus large.",
+        "meta": "8+ pages / périmètre avancé / mise en œuvre approfondie"
       },
-      "cta": "Start a website estimate"
+      "cta": "Démarrer une estimation site web"
     },
     "webAppsSection": {
-      "sectionLabel": "Custom web apps",
-      "sectionTitle": "Dashboards, portals, internal tools, and MVPs.",
-      "note": "All web app projects start with a strategy call. Ranges only — scope and complexity drive the final number.",
+      "sectionLabel": "Applications web sur mesure",
+      "sectionTitle": "Tableaux de bord, portails, outils internes et MVPs.",
+      "note": "Tous les projets d'application commencent par un appel stratégique. Fourchettes uniquement — le périmètre et la complexité déterminent le chiffre final.",
       "discovery": {
-        "label": "/ Discovery sprint",
+        "label": "/ Sprint de découverte",
         "value": "$2,500 – $5,000",
-        "detail": "1–2 week paid scoping engagement for projects that need definition before an MVP commit.",
-        "meta": "1–2 weeks / written brief / shapes the MVP"
+        "detail": "Engagement de cadrage payant de 1 à 2 semaines pour les projets qui ont besoin d'être définis avant un engagement MVP.",
+        "meta": "1–2 semaines / brief écrit / cadre le MVP"
       },
       "mvp": {
         "label": "/ MVP",
         "value": "$18,000 – $35,000",
-        "detail": "Multi-role web application with auth, a custom data model, and working integrations.",
-        "meta": "Custom auth / data model / integrations / launch-ready"
+        "detail": "Application web multi-rôles avec authentification, modèle de données sur mesure et intégrations fonctionnelles.",
+        "meta": "Auth sur mesure / modèle de données / intégrations / prêt à lancer"
       },
       "standard": {
         "label": "/ Standard",
         "value": "$35,000 – $75,000",
-        "detail": "Production-grade application with complex workflows, multi-tenant support, or significant data architecture.",
-        "meta": "Complex workflows / multi-tenant / advanced architecture"
+        "detail": "Application de niveau production avec flux complexes, support multi-tenant ou architecture de données significative.",
+        "meta": "Flux complexes / multi-tenant / architecture avancée"
       },
       "custom": {
-        "label": "/ Custom",
+        "label": "/ Sur mesure",
         "value": "$75,000+",
-        "detail": "Large-scale or multi-system builds where scope is determined in discovery.",
-        "meta": "Custom scope / multi-system / discovery required"
+        "detail": "Constructions à grande échelle ou multi-systèmes dont le périmètre est défini en découverte.",
+        "meta": "Périmètre sur mesure / multi-systèmes / découverte requise"
       },
-      "cta": "Book a strategy call"
+      "cta": "Réserver un appel stratégique"
     },
     "automationSection": {
-      "sectionLabel": "Workflow automation",
-      "sectionTitle": "Stop doing the same task twice.",
+      "sectionLabel": "Automatisation des flux",
+      "sectionTitle": "Arrêtez de refaire la même tâche deux fois.",
       "quickFix": {
-        "label": "/ Quick fix",
+        "label": "/ Correction rapide",
         "value": "$1,000 – $1,800",
-        "detail": "One broken or manual process diagnosed and automated.",
-        "meta": "Single workflow / documented / owned by you"
+        "detail": "Un processus manuel ou défaillant diagnostiqué et automatisé.",
+        "meta": "Flux unique / documenté / vous appartient"
       },
       "opsSystem": {
-        "label": "/ Ops system",
+        "label": "/ Système d'opérations",
         "value": "$2,000 – $3,800",
-        "detail": "Two to four connected workflows with documentation and a clean handoff.",
-        "meta": "2–4 workflows / documented / training included"
+        "detail": "Deux à quatre flux connectés avec documentation et transfert propre.",
+        "meta": "2–4 flux / documentés / formation incluse"
       },
       "systemsPartner": {
-        "label": "/ Systems partner",
+        "label": "/ Partenaire systèmes",
         "value": "$500 – $1,250/mo",
-        "detail": "Ongoing automation maintenance and iterative improvements to your ops stack.",
-        "meta": "Monthly retainer / maintenance + improvements"
+        "detail": "Maintenance continue d'automatisation et améliorations itératives de votre pile opérationnelle.",
+        "meta": "Forfait mensuel / maintenance + améliorations"
       },
-      "cta": "Start an automation intake"
+      "cta": "Démarrer une demande d'automatisation"
     },
     "ecommerceSection": {
       "sectionLabel": "E-commerce",
-      "sectionTitle": "Stores built, run, and fixed.",
+      "sectionTitle": "Boutiques construites, gérées et réparées.",
       "build": {
-        "label": "/ Build",
+        "label": "/ Construction",
         "value": "$1,800 – $4,000+",
-        "detail": "New store or full rebuild — scoped after intake based on platform, products, and conversion goals.",
-        "meta": "New build / platform-matched / conversion-focused"
+        "detail": "Nouvelle boutique ou refonte complète — cadrée après l'intake selon la plateforme, les produits et les objectifs de conversion.",
+        "meta": "Nouvelle construction / plateforme adaptée / orientée conversion"
       },
       "run": {
-        "label": "/ Run",
+        "label": "/ Exploitation",
         "value": "$500 – $1,800/mo",
-        "detail": "Monthly ops: product updates, order flow monitoring, analytics, and platform maintenance.",
-        "meta": "Monthly retainer / ops + analytics / platform care"
+        "detail": "Opérations mensuelles : mises à jour produits, suivi des commandes, analyse et maintenance plateforme.",
+        "meta": "Forfait mensuel / ops + analyses / soin de la plateforme"
       },
       "fix": {
-        "label": "/ Fix",
+        "label": "/ Correction",
         "value": "$1,200",
-        "detail": "Targeted repair — broken checkout, mobile layout issues, platform migration, or conversion audit.",
-        "meta": "Single fix / scoped upfront / fast turnaround"
+        "detail": "Réparation ciblée — checkout cassé, problèmes de mise en page mobile, migration de plateforme ou audit de conversion.",
+        "meta": "Correction unique / cadrée d'avance / livraison rapide"
       },
-      "cta": "Start an e-commerce intake"
+      "cta": "Démarrer un intake e-commerce"
     },
     "rescueSection": {
-      "sectionLabel": "Website rescue",
-      "sectionTitle": "Fix what you have without a full rebuild.",
+      "sectionLabel": "Sauvetage de site web",
+      "sectionTitle": "Réparez l'existant sans tout reconstruire.",
       "audit": {
-        "label": "/ Rescue audit",
+        "label": "/ Audit de sauvetage",
         "value": "$1,000 – $1,500",
-        "detail": "3–5 day diagnostic with a written report and prioritized fix list — whether or not you engage us for the sprint.",
-        "meta": "3–5 days / written report / independent advice"
+        "detail": "Diagnostic de 3 à 5 jours avec rapport écrit et liste de correctifs priorisée — que vous engagiez le sprint ou non.",
+        "meta": "3–5 jours / rapport écrit / conseil indépendant"
       },
       "sprint": {
-        "label": "/ Rescue sprint",
+        "label": "/ Sprint de sauvetage",
         "value": "$3,500 – $6,500",
-        "detail": "Audit plus a 1–2 week implementation of the highest-impact fixes. Audit fee applies to the sprint.",
-        "meta": "Audit included / 1–2 week sprint / highest-impact fixes"
+        "detail": "Audit plus mise en œuvre de 1 à 2 semaines des corrections à plus fort impact. Les frais d'audit s'appliquent au sprint.",
+        "meta": "Audit inclus / sprint 1–2 semaines / corrections à fort impact"
       },
-      "cta": "Start with a rescue audit"
+      "cta": "Commencer par un audit de sauvetage"
     },
     "careSection": {
-      "sectionLabel": "Care plans",
-      "sectionTitle": "Your site stays healthy after launch.",
-      "note": "Monthly plans billed in USD. 3-month minimum commitment, month-to-month after.",
+      "sectionLabel": "Plans de maintenance",
+      "sectionTitle": "Votre site reste en bonne santé après le lancement.",
+      "note": "Plans mensuels facturés en USD. Engagement minimum de 3 mois, mois par mois ensuite.",
       "care": {
-        "label": "/ Care",
+        "label": "/ Maintenance",
         "value": "$400/mo",
-        "detail": "Monthly health check, monitoring, content updates, plugin updates, and end-of-month email summary.",
-        "meta": "2h bank / 48h ack / 5d resolve"
+        "detail": "Bilan mensuel, surveillance, mises à jour de contenu, mises à jour de plugins et résumé mensuel par e-mail.",
+        "meta": "Banque 2h / accusé 48h / résolution 5j"
       },
       "carePlus": {
-        "label": "/ Care+",
+        "label": "/ Maintenance+",
         "value": "$850/mo",
-        "detail": "Care plus small feature work, analytics review, portal activity dashboard, and shorter response windows.",
-        "meta": "5h bank / 24h ack / 3d resolve"
+        "detail": "Maintenance plus petites évolutions, revue d'analyses, tableau d'activité du portail et délais de réponse plus courts.",
+        "meta": "Banque 5h / accusé 24h / résolution 3j"
       },
       "carePro": {
-        "label": "/ Care Pro",
+        "label": "/ Maintenance Pro",
         "value": "$2,250/mo",
-        "detail": "Care+ plus a monthly improvement sprint, a 30-minute strategy call, and priority-response SLA.",
-        "meta": "8h bank + sprint / 4h ack / 1d resolve / strategy call"
+        "detail": "Maintenance+ plus un sprint d'amélioration mensuel, un appel stratégique de 30 minutes et un SLA prioritaire.",
+        "meta": "Banque 8h + sprint / accusé 4h / résolution 1j / appel stratégie"
       },
-      "cta": "Ask about a care plan"
+      "cta": "Demander un plan de maintenance"
     }
   },
   "process": {
@@ -577,19 +577,19 @@
     "topic4": "Demandes légales / confidentialité",
     "byType": {
       "webApp": {
-        "kicker": "Custom web app inquiry",
-        "title": "Tell us about your custom web app",
-        "description": "Quick context — what problem are you solving, who would use it, and when do you need it live? Email us and we'll route to a free 30-minute strategy call to scope properly."
+        "kicker": "Demande d'application web sur mesure",
+        "title": "Parlez-nous de votre application sur mesure",
+        "description": "Contexte rapide — quel problème résolvez-vous, qui l'utiliserait, et pour quand devez-vous être en ligne ? Écrivez-nous et nous orienterons vers un appel stratégique gratuit de 30 minutes pour cadrer correctement."
       },
       "portal": {
-        "kicker": "Client portal inquiry",
-        "title": "Tell us about the portal you need",
-        "description": "Who logs in (clients, staff, both), what they do there, and what's the current pain point? Email us and we'll set up a scoping conversation."
+        "kicker": "Demande de portail client",
+        "title": "Parlez-nous du portail dont vous avez besoin",
+        "description": "Qui se connecte (clients, équipe, les deux), ce qu'ils y font et quel est le point de douleur actuel ? Écrivez-nous et nous organisons une conversation de cadrage."
       },
       "rescue": {
-        "kicker": "Website rescue inquiry",
-        "title": "Tell us what's broken on your current site",
-        "description": "URL, what isn't working, and what you've already tried. Email us and we'll do a quick triage and propose audit or sprint scope."
+        "kicker": "Demande de sauvetage de site",
+        "title": "Dites-nous ce qui est cassé sur votre site actuel",
+        "description": "URL, ce qui ne fonctionne pas et ce que vous avez déjà essayé. Écrivez-nous et nous ferons un triage rapide en proposant un audit ou un périmètre de sprint."
       }
     }
   },
@@ -639,7 +639,7 @@
     "selfServiceBody": "Les clients connectés peuvent télécharger une copie de leurs données ou supprimer leur compte à tout moment depuis les paramètres du compte. L'export retourne un fichier JSON ; la suppression anonymise les enregistrements que nous devons conserver (factures, registres fiscaux) et supprime tout le reste."
   },
   "terms": {
-    "metaTitle": "Conditions d'utilisation | CrecyStudio",
+    "metaTitle": "Conditions générales | CrecyStudio",
     "metaDescription": "Conditions régissant les services CrecyStudio. Les propositions signées priment sur la portée et le tarif lorsqu'elles sont plus précises.",
     "label": "Légal",
     "title": "Conditions d'utilisation",
@@ -719,7 +719,7 @@
     "ctaContact": "Nous contacter"
   },
   "security": {
-    "metaTitle": "Pratiques de sécurité | CrecyStudio",
+    "metaTitle": "Sécurité | CrecyStudio",
     "metaDescription": "Comment CrecyStudio protège les données clients, les fichiers de projet et l'accès à l'espace de travail.",
     "label": "Sécurité",
     "title": "Pratiques de sécurité",
@@ -748,7 +748,7 @@
     "subprocessorsNote": "Les données sont partagées uniquement avec les fournisseurs nécessaires au fonctionnement de notre plateforme. Chacun est contractuellement tenu de protéger vos données.",
     "sp1Name": "Vercel",
     "sp1Role": "Hébergement et diffusion en périphérie",
-    "sp1Region": "Mondial",
+    "sp1Region": "Global",
     "sp2Name": "Supabase",
     "sp2Role": "Base de données, auth et stockage",
     "sp2Region": "AWS US-Est",
@@ -907,20 +907,20 @@
       "metaDescription": "Systèmes e-commerce pour les marques qui ont besoin d'une meilleure vitrine, d'un paiement plus fluide et d'opérations post-achat plus propres."
     },
     "customWebApps": {
-      "metaTitle": "Custom Web Apps | Dashboards, Portals, and Internal Tools",
-      "metaDescription": "Custom web applications for businesses that need more than a website — dashboards, client portals, internal tools, and MVPs built by a practitioner."
+      "metaTitle": "Applications web sur mesure | Tableaux de bord, portails et outils internes",
+      "metaDescription": "Applications web sur mesure pour les entreprises qui ont besoin de plus qu'un site — tableaux de bord, portails clients, outils internes et MVPs construits par un praticien."
     },
     "clientPortals": {
-      "metaTitle": "Client Portals | Branded Workspaces Your Clients Actually Use",
-      "metaDescription": "Private project workspaces with milestones, messaging, file sharing, invoicing, and agreements — owned by you, branded to your business."
+      "metaTitle": "Portails clients | Espaces de travail brandés que vos clients utilisent vraiment",
+      "metaDescription": "Espaces de travail de projet privés avec jalons, messagerie, partage de fichiers, facturation et accords — vous appartiennent, à votre image."
     },
     "websiteRescue": {
-      "metaTitle": "Website Rescue | Fix What's Broken Without a Full Rebuild",
-      "metaDescription": "Website audit and sprint service for small businesses with a site that's slow, broken on mobile, or not converting — fixed in 1–2 weeks."
+      "metaTitle": "Sauvetage de site web | Réparez l'existant sans tout reconstruire",
+      "metaDescription": "Service d'audit et de sprint pour les PME dont le site est lent, cassé sur mobile ou ne convertit pas — corrigé en 1 à 2 semaines."
     },
     "carePlans": {
-      "metaTitle": "Care Plans | Monthly Website and System Maintenance",
-      "metaDescription": "Three monthly care plans that keep your site or custom system healthy — content updates, monitoring, small features, and improvement sprints."
+      "metaTitle": "Plans de maintenance | Entretien mensuel de site et de système",
+      "metaDescription": "Trois plans mensuels qui maintiennent votre site ou votre système sur mesure en bonne santé — mises à jour de contenu, surveillance, petites évolutions et sprints d'amélioration."
     }
   },
   "auth": {
@@ -997,30 +997,30 @@
     "kicker": "Devis de site web",
     "title": "Trouvez la bonne configuration <em>en moins de 60 secondes</em>",
     "subtitle": "Répondez à cinq questions rapides. Nous recommanderons le bon type de build et vous enverrons directement vers le devis complet.",
-    "routerKicker": "Start a project",
-    "routerTitle": "What are you building?",
-    "routerSubtitle": "Pick what's closest to what you need. We'll route you to the right intake.",
-    "redirecting": "Routing you to the right intake...",
+    "routerKicker": "Démarrer un projet",
+    "routerTitle": "Que voulez-vous construire ?",
+    "routerSubtitle": "Choisissez ce qui se rapproche le plus de votre besoin. Nous vous orientons vers le bon intake.",
+    "redirecting": "Redirection vers le bon intake…",
     "projectTypes": {
       "website": {
-        "label": "Website",
-        "desc": "I need a website that converts."
+        "label": "Site web",
+        "desc": "J'ai besoin d'un site qui convertit."
       },
       "web_app": {
-        "label": "Custom web app",
-        "desc": "Dashboard, portal, internal tool, MVP."
+        "label": "Application web sur mesure",
+        "desc": "Tableau de bord, portail, outil interne, MVP."
       },
       "automation": {
-        "label": "Workflow automation",
-        "desc": "I'm drowning in repetitive admin work."
+        "label": "Automatisation des flux",
+        "desc": "Je croule sous les tâches admin répétitives."
       },
       "ecommerce": {
         "label": "E-commerce",
-        "desc": "I need to sell things online."
+        "desc": "J'ai besoin de vendre en ligne."
       },
       "rescue": {
-        "label": "Website rescue",
-        "desc": "My current site isn't working."
+        "label": "Sauvetage de site",
+        "desc": "Mon site actuel ne fonctionne pas."
       },
       "ai_integration": {
         "label": "Intégration IA",
@@ -1220,7 +1220,7 @@
       "emailLabel": "Adresse e-mail *",
       "emailPlaceholder": "vous@entreprise.com",
       "phoneLabel": "Numéro de téléphone (optionnel)",
-      "phonePlaceholder": "(555) 555-5555"
+      "phonePlaceholder": "+33 6 12 34 56 78"
     },
     "nav": {
       "back": "Retour",
@@ -1234,7 +1234,7 @@
     "enums": {
       "intents": {
         "Marketing": "Marketing",
-        "Leads": "Prospects",
+        "Leads": "Leads",
         "Booking": "Réservation",
         "Selling": "Vente",
         "Content": "Contenu",
@@ -1296,7 +1296,9 @@
         "Analytics (GA4 / Pixel)": "Analytics (GA4 / Pixel)",
         "Live chat": "Chat en direct"
       }
-    }
+    },
+    "label": "Estimateur",
+    "title": "Obtenez votre estimation en moins de 5 minutes."
   },
   "book": {
     "metaTitle": "Réserver votre appel de découverte | CrecyStudio",
@@ -1396,9 +1398,9 @@
     "step1": {
       "heading": "Parlez-nous de votre entreprise",
       "companyLabel": "Nom de l'entreprise *",
-      "companyPlaceholder": "Acme Corp",
+      "companyPlaceholder": "Acme SAS",
       "contactLabel": "Votre nom *",
-      "contactPlaceholder": "Jane Smith",
+      "contactPlaceholder": "Marie Dupont",
       "industryLabel": "Secteur",
       "industryPlaceholder": "ex. Juridique, CVC, Immobilier",
       "teamSizeLabel": "Taille de l'équipe",
@@ -1434,7 +1436,7 @@
       "emailLabel": "Adresse e-mail *",
       "emailPlaceholder": "vous@entreprise.com",
       "phoneLabel": "Téléphone (optionnel)",
-      "phonePlaceholder": "(555) 555-5555",
+      "phonePlaceholder": "+33 6 12 34 56 78",
       "whyHeading": "Pourquoi nous arrivons ici"
     },
     "nav": {
@@ -1622,15 +1624,15 @@
     "step1": {
       "heading": "Parlez-nous de votre entreprise",
       "businessLabel": "Nom de l'entreprise *",
-      "businessPlaceholder": "Acme Store",
+      "businessPlaceholder": "Boutique Acme",
       "contactLabel": "Nom du contact *",
-      "contactPlaceholder": "Jane Smith",
+      "contactPlaceholder": "Marie Dupont",
       "emailLabel": "E-mail *",
       "emailPlaceholder": "vous@entreprise.com",
       "emailValid": "E-mail valide",
       "emailInvalid": "Saisissez un e-mail valide",
       "phoneLabel": "Téléphone",
-      "phonePlaceholder": "(555) 555-5555",
+      "phonePlaceholder": "+33 6 12 34 56 78",
       "storeUrlLabel": "URL de la boutique",
       "storeUrlPlaceholder": "https://votreboutique.com ou page vendeur Amazon",
       "platformLabel": "Sur quelle plateforme est votre boutique ?",
@@ -1688,7 +1690,7 @@
         "platform": "Plateforme",
         "channels": "Canaux",
         "services": "Services",
-        "skus": "SKU",
+        "skus": "SKUs",
         "monthlyOrders": "Commandes mensuelles",
         "budget": "Budget",
         "timeline": "Calendrier",
@@ -2008,7 +2010,7 @@
         "Copy": "Texte",
         "Images": "Images",
         "Access": "Accès",
-        "Legal": "Légal",
+        "Legal": "Juridique",
         "Other": "Autre"
       },
       "statuses": {
@@ -2080,7 +2082,7 @@
       "agreementLabel": "Accord & paiement",
       "scopeHistoryLabel": "Historique du périmètre & ordres de modification",
       "scopeHistoryValue": "{versions} versions · {changes} modifications",
-      "notesContactLabel": "Notes & contact",
+      "notesContactLabel": "Notes et contact",
       "notesContactDefault": "Détails",
       "callTimeWithTimezone": "{time} ({timezone})",
       "changeOrderImpacts": {
@@ -2101,44 +2103,44 @@
     },
     "directionModule": {
       "title": {
-        "design": "Design Direction",
-        "product": "Product Direction",
-        "workflow": "Workflow Direction",
-        "store": "Store Direction",
-        "rescue": "Rescue Diagnosis"
+        "design": "Direction de design",
+        "product": "Direction produit",
+        "workflow": "Direction du workflow",
+        "store": "Direction de boutique",
+        "rescue": "Diagnostic de sauvetage"
       },
       "statusPill": {
-        "notStarted": "Not started",
-        "waitingOnClient": "Action needed",
-        "submitted": "Submitted",
-        "underReview": "Under review",
-        "changesRequested": "Clarification needed",
-        "approved": "Approved",
-        "locked": "Locked for build"
+        "notStarted": "Non démarré",
+        "waitingOnClient": "Action requise",
+        "submitted": "Soumis",
+        "underReview": "En cours de revue",
+        "changesRequested": "Clarification requise",
+        "approved": "Approuvé",
+        "locked": "Verrouillé pour la construction"
       },
-      "lockedNotice": "Direction is locked. Feedback should focus on functionality, content accuracy, and reasonable polish. Major changes to the approved direction may affect the timeline or require a change order.",
-      "lockedNoticeDesignDirection": "Design direction is locked. Feedback should focus on content accuracy, clarity, missing information, bugs, and reasonable polish. Major visual changes may affect the timeline or require a change order.",
-      "noteFromCrecyStudio": "Note from CrecyStudio",
-      "submitError": "Failed to submit direction.",
-      "submitDesignDirectionError": "Failed to submit design direction.",
-      "submitButton": "Submit direction",
-      "submitButtonSaving": "Submitting..."
+      "lockedNotice": "La direction est verrouillée. Vos retours doivent porter sur la fonctionnalité, la justesse du contenu et un polissage raisonnable. Les changements majeurs à la direction approuvée peuvent affecter le calendrier ou nécessiter un avenant.",
+      "lockedNoticeDesignDirection": "La direction de design est verrouillée. Vos retours doivent porter sur la justesse du contenu, la clarté, les informations manquantes, les bugs et un polissage raisonnable. Les changements visuels majeurs peuvent affecter le calendrier ou nécessiter un avenant.",
+      "noteFromCrecyStudio": "Note de CrecyStudio",
+      "submitError": "Échec de l'envoi de la direction.",
+      "submitDesignDirectionError": "Échec de l'envoi de la direction de design.",
+      "submitButton": "Envoyer la direction",
+      "submitButtonSaving": "Envoi en cours…"
     },
     "requiredActions": {
-      "title": "Action needed from you",
-      "intro": "Each step below moves the project toward launch. Pending items show what we're waiting on from you right now.",
-      "pendingCount": "{count} pending",
-      "useFormBelow": "(use the form below)",
-      "markAsDone": "Mark as done",
-      "markAsDoneSaving": "Saving...",
-      "completedOn": "Completed {date}",
-      "actionError": "Failed to mark action complete.",
+      "title": "Action requise de votre part",
+      "intro": "Chaque étape ci-dessous rapproche le projet du lancement. Les éléments en attente montrent ce que nous attendons de vous en ce moment.",
+      "pendingCount": "{count} en attente",
+      "useFormBelow": "(utilisez le formulaire ci-dessous)",
+      "markAsDone": "Marquer comme fait",
+      "markAsDoneSaving": "Enregistrement…",
+      "completedOn": "Terminé le {date}",
+      "actionError": "Échec lors du marquage de l'action.",
       "statusPill": {
-        "notStarted": "Not started yet",
-        "waitingOnClient": "Action needed",
-        "submitted": "Submitted",
-        "complete": "Done",
-        "blocked": "Blocked"
+        "notStarted": "Pas encore commencé",
+        "waitingOnClient": "Action requise",
+        "submitted": "Soumis",
+        "complete": "Terminé",
+        "blocked": "Bloqué"
       }
     }
   },
@@ -2535,35 +2537,35 @@
     }
   },
   "work": {
-    "metaTitle": "Work | CrecyStudio",
-    "metaDescription": "Selected systems we've shipped — including our own. Multi-tenant rental SaaS, AI-augmented service-contractor platform, and client work.",
-    "kicker": "Selected work",
-    "title": "Real systems we've shipped — <em>including our own.</em>",
+    "metaTitle": "Réalisations | CrecyStudio",
+    "metaDescription": "Une sélection de systèmes que nous avons livrés — y compris les nôtres. SaaS de location multi-tenant, plateforme augmentée par IA pour contractants de service, et projets clients.",
+    "kicker": "Sélection de réalisations",
+    "title": "De vrais systèmes que nous avons livrés — <em>y compris les nôtres.</em>",
     "subtitle": "Trois produits studio que nous avons construits, lançons et exploitons. Plus du travail client dont les noms sont parfois anonymisés.",
-    "venturesLabel": "Studio ventures",
-    "venturesIntro": "These are our own products, built and operated by the studio. They prove the engineering capability for the Web Apps lane — they're not client testimonials.",
-    "ventureBadge": "Studio venture",
+    "venturesLabel": "Projets du studio",
+    "venturesIntro": "Ce sont nos propres produits, conçus et exploités par le studio. Ils démontrent notre capacité d'ingénierie pour la voie Applications Web — ce ne sont pas des témoignages clients.",
+    "ventureBadge": "Projet du studio",
     "ventures": {
       "fleiko": {
         "name": "Fleiko",
-        "tagline": "Fleet management platform for small businesses",
-        "summary": "Cloud-based fleet management SaaS built for small businesses running 2–20 vehicles. Replaces spreadsheets with a centralized dashboard for vehicle records, maintenance history, and compliance documents. AI copilot flags cost outliers and upcoming maintenance needs; automated alerts for insurance, registration, and inspection expiry; optional real-time GPS tracking.",
-        "chip1": "AI Fleet Copilot",
-        "chip2": "Compliance Alerts",
-        "chip3": "GPS Tracking",
-        "chip4": "Managed Service",
-        "linkLabel": "Visit fleiko.com",
+        "tagline": "Plateforme de gestion de flotte pour PME",
+        "summary": "SaaS cloud de gestion de flotte pour les PME qui exploitent de 2 à 20 véhicules. Remplace les tableurs par un tableau de bord centralisé pour les dossiers véhicules, l'historique d'entretien et les documents de conformité. Le copilote IA repère les écarts de coûts et les besoins d'entretien à venir ; alertes automatisées pour l'expiration d'assurance, d'immatriculation et de contrôle technique ; suivi GPS en temps réel optionnel.",
+        "chip1": "Copilote IA flotte",
+        "chip2": "Alertes de conformité",
+        "chip3": "Suivi GPS",
+        "chip4": "Service géré",
+        "linkLabel": "Visiter fleiko.com",
         "caseStudyLink": "Plongée technique"
       },
       "proveo": {
         "name": "Proveo",
-        "tagline": "Photo proof + CRM for service contractors",
-        "summary": "SaaS for auto detailers, painters, and cleaners. AI photo detection identifying before/after pairs, freemium billing tiers, CRM pipeline, appointment scheduling, automated lifecycle and review-request emails.",
-        "chip1": "AI photo detection",
-        "chip2": "Freemium billing",
-        "chip3": "CRM pipeline",
-        "chip4": "Automated emails",
-        "linkLabel": "Visit proveohq.com",
+        "tagline": "Preuve photo + CRM pour contractants de service",
+        "summary": "SaaS pour les détailleurs auto, peintres et nettoyeurs. Détection photo par IA identifiant les paires avant/après, paliers de facturation freemium, pipeline CRM, prise de rendez-vous, e-mails automatisés de cycle de vie et de demande d'avis.",
+        "chip1": "Détection photo IA",
+        "chip2": "Facturation freemium",
+        "chip3": "Pipeline CRM",
+        "chip4": "E-mails automatisés",
+        "linkLabel": "Visiter proveohq.com",
         "caseStudyLink": "Plongée technique"
       },
       "techdesk": {
@@ -2578,33 +2580,33 @@
         "caseStudyLink": "Plongée technique"
       }
     },
-    "clientLabel": "Client work",
-    "clientIntro": "Client case studies will land here as engagements complete. Anonymized first, then replaced with the named version when the client agrees.",
-    "comingSoon": "First case study lands here soon",
-    "ctaPrimary": "Start a project",
-    "ctaSecondary": "Plan a custom app"
+    "clientLabel": "Travail client",
+    "clientIntro": "Les études de cas clients arriveront ici à mesure que les missions se terminent. Anonymisées d'abord, puis remplacées par la version nominative quand le client est d'accord.",
+    "comingSoon": "Le premier cas client arrive bientôt ici",
+    "ctaPrimary": "Démarrer un projet",
+    "ctaSecondary": "Planifier une application sur mesure"
   },
   "customAppIntake": {
-    "metaTitle": "Custom web app intake | CrecyStudio",
-    "metaDescription": "Tell us what you're building. We'll scope the right engagement — discovery sprint, MVP, or full system — and schedule a call to walk through the details.",
-    "kicker": "Custom Web App",
-    "title": "Tell us about your project.",
-    "stepCounter": "Step {current} of {total} — {stepTitle}",
+    "metaTitle": "Intake application web sur mesure | CrecyStudio",
+    "metaDescription": "Dites-nous ce que vous construisez. Nous cadrons le bon engagement — sprint de découverte, MVP ou système complet — et planifions un appel pour parcourir les détails.",
+    "kicker": "Application Web sur mesure",
+    "title": "Parlez-nous de votre projet.",
+    "stepCounter": "Étape {current} sur {total} — {stepTitle}",
     "stepTitles": {
-      "1": "Your Project",
-      "2": "Context",
-      "3": "Scope & Timeline",
-      "4": "Review & Submit"
+      "1": "Votre projet",
+      "2": "Contexte",
+      "3": "Portée et calendrier",
+      "4": "Vérifier et envoyer"
     },
     "step1": {
-      "heading": "What are you building?",
-      "descriptionLabel": "Describe the project *",
-      "descriptionPlaceholder": "e.g. A portal for our field technicians to log jobs, upload photos, and get paid without calling the office.",
-      "descriptionHint": "Give us a bit more detail — at least a sentence or two.",
-      "companyLabel": "Company / Organization *",
-      "companyPlaceholder": "Acme Services",
-      "contactLabel": "Your Name *",
-      "contactPlaceholder": "Jane Smith"
+      "heading": "Que construisez-vous ?",
+      "descriptionLabel": "Décrivez le projet *",
+      "descriptionPlaceholder": "ex. Un portail pour nos techniciens terrain pour enregistrer les interventions, téléverser des photos et être payés sans appeler le bureau.",
+      "descriptionHint": "Donnez-nous un peu plus de détail — au moins une ou deux phrases.",
+      "companyLabel": "Entreprise / Organisation *",
+      "companyPlaceholder": "Société Acme",
+      "contactLabel": "Votre nom *",
+      "contactPlaceholder": "Marie Dupont"
     },
     "step2": {
       "heading": "Un peu plus de contexte.",
@@ -2642,7 +2644,7 @@
       "emailLabel": "Courriel *",
       "emailPlaceholder": "vous@entreprise.com",
       "phoneLabel": "Téléphone (optionnel)",
-      "phonePlaceholder": "(555) 555-5555",
+      "phonePlaceholder": "+33 6 12 34 56 78",
       "privacyNote": "Nous utiliserons vos coordonnées uniquement pour ce projet. Aucune newsletter, aucun spam.",
       "postLaunchLabel": "Après le lancement, comment hébergement, maintenance et mises à jour doivent-ils être gérés ?",
       "budgetFlexibilityLabel": "Si la bonne solution coûte 20 à 30 % de plus que la plage ci-dessus, êtes-vous ouvert à en discuter ?",
@@ -2780,9 +2782,9 @@
     "step1": {
       "heading": "Parlez-nous de votre entreprise.",
       "contactLabel": "Votre nom *",
-      "contactPlaceholder": "Jean Dupont",
+      "contactPlaceholder": "Marie Dupont",
       "companyLabel": "Entreprise / Organisation",
-      "companyPlaceholder": "Acme Services",
+      "companyPlaceholder": "Société Acme",
       "userCountLabel": "Combien de personnes utiliseront ce portail au lancement ?",
       "techTeamLabel": "Avez-vous une équipe de développeurs ou une équipe informatique impliquée ?",
       "accessLabel": "Qui accède au portail ?",
@@ -2819,7 +2821,7 @@
       "emailLabel": "Courriel *",
       "emailPlaceholder": "vous@entreprise.com",
       "phoneLabel": "Téléphone (optionnel)",
-      "phonePlaceholder": "(555) 555-5555",
+      "phonePlaceholder": "+33 6 12 34 56 78",
       "notesLabel": "Autre chose à savoir ? (optionnel)",
       "notesPlaceholder": "ex. Nous devons l'intégrer à notre CRM et facturer les clients directement.",
       "privacyNote": "Nous utiliserons vos coordonnées uniquement pour ce projet."
@@ -2951,7 +2953,7 @@
       "siteUrlPlaceholder": "https://votresite.com",
       "platformLabel": "Sur quelle plateforme est-il construit ?",
       "companyLabel": "Entreprise / Organisation",
-      "companyPlaceholder": "Acme Services",
+      "companyPlaceholder": "Société Acme",
       "contactLabel": "Votre nom *",
       "contactPlaceholder": "Jean Dupont",
       "builtWhenLabel": "Quand ce site a-t-il été construit ou remanié pour la dernière fois ?",
@@ -2987,7 +2989,7 @@
       "emailLabel": "Courriel *",
       "emailPlaceholder": "vous@entreprise.com",
       "phoneLabel": "Téléphone (optionnel)",
-      "phonePlaceholder": "(555) 555-5555",
+      "phonePlaceholder": "+33 6 12 34 56 78",
       "notesLabel": "Autre chose à savoir ? (optionnel)",
       "notesPlaceholder": "ex. Nous avons relancé il y a 3 mois et le trafic a chuté de 40 %.",
       "privacyNote": "Nous utiliserons vos coordonnées uniquement pour ce projet."
@@ -3037,12 +3039,12 @@
         }
       },
       "builtWhen": {
-        "2020-earlier": "2020 ou avant",
         "2021": "2021",
         "2022": "2022",
         "2023": "2023",
         "2024": "2024",
         "2025": "2025",
+        "2020-earlier": "2020 ou avant",
         "unknown": "Je ne sais pas"
       },
       "previousVendor": {
@@ -3215,7 +3217,7 @@
     "closingCtaSecondary": "Voir notre processus"
   },
   "workTechdesk": {
-    "metaTitle": "Kocre IT Services — Architecture technique | CrecyStudio",
+    "metaTitle": "Étude de cas Kocre IT Services | CrecyStudio",
     "metaDescription": "Comment nous avons construit un helpdesk IA avec Ghost Admin, un portail de résolution automatique en six critères, un volant de connaissances auto-composé et la surveillance déterministe Sentinel.",
     "back": "Retour aux projets",
     "kicker": "Étude de cas technique / Kocre IT Services",
@@ -3300,9 +3302,9 @@
     "step1": {
       "contactHeading": "À qui parlons-nous ?",
       "contactNameLabel": "Votre nom",
-      "contactNamePlaceholder": "Jane Dupont",
+      "contactNamePlaceholder": "Marie Dupont",
       "companyLabel": "Nom de l'entreprise ou du produit",
-      "companyPlaceholder": "Acme Inc.",
+      "companyPlaceholder": "Acme SAS",
       "productHeading": "Parlez-nous du produit",
       "productSubtitle": "Que fait-il aujourd'hui, qui l'utilise, et quel problème voulez-vous que l'IA résolve ?",
       "productPlaceholder": "ex. Nous gérons un CRM SaaS B2B. Les agents support passent 3 heures par jour à trier les tickets manuellement. Nous voulons que l'IA classifie et suggère des réponses afin que les agents n'aient qu'à approuver ou modifier.",
@@ -3343,7 +3345,7 @@
       "emailLabel": "Adresse e-mail",
       "emailPlaceholder": "jane@entreprise.com",
       "phoneLabel": "Téléphone (optionnel)",
-      "phonePlaceholder": "+33 6 00 00 00 00",
+      "phonePlaceholder": "+33 6 12 34 56 78",
       "decisionMakerLabel": "Votre rôle",
       "decisionMakerPlaceholder": "ex. CTO, Responsable Produit, Fondateur"
     },
