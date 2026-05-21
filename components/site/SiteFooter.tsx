@@ -34,6 +34,7 @@ export default function SiteFooter() {
             <Link href="/refunds">{t("links.refund")}</Link>
             <Link href="/security">{t("links.security")}</Link>
             <Link href="/aup">{t("links.aup")}</Link>
+            <Link href="/coming-soon">{t("links.futureServices")}</Link>
           </div>
         </div>
 
