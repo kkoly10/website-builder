@@ -183,8 +183,11 @@ export function emailWrap(
     .row-value { color:#e8e8e8 !important; }
     .row-value a { color:#7eb7ff !important; }
     .sig-name { color:#ffffff !important; }
-    .sig-name a, .sig-role a { color:#6bb7ff !important; }
     .sig-role { color:#999999 !important; }
+    /* Plain <a> tags inside body copy (signature LinkedIn, certificate
+       verification URL, etc). The class lives directly on each <a>
+       because iOS Mail drops descendant selectors inside @media. */
+    .body-link { color:#7eb7ff !important; }
     /* CTA: brand black-on-white in light mode would disappear into
        the dark card body, so invert to white-on-black. The class is
        on BOTH the td and the <a> (not a descendant selector) because
@@ -218,8 +221,8 @@ export function emailWrap(
     [data-ogsc] .row-value { color:#e8e8e8 !important; }
     [data-ogsc] .row-value a { color:#7eb7ff !important; }
     [data-ogsc] .sig-name { color:#ffffff !important; }
-    [data-ogsc] .sig-name a, [data-ogsc] .sig-role a { color:#6bb7ff !important; }
     [data-ogsc] .sig-role { color:#999999 !important; }
+    [data-ogsc] .body-link { color:#7eb7ff !important; }
     [data-ogsc] .cta-link { background:#ffffff !important; color:#111111 !important; }
     [data-ogsb] .body-bg { background:#0f0f0f !important; }
     [data-ogsb] .card { background:#1a1a1a !important; }
@@ -363,7 +366,7 @@ export function sig(lang: EmailLocale = "en"): string {
              experience is unchanged. -->
         <p class="sig-name" style="margin:0 0 2px;font-size:14px;font-weight:bold;color:#111111;font-family:Arial,Helvetica,sans-serif">Komlan Kouhiko</p>
         <p class="sig-role" style="margin:0 0 6px;font-size:13px;color:#888888;font-family:Arial,Helvetica,sans-serif">${escHtml(t("common.signature.role", lang))}</p>
-        <a href="${LINKEDIN_URL}" style="font-size:12px;color:#0077b5;text-decoration:none;font-family:Arial,Helvetica,sans-serif">LinkedIn &#x2192;</a>
+        <a href="${LINKEDIN_URL}" class="body-link" style="font-size:12px;color:#0077b5;text-decoration:none;font-family:Arial,Helvetica,sans-serif">LinkedIn &#x2192;</a>
       </td>
     </tr>
   </table>`;
