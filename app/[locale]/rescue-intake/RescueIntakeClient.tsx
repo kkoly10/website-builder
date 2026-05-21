@@ -744,7 +744,11 @@ export default function RescueIntakeClient() {
             {t("nav.continue")} <span className="btnArrow">→</span>
           </button>
         ) : (
-          <button className="btn btnPrimary" onClick={submit} disabled={loading}>
+          <button
+            className="btn btnPrimary"
+            onClick={submit}
+            disabled={loading || !form.email.trim().includes("@")}
+          >
             {loading ? t("nav.submitting") : `${t("nav.submit")} →`}
           </button>
         )}

@@ -110,11 +110,16 @@ export default function RequiredActionsCard({ actions, onComplete }: Props) {
   }
 
   // Sort: incomplete first (pending action), complete last (history).
+  // Guard against malformed createdAt — `new Date(undefined).getTime()`
+  // returns NaN and NaN comparisons make sort unstable, causing actions
+  // to render in arbitrary order.
   const sorted = [...visible].sort((a, b) => {
     const aDone = a.status === "complete" ? 1 : 0;
     const bDone = b.status === "complete" ? 1 : 0;
     if (aDone !== bDone) return aDone - bDone;
-    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    const aTime = new Date(a.createdAt).getTime();
+    const bTime = new Date(b.createdAt).getTime();
+    return (Number.isFinite(aTime) ? aTime : 0) - (Number.isFinite(bTime) ? bTime : 0);
   });
 
   return (
@@ -235,7 +240,7 @@ export default function RequiredActionsCard({ actions, onComplete }: Props) {
                   {busyKey === action.actionKey ? t("markAsDoneSaving") : t("markAsDone")}
                 </button>
               ) : null}
-              {isDone && action.completedAt ? (
+              {isDone && action.completedAt && Number.isFinite(new Date(action.completedAt).getTime()) ? (
                 <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6 }}>
                   {t("completedOn", { date: new Date(action.completedAt).toLocaleDateString() })}
                 </div>
