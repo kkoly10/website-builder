@@ -13,13 +13,22 @@ type Body = {
   token?: string;
 };
 
+// Tight UUID validation before hitting the DB. Without this a fuzzed
+// quoteId still parses through to `.eq("id", quoteId)` and either
+// returns 0 rows (slow scan, wasted query budget) or — for sufficiently
+// malformed input — surfaces a Postgres error directly to the caller.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isUuid(v: string): boolean {
+  return UUID_RE.test(v);
+}
+
 export async function POST(req: Request) {
   try {
     const body = (await req.json().catch(() => ({}))) as Body;
     const quoteId = String(body.quoteId ?? "").trim();
     const quoteToken = String(body.quoteToken ?? body.token ?? "").trim();
 
-    if (!quoteId) {
+    if (!quoteId || !isUuid(quoteId)) {
       return NextResponse.json({ error: "quoteId is required." }, { status: 400 });
     }
 

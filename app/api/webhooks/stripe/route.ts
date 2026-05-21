@@ -106,6 +106,24 @@ async function handleRefundOrDispute(event: any, eventType: string) {
     const now = new Date().toISOString();
     const history = Array.isArray((internal as any).history) ? ((internal as any).history as any[]) : [];
     const action = eventType === "charge.refunded" ? "refunded" : "disputed";
+
+    // Idempotency check: if we've already processed this exact Stripe
+    // event ID against this quote, do nothing. Stripe retries on any
+    // non-2xx response (including the 503 we return for concurrent
+    // checkout sessions) and will also retry on its own internal
+    // network blips. Without this guard each retry appends a duplicate
+    // history entry, polluting the audit trail. The deposit_status
+    // flip itself is already state-idempotent (same value re-set), so
+    // the only collateral was log noise — but on a refund storm that
+    // noise hides the real signal.
+    const alreadyProcessed = history.some(
+      (h) => h && typeof h === "object" && h.eventId === event.id,
+    );
+    if (alreadyProcessed) {
+      console.log(`[stripe-webhook] ${eventType} ${event.id} already applied to quote ${q.id} — skipping`);
+      return;
+    }
+
     history.push({ at: now, action, eventType, eventId: event.id, chargeId: charge.id });
 
     const nextInternal = {

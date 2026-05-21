@@ -8,6 +8,20 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Boot-time visibility for misconfigured prod deploys. The per-request
+// check below will fail closed (returns 500) if the secret is unset —
+// but by then Supabase has already tried to send the auth email and the
+// user is staring at a "couldn't sign up" screen. Logging at module load
+// surfaces the misconfig the moment a cold start touches this route, so
+// the operator sees it during the smoke test that follows a deploy
+// rather than after the first real customer complaint.
+if (process.env.NODE_ENV === "production" && !process.env.SUPABASE_SEND_EMAIL_HOOK_SECRET) {
+  console.warn(
+    "[send-email-hook] SUPABASE_SEND_EMAIL_HOOK_SECRET is not set. " +
+      "All branded auth emails (signup confirm, magic link, password reset, invite) will fail with 500 until this is configured."
+  );
+}
+
 type SendEmailHookPayload = {
   user?: {
     email?: string;
