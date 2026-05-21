@@ -17,9 +17,12 @@ export async function recordServerEvent(input: {
   try {
     const { error } = await supabaseAdmin.from("analytics_events").insert(payload);
     if (error) {
-      console.log("analytics_events insert skipped:", error.message);
+      // warn (not log) so log-level filters surface this — silently
+      // dropped analytics events are debuggable but not page-worthy,
+      // so we don't capture to Sentry.
+      console.warn("analytics_events insert skipped:", error.message);
     }
   } catch (err) {
-    console.log("analytics_events unavailable:", err instanceof Error ? err.message : "unknown");
+    console.warn("analytics_events unavailable:", err instanceof Error ? err.message : "unknown");
   }
 }

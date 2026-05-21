@@ -113,8 +113,7 @@ function isAllowedOrigin(origin: string | null): boolean {
   }
   try {
     const url = new URL(origin);
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com";
-    const siteHost = new URL(siteUrl).host;
+    const siteHost = new URL(appBaseUrl()).host;
     if (url.host === siteHost) return true;
     // Vercel preview deployments use *.vercel.app subdomains.
     if (url.host.endsWith(".vercel.app")) return true;

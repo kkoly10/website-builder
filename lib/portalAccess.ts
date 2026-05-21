@@ -5,7 +5,6 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 export type PortalAccessResolved = {
   quoteId: string;
   via: "quote_id" | "portal_token";
-  accessRow?: any;
 };
 
 function isUuid(value: string) {
@@ -39,7 +38,7 @@ export async function resolvePortalAccess(
       if (!Number.isNaN(expires) && expires < Date.now()) return null;
     }
 
-    return { quoteId: raw, via: "quote_id", accessRow };
+    return { quoteId: raw, via: "quote_id" };
   }
 
   const { data, error } = await supabaseAdmin
@@ -84,6 +83,5 @@ export async function resolvePortalAccess(
   return {
     quoteId: data.quote_id,
     via: "portal_token",
-    accessRow: data,
   };
 }

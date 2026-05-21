@@ -141,7 +141,6 @@ async function maybeCreateCalendarEvent(
         },
       });
     }
-    console.log("[book-discovery-call] calendar event created ok");
   } catch (err: any) {
     console.warn("[book-discovery-call] calendar event creation failed");
     console.warn("[book-discovery-call] err.message:", err?.message);
@@ -257,9 +256,8 @@ export async function POST(req: Request) {
         }
       : null;
 
-    console.log(`[book-discovery-call] sending client email to=${email} from=${FROM_EMAIL} scheduled=${!!scheduledAt}`);
     try {
-      const clientRes = await sendResendEmail({
+      await sendResendEmail({
         to: email,
         from: FROM_EMAIL,
         subject: scheduledAt
@@ -270,7 +268,6 @@ export async function POST(req: Request) {
           : buildDiscoveryClientEmail(name, emailLang),
         ...(icsAttachment ? { attachments: [icsAttachment] } : {}),
       });
-      console.log("[book-discovery-call] client email sent id=", (clientRes as any)?.id);
     } catch (emailErr) {
       captureBackgroundError(emailErr, {
         where: "book-discovery-call.client_confirmation",
@@ -283,14 +280,13 @@ export async function POST(req: Request) {
         // Admin subject leaves out the email address on purpose. Leaving
         // it in the subject leaked PII into lock-screen notifications and
         // any shared screen; the full email is one click away in the body.
-        const adminRes = await sendResendEmail({
+        await sendResendEmail({
           to: ADMIN_EMAIL,
           from: FROM_EMAIL,
           subject: `Discovery call — ${name}${slotLabel ? " · scheduled" : " · request"}`,
           html: buildDiscoveryAdminEmail(callId, name, email, company, projectType, availabilityNote, slotLabel),
           ...(icsAttachment ? { attachments: [icsAttachment] } : {}),
         });
-        console.log("[book-discovery-call] admin email sent id=", (adminRes as any)?.id);
       } catch (emailErr) {
         captureBackgroundError(emailErr, {
           where: "book-discovery-call.admin_notification",
