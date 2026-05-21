@@ -51,6 +51,9 @@ export default function EcommerceBookClient({ ecomIntakeId }: Props) {
       const data = await res.json();
       if (!res.ok || !data?.ok) throw new Error(data?.error || t("requestFailed"));
 
+      // Reset before navigating: if router.push is interrupted the
+      // customer would otherwise return to a stuck "Submitting..." button.
+      setSubmitting(false);
       router.push(data.nextUrl || `/ecommerce/success?ecomIntakeId=${encodeURIComponent(ecomIntakeId)}`);
     } catch (err: any) {
       setError(err.message || t("fallbackError"));

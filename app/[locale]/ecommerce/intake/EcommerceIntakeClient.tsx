@@ -213,6 +213,9 @@ export default function EcommerceIntakeClient() {
       const data = await res.json();
       if (!res.ok || !data?.ok) throw new Error(data?.error || t("validation.submissionFailed"));
       localStorage.removeItem(STORAGE_KEY);
+      // Reset before navigating: if router.push is interrupted the
+      // customer would otherwise return to a stuck "Submitting..." button.
+      setSubmitting(false);
       router.push(`/ecommerce/book?ecomIntakeId=${encodeURIComponent(data.ecomIntakeId)}`);
     } catch (err: any) {
       setError(err.message || t("validation.fallback"));
