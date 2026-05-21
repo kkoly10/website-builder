@@ -131,12 +131,13 @@ for (const scenario of SCENARIOS) {
         expect(ctaHref, `CTA type=${verifyType}`).toContain(`type=${verifyType}`);
 
         // Dark-mode CTA invert: without this the black button vanishes
-        // into a #1a1a1a dark card. Assert both the class hook on the
-        // td and the matching CSS rule are present so we catch either
-        // half of the contract being removed.
-        expect(fullHtml, ".cta-button class hook on CTA td").toContain('class="cta-button"');
+        // into a #1a1a1a dark card. The class lives on BOTH the td and
+        // the inner <a> (not a descendant selector) — iOS Mail drops
+        // descendant selectors inside @media queries, so we need both
+        // hits as plain class selectors.
+        expect(fullHtml, "cta-link class hook on CTA td").toContain('class="cta-link"');
         expect(fullHtml, "dark-mode CTA invert rule present").toMatch(
-          /\.cta-button[^{]*\{[^}]*background:\s*#ffffff/i,
+          /\.cta-link[^{]*\{[^}]*background:\s*#ffffff/i,
         );
       } else {
         // email_change_current must NOT contain a Supabase verify link

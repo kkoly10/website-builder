@@ -28,7 +28,7 @@ export function buildCertificateEmailHtml(
     <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("certificate.body_verify", lang))}</p>
     ${ctaButton(signedUrl, t("certificate.cta", lang))}
     <p style="margin:0 0 8px;font-size:13px;color:#888888;line-height:1.6;letter-spacing:0.04em;text-transform:uppercase;font-weight:600">${escHtml(t("certificate.verify_label", lang))}</p>
-    <p style="margin:0 0 28px;font-size:13px;color:#444444;line-height:1.6;word-break:break-all"><a href="${safeVerifyUrl}" style="color:#111111;text-decoration:underline">${safeVerifyUrl}</a></p>
+    <p style="margin:0 0 28px;font-size:13px;color:#444444;line-height:1.6;word-break:break-all"><a href="${safeVerifyUrl}" class="body-link" style="color:#111111;text-decoration:underline">${safeVerifyUrl}</a></p>
     ${sig(lang)}
   `, {
     footerNote: t("common.footer.reply_note", lang),
