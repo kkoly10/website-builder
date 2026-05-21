@@ -2096,7 +2096,8 @@
     "errors": {
       "updateFailed": "Error al actualizar el espacio.",
       "uploadFailed": "Error al subir.",
-      "messageFailed": "Error al enviar el mensaje."
+      "messageFailed": "Error al enviar el mensaje.",
+      "refreshFailed": "No se pudo actualizar — comprueba tu conexión e inténtalo de nuevo."
     },
     "directionModule": {
       "title": {
