@@ -52,8 +52,11 @@ function buildAddToCalendarLinks(start: Date, slotLabel: string): {
 
 function buildCalendarButtonsHtml(start: Date, slotLabel: string, lang: EmailLocale): string {
   const links = buildAddToCalendarLinks(start, slotLabel);
+  // class="cal-btn" gives the dark-mode rule a hook so these stay
+  // visually consistent with the inverted card instead of rendering
+  // as bright white pills against #1a1a1a.
   const btn = (href: string, label: string) =>
-    `<a href="${href}" style="display:inline-block;background:#ffffff;border:1px solid #d6d6d6;color:#111111;text-decoration:none;padding:10px 16px;font-size:13px;font-weight:600;font-family:Arial,Helvetica,sans-serif;border-radius:4px;margin:0 6px 8px 0">${label}</a>`;
+    `<a href="${href}" class="cal-btn" style="display:inline-block;background:#ffffff;border:1px solid #d6d6d6;color:#111111;text-decoration:none;padding:10px 16px;font-size:13px;font-weight:600;font-family:Arial,Helvetica,sans-serif;border-radius:4px;margin:0 6px 8px 0">${label}</a>`;
   return `<div style="margin:0 0 24px">
     <p style="margin:0 0 10px;font-size:12px;color:#888888;letter-spacing:0.06em;text-transform:uppercase;font-weight:600">${escHtml(t("discovery.add_to_calendar", lang))}</p>
     ${btn(links.google, "Google Calendar")}
@@ -72,7 +75,7 @@ export function buildDiscoveryClientEmailScheduled(name: string, slotLabel: stri
   return emailWrap(`
     <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em;line-height:1.2">${headlineHtml}</h1>
     <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("discovery.eyebrow", lang))}</p>
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" class="booked-box" style="margin:0 0 28px">
       <tr>
         <td style="background:#f7f7f7;border-radius:6px;padding:22px 24px;text-align:center">
           <p style="margin:0 0 6px;font-size:11px;color:#888888;letter-spacing:0.08em;text-transform:uppercase;font-weight:600">${escHtml(t("discovery.booked_for_label", lang))}</p>

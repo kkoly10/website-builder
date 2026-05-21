@@ -25,6 +25,11 @@ e2e/.auth/
 # Source-of-truth is the renderer, not the rendered HTML.
 scripts/email-previews/
 
+# Local-only scratch scripts (Playwright smoke tests, one-off
+# render scripts). The leading `_` is the convention — these
+# typically read credentials from env vars and should never ship.
+scripts/_*.ts
+
 .env.local
 .env
 
