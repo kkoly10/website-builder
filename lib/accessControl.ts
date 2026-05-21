@@ -39,15 +39,6 @@ export function sameNormalizedEmail(a?: string | null, b?: string | null) {
   return !!left && !!right && left === right;
 }
 
-export function maskEmail(value?: string | null) {
-  const email = normalizeEmail(value);
-  if (!email || !email.includes("@")) return null;
-  const [local, domain] = email.split("@");
-  const safeLocal =
-    local.length <= 2 ? `${local[0] ?? "*"}*` : `${local.slice(0, 2)}***`;
-  return `${safeLocal}@${domain}`;
-}
-
 function canAttachOwner(args: {
   existingUserId?: string | null;
   existingOwnerEmail?: string | null;
