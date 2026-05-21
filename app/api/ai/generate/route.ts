@@ -117,8 +117,17 @@ export async function POST(req: Request) {
     try {
       parsed = JSON.parse(text);
     } catch {
+      // Don't echo the raw model output back to the client — a parse
+      // failure usually means the model produced something off-format,
+      // which can include arbitrary text the prompt may have steered it
+      // toward. Log to server-side observability and return a clean
+      // error to the client.
+      console.error("[ai/generate] failed to parse model output as JSON", {
+        prefix: text.slice(0, 200),
+        length: text.length,
+      });
       return NextResponse.json(
-        { error: "Failed to parse JSON from OpenAI output.", raw: text },
+        { error: "Failed to parse JSON from OpenAI output." },
         { status: 500 }
       );
     }
