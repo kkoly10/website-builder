@@ -107,6 +107,7 @@ export function renderDepositInvoiceUnpaidNudge(ctx: NudgeRenderContext): Render
       ${sig(lang)}
     `, {
       footerNote: t("common.footer.reply_note", lang),
+      unsubscribeUrl: workspaceUrl,
       lang,
     }),
   };

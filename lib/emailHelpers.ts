@@ -169,10 +169,21 @@ export function emailWrap(
     .callout td p:first-child { color:#888888 !important; }
     .admin-badge td { background:#2a2a2a !important; }
     .admin-badge td p { color:#aaaaaa !important; }
+    /* Discovery "your call is booked for" panel — same outer-class /
+       inner-styled-td shape as callout. The light cream highlight
+       reads as a white blob against the dark card without this. */
+    .booked-box td { background:#222222 !important; }
+    .booked-box td p { color:#e8e8e8 !important; }
+    .booked-box td p:first-child { color:#888888 !important; }
+    /* Add-to-calendar buttons live next to the dark card, not on it.
+       Without inversion they render as bright white pills that fight
+       the inverted CTA above them. Match the muted-secondary palette. */
+    .cal-btn { background:#2a2a2a !important; border-color:#444444 !important; color:#e8e8e8 !important; }
     .row-label { color:#888888 !important; }
     .row-value { color:#e8e8e8 !important; }
     .row-value a { color:#7eb7ff !important; }
     .sig-name { color:#ffffff !important; }
+    .sig-name a, .sig-role a { color:#6bb7ff !important; }
     .sig-role { color:#999999 !important; }
     /* CTA: brand black-on-white in light mode would disappear into
        the dark card body, so invert to white-on-black. Targets both
@@ -198,10 +209,15 @@ export function emailWrap(
     [data-ogsc] .callout td p:first-child { color:#888888 !important; }
     [data-ogsc] .admin-badge td { background:#2a2a2a !important; }
     [data-ogsc] .admin-badge td p { color:#aaaaaa !important; }
+    [data-ogsc] .booked-box td { background:#222222 !important; }
+    [data-ogsc] .booked-box td p { color:#e8e8e8 !important; }
+    [data-ogsc] .booked-box td p:first-child { color:#888888 !important; }
+    [data-ogsc] .cal-btn { background:#2a2a2a !important; border-color:#444444 !important; color:#e8e8e8 !important; }
     [data-ogsc] .row-label { color:#888888 !important; }
     [data-ogsc] .row-value { color:#e8e8e8 !important; }
     [data-ogsc] .row-value a { color:#7eb7ff !important; }
     [data-ogsc] .sig-name { color:#ffffff !important; }
+    [data-ogsc] .sig-name a, [data-ogsc] .sig-role a { color:#6bb7ff !important; }
     [data-ogsc] .sig-role { color:#999999 !important; }
     [data-ogsc] .cta-button { background:#ffffff !important; }
     [data-ogsc] .cta-button a { background:#ffffff !important; color:#111111 !important; }
@@ -210,6 +226,8 @@ export function emailWrap(
     [data-ogsb] .card-footer { background:#141414 !important; }
     [data-ogsb] .callout td { background:#141414 !important; }
     [data-ogsb] .admin-badge td { background:#2a2a2a !important; }
+    [data-ogsb] .booked-box td { background:#222222 !important; }
+    [data-ogsb] .cal-btn { background:#2a2a2a !important; }
     [data-ogsb] .cta-button { background:#ffffff !important; }
   `;
 
