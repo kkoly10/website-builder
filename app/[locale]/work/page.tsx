@@ -101,21 +101,6 @@ function WorkContent() {
         </div>
       </section>
 
-      <section className={`${styles.section} fadeUp`}>
-        <div className="container">
-          <div className={styles.sectionHead}>
-            <p className={styles.sectionLabel}>{t("clientLabel")}</p>
-            <p className={styles.sectionIntro}>{t("clientIntro")}</p>
-          </div>
-
-          <div className={styles.grid}>
-            <article className={`${styles.card} ${styles.cardPlaceholder}`}>
-              <p className={styles.placeholder}>{t("comingSoon")}</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
       <section className={`${styles.closing} fadeUp`}>
         <div className="container">
           <div className={styles.closingActions}>
