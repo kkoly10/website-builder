@@ -347,7 +347,7 @@ for (const scenario of SCENARIOS) {
       // every email funnels recipients to a workspace/admin action; an
       // accidental drop is a real bug.
       if (!scenario.noCta) {
-        expect(fullHtml, "CTA button class hook present").toContain('class="cta-button"');
+        expect(fullHtml, "CTA button class hook present").toContain('class="cta-link"');
       }
     });
   }

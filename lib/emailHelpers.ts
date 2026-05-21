@@ -186,11 +186,12 @@ export function emailWrap(
     .sig-name a, .sig-role a { color:#6bb7ff !important; }
     .sig-role { color:#999999 !important; }
     /* CTA: brand black-on-white in light mode would disappear into
-       the dark card body, so invert to white-on-black. Targets both
-       the wrapping td (Outlook reads background here) and the inner
-       <a> (everywhere else). */
-    .cta-button { background:#ffffff !important; }
-    .cta-button a { background:#ffffff !important; color:#111111 !important; }
+       the dark card body, so invert to white-on-black. The class is
+       on BOTH the td and the <a> (not a descendant selector) because
+       iOS Mail drops descendant selectors inside @media queries — in
+       that mode only the td flipped, leaving the inner <a> dark and
+       the white text invisible against the inverted card. */
+    .cta-link { background:#ffffff !important; color:#111111 !important; }
   `;
   const darkModeCss = `
     @media (prefers-color-scheme: dark) {
@@ -219,8 +220,7 @@ export function emailWrap(
     [data-ogsc] .sig-name { color:#ffffff !important; }
     [data-ogsc] .sig-name a, [data-ogsc] .sig-role a { color:#6bb7ff !important; }
     [data-ogsc] .sig-role { color:#999999 !important; }
-    [data-ogsc] .cta-button { background:#ffffff !important; }
-    [data-ogsc] .cta-button a { background:#ffffff !important; color:#111111 !important; }
+    [data-ogsc] .cta-link { background:#ffffff !important; color:#111111 !important; }
     [data-ogsb] .body-bg { background:#0f0f0f !important; }
     [data-ogsb] .card { background:#1a1a1a !important; }
     [data-ogsb] .card-footer { background:#141414 !important; }
@@ -228,7 +228,7 @@ export function emailWrap(
     [data-ogsb] .admin-badge td { background:#2a2a2a !important; }
     [data-ogsb] .booked-box td { background:#222222 !important; }
     [data-ogsb] .cal-btn { background:#2a2a2a !important; }
-    [data-ogsb] .cta-button { background:#ffffff !important; }
+    [data-ogsb] .cta-link { background:#ffffff !important; }
   `;
 
   return `<!DOCTYPE html>
@@ -295,13 +295,16 @@ ${preheaderHtml}
 }
 
 export function ctaButton(href: string, label: string): string {
-  // Double background (td + a) is required for Outlook: Outlook ignores background on <a>.
-  // .cta-button class lets the dark-mode media query invert this to
-  // white-on-black so the button doesn't disappear into a #1a1a1a card.
+  // Double background (td + a) is required for Outlook: Outlook ignores
+  // background on <a>. Both elements carry the cta-link class so iOS
+  // Mail (which drops descendant selectors inside @media queries) gets
+  // a simple class hit on each one — without that, the inner <a> keeps
+  // its inline `background:#111111; color:#ffffff` and reads as dark
+  // text on a dark card in dark mode.
   return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:4px 0 28px">
     <tr>
-      <td class="cta-button" style="background:#111111">
-        <a href="${escHtml(href)}" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;padding:13px 26px;font-size:14px;font-weight:bold;font-family:Arial,Helvetica,sans-serif">${escHtml(label)} &#x2192;</a>
+      <td class="cta-link" style="background:#111111">
+        <a href="${escHtml(href)}" class="cta-link" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;padding:13px 26px;font-size:14px;font-weight:bold;font-family:Arial,Helvetica,sans-serif">${escHtml(label)} &#x2192;</a>
       </td>
     </tr>
   </table>`;
