@@ -199,7 +199,23 @@ export async function POST(req: NextRequest) {
 
     const event = JSON.parse(rawBody);
     const eventId = String(event?.id || "").trim();
-    const eventType = String(event?.type || "");
+    const eventType = String(event?.type || "").trim();
+
+    // Defensive: a signature-valid Stripe event always carries id + type.
+    // Return 400 with a log breadcrumb if either is missing — that's a
+    // clear contract violation we want visibility on (likely indicates
+    // someone replaying a hand-crafted payload or a Stripe API change)
+    // rather than a 200 no-op that hides the anomaly.
+    if (!eventId || !eventType) {
+      console.error(
+        "[stripe-webhook] malformed event — missing id or type",
+        { hasId: !!eventId, hasType: !!eventType },
+      );
+      return NextResponse.json(
+        { error: "Malformed event: missing id or type" },
+        { status: 400 },
+      );
+    }
 
     // Refund / dispute events: flag the affected quote so the portal
     // doesn't keep showing "paid" indefinitely after a refund or

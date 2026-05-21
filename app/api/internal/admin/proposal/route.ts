@@ -7,6 +7,27 @@ import { requireAdminRoute, enforceAdminRateLimit } from "@/lib/routeAuth";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Canonical quote status values. Mirrors the Set in
+// app/api/internal/quote/update/route.ts — the proposal endpoint
+// previously wrote any string here, but quotes.status has no schema
+// check constraint so a typo would silently corrupt the row.
+const VALID_QUOTE_STATUSES = new Set([
+  "new",
+  "awaiting_call",
+  "call_scheduled",
+  "scope_locked",
+  "deposit_sent",
+  "deposit_paid",
+  "paid",
+  "in_progress",
+  "delivered",
+  "closed_won",
+  "closed_lost",
+  "call_requested",
+  "proposal",
+  "active",
+]);
+
 function safeObj(v: any) {
   if (!v) return {};
   if (typeof v === "object") return v;
@@ -83,7 +104,21 @@ export async function POST(req: NextRequest) {
     };
 
     if (typeof body?.status === "string" && body.status.trim()) {
-      patch.status = body.status.trim();
+      const next = body.status.trim();
+      if (!VALID_QUOTE_STATUSES.has(next)) {
+        // Reject typos like "payyd" before they reach the DB. quotes.status
+        // has no check constraint at the schema level, so without this gate
+        // a malformed value silently persists and breaks downstream lifecycle
+        // logic that switches on the canonical enum.
+        return NextResponse.json(
+          {
+            ok: false,
+            error: `Invalid status "${next}". Allowed: ${Array.from(VALID_QUOTE_STATUSES).join(", ")}`,
+          },
+          { status: 400 },
+        );
+      }
+      patch.status = next;
     }
 
     const { error: updateError } = await supabaseAdmin

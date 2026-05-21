@@ -10,6 +10,12 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Schema-level enum on customer_portal_assets.status (see migration
+// 20260420_create_customer_portal_tables.sql). Catching invalid values
+// before the DB insert turns an opaque 500 (postgres check-constraint
+// violation) into a clean 400 with the allowed values.
+const VALID_ASSET_STATUSES = new Set(["submitted", "received", "approved"]);
+
 // Admin asset surface. POST creates an asset on the client's behalf
 // (e.g. studio uploaded a logo through email and wants it indexed in
 // the portal); DELETE removes one. Editing existing asset metadata
@@ -42,6 +48,18 @@ export async function POST(req: NextRequest) {
   };
 
   try {
+    const requestedStatus =
+      typeof body?.status === "string" && body.status.trim() ? body.status.trim() : undefined;
+    if (requestedStatus && !VALID_ASSET_STATUSES.has(requestedStatus)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: `Invalid status "${requestedStatus}". Allowed: ${Array.from(VALID_ASSET_STATUSES).join(", ")}`,
+        },
+        { status: 400 },
+      );
+    }
+
     const created = await submitAssetByQuoteId({
       quoteId,
       label: String(body?.label || "").trim(),
@@ -49,7 +67,7 @@ export async function POST(req: NextRequest) {
       assetUrl: typeof body?.assetUrl === "string" ? body.assetUrl : undefined,
       notes: typeof body?.notes === "string" ? body.notes : undefined,
       source: typeof body?.source === "string" ? body.source : undefined,
-      status: typeof body?.status === "string" ? body.status : undefined,
+      status: requestedStatus,
       storageBucket: typeof body?.storageBucket === "string" ? body.storageBucket : null,
       storagePath: typeof body?.storagePath === "string" ? body.storagePath : null,
       fileName: typeof body?.fileName === "string" ? body.fileName : null,
