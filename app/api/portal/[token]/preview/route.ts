@@ -33,7 +33,28 @@ export async function GET(
 
     const { token } = await getParams(ctx);
     const previewUrl = await markPreviewViewedByToken(token);
-    return NextResponse.redirect(previewUrl);
+
+    // markPreviewViewedByToken returns customer_portal_projects.preview_url
+    // verbatim — an admin row with a malformed (or hostile) value would
+    // otherwise become an open redirect. Only follow well-formed
+    // http(s) URLs.
+    let safeUrl: string | null = null;
+    try {
+      const parsed = new URL(String(previewUrl ?? "").trim());
+      if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+        safeUrl = parsed.toString();
+      }
+    } catch {
+      safeUrl = null;
+    }
+    if (!safeUrl) {
+      return NextResponse.json(
+        { ok: false, error: "Preview URL is not configured." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.redirect(safeUrl);
   } catch (err: any) {
     return NextResponse.json(
       { ok: false, error: err?.message || "Preview not available." },
