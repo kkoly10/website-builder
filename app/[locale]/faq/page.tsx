@@ -3,6 +3,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import ScrollReveal from "@/components/site/ScrollReveal";
+import StructuredData from "@/components/seo/StructuredData";
+import { faqPageNode, siteGraph } from "@/lib/seo/structuredData";
 import styles from "../marketing.module.css";
 
 export const dynamic = "force-dynamic";
@@ -38,7 +40,28 @@ export default async function FaqPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <FaqContent />;
+
+  // Build the FAQPage @graph from the same i18n keys the JSX renders below,
+  // so Google's "questions must match visible page copy" requirement holds
+  // automatically. The locale slug in the URL keeps EN/FR/ES variants
+  // separately indexable as rich results.
+  const t = await getTranslations({ locale, namespace: "faq" });
+  const faqGraph = siteGraph([
+    faqPageNode(
+      FAQ_KEYS.map((key) => ({
+        question: t(`items.${key}.q`),
+        answer: t(`items.${key}.a`),
+      })),
+      `/${locale}/faq`,
+    ),
+  ]);
+
+  return (
+    <>
+      <StructuredData graph={faqGraph} />
+      <FaqContent />
+    </>
+  );
 }
 
 function FaqContent() {

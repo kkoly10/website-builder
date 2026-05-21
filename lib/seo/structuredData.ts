@@ -9,6 +9,14 @@ const ORG_ID = `${SITE_URL}/#organization`;
 const FOUNDER_ID = `${SITE_URL}/#founder`;
 const WEBSITE_ID = `${SITE_URL}/#website`;
 
+// External profiles the Organization controls. Listed in schema.org `sameAs`
+// so Google's Knowledge Graph and AI search (Perplexity, ChatGPT browsing)
+// can disambiguate the entity across the open web. Add new ones here.
+const SAME_AS_URLS = [
+  "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407",
+  "https://github.com/kkoly10",
+];
+
 type GraphNode = Record<string, unknown>;
 
 function absoluteUrl(pathOrUrl: string): string {
@@ -20,6 +28,9 @@ export function organizationNode(): GraphNode {
   // ProfessionalService is the schema.org subtype that fits a small web
   // studio — more specific than bare Organization, and what AI search
   // surfaces (Perplexity, ChatGPT) use to categorize an entity in answers.
+  // ProfessionalService extends LocalBusiness, so the LocalBusiness signal
+  // (priceRange, areaServed, sameAs) propagates without us declaring it
+  // twice.
   return {
     "@type": "ProfessionalService",
     "@id": ORG_ID,
@@ -29,6 +40,7 @@ export function organizationNode(): GraphNode {
     image: `${SITE_URL}/brand/crecy-d1-horizontal-light.svg`,
     description:
       "Independent web studio building premium websites, custom web systems, and AI-powered products.",
+    slogan: "Independent web studio. Premium craft.",
     foundingDate: "2024",
     founder: { "@id": FOUNDER_ID },
     contactPoint: {
@@ -39,6 +51,11 @@ export function organizationNode(): GraphNode {
       availableLanguage: ["English", "French", "Spanish"],
     },
     areaServed: "Worldwide",
+    // priceRange satisfies LocalBusiness's required field and gives Knowledge
+    // Graph + AI answers a concrete signal of the studio's positioning
+    // (boutique / mid-to-high). schema.org accepts the "$$" convention here.
+    priceRange: "$$$",
+    sameAs: SAME_AS_URLS,
     knowsAbout: [
       "Web development",
       "Custom web applications",
@@ -117,6 +134,29 @@ export function articleNode(opts: {
     publisher: { "@id": ORG_ID },
     inLanguage: opts.inLanguage ?? "en",
     ...(opts.image && { image: absoluteUrl(opts.image) }),
+  };
+}
+
+export function faqPageNode(
+  items: { question: string; answer: string }[],
+  pageUrl: string,
+): GraphNode {
+  // FAQPage rich result. Google Search shows Q&A snippets directly in
+  // results when this schema is present and the questions match the
+  // visible page copy — required by Google for the rich result to render.
+  // Callers should pass the same Q/A strings that the page renders so the
+  // signal is consistent.
+  return {
+    "@type": "FAQPage",
+    "@id": `${absoluteUrl(pageUrl)}#faq`,
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
   };
 }
 
