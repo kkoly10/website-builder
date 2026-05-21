@@ -659,23 +659,35 @@ export default function PortalClient({
   /* ── Polling ── */
   const [refreshing, setRefreshing] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Errors render in a single banner at the top of the workspace.
+  // Customers submitting from the upload form or message composer at
+  // the bottom of the page wouldn't see the banner — scroll it into
+  // view whenever it gains content so the failure is always visible.
+  const errorRef = useRef<HTMLDivElement | null>(null);
 
   const refreshBundle = useCallback(
     async (silent = true) => {
       if (!silent) setRefreshing(true);
       try {
         const res = await fetch(`/api/portal/${token}`, { method: "GET" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
-        if (res.ok && json?.data) {
-          setBundle(json.data as PortalBundle);
+        if (!json?.data) throw new Error("Empty response");
+        setBundle(json.data as PortalBundle);
+      } catch (err) {
+        // Silent path (polling every 30s): swallow — we don't want to
+        // flash an error banner whenever the network blips. The next
+        // poll will recover.
+        // Non-silent path (manual refresh button): surface the failure
+        // so the customer knows the click did something and can retry.
+        if (!silent) {
+          setError(err instanceof Error ? err.message : tErrors("refreshFailed"));
         }
-      } catch {
-        /* silent */
       } finally {
         if (!silent) setRefreshing(false);
       }
     },
-    [token]
+    [token, tErrors]
   );
 
   useEffect(() => {
@@ -684,6 +696,12 @@ export default function PortalClient({
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, [refreshBundle]);
+
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [error]);
 
   /* ── Computed ── */
   const phase = useMemo(() => getPhaseKey(bundle), [bundle]);
@@ -945,7 +963,16 @@ export default function PortalClient({
       </div>
 
       {/* ── Error ── */}
-      {error ? <div className="portalError">{error}</div> : null}
+      {error ? (
+        <div
+          ref={errorRef}
+          className="portalError"
+          role="alert"
+          aria-live="polite"
+        >
+          {error}
+        </div>
+      ) : null}
 
       {/* ── Deposit Banner (only if unpaid) ── */}
       <div

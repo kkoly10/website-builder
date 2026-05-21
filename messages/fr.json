@@ -2096,7 +2096,8 @@
     "errors": {
       "updateFailed": "Échec de la mise à jour de l'espace.",
       "uploadFailed": "Échec du téléversement.",
-      "messageFailed": "Échec de l'envoi du message."
+      "messageFailed": "Échec de l'envoi du message.",
+      "refreshFailed": "Impossible d'actualiser — vérifiez votre connexion et réessayez."
     },
     "directionModule": {
       "title": {

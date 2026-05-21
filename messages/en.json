@@ -2096,7 +2096,8 @@
     "errors": {
       "updateFailed": "Failed to update workspace.",
       "uploadFailed": "Upload failed.",
-      "messageFailed": "Failed to send message."
+      "messageFailed": "Failed to send message.",
+      "refreshFailed": "Couldn't refresh — check your connection and try again."
     },
     "directionModule": {
       "title": {
