@@ -256,7 +256,16 @@ export default function StartClient() {
         </div>
       )}
 
-      <button type="submit" className="btn btnPrimary" disabled={loading}>
+      <button
+        type="submit"
+        className="btn btnPrimary"
+        disabled={
+          loading ||
+          !name.trim() ||
+          !email.trim().includes("@") ||
+          (!noCalendar && (!selectedDate || !selectedTime))
+        }
+      >
         {loading ? t("submitting") : t("submit")}{" "}
         {!loading && <span className="btnArrow">→</span>}
       </button>

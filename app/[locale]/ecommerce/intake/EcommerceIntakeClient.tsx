@@ -498,7 +498,16 @@ export default function EcommerceIntakeClient() {
                 {t("nav.continue")} <span className="btnArrow">→</span>
               </button>
             ) : (
-              <button className="btn btnPrimary" onClick={submit} disabled={submitting}>
+              <button
+                className="btn btnPrimary"
+                onClick={submit}
+                disabled={
+                  submitting ||
+                  !form.businessName.trim() ||
+                  !form.contactName.trim() ||
+                  !emailValid
+                }
+              >
                 {submitting ? t("nav.submitting") : t("nav.submit")} <span className="btnArrow">→</span>
               </button>
             )}
