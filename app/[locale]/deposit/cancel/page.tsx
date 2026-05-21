@@ -1,4 +1,6 @@
-// app/deposit/cancel/page.tsx
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -9,7 +11,8 @@ function pick(sp: SearchParams, key: string) {
   return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
 }
 
-export default function DepositCancelPage({ searchParams }: { searchParams: SearchParams }) {
+export default async function DepositCancelPage({ searchParams }: { searchParams: SearchParams }) {
+  const t = await getTranslations("depositCancel");
   const quoteId = pick(searchParams, "quoteId").trim();
 
   return (
@@ -21,22 +24,22 @@ export default function DepositCancelPage({ searchParams }: { searchParams: Sear
 
       <div style={{ height: 12 }} />
 
-      <h1 className="h1">Payment canceled</h1>
+      <h1 className="h1">{t("h1")}</h1>
       <p className="p" style={{ maxWidth: 900, marginTop: 10 }}>
-        No worries — you can return to your quote and try again.
+        {t("body")}
       </p>
 
       {quoteId ? (
         <p className="smallNote">
-          Quote ID: <code>{quoteId}</code>
+          {t("quoteIdLabel")} <code>{quoteId}</code>
         </p>
       ) : null}
 
       <div style={{ height: 18 }} />
 
-      <a className="btn btnPrimary" href="/">
-        Back home <span className="btnArrow">→</span>
-      </a>
+      <Link className="btn btnPrimary" href="/">
+        {t("backHome")} <span className="btnArrow">→</span>
+      </Link>
     </main>
   );
 }

@@ -31,6 +31,83 @@
     "primaryAria": "Primary",
     "footerAria": "Footer"
   },
+  "notFound": {
+    "metaTitle": "Page not found | CrecyStudio",
+    "h1": "Page not found",
+    "body": "The page you're looking for doesn't exist or has been moved.",
+    "backHome": "Back to home",
+    "contactUs": "Contact us"
+  },
+  "comingSoon": {
+    "metaTitle": "E-commerce Support (Coming Later) | CrecyStudio",
+    "backHome": "Back to home",
+    "title": "E-commerce Support",
+    "comingLaterTag": "(Coming Later)",
+    "intro": "We are exploring additional support services for online sellers including fulfillment and marketplace operations.",
+    "notLiveYet": "This is not live yet.",
+    "currentFocus": "We are currently focused on website projects.",
+    "joinCallout": "If this is something you would be interested in, join our early-interest list below. There is no commitment.",
+    "onListHeading": "You are on the list",
+    "onListBody": "Thanks. Your interest has been noted. We will reach out if we move forward.",
+    "joinHeading": "Join Early Interest",
+    "joinSubtitle": "No obligation. No sales emails.",
+    "emailLabel": "Email address *",
+    "emailPlaceholder": "you@email.com",
+    "describeLabel": "What best describes you?",
+    "interestsLabel": "What interests you? (optional)",
+    "interestsHint": "Pick one or more.",
+    "volumeLabel": "Monthly order volume (optional)",
+    "submit": "Join Early Interest",
+    "submitting": "Submitting...",
+    "consent": "By submitting, you agree to be contacted if we launch this service.",
+    "missingEndpoint": "Missing form endpoint.",
+    "missingEmail": "Please enter your email.",
+    "submissionFailed": "Submission failed.",
+    "somethingWentWrong": "Something went wrong.",
+    "sellerType": {
+      "amazon": "Amazon seller",
+      "shopify": "Shopify store owner",
+      "ebay": "eBay seller",
+      "planning": "Planning to sell online",
+      "curious": "Just curious"
+    },
+    "interests": {
+      "storage": "Inventory storage",
+      "fulfillment": "Order fulfillment",
+      "marketplace": "Marketplace management",
+      "websiteSetup": "Website + e-commerce setup",
+      "notSure": "Not sure yet"
+    },
+    "volume": {
+      "notSelling": "Not selling yet",
+      "under100": "Under 100 orders / month",
+      "between100_500": "100-500 orders / month",
+      "over500": "500+ orders / month"
+    }
+  },
+  "depositCancel": {
+    "metaTitle": "Payment canceled | CrecyStudio",
+    "h1": "Payment canceled",
+    "body": "No worries — you can return to your quote and try again.",
+    "quoteIdLabel": "Quote ID:",
+    "backHome": "Back home"
+  },
+  "depositSuccess": {
+    "metaTitle": "Thank you | CrecyStudio",
+    "h1": "Thank you!",
+    "statusLabel": "Payment status",
+    "depositReceived": "Deposit received",
+    "notCompleted": "Payment not completed yet.",
+    "missingSession": "Missing session id.",
+    "couldNotConfirm": "Could not confirm payment.",
+    "returnToWorkspace": "Return to workspace",
+    "laneLabel": {
+      "ops": "Ops",
+      "ecommerce": "E-commerce",
+      "website": "Website",
+      "project": "Project"
+    }
+  },
   "footer": {
     "blurb": "Independent web studio building premium websites and custom web systems. One workspace from scope to launch.",
     "rightsReserved": "All rights reserved.",
