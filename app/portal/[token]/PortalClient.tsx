@@ -638,19 +638,23 @@ export default function PortalClient({
   const [assetFile, setAssetFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Submit-button enable rule. Without this, an empty label or a
-  // "file mode but no file picked" state silently no-op'd on submit
-  // and the button looked broken to the customer.
-  const canSubmitAsset =
-    assetLabel.trim().length > 0 &&
-    (assetMode === "file" ? assetFile !== null : assetUrl.trim().length > 0);
-
   /* ── Feedback form state ── */
   const [revisionMessage, setRevisionMessage] = useState("");
   const [revisionPriority, setRevisionPriority] = useState<"low" | "normal" | "high">("normal");
   const [messageBody, setMessageBody] = useState("");
   const [messageFile, setMessageFile] = useState<File | null>(null);
   const messageFileRef = useRef<HTMLInputElement>(null);
+
+  // Submit-button enable rules — same pattern across the three
+  // customer-write forms. Without these the submit handlers silently
+  // returned on empty input and the button looked broken from the
+  // customer's side. Now the button is visibly disabled until the
+  // form is valid.
+  const canSubmitAsset =
+    assetLabel.trim().length > 0 &&
+    (assetMode === "file" ? assetFile !== null : assetUrl.trim().length > 0);
+  const canSubmitRevision = revisionMessage.trim().length > 0;
+  const canSubmitMessage = messageBody.trim().length > 0 || messageFile !== null;
 
   /* ── Polling ── */
   const [refreshing, setRefreshing] = useState(false);
@@ -1370,7 +1374,11 @@ export default function PortalClient({
                 </div>
               ) : null}
             </div>
-            <button type="submit" className="portalFeedbackBtn" disabled={saving}>
+            <button
+              type="submit"
+              className="portalFeedbackBtn"
+              disabled={saving || !canSubmitMessage}
+            >
               {saving ? tMessages("sending") : tMessages("send")}
             </button>
           </div>
@@ -1608,6 +1616,7 @@ export default function PortalClient({
               placeholder={tFeedback("placeholder")}
               value={revisionMessage}
               onChange={(e) => setRevisionMessage(e.target.value)}
+              required
             />
             <div className="portalFeedbackRow">
               <div className="portalPriorityRow">
@@ -1626,7 +1635,11 @@ export default function PortalClient({
                   </button>
                 ))}
               </div>
-              <button type="submit" className="portalFeedbackBtn" disabled={saving}>
+              <button
+                type="submit"
+                className="portalFeedbackBtn"
+                disabled={saving || !canSubmitRevision}
+              >
                 {saving ? tFeedback("submitting") : tFeedback("submit")}
               </button>
             </div>
