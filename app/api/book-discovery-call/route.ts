@@ -142,15 +142,19 @@ async function maybeCreateCalendarEvent(
       });
     }
     console.log("[book-discovery-call] calendar event created ok");
-  } catch (err: any) {
-    console.warn("[book-discovery-call] calendar event creation failed");
-    console.warn("[book-discovery-call] err.message:", err?.message);
-    console.warn("[book-discovery-call] err.code:", err?.code);
-    console.warn("[book-discovery-call] err.status:", err?.status ?? err?.response?.status);
-    try {
-      const body = err?.response?.data ?? err?.errors ?? null;
-      if (body) console.warn("[book-discovery-call] err.body:", JSON.stringify(body));
-    } catch {}
+  } catch (err) {
+    // Calendar failures shouldn't block the booking flow (we already
+    // saved the row + email goes out separately), but they ARE
+    // page-worthy — the studio expects every booking to show up in
+    // Google Calendar. Send to Sentry so a streak of failures is
+    // visible rather than buried in console.warn.
+    captureBackgroundError(err, {
+      where: "book-discovery-call.calendar_insert",
+      extra: {
+        code: (err as { code?: string })?.code,
+        status: (err as { status?: number })?.status,
+      },
+    });
   }
 }
 

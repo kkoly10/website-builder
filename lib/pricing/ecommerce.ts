@@ -19,6 +19,34 @@ function choosePosition(score: number): "low" | "middle" | "high" {
   return "low";
 }
 
+// Tier bands in ECOMMERCE_TIER_CONFIG have these fields typed as
+// optional. Every band in code today has projectMin/projectMax set
+// (build/rescue tiers) or setupMin/setupMax + monthlyMin/monthlyMax
+// (ops tiers). If a future config edit drops one, the previous code
+// (`band.projectMin!` etc.) silently produced NaN through the pricing
+// pipeline and shipped garbage quotes. These helpers fail loud
+// instead — Sentry sees the error, callers get a clear message, no
+// silent NaN.
+function requireProjectBand(tierKey: string, band: { projectMin?: number; projectMax?: number }): { min: number; max: number } {
+  if (band.projectMin == null || band.projectMax == null) {
+    throw new Error(`Ecommerce tier "${tierKey}" is missing projectMin/projectMax in ECOMMERCE_TIER_CONFIG`);
+  }
+  return { min: band.projectMin, max: band.projectMax };
+}
+
+function requireOpsBands(
+  tierKey: string,
+  band: { setupMin?: number; setupMax?: number; monthlyMin?: number; monthlyMax?: number },
+): { setup: { min: number; max: number }; monthly: { min: number; max: number } } {
+  if (band.setupMin == null || band.setupMax == null || band.monthlyMin == null || band.monthlyMax == null) {
+    throw new Error(`Ecommerce tier "${tierKey}" is missing setup or monthly band in ECOMMERCE_TIER_CONFIG`);
+  }
+  return {
+    setup: { min: band.setupMin, max: band.setupMax },
+    monthly: { min: band.monthlyMin, max: band.monthlyMax },
+  };
+}
+
 function parseApproxNumber(value: string) {
   const matches = String(value || "").match(/\d+/g);
   if (!matches?.length) return 0;
@@ -169,8 +197,9 @@ export function getEcommercePricing(
         : "growth_store_build";
 
     const band = ECOMMERCE_TIER_CONFIG[tierKey];
+    const projectBand = requireProjectBand(tierKey, band);
     const position = choosePosition(complexityScore);
-    const target = targetFromBand(band.projectMin!, band.projectMax!, position);
+    const target = targetFromBand(projectBand.min, projectBand.max, position);
 
     if (!reasons.length) {
       reasons.push({
@@ -188,9 +217,9 @@ export function getEcommercePricing(
       position,
       isCustomScope: false,
       billingModel: "project",
-      band: { min: band.projectMin!, max: band.projectMax!, target },
-      displayRange: formatRange(band.projectMin!, band.projectMax!),
-      publicMessage: formatRange(band.projectMin!, band.projectMax!),
+      band: { min: projectBand.min, max: projectBand.max, target },
+      displayRange: formatRange(projectBand.min, projectBand.max),
+      publicMessage: formatRange(projectBand.min, projectBand.max),
       summary: `This request fits the ${band.label} range based on catalog size, channels, timeline, and build depth.`,
       estimatorSummary: `${band.label} selected at a ${position} position inside the project band.`,
       reasons,
@@ -231,8 +260,9 @@ export function getEcommercePricing(
 
     const tierKey = issueHeavy ? "commerce_growth_repair" : "commerce_repair_sprint";
     const band = ECOMMERCE_TIER_CONFIG[tierKey];
+    const projectBand = requireProjectBand(tierKey, band);
     const position = choosePosition(complexityScore);
-    const target = targetFromBand(band.projectMin!, band.projectMax!, position);
+    const target = targetFromBand(projectBand.min, projectBand.max, position);
 
     reasons.unshift({
       label: "Store optimization / repair scope",
@@ -248,9 +278,9 @@ export function getEcommercePricing(
       position,
       isCustomScope: false,
       billingModel: "project",
-      band: { min: band.projectMin!, max: band.projectMax!, target },
-      displayRange: formatRange(band.projectMin!, band.projectMax!),
-      publicMessage: formatRange(band.projectMin!, band.projectMax!),
+      band: { min: projectBand.min, max: projectBand.max, target },
+      displayRange: formatRange(projectBand.min, projectBand.max),
+      publicMessage: formatRange(projectBand.min, projectBand.max),
       summary: `This request fits the ${band.label} range based on issue depth, channel spread, and store complexity.`,
       estimatorSummary: `${band.label} selected at a ${position} price position inside the project band.`,
       reasons,
@@ -299,16 +329,17 @@ export function getEcommercePricing(
       : "managed_commerce_partner";
 
   const band = ECOMMERCE_TIER_CONFIG[tierKey];
+  const opsBands = requireOpsBands(tierKey, band);
   const position = choosePosition(complexityScore);
   const setupBand = {
-    min: band.setupMin!,
-    max: band.setupMax!,
-    target: targetFromBand(band.setupMin!, band.setupMax!, position),
+    min: opsBands.setup.min,
+    max: opsBands.setup.max,
+    target: targetFromBand(opsBands.setup.min, opsBands.setup.max, position),
   };
   const monthlyBand = {
-    min: band.monthlyMin!,
-    max: band.monthlyMax!,
-    target: targetFromBand(band.monthlyMin!, band.monthlyMax!, position),
+    min: opsBands.monthly.min,
+    max: opsBands.monthly.max,
+    target: targetFromBand(opsBands.monthly.min, opsBands.monthly.max, position),
   };
 
   reasons.unshift({

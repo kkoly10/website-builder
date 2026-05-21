@@ -39,10 +39,13 @@ export async function POST(req: Request) {
       .from("quotes")
       .select("id, public_token, lead_id")
       .eq("id", quoteId)
-      .single();
+      .maybeSingle();
 
-    if (qErr || !q) {
-      return NextResponse.json({ error: qErr?.message ?? "Quote not found." }, { status: 404 });
+    if (qErr) {
+      return NextResponse.json({ error: qErr.message }, { status: 500 });
+    }
+    if (!q) {
+      return NextResponse.json({ error: "Quote not found." }, { status: 404 });
     }
 
     if ((q as any).public_token !== token) {

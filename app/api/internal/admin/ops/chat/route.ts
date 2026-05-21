@@ -219,16 +219,21 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const authErr = await requireAdminRoute();
-  if (authErr) return authErr;
-  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-ops-chat", limit: 60 });
-  if (rlErr) return rlErr;
+  try {
+    const authErr = await requireAdminRoute();
+    if (authErr) return authErr;
+    const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-ops-chat", limit: 60 });
+    if (rlErr) return rlErr;
 
-  const opsIntakeId = req.nextUrl.searchParams.get("opsIntakeId");
-  if (!opsIntakeId) {
-    return NextResponse.json({ ok: false, error: "Missing opsIntakeId" }, { status: 400 });
+    const opsIntakeId = req.nextUrl.searchParams.get("opsIntakeId");
+    if (!opsIntakeId) {
+      return NextResponse.json({ ok: false, error: "Missing opsIntakeId" }, { status: 400 });
+    }
+
+    const state = await getWorkspaceState(opsIntakeId);
+    return NextResponse.json({ ok: true, messages: state.chatMessages ?? [] });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to load chat.";
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
-
-  const state = await getWorkspaceState(opsIntakeId);
-  return NextResponse.json({ ok: true, messages: state.chatMessages ?? [] });
 }

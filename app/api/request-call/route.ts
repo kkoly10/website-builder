@@ -60,10 +60,13 @@ export async function POST(req: Request) {
       .from("quotes")
       .select("id, lead_id, lead_email, estimate_total, tier_recommended, status, public_token, auth_user_id, owner_email_norm")
       .eq("id", quoteId)
-      .single();
+      .maybeSingle();
 
-    if (qErr || !quote) {
-      return NextResponse.json({ error: qErr?.message || "Quote not found." }, { status: 404 });
+    if (qErr) {
+      return NextResponse.json({ error: qErr.message }, { status: 500 });
+    }
+    if (!quote) {
+      return NextResponse.json({ error: "Quote not found." }, { status: 404 });
     }
 
     let leadEmail = quote.lead_email ?? "(missing)";
