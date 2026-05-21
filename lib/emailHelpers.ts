@@ -159,10 +159,19 @@ export function emailWrap(
     .card-body strong { color:#ffffff !important; }
     .card-footer { background:#141414 !important; border-color:#2a2a2a !important; }
     .footer-text, .footer-text a { color:#888888 !important; }
-    .callout { background:#141414 !important; border-color:#ffffff !important; }
-    .callout p { color:#cccccc !important; }
+    /* Callout: class is on the outer <table>, but the styled cell is
+       the inner <td> with inline background:#f7f7f7. Inline styles beat
+       unrelated class selectors, so the rule must target the inner td
+       directly — otherwise dark mode leaves a cream stripe across an
+       otherwise-dark card. Same pattern for admin-badge below. */
+    .callout td { background:#141414 !important; border-left-color:#ffffff !important; }
+    .callout td p { color:#cccccc !important; }
+    .callout td p:first-child { color:#888888 !important; }
+    .admin-badge td { background:#2a2a2a !important; }
+    .admin-badge td p { color:#aaaaaa !important; }
     .row-label { color:#888888 !important; }
     .row-value { color:#e8e8e8 !important; }
+    .row-value a { color:#7eb7ff !important; }
     .sig-name { color:#ffffff !important; }
     .sig-role { color:#999999 !important; }
     /* CTA: brand black-on-white in light mode would disappear into
@@ -184,10 +193,14 @@ export function emailWrap(
     [data-ogsc] .card-body strong { color:#ffffff !important; }
     [data-ogsc] .card-footer { background:#141414 !important; border-color:#2a2a2a !important; }
     [data-ogsc] .footer-text, [data-ogsc] .footer-text a { color:#888888 !important; }
-    [data-ogsc] .callout { background:#141414 !important; border-color:#ffffff !important; }
-    [data-ogsc] .callout p { color:#cccccc !important; }
+    [data-ogsc] .callout td { background:#141414 !important; border-left-color:#ffffff !important; }
+    [data-ogsc] .callout td p { color:#cccccc !important; }
+    [data-ogsc] .callout td p:first-child { color:#888888 !important; }
+    [data-ogsc] .admin-badge td { background:#2a2a2a !important; }
+    [data-ogsc] .admin-badge td p { color:#aaaaaa !important; }
     [data-ogsc] .row-label { color:#888888 !important; }
     [data-ogsc] .row-value { color:#e8e8e8 !important; }
+    [data-ogsc] .row-value a { color:#7eb7ff !important; }
     [data-ogsc] .sig-name { color:#ffffff !important; }
     [data-ogsc] .sig-role { color:#999999 !important; }
     [data-ogsc] .cta-button { background:#ffffff !important; }
@@ -195,6 +208,8 @@ export function emailWrap(
     [data-ogsb] .body-bg { background:#0f0f0f !important; }
     [data-ogsb] .card { background:#1a1a1a !important; }
     [data-ogsb] .card-footer { background:#141414 !important; }
+    [data-ogsb] .callout td { background:#141414 !important; }
+    [data-ogsb] .admin-badge td { background:#2a2a2a !important; }
     [data-ogsb] .cta-button { background:#ffffff !important; }
   `;
 
@@ -296,7 +311,7 @@ export function callout(label: string, lines: string[]): string {
 
 export function adminBadge(label: string): string {
   // Table wrapper required: display:inline-block on <p> is ignored by Outlook
-  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:0 0 20px">
+  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" class="admin-badge" style="margin:0 0 20px">
     <tr>
       <td style="background:#f5f5f5;padding:4px 10px">
         <p style="margin:0;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#888888;font-weight:bold;font-family:Arial,Helvetica,sans-serif">${escHtml(label)}</p>
