@@ -2077,8 +2077,7 @@
         "projectNotes": "Notes du projet",
         "none": "Aucune",
         "bestTimeToCall": "Meilleur moment pour appeler",
-        "notProvided": "Non fourni",
-        "pieSummary": "Résumé PIE"
+        "notProvided": "Non fourni"
       },
       "agreementLabel": "Accord & paiement",
       "scopeHistoryLabel": "Historique du périmètre & ordres de modification",

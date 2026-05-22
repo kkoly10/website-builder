@@ -1971,14 +1971,13 @@ export default function PortalClient({
               : tDetailRows("notProvided")}
           </span>
         </div>
-        {bundle.pie.summary ? (
-          <div className="portalDrawerRow" style={{ borderBottom: "none" }}>
-            <span className="portalDrawerKey">{tDetailRows("pieSummary")}</span>
-            <span className="portalDrawerVal" style={{ maxWidth: 300, textAlign: "right" }}>
-              {bundle.pie.summary}
-            </span>
-          </div>
-        ) : null}
+        {/*
+          Intentionally NOT rendering bundle.pie.summary here. PIE
+          (Project Intake Engine) is an internal pricing-intelligence
+          tool — the label and the placeholder text "No PIE summary
+          yet." should never appear on the client portal. The field is
+          still exposed on bundle.pie for admin / internal views.
+        */}
       </Drawer>
 
       {/* ── Footer ── */}
