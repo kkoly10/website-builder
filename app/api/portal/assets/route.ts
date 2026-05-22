@@ -87,7 +87,23 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ ok: true, assets: bundle.assets ?? [] });
+    // Narrow to the same client-safe shape that buildWorkspaceView
+    // produces for the main portal bundle. The raw row from
+    // customer_portal_assets includes portal_project_id and the
+    // storage_bucket/storage_path columns — internal plumbing the
+    // customer doesn't need and a leak vector if an admin-only
+    // column is added to the table in the future.
+    const safeAssets = (bundle.assets ?? []).map((asset: { id?: string; asset_type?: string; label?: string; resolved_url?: string; asset_url?: string; notes?: string; status?: string; created_at?: string }) => ({
+      id: String(asset.id ?? ""),
+      category: String(asset.asset_type ?? "") || "General",
+      label: String(asset.label ?? "") || "Client file",
+      url: String(asset.resolved_url ?? asset.asset_url ?? ""),
+      notes: String(asset.notes ?? ""),
+      status: String(asset.status ?? ""),
+      createdAt: String(asset.created_at ?? ""),
+    }));
+
+    return NextResponse.json({ ok: true, assets: safeAssets });
   } catch (err: any) {
     return NextResponse.json(
       { ok: false, error: err?.message || "Unexpected error" },
