@@ -513,11 +513,15 @@ function parsePieReport(rawPie: AnyObj | null) {
       score: Number(complexity.score ?? rawPie?.score ?? 0) || null,
       tier: cleanString(tier.recommended) || cleanString(rawPie?.tier) || null,
       confidence: cleanString(complexity.confidence) || cleanString(rawPie?.confidence) || null,
+      // Empty string when no PIE data, not a placeholder sentence —
+      // the field rides on the API response and a string like "No PIE
+      // summary yet." would leak the existence of the internal PIE
+      // tool to anyone inspecting Network in devtools.
       summary:
         cleanString(tier.rationale) ||
         cleanString(payload.summary) ||
         cleanString(rawPie?.summary) ||
-        "No PIE summary yet.",
+        "",
       risks: safeArray(payload.risks).map((risk: AnyObj) => cleanString(risk.flag || risk)).filter(Boolean),
       pitch: {
         emphasize: safeArray(negotiation.priceDefense).map((item) => cleanString(item)).filter(Boolean).slice(0, 3),
@@ -558,7 +562,10 @@ function parsePieReport(rawPie: AnyObj | null) {
     score: Number(legacy.score ?? rawPie?.score ?? 0) || null,
     tier: cleanString(legacy.tier || rawPie?.tier) || null,
     confidence: cleanString(legacy.confidence || rawPie?.confidence) || null,
-    summary: cleanString(legacy.summary || rawPie?.summary) || "No PIE summary yet.",
+    // Empty string default rather than a placeholder — see comment on
+    // the other summary field in this file. Admin renderers should
+    // show their own "no data yet" UI if needed.
+    summary: cleanString(legacy.summary || rawPie?.summary) || "",
     risks: safeArray(legacy.risks).map((risk) => cleanString(risk)).filter(Boolean),
     pitch: {
       emphasize: safeArray(safeObj(legacy.pitch).emphasize).map((item) => cleanString(item)).filter(Boolean),

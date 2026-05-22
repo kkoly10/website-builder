@@ -526,7 +526,14 @@ export async function saveEcommerceWorkspaceState(args: { ecomIntakeId: string; 
 
 export function makeClientSafeEcommerceBundle(bundle: EcommerceWorkspaceBundle, options?: { isAdmin?: boolean }): EcommerceWorkspaceBundle {
   if (options?.isAdmin) return bundle;
-  return { ...bundle, workspace: { ...bundle.workspace, internalNotes: "" } };
+  // Strip the `internalNotes` field entirely from the wire payload —
+  // previously we zeroed it to "" but the field NAME still appeared
+  // in the JSON response, leaking the existence of admin-only notes
+  // about the customer. See the matching change in
+  // lib/opsWorkspace/state.ts makeClientSafeOpsBundle.
+  const workspace = { ...bundle.workspace } as Partial<typeof bundle.workspace>;
+  delete workspace.internalNotes;
+  return { ...bundle, workspace: workspace as typeof bundle.workspace };
 }
 
 export async function getEcommerceAdminRows(): Promise<EcommerceAdminRow[]> {
