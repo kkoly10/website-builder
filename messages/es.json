@@ -31,6 +31,83 @@
     "primaryAria": "Principal",
     "footerAria": "Pie de página"
   },
+  "notFound": {
+    "metaTitle": "Página no encontrada | CrecyStudio",
+    "h1": "Página no encontrada",
+    "body": "La página que busca no existe o ha sido movida.",
+    "backHome": "Volver al inicio",
+    "contactUs": "Contáctanos"
+  },
+  "comingSoon": {
+    "metaTitle": "Soporte e-commerce (próximamente) | CrecyStudio",
+    "backHome": "Volver al inicio",
+    "title": "Soporte e-commerce",
+    "comingLaterTag": "(próximamente)",
+    "intro": "Estamos explorando servicios de soporte adicionales para vendedores en línea, incluyendo logística y gestión de marketplaces.",
+    "notLiveYet": "Este servicio aún no está disponible.",
+    "currentFocus": "Actualmente nos enfocamos en proyectos de sitios web.",
+    "joinCallout": "Si esto le interesa, únase a nuestra lista de interés anticipado a continuación. Sin compromiso.",
+    "onListHeading": "Está en la lista",
+    "onListBody": "Gracias. Su interés ha sido registrado. Le contactaremos si avanzamos con el servicio.",
+    "joinHeading": "Unirse a la lista de interés",
+    "joinSubtitle": "Sin compromiso. Sin correos comerciales.",
+    "emailLabel": "Dirección de correo *",
+    "emailPlaceholder": "tu@email.com",
+    "describeLabel": "¿Qué le describe mejor?",
+    "interestsLabel": "¿Qué le interesa? (opcional)",
+    "interestsHint": "Elija una o más opciones.",
+    "volumeLabel": "Volumen mensual de pedidos (opcional)",
+    "submit": "Unirse a la lista de interés",
+    "submitting": "Enviando...",
+    "consent": "Al enviar, acepta que le contactemos si lanzamos este servicio.",
+    "missingEndpoint": "Falta el endpoint del formulario.",
+    "missingEmail": "Por favor ingrese su correo.",
+    "submissionFailed": "Error al enviar.",
+    "somethingWentWrong": "Algo salió mal.",
+    "sellerType": {
+      "amazon": "Vendedor Amazon",
+      "shopify": "Propietario de tienda Shopify",
+      "ebay": "Vendedor eBay",
+      "planning": "Planeo vender en línea",
+      "curious": "Solo curiosidad"
+    },
+    "interests": {
+      "storage": "Almacenamiento de inventario",
+      "fulfillment": "Preparación de pedidos",
+      "marketplace": "Gestión de marketplaces",
+      "websiteSetup": "Sitio web + configuración e-commerce",
+      "notSure": "No estoy seguro aún"
+    },
+    "volume": {
+      "notSelling": "Aún no vendo",
+      "under100": "Menos de 100 pedidos / mes",
+      "between100_500": "100-500 pedidos / mes",
+      "over500": "Más de 500 pedidos / mes"
+    }
+  },
+  "depositCancel": {
+    "metaTitle": "Pago cancelado | CrecyStudio",
+    "h1": "Pago cancelado",
+    "body": "No se preocupe — puede volver a su cotización e intentar de nuevo.",
+    "quoteIdLabel": "ID de cotización:",
+    "backHome": "Volver al inicio"
+  },
+  "depositSuccess": {
+    "metaTitle": "Gracias | CrecyStudio",
+    "h1": "¡Gracias!",
+    "statusLabel": "Estado del pago",
+    "depositReceived": "Depósito recibido",
+    "notCompleted": "Pago aún no completado.",
+    "missingSession": "Falta el ID de sesión.",
+    "couldNotConfirm": "No se pudo confirmar el pago.",
+    "returnToWorkspace": "Volver al espacio de trabajo",
+    "laneLabel": {
+      "ops": "Automatización",
+      "ecommerce": "E-commerce",
+      "website": "Sitio web",
+      "project": "Proyecto"
+    }
+  },
   "footer": {
     "blurb": "Estudio web independiente que construye sitios web premium y sistemas web personalizados. Un espacio de trabajo del alcance al lanzamiento.",
     "rightsReserved": "Todos los derechos reservados.",
@@ -1297,9 +1374,7 @@
         "Analytics (GA4 / Pixel)": "Analytics (GA4 / Pixel)",
         "Live chat": "Chat en vivo"
       }
-    },
-    "label": "Estimador",
-    "title": "Obtenga su estimación en menos de 5 minutos."
+    }
   },
   "book": {
     "metaTitle": "Reserva tu llamada de descubrimiento | CrecyStudio",
@@ -2130,7 +2205,7 @@
     "requiredActions": {
       "title": "Acción requerida de su parte",
       "intro": "Cada paso a continuación acerca el proyecto al lanzamiento. Los pendientes muestran lo que esperamos de usted ahora mismo.",
-      "pendingCount": "{count} pendientes",
+      "pendingCount": "{count, plural, one {# pendiente} other {# pendientes}}",
       "useFormBelow": "(use el formulario a continuación)",
       "markAsDone": "Marcar como hecho",
       "markAsDoneSaving": "Guardando…",

@@ -13,7 +13,7 @@
 // so we don't show a redundant "click here" CTA next to the actual form.
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { RequiredAction } from "@/lib/requiredActions";
 
 type Props = {
@@ -85,6 +85,7 @@ const STATUS_PILL_KEY: Record<RequiredAction["status"], string> = {
 
 export default function RequiredActionsCard({ actions, onComplete }: Props) {
   const t = useTranslations("portalToken.requiredActions");
+  const locale = useLocale();
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   // The error banner renders at the TOP of this card. When the customer
@@ -253,7 +254,7 @@ export default function RequiredActionsCard({ actions, onComplete }: Props) {
               ) : null}
               {isDone && action.completedAt && Number.isFinite(new Date(action.completedAt).getTime()) ? (
                 <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6 }}>
-                  {t("completedOn", { date: new Date(action.completedAt).toLocaleDateString() })}
+                  {t("completedOn", { date: new Date(action.completedAt).toLocaleDateString(locale) })}
                 </div>
               ) : null}
             </div>
