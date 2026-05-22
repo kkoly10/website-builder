@@ -516,10 +516,36 @@ export function makeClientSafeOpsBundle(
   delete workspace.adminNotes;
   delete workspace.chatMessages;
 
+  // bundle.pie ships structured proposal content (diagnosis,
+  // quickWins, implementationPlan, sops, kpis, risks, nextActions,
+  // summary, confidence) that's meant to be delivered as a polished
+  // proposal PDF — never as raw JSON on the portal API. Strip those
+  // out, keep only the two sub-objects the customer client actually
+  // renders: clientQuestions (the questions-to-answer list) and
+  // recommendedOffer.{primaryPackage,projectRange,retainerRange}
+  // (the offer summary in the pricing drawer).
+  const pie = { ...bundle.pie } as Partial<typeof bundle.pie>;
+  delete pie.id;
+  delete pie.status;
+  delete pie.summary;
+  delete pie.confidence;
+  delete pie.diagnosis;
+  delete pie.quickWins;
+  delete pie.implementationPlan;
+  delete pie.sops;
+  delete pie.kpis;
+  delete pie.risks;
+  delete pie.nextActions;
+  if (pie.recommendedOffer) {
+    const { why: _why, ...recommendedOffer } = pie.recommendedOffer;
+    pie.recommendedOffer = recommendedOffer as typeof pie.recommendedOffer;
+  }
+
   return {
     ...bundle,
     intake: intake as typeof bundle.intake,
     ghostAdmin: ghostAdmin as typeof bundle.ghostAdmin,
     workspace: workspace as typeof bundle.workspace,
+    pie: pie as typeof bundle.pie,
   };
 }

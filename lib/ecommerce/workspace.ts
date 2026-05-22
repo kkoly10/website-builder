@@ -524,8 +524,37 @@ export async function saveEcommerceWorkspaceState(args: { ecomIntakeId: string; 
   return { ok: true as const };
 }
 
+// Fields the EcomPortalClient component actually reads off bundle.intake.
+// `intake` is typed `any` in the bundle (it's the full ecom_intakes row
+// straight from the DB) — that means the customer's portal API
+// previously shipped EVERY column on the intake, including any future
+// admin-only columns we might add. Narrow to a whitelist on the way
+// out so a column add doesn't silently leak.
+const ECOM_CLIENT_INTAKE_FIELDS = [
+  "id",
+  "created_at",
+  "business_name",
+  "contact_name",
+  "email",
+  "store_url",
+  "monthly_orders",
+  "sales_channels",
+  "budget_range",
+  "timeline",
+] as const;
+
+function pickEcomClientIntake(intake: any): Record<string, unknown> {
+  if (!intake || typeof intake !== "object") return {};
+  const out: Record<string, unknown> = {};
+  for (const key of ECOM_CLIENT_INTAKE_FIELDS) {
+    if (key in intake) out[key] = intake[key];
+  }
+  return out;
+}
+
 export function makeClientSafeEcommerceBundle(bundle: EcommerceWorkspaceBundle, options?: { isAdmin?: boolean }): EcommerceWorkspaceBundle {
   if (options?.isAdmin) return bundle;
+
   // Strip the `internalNotes` field entirely from the wire payload —
   // previously we zeroed it to "" but the field NAME still appeared
   // in the JSON response, leaking the existence of admin-only notes
@@ -533,7 +562,26 @@ export function makeClientSafeEcommerceBundle(bundle: EcommerceWorkspaceBundle, 
   // lib/opsWorkspace/state.ts makeClientSafeOpsBundle.
   const workspace = { ...bundle.workspace } as Partial<typeof bundle.workspace>;
   delete workspace.internalNotes;
-  return { ...bundle, workspace: workspace as typeof bundle.workspace };
+
+  // bundle.intake and bundle.quote were typed `any` and shipped the
+  // entire DB row to the customer. The portal client only renders a
+  // handful of fields from each — narrow to those.
+  //
+  // bundle.recommendation contains internal pricing reasoning
+  // (reasons, complexityFlags, complexityScore, estimatorSummary)
+  // that should never appear on the customer portal — it belongs in
+  // a proposal PDF, not as raw JSON. The customer client renders
+  // nothing from recommendation, so drop the key entirely at runtime.
+  // The TS return type still claims the field exists for admin/
+  // internal callers (this branch is non-admin only).
+  const next = {
+    ...bundle,
+    intake: pickEcomClientIntake(bundle.intake),
+    quote: bundle.quote ? { status: bundle.quote.status ?? null } : null,
+    workspace: workspace as typeof bundle.workspace,
+  } as EcommerceWorkspaceBundle;
+  delete (next as Partial<EcommerceWorkspaceBundle>).recommendation;
+  return next;
 }
 
 export async function getEcommerceAdminRows(): Promise<EcommerceAdminRow[]> {
