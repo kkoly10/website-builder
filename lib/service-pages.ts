@@ -1665,5 +1665,13 @@ export function getServicePageData(locale: string, id: ServiceId): ServiceData {
   };
   const map = dataMap[id];
   const normalized = (locale === "fr" || locale === "es" ? locale : "en") as Locale;
-  return (map[normalized] ?? map.en)!;
+  // English is the always-on fallback for every service id. If a new
+  // service is added to the maps above without an `en` entry, fail
+  // loud here rather than returning undefined and crashing the page
+  // with a confusing "Cannot read properties of undefined" at render.
+  const data = map[normalized] ?? map.en;
+  if (!data) {
+    throw new Error(`getServicePageData: no data for service "${id}" (locale=${locale}). Add an "en" entry to the data map.`);
+  }
+  return data;
 }

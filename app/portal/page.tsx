@@ -60,7 +60,6 @@ type EcomIntakeRow = {
 };
 
 type OpsCallRow = { id: string; ops_intake_id: string; status: string | null };
-type OpsPieRow = { id: string; ops_intake_id: string; summary: string | null };
 
 function fmtDate(v: string | null | undefined, locale: string) {
   if (!v) return "—";
@@ -166,7 +165,7 @@ export default async function PortalPage() {
   const quoteIds = quoteRows.map((q) => q.id);
   const opsIds = opsRows.map((r) => r.id);
 
-  const [leadRes, opsCallRes, opsPieRes, portalProjectsRes] = await Promise.all([
+  const [leadRes, opsCallRes, portalProjectsRes] = await Promise.all([
     leadIds.length
       ? supabaseAdmin.from("leads").select("id, email, name").in("id", leadIds)
       : Promise.resolve({ data: [] as LeadRow[] }),
@@ -177,13 +176,6 @@ export default async function PortalPage() {
           .in("ops_intake_id", opsIds)
           .order("created_at", { ascending: false })
       : Promise.resolve({ data: [] as OpsCallRow[] }),
-    opsIds.length
-      ? supabaseAdmin
-          .from("ops_pie_reports")
-          .select("id, ops_intake_id, summary")
-          .in("ops_intake_id", opsIds)
-          .order("created_at", { ascending: false })
-      : Promise.resolve({ data: [] as OpsPieRow[] }),
     quoteIds.length
       ? supabaseAdmin
           .from("customer_portal_projects")
@@ -198,11 +190,6 @@ export default async function PortalPage() {
   const callByOps = new Map<string, OpsCallRow>();
   for (const c of (opsCallRes.data ?? []) as OpsCallRow[]) {
     if (!callByOps.has(c.ops_intake_id)) callByOps.set(c.ops_intake_id, c);
-  }
-
-  const pieByOps = new Map<string, OpsPieRow>();
-  for (const p of (opsPieRes.data ?? []) as OpsPieRow[]) {
-    if (!pieByOps.has(p.ops_intake_id)) pieByOps.set(p.ops_intake_id, p);
   }
 
   const portalTokenByQuoteId = new Map<string, string>();
@@ -401,7 +388,6 @@ export default async function PortalPage() {
           <div className="productList">
             {opsRows.map((o) => {
               const call = callByOps.get(o.id);
-              const pie = pieByOps.get(o.id);
               const callStatusLabel = call?.status
                 ? labelForStatus(call.status)
                 : tCommon("callNotRequested");
@@ -417,11 +403,12 @@ export default async function PortalPage() {
                     t("callStatusLabel", { status: callStatusLabel }),
                   ]}
                   summary={
-                    pie?.summary
-                      ? pie.summary.length > 120
-                        ? `${pie.summary.slice(0, 120)}…`
-                        : pie.summary
-                      : undefined
+                    // Intentionally NOT surfacing pie.summary here.
+                    // The PIE-generated summary is an internal,
+                    // operator-perspective writeup of the project; the
+                    // customer shouldn't see studio scaffolding on
+                    // their workspaces list.
+                    undefined
                   }
                   action={
                     <Link href={`/portal/ops/${o.id}`} className="btn btnPrimary productBtnSm">

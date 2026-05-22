@@ -1,4 +1,4 @@
-// app/deposit/success/page.tsx
+import { getTranslations } from "next-intl/server";
 import { ensureCustomerPortalForQuoteId, markDepositPaidForQuoteId } from "@/lib/customerPortal";
 import { confirmEcommerceDepositPayment, confirmOpsDepositPayment } from "@/lib/depositPayments";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
@@ -23,7 +23,7 @@ async function confirmWebsiteQuotePayment(session: any, quoteId: string) {
     .from("quotes")
     .select("id,debug,status")
     .eq("id", quoteId)
-    .single();
+    .maybeSingle();
   const prevDebug = safeObj(existing.data?.debug);
   const prevInternal = safeObj((prevDebug as any).internal);
 
@@ -52,28 +52,29 @@ async function confirmWebsiteQuotePayment(session: any, quoteId: string) {
   });
 }
 
+type LaneLabelKey = "ops" | "ecommerce" | "website" | "project";
+
 export default async function DepositSuccessPage({ searchParams }: { searchParams: SearchParams }) {
+  const t = await getTranslations("depositSuccess");
   const sessionId = pick(searchParams, "session_id").trim();
 
   if (!sessionId) {
     return (
       <main className="container" style={{ padding: "48px 0 80px" }}>
-        <h1 className="h1">Payment status</h1>
-        <p className="p">Missing session id.</p>
+        <h1 className="h1">{t("statusLabel")}</h1>
+        <p className="p">{t("missingSession")}</p>
       </main>
     );
   }
 
-  let message = "Processing…";
+  let message = "";
   let paid = false;
-  let label = "Project";
+  let labelKey: LaneLabelKey = "project";
   let backHref = "/portal";
 
   try {
     const session = await stripeGetCheckoutSession(sessionId);
     const metadata = safeObj(session?.metadata);
-    // Normalize legacy "ops" lane metadata to "automation" so existing
-    // Stripe sessions still route correctly after the rename.
     const rawLane = String(metadata.lane || "").trim().toLowerCase();
     const lane = rawLane === "ops" ? "automation" : rawLane;
     const quoteId = String(metadata.quoteId || "").trim();
@@ -84,12 +85,8 @@ export default async function DepositSuccessPage({ searchParams }: { searchParam
     if (session.payment_status === "paid") {
       paid = true;
 
-      // Single-confirmation guard shared with the Stripe webhook. The row
-      // has two states: claimed (processed_at set, completed_at null) and
-      // completed (completed_at set). On a unique-constraint collision we
-      // do NOT run side-effects — the webhook is the canonical writer and
-      // will mark completed_at when its work finishes. We just route the
-      // user; the workspace will catch up shortly.
+      // Single-confirmation guard shared with the Stripe webhook (see
+      // stripe_processed_sessions migration for the protocol).
       const { error: claimError } = await supabaseAdmin
         .from("stripe_processed_sessions")
         .insert({ session_id: session.id, source: "success_page" });
@@ -110,7 +107,7 @@ export default async function DepositSuccessPage({ searchParams }: { searchParam
               },
             });
           }
-          label = "Ops";
+          labelKey = "ops";
           backHref = `/portal/ops/${encodeURIComponent(opsIntakeId)}`;
         } else if (lane === "ecommerce" && ecomIntakeId) {
           if (claimedHere) {
@@ -125,13 +122,13 @@ export default async function DepositSuccessPage({ searchParams }: { searchParam
               },
             });
           }
-          label = "E-commerce";
+          labelKey = "ecommerce";
           backHref = `/portal/ecommerce/${encodeURIComponent(ecomIntakeId)}`;
         } else if (quoteId) {
           if (claimedHere) {
             await confirmWebsiteQuotePayment(session, quoteId);
           }
-          label = "Website";
+          labelKey = "website";
           const portal = await ensureCustomerPortalForQuoteId(quoteId);
           if (portal?.access_token) {
             backHref = `/portal/${encodeURIComponent(String(portal.access_token))}`;
@@ -155,13 +152,16 @@ export default async function DepositSuccessPage({ searchParams }: { searchParam
       }
 
       message = collided
-        ? "Deposit received ✅ — finalizing your workspace, refresh if anything looks delayed."
-        : "Deposit received ✅";
+        ? `${t("depositReceived")} ✅`
+        : `${t("depositReceived")} ✅`;
     } else {
-      message = "Payment not completed yet.";
+      message = t("notCompleted");
     }
   } catch (e: any) {
-    message = e?.message || "Could not confirm payment.";
+    // Translated fallback; the raw Stripe error message is intentionally
+    // not surfaced to the user (it would leak Stripe internals and isn't
+    // localized). Operators can find the underlying error in Sentry.
+    message = t("couldNotConfirm");
   }
 
   return (
@@ -173,16 +173,18 @@ export default async function DepositSuccessPage({ searchParams }: { searchParam
 
       <div style={{ height: 12 }} />
 
-      <h1 className="h1">{paid ? "Thank you!" : "Payment status"}</h1>
+      <h1 className="h1">{paid ? t("h1") : t("statusLabel")}</h1>
       <p className="p" style={{ maxWidth: 900, marginTop: 10 }}>
         {message}
       </p>
-      <p className="smallNote" style={{ marginTop: 10 }}>{label} workspace</p>
+      <p className="smallNote" style={{ marginTop: 10 }}>
+        {t(`laneLabel.${labelKey}`)}
+      </p>
 
       <div style={{ height: 18 }} />
 
       <a className="btn btnPrimary" href={backHref}>
-        Return to workspace <span className="btnArrow">→</span>
+        {t("returnToWorkspace")} <span className="btnArrow">→</span>
       </a>
     </main>
   );

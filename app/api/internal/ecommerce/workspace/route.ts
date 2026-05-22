@@ -10,20 +10,25 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  const authErr = await requireAdminRoute();
-  if (authErr) return authErr;
+  try {
+    const authErr = await requireAdminRoute();
+    if (authErr) return authErr;
 
-  const ecomIntakeId = req.nextUrl.searchParams.get("ecomIntakeId");
-  if (!ecomIntakeId) {
-    return NextResponse.json({ ok: false, error: "Missing ecomIntakeId" }, { status: 400 });
+    const ecomIntakeId = req.nextUrl.searchParams.get("ecomIntakeId");
+    if (!ecomIntakeId) {
+      return NextResponse.json({ ok: false, error: "Missing ecomIntakeId" }, { status: 400 });
+    }
+
+    const bundle = await getEcommerceWorkspaceBundle(ecomIntakeId, { isAdmin: true });
+    if (!bundle) {
+      return NextResponse.json({ ok: false, error: "Workspace not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ ok: true, data: bundle.workspace });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to load workspace.";
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
-
-  const bundle = await getEcommerceWorkspaceBundle(ecomIntakeId, { isAdmin: true });
-  if (!bundle) {
-    return NextResponse.json({ ok: false, error: "Workspace not found" }, { status: 404 });
-  }
-
-  return NextResponse.json({ ok: true, data: bundle.workspace });
 }
 
 export async function POST(req: NextRequest) {

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { generateOpsPieForIntake } from "@/lib/opsPie";
 import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 import { recordServerEvent } from "@/lib/analytics/server";
-import { maybeAttachOpsIntakeToUser } from "@/lib/accessControl";
+import { maybeAttachOpsIntakeToUser, normalizeEmail, sameNormalizedEmail } from "@/lib/accessControl";
 import { pickPreferredLocale } from "@/lib/preferredLocale";
 
 export const dynamic = "force-dynamic";
@@ -58,6 +58,33 @@ export async function POST(req: Request) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+
+    // Ownership gate. Before this check, anyone with an opsIntakeId
+    // (UUID) could insert call_request rows and trigger OpenAI PIE
+    // generation regardless of who owned the intake. Allow:
+    //  - admin
+    //  - the auth user already attached to the intake
+    //  - any logged-in user whose email matches the intake's owner /
+    //    contact email (will be claimed via maybeAttachOpsIntakeToUser
+    //    just below)
+    const userEmailNorm = normalizeEmail(user?.email);
+    const admin = await isAdminUser({
+      userId: user?.id ?? null,
+      email: user?.email ?? null,
+    });
+    const matchesAttachedUser =
+      !!user?.id && !!intake.auth_user_id && String(user.id) === String(intake.auth_user_id);
+    const matchesIntakeEmail =
+      !!userEmailNorm &&
+      (sameNormalizedEmail(userEmailNorm, intake.owner_email_norm) ||
+        sameNormalizedEmail(userEmailNorm, intake.email));
+
+    if (!admin && !matchesAttachedUser && !matchesIntakeEmail) {
+      return NextResponse.json(
+        { error: "You do not have access to this ops intake." },
+        { status: 403 }
+      );
+    }
 
     if (user?.id && user?.email) {
       await maybeAttachOpsIntakeToUser({

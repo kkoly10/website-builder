@@ -95,11 +95,44 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Invalid signature" }, { status: 401 });
   }
 
+  // Idempotency claim. Standard Webhooks guarantees at-least-once
+  // delivery — a Supabase retry of a previously-handled webhook would
+  // otherwise re-send the auth email. Claim the webhook-id via a
+  // unique-key insert; if it collides, another delivery has already
+  // been processed and we ACK without sending.
   let payload: SendEmailHookPayload;
   try {
     payload = JSON.parse(rawBody);
   } catch {
     return NextResponse.json({ ok: false, error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const claim = await supabaseAdmin
+    .from("auth_email_hook_processed")
+    .insert({
+      webhook_id: webhookId,
+      action_type: payload.email_data?.email_action_type || null,
+    })
+    .select("webhook_id")
+    .maybeSingle();
+  if (claim.error) {
+    // Unique-constraint violation = already processed → ACK and exit
+    // so Supabase doesn't keep retrying. Any other DB error is real
+    // and should surface as a 5xx so the delivery is retried.
+    const isDuplicate =
+      claim.error.code === "23505" ||
+      /duplicate key/i.test(claim.error.message || "");
+    if (isDuplicate) {
+      return NextResponse.json({ ok: true, skipped: "already_processed" });
+    }
+    captureBackgroundError(claim.error, {
+      where: "send-email-hook.dedup_claim",
+      extra: { webhookId },
+    });
+    return NextResponse.json(
+      { ok: false, error: "Dedup claim failed" },
+      { status: 500 }
+    );
   }
 
   const userEmail = (payload.user?.email || "").trim().toLowerCase();
@@ -130,10 +163,17 @@ export async function POST(req: Request) {
       ? (newEmail || userEmail)
       : userEmail;
   if (!recipient || !recipient.includes("@")) {
-    console.error(`[send-email-hook] resolved invalid recipient for ${actionType}`);
-    // Return 200 so Supabase doesn't retry forever on a permanent
-    // data issue. The error is logged for the operator to investigate.
-    return NextResponse.json({ ok: false, error: "Invalid recipient" });
+    // Permanent data issue — retrying won't help. Capture to Sentry
+    // so an operator sees this in the issue feed, then return 200
+    // with ok:true so Supabase records the hook as handled and moves
+    // on. Previously this returned ok:false with status 200, which is
+    // ambiguous: Supabase treated the 200 as success while ok:false
+    // suggested a recoverable error to anyone reading the body.
+    captureBackgroundError(
+      new Error(`send-email-hook: invalid recipient for ${actionType}`),
+      { where: "send-email-hook.invalid_recipient", extra: { actionType } }
+    );
+    return NextResponse.json({ ok: true, skipped: "invalid_recipient" });
   }
 
   try {

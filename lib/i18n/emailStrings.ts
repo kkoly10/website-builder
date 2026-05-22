@@ -215,8 +215,8 @@ const STRINGS: Record<string, LocalizedString> = {
   },
   "site_live.body_live_generic": {
     en: "Your {{lane}} is shipped and indexed. The full handoff — admin credentials, analytics access, and post-launch documentation — is waiting in your workspace.",
-    fr: "Votre {{lane}} est livré et indexé. La remise complète — identifiants d'administration, accès aux analyses et documentation post-lancement — vous attend dans votre espace.",
-    es: "Su {{lane}} está entregado e indexado. La entrega completa — credenciales de administración, acceso a analítica y documentación post-lanzamiento — le espera en su espacio.",
+    fr: "Votre {{lane}} est en ligne. L'indexation par les moteurs de recherche est en cours. La remise complète — identifiants d'administration, accès aux analyses et documentation post-lancement — vous attend dans votre espace.",
+    es: "Su {{lane}} está en línea. La indexación por los motores de búsqueda está en marcha. La entrega completa — credenciales de administración, acceso a analítica y documentación post-lanzamiento — le espera en su espacio.",
   },
   "site_live.body_website_care": {
     en: "A live website is a starting line, not a finish line. The next 90 days are where real conversions happen — small copy and design tweaks, content updates, performance tuning. If you'd rather not handle that yourself, our Care Plans start at $400/mo and keep the site working harder for you each month.",

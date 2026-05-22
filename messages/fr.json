@@ -31,6 +31,83 @@
     "primaryAria": "Principale",
     "footerAria": "Pied de page"
   },
+  "notFound": {
+    "metaTitle": "Page introuvable | CrecyStudio",
+    "h1": "Page introuvable",
+    "body": "La page que vous cherchez n'existe pas ou a été déplacée.",
+    "backHome": "Retour à l'accueil",
+    "contactUs": "Nous contacter"
+  },
+  "comingSoon": {
+    "metaTitle": "Support e-commerce (à venir) | CrecyStudio",
+    "backHome": "Retour à l'accueil",
+    "title": "Support e-commerce",
+    "comingLaterTag": "(à venir)",
+    "intro": "Nous explorons des services de support additionnels pour les vendeurs en ligne, notamment la logistique et la gestion des places de marché.",
+    "notLiveYet": "Ce service n'est pas encore disponible.",
+    "currentFocus": "Nous nous concentrons actuellement sur les projets de sites web.",
+    "joinCallout": "Si ce service vous intéresse, inscrivez-vous à notre liste d'intérêt anticipé ci-dessous. Sans engagement.",
+    "onListHeading": "Vous êtes inscrit·e",
+    "onListBody": "Merci. Votre intérêt a été enregistré. Nous reviendrons vers vous si nous lançons ce service.",
+    "joinHeading": "Rejoindre la liste d'intérêt",
+    "joinSubtitle": "Sans engagement. Aucun e-mail commercial.",
+    "emailLabel": "Adresse e-mail *",
+    "emailPlaceholder": "vous@email.com",
+    "describeLabel": "Qu'est-ce qui vous décrit le mieux ?",
+    "interestsLabel": "Qu'est-ce qui vous intéresse ? (optionnel)",
+    "interestsHint": "Choisissez une ou plusieurs options.",
+    "volumeLabel": "Volume de commandes mensuel (optionnel)",
+    "submit": "Rejoindre la liste d'intérêt",
+    "submitting": "Envoi...",
+    "consent": "En soumettant, vous acceptez d'être contacté·e si nous lançons ce service.",
+    "missingEndpoint": "Point d'envoi du formulaire manquant.",
+    "missingEmail": "Veuillez saisir votre e-mail.",
+    "submissionFailed": "Échec de l'envoi.",
+    "somethingWentWrong": "Une erreur s'est produite.",
+    "sellerType": {
+      "amazon": "Vendeur Amazon",
+      "shopify": "Propriétaire de boutique Shopify",
+      "ebay": "Vendeur eBay",
+      "planning": "Je prévois de vendre en ligne",
+      "curious": "Simple curiosité"
+    },
+    "interests": {
+      "storage": "Stockage d'inventaire",
+      "fulfillment": "Préparation de commandes",
+      "marketplace": "Gestion des places de marché",
+      "websiteSetup": "Site web + configuration e-commerce",
+      "notSure": "Je ne sais pas encore"
+    },
+    "volume": {
+      "notSelling": "Je ne vends pas encore",
+      "under100": "Moins de 100 commandes / mois",
+      "between100_500": "100 à 500 commandes / mois",
+      "over500": "Plus de 500 commandes / mois"
+    }
+  },
+  "depositCancel": {
+    "metaTitle": "Paiement annulé | CrecyStudio",
+    "h1": "Paiement annulé",
+    "body": "Pas d'inquiétude — vous pouvez revenir à votre devis et réessayer.",
+    "quoteIdLabel": "ID du devis :",
+    "backHome": "Retour à l'accueil"
+  },
+  "depositSuccess": {
+    "metaTitle": "Merci | CrecyStudio",
+    "h1": "Merci !",
+    "statusLabel": "Statut du paiement",
+    "depositReceived": "Acompte reçu",
+    "notCompleted": "Paiement non encore finalisé.",
+    "missingSession": "ID de session manquant.",
+    "couldNotConfirm": "Impossible de confirmer le paiement.",
+    "returnToWorkspace": "Retour à l'espace de travail",
+    "laneLabel": {
+      "ops": "Automatisation",
+      "ecommerce": "E-commerce",
+      "website": "Site web",
+      "project": "Projet"
+    }
+  },
   "footer": {
     "blurb": "Studio web indépendant qui construit des sites web premium et des systèmes web sur mesure. Un seul espace de travail du cadrage au lancement.",
     "rightsReserved": "Tous droits réservés.",
@@ -1297,9 +1374,7 @@
         "Analytics (GA4 / Pixel)": "Analytics (GA4 / Pixel)",
         "Live chat": "Chat en direct"
       }
-    },
-    "label": "Estimateur",
-    "title": "Obtenez votre estimation en moins de 5 minutes."
+    }
   },
   "book": {
     "metaTitle": "Réserver votre appel de découverte | CrecyStudio",
@@ -2077,8 +2152,7 @@
         "projectNotes": "Notes du projet",
         "none": "Aucune",
         "bestTimeToCall": "Meilleur moment pour appeler",
-        "notProvided": "Non fourni",
-        "pieSummary": "Résumé PIE"
+        "notProvided": "Non fourni"
       },
       "agreementLabel": "Accord & paiement",
       "scopeHistoryLabel": "Historique du périmètre & ordres de modification",

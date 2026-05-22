@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -101,7 +102,20 @@ function overlaps(slotStart: Date, slotEnd: Date, busyStart: Date, busyEnd: Date
   return slotStart < busyEnd && slotEnd > busyStart;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  // Unauthenticated read but it hits Google Calendar's freebusy API on
+  // every request. Without a limit, the studio's Google API quota
+  // becomes a denial-of-service vector and the calendar pattern is
+  // scrapeable. 20/min/IP is generous for the booking widget's actual
+  // usage (one initial load + occasional refreshes).
+  const ip = getIpFromHeaders(req.headers);
+  const rl = await enforceRateLimitDurable({
+    key: `slots:${ip}`,
+    limit: 20,
+    windowMs: 60_000,
+  });
+  if (!rl.ok) return rateLimitResponse(rl.resetAt);
+
   const calendarId = process.env.GOOGLE_CALENDAR_ID;
   const serviceEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   const serviceKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
@@ -133,10 +147,16 @@ export async function GET() {
       },
     });
 
-    const busyPeriods = (freebusyRes.data.calendars?.[calendarId]?.busy ?? []).map((b) => ({
-      start: new Date(b.start!),
-      end: new Date(b.end!),
-    }));
+    // Google freebusy types `start` / `end` as optional; in practice
+    // they're always present, but a partial payload would produce
+    // `new Date(undefined)` (Invalid Date) and silently break the
+    // overlaps() comparison. Filter blocks that don't have both.
+    const busyPeriods = (freebusyRes.data.calendars?.[calendarId]?.busy ?? [])
+      .filter((b): b is { start: string; end: string } => !!b.start && !!b.end)
+      .map((b) => ({
+        start: new Date(b.start),
+        end: new Date(b.end),
+      }));
 
     const now = new Date();
     const slots: SlotDay[] = [];

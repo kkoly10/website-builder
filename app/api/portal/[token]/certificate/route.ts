@@ -13,66 +13,74 @@ export async function GET(
   req: NextRequest,
   ctx: { params: Promise<{ token: string }> | { token: string } }
 ) {
-  // Each call generates a Supabase signed URL (real $ cost) plus
-  // returns a 60s download link. 30/min is plenty for a legitimate
-  // client clicking re-download a few times; anything higher is a
-  // signal someone is automating the endpoint.
-  const ip = getIpFromHeaders(req.headers);
-  const rl = await enforceRateLimitDurable({
-    key: `portal-certificate:${ip}`,
-    limit: 30,
-    windowMs: 60_000,
-  });
-  if (!rl.ok) return rateLimitResponse(rl.resetAt);
+  try {
+    // Each call generates a Supabase signed URL (real $ cost) plus
+    // returns a 60s download link. 30/min is plenty for a legitimate
+    // client clicking re-download a few times; anything higher is a
+    // signal someone is automating the endpoint.
+    const ip = getIpFromHeaders(req.headers);
+    const rl = await enforceRateLimitDurable({
+      key: `portal-certificate:${ip}`,
+      limit: 30,
+      windowMs: 60_000,
+    });
+    if (!rl.ok) return rateLimitResponse(rl.resetAt);
 
-  const { token } = await Promise.resolve(ctx.params);
+    const { token } = await Promise.resolve(ctx.params);
 
-  const { data: portalRow } = await supabaseAdmin
-    .from("customer_portal_projects")
-    .select("id")
-    .eq("access_token", token)
-    .maybeSingle();
+    const { data: portalRow } = await supabaseAdmin
+      .from("customer_portal_projects")
+      .select("id")
+      .eq("access_token", token)
+      .maybeSingle();
 
-  if (!portalRow?.id) {
-    return NextResponse.json({ ok: false, error: "Portal not found." }, { status: 404 });
+    if (!portalRow?.id) {
+      return NextResponse.json({ ok: false, error: "Portal not found." }, { status: 404 });
+    }
+
+    const { data: agrRow } = await supabaseAdmin
+      .from("agreements")
+      .select("certificate_path")
+      .eq("portal_project_id", portalRow.id)
+      .eq("status", "accepted")
+      .order("accepted_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!agrRow?.certificate_path) {
+      return NextResponse.json(
+        { ok: false, error: "Certificate not available yet." },
+        { status: 404 }
+      );
+    }
+
+    const bucket = process.env.CERTIFICATES_BUCKET || "certificates";
+    // 60-second TTL is the tightest reasonable window for a click-to-
+    // download flow. The signed URL ends up in CDN / proxy access logs;
+    // the shorter the window, the smaller the replay surface.
+    const { data: signed } = await supabaseAdmin.storage
+      .from(bucket)
+      .createSignedUrl(agrRow.certificate_path, 60);
+
+    if (!signed?.signedUrl) {
+      return NextResponse.json(
+        { ok: false, error: "Unable to generate download link." },
+        { status: 500 }
+      );
+    }
+
+    // no-store keeps the redirect itself out of intermediate caches.
+    // no-referrer prevents the signed URL leaking through the next hop's
+    // Referer header when the browser follows the 302.
+    const res = NextResponse.redirect(signed.signedUrl, { status: 302 });
+    res.headers.set("Cache-Control", "no-store");
+    res.headers.set("Referrer-Policy", "no-referrer");
+    return res;
+  } catch (err) {
+    // Without this catch, a Supabase network blip on the .maybeSingle
+    // calls (or storage.createSignedUrl) would surface as a raw Next
+    // 500 with a stack trace in the response body.
+    const message = err instanceof Error ? err.message : "Failed to load certificate.";
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
-
-  const { data: agrRow } = await supabaseAdmin
-    .from("agreements")
-    .select("certificate_path")
-    .eq("portal_project_id", portalRow.id)
-    .eq("status", "accepted")
-    .order("accepted_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (!agrRow?.certificate_path) {
-    return NextResponse.json(
-      { ok: false, error: "Certificate not available yet." },
-      { status: 404 }
-    );
-  }
-
-  const bucket = process.env.CERTIFICATES_BUCKET || "certificates";
-  // 60-second TTL is the tightest reasonable window for a click-to-
-  // download flow. The signed URL ends up in CDN / proxy access logs;
-  // the shorter the window, the smaller the replay surface.
-  const { data: signed } = await supabaseAdmin.storage
-    .from(bucket)
-    .createSignedUrl(agrRow.certificate_path, 60);
-
-  if (!signed?.signedUrl) {
-    return NextResponse.json(
-      { ok: false, error: "Unable to generate download link." },
-      { status: 500 }
-    );
-  }
-
-  // no-store keeps the redirect itself out of intermediate caches.
-  // no-referrer prevents the signed URL leaking through the next hop's
-  // Referer header when the browser follows the 302.
-  const res = NextResponse.redirect(signed.signedUrl, { status: 302 });
-  res.headers.set("Cache-Control", "no-store");
-  res.headers.set("Referrer-Policy", "no-referrer");
-  return res;
 }

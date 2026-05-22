@@ -1,11 +1,29 @@
 // lib/stripeServer.ts
+
+// Hosts we trust to derive the base URL from request headers. Anything
+// else (forged Host: in a request that bypasses Vercel's edge, custom
+// domain mis-configuration, etc.) falls back to the canonical
+// production URL — never the attacker-supplied host. The high-stakes
+// case is Stripe success_url / cancel_url: an attacker who could spoof
+// Host: would otherwise redirect users post-payment to a phishing site
+// that looks like /deposit/success.
+function isAllowedHost(host: string | null): boolean {
+  if (!host) return false;
+  const lower = host.toLowerCase().split(":")[0]; // strip :port
+  if (lower === "crecystudio.com" || lower === "www.crecystudio.com") return true;
+  if (lower.endsWith(".vercel.app")) return true;
+  if (lower === "localhost" || lower === "127.0.0.1") return true;
+  return false;
+}
+
 export function getBaseUrl(req: Request) {
   const envUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
   if (envUrl) return envUrl.replace(/\/$/, "");
 
   const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
+  if (!isAllowedHost(host)) return "https://crecystudio.com";
+
   const proto = req.headers.get("x-forwarded-proto") || "https";
-  if (!host) return "https://crecystudio.com";
   return `${proto}://${host}`;
 }
 

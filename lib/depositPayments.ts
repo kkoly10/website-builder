@@ -4,6 +4,8 @@ import { getOpsPricing } from "@/lib/pricing/automation";
 import { stripeCreateCheckoutSession } from "@/lib/stripeServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { ensureCustomerPortalForQuoteId } from "@/lib/customerPortal";
+import { sendEventNotification } from "@/lib/notifications";
+import { captureBackgroundError } from "@/lib/sentry";
 
 function str(value: unknown, fallback = "") {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
@@ -325,14 +327,21 @@ export async function confirmEcommerceDepositPayment(args: {
     quote = await getOrCreateEcomQuote(args.ecomIntakeId);
   }
 
+  // Idempotency: the Stripe webhook is guarded by stripe_processed_sessions
+  // (it dedupes the whole event), but it's still cheap belt-and-suspenders
+  // to skip the email when this quote is already marked paid — e.g. an
+  // admin manually re-running confirmEcommerceDepositPayment.
+  const wasAlreadyPaid = str(quote?.status).toLowerCase() === "paid";
+
   const quoteJson = safeObj(quote?.quote_json);
   const deposit = safeObj(quoteJson.deposit);
+  const depositAmountDollars = roundMoney((args.session.amount_total ?? 0) / 100);
   const nextQuoteJson = {
     ...quoteJson,
     deposit: {
       ...deposit,
       session_id: args.session.id,
-      amount: roundMoney((args.session.amount_total ?? 0) / 100),
+      amount: depositAmountDollars,
       paid_at: now,
       currency: args.session.currency ?? "usd",
       customer_email: args.session.customer_email ?? null,
@@ -354,11 +363,58 @@ export async function confirmEcommerceDepositPayment(args: {
     savedBy: "system",
     patch: {
       depositStatus: "paid",
-      depositAmount: roundMoney((args.session.amount_total ?? 0) / 100),
+      depositAmount: depositAmountDollars,
       depositSessionId: args.session.id,
       depositPaidAt: now,
       depositNotice: "Deposit received.",
     },
+  });
+
+  if (!wasAlreadyPaid) {
+    // Fire-and-forget client kickoff email — failure logs to Sentry but
+    // doesn't block the deposit-paid path. Mirrors the website lane's
+    // notifyDepositReceived behavior in lib/customerPortal.ts.
+    notifyEcommerceDepositReceived({
+      ecomIntakeId: args.ecomIntakeId,
+      depositAmount: depositAmountDollars,
+    }).catch((err) =>
+      captureBackgroundError(err, {
+        where: "depositPayments.ecommerce_deposit_email",
+        extra: { ecomIntakeId: args.ecomIntakeId },
+      })
+    );
+  }
+}
+
+async function notifyEcommerceDepositReceived(args: {
+  ecomIntakeId: string;
+  depositAmount: number;
+}) {
+  const { data: intake } = await supabaseAdmin
+    .from("ecom_intakes")
+    .select("id, email, contact_name, preferred_locale")
+    .eq("id", args.ecomIntakeId)
+    .maybeSingle();
+  if (!intake) return;
+  const leadEmail = str(intake.email);
+  if (!leadEmail.includes("@")) return;
+
+  const baseUrl = (process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com").trim().replace(/\/$/, "");
+  const workspaceUrl = `${baseUrl}/portal/ecommerce/${encodeURIComponent(args.ecomIntakeId)}`;
+
+  await sendEventNotification({
+    event: "deposit_received",
+    // No quoteId for ecom — use the intake id as the project identifier;
+    // the deposit_received template only uses it in the admin variant
+    // (which we don't send for this event — toAdmin is false in the
+    // template) and as a fallback identifier.
+    quoteId: args.ecomIntakeId,
+    leadName: str(intake.contact_name),
+    leadEmail,
+    workspaceUrl,
+    projectType: "ecommerce",
+    depositAmount: args.depositAmount,
+    lang: str(intake.preferred_locale, "en"),
   });
 }
 
@@ -443,11 +499,22 @@ export async function confirmOpsDepositPayment(args: {
   };
 }) {
   const now = new Date().toISOString();
+
+  // Idempotency: only send the client email on the transition from
+  // not-paid → paid. Read the current status before we overwrite it.
+  const { data: intakeBefore } = await supabaseAdmin
+    .from("ops_intakes")
+    .select("status")
+    .eq("id", args.opsIntakeId)
+    .maybeSingle();
+  const wasAlreadyPaid = str(intakeBefore?.status).toLowerCase() === "deposit_paid";
+
+  const depositAmountDollars = roundMoney((args.session.amount_total ?? 0) / 100);
   await saveWorkspaceState(
     args.opsIntakeId,
     {
       depositStatus: "paid",
-      depositAmount: roundMoney((args.session.amount_total ?? 0) / 100),
+      depositAmount: depositAmountDollars,
       depositSessionId: args.session.id,
       depositPaidAt: now,
       depositNotice: "Deposit received.",
@@ -460,4 +527,44 @@ export async function confirmOpsDepositPayment(args: {
     .from("ops_intakes")
     .update({ status: "deposit_paid" })
     .eq("id", args.opsIntakeId);
+
+  if (!wasAlreadyPaid) {
+    notifyOpsDepositReceived({
+      opsIntakeId: args.opsIntakeId,
+      depositAmount: depositAmountDollars,
+    }).catch((err) =>
+      captureBackgroundError(err, {
+        where: "depositPayments.ops_deposit_email",
+        extra: { opsIntakeId: args.opsIntakeId },
+      })
+    );
+  }
+}
+
+async function notifyOpsDepositReceived(args: {
+  opsIntakeId: string;
+  depositAmount: number;
+}) {
+  const { data: intake } = await supabaseAdmin
+    .from("ops_intakes")
+    .select("id, email, contact_name, preferred_locale")
+    .eq("id", args.opsIntakeId)
+    .maybeSingle();
+  if (!intake) return;
+  const leadEmail = str(intake.email);
+  if (!leadEmail.includes("@")) return;
+
+  const baseUrl = (process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com").trim().replace(/\/$/, "");
+  const workspaceUrl = `${baseUrl}/portal/ops/${encodeURIComponent(args.opsIntakeId)}`;
+
+  await sendEventNotification({
+    event: "deposit_received",
+    quoteId: args.opsIntakeId,
+    leadName: str(intake.contact_name),
+    leadEmail,
+    workspaceUrl,
+    projectType: "automation",
+    depositAmount: args.depositAmount,
+    lang: str(intake.preferred_locale, "en"),
+  });
 }

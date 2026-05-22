@@ -120,7 +120,11 @@ export type EnrichedOpsWorkspaceBundle = OpsWorkspaceBundle & {
     phase: string;
     waitingOn: string;
     adminPublicNote: string;
-    internalDiagnosisNote: string;
+    // Stripped from the customer-facing wire payload by
+    // makeClientSafeOpsBundle (admin's private diagnosis notes,
+    // per-stage admin notes, and the admin scratchpad chat). Optional
+    // so admin callers narrow before reading.
+    internalDiagnosisNote?: string;
     agreementStatus: string;
     agreementAcceptedAt: string;
     depositStatus: string;
@@ -143,8 +147,8 @@ export type EnrichedOpsWorkspaceBundle = OpsWorkspaceBundle & {
     risks: WorkspaceRisk[];
     qa: WorkspaceQaItem[];
     nextActions: string[];
-    adminNotes: Record<string, string>;
-    chatMessages: ChatMessage[];
+    adminNotes?: Record<string, string>;
+    chatMessages?: ChatMessage[];
     lastSavedAt: string;
     lastSavedBy: string;
   };
@@ -494,21 +498,54 @@ export function makeClientSafeOpsBundle(
 ): EnrichedOpsWorkspaceBundle {
   if (options?.isAdmin) return bundle;
 
+  // Strip admin-only fields entirely from the wire payload — previously
+  // we zeroed them ("", [], {}) but the field NAMES still appeared in
+  // the JSON response. A curious customer opening DevTools → Network
+  // would see `internalDiagnosisNote: ""`, `adminNotes: {}`,
+  // `starterPrompts: []` and infer that we keep private notes /
+  // prompts about them, which is a trust leak even with empty values.
+  //
+  // All stripped fields are typed optional on the source type, so the
+  // destructure-and-spread produces a return value that's truthfully
+  // typed — admin code narrows with `?.` before reading.
+  const { notes: _intakeNotes, ...intake } = bundle.intake;
+  const { starterPrompts: _starterPrompts, ...ghostAdmin } = bundle.ghostAdmin;
+  const {
+    internalDiagnosisNote: _internalDiagnosisNote,
+    adminNotes: _adminNotes,
+    chatMessages: _chatMessages,
+    ...workspace
+  } = bundle.workspace;
+
+  // bundle.pie ships structured proposal content (diagnosis,
+  // quickWins, implementationPlan, sops, kpis, risks, nextActions,
+  // summary, confidence) that's meant to be delivered as a polished
+  // proposal PDF — never as raw JSON on the portal API. Strip those
+  // out, keep only the two sub-objects the customer client actually
+  // renders: clientQuestions (the questions-to-answer list) and
+  // recommendedOffer.{primaryPackage,projectRange,retainerRange}
+  // (the offer summary in the pricing drawer).
+  const {
+    id: _pieId,
+    status: _pieStatus,
+    summary: _pieSummary,
+    confidence: _pieConfidence,
+    diagnosis: _diagnosis,
+    quickWins: _quickWins,
+    implementationPlan: _implementationPlan,
+    sops: _sops,
+    kpis: _kpis,
+    risks: _risks,
+    nextActions: _nextActions,
+    recommendedOffer: { why: _why, ...recommendedOffer },
+    ...pieRest
+  } = bundle.pie;
+
   return {
     ...bundle,
-    intake: {
-      ...bundle.intake,
-      notes: "",
-    },
-    ghostAdmin: {
-      ...bundle.ghostAdmin,
-      starterPrompts: [],
-    },
-    workspace: {
-      ...bundle.workspace,
-      internalDiagnosisNote: "",
-      adminNotes: {},
-      chatMessages: [],
-    },
+    intake,
+    ghostAdmin,
+    workspace,
+    pie: { ...pieRest, recommendedOffer },
   };
 }

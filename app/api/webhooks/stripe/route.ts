@@ -155,11 +155,14 @@ async function handleRefundOrDispute(event: any, eventType: string) {
 }
 
 async function confirmWebsiteQuotePayment(session: any, quoteId: string) {
+  // .maybeSingle so a missing quote returns null rather than throwing
+  // PGRST116 — the webhook continues with its other handlers instead
+  // of failing the whole event.
   const { data: existing } = await supabaseAdmin
     .from("quotes")
     .select("id, debug, status")
     .eq("id", quoteId)
-    .single();
+    .maybeSingle();
 
   if (!existing) return;
 

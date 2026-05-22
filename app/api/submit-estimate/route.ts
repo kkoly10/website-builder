@@ -7,6 +7,7 @@ import { recordServerEvent } from "@/lib/analytics/server";
 import { resolveQuoteAccess, sameNormalizedEmail } from "@/lib/accessControl";
 import { pickPreferredLocale } from "@/lib/preferredLocale";
 import { ensureCustomerPortalForQuoteId } from "@/lib/customerPortal";
+import { captureBackgroundError } from "@/lib/sentry";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -153,6 +154,34 @@ export async function POST(req: Request) {
 
     const body = (await req.json().catch(() => ({}))) as LooseObj;
 
+    // The intake form's quote_json + intake_raw can legitimately be a
+    // few KB (multi-step intake with notes and answers) but should not
+    // be megabytes. Cap roughly at 200 KB serialized to keep abusive
+    // payloads out of the JSONB columns while leaving headroom for the
+    // legitimate "I wrote three paragraphs in the notes field" case.
+    let bodySize = 0;
+    try {
+      bodySize = JSON.stringify(body).length;
+    } catch {
+      // unserializable input — e.g. circular ref — refuse it
+      return NextResponse.json(
+        { ok: false, error: "Invalid request body." },
+        { status: 400 }
+      );
+    }
+    if (bodySize > 200_000) {
+      return NextResponse.json(
+        { ok: false, error: "Request body too large." },
+        { status: 413 }
+      );
+    }
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json(
+        { ok: false, error: "Invalid request body." },
+        { status: 400 }
+      );
+    }
+
     const leadEmail = extractLeadEmail(body);
     if (!leadEmail) {
       return NextResponse.json({ ok: false, error: "Invalid email" }, { status: 400 });
@@ -185,7 +214,6 @@ export async function POST(req: Request) {
         quoteToken,
         userId: user?.id ?? null,
         userEmail,
-        leadEmail,
       });
 
       if (!access.ok) {
@@ -264,7 +292,10 @@ export async function POST(req: Request) {
       savedQuoteToken = String(data.public_token ?? "").trim() || null;
 
       ensureCustomerPortalForQuoteId(savedQuoteId).catch((err) => {
-        console.error("[submit-estimate] workspace auto-create failed for quote", savedQuoteId, err);
+        captureBackgroundError(err, {
+          where: "submit-estimate.workspace_auto_create",
+          extra: { quoteId: savedQuoteId },
+        });
       });
     }
 

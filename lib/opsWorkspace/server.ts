@@ -95,7 +95,11 @@ export type OpsWorkspaceBundle = {
     currentTools: string[];
     painPoints: string[];
     workflowsNeeded: string[];
-    notes: string;
+    // Stripped from the customer-facing wire payload by
+    // makeClientSafeOpsBundle. Optional so admin code (which gets the
+    // full bundle) knows to handle the absence rather than assuming
+    // a string.
+    notes?: string;
   };
   callRequest: {
     exists: boolean;
@@ -107,30 +111,39 @@ export type OpsWorkspaceBundle = {
   };
   pie: {
     exists: boolean;
-    id: string | null;
-    status: string;
-    summary: string;
-    confidence: string;
+    // Fields below `exists` and `clientQuestions` + the offer's
+    // public sub-fields are STRIPPED on the customer-facing wire
+    // payload by makeClientSafeOpsBundle — proposal content
+    // (diagnosis, quickWins, implementationPlan, sops, kpis, risks,
+    // nextActions) plus internal metadata (id, status) plus
+    // operator-perspective writeup (summary, confidence) plus the
+    // internal offer rationale (recommendedOffer.why) all belong in
+    // the proposal PDF, never the portal API. Optional here so admin
+    // callers narrow before reading rather than assuming a value.
+    id?: string | null;
+    status?: string;
+    summary?: string;
+    confidence?: string;
     recommendedOffer: {
       primaryPackage: string;
       projectRange: string;
       retainerRange: string;
-      why: string;
+      why?: string;
     };
-    diagnosis: Array<{
+    diagnosis?: Array<{
       problem: string;
       impact: string;
       evidence: string;
       priority: string;
     }>;
-    quickWins: Array<{
+    quickWins?: Array<{
       title: string;
       why: string;
       steps: string[];
       owner: string;
       eta: string;
     }>;
-    implementationPlan: Array<{
+    implementationPlan?: Array<{
       phase: string;
       goal: string;
       deliverables: string[];
@@ -140,24 +153,24 @@ export type OpsWorkspaceBundle = {
       acceptanceCriteria: string[];
       estimateDays: string;
     }>;
-    sops: Array<{
+    sops?: Array<{
       workflow: string;
       trigger: string;
       steps: string[];
       exceptions: string[];
       metrics: string[];
     }>;
-    kpis: Array<{
+    kpis?: Array<{
       name: string;
       target: string;
       why: string;
     }>;
     clientQuestions: string[];
-    risks: Array<{
+    risks?: Array<{
       risk: string;
       mitigation: string;
     }>;
-    nextActions: string[];
+    nextActions?: string[];
   };
   ghostAdmin: {
     businessObjective: string;
@@ -168,7 +181,9 @@ export type OpsWorkspaceBundle = {
     bestFirstFix: string;
     bestTool: string;
     missingInfo: string[];
-    starterPrompts: string[];
+    // Admin-only AI prompt templates — stripped from the customer
+    // wire payload by makeClientSafeOpsBundle.
+    starterPrompts?: string[];
   };
   workflowMap: {
     currentState: string[];
@@ -397,7 +412,11 @@ function normalizePie(report: JsonRecord | null, intake: OpsIntakeRow) {
     exists: !!report,
     id: str(report?._id, null as any) ?? null,
     status: report ? "completed" : "pending",
-    summary: str(report?.summary, `PIE will summarize the ops strategy for ${str(intake.company_name, "this client")}.`),
+    // Empty string default rather than a placeholder mentioning
+    // "PIE" — that's the internal name of our pricing-intelligence
+    // tool and shouldn't appear in any field that rides on the
+    // customer-facing portal API response.
+    summary: str(report?.summary, ""),
     confidence: str(report?.confidence, "medium"),
     recommendedOffer: {
       primaryPackage: str(intake.recommendation_tier, sharedPricing.tierLabel),

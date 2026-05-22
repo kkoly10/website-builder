@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireAdminRoute } from "@/lib/routeAuth";
 import { ensureCustomerPortalForQuoteId } from "@/lib/customerPortal";
+import { captureBackgroundError } from "@/lib/sentry";
 
 export const runtime = "nodejs";
 
@@ -44,7 +45,10 @@ export async function POST(req: Request) {
       const workspaceStatuses = new Set(["active", "closed_won", "deposit_paid", "deposit_sent", "scope_locked"]);
       if (workspaceStatuses.has(status)) {
         ensureCustomerPortalForQuoteId(quoteId).catch((err) => {
-          console.error("[quote-action] workspace ensure failed for quote", quoteId, err);
+          captureBackgroundError(err, {
+            where: "quote-action.workspace_ensure",
+            extra: { quoteId },
+          });
         });
       }
 
@@ -56,9 +60,10 @@ export async function POST(req: Request) {
         .from("quotes")
         .select("scope_snapshot")
         .eq("id", quoteId)
-        .single();
+        .maybeSingle();
 
       if (loadErr) return NextResponse.json({ error: loadErr.message }, { status: 400 });
+      if (!data) return NextResponse.json({ error: "Quote not found." }, { status: 404 });
 
       const scope = (data as any)?.scope_snapshot ?? {};
 
@@ -74,7 +79,10 @@ export async function POST(req: Request) {
       if (updErr) return NextResponse.json({ error: updErr.message }, { status: 400 });
 
       ensureCustomerPortalForQuoteId(quoteId).catch((err) => {
-        console.error("[quote-action] workspace ensure failed for quote", quoteId, err);
+        captureBackgroundError(err, {
+          where: "quote-action.workspace_ensure",
+          extra: { quoteId },
+        });
       });
 
       return NextResponse.redirect(referer, 303);
@@ -99,7 +107,10 @@ export async function POST(req: Request) {
 
       if (deposit_link) {
         ensureCustomerPortalForQuoteId(quoteId).catch((err) => {
-          console.error("[quote-action] workspace ensure failed for quote", quoteId, err);
+          captureBackgroundError(err, {
+            where: "quote-action.workspace_ensure",
+            extra: { quoteId },
+          });
         });
       }
 
@@ -119,7 +130,10 @@ export async function POST(req: Request) {
       if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
       ensureCustomerPortalForQuoteId(quoteId).catch((err) => {
-        console.error("[quote-action] workspace ensure failed for quote", quoteId, err);
+        captureBackgroundError(err, {
+          where: "quote-action.workspace_ensure",
+          extra: { quoteId },
+        });
       });
 
       return NextResponse.redirect(referer, 303);
