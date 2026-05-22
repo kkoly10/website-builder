@@ -11,18 +11,23 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  const authErr = await requireAdminRoute();
-  if (authErr) return authErr;
-  const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-ops-workspace", limit: 60 });
-  if (rlErr) return rlErr;
+  try {
+    const authErr = await requireAdminRoute();
+    if (authErr) return authErr;
+    const rlErr = await enforceAdminRateLimit(req, { keyPrefix: "admin-ops-workspace", limit: 60 });
+    if (rlErr) return rlErr;
 
-  const opsIntakeId = req.nextUrl.searchParams.get("opsIntakeId");
-  if (!opsIntakeId) {
-    return NextResponse.json({ ok: false, error: "Missing opsIntakeId" }, { status: 400 });
+    const opsIntakeId = req.nextUrl.searchParams.get("opsIntakeId");
+    if (!opsIntakeId) {
+      return NextResponse.json({ ok: false, error: "Missing opsIntakeId" }, { status: 400 });
+    }
+
+    const data = await getWorkspaceState(opsIntakeId);
+    return NextResponse.json({ ok: true, data });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to load workspace.";
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
-
-  const data = await getWorkspaceState(opsIntakeId);
-  return NextResponse.json({ ok: true, data });
 }
 
 export async function POST(req: NextRequest) {

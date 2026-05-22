@@ -19,6 +19,7 @@ function isGhostLane(value: string): value is GhostLane {
 }
 
 export async function POST(req: NextRequest) {
+  try {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -104,4 +105,8 @@ export async function POST(req: NextRequest) {
     snapshot,
     sessionId: session?.id || null,
   });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Ghost query handler failed.";
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+  }
 }

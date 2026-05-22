@@ -7,6 +7,7 @@ import { recordServerEvent } from "@/lib/analytics/server";
 import { resolveQuoteAccess, sameNormalizedEmail } from "@/lib/accessControl";
 import { pickPreferredLocale } from "@/lib/preferredLocale";
 import { ensureCustomerPortalForQuoteId } from "@/lib/customerPortal";
+import { captureBackgroundError } from "@/lib/sentry";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -291,7 +292,10 @@ export async function POST(req: Request) {
       savedQuoteToken = String(data.public_token ?? "").trim() || null;
 
       ensureCustomerPortalForQuoteId(savedQuoteId).catch((err) => {
-        console.error("[submit-estimate] workspace auto-create failed for quote", savedQuoteId, err);
+        captureBackgroundError(err, {
+          where: "submit-estimate.workspace_auto_create",
+          extra: { quoteId: savedQuoteId },
+        });
       });
     }
 
