@@ -6,7 +6,6 @@ type QuoteAccessArgs = {
   quoteToken?: string | null;
   userId?: string | null;
   userEmail?: string | null;
-  leadEmail?: string | null;
 };
 
 type QuoteRow = {
@@ -62,7 +61,6 @@ function isAuthorizedQuoteActor(args: {
   quoteToken?: string | null;
   userId?: string | null;
   userEmail?: string | null;
-  leadEmail?: string | null;
 }) {
   const viaToken =
     !!args.quoteToken &&
@@ -74,20 +72,20 @@ function isAuthorizedQuoteActor(args: {
     !!args.quote.auth_user_id &&
     String(args.userId).trim() === String(args.quote.auth_user_id).trim();
 
+  // viaUserEmail proves ownership because userEmail comes from the
+  // verified Supabase session (auth.getUser()), not from request body.
+  // A previous implementation also accepted a body-supplied leadEmail
+  // as ownership proof — that allowed anyone with a quoteId + the
+  // customer's email to mutate the quote. Removed.
   const viaUserEmail =
     sameNormalizedEmail(args.userEmail, args.quote.owner_email_norm) ||
     sameNormalizedEmail(args.userEmail, args.quote.lead_email);
-
-  const viaLeadEmail =
-    sameNormalizedEmail(args.leadEmail, args.quote.owner_email_norm) ||
-    sameNormalizedEmail(args.leadEmail, args.quote.lead_email);
 
   return {
     viaToken,
     viaUser,
     viaUserEmail,
-    viaLeadEmail,
-    ok: viaToken || viaUser || viaUserEmail || viaLeadEmail,
+    ok: viaToken || viaUser || viaUserEmail,
   };
 }
 
@@ -116,7 +114,6 @@ export async function resolveQuoteAccess(args: QuoteAccessArgs) {
     quoteToken: args.quoteToken,
     userId: args.userId,
     userEmail: args.userEmail,
-    leadEmail: args.leadEmail,
   });
 
   return {

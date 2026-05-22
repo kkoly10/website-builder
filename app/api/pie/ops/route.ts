@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generatePieOpsReport } from "@/lib/pie/ops-agent";
 import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
+import { requireAdminRoute } from "@/lib/routeAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,12 @@ type RequestBody = {
 
 export async function POST(req: NextRequest) {
   try {
+    // /pie-lab is the only legitimate caller and is admin-gated by its
+    // layout — the route itself must enforce the same gate so direct
+    // POSTs can't burn OpenAI tokens anonymously.
+    const authErr = await requireAdminRoute();
+    if (authErr) return authErr;
+
     const ip = getIpFromHeaders(req.headers);
     const rl = await enforceRateLimitDurable({ key: `pie-ops:${ip}`, limit: 5, windowMs: 60_000 });
     if (!rl.ok) return rateLimitResponse(rl.resetAt);
