@@ -173,30 +173,15 @@ type PortalBundle = {
     timezone: string | null;
     notes: string | null;
   } | null;
+  // The customer-facing bundle exposes a deliberately minimal PIE
+  // shape — anything beyond `exists` was internal pricing-tool data
+  // (pitch.emphasize / pitch.objections, pricing band, internal
+  // hours, routing intelligence, the raw payload). Admin renders use
+  // a different bundle (lib/adminProjectData.ts) that includes the
+  // full shape.
   pie: {
     exists: boolean;
-    id: string | null;
-    score: number | null;
-    tier: string | null;
-    confidence: string | null;
     summary: string;
-    risks: string[];
-    pitch: {
-      emphasize: string[];
-      recommend: string | null;
-      objections: string[];
-    };
-    pricing: {
-      target: number | null;
-      minimum: number | null;
-      maximum: number | null;
-    };
-    hours: {
-      min: number | null;
-      max: number | null;
-    };
-    timelineText: string | null;
-    discoveryQuestions: string[];
   };
   preview: {
     url: string | null;

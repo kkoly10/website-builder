@@ -495,7 +495,8 @@ async function loadPortalBundle(portal: AnyObj | null) {
   };
 }
 
-function parsePieReport(rawPie: AnyObj | null) {
+function parsePieReport(rawPie: AnyObj | null, options?: { includeInternal?: boolean }) {
+  const includeInternal = !!options?.includeInternal;
   const payload = safeObj(rawPie?.payload);
   const report = safeObj(rawPie?.report);
 
@@ -507,21 +508,34 @@ function parsePieReport(rawPie: AnyObj | null) {
     const routing = safeObj(payload.routing);
     const negotiation = safeObj(payload.negotiation);
 
+    const summary =
+      cleanString(tier.rationale) ||
+      cleanString(payload.summary) ||
+      cleanString(rawPie?.summary) ||
+      "";
+
+    // Client-safe shape: the customer portal renders nothing from
+    // bundle.pie today; previously we shipped the full PIE shape
+    // (pitch.emphasize / pitch.objections — internal sales-defense
+    // scripts; pricing.{target,minimum,maximum} — our internal
+    // pricing band; routing.{reason,triggers} — sales intelligence;
+    // payload — the raw PIE response) to every client request and
+    // anyone could read it in DevTools → Network. Strip the whole
+    // internal payload when the caller isn't an admin.
+    if (!includeInternal) {
+      return {
+        exists: true,
+        summary,
+      };
+    }
+
     return {
       exists: true,
       id: rawPie?.id ?? null,
       score: Number(complexity.score ?? rawPie?.score ?? 0) || null,
       tier: cleanString(tier.recommended) || cleanString(rawPie?.tier) || null,
       confidence: cleanString(complexity.confidence) || cleanString(rawPie?.confidence) || null,
-      // Empty string when no PIE data, not a placeholder sentence —
-      // the field rides on the API response and a string like "No PIE
-      // summary yet." would leak the existence of the internal PIE
-      // tool to anyone inspecting Network in devtools.
-      summary:
-        cleanString(tier.rationale) ||
-        cleanString(payload.summary) ||
-        cleanString(rawPie?.summary) ||
-        "",
+      summary,
       risks: safeArray(payload.risks).map((risk: AnyObj) => cleanString(risk.flag || risk)).filter(Boolean),
       pitch: {
         emphasize: safeArray(negotiation.priceDefense).map((item) => cleanString(item)).filter(Boolean).slice(0, 3),
@@ -556,16 +570,22 @@ function parsePieReport(rawPie: AnyObj | null) {
   const quote = safeObj(pricing.quote);
   const hours = safeObj(legacy.hours);
 
+  const legacySummary = cleanString(legacy.summary || rawPie?.summary) || "";
+
+  if (!includeInternal) {
+    return {
+      exists: !!rawPie,
+      summary: legacySummary,
+    };
+  }
+
   return {
     exists: !!rawPie,
     id: rawPie?.id ?? null,
     score: Number(legacy.score ?? rawPie?.score ?? 0) || null,
     tier: cleanString(legacy.tier || rawPie?.tier) || null,
     confidence: cleanString(legacy.confidence || rawPie?.confidence) || null,
-    // Empty string default rather than a placeholder — see comment on
-    // the other summary field in this file. Admin renderers should
-    // show their own "no data yet" UI if needed.
-    summary: cleanString(legacy.summary || rawPie?.summary) || "",
+    summary: legacySummary,
     risks: safeArray(legacy.risks).map((risk) => cleanString(risk)).filter(Boolean),
     pitch: {
       emphasize: safeArray(safeObj(legacy.pitch).emphasize).map((item) => cleanString(item)).filter(Boolean),
@@ -703,7 +723,7 @@ function buildWorkspaceView(
   const intake = safeObj(quote.intake_normalized);
   const scopeSnapshot = safeObj(portal.scope_snapshot);
   const debug = safeObj(quote.debug);
-  const pie = parsePieReport(bundle.pieReport);
+  const pie = parsePieReport(bundle.pieReport, { includeInternal: !!options?.includeInternal });
   const milestones = buildWorkspaceMilestones(safeArray(bundle.milestones));
   const assets = safeArray(bundle.assets).map((asset: AnyObj) => ({
     id: cleanString(asset.id),
