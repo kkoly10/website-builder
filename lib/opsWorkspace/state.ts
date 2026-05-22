@@ -494,21 +494,32 @@ export function makeClientSafeOpsBundle(
 ): EnrichedOpsWorkspaceBundle {
   if (options?.isAdmin) return bundle;
 
+  // Strip admin-only fields entirely from the wire payload — previously
+  // we zeroed them ("", [], {}) but the field NAMES still appeared in
+  // the JSON response. A curious customer opening DevTools → Network
+  // would see `internalDiagnosisNote: ""`, `adminNotes: {}`,
+  // `starterPrompts: []` and infer that we keep private notes /
+  // prompts about them, which is a trust leak even with empty values.
+  //
+  // The TypeScript return type still claims these fields exist; that's
+  // intentional so admin/internal callers stay typed. The customer
+  // OpsPortalClient happens not to read any of these properties, so
+  // they're safe to omit at runtime.
+  const intake = { ...bundle.intake } as Partial<typeof bundle.intake>;
+  delete intake.notes;
+
+  const ghostAdmin = { ...bundle.ghostAdmin } as Partial<typeof bundle.ghostAdmin>;
+  delete ghostAdmin.starterPrompts;
+
+  const workspace = { ...bundle.workspace } as Partial<typeof bundle.workspace>;
+  delete workspace.internalDiagnosisNote;
+  delete workspace.adminNotes;
+  delete workspace.chatMessages;
+
   return {
     ...bundle,
-    intake: {
-      ...bundle.intake,
-      notes: "",
-    },
-    ghostAdmin: {
-      ...bundle.ghostAdmin,
-      starterPrompts: [],
-    },
-    workspace: {
-      ...bundle.workspace,
-      internalDiagnosisNote: "",
-      adminNotes: {},
-      chatMessages: [],
-    },
+    intake: intake as typeof bundle.intake,
+    ghostAdmin: ghostAdmin as typeof bundle.ghostAdmin,
+    workspace: workspace as typeof bundle.workspace,
   };
 }

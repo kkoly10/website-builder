@@ -2152,8 +2152,7 @@
         "projectNotes": "Notas del proyecto",
         "none": "Ninguna",
         "bestTimeToCall": "Mejor momento para llamar",
-        "notProvided": "No proporcionado",
-        "pieSummary": "Resumen PIE"
+        "notProvided": "No proporcionado"
       },
       "agreementLabel": "Acuerdo & pago",
       "scopeHistoryLabel": "Historial de alcance & órdenes de cambio",

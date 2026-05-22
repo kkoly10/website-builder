@@ -397,7 +397,11 @@ function normalizePie(report: JsonRecord | null, intake: OpsIntakeRow) {
     exists: !!report,
     id: str(report?._id, null as any) ?? null,
     status: report ? "completed" : "pending",
-    summary: str(report?.summary, `PIE will summarize the ops strategy for ${str(intake.company_name, "this client")}.`),
+    // Empty string default rather than a placeholder mentioning
+    // "PIE" — that's the internal name of our pricing-intelligence
+    // tool and shouldn't appear in any field that rides on the
+    // customer-facing portal API response.
+    summary: str(report?.summary, ""),
     confidence: str(report?.confidence, "medium"),
     recommendedOffer: {
       primaryPackage: str(intake.recommendation_tier, sharedPricing.tierLabel),
