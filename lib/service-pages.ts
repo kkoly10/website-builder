@@ -8,7 +8,8 @@ type ServiceId =
   | "custom_web_apps"
   | "client_portals"
   | "website_rescue"
-  | "care_plans";
+  | "care_plans"
+  | "ai_integration";
 
 // ServiceData mirrors ServicePageProps. We translate by swapping locale-keyed
 // objects under each ServiceId. /fr and /es fall back to the en entry if a
@@ -50,6 +51,11 @@ const CROSS_LINKS: Record<ServiceId, ServicePageProps["crossLinks"]> = {
     { id: "websites", href: "/websites" },
     { id: "systems", href: "/systems" },
     { id: "customWebApps", href: "/custom-web-apps" },
+  ],
+  ai_integration: [
+    { id: "systems", href: "/systems" },
+    { id: "customWebApps", href: "/custom-web-apps" },
+    { id: "clientPortals", href: "/client-portals" },
   ],
 };
 
@@ -1653,6 +1659,212 @@ carePlansData.en = {
   finalSecondaryCta: { label: "See our work", href: "/work" },
 };
 
+const aiIntegrationData: Partial<Record<Locale, ServiceData>> = {};
+
+aiIntegrationData.en = {
+  eyebrow: "AI integration",
+  title: "Anyone can demo AI. We build the version that holds up in production.",
+  intro:
+    "The hard part of AI was never the demo — it's everything after: what happens when the model is wrong, how it connects to your real tools, and whether you can trust it unattended. That's the part most vendors skip. We don't, because we've had to solve it for our own products. We run three production AI systems, and we build them the way serious AI has to be built — confidence-gated autonomy, guardrails, a human in the loop where mistakes are costly, and audit trails you can inspect.",
+  heroStats: [
+    "3 production AI systems we built & run",
+    "Guardrails + audit trails built in",
+    "Human-in-the-loop by default",
+    "You own the code, data & prompts",
+  ],
+  primaryCta: { label: "Scope your AI build", href: "/build/intro" },
+  secondaryCta: { label: "See it in our work", href: "/work" },
+  whoItsForTitle: "Best for businesses past the “let's try ChatGPT” phase.",
+  whoItsFor: [
+    "You've seen what AI can do and want it wired into your actual tools and workflow — not another browser tab.",
+    "Your team burns hours every week on work a well-built agent could handle: triage, follow-up, lookups, data entry.",
+    "You tried an off-the-shelf tool or a freelancer's bot — impressive for a week, then it quietly broke.",
+    "You want AI that's accountable: logged, reviewable, supervised — not a black box you can't trust with customers.",
+  ],
+  problemsTitle: "Why most business AI never makes it past the demo.",
+  problems: [
+    "It was built to impress in a pitch, not to survive real inputs, edge cases, and volume.",
+    "Nobody designed for the AI being wrong — no confidence gate, no review step, no audit trail.",
+    "It lives in a silo, disconnected from your CRM, inbox, and database, so it never actually saves time.",
+    "When the person who set it up leaves, it becomes an unmaintainable mystery nobody can touch.",
+  ],
+  includesTitle: "What we build into your business",
+  includes: [
+    {
+      title: "AI agents & agentic workflows",
+      items: [
+        "Agents that act across your tools — qualify a lead, update a record, draft the reply, flag the exception",
+        "Confidence thresholds and guardrails so an agent only acts when it's safe, and escalates when it isn't",
+        "Preview-before-execute on anything that changes real data, the way our Fleiko copilot works",
+      ],
+    },
+    {
+      title: "Customer & internal support copilots",
+      items: [
+        "A support assistant that answers from your live account, ticket, and policy data — not generic guesses",
+        "Autonomous resolution of low-risk, high-confidence requests; everything else routed to a human with context",
+        "Agent-assist that drafts replies so your team answers faster, all running today in kocreit",
+      ],
+    },
+    {
+      title: "AI-powered workflow automation",
+      items: [
+        "Your automations (Zapier / Make / n8n) given judgment — routing, summarizing, deciding, not just moving data",
+        "Intelligent triage so the right things reach the right people first",
+        "Ties directly into our Systems service if the plumbing needs to come first",
+      ],
+    },
+    {
+      title: "Document & data extraction",
+      items: [
+        "Turn invoices, forms, contracts, and PDFs into structured data automatically",
+        "Confidence flags so low-certainty items get a human check instead of a silent error",
+        "Cuts the manual data-entry work that quietly costs a salary",
+      ],
+    },
+    {
+      title: "Computer vision & authenticity verification",
+      items: [
+        "Automated image analysis — before/after detection, condition checks, photo verification",
+        "Provenance audit trails behind every verified result, so a claim can be trusted — this is Proveo's TrustAudit engine",
+        "A capability almost no small studio can deliver — we ship it in production",
+      ],
+    },
+  ],
+  proof: {
+    label: "Proof, not promises",
+    title: "We don't sell demos. We run three of our own production AI systems.",
+    intro:
+      "And we build them the way serious AI has to be built: confidence gates, guardrails, human-in-the-loop, and audit trails. Not buzzwords — the actual architecture we run. See them in our work.",
+    items: [
+      {
+        name: "kocreit",
+        detail:
+          "A managed IT-support platform whose AI autonomously resolves tickets only above 90% confidence on safe categories, and escalates everything else to a human.",
+      },
+      {
+        name: "Fleiko",
+        detail:
+          "An agentic fleet copilot that previews actions and enforces guardrails before it ever touches your data.",
+      },
+      {
+        name: "Proveo",
+        detail:
+          "AI authenticity verification with a full provenance audit trail behind every “verified” badge.",
+      },
+    ],
+  },
+  pricingTitle: "Priced on what it takes to run in production — not what it takes to demo.",
+  pricingIntro:
+    "Every build is scoped on autonomy, risk, data sensitivity, and volume — you see the price before you commit, and $0 is due until scope is approved. We define the outcome we're moving and validate it on your real data before the full build, so you're never betting on a number we made up. Production AI also has real ongoing costs (monitoring, tuning, tokens, infrastructure), available as an optional ops retainer.",
+  pricingCards: [
+    {
+      label: "/ SINGLE INTEGRATION",
+      value: "$10,000 - $20,000",
+      detail:
+        "One focused AI capability shipped into your business — a single agent, an extraction pipeline, or a support copilot. Live, gated, and supervised.",
+    },
+    {
+      label: "/ PRODUCTION SYSTEM",
+      value: "$25,000 - $50,000",
+      detail:
+        "Multiple AI capabilities working together across your tools, with confidence gating, review steps, logging, and handoffs designed in.",
+    },
+    {
+      label: "/ ARCHITECTURE BUILD",
+      value: "$50,000 - $100,000+",
+      detail:
+        "A full AI layer for your operation — multi-agent orchestration, custom models, and the infrastructure to run it reliably at scale.",
+    },
+  ],
+  processTitle: "From use case to production — without the demo trap.",
+  processIntro:
+    "We don't start with the model. We start with the job to be done, the cost of getting it wrong, and how you'll know it worked.",
+  process: [
+    {
+      step: "/ 01 — WEEK 1",
+      title: "Scope the real job",
+      detail:
+        "Use case, autonomy level, what a mistake costs, and the metric we're moving — hours saved, response time, error rate.",
+    },
+    {
+      step: "/ 02 — WEEK 1–2",
+      title: "Prove it on your data",
+      detail:
+        "We validate against your real inputs and edge cases before committing to a full build. Honest results, not a cherry-picked demo.",
+    },
+    {
+      step: "/ 03 — BUILD",
+      title: "Ship to production",
+      detail:
+        "Built into your tools with the confidence gates, guardrails, logging, and human-in-the-loop steps that keep it trustworthy. Tested with real data before go-live.",
+    },
+    {
+      step: "/ 04 — LAUNCH + RUN",
+      title: "Measure & maintain",
+      detail:
+        "We track the metric we promised, tune it, and optionally run ongoing ops so it keeps working as your business changes.",
+    },
+  ],
+  bestFitTitle: "Start here if you want AI that runs your business — not one that impresses at a meeting.",
+  bestFit: [
+    "You have a specific, repetitive, expensive workflow you want AI to own.",
+    "You want accountable AI — gated, logged, reviewable — handling real customers or real data.",
+    "You want a partner who's still on the hook when it's live, not just at the demo.",
+  ],
+  notFitTitle: "Probably not the right first move if…",
+  notFit: [
+    "You mainly need a website or online store — start with our websites or e-commerce lane.",
+    "You want the cheapest possible chatbot with no concern for whether it survives real use.",
+    "You're exploring AI conceptually but don't yet have a workflow or outcome in mind — start with our automation audit instead.",
+  ],
+  faqTitle: "What people ask before committing to AI.",
+  faqs: [
+    {
+      question: "How is this different from just using ChatGPT?",
+      answer:
+        "ChatGPT is a great tab to have open. It doesn't read your CRM, follow your rules, log its decisions, or run unattended at 2am. We build AI into your systems with the connections, gating, and oversight that turn a clever demo into something you can depend on.",
+    },
+    {
+      question: "What happens when the AI gets something wrong?",
+      answer:
+        "We assume it will. Every build has confidence thresholds and a human-in-the-loop step wherever a mistake is costly, plus logging so you can see exactly what it did and why. Our own kocreit system, for example, only auto-acts above 90% confidence and escalates the rest.",
+    },
+    {
+      question: "Isn't this just an “AI agent” wrapper on a chatbot?",
+      answer:
+        "No agent-washing here. We only call something an agent if it genuinely plans and takes actions. If a simple automation solves your problem, we'll build that and charge you less.",
+    },
+    {
+      question: "Do I own what you build?",
+      answer:
+        "Yes — the code, the prompts, the data, the integrations. No lock-in. The optional retainer is for clients who want us to keep running it, not a leash.",
+    },
+    {
+      question: "How do I know it'll save money, not just cost it?",
+      answer:
+        "We define the metric before we build and validate on your real data early. If it doesn't move the number, we tell you before you spend on a full build.",
+    },
+    {
+      question: "What does it cost to keep running after launch?",
+      answer:
+        "Production AI has real ongoing costs (tokens, infrastructure, monitoring). We're upfront about them and offer an optional ops retainer.",
+    },
+    {
+      question: "Can you prove you've actually done this?",
+      answer:
+        "Yes. kocreit, Fleiko, and Proveo are three AI products we built and run — you can see them in our work. Most of the market shows you a demo; we show you live systems.",
+    },
+  ],
+  crossLinks: CROSS_LINKS.ai_integration,
+  finalTitle: "Tell us the workflow that's costing you the most.",
+  finalText:
+    "We'll tell you honestly whether AI should own it — and if it should, what it'll take to put it in production, gated and safe. Scoped and priced within 48 hours.",
+  finalPrimaryCta: { label: "Scope your AI build", href: "/build/intro" },
+  finalSecondaryCta: { label: "See recent work", href: "/work" },
+  projectType: "ai_integration",
+};
+
 export function getServicePageData(locale: string, id: ServiceId): ServiceData {
   const dataMap: Record<ServiceId, Partial<Record<Locale, ServiceData>>> = {
     websites: websitesData,
@@ -1662,6 +1874,7 @@ export function getServicePageData(locale: string, id: ServiceId): ServiceData {
     client_portals: clientPortalsData,
     website_rescue: websiteRescueData,
     care_plans: carePlansData,
+    ai_integration: aiIntegrationData,
   };
   const map = dataMap[id];
   const normalized = (locale === "fr" || locale === "es" ? locale : "en") as Locale;

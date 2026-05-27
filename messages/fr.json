@@ -21,6 +21,7 @@
     "ecommerce": "E-commerce",
     "websiteRescue": "Rescue de site",
     "systems": "Systèmes",
+    "aiIntegration": "Intégration IA",
     "process": "Processus",
     "work": "Réalisations",
     "pricing": "Tarifs",
@@ -116,6 +117,7 @@
       "websites": "Sites web",
       "ecommerce": "E-commerce",
       "systems": "Systèmes",
+      "aiIntegration": "Intégration IA",
       "process": "Processus",
       "work": "Réalisations",
       "pricing": "Tarifs",
@@ -972,6 +974,10 @@
     "carePlans": "Plans de maintenance"
   },
   "servicesMeta": {
+    "aiIntegration": {
+      "metaTitle": "Intégration IA | De l'IA en production, avec des garde-fous",
+      "metaDescription": "Nous ne vendons pas de démos d'IA. Nous exploitons trois systèmes d'IA en production — à seuil de confiance, encadrés, avec supervision humaine. Nous construisons la même chose pour votre entreprise."
+    },
     "websites": {
       "metaTitle": "Création de sites web | Sites premium axés sur la conversion",
       "metaDescription": "Création de sites web premium pour les entreprises de services qui ont besoin de plus de confiance, d'un message plus clair et d'une meilleure conversion des prospects."

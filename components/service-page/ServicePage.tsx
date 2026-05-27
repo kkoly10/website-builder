@@ -63,6 +63,14 @@ export type ServicePageProps = {
   problems: string[];
   includesTitle: string;
   includes: IncludeGroup[];
+  // Optional proof band. When set, renders between the includes and process
+  // sections — used by the AI integration page to surface shipped products.
+  proof?: {
+    label: string;
+    title: string;
+    intro: string;
+    items: { name: string; detail: string }[];
+  };
   pricingTitle: string;
   pricingIntro: string;
   pricingCards: PricingCard[];
@@ -99,6 +107,7 @@ export default function ServicePage({
   problems,
   includesTitle,
   includes,
+  proof,
   pricingTitle,
   pricingIntro,
   pricingCards,
@@ -269,6 +278,27 @@ export default function ServicePage({
           </div>
         </div>
       </section>
+
+      {proof && (
+        <section className={styles.section}>
+          <div className="container">
+            <div className={styles.sectionHead}>
+              <p className={styles.sectionLabel}>{proof.label}</p>
+              <h2 className={styles.sectionTitle}>{proof.title}</h2>
+              <p className={styles.sectionIntro}>{proof.intro}</p>
+            </div>
+
+            <div className={styles.includesGrid}>
+              {proof.items.map((item) => (
+                <article key={item.name} className={styles.includeCard}>
+                  <h3>{item.name}</h3>
+                  <p>{item.detail}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className={styles.processBand}>
         <div className="container">
