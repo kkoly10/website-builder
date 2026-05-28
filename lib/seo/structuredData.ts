@@ -351,6 +351,167 @@ export function serviceNode(opts: {
   };
 }
 
+// Sub-offerings under the AI integration service. Each becomes its own
+// Offer + Service in the @graph — gives AI search engines (Perplexity,
+// ChatGPT, Claude) concrete answers to "what does CrecyStudio
+// specifically build with AI". Order matters for SERP snippets:
+// highest-intent / most-searched terms first.
+const AI_SUB_OFFERINGS = [
+  {
+    name: "AI agent development",
+    description:
+      "Production AI agents with safety gates, tool-use boundaries, and human-in-the-loop confirmation for high-stakes actions.",
+  },
+  {
+    name: "AI copilot development",
+    description:
+      "In-product AI copilots that suggest next actions, draft content, and surface insights — without ever silently editing your data.",
+  },
+  {
+    name: "OpenAI integration (GPT-4, GPT-4o, o1)",
+    description:
+      "OpenAI API integration into production web apps — structured outputs, function calling, streaming, cost controls.",
+  },
+  {
+    name: "Anthropic Claude integration",
+    description:
+      "Claude API integration with prompt caching, computer use, and the Claude Agent SDK for long-running tasks.",
+  },
+  {
+    name: "RAG (Retrieval-Augmented Generation)",
+    description:
+      "Vector-database-backed RAG pipelines on Supabase pgvector or Pinecone — for answering questions over your own documents.",
+  },
+  {
+    name: "Vision AI integration",
+    description:
+      "GPT-4o vision and Claude vision integration — photo classification, document parsing, image-based QA.",
+  },
+  {
+    name: "Custom GPTs and Claude projects",
+    description:
+      "Branded custom GPTs and Claude projects tuned to your domain — for internal use or customer-facing assistants.",
+  },
+  {
+    name: "AI prompt engineering & evals",
+    description:
+      "Prompt engineering, evaluation harnesses, and regression suites so your AI behavior is measurable and reproducible.",
+  },
+  {
+    name: "AI workflow automation",
+    description:
+      "AI-driven workflow automation — auto-triage, auto-routing, content generation pipelines, multi-step task orchestration.",
+  },
+];
+
+// Tools & platforms the studio works with. schema.org `mentions` is the
+// right field for "this service uses these things". AI search engines
+// use this to answer "who integrates OpenAI" / "who builds on
+// pgvector" — without it the studio would only match the generic
+// "AI" search, not the buyer-intent technology-specific search.
+const AI_TECH_MENTIONS = [
+  { name: "OpenAI GPT-4" },
+  { name: "OpenAI GPT-4o" },
+  { name: "Anthropic Claude" },
+  { name: "Anthropic Claude Agent SDK" },
+  { name: "Supabase pgvector" },
+  { name: "OpenAI Embeddings" },
+  { name: "OpenAI Whisper" },
+  { name: "Next.js" },
+  { name: "TypeScript" },
+  { name: "Vercel AI SDK" },
+];
+
+export function aiIntegrationServiceNode(opts: {
+  // Canonical URL of the AI integration page (e.g. "/ai-integration"
+  // or "/fr/ai-integration"). Used as the @id anchor so the rich
+  // node is the canonical Service entity for the page.
+  pageUrl: string;
+  // BCP-47 lang tag for the page. AI search engines pick the right
+  // localized result when this matches the page's <html lang>.
+  inLanguage: string;
+  // Hero copy already shown on the page. Keeping it in the schema
+  // satisfies Google's "structured data must match visible content"
+  // rule — paste from the i18n key the page renders.
+  serviceName: string;
+  serviceDescription: string;
+}): GraphNode {
+  const url = absoluteUrl(opts.pageUrl);
+  return {
+    "@type": "Service",
+    "@id": `${url}#ai-integration-service`,
+    name: opts.serviceName,
+    description: opts.serviceDescription,
+    url,
+    provider: { "@id": ORG_ID },
+    inLanguage: opts.inLanguage,
+    // Same DMV + US/CA/GB service area as the LocalBusiness — keeps
+    // the local pack relevance signal consistent.
+    areaServed: areaServedNodes(),
+    // serviceType doubles as the SEO keyword surface. List the most-
+    // searched buyer phrases first.
+    serviceType: [
+      "AI integration",
+      "AI agent development",
+      "AI copilot development",
+      "OpenAI integration",
+      "Anthropic Claude integration",
+      "GPT-4 integration",
+      "RAG implementation",
+      "AI workflow automation",
+      "Vision AI integration",
+      "AI prompt engineering",
+    ],
+    // Tools & platforms the studio works with.
+    mentions: AI_TECH_MENTIONS.map((tech) => ({
+      "@type": "SoftwareApplication",
+      name: tech.name,
+      applicationCategory: "AIApplication",
+    })),
+    // Sub-offerings as a proper OfferCatalog. AI search engines walk
+    // this list to answer "does X specifically do Y" follow-up
+    // queries. Each sub-offering exposed as its own Service so the
+    // catalog is rich-result-eligible.
+    hasOfferCatalog: {
+      "@type": "OfferCatalog",
+      name: "AI integration offerings",
+      itemListElement: AI_SUB_OFFERINGS.map((offering) => ({
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: offering.name,
+          description: offering.description,
+          provider: { "@id": ORG_ID },
+        },
+      })),
+    },
+  };
+}
+
+// Speakable spec for voice search and AI-assistant answers (Google
+// Assistant, Siri, Alexa skill answers, and increasingly LLM-based
+// search like Perplexity). Tells the engine: "if a user asks
+// 'what does CrecyStudio do for AI', read these page elements
+// aloud." The css selectors must match real DOM nodes on the page.
+export function speakableNode(opts: {
+  pageUrl: string;
+  // CSS selectors of the elements that hold the canonical "answer"
+  // copy — usually the h1 + lead paragraph. Both ServicePage's heroTitle
+  // and heroIntro have stable class names from the CSS module that we
+  // can target.
+  selectors: string[];
+}): GraphNode {
+  return {
+    "@type": "WebPage",
+    "@id": `${absoluteUrl(opts.pageUrl)}#webpage`,
+    url: absoluteUrl(opts.pageUrl),
+    speakable: {
+      "@type": "SpeakableSpecification",
+      cssSelector: opts.selectors,
+    },
+  };
+}
+
 export function siteGraph(nodes: GraphNode[]): GraphNode {
   return {
     "@context": "https://schema.org",
