@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
 import { allLocationSlugs } from "@/lib/seo/locations";
+import { BLOG_POSTS } from "@/lib/blog/posts";
 
 type Page = {
   path: string;
@@ -12,6 +13,12 @@ type Page = {
   // (English-language local-SEO landing pages targeting the
   // anglophone DMV — see app/[locale]/locations/[city]/page.tsx).
   englishOnly?: boolean;
+  // Optional override for the sitemap's `lastModified` field.
+  // Blog posts pass their updatedAt (or publishedAt) so search
+  // engines see the real freshness of the content rather than a
+  // generated-at-build-time timestamp that resets every deploy
+  // (which dilutes the "this content was updated" signal).
+  lastModified?: string;
 };
 
 const STATIC_PAGES: Page[] = [
@@ -34,6 +41,7 @@ const STATIC_PAGES: Page[] = [
   { path: "/contact", priority: 0.6, changeFrequency: "yearly" },
   { path: "/pricing", priority: 0.7, changeFrequency: "monthly" },
   { path: "/locations", priority: 0.8, changeFrequency: "monthly", englishOnly: true },
+  { path: "/blog", priority: 0.8, changeFrequency: "weekly", englishOnly: true },
   { path: "/privacy", priority: 0.3, changeFrequency: "yearly" },
   { path: "/terms", priority: 0.3, changeFrequency: "yearly" },
   { path: "/aup", priority: 0.3, changeFrequency: "yearly" },
@@ -51,7 +59,20 @@ const LOCATION_PAGES: Page[] = allLocationSlugs().map((slug) => ({
   englishOnly: true,
 }));
 
-const PAGES: Page[] = [...STATIC_PAGES, ...LOCATION_PAGES];
+// Blog posts — auto-registered from lib/blog/posts.ts so adding a
+// new post registers in the sitemap without touching this file.
+// Slightly higher priority than location pages (blog posts are the
+// primary inbound-traffic surface for non-brand keyword queries).
+const BLOG_POST_PAGES: Page[] = BLOG_POSTS.map((post) => ({
+  path: `/blog/${post.slug}`,
+  priority: 0.75,
+  changeFrequency: "monthly" as const,
+  englishOnly: true,
+  // Use the post's own freshness signal instead of build time.
+  lastModified: post.updatedAt || post.publishedAt,
+}));
+
+const PAGES: Page[] = [...STATIC_PAGES, ...LOCATION_PAGES, ...BLOG_POST_PAGES];
 
 function localizedHref(siteUrl: string, locale: string, path: string) {
   // Default locale stays at the root (no prefix). Other locales get a prefix.
@@ -91,7 +112,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
     return emittedLocales.map((locale) => ({
       url: localizedHref(siteUrl, locale, page.path),
-      lastModified: now,
+      lastModified: page.lastModified ?? now,
       changeFrequency: page.changeFrequency,
       priority: page.priority,
       alternates: { languages },
