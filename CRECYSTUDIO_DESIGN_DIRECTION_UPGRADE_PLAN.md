@@ -224,8 +224,9 @@ taste: { calmEnergetic: 0, traditionalModern: 0, strippedLayered: 0, warmCool: 0
 
 ---
 
-## Task 4 — Persistent draft save
+## Task 4 — Persistent draft save ✅ DONE
 
+**Status:** ✅ shipped
 **Effort:** half day to 1 day
 **Why:** today a 12-section form lives in `useState`. Close the tab, lose
 everything. For a $1.8k-$10k client that's a real frustration.

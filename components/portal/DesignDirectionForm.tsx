@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   type DesignControlLevel,
   type WebsiteDesignDirection,
@@ -20,7 +20,17 @@ type Props = {
   saving: boolean;
   error: string | null;
   onSubmit: (value: WebsiteDesignDirectionInput) => Promise<void> | void;
+  // Optional auto-save callback. When provided, the form debounces every
+  // change at ~800ms and persists the current values as a draft. Returns
+  // a Promise so the form can surface "saving / saved" status.
+  onSaveDraft?: (value: WebsiteDesignDirectionInput) => Promise<void>;
 };
+
+type DraftStatus =
+  | { kind: "idle" }
+  | { kind: "saving" }
+  | { kind: "saved"; at: string }
+  | { kind: "error" };
 
 function toggleInArray<T extends string>(arr: T[], value: T): T[] {
   return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
@@ -190,31 +200,119 @@ function ReferenceListEditor({
   );
 }
 
-export default function DesignDirectionForm({ initial, saving, error, onSubmit }: Props) {
-  const [controlLevel, setControlLevel] = useState<DesignControlLevel>(initial.controlLevel);
+export default function DesignDirectionForm({ initial, saving, error, onSubmit, onSaveDraft }: Props) {
+  // Prefer in-progress draft values over the underlying record's stored
+  // values. Falls back to the record when no draft exists. Lets the client
+  // close the tab mid-form and resume where they left off.
+  const seed = initial.draftPayload ?? initial;
+
+  const [controlLevel, setControlLevel] = useState<DesignControlLevel>(seed.controlLevel);
   // Filter to current allowlist so historical mood values (pre-sharpening)
   // don't render as "selected" against pills that no longer exist. Old
   // values are still safe in the stored record; they just won't pre-select
   // on a resubmission flow.
   const [brandMood, setBrandMood] = useState<string[]>(
-    initial.brandMood.filter((m) => (BRAND_MOOD_OPTIONS as readonly string[]).includes(m)),
+    seed.brandMood.filter((m) => (BRAND_MOOD_OPTIONS as readonly string[]).includes(m)),
   );
-  const [visualStyle, setVisualStyle] = useState<string>(initial.visualStyle);
-  const [taste, setTaste] = useState<TasteSpectrum>(initial.taste);
-  const [brandColorsKnown, setBrandColorsKnown] = useState(initial.brandColorsKnown);
-  const [preferredColors, setPreferredColors] = useState(initial.preferredColors);
-  const [colorsToAvoid, setColorsToAvoid] = useState(initial.colorsToAvoid);
-  const [letCrecyChoosePalette, setLetCrecyChoosePalette] = useState(initial.letCrecyChoosePalette);
-  const [typographyFeel, setTypographyFeel] = useState(initial.typographyFeel);
-  const [imageryDirection, setImageryDirection] = useState<string[]>(initial.imageryDirection);
-  const [likedWebsites, setLikedWebsites] = useState<ReferenceWebsite[]>(initial.likedWebsites);
-  const [dislikedWebsites, setDislikedWebsites] = useState<ReferenceWebsite[]>(initial.dislikedWebsites);
-  const [contentTone, setContentTone] = useState<string[]>(initial.contentTone);
-  const [hasLogo, setHasLogo] = useState(initial.hasLogo);
-  const [hasBrandGuide, setHasBrandGuide] = useState(initial.hasBrandGuide);
-  const [brandAssetsNotes, setBrandAssetsNotes] = useState(initial.brandAssetsNotes);
-  const [clientNotes, setClientNotes] = useState(initial.clientNotes);
-  const [approvedDirectionTerms, setApprovedDirectionTerms] = useState(initial.approvedDirectionTerms);
+  const [visualStyle, setVisualStyle] = useState<string>(seed.visualStyle);
+  const [taste, setTaste] = useState<TasteSpectrum>(seed.taste);
+  const [brandColorsKnown, setBrandColorsKnown] = useState(seed.brandColorsKnown);
+  const [preferredColors, setPreferredColors] = useState(seed.preferredColors);
+  const [colorsToAvoid, setColorsToAvoid] = useState(seed.colorsToAvoid);
+  const [letCrecyChoosePalette, setLetCrecyChoosePalette] = useState(seed.letCrecyChoosePalette);
+  const [typographyFeel, setTypographyFeel] = useState(seed.typographyFeel);
+  const [imageryDirection, setImageryDirection] = useState<string[]>(seed.imageryDirection);
+  const [likedWebsites, setLikedWebsites] = useState<ReferenceWebsite[]>(seed.likedWebsites);
+  const [dislikedWebsites, setDislikedWebsites] = useState<ReferenceWebsite[]>(seed.dislikedWebsites);
+  const [contentTone, setContentTone] = useState<string[]>(seed.contentTone);
+  const [hasLogo, setHasLogo] = useState(seed.hasLogo);
+  const [hasBrandGuide, setHasBrandGuide] = useState(seed.hasBrandGuide);
+  const [brandAssetsNotes, setBrandAssetsNotes] = useState(seed.brandAssetsNotes);
+  const [clientNotes, setClientNotes] = useState(seed.clientNotes);
+  // Approval terms are never carried forward from a draft — the client
+  // must re-tick the box at submit time.
+  const [approvedDirectionTerms, setApprovedDirectionTerms] = useState(
+    initial.draftPayload ? false : initial.approvedDirectionTerms,
+  );
+
+  // Auto-save plumbing. Skip the initial render so opening the form for
+  // the first time doesn't immediately write a draft over an existing
+  // record. After that, every state change schedules an 800ms-debounced
+  // save.
+  const [draftStatus, setDraftStatus] = useState<DraftStatus>(() =>
+    initial.draftSavedAt
+      ? {
+          kind: "saved",
+          at: new Date(initial.draftSavedAt).toLocaleTimeString([], {
+            hour: "numeric",
+            minute: "2-digit",
+          }),
+        }
+      : { kind: "idle" },
+  );
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    if (!onSaveDraft) return;
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setDraftStatus({ kind: "saving" });
+      try {
+        await onSaveDraft({
+          controlLevel,
+          brandMood,
+          visualStyle,
+          taste,
+          brandColorsKnown,
+          preferredColors,
+          colorsToAvoid,
+          letCrecyChoosePalette,
+          typographyFeel,
+          imageryDirection,
+          likedWebsites: likedWebsites.filter((w) => w.url.trim().length > 0 || w.reason.trim().length > 0),
+          dislikedWebsites: dislikedWebsites.filter((w) => w.url.trim().length > 0 || w.reason.trim().length > 0),
+          contentTone,
+          hasLogo,
+          hasBrandGuide,
+          brandAssetsNotes,
+          clientNotes,
+          // approvedDirectionTerms is intentionally not saved — see seed
+          // hydration above; clients must re-tick at submit.
+          approvedDirectionTerms: false,
+        });
+        const now = new Date();
+        setDraftStatus({
+          kind: "saved",
+          at: now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
+        });
+      } catch {
+        setDraftStatus({ kind: "error" });
+      }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [
+    onSaveDraft,
+    controlLevel,
+    brandMood,
+    visualStyle,
+    taste,
+    brandColorsKnown,
+    preferredColors,
+    colorsToAvoid,
+    letCrecyChoosePalette,
+    typographyFeel,
+    imageryDirection,
+    likedWebsites,
+    dislikedWebsites,
+    contentTone,
+    hasLogo,
+    hasBrandGuide,
+    brandAssetsNotes,
+    clientNotes,
+  ]);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -557,7 +655,7 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit }
         </div>
       ) : null}
 
-      <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
         <button
           type="submit"
           className="btn btnPrimary"
@@ -567,6 +665,13 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit }
           {saving ? "Submitting..." : "Submit design direction"}
           <span className="btnArrow"> →</span>
         </button>
+        {onSaveDraft ? (
+          <span style={{ fontSize: 12, color: "var(--muted)" }} aria-live="polite">
+            {draftStatus.kind === "saving" ? "Saving…" : null}
+            {draftStatus.kind === "saved" ? `Draft saved · ${draftStatus.at}` : null}
+            {draftStatus.kind === "error" ? "Couldn't save draft — your input stays in this tab." : null}
+          </span>
+        ) : null}
       </div>
     </form>
   );

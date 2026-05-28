@@ -79,10 +79,16 @@ export type WebsiteDesignDirection = {
 
   adminPublicNote: string | null;
   adminInternalNote: string | null;
+
+  // In-progress form state, auto-saved as the client fills the form. Null
+  // until the first draft save; cleared on submit. Lets the client close
+  // the tab and resume without losing 12 sections of input.
+  draftPayload: WebsiteDesignDirectionInput | null;
+  draftSavedAt: string | null;
 };
 
-// Subset of fields the client sends on submission. Status and timestamps
-// are server-managed.
+// Subset of fields the client sends on submission. Status, timestamps, and
+// draft fields are server-managed and not part of what the client posts.
 export type WebsiteDesignDirectionInput = Omit<
   WebsiteDesignDirection,
   | "status"
@@ -93,6 +99,8 @@ export type WebsiteDesignDirectionInput = Omit<
   | "changesRequestedAt"
   | "adminPublicNote"
   | "adminInternalNote"
+  | "draftPayload"
+  | "draftSavedAt"
 >;
 
 // ─── Option lists ────────────────────────────────────────────────────────
@@ -230,6 +238,8 @@ export const DEFAULT_WEBSITE_DESIGN_DIRECTION: WebsiteDesignDirection = {
   changesRequestedAt: null,
   adminPublicNote: null,
   adminInternalNote: null,
+  draftPayload: null,
+  draftSavedAt: null,
 };
 
 // ─── Validation ──────────────────────────────────────────────────────────
@@ -411,6 +421,98 @@ export function validateDesignDirectionInput(
       clientNotes: asString(r.clientNotes, 4000),
       approvedDirectionTerms: true,
     },
+  };
+}
+
+// Sanitize a partial form payload for *draft* storage. Unlike the strict
+// validator above, this is intentionally tolerant — drafts allow empty
+// fields, partially-typed URLs, and missing taste/approval values. Out-of-
+// range values silently fall back to defaults rather than rejecting. Use
+// this for the design_direction_save_draft endpoint; submission still goes
+// through validateDesignDirectionInput.
+export function sanitizeDesignDirectionDraft(raw: unknown): WebsiteDesignDirectionInput {
+  const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+
+  const controlLevelRaw = asString(r.controlLevel) as DesignControlLevel;
+  const controlLevel: DesignControlLevel = CONTROL_LEVEL_OPTIONS.some(
+    (o) => o.value === controlLevelRaw,
+  )
+    ? controlLevelRaw
+    : DEFAULT_WEBSITE_DESIGN_DIRECTION.controlLevel;
+
+  const brandMood = asStringArray(r.brandMood, 3).filter((m) =>
+    (BRAND_MOOD_OPTIONS as readonly string[]).includes(m),
+  );
+
+  const visualStyleRaw = asString(r.visualStyle, 200);
+  const visualStyle = (VISUAL_STYLE_OPTIONS as readonly string[]).includes(visualStyleRaw)
+    ? visualStyleRaw
+    : "";
+
+  const typographyFeelRaw = asString(r.typographyFeel, 200);
+  const typographyFeel = (TYPOGRAPHY_FEEL_OPTIONS as readonly string[]).includes(
+    typographyFeelRaw,
+  )
+    ? typographyFeelRaw
+    : DEFAULT_WEBSITE_DESIGN_DIRECTION.typographyFeel;
+
+  const imageryDirection = asStringArray(r.imageryDirection).filter((i) =>
+    (IMAGERY_DIRECTION_OPTIONS as readonly string[]).includes(i),
+  );
+
+  const contentTone = asStringArray(r.contentTone, 2).filter((t) =>
+    (CONTENT_TONE_OPTIONS as readonly string[]).includes(t),
+  );
+
+  // Reference lists for drafts — skip the URL regex so a partially-typed
+  // "https://" URL can be auto-saved without rejecting. Strict validation
+  // happens at submit time.
+  const sanitizeRefs = (value: unknown, max: number): ReferenceWebsite[] => {
+    if (!Array.isArray(value)) return [];
+    const out: ReferenceWebsite[] = [];
+    for (const item of value.slice(0, max)) {
+      if (!item || typeof item !== "object") continue;
+      const url = asString((item as { url?: unknown }).url, 500);
+      const reason = asString((item as { reason?: unknown }).reason, 500);
+      out.push({ url, reason });
+    }
+    return out;
+  };
+
+  const brandColorsKnownRaw = asString(r.brandColorsKnown);
+  const brandColorsKnown: BrandColorsKnown =
+    brandColorsKnownRaw === "yes" || brandColorsKnownRaw === "no"
+      ? brandColorsKnownRaw
+      : "not_sure";
+
+  const hasLogoRaw = asString(r.hasLogo);
+  const hasLogo: HasLogo =
+    hasLogoRaw === "yes" || hasLogoRaw === "in_progress" ? hasLogoRaw : "no";
+
+  const hasBrandGuideRaw = asString(r.hasBrandGuide);
+  const hasBrandGuide: HasBrandGuide = hasBrandGuideRaw === "yes" ? "yes" : "no";
+
+  return {
+    controlLevel,
+    brandMood,
+    visualStyle,
+    taste: coerceTaste(r.taste),
+    brandColorsKnown,
+    preferredColors: asString(r.preferredColors, 2000),
+    colorsToAvoid: asString(r.colorsToAvoid, 2000),
+    letCrecyChoosePalette: r.letCrecyChoosePalette !== false,
+    typographyFeel,
+    imageryDirection,
+    likedWebsites: sanitizeRefs(r.likedWebsites, 3),
+    dislikedWebsites: sanitizeRefs(r.dislikedWebsites, 2),
+    contentTone,
+    hasLogo,
+    hasBrandGuide,
+    brandAssetsNotes: asString(r.brandAssetsNotes, 4000),
+    clientNotes: asString(r.clientNotes, 4000),
+    // approvedDirectionTerms must always be re-confirmed at submit. Drafts
+    // can't carry an approved-terms checkbox forward.
+    approvedDirectionTerms: false,
   };
 }
 

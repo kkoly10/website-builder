@@ -156,6 +156,30 @@ export default function DesignDirectionAdminPanel({
         </span>
       </div>
 
+      {/* Draft-in-progress indicator. Surfaces when the client has started
+          filling out the form but hasn't submitted yet — lets admin decide
+          whether to nudge or give them more time. */}
+      {designDirection.draftPayload &&
+      (designDirection.status === "waiting_on_client" || designDirection.status === "changes_requested") ? (
+        <div
+          style={{
+            padding: 10,
+            border: "1px dashed var(--accent)",
+            borderRadius: 8,
+            background: "var(--accent-bg)",
+            fontSize: 12,
+            color: "var(--accent-2)",
+            lineHeight: 1.6,
+          }}
+        >
+          Client has a draft in progress
+          {designDirection.draftSavedAt
+            ? ` — last saved ${new Date(designDirection.draftSavedAt).toLocaleString()}`
+            : ""}
+          .
+        </div>
+      ) : null}
+
       {/* Submitted summary */}
       {designDirection.status !== "not_started" && designDirection.status !== "waiting_on_client" ? (
         <details style={{ border: "1px solid var(--rule)", borderRadius: 12, padding: 12, background: "var(--paper-2)" }}>

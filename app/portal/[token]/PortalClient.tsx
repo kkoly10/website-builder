@@ -1091,6 +1091,23 @@ export default function PortalClient({
             }
             setBundle(json.data as PortalBundle);
           }}
+          onSaveDesignDirectionDraft={async (input: WebsiteDesignDirectionInput) => {
+            const res = await fetch(`/api/portal/${token}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                type: "design_direction_save_draft",
+                designDirection: input,
+              }),
+            });
+            const json = await res.json();
+            if (!res.ok || !json?.ok) {
+              throw new Error(json?.error || tErrors("updateFailed"));
+            }
+            // Refresh the bundle so the form's stored draftSavedAt timestamp
+            // stays accurate if the client reloads.
+            setBundle(json.data as PortalBundle);
+          }}
         />
       ) : null}
 
