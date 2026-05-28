@@ -15,8 +15,13 @@ export type LocationSlug =
   | "washington-dc"
   | "arlington-va"
   | "alexandria-va"
+  | "tysons-va"
+  | "reston-va"
+  | "fairfax-va"
+  | "woodbridge-va"
   | "bethesda-md"
   | "silver-spring-md"
+  | "rockville-md"
   | "annapolis-md"
   | "northern-virginia"
   | "maryland"
@@ -181,6 +186,74 @@ export const LOCATIONS: Location[] = [
     ],
   },
   {
+    slug: "tysons-va",
+    type: "City",
+    name: "Tysons, Virginia",
+    shortName: "Tysons, VA",
+    region: "Virginia",
+    geo: { latitude: 38.9187, longitude: -77.2311 },
+    distanceFromHomeMiles: 45,
+    intro:
+      "Web design, custom web apps, and AI integration for Tysons businesses — the Tysons Corner office corridor, Tysons Galleria, and the surrounding Fortune-500-adjacent client base. About 45 miles north of our Stafford studio.",
+    whyLocal: [
+      "Familiar with Tysons' enterprise / contractor / consulting client landscape — confidentiality and security defaults baked in.",
+      "Production AI experience that matters near enterprise buyers — auditable, gated, human-in-the-loop.",
+      "Independent practitioner — same person from scope to launch, no agency layer.",
+      "Async-first delivery that fits how Tysons-area professionals actually work day-to-day.",
+    ],
+  },
+  {
+    slug: "reston-va",
+    type: "City",
+    name: "Reston, Virginia",
+    shortName: "Reston, VA",
+    region: "Virginia",
+    geo: { latitude: 38.9586, longitude: -77.3570 },
+    distanceFromHomeMiles: 55,
+    intro:
+      "Premium websites, custom web apps, and AI integration for Reston businesses — Reston Town Center, the Dulles tech corridor, and Loudoun-adjacent firms. About 55 miles from our Stafford studio.",
+    whyLocal: [
+      "Strong fit for Reston's tech, defense, and SaaS-adjacent client base.",
+      "Production AI work shipped to four of our own SaaS products — not pitch-deck AI.",
+      "Direct work with the founder for the entire engagement.",
+      "Bilingual workspace (English / French / Spanish) — useful for Reston's international workforce.",
+    ],
+  },
+  {
+    slug: "fairfax-va",
+    type: "City",
+    name: "Fairfax, Virginia",
+    shortName: "Fairfax, VA",
+    region: "Virginia",
+    geo: { latitude: 38.8462, longitude: -77.3064 },
+    distanceFromHomeMiles: 35,
+    intro:
+      "Web design, custom web apps, and AI integration for Fairfax County businesses — Fairfax City, GMU-adjacent firms, the Vienna / Oakton corridor, and the broader Fairfax County professional services market. About 35 miles north of our Stafford studio.",
+    whyLocal: [
+      "Familiar with Fairfax County's mix of government contractors, professional services, and growing local businesses.",
+      "Senior independent practitioner — no agency markup, same person from scope to launch.",
+      "In-person discovery calls in Fairfax on request.",
+      "Same time zone, same week, same accountability as your team.",
+    ],
+  },
+  {
+    slug: "woodbridge-va",
+    type: "City",
+    name: "Woodbridge, Virginia",
+    shortName: "Woodbridge, VA",
+    region: "Virginia",
+    geo: { latitude: 38.6582, longitude: -77.2497 },
+    distanceFromHomeMiles: 18,
+    intro:
+      "Premium websites and AI integration for Woodbridge and Prince William County businesses — Potomac Mills, Lake Ridge, Dale City, the I-95 corridor north of Quantico. About 20 minutes from our Stafford studio.",
+    whyLocal: [
+      "Short drive — happy to meet in person in Woodbridge or at your office.",
+      "Familiar with Prince William County's mix of service businesses, contractors, and growing e-commerce brands.",
+      "Bilingual project workspace (English / French / Spanish) — useful for the region's diverse customer base.",
+      "Premium craft at a non-DC price point.",
+    ],
+  },
+  {
     slug: "bethesda-md",
     type: "City",
     name: "Bethesda, Maryland",
@@ -212,6 +285,23 @@ export const LOCATIONS: Location[] = [
       "Independent practitioner — no agency layer between you and the person writing the code.",
       "Production AI experience: shipped systems, not pitch decks.",
       "Same-day async responses for active projects.",
+    ],
+  },
+  {
+    slug: "rockville-md",
+    type: "City",
+    name: "Rockville, Maryland",
+    shortName: "Rockville, MD",
+    region: "Maryland",
+    geo: { latitude: 39.0840, longitude: -77.1528 },
+    distanceFromHomeMiles: 70,
+    intro:
+      "Web design, custom web apps, and AI integration for Rockville businesses — Rockville Town Center, the I-270 biotech corridor, and Montgomery County professional services firms. About 70 miles from our Stafford studio.",
+    whyLocal: [
+      "Familiar with Rockville's biotech, life-sciences, and consulting client landscape.",
+      "AI integration with real safety thinking — important for the regulated industries that anchor the I-270 corridor.",
+      "Independent practitioner — same person from scope to launch.",
+      "Async-first delivery that respects how Montgomery County professionals actually work.",
     ],
   },
   {
