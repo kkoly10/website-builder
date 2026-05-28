@@ -325,6 +325,13 @@ export function serviceNode(opts: {
   // the `hasOfferCatalog` field. AI search engines use these to answer
   // "what specifically does X do" follow-up questions.
   offerings?: string[];
+  // Optional override for `areaServed`. Per-city pages should pass
+  // the SINGLE city this page targets — otherwise every city's
+  // Service node claims to serve every other city in the DMV, which
+  // dilutes the local-SEO signal. Defaults to the umbrella list
+  // (used by lane-wide service pages like /websites where the
+  // service genuinely covers the full service area).
+  areaServed?: GraphNode[];
 }): GraphNode {
   return {
     "@type": "Service",
@@ -334,7 +341,7 @@ export function serviceNode(opts: {
     url: absoluteUrl(opts.pageUrl),
     provider: { "@id": ORG_ID },
     serviceType: opts.name,
-    areaServed: areaServedNodes(),
+    areaServed: opts.areaServed ?? areaServedNodes(),
     ...(opts.offerings && opts.offerings.length > 0 && {
       hasOfferCatalog: {
         "@type": "OfferCatalog",
@@ -462,11 +469,15 @@ export function aiIntegrationServiceNode(opts: {
       "Vision AI integration",
       "AI prompt engineering",
     ],
-    // Tools & platforms the studio works with.
+    // Tools & platforms the studio works with. `applicationCategory`
+    // accepts free-text per the schema.org spec; using a descriptive
+    // phrase rather than an invented enum like "AIApplication" (which
+    // isn't on schema.org's recognized values list and gets flagged by
+    // Google's structured-data validator).
     mentions: AI_TECH_MENTIONS.map((tech) => ({
       "@type": "SoftwareApplication",
       name: tech.name,
-      applicationCategory: "AIApplication",
+      applicationCategory: "Artificial intelligence platform",
     })),
     // Sub-offerings as a proper OfferCatalog. AI search engines walk
     // this list to answer "does X specifically do Y" follow-up

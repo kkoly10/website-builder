@@ -40,7 +40,15 @@ export default function SiteFooter() {
             <Link href="/work">{t("links.work")}</Link>
             <Link href="/care-plans">{t("links.carePlans")}</Link>
             <Link href="/pricing">{t("links.pricing")}</Link>
-            <Link href="/locations">{t("links.locations")}</Link>
+            {/*
+              /locations and the city pages are English-only. Forcing
+              `locale="en"` makes the link emit `/locations` regardless
+              of the active locale, so FR/ES users can still navigate
+              to the local-SEO index (they just land on the English
+              version). Without this, clicking from /fr would route to
+              /fr/locations and 404.
+            */}
+            <Link href="/locations" locale="en">{t("links.locations")}</Link>
             <Link href="/faq">{t("links.faq")}</Link>
             <Link href="/about">{t("links.about")}</Link>
             <Link href="/start">{t("links.start")}</Link>

@@ -23,9 +23,19 @@ type Params = {
   city: string;
 };
 
-// Pre-generate the (locale × city) URLs Next.js needs to render. Keeps
-// the page indexable as a static-rendered route even though the
-// surrounding layout is `force-dynamic`.
+// City landing pages target English-speaking buyers in the DMV (and
+// US/CA/GB remote). The unique long-form copy in lib/seo/locations.ts
+// is English-only by design — translating "Caroline Street",
+// "Quantico", "Scott's Addition" produces awkward results, and the
+// FR/ES audiences aren't who these pages rank for. Rather than serve
+// untranslated English at a /fr/ URL (which Google indexes as
+// mixed-language and downranks), 404 the non-English variants.
+function isSupportedLocale(locale: string): boolean {
+  return locale === routing.defaultLocale;
+}
+
+// Pre-generate the (locale × city) URLs Next.js needs to render. Only
+// the default English locale gets city pages — see comment above.
 export async function generateStaticParams(): Promise<Pick<Params, "city">[]> {
   return allLocationSlugs().map((slug) => ({ city: slug }));
 }
@@ -35,7 +45,10 @@ export async function generateMetadata({
 }: {
   params: Promise<Params>;
 }): Promise<Metadata> {
-  const { city } = await params;
+  const { locale, city } = await params;
+  if (!isSupportedLocale(locale)) {
+    return { robots: { index: false, follow: false } };
+  }
   const location = locationBySlug(city);
   if (!location) {
     return {
@@ -61,7 +74,7 @@ export async function generateMetadata({
 const SERVICES: { slug: string; name: string; href: string; blurb: string }[] = [
   { slug: "websites", name: "Premium websites", href: "/websites", blurb: "Conversion-focused websites for service businesses." },
   { slug: "custom-web-apps", name: "Custom web apps", href: "/custom-web-apps", blurb: "Dashboards, portals, MVPs, internal tools." },
-  { slug: "ai-integration", name: "AI integration", href: "/build/intro?projectType=ai_integration", blurb: "Production AI copilots, agents, RAG, GPT-4/Claude integration." },
+  { slug: "ai-integration", name: "AI integration", href: "/ai-integration", blurb: "Production AI copilots, agents, RAG, GPT-4/Claude integration." },
   { slug: "systems", name: "Workflow automation", href: "/systems", blurb: "Intake, routing, status tracking, admin systems." },
   { slug: "ecommerce", name: "E-commerce", href: "/ecommerce", blurb: "Storefronts, checkout, post-purchase ops flow." },
   { slug: "website-rescue", name: "Website rescue", href: "/website-rescue", blurb: "Audit + 1-2 week sprint to fix a broken site." },
@@ -70,15 +83,20 @@ const SERVICES: { slug: string; name: string; href: string; blurb: string }[] = 
 function buildLocationGraph(location: Location) {
   const pageUrl = `/locations/${location.slug}`;
   return siteGraph([
-    // Per-city Service node anchored to this URL. Tells Google
-    // "this exact service is offered in this exact place" — the
-    // signal local-pack ranking is built on.
+    // Per-city Service node anchored to this URL with `areaServed`
+    // narrowed to JUST this city. Without the narrowing, each city
+    // page would claim to serve every other city in the DMV — which
+    // is true but dilutes the local-pack relevance signal Google
+    // uses to rank "X in {city}" queries. The umbrella DMV+US/CA/GB
+    // service area lives on the page-wide LocalBusiness node (from
+    // the root layout); this per-page Service stays focused.
     serviceNode({
       slug: `${location.slug}-web-services`,
       name: `Web design & AI integration in ${location.shortName}`,
       description: location.intro,
       pageUrl,
       offerings: SERVICES.map((s) => s.name),
+      areaServed: [{ "@type": location.type, name: location.name }],
     }),
     breadcrumbListNode([
       { name: "Home", url: "/" },
@@ -88,12 +106,24 @@ function buildLocationGraph(location: Location) {
   ]);
 }
 
+// Inline grid styles for the service cards. The codebase doesn't
+// have a global .checkGrid class — coming-soon uses the same name
+// but it's effectively unstyled there. Inline keeps the layout
+// predictable without introducing another CSS module just for this.
+const SERVICE_GRID_STYLE: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+  gap: 12,
+  marginTop: 16,
+};
+
 export default async function CityLocationPage({
   params,
 }: {
   params: Promise<Params>;
 }) {
   const { locale, city } = await params;
+  if (!isSupportedLocale(locale)) notFound();
   setRequestLocale(locale);
   const location = locationBySlug(city);
   if (!location) notFound();
@@ -146,7 +176,7 @@ export default async function CityLocationPage({
 
         <section>
           <h2 className="h2">What we build for {location.shortName} clients</h2>
-          <div className="checkGrid" style={{ marginTop: 16 }}>
+          <div style={SERVICE_GRID_STYLE}>
             {SERVICES.map((service) => (
               <Link
                 key={service.slug}
@@ -195,8 +225,3 @@ export default async function CityLocationPage({
     </>
   );
 }
-
-// Make TypeScript happy: routing.locales is declared so Next knows
-// the locale segment is valid. (No-op at runtime; the locale layout
-// already validates via hasLocale.)
-void routing;

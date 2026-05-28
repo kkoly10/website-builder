@@ -9,6 +9,7 @@ import {
   siteGraph,
   speakableNode,
 } from "@/lib/seo/structuredData";
+import { routing } from "@/i18n/routing";
 
 export const dynamic = "force-dynamic";
 
@@ -44,10 +45,14 @@ export default async function AiIntegrationPage({
   setRequestLocale(locale);
   const data = getServicePageData(locale, "ai_integration");
 
-  // Locale-aware canonical path. Default locale (en) lives at /ai-integration;
-  // FR/ES at /{locale}/ai-integration. Matches the hreflang behaviour in
-  // app/[locale]/layout.tsx.
-  const pagePath = locale === "en" ? "/ai-integration" : `/${locale}/ai-integration`;
+  // Locale-aware canonical path. Default locale lives at /ai-integration
+  // (no prefix, per routing.localePrefix = "as-needed"); other locales
+  // prefix with /{locale}. Reads routing.defaultLocale rather than
+  // hardcoding "en" so a future locale-default change stays consistent.
+  const pagePath =
+    locale === routing.defaultLocale
+      ? "/ai-integration"
+      : `/${locale}/ai-integration`;
 
   // Rich AI-specific @graph: dedicated Service node with sub-offerings
   // catalog (RAG, OpenAI integration, AI agents, etc.) + mentions of

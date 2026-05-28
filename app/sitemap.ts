@@ -6,6 +6,12 @@ type Page = {
   path: string;
   priority: number;
   changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
+  // English-only pages skip the FR/ES sitemap entries and the
+  // FR/ES hreflang alternates. Set for /locations and the city
+  // landing pages: those routes 404 on /fr/ /es/ by design
+  // (English-language local-SEO landing pages targeting the
+  // anglophone DMV — see app/[locale]/locations/[city]/page.tsx).
+  englishOnly?: boolean;
 };
 
 const STATIC_PAGES: Page[] = [
@@ -27,7 +33,7 @@ const STATIC_PAGES: Page[] = [
   { path: "/faq", priority: 0.7, changeFrequency: "monthly" },
   { path: "/contact", priority: 0.6, changeFrequency: "yearly" },
   { path: "/pricing", priority: 0.7, changeFrequency: "monthly" },
-  { path: "/locations", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/locations", priority: 0.8, changeFrequency: "monthly", englishOnly: true },
   { path: "/privacy", priority: 0.3, changeFrequency: "yearly" },
   { path: "/terms", priority: 0.3, changeFrequency: "yearly" },
   { path: "/aup", priority: 0.3, changeFrequency: "yearly" },
@@ -42,6 +48,7 @@ const LOCATION_PAGES: Page[] = allLocationSlugs().map((slug) => ({
   path: `/locations/${slug}`,
   priority: 0.7,
   changeFrequency: "monthly" as const,
+  englishOnly: true,
 }));
 
 const PAGES: Page[] = [...STATIC_PAGES, ...LOCATION_PAGES];
@@ -58,10 +65,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date().toISOString();
 
   return PAGES.flatMap((page) => {
-    // One sitemap entry per (locale × page). Each carries alternates.languages
-    // so search engines learn the hreflang relationships in a single fetch.
+    // Locales this page actually exists at. englishOnly pages skip
+    // FR/ES entirely — both sitemap entries and hreflang alternates —
+    // because the page 404s on those locales.
+    const emittedLocales = page.englishOnly
+      ? ([routing.defaultLocale] as readonly string[])
+      : routing.locales;
+
     const languages: Record<string, string> = {};
-    for (const locale of routing.locales) {
+    for (const locale of emittedLocales) {
       languages[locale] = localizedHref(siteUrl, locale, page.path);
     }
     // Multi-region English: map en-US, en-CA, en-GB to the same
@@ -77,7 +89,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }
     languages["x-default"] = localizedHref(siteUrl, routing.defaultLocale, page.path);
 
-    return routing.locales.map((locale) => ({
+    return emittedLocales.map((locale) => ({
       url: localizedHref(siteUrl, locale, page.path),
       lastModified: now,
       changeFrequency: page.changeFrequency,

@@ -19,6 +19,13 @@ export type LocationSlug =
 
 export type Location = {
   slug: LocationSlug;
+  // schema.org @type for this place. "City" is the right tag for a
+  // single named municipality (Stafford, Richmond, DC); umbrella
+  // entries like Maryland (a state), Northern Virginia (a sub-region),
+  // and the DMV (a multi-state metro) need "AdministrativeArea"
+  // instead — using "City" for those produces invalid structured data
+  // that Google's validator flags.
+  type: "City" | "AdministrativeArea";
   // Display name used in H1 and meta. Keep canonical (no abbreviations
   // unless the city itself uses one, like "Washington, D.C.").
   name: string;
@@ -51,6 +58,7 @@ export type Location = {
 export const LOCATIONS: Location[] = [
   {
     slug: "stafford-va",
+    type: "City",
     name: "Stafford, Virginia",
     shortName: "Stafford, VA",
     region: "Virginia",
@@ -67,6 +75,7 @@ export const LOCATIONS: Location[] = [
   },
   {
     slug: "fredericksburg-va",
+    type: "City",
     name: "Fredericksburg, Virginia",
     shortName: "Fredericksburg, VA",
     region: "Virginia",
@@ -83,6 +92,7 @@ export const LOCATIONS: Location[] = [
   },
   {
     slug: "richmond-va",
+    type: "City",
     name: "Richmond, Virginia",
     shortName: "Richmond, VA",
     region: "Virginia",
@@ -99,6 +109,7 @@ export const LOCATIONS: Location[] = [
   },
   {
     slug: "ashland-va",
+    type: "City",
     name: "Ashland, Virginia",
     shortName: "Ashland, VA",
     region: "Virginia",
@@ -115,6 +126,7 @@ export const LOCATIONS: Location[] = [
   },
   {
     slug: "washington-dc",
+    type: "City",
     name: "Washington, D.C.",
     shortName: "Washington, DC",
     region: "District of Columbia",
@@ -131,6 +143,7 @@ export const LOCATIONS: Location[] = [
   },
   {
     slug: "northern-virginia",
+    type: "AdministrativeArea",
     name: "Northern Virginia",
     shortName: "Northern Virginia",
     region: "Virginia",
@@ -147,6 +160,7 @@ export const LOCATIONS: Location[] = [
   },
   {
     slug: "maryland",
+    type: "AdministrativeArea",
     name: "Maryland",
     shortName: "Maryland",
     region: "Maryland",
@@ -163,6 +177,7 @@ export const LOCATIONS: Location[] = [
   },
   {
     slug: "dmv",
+    type: "AdministrativeArea",
     name: "The DMV (DC, Maryland, Virginia)",
     shortName: "DMV",
     region: "DC / Maryland / Virginia",
