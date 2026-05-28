@@ -172,14 +172,13 @@ export const PROJECT_TYPES: readonly ProjectType[] = [
 
 ---
 
-## Task 2 — `PORTAL_DIRECTION_SCHEMA` (12 fields, matching intake depth)
+## Task 2 — `PORTAL_DIRECTION_SCHEMA` (15 fields, boutique max)
 
-**Effort:** 2 hours (mostly designing the right fields; typing is short)
-**Why:** v1's 7-field schema reproduced the depth-then-collapse defect.
-Boutique research called for a **permissions matrix**, **audit-trail
-spec**, **data-isolation diagram** for B2B multi-tenant — none in v1.
-12 fields aligns with intake depth (22 questions) and ships the
-artifacts buyers expect at $5k–$75k+.
+**Effort:** 2.5 hours (3 more fields than v2's 12; the design work
+is meaningfully harder for screenInventory/branding/auth fields)
+**Why:** boutique-max version matches what top studios deliver. Closes
+the depth-then-collapse defect comprehensively and gives admin the data
+to deliver a real permissions matrix + IA before build.
 
 ### Schema design
 
@@ -290,6 +289,47 @@ export const PORTAL_DIRECTION_SCHEMA: DirectionSchema = {
       helpText:
         "What events generate email or in-app alerts. Example: 'milestone completed, file uploaded, message received, payment failed.'",
       maxLength: 2000,
+    },
+    {
+      key: "screenInventory",
+      label: "Main screens / pages",
+      type: "string-list",
+      required: true,
+      helpText:
+        "List the main screens users will see (e.g. Dashboard, Projects, Files, Messages, Billing, Settings). The IA gets refined during wireframes; this is the starting set.",
+      maxItems: 15,
+    },
+    {
+      key: "authMethod",
+      label: "How do users sign in?",
+      type: "select",
+      required: true,
+      options: [
+        "Email + password",
+        "Magic link (passwordless email)",
+        "Single sign-on (SSO / Google Workspace / Microsoft 365)",
+        "Social login (Google / Apple)",
+        "Invite-only (admin creates accounts)",
+        "Not sure — recommend the right one",
+      ],
+      helpText:
+        "Drives the auth provider build + how onboarding flows work for new users.",
+    },
+    {
+      key: "brandingRequirements",
+      label: "Branding scope",
+      type: "pills-multi",
+      options: [
+        "Custom logo",
+        "Custom colors",
+        "Custom domain (e.g. portal.yourdomain.com)",
+        "Custom email-from address",
+        "Full white-label (no CrecyStudio attribution)",
+        "Match existing brand guidelines",
+      ],
+      helpText:
+        "Pick what applies. Full white-label and custom domain typically lift the project into the Standalone or Enterprise tier.",
+      maxItems: 6,
     },
     {
       key: "successMetric",
@@ -428,6 +468,9 @@ export const CLIENT_PORTAL_WORKFLOW_TEMPLATE: WorkflowTemplate = {
       complianceRequirements: [],
       auditTrailEvents: "",
       notificationsEvents: "",
+      screenInventory: [],
+      authMethod: "",
+      brandingRequirements: [],
       successMetric: "",
     },
   },
@@ -666,7 +709,7 @@ admin + customer creds + harness pattern from the DD test.
 | # | Task | Effort | Notes |
 |---|------|--------|-------|
 | 1 | Extend type unions + maps + TS sweep | 1–1.5 hr | 5 callsites verified |
-| 2 | `PORTAL_DIRECTION_SCHEMA` (12 fields) + register | 2 hr | No validator changes needed |
+| 2 | `PORTAL_DIRECTION_SCHEMA` (15 fields) + register | 2.5 hr | No validator changes needed |
 | 3 | `CLIENT_PORTAL_WORKFLOW_TEMPLATE` + register | 2 hr | 12 milestones / 6 required actions / 9 launch checks |
 | 4 | `lib/pricing/portal.ts` (3 tiers) + unit test | half day | $5–10k / $22–45k / $75k+ |
 | 5 | Intake submit + API routing | half day | Drop `projectSubType` workaround |
@@ -718,20 +761,42 @@ Capture baseline numbers in the first 30 days; revisit at day 60.
 
 ---
 
-## Open questions / decisions still needed
+## Decisions locked
 
-1. **Migration: Option A (leave existing as web_app) vs B (re-tag)?**
-   Recommend A.
-2. **Schema: duplicate vs extend product_direction?** Recommend
-   duplicate (matches existing pattern; cleaner separation).
-3. **Field count.** Proposed 12. Could trim to 8–10 (lighter) or grow
-   to 14–15 (more boutique). Recommend 12 — matches intake depth without
-   overwhelming.
+1. ✅ **Migration: Option A** — leave existing portal-as-web_app leads
+   in place; tag new submissions as `client_portal`.
+2. ✅ **Schema: duplicate** (not extend) — consistent with existing
+   pattern. If a permissions-matrix UI is built later, plan to share it
+   between portal_direction and product_direction.
+3. ✅ **Schema field count: 15 (boutique max)** — schema below expanded
+   to include `screenInventory`, `brandingRequirements`, `authMethod`.
 4. **Dedicated admin pipeline** at `app/internal/admin/portals/` —
-   defer or ship in this sprint? Recommend defer.
-5. **i18n.** Schema labels are hardcoded English on all lanes. Same gap
-   exists everywhere. Don't fix it just for portal — wait for a unified
-   i18n direction-form track.
+   **defer** (lane works with shared `ProjectControlClient`).
+5. **i18n** — hardcoded English for now, consistent with every other
+   lane. Separate unified i18n track later.
+
+## Sequencing — locked
+
+✅ **Portal lane first**, then Decision Log (Week 2), then Weekly Digest
+(Week 3). The 15-field schema and end-to-end lane wiring closes the
+depth-then-collapse defect for portal clients.
+
+## Note on the 15-field schema (boutique max trade-off)
+
+The expanded 15-field schema matches what top-tier boutiques deliver,
+but it's heavier than the 7–12 field typical. Two implications:
+
+1. **Form UX matters more** — without grouping or progressive
+   disclosure, the form will feel like a wall of inputs. The existing
+   `DirectionForm` renders all fields sequentially. For v1, ship the
+   full 15 with thoughtful `helpText` and clear visual section breaks
+   between conceptual groups (Identity / Access / Features /
+   Integrations / Compliance / Success).
+2. **Success-metric target adjusts** — "70% direction-form completion
+   rate" is aggressive at 15 fields. Plan to measure baseline at day
+   30 and revise the target if it sits 50–60%. Either trim fields,
+   add inline save (draft auto-save like Task 4 of the DD plan), or
+   accept the floor.
 
 ---
 
