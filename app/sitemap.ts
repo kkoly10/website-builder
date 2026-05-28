@@ -50,6 +50,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     for (const locale of routing.locales) {
       languages[locale] = localizedHref(siteUrl, locale, page.path);
     }
+    // Multi-region English: map en-US, en-CA, en-GB to the same
+    // canonical English URL so the page surfaces in regional SERPs
+    // across the DMV + US + Canada + UK. Mirrors localeAwareLanguages()
+    // in app/[locale]/layout.tsx — sitemap + page-level hreflang need
+    // to agree or Google ignores both.
+    const englishHref = languages[routing.defaultLocale];
+    if (englishHref) {
+      languages["en-US"] = englishHref;
+      languages["en-CA"] = englishHref;
+      languages["en-GB"] = englishHref;
+    }
     languages["x-default"] = localizedHref(siteUrl, routing.defaultLocale, page.path);
 
     return routing.locales.map((locale) => ({

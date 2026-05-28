@@ -8,6 +8,7 @@ import { routing } from "@/i18n/routing";
 import StructuredData from "@/components/seo/StructuredData";
 import {
   founderNode,
+  localBusinessNode,
   organizationNode,
   siteGraph,
   websiteNode,
@@ -24,6 +25,15 @@ const OG_LOCALES: Record<string, string> = {
   es: "es_ES",
 };
 
+// English regions the studio actively targets. Each gets its own
+// hreflang alternate pointing at the same canonical English URL.
+// This tells Google "the English page is the right result for users
+// in the US, Canada, and UK" — without needing physical /en-us /en-gb
+// URL variants. Search engines deduplicate to one canonical (the
+// alternates[locale=en] entry) but use the region tag to pick which
+// SERP to show this page in.
+const ENGLISH_REGIONS = ["en-US", "en-CA", "en-GB"] as const;
+
 function localeAwareLanguages(unprefixedPath: string) {
   // unprefixedPath always starts with "/". For each configured locale, build
   // the absolute href Next will join against metadataBase: default locale at
@@ -32,6 +42,17 @@ function localeAwareLanguages(unprefixedPath: string) {
   for (const code of routing.locales) {
     const prefix = code === routing.defaultLocale ? "" : `/${code}`;
     languages[code] = unprefixedPath === "/" ? prefix || "/" : `${prefix}${unprefixedPath}`;
+  }
+  // Map every targeted English region to the same English URL. Google
+  // recognises both `en` (the language) and `en-US` / `en-CA` /
+  // `en-GB` (the region-tagged variants) — emitting both ensures the
+  // page surfaces in regional SERPs for the entire DMV + US + Canada
+  // + UK English-speaking market.
+  const englishHref = languages[routing.defaultLocale];
+  if (englishHref) {
+    for (const region of ENGLISH_REGIONS) {
+      languages[region] = englishHref;
+    }
   }
   languages["x-default"] =
     unprefixedPath === "/" ? "/" : unprefixedPath;
@@ -107,7 +128,12 @@ export default async function LocaleLayout({
   // across scripts on the same page, so the Org/Founder/WebSite entities
   // declared here are referenced by @id from the per-page nodes without
   // having to re-emit the full definition.
-  const baseGraph = siteGraph([organizationNode(), founderNode(), websiteNode()]);
+  const baseGraph = siteGraph([
+    organizationNode(),
+    localBusinessNode(),
+    founderNode(),
+    websiteNode(),
+  ]);
 
   return (
     <>
