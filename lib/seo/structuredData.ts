@@ -32,22 +32,37 @@ const SERVICE_AREA_RADIUS_METERS = 80_000; // ~50 mi
 const BUSINESS_PHONE = process.env.NEXT_PUBLIC_BUSINESS_PHONE?.trim() || null;
 const GBP_URL = process.env.NEXT_PUBLIC_GBP_URL?.trim() || "https://share.google/1vArXT26e2XEdqj0h";
 
-// External profiles the Organization controls. Listed in schema.org `sameAs`
-// so Google's Knowledge Graph and AI search (Perplexity, ChatGPT browsing)
-// can disambiguate the entity across the open web. More platforms here =
-// stronger entity-confidence signal — Google cross-references the URLs to
-// confirm the studio is one consistent entity across surfaces, which is
-// the foundation of the Knowledge Graph. Add new ones here.
+// External profiles split between the Organization (CrecyStudio) and
+// the founder Person (Komlan Kouhiko). Schema.org `sameAs` carries the
+// "this URL refers to this entity" claim — putting personal profiles
+// on the Organization muddies the Knowledge Graph's understanding of
+// which is which. Cleanly separated:
 //
-// Tracking params (?mibextid=…, ?igsh=…, ?utm_source=qr) stripped from the
-// canonical URLs so schema validators don't flag them as redirect-laden.
-const SAME_AS_URLS = [
-  "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407",
-  "https://github.com/kkoly10",
+//   ORG_SAME_AS_URLS   — accounts the *studio* owns
+//                        (Facebook Page, Instagram handle, GBP listing)
+//   PERSON_SAME_AS_URLS — accounts the *founder* owns personally
+//                         (personal LinkedIn, personal GitHub used to
+//                         host the studio's code)
+//
+// More platforms on each list = stronger entity-confidence — Google
+// cross-references URLs to confirm a consistent entity across the open
+// web. The Person node referencing the founder URLs while
+// `worksFor: { @id: ORG_ID }` is what tells Knowledge Graph "this
+// person founded that organization" cleanly.
+//
+// Tracking params (?mibextid=…, ?igsh=…, ?utm_source=qr) stripped from
+// the canonical URLs so schema validators don't flag them as
+// redirect-laden.
+const ORG_SAME_AS_URLS = [
   "https://www.facebook.com/share/1GFn42rFuS/",
   "https://www.instagram.com/crecystudio",
   GBP_URL,
 ].filter(Boolean) as string[];
+
+const PERSON_SAME_AS_URLS = [
+  "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407",
+  "https://github.com/kkoly10",
+];
 
 // Cities + admin areas the studio actively serves. Shows up on every
 // LocalBusiness payload so Google understands the service-area scope.
@@ -181,7 +196,7 @@ export function organizationNode(): GraphNode {
     logo: `${SITE_URL}/brand/crecy-d1-horizontal-light.svg`,
     image: `${SITE_URL}/brand/crecy-d1-horizontal-light.svg`,
     description:
-      "Independent web studio serving the DMV (Stafford, Fredericksburg, Richmond, DC, Maryland) and English-speaking clients across the US, Canada, and UK. Premium websites, custom web systems, and AI integration.",
+      "Independent web studio serving the DMV (Stafford, Fredericksburg, Richmond, DC, Maryland) and English-speaking clients across the US, Canada, and UK. Premium websites, custom web apps and SaaS products, AI integration — by a founder who's shipped three production SaaS products of his own.",
     slogan: "Independent web studio. Premium craft.",
     foundingDate: "2024",
     founder: { "@id": FOUNDER_ID },
@@ -203,7 +218,7 @@ export function organizationNode(): GraphNode {
     // Graph + AI answers a concrete signal of the studio's positioning
     // (boutique / mid-to-high). schema.org accepts the "$$" convention here.
     priceRange: "$$$",
-    sameAs: SAME_AS_URLS,
+    sameAs: ORG_SAME_AS_URLS,
     // Keyword-rich knowsAbout/serviceType. AI search engines
     // (Perplexity, ChatGPT, Claude) use these phrases to decide whether
     // the entity is a valid answer to "who does X". Mix the broad
@@ -212,6 +227,17 @@ export function organizationNode(): GraphNode {
     knowsAbout: [
       "Web development",
       "Custom web applications",
+      // SaaS coverage. The studio owns and operates three production
+      // SaaS products (Fleiko fleet SaaS, Proveo contractor SaaS,
+      // TechDesk IT helpdesk SaaS), which is rare authority for
+      // these queries — but until these phrases were on the schema,
+      // Google had no way to match the studio to "SaaS development
+      // agency" / "B2B SaaS builder" / "SaaS MVP" searches.
+      "SaaS development",
+      "B2B SaaS development",
+      "SaaS product development",
+      "Multi-tenant SaaS architecture",
+      "SaaS MVP development",
       "AI integration",
       "OpenAI integration",
       "Anthropic Claude integration",
@@ -236,6 +262,8 @@ export function organizationNode(): GraphNode {
       "Web design",
       "Web development",
       "Custom web app development",
+      "SaaS development",
+      "B2B SaaS development",
       "AI integration",
       "AI agent development",
       "OpenAI integration",
@@ -269,7 +297,7 @@ export function localBusinessNode(): GraphNode {
     image: `${SITE_URL}/brand/crecy-d1-horizontal-light.svg`,
     logo: `${SITE_URL}/brand/crecy-d1-horizontal-light.svg`,
     description:
-      "Web studio in Stafford, VA serving the DMV — Fredericksburg, Richmond, Ashland, Washington DC, Maryland — plus remote clients across the US, Canada, and UK.",
+      "Web studio in Stafford, VA building websites, custom web apps, SaaS products, and AI integrations. Serves the DMV — Fredericksburg, Richmond, Ashland, Washington DC, Maryland — plus remote clients across the US, Canada, and UK.",
     address: postalAddressNode(),
     geo: geoNode(),
     areaServed: areaServedNodes(),
@@ -288,7 +316,7 @@ export function localBusinessNode(): GraphNode {
         closes: "18:00",
       },
     ],
-    sameAs: [ORG_ID, ...SAME_AS_URLS],
+    sameAs: [ORG_ID, ...ORG_SAME_AS_URLS],
     // AggregateRating + Review nodes — only emitted when real
     // testimonials have been wired into lib/seo/testimonials.ts.
     // With at least one entry, the LocalBusiness becomes eligible
@@ -340,6 +368,13 @@ export function founderNode(): GraphNode {
     jobTitle: "Founder",
     worksFor: { "@id": ORG_ID },
     url: `${SITE_URL}/about`,
+    // Personal sameAs anchored to the Person, not the Organization.
+    // Without this, the personal LinkedIn / GitHub URLs sat on the
+    // Organization's sameAs which muddied the Knowledge Graph's
+    // person-vs-org distinction. With it, Google reads "Komlan
+    // Kouhiko (Person) owns these URLs AND worksFor CrecyStudio
+    // (Organization)" — cleaner entity graph.
+    sameAs: PERSON_SAME_AS_URLS,
   };
 }
 
