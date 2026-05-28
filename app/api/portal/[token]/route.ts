@@ -5,6 +5,7 @@ import {
   acceptCustomerPortalAgreement,
   getCustomerPortalViewByToken,
   getPortalProjectByToken,
+  saveDesignDirectionDraftByPortalToken,
   submitAssetByPortalToken,
   submitDesignDirectionByPortalToken,
   submitDirectionByPortalToken,
@@ -12,7 +13,10 @@ import {
   toggleMilestone,
   updateClientStatus,
 } from "@/lib/customerPortal";
-import { validateDesignDirectionInput } from "@/lib/designDirection";
+import {
+  sanitizeDesignDirectionDraft,
+  validateDesignDirectionInput,
+} from "@/lib/designDirection";
 import { validateDirectionPayload } from "@/lib/directions/validate";
 import { isProjectType, type DirectionType } from "@/lib/workflows/types";
 import { completeRequiredActionByPortalToken } from "@/lib/requiredActions";
@@ -350,6 +354,22 @@ export async function POST(
           ip,
         },
       });
+    } else if (actionType === "design_direction_save_draft") {
+      // Tolerant auto-save endpoint. Sanitizes the payload (no rejection
+      // on missing fields or partial URLs) and stores it as draftPayload
+      // under the existing direction record. Does not change status.
+      const payload = sanitizeDesignDirectionDraft(body?.designDirection);
+      try {
+        await saveDesignDirectionDraftByPortalToken({
+          token,
+          draftPayload: payload,
+        });
+      } catch (err: any) {
+        return NextResponse.json(
+          { ok: false, error: err?.message || "Failed to save draft." },
+          { status: 400 },
+        );
+      }
     } else if (actionType === "required_action_complete") {
       // Phase 3.9: client marks a required action complete. The actual
       // submission of action-specific data (e.g. design direction) goes

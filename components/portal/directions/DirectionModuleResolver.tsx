@@ -18,6 +18,9 @@ type Props = {
   direction?: GenericDirection | null;
   onSubmitDesignDirection: (input: WebsiteDesignDirectionInput) => Promise<void>;
   onSubmitDirection: (input: GenericDirectionInput) => Promise<void>;
+  // Optional draft auto-save for the website lane. Generic-direction
+  // lanes don't have an auto-save flow yet.
+  onSaveDesignDirectionDraft?: (input: WebsiteDesignDirectionInput) => Promise<void>;
 };
 
 export default function DirectionModuleResolver({
@@ -25,9 +28,16 @@ export default function DirectionModuleResolver({
   direction,
   onSubmitDesignDirection,
   onSubmitDirection,
+  onSaveDesignDirectionDraft,
 }: Props) {
   if (designDirection) {
-    return <DesignDirectionCard value={designDirection} onSubmit={onSubmitDesignDirection} />;
+    return (
+      <DesignDirectionCard
+        value={designDirection}
+        onSubmit={onSubmitDesignDirection}
+        onSaveDraft={onSaveDesignDirectionDraft}
+      />
+    );
   }
   if (direction) {
     return <DirectionCard value={direction} onSubmit={onSubmitDirection} />;

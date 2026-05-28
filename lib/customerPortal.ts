@@ -1411,6 +1411,9 @@ export async function submitDesignDirectionByPortalToken(input: {
     // — admin may have left clarification copy that's still useful context.
     changesRequestedAt:
       existing.status === "changes_requested" ? null : existing.changesRequestedAt,
+    // A successful submit always supersedes any in-progress draft.
+    draftPayload: null,
+    draftSavedAt: null,
   };
 
   const nextScope = { ...existingScope, designDirection: merged };
@@ -1453,6 +1456,78 @@ export async function submitDesignDirectionByPortalToken(input: {
   });
 
   return merged;
+}
+
+// Save an in-progress design-direction draft. Unlike submit, this never
+// changes status, never bumps timestamps tied to lifecycle (submittedAt
+// etc.), and does NOT write to project_activity — we don't want auto-save
+// spamming the activity feed. Refuses to save if the direction is locked
+// or already approved (admin should unlock first if revisions are needed).
+export async function saveDesignDirectionDraftByPortalToken(input: {
+  token: string;
+  draftPayload: WebsiteDesignDirectionInput;
+}) {
+  const portal = await getPortalProjectByToken(input.token);
+  if (!portal) throw new Error("Portal not found");
+
+  // Same project-type gating as submit.
+  const portalProjectType =
+    typeof portal.project_type === "string" && portal.project_type
+      ? portal.project_type
+      : null;
+  let quoteProjectType: string | null = null;
+  if (portal.quote_id) {
+    const { data: q } = await supabaseAdmin
+      .from("quotes")
+      .select("project_type")
+      .eq("id", portal.quote_id)
+      .maybeSingle();
+    quoteProjectType =
+      q && typeof q.project_type === "string" && q.project_type ? q.project_type : null;
+  }
+  const projectType = quoteProjectType ?? portalProjectType ?? "website";
+  if (projectType !== "website" || (portalProjectType && portalProjectType !== "website")) {
+    throw new Error("Design direction is only available for website projects.");
+  }
+
+  const existingScope = safeObj(portal.scope_snapshot);
+  if (!hasDesignDirection(existingScope)) {
+    throw new Error(
+      "Design direction is not enabled for this project. Contact CrecyStudio to opt in.",
+    );
+  }
+
+  const existing = readDesignDirection(existingScope) ?? DEFAULT_WEBSITE_DESIGN_DIRECTION;
+
+  // Drafts only make sense while the client still has the form open.
+  if (existing.status === "locked") {
+    throw new Error("Design direction is locked. Reach out to CrecyStudio to request a change.");
+  }
+  if (existing.status === "approved") {
+    throw new Error("Design direction is already approved; no draft to save.");
+  }
+
+  const next: WebsiteDesignDirection = {
+    ...existing,
+    draftPayload: input.draftPayload,
+    draftSavedAt: new Date().toISOString(),
+  };
+
+  const nextScope = { ...existingScope, designDirection: next };
+
+  const { error } = await supabaseAdmin
+    .from("customer_portal_projects")
+    .update({
+      scope_snapshot: nextScope,
+      updated_at: new Date().toISOString(),
+      // Intentionally do NOT bump client_updated_at — drafts are private
+      // until submit, and we don't want auto-save to trigger admin nudges.
+    })
+    .eq("id", portal.id);
+
+  if (error) throw error;
+
+  return next;
 }
 
 export type DesignDirectionAdminAction =

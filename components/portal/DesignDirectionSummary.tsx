@@ -2,7 +2,17 @@
 
 import { useTranslations } from "next-intl";
 import type { WebsiteDesignDirection } from "@/lib/designDirection";
-import { CONTROL_LEVEL_OPTIONS } from "@/lib/designDirection";
+import {
+  CONTROL_LEVEL_OPTIONS,
+  IMAGERY_DIRECTION_VISUALS,
+  TYPOGRAPHY_FEEL_VISUALS,
+  VISUAL_STYLE_VISUALS,
+} from "@/lib/designDirection";
+import {
+  ImageryGlyph,
+  StyleSketch,
+  TypeSample,
+} from "./design-direction-visuals";
 
 function controlLevelLabel(value: string) {
   return CONTROL_LEVEL_OPTIONS.find((o) => o.value === value)?.label ?? value;
@@ -93,13 +103,53 @@ export default function DesignDirectionSummary({ value }: { value: WebsiteDesign
         </Row>
       ) : null}
       <Row label="Brand mood">{joinList(value.brandMood)}</Row>
-      <Row label="Visual style">{value.visualStyle}</Row>
+      <Row label="Visual style">
+        {value.visualStyle ? (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            {VISUAL_STYLE_VISUALS[value.visualStyle as keyof typeof VISUAL_STYLE_VISUALS] ? (
+              <StyleSketch
+                sketch={VISUAL_STYLE_VISUALS[value.visualStyle as keyof typeof VISUAL_STYLE_VISUALS]}
+              />
+            ) : null}
+            <span>{value.visualStyle}</span>
+          </span>
+        ) : (
+          ""
+        )}
+      </Row>
       <Row label="Colors">
         {value.preferredColors || (value.brandColorsKnown === "yes" ? "Provided" : value.letCrecyChoosePalette ? "CrecyStudio to choose" : "Not specified")}
       </Row>
       {value.colorsToAvoid ? <Row label="Avoid">{value.colorsToAvoid}</Row> : null}
-      <Row label="Typography">{value.typographyFeel}</Row>
-      {value.imageryDirection.length > 0 ? <Row label="Imagery">{joinList(value.imageryDirection)}</Row> : null}
+      <Row label="Typography">
+        {value.typographyFeel ? (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            {TYPOGRAPHY_FEEL_VISUALS[value.typographyFeel as keyof typeof TYPOGRAPHY_FEEL_VISUALS] ? (
+              <TypeSample
+                sample={TYPOGRAPHY_FEEL_VISUALS[value.typographyFeel as keyof typeof TYPOGRAPHY_FEEL_VISUALS]}
+              />
+            ) : null}
+            <span>{value.typographyFeel}</span>
+          </span>
+        ) : (
+          ""
+        )}
+      </Row>
+      {value.imageryDirection.length > 0 ? (
+        <Row label="Imagery">
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+            {value.imageryDirection.map((opt) => {
+              const key = IMAGERY_DIRECTION_VISUALS[opt as keyof typeof IMAGERY_DIRECTION_VISUALS];
+              return (
+                <span key={opt} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  {key ? <ImageryGlyph glyph={key} /> : null}
+                  <span>{opt}</span>
+                </span>
+              );
+            })}
+          </div>
+        </Row>
+      ) : null}
       <Row label="Tone">{joinList(value.contentTone)}</Row>
       {value.likedWebsites.length > 0 ? (
         <Row label="Liked sites">

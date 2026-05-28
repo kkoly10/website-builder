@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import styles from "./design-direction-form.module.css";
 import {
   type DesignControlLevel,
   type WebsiteDesignDirection,
@@ -11,16 +12,34 @@ import {
   CONTENT_TONE_OPTIONS,
   CONTROL_LEVEL_OPTIONS,
   IMAGERY_DIRECTION_OPTIONS,
+  IMAGERY_DIRECTION_VISUALS,
   TYPOGRAPHY_FEEL_OPTIONS,
+  TYPOGRAPHY_FEEL_VISUALS,
   VISUAL_STYLE_OPTIONS,
+  VISUAL_STYLE_VISUALS,
 } from "@/lib/designDirection";
+import {
+  ImageryGlyph,
+  StyleSketch,
+  TypeSample,
+} from "./design-direction-visuals";
 
 type Props = {
   initial: WebsiteDesignDirection;
   saving: boolean;
   error: string | null;
   onSubmit: (value: WebsiteDesignDirectionInput) => Promise<void> | void;
+  // Optional auto-save callback. When provided, the form debounces every
+  // change at ~800ms and persists the current values as a draft. Returns
+  // a Promise so the form can surface "saving / saved" status.
+  onSaveDraft?: (value: WebsiteDesignDirectionInput) => Promise<void>;
 };
+
+type DraftStatus =
+  | { kind: "idle" }
+  | { kind: "saving" }
+  | { kind: "saved"; at: string }
+  | { kind: "error" };
 
 function toggleInArray<T extends string>(arr: T[], value: T): T[] {
   return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
@@ -33,6 +52,7 @@ function PillSelect<T extends string>({
   multi = false,
   max,
   ariaLabel,
+  renderVisual,
 }: {
   options: readonly T[];
   value: T[] | T;
@@ -40,6 +60,10 @@ function PillSelect<T extends string>({
   multi?: boolean;
   max?: number;
   ariaLabel: string;
+  // Optional visual rendered to the left of each pill's label. Used by
+  // visual-style / typography / imagery options to give the client an
+  // actual idea of what each choice looks like instead of just text.
+  renderVisual?: (option: T) => React.ReactNode;
 }) {
   const isSelected = (option: T) =>
     multi ? (value as T[]).includes(option) : value === option;
@@ -47,11 +71,13 @@ function PillSelect<T extends string>({
     <div role="group" aria-label={ariaLabel} style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
       {options.map((option) => {
         const selected = isSelected(option);
+        const visual = renderVisual?.(option);
         return (
           <button
             key={option}
             type="button"
             aria-pressed={selected}
+            className={styles.pill}
             onClick={() => {
               if (multi) {
                 const arr = value as T[];
@@ -72,9 +98,13 @@ function PillSelect<T extends string>({
               fontWeight: selected ? 700 : 500,
               cursor: "pointer",
               transition: "all 120ms ease",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: visual ? 8 : 0,
             }}
           >
-            {option}
+            {visual}
+            <span>{option}</span>
           </button>
         );
       })}
@@ -94,14 +124,7 @@ function TasteSliderRow({
   onChange: (v: number) => void;
 }) {
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "minmax(80px, 110px) 1fr minmax(80px, 110px)",
-        gap: 12,
-        alignItems: "center",
-      }}
-    >
+    <div className={styles.tasteSliderRow}>
       <span style={{ fontSize: 13, color: "var(--muted)", textAlign: "right" }}>{leftLabel}</span>
       <input
         type="range"
@@ -138,7 +161,7 @@ function ReferenceListEditor({
   return (
     <div style={{ display: "grid", gap: 12 }}>
       {value.map((item, index) => (
-        <div key={index} style={{ display: "grid", gap: 8, gridTemplateColumns: "1fr auto" }}>
+        <div key={index} className={styles.referenceItem}>
           <div style={{ display: "grid", gap: 6 }}>
             <input
               className="input"
@@ -190,31 +213,119 @@ function ReferenceListEditor({
   );
 }
 
-export default function DesignDirectionForm({ initial, saving, error, onSubmit }: Props) {
-  const [controlLevel, setControlLevel] = useState<DesignControlLevel>(initial.controlLevel);
+export default function DesignDirectionForm({ initial, saving, error, onSubmit, onSaveDraft }: Props) {
+  // Prefer in-progress draft values over the underlying record's stored
+  // values. Falls back to the record when no draft exists. Lets the client
+  // close the tab mid-form and resume where they left off.
+  const seed = initial.draftPayload ?? initial;
+
+  const [controlLevel, setControlLevel] = useState<DesignControlLevel>(seed.controlLevel);
   // Filter to current allowlist so historical mood values (pre-sharpening)
   // don't render as "selected" against pills that no longer exist. Old
   // values are still safe in the stored record; they just won't pre-select
   // on a resubmission flow.
   const [brandMood, setBrandMood] = useState<string[]>(
-    initial.brandMood.filter((m) => (BRAND_MOOD_OPTIONS as readonly string[]).includes(m)),
+    seed.brandMood.filter((m) => (BRAND_MOOD_OPTIONS as readonly string[]).includes(m)),
   );
-  const [visualStyle, setVisualStyle] = useState<string>(initial.visualStyle);
-  const [taste, setTaste] = useState<TasteSpectrum>(initial.taste);
-  const [brandColorsKnown, setBrandColorsKnown] = useState(initial.brandColorsKnown);
-  const [preferredColors, setPreferredColors] = useState(initial.preferredColors);
-  const [colorsToAvoid, setColorsToAvoid] = useState(initial.colorsToAvoid);
-  const [letCrecyChoosePalette, setLetCrecyChoosePalette] = useState(initial.letCrecyChoosePalette);
-  const [typographyFeel, setTypographyFeel] = useState(initial.typographyFeel);
-  const [imageryDirection, setImageryDirection] = useState<string[]>(initial.imageryDirection);
-  const [likedWebsites, setLikedWebsites] = useState<ReferenceWebsite[]>(initial.likedWebsites);
-  const [dislikedWebsites, setDislikedWebsites] = useState<ReferenceWebsite[]>(initial.dislikedWebsites);
-  const [contentTone, setContentTone] = useState<string[]>(initial.contentTone);
-  const [hasLogo, setHasLogo] = useState(initial.hasLogo);
-  const [hasBrandGuide, setHasBrandGuide] = useState(initial.hasBrandGuide);
-  const [brandAssetsNotes, setBrandAssetsNotes] = useState(initial.brandAssetsNotes);
-  const [clientNotes, setClientNotes] = useState(initial.clientNotes);
-  const [approvedDirectionTerms, setApprovedDirectionTerms] = useState(initial.approvedDirectionTerms);
+  const [visualStyle, setVisualStyle] = useState<string>(seed.visualStyle);
+  const [taste, setTaste] = useState<TasteSpectrum>(seed.taste);
+  const [brandColorsKnown, setBrandColorsKnown] = useState(seed.brandColorsKnown);
+  const [preferredColors, setPreferredColors] = useState(seed.preferredColors);
+  const [colorsToAvoid, setColorsToAvoid] = useState(seed.colorsToAvoid);
+  const [letCrecyChoosePalette, setLetCrecyChoosePalette] = useState(seed.letCrecyChoosePalette);
+  const [typographyFeel, setTypographyFeel] = useState(seed.typographyFeel);
+  const [imageryDirection, setImageryDirection] = useState<string[]>(seed.imageryDirection);
+  const [likedWebsites, setLikedWebsites] = useState<ReferenceWebsite[]>(seed.likedWebsites);
+  const [dislikedWebsites, setDislikedWebsites] = useState<ReferenceWebsite[]>(seed.dislikedWebsites);
+  const [contentTone, setContentTone] = useState<string[]>(seed.contentTone);
+  const [hasLogo, setHasLogo] = useState(seed.hasLogo);
+  const [hasBrandGuide, setHasBrandGuide] = useState(seed.hasBrandGuide);
+  const [brandAssetsNotes, setBrandAssetsNotes] = useState(seed.brandAssetsNotes);
+  const [clientNotes, setClientNotes] = useState(seed.clientNotes);
+  // Approval terms are never carried forward from a draft — the client
+  // must re-tick the box at submit time.
+  const [approvedDirectionTerms, setApprovedDirectionTerms] = useState(
+    initial.draftPayload ? false : initial.approvedDirectionTerms,
+  );
+
+  // Auto-save plumbing. Skip the initial render so opening the form for
+  // the first time doesn't immediately write a draft over an existing
+  // record. After that, every state change schedules an 800ms-debounced
+  // save.
+  const [draftStatus, setDraftStatus] = useState<DraftStatus>(() =>
+    initial.draftSavedAt
+      ? {
+          kind: "saved",
+          at: new Date(initial.draftSavedAt).toLocaleTimeString([], {
+            hour: "numeric",
+            minute: "2-digit",
+          }),
+        }
+      : { kind: "idle" },
+  );
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    if (!onSaveDraft) return;
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setDraftStatus({ kind: "saving" });
+      try {
+        await onSaveDraft({
+          controlLevel,
+          brandMood,
+          visualStyle,
+          taste,
+          brandColorsKnown,
+          preferredColors,
+          colorsToAvoid,
+          letCrecyChoosePalette,
+          typographyFeel,
+          imageryDirection,
+          likedWebsites: likedWebsites.filter((w) => w.url.trim().length > 0 || w.reason.trim().length > 0),
+          dislikedWebsites: dislikedWebsites.filter((w) => w.url.trim().length > 0 || w.reason.trim().length > 0),
+          contentTone,
+          hasLogo,
+          hasBrandGuide,
+          brandAssetsNotes,
+          clientNotes,
+          // approvedDirectionTerms is intentionally not saved — see seed
+          // hydration above; clients must re-tick at submit.
+          approvedDirectionTerms: false,
+        });
+        const now = new Date();
+        setDraftStatus({
+          kind: "saved",
+          at: now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
+        });
+      } catch {
+        setDraftStatus({ kind: "error" });
+      }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [
+    onSaveDraft,
+    controlLevel,
+    brandMood,
+    visualStyle,
+    taste,
+    brandColorsKnown,
+    preferredColors,
+    colorsToAvoid,
+    letCrecyChoosePalette,
+    typographyFeel,
+    imageryDirection,
+    likedWebsites,
+    dislikedWebsites,
+    contentTone,
+    hasLogo,
+    hasBrandGuide,
+    brandAssetsNotes,
+    clientNotes,
+  ]);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -241,7 +352,7 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit }
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "grid", gap: 24 }}>
+    <form onSubmit={handleSubmit} className={styles.form}>
       {/* Control level */}
       <fieldset style={{ border: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
         <legend className="fieldLabel" style={{ marginBottom: 4 }}>
@@ -342,6 +453,7 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit }
           value={visualStyle}
           onChange={(v) => setVisualStyle(v as string)}
           ariaLabel="Visual style"
+          renderVisual={(opt) => <StyleSketch sketch={VISUAL_STYLE_VISUALS[opt]} />}
         />
       </div>
 
@@ -394,6 +506,7 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit }
           value={typographyFeel}
           onChange={(v) => setTypographyFeel(v as string)}
           ariaLabel="Typography feel"
+          renderVisual={(opt) => <TypeSample sample={TYPOGRAPHY_FEEL_VISUALS[opt]} />}
         />
       </div>
 
@@ -406,6 +519,7 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit }
           onChange={(v) => setImageryDirection(v as string[])}
           multi
           ariaLabel="Imagery direction"
+          renderVisual={(opt) => <ImageryGlyph glyph={IMAGERY_DIRECTION_VISUALS[opt]} />}
         />
       </div>
 
@@ -557,7 +671,7 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit }
         </div>
       ) : null}
 
-      <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
         <button
           type="submit"
           className="btn btnPrimary"
@@ -567,6 +681,13 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit }
           {saving ? "Submitting..." : "Submit design direction"}
           <span className="btnArrow"> →</span>
         </button>
+        {onSaveDraft ? (
+          <span style={{ fontSize: 12, color: "var(--muted)" }} aria-live="polite">
+            {draftStatus.kind === "saving" ? "Saving…" : null}
+            {draftStatus.kind === "saved" ? `Draft saved · ${draftStatus.at}` : null}
+            {draftStatus.kind === "error" ? "Couldn't save draft — your input stays in this tab." : null}
+          </span>
+        ) : null}
       </div>
     </form>
   );

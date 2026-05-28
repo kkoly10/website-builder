@@ -224,8 +224,9 @@ taste: { calmEnergetic: 0, traditionalModern: 0, strippedLayered: 0, warmCool: 0
 
 ---
 
-## Task 4 — Persistent draft save
+## Task 4 — Persistent draft save ✅ DONE
 
+**Status:** ✅ shipped
 **Effort:** half day to 1 day
 **Why:** today a 12-section form lives in `useState`. Close the tab, lose
 everything. For a $1.8k-$10k client that's a real frustration.
@@ -280,8 +281,9 @@ everything. For a $1.8k-$10k client that's a real frustration.
 
 ---
 
-## Task 5 — Mobile pass via CSS module
+## Task 5 — Mobile pass via CSS module ✅ DONE
 
+**Status:** ✅ shipped (targeted CSS module, not full inline-style migration)
 **Effort:** half day
 **Why:** the form is 495 lines of inline `style={{}}` props with zero media
 queries. Reference editor's `gridTemplateColumns: "1fr auto"` and the
@@ -314,8 +316,9 @@ Foundational for Task 6.
 
 ---
 
-## Task 6 — Visual references next to options
+## Task 6 — Visual references next to options ✅ DONE
 
+**Status:** ✅ shipped
 **Effort:** ~1.5 days (curation + UI)
 **Why:** the single biggest perception lift. Today the client picks "Bold &
 Premium" with zero visual idea of what it looks like. Adding visuals turns

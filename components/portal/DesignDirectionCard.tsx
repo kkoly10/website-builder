@@ -10,6 +10,10 @@ type Props = {
   value: WebsiteDesignDirection;
   // Async submit callback. Returns nothing on success, throws or rejects on failure.
   onSubmit: (input: WebsiteDesignDirectionInput) => Promise<void>;
+  // Optional draft auto-save. When provided, the underlying form will
+  // debounce changes and persist drafts so the client can close the tab
+  // and resume mid-form.
+  onSaveDraft?: (input: WebsiteDesignDirectionInput) => Promise<void>;
 };
 
 // Style-only pill record. Labels come from i18n keys at
@@ -54,7 +58,7 @@ const SUBTITLE: Record<WebsiteDesignDirection["status"], string> = {
     "Design direction is locked. Major visual changes may affect the timeline or require a change order.",
 };
 
-export default function DesignDirectionCard({ value, onSubmit }: Props) {
+export default function DesignDirectionCard({ value, onSubmit, onSaveDraft }: Props) {
   const t = useTranslations("portalToken.directionModule");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -113,6 +117,7 @@ export default function DesignDirectionCard({ value, onSubmit }: Props) {
             saving={saving}
             error={error}
             onSubmit={handleSubmit}
+            onSaveDraft={onSaveDraft}
           />
         ) : (
           <DesignDirectionSummary value={value} />
