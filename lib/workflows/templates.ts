@@ -478,20 +478,23 @@ export const CLIENT_PORTAL_WORKFLOW_TEMPLATE: WorkflowTemplate = {
   direction: {
     type: "portal_direction",
     status: "waiting_on_client",
+    // Key order matches PORTAL_DIRECTION_SCHEMA.fields order so reading
+    // this payload alongside the schema reads naturally. Runtime doesn't
+    // care about object key order — this is purely for code clarity.
     payload: {
       portalPurpose: "",
       accessType: "",
       userRoles: [],
       rolePermissions: "",
+      authMethod: "",
       keyFeatures: [],
+      screenInventory: [],
       integrations: [],
       integrationFlows: "",
       multiTenancyModel: "",
       complianceRequirements: [],
       auditTrailEvents: "",
       notificationsEvents: "",
-      screenInventory: [],
-      authMethod: "",
       brandingRequirements: [],
       successMetric: "",
     },

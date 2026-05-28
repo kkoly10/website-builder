@@ -183,3 +183,19 @@ test("tech team availability adds 'supporting' reason", () => {
   const supportingReasons = r.reasons.filter((reason) => reason.impact === "supporting");
   assert.ok(supportingReasons.some((reason) => reason.label.includes("tech team")));
 });
+
+test("blank budget flags the recommendation as indicative", () => {
+  const r = getPortalPricing(baseInput({ budget: "" }));
+  assert.ok(r.complexityFlags.includes("Budget not specified — indicative estimate"));
+  assert.ok(r.reasons.some((reason) => reason.label === "Budget not specified"));
+});
+
+test("'guidance' budget also flags as indicative", () => {
+  const r = getPortalPricing(baseInput({ budget: "guidance" }));
+  assert.ok(r.complexityFlags.includes("Budget not specified — indicative estimate"));
+});
+
+test("specified budget does NOT add the indicative flag", () => {
+  const r = getPortalPricing(baseInput({ budget: "15k-25k" }));
+  assert.ok(!r.complexityFlags.includes("Budget not specified — indicative estimate"));
+});

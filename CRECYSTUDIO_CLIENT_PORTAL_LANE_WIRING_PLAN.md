@@ -768,6 +768,54 @@ Capture baseline numbers in the first 30 days; revisit at day 60.
 
 ---
 
+## Implementation log (recon + fixes)
+
+**Tasks 1-7 shipped** in commits leading up to draft PR #213. Two
+self-review passes after shipping found gaps that were fixed before
+merge:
+
+**Round 1 fix commit (10 items from self-review):**
+- Wired `getPortalPricing()` into `PortalIntakeClient` (was the worst
+  gap — engine existed but was never called)
+- `PortalPricingInput` realigned to actual form value shape (recon
+  caught mismatched buckets between my type and the form's
+  USER_COUNT_OPTIONS / BUDGET_OPTIONS)
+- `custom_portal_scope` got a real return path (was dead code)
+- `lane.client_portal` added to `emailStrings.ts` (en/fr/es)
+- `direction_submitted` analytics event added in `DirectionCard`
+  (benefits all 5 generic-direction lanes)
+- Optional `section` field added to `FieldDef`; portal schema's 15
+  fields grouped into 7 sections (Identity / Access & roles /
+  Features & screens / Integrations / Compliance & data / Branding /
+  Success) — closes the "wall of inputs" UX gap
+- 42 tests pass (20 new portal-pricing + 22 existing)
+
+**Round 2 fix commit (admin verification — new "always verify admin"
+operating rule):**
+- `AdminPipelineClient` `LaneFilter` type + `LANE_FILTER_OPTIONS`
+  array gained `client_portal` so admin can filter the master list
+  by Client Portal
+- `ProjectControlClient` `getLaunchReadinessChecks` switch gained a
+  `client_portal` case with portal-relevant checks (was falling
+  through to website's `default` — domain/analytics/forms/SEO
+  checks would have appeared for portal projects)
+- Code comment on `isAddOnSignal` explains the add-on tier is
+  currently unreachable from `/portal-intake` (deliberate — that
+  form is for standalone portals; add-on path is a future surface)
+- Budget-blank or "guidance" now flags the recommendation as
+  indicative (`"Budget not specified — indicative estimate"` flag +
+  reason) so admin knows to re-scope before quoting
+- `CLIENT_PORTAL_WORKFLOW_TEMPLATE` default payload key order
+  matches schema field order (cosmetic; runtime didn't care)
+- 3 new tests for the indicative flag (45 tests total, all green)
+
+**Deferred (acknowledged, not fixed in this lane work):**
+- Structured permissions matrix UI (row × column × CRUD grid). The
+  textarea where clients write the matrix in prose is the weakest
+  field. Real component work; future enhancement.
+- DB-mocked intake → portal-creation unit test. Playwright E2E in
+  Task 8 covers the live path end-to-end.
+
 ## Decisions locked
 
 1. ✅ **Migration: Option A** — leave existing portal-as-web_app leads

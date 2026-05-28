@@ -223,6 +223,17 @@ function computeLaunchReadiness(data: ProjectControlData) {
         { key: "handoff", label: "Final report ready", done: isReadyState(data.portalAdmin.handoffStatus) },
       ];
       break;
+    case "client_portal":
+      checks = [
+        agreementCheck,
+        previewCheck,
+        getMilestoneCheck(milestones, "roles_permissions_locked", "Roles & permissions locked"),
+        getMilestoneCheck(milestones, "integration_plan_confirmed", "Integration plan confirmed"),
+        getMilestoneCheck(milestones, "uat_complete", "UAT complete"),
+        getMilestoneCheck(milestones, "production_launch", "Production launch milestone done"),
+        handoffCheck,
+      ];
+      break;
     default:
       checks = [
         agreementCheck,

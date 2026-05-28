@@ -81,6 +81,12 @@ function isEnterpriseSignal(input: PortalPricingInput): boolean {
   return false;
 }
 
+// Add-on tier is currently UNREACHABLE from PortalIntakeClient (it hard-
+// codes isAddOn: false, since /portal-intake is the standalone-portal
+// form, not the add-on flow). The tier exists for a future caller — most
+// likely the website intake adding a portal as an upsell, or an admin-
+// side wizard that knows about an existing website build. Don't remove
+// the path; preserve the option for that future surface.
 function isAddOnSignal(input: PortalPricingInput): boolean {
   // Add-on is small-scope and bolted onto an existing website build.
   // Bail out of add-on if any heavy signal is set — a "small" add-on
@@ -94,9 +100,6 @@ function isAddOnSignal(input: PortalPricingInput): boolean {
   if (input.features.length > 4) return false;
   if (input.integrations.length > 2) return false;
   if (budgetIsEnterprise(input.budget)) return false;
-  // The intake form is for standalone portals, not add-ons; the add-on
-  // flag has to be explicitly true (e.g. set by an admin-side wizard
-  // that knows about an existing website build).
   return input.isAddOn === true;
 }
 
@@ -171,6 +174,19 @@ export function getPortalPricing(
     reasons.push({
       label: "Client tech team available",
       note: "Faster integrations and shared maintenance responsibility.",
+      impact: "supporting",
+    });
+  }
+
+  // Budget left blank or marked "needs guidance" → flag the recommendation
+  // as indicative so admin re-scopes before quoting. The tier is still
+  // returned (the engine still has to pick something) but the flag tells
+  // downstream UI / admin that this estimate is provisional.
+  if (input.budget === "" || input.budget === "guidance") {
+    flags.push("Budget not specified — indicative estimate");
+    reasons.push({
+      label: "Budget not specified",
+      note: "Client didn't pin a budget at intake. Admin should refine the tier with the client during scoping.",
       impact: "supporting",
     });
   }
