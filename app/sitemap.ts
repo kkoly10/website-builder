@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
+import { allLocationSlugs } from "@/lib/seo/locations";
 
 type Page = {
   path: string;
@@ -7,7 +8,7 @@ type Page = {
   changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
 };
 
-const PAGES: Page[] = [
+const STATIC_PAGES: Page[] = [
   { path: "/", priority: 1.0, changeFrequency: "weekly" },
   { path: "/websites", priority: 0.9, changeFrequency: "monthly" },
   { path: "/ecommerce", priority: 0.9, changeFrequency: "monthly" },
@@ -16,6 +17,7 @@ const PAGES: Page[] = [
   { path: "/client-portals", priority: 0.8, changeFrequency: "monthly" },
   { path: "/website-rescue", priority: 0.8, changeFrequency: "monthly" },
   { path: "/care-plans", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/ai-integration", priority: 0.9, changeFrequency: "monthly" },
   { path: "/process", priority: 0.8, changeFrequency: "monthly" },
   { path: "/work", priority: 0.8, changeFrequency: "monthly" },
   { path: "/work/fleiko", priority: 0.7, changeFrequency: "monthly" },
@@ -25,12 +27,24 @@ const PAGES: Page[] = [
   { path: "/faq", priority: 0.7, changeFrequency: "monthly" },
   { path: "/contact", priority: 0.6, changeFrequency: "yearly" },
   { path: "/pricing", priority: 0.7, changeFrequency: "monthly" },
+  { path: "/locations", priority: 0.8, changeFrequency: "monthly" },
   { path: "/privacy", priority: 0.3, changeFrequency: "yearly" },
   { path: "/terms", priority: 0.3, changeFrequency: "yearly" },
   { path: "/aup", priority: 0.3, changeFrequency: "yearly" },
   { path: "/refunds", priority: 0.3, changeFrequency: "yearly" },
   { path: "/security", priority: 0.3, changeFrequency: "yearly" },
 ];
+
+// City landing pages — one per slug in LOCATIONS. Generated rather
+// than hardcoded so adding a new city to lib/seo/locations.ts
+// automatically registers it in the sitemap.
+const LOCATION_PAGES: Page[] = allLocationSlugs().map((slug) => ({
+  path: `/locations/${slug}`,
+  priority: 0.7,
+  changeFrequency: "monthly" as const,
+}));
+
+const PAGES: Page[] = [...STATIC_PAGES, ...LOCATION_PAGES];
 
 function localizedHref(siteUrl: string, locale: string, path: string) {
   // Default locale stays at the root (no prefix). Other locales get a prefix.

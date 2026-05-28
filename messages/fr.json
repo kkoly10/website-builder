@@ -111,6 +111,8 @@
   },
   "footer": {
     "blurb": "Studio web indépendant qui construit des sites web premium et des systèmes web sur mesure. Un seul espace de travail du cadrage au lancement.",
+    "address": "Stafford, Virginie · États-Unis",
+    "serviceArea": "Au service de la région DMV (DC, Maryland, Virginie) et de clients aux États-Unis, au Canada et au Royaume-Uni.",
     "rightsReserved": "Tous droits réservés.",
     "links": {
       "aria": "Pied de page",
@@ -121,6 +123,7 @@
       "process": "Processus",
       "work": "Réalisations",
       "pricing": "Tarifs",
+      "locations": "Localisations",
       "faq": "FAQ",
       "contact": "Contact",
       "privacy": "Confidentialité",
