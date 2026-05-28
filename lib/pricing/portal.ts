@@ -1,19 +1,19 @@
 // Phase 4.x — Client portal pricing engine.
 //
-// Three tiers match the /client-portals landing page:
-//   - portal_add_on:      $5,000–$10,000   (most common starting point)
-//   - standalone_portal:  $22,000–$45,000  (portal as its own product)
-//   - enterprise_portal:  $75,000–$150,000 (multi-tenant, white-label, compliance)
+// Four tiers match the /client-portals landing page (with a custom
+// fallback for over-band signals):
+//   - portal_add_on:       $5,000–$10,000   (most common starting point)
+//   - standalone_portal:   $22,000–$45,000  (portal as its own product)
+//   - enterprise_portal:   $75,000–$150,000 (multi-tenant + compliance + scale)
+//   - custom_portal_scope: explicit over-band (multi-tenant + compliance +
+//                          white-label + heavy integration surface). Admin
+//                          will scope manually via a discovery sprint.
 //
-// Plus a custom_portal_scope fallback for explicitly over-tier inputs.
-//
-// Tier selection is signal-based, not budget-driven (the audit noted
-// budget can mislead — let the scope speak). Strongest signal wins:
-//   - Enterprise: multi-tenant + compliance + white-label, OR very large
-//     user base, OR budget ≥ $50k with multi-tenant requirements.
-//   - Add-on: bolted onto an existing website build, small scope,
-//     single-tenant, no compliance, ≤50 users.
-//   - Standalone: everything in between.
+// Input shape mirrors PortalIntakeClient form values directly — no
+// mapping layer in between. The form doesn't capture multi-tenant /
+// white-label / custom-domain signals today; those default to false at
+// intake time and admin refines the tier once portal_direction surfaces
+// them.
 
 import {
   PORTAL_TIER_CONFIG,
@@ -35,35 +35,68 @@ function choosePosition(score: number): "low" | "middle" | "high" {
   return "low";
 }
 
+// Maps the form's userCount strings to whether the project is small,
+// medium, or large in user-base terms.
+function userCountSignal(userCount: string): "small" | "medium" | "large" | "very_large" {
+  switch (userCount) {
+    case "under-25":    return "small";
+    case "25-100":      return "medium";
+    case "100-500":     return "medium";
+    case "500-2000":    return "large";
+    case "2000-plus":   return "very_large";
+    default:            return "medium";
+  }
+}
+
+function budgetIsEnterprise(budget: string): boolean {
+  return budget === "100k-plus" || budget === "50k-100k";
+}
+
+function isCustomScopeSignal(input: PortalPricingInput): boolean {
+  // Strongest possible enterprise signals together — multi-tenant +
+  // compliance + white-label + heavy integration surface OR 2000+ users
+  // with enterprise budget. Admin handles scoping via discovery sprint.
+  const allEnterpriseSignals =
+    input.isMultiTenant === true &&
+    (input.compliance?.length ?? 0) > 0 &&
+    input.hasWhiteLabel === true &&
+    (input.integrations?.length ?? 0) >= 5;
+  const veryLargeWithEnterpriseBudget =
+    userCountSignal(input.userCount) === "very_large" && budgetIsEnterprise(input.budget);
+  return allEnterpriseSignals || veryLargeWithEnterpriseBudget;
+}
+
 function isEnterpriseSignal(input: PortalPricingInput): boolean {
   // Strong: white-label + multi-tenant is the textbook enterprise pairing
-  if (input.hasWhiteLabel && input.isMultiTenant) return true;
+  if (input.isMultiTenant && input.hasWhiteLabel) return true;
   // Strong: multi-tenant + compliance (e.g. HIPAA portal serving multiple orgs)
-  if (input.isMultiTenant && input.hasCompliance) return true;
-  // Scale: 200+ users typically implies enterprise infra and SLA
-  if (input.userCount === "200+") return true;
+  if (input.isMultiTenant && (input.compliance?.length ?? 0) > 0) return true;
+  // Scale: 500+ users typically implies enterprise infra and SLA
+  const scale = userCountSignal(input.userCount);
+  if (scale === "large" || scale === "very_large") return true;
   // Budget signal: explicit $100k+ budget always lands here
-  if (input.budget === "100k_plus") return true;
+  if (input.budget === "100k-plus") return true;
   // Budget + multi-tenant combination
-  if (input.budget === "50k_100k" && input.isMultiTenant) return true;
+  if (input.budget === "50k-100k" && input.isMultiTenant) return true;
   return false;
 }
 
 function isAddOnSignal(input: PortalPricingInput): boolean {
   // Add-on is small-scope and bolted onto an existing website build.
-  // Bail out of add-on if any of the following heavy signals are set —
-  // a "small" add-on with white-label is a contradiction.
+  // Bail out of add-on if any heavy signal is set — a "small" add-on
+  // with multi-tenant or white-label is a contradiction.
   if (input.isMultiTenant) return false;
-  if (input.hasCompliance) return false;
   if (input.hasWhiteLabel) return false;
   if (input.hasCustomDomain) return false;
-  if (input.userCount === "51-200" || input.userCount === "200+") return false;
-  if (input.featureCount > 4) return false;
-  if (input.integrationCount > 2) return false;
-  if (input.budget === "25k_50k" || input.budget === "50k_100k" || input.budget === "100k_plus") {
-    return false;
-  }
-  // Final check: is it actually framed as an add-on?
+  if ((input.compliance?.length ?? 0) > 0) return false;
+  const scale = userCountSignal(input.userCount);
+  if (scale === "large" || scale === "very_large") return false;
+  if (input.features.length > 4) return false;
+  if (input.integrations.length > 2) return false;
+  if (budgetIsEnterprise(input.budget)) return false;
+  // The intake form is for standalone portals, not add-ons; the add-on
+  // flag has to be explicitly true (e.g. set by an admin-side wizard
+  // that knows about an existing website build).
   return input.isAddOn === true;
 }
 
@@ -76,7 +109,8 @@ export function getPortalPricing(
 
   // ── Signals (collected upfront for position scoring) ─────────────────
 
-  if (input.integrationCount >= 4) {
+  const integrationCount = input.integrations.length;
+  if (integrationCount >= 4) {
     flags.push("Many integrations");
     reasons.push({
       label: "Heavy integration surface",
@@ -84,7 +118,7 @@ export function getPortalPricing(
       impact: "upward",
     });
     complexityScore += 2;
-  } else if (input.integrationCount >= 2) {
+  } else if (integrationCount >= 2) {
     reasons.push({
       label: "Multiple integrations",
       note: "Each integration adds setup, error handling, and ongoing maintenance.",
@@ -93,7 +127,8 @@ export function getPortalPricing(
     complexityScore += 1;
   }
 
-  if (input.hasCompliance) {
+  const complianceCount = input.compliance?.length ?? 0;
+  if (complianceCount > 0) {
     flags.push("Compliance requirements");
     reasons.push({
       label: "Compliance constraints",
@@ -123,7 +158,7 @@ export function getPortalPricing(
     complexityScore += 1;
   }
 
-  if (input.featureCount >= 6) {
+  if (input.features.length >= 6) {
     reasons.push({
       label: "Broad feature set",
       note: "Six or more must-have features expand the build surface.",
@@ -132,7 +167,7 @@ export function getPortalPricing(
     complexityScore += 1;
   }
 
-  if (input.techTeam === "yes") {
+  if (input.hasTechTeam === "yes") {
     reasons.push({
       label: "Client tech team available",
       note: "Faster integrations and shared maintenance responsibility.",
@@ -147,7 +182,23 @@ export function getPortalPricing(
   let band: { min: number; max: number };
   let isCustomScope = false;
 
-  if (isEnterpriseSignal(input)) {
+  if (isCustomScopeSignal(input)) {
+    tierKey = "custom_portal_scope";
+    tierLabel = "Custom portal scope";
+    // Use enterprise band's max as floor; admin scopes the upper bound.
+    band = {
+      min: PORTAL_TIER_CONFIG.enterprise_portal.max,
+      max: PORTAL_TIER_CONFIG.enterprise_portal.max * 2,
+    };
+    isCustomScope = true;
+    flags.push("Custom scope required");
+    reasons.push({
+      label: "Beyond enterprise band",
+      note: "Strong overlap of enterprise signals (multi-tenant + compliance + white-label + heavy integrations OR very-large user base) needs a custom-scope discovery sprint to land a realistic estimate.",
+      impact: "custom",
+    });
+    complexityScore += 3;
+  } else if (isEnterpriseSignal(input)) {
     tierKey = "enterprise_portal";
     tierLabel = PORTAL_TIER_CONFIG.enterprise_portal.label;
     band = PORTAL_TIER_CONFIG.enterprise_portal;
@@ -164,7 +215,7 @@ export function getPortalPricing(
     band = PORTAL_TIER_CONFIG.portal_add_on;
     reasons.push({
       label: "Portal as add-on",
-      note: "Scoped as a smaller surface bolted onto an existing website build. Common starting point.",
+      note: "Scoped as a smaller surface bolted onto an existing website build.",
       impact: "fit",
     });
   } else {

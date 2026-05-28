@@ -74,7 +74,9 @@ export type RescueTierKey =
   | "custom_rescue_scope";
 
 // Phase 4.x — client portal lane. Tier names match the landing page
-// at /client-portals (Portal add-on / Standalone / Enterprise).
+// at /client-portals (Portal add-on / Standalone / Enterprise). Input
+// field values mirror PortalIntakeClient's form shape so the engine
+// takes raw form values without a mapping layer in between.
 export type PortalTierKey =
   | "portal_add_on"
   | "standalone_portal"
@@ -82,17 +84,22 @@ export type PortalTierKey =
   | "custom_portal_scope";
 
 export type PortalPricingInput = {
-  accessType: "clients" | "team" | "both" | "partners" | "unknown";
-  userCount: "1-10" | "11-50" | "51-200" | "200+" | "unknown";
-  featureCount: number;
-  integrationCount: number;
-  isMultiTenant: boolean;
-  hasCompliance: boolean;
-  budget: "under_5k" | "5k_10k" | "10k_25k" | "25k_50k" | "50k_100k" | "100k_plus" | "unknown";
-  techTeam: "none" | "some" | "yes";
-  isAddOn: boolean; // true when scoped as add-on to an existing website build
-  hasWhiteLabel: boolean; // full white-label requirement (drives enterprise tier)
-  hasCustomDomain: boolean; // separate domain (portal.client.com)
+  // Mirrors the PortalIntakeClient form constants directly.
+  accessType: string;           // "clients" | "team" | "both" (form free-string)
+  userCount: string;            // USER_COUNT_OPTIONS: "under-25" | "25-100" | "100-500" | "500-2000" | "2000-plus"
+  features: string[];           // FEATURE_OPTIONS multi-select
+  integrations: string[];       // free-string multi-select
+  compliance: string[];         // multi-select (empty = no compliance)
+  budget: string;               // BUDGET_OPTIONS: "15k-25k" | "25k-50k" | "50k-100k" | "100k-plus" | "guidance" | ""
+  budgetFlexibility: string;    // form value
+  hasTechTeam: string;          // TECH_TEAM_OPTIONS: "yes" | "no" | "one-person"
+  // Signals not currently captured by the intake form — default false at
+  // intake time. Admin can refine tier later once the portal_direction
+  // form surfaces multi-tenant / white-label / custom-domain decisions.
+  isMultiTenant?: boolean;
+  hasWhiteLabel?: boolean;
+  hasCustomDomain?: boolean;
+  isAddOn?: boolean;
 };
 
 export type PricingReasonImpact = "supporting" | "upward" | "custom" | "fit";

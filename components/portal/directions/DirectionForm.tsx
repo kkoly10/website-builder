@@ -252,14 +252,35 @@ export default function DirectionForm({
 
   return (
     <form onSubmit={handleSubmit} style={{ display: "grid", gap: 24 }}>
-      {schema.fields.map((field) => (
-        <FieldRow
-          key={field.key}
-          field={field}
-          value={payload[field.key]}
-          onChange={(next) => setField(field.key, next)}
-        />
-      ))}
+      {schema.fields.map((field, idx) => {
+        const prevSection = idx > 0 ? schema.fields[idx - 1].section : undefined;
+        const showSectionHeader = field.section && field.section !== prevSection;
+        return (
+          <div key={field.key} style={{ display: "grid", gap: 14 }}>
+            {showSectionHeader ? (
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: "var(--muted)",
+                  borderBottom: "1px solid var(--rule)",
+                  paddingBottom: 8,
+                  marginTop: idx === 0 ? 0 : 8,
+                }}
+              >
+                {field.section}
+              </div>
+            ) : null}
+            <FieldRow
+              field={field}
+              value={payload[field.key]}
+              onChange={(next) => setField(field.key, next)}
+            />
+          </div>
+        );
+      })}
 
       <label
         style={{

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { trackEvent } from "@/lib/analytics/client";
+import { getPortalPricing } from "@/lib/pricing/portal";
 import ScrollReveal from "@/components/site/ScrollReveal";
 
 type PortalFormState = {
@@ -183,19 +184,54 @@ export default function PortalIntakeClient() {
     setError("");
 
     try {
+      // Compute pricing client-side and pass to submit-estimate. Mirrors the
+      // custom-app / ecommerce / rescue intake pattern. The server stores
+      // pricingTruth + tier label + estimate cents from the band. Signals
+      // not captured by this intake (multi-tenant / white-label / custom
+      // domain) default false at intake time; admin refines tier later
+      // once portal_direction surfaces those decisions.
+      const recommendation = getPortalPricing({
+        accessType: form.accessType,
+        userCount: form.userCount,
+        features: form.features,
+        integrations: form.integrations,
+        compliance: form.compliance,
+        budget: form.budget,
+        budgetFlexibility: form.budgetFlexibility,
+        hasTechTeam: form.hasTechTeam,
+        isMultiTenant: false,
+        hasWhiteLabel: false,
+        hasCustomDomain: false,
+        isAddOn: false,
+      });
+
       const res = await fetch("/api/submit-estimate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          // First-class lane. Previously this routed as
-          // projectType: "web_app" + intakeRaw.projectSubType: "portal"
-          // workaround; the lane is wired end-to-end now. See
-          // CRECYSTUDIO_CLIENT_PORTAL_LANE_WIRING_PLAN.md.
+          // First-class lane. Previously routed as projectType: "web_app"
+          // + intakeRaw.projectSubType: "portal" workaround; lane is wired
+          // end-to-end now (see CRECYSTUDIO_CLIENT_PORTAL_LANE_WIRING_PLAN.md).
           projectType: "client_portal",
           contactName: form.contactName,
           email: form.email,
           phone: form.phone || undefined,
           preferredLocale: locale,
+          pricing: {
+            version: recommendation.version,
+            lane: recommendation.lane,
+            tierKey: recommendation.tierKey,
+            tierLabel: recommendation.tierLabel,
+            estimateCents: recommendation.band.target * 100,
+            estimateLowCents: recommendation.band.min * 100,
+            estimateHighCents: recommendation.band.max * 100,
+            displayRange: recommendation.displayRange,
+            position: recommendation.position,
+            isCustomScope: recommendation.isCustomScope,
+            reasons: recommendation.reasons,
+            complexityFlags: recommendation.complexityFlags,
+            complexityScore: recommendation.complexityScore,
+          },
           intakeRaw: {
             companyName: form.companyName,
             accessType: form.accessType,

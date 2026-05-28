@@ -1028,6 +1028,7 @@ const STRINGS: Record<string, LocalizedString> = {
   "lane.ecommerce": { en: "store", fr: "boutique", es: "tienda" },
   "lane.rescue": { en: "site rescue", fr: "sauvetage de site", es: "rescate de sitio" },
   "lane.ai_integration": { en: "AI integration", fr: "intégration IA", es: "integración de IA" },
+  "lane.client_portal": { en: "client portal", fr: "portail client", es: "portal del cliente" },
   "lane.project": { en: "project", fr: "projet", es: "proyecto" },
 };
 

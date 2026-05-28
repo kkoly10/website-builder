@@ -133,6 +133,19 @@ export default function DirectionCard({ value, onSubmit }: Props) {
     setSaving(true);
     try {
       await onSubmit(input);
+      // Generic per-lane event so completion rate, time-to-submit, and
+      // per-lane funnels are measurable. Tracking lives on the client
+      // here (not server) because the form completion moment is what
+      // matters; admin re-edits via the payload editor shouldn't count.
+      try {
+        const { trackEvent } = await import("@/lib/analytics/client");
+        trackEvent({
+          event: "direction_submitted",
+          metadata: { directionType: value.type, status: value.status },
+        });
+      } catch {
+        // Analytics is best-effort — never block a successful submit.
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : t("submitError"));
     } finally {
