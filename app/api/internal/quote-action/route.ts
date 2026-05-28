@@ -7,6 +7,36 @@ import { captureBackgroundError } from "@/lib/sentry";
 
 export const runtime = "nodejs";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isUuid(v: string): boolean {
+  return UUID_RE.test(v);
+}
+
+// Whitelist of canonical quote status values the admin form is allowed
+// to write. Without this, a hand-crafted form post could set status to
+// any free-form string (the column has no DB-level enum), poisoning the
+// admin pipeline filters and downstream lifecycle logic that branches on
+// these exact values.
+const ALLOWED_QUOTE_STATUSES = new Set([
+  "new",
+  "sent",
+  "review",
+  "proposal",
+  "active",
+  "scope_locked",
+  "deposit",
+  "deposit_sent",
+  "deposit_paid",
+  "closed_won",
+  "closed_lost",
+]);
+
+// Deposit amounts are stored in dollars (numeric column, NOT cents).
+// Cap at $1M — anything beyond is almost certainly a fat-finger or a
+// fuzzed payload, and silently writing it could break downstream Stripe
+// flows that pass `amount * 100` into APIs with their own integer caps.
+const MAX_DEPOSIT_AMOUNT_USD = 1_000_000;
+
 async function readBody(req: Request): Promise<Record<string, any>> {
   const ct = req.headers.get("content-type") || "";
   if (ct.includes("application/json")) {
@@ -28,12 +58,19 @@ export async function POST(req: Request) {
     const action = String(body.action || "").trim();
     const quoteId = String(body.quoteId || "").trim();
 
-    if (!quoteId) {
-      return NextResponse.json({ error: "Missing quoteId" }, { status: 400 });
+    if (!quoteId || !isUuid(quoteId)) {
+      return NextResponse.json({ error: "Missing or invalid quoteId" }, { status: 400 });
     }
 
     if (action === "update_status") {
       const status = String(body.status || "new").trim();
+
+      if (!ALLOWED_QUOTE_STATUSES.has(status)) {
+        return NextResponse.json(
+          { error: `Invalid status: ${status}` },
+          { status: 400 }
+        );
+      }
 
       const { error } = await supabaseAdmin
         .from("quotes")
@@ -89,14 +126,44 @@ export async function POST(req: Request) {
     }
 
     if (action === "set_deposit") {
-      const deposit_link = String(body.deposit_link || "").trim() || null;
-      const deposit_amount = body.deposit_amount ? Math.round(Number(body.deposit_amount)) : null;
+      const deposit_link_raw = String(body.deposit_link || "").trim();
+      let deposit_link: string | null = null;
+      if (deposit_link_raw) {
+        try {
+          const url = new URL(deposit_link_raw);
+          if (url.protocol !== "https:" && url.protocol !== "http:") {
+            return NextResponse.json(
+              { error: "deposit_link must use http or https" },
+              { status: 400 }
+            );
+          }
+          deposit_link = deposit_link_raw;
+        } catch {
+          return NextResponse.json(
+            { error: "deposit_link is not a valid URL" },
+            { status: 400 }
+          );
+        }
+      }
+
+      const deposit_amount_raw = body.deposit_amount;
+      let deposit_amount: number | null = null;
+      if (deposit_amount_raw !== undefined && deposit_amount_raw !== null && deposit_amount_raw !== "") {
+        const parsed = Math.round(Number(deposit_amount_raw));
+        if (!Number.isFinite(parsed) || parsed < 0 || parsed > MAX_DEPOSIT_AMOUNT_USD) {
+          return NextResponse.json(
+            { error: `deposit_amount must be between 0 and ${MAX_DEPOSIT_AMOUNT_USD}` },
+            { status: 400 }
+          );
+        }
+        deposit_amount = parsed;
+      }
 
       const { error } = await supabaseAdmin
         .from("quotes")
         .update({
           deposit_link,
-          deposit_amount: Number.isFinite(deposit_amount as any) ? deposit_amount : null,
+          deposit_amount,
           deposit_status: deposit_link ? "sent" : null,
           deposit_sent_at: deposit_link ? new Date().toISOString() : null,
           status: deposit_link ? "deposit_sent" : undefined,
