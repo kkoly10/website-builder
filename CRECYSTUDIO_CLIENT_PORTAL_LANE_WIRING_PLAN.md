@@ -497,8 +497,9 @@ export const WORKFLOW_TEMPLATES: Record<ProjectType, WorkflowTemplate> = {
 
 ---
 
-## Task 4 — `lib/pricing/portal.ts` (3 tiers, real $ ranges)
+## Task 4 — `lib/pricing/portal.ts` (3 tiers, real $ ranges) ✅ DONE
 
+**Status:** ✅ shipped with 13-test unit suite (all green)
 **Effort:** half day including a unit test
 **Why:** intake produces no recommendation today. Sales conversation
 breaks on "what will this cost?"

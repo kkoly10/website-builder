@@ -2,6 +2,7 @@ import type {
   AiIntakeTierKey,
   EcommerceTierKey,
   OpsTierKey,
+  PortalTierKey,
   RescueTierKey,
   WebAppTierKey,
   WebsiteTierKey,
@@ -178,6 +179,31 @@ export const RESCUE_TIER_CONFIG: Record<
     label: "Full Rescue Sprint",
     min: 1500,
     max: 3500,
+  },
+};
+
+// Phase 4.x — Client portal pricing tiers. Bands match the
+// /client-portals landing page (lib/service-pages.ts:1232-1255) so the
+// quote and the marketing site agree. The audit noted portal was 30-50%
+// under-priced; current ranges reflect the corrected positioning.
+export const PORTAL_TIER_CONFIG: Record<
+  Exclude<PortalTierKey, "custom_portal_scope">,
+  { label: string; min: number; max: number }
+> = {
+  portal_add_on: {
+    label: "Portal add-on",
+    min: 5000,
+    max: 10000,
+  },
+  standalone_portal: {
+    label: "Standalone portal",
+    min: 22000,
+    max: 45000,
+  },
+  enterprise_portal: {
+    label: "Enterprise build",
+    min: 75000,
+    max: 150000,
   },
 };
 

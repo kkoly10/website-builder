@@ -9,7 +9,8 @@ export type PricingLane =
   | "ecommerce"
   | "web_app"
   | "rescue"
-  | "ai_integration";
+  | "ai_integration"
+  | "client_portal";
 
 // Normalize a stored lane string to the canonical PricingLane. Accepts
 // the legacy "ops" value (returns "automation") so old persisted data
@@ -17,7 +18,14 @@ export type PricingLane =
 // not in the canonical set falls back to "website".
 export function normalizePricingLane(lane: string | null | undefined): PricingLane {
   if (lane === "ops" || lane === "automation") return "automation";
-  if (lane === "website" || lane === "ecommerce" || lane === "web_app" || lane === "rescue" || lane === "ai_integration") {
+  if (
+    lane === "website" ||
+    lane === "ecommerce" ||
+    lane === "web_app" ||
+    lane === "rescue" ||
+    lane === "ai_integration" ||
+    lane === "client_portal"
+  ) {
     return lane;
   }
   return "website";
@@ -64,6 +72,28 @@ export type RescueTierKey =
   | "basic_rescue"
   | "full_rescue_sprint"
   | "custom_rescue_scope";
+
+// Phase 4.x — client portal lane. Tier names match the landing page
+// at /client-portals (Portal add-on / Standalone / Enterprise).
+export type PortalTierKey =
+  | "portal_add_on"
+  | "standalone_portal"
+  | "enterprise_portal"
+  | "custom_portal_scope";
+
+export type PortalPricingInput = {
+  accessType: "clients" | "team" | "both" | "partners" | "unknown";
+  userCount: "1-10" | "11-50" | "51-200" | "200+" | "unknown";
+  featureCount: number;
+  integrationCount: number;
+  isMultiTenant: boolean;
+  hasCompliance: boolean;
+  budget: "under_5k" | "5k_10k" | "10k_25k" | "25k_50k" | "50k_100k" | "100k_plus" | "unknown";
+  techTeam: "none" | "some" | "yes";
+  isAddOn: boolean; // true when scoped as add-on to an existing website build
+  hasWhiteLabel: boolean; // full white-label requirement (drives enterprise tier)
+  hasCustomDomain: boolean; // separate domain (portal.client.com)
+};
 
 export type PricingReasonImpact = "supporting" | "upward" | "custom" | "fit";
 
