@@ -234,6 +234,17 @@ function computeLaunchReadiness(data: ProjectControlData) {
         handoffCheck,
       ];
       break;
+    case "ai_integration":
+      // AI integration leads don't go through the standard portal-flow
+      // (no workflow template), but if an admin opens the project page
+      // for one, show meaningful AI-shaped readiness markers rather than
+      // the website-shaped default (which would surface irrelevant
+      // domain / SEO / forms checks).
+      checks = [
+        agreementCheck,
+        handoffCheck,
+      ];
+      break;
     default:
       checks = [
         agreementCheck,

@@ -1,16 +1,10 @@
-// Pricing lanes mirror the workflow ProjectType enum. The deprecated
-// "ops" lane has been removed from the type union — all engine code
-// emits "automation" — but normalizePricingLane below still accepts
-// "ops" on read to handle stored quote / pricingTruth / Stripe metadata
-// from before the rename.
-export type PricingLane =
-  | "website"
-  | "automation"
-  | "ecommerce"
-  | "web_app"
-  | "rescue"
-  | "ai_integration"
-  | "client_portal";
+// Pricing lanes mirror the canonical LeadProjectType from workflows/types.
+// The deprecated "ops" lane has been removed from the type union — all
+// engine code emits "automation" — but normalizePricingLane below still
+// accepts "ops" on read to handle stored quote / pricingTruth / Stripe
+// metadata from before the rename.
+import type { LeadProjectType } from "@/lib/workflows/types";
+export type PricingLane = LeadProjectType;
 
 // Normalize a stored lane string to the canonical PricingLane. Accepts
 // the legacy "ops" value (returns "automation") so old persisted data
