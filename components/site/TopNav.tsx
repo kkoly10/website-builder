@@ -69,12 +69,21 @@ export default function TopNav({
     }
   }, [pathname]);
 
+  // Top-nav order: the most-searched services first (websites, AI,
+  // ecommerce, systems) → secondary services → care-plans → process /
+  // work / faq. /custom-web-apps and /client-portals were footer-only
+  // before; adding them to the top nav now per the SEO request, since
+  // top-nav presence helps both UX discovery and feeds Google a
+  // stronger internal-link signal than footer alone.
   const navItems: NavItem[] = [
     { href: "/websites", label: t("websites") },
-    { href: "/ecommerce", label: t("ecommerce") },
-    { href: "/website-rescue", label: t("websiteRescue") },
-    { href: "/systems", label: t("systems") },
     { href: "/ai-integration", label: t("aiIntegration") },
+    { href: "/custom-web-apps", label: t("customWebApps") },
+    { href: "/systems", label: t("systems") },
+    { href: "/ecommerce", label: t("ecommerce") },
+    { href: "/client-portals", label: t("clientPortals") },
+    { href: "/website-rescue", label: t("websiteRescue") },
+    { href: "/care-plans", label: t("carePlans") },
     { href: "/process", label: t("process") },
     { href: "/work", label: t("work") },
     { href: "/faq", label: t("faq") },

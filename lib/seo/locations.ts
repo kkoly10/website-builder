@@ -13,6 +13,11 @@ export type LocationSlug =
   | "richmond-va"
   | "ashland-va"
   | "washington-dc"
+  | "arlington-va"
+  | "alexandria-va"
+  | "bethesda-md"
+  | "silver-spring-md"
+  | "annapolis-md"
   | "northern-virginia"
   | "maryland"
   | "dmv";
@@ -139,6 +144,91 @@ export const LOCATIONS: Location[] = [
       "Used to working with policy / association / consulting workflows.",
       "Async-first delivery that fits how DC professionals actually work.",
       "AI integration done with the kind of safety guardrails a DC client expects.",
+    ],
+  },
+  {
+    slug: "arlington-va",
+    type: "City",
+    name: "Arlington, Virginia",
+    shortName: "Arlington, VA",
+    region: "Virginia",
+    geo: { latitude: 38.8816, longitude: -77.0910 },
+    distanceFromHomeMiles: 40,
+    intro:
+      "Web design, custom web apps, and AI integration for Arlington businesses — Rosslyn, Crystal City, Ballston, Pentagon City, Clarendon. About 40 miles north of our Stafford studio, easy drive for in-person kickoffs.",
+    whyLocal: [
+      "Familiar with Arlington's defense / federal contractor / tech-adjacent client base — confidentiality and security defaults baked in.",
+      "Direct work with the founder for the entire engagement, not handed off to a junior team.",
+      "Production AI experience that matters when working near government clients — auditable, gated, human-in-the-loop.",
+      "Async-first delivery that fits how Arlington-area professionals actually work day-to-day.",
+    ],
+  },
+  {
+    slug: "alexandria-va",
+    type: "City",
+    name: "Alexandria, Virginia",
+    shortName: "Alexandria, VA",
+    region: "Virginia",
+    geo: { latitude: 38.8048, longitude: -77.0469 },
+    distanceFromHomeMiles: 35,
+    intro:
+      "Premium websites, custom web apps, and AI integration for Alexandria businesses — Old Town, Del Ray, Carlyle, Eisenhower Avenue. About 35 miles north of our Stafford studio on I-95.",
+    whyLocal: [
+      "In-person discovery calls in Old Town or your office on request.",
+      "Strong fit for Alexandria's mix of consulting firms, associations, and small professional businesses.",
+      "Independent practitioner — no agency markup, same person from scope to launch.",
+      "Bilingual workspace (English / French / Spanish) — useful if your customer base reflects Alexandria's diversity.",
+    ],
+  },
+  {
+    slug: "bethesda-md",
+    type: "City",
+    name: "Bethesda, Maryland",
+    shortName: "Bethesda, MD",
+    region: "Maryland",
+    geo: { latitude: 38.9847, longitude: -77.0947 },
+    distanceFromHomeMiles: 60,
+    intro:
+      "Web design, custom web apps, and AI integration for Bethesda businesses — downtown Bethesda, Chevy Chase, NIH corridor, Friendship Heights. About an hour from our Stafford studio.",
+    whyLocal: [
+      "Familiar with Bethesda's biotech / healthcare / consulting client landscape — projects scoped with the right level of compliance awareness.",
+      "AI integration with real safety thinking — important for the healthcare and research orgs that anchor the area.",
+      "Direct work with the founder, no junior handoffs.",
+      "Async-first delivery that respects how Bethesda professionals actually work.",
+    ],
+  },
+  {
+    slug: "silver-spring-md",
+    type: "City",
+    name: "Silver Spring, Maryland",
+    shortName: "Silver Spring, MD",
+    region: "Maryland",
+    geo: { latitude: 38.9907, longitude: -77.0261 },
+    distanceFromHomeMiles: 65,
+    intro:
+      "Premium websites and AI integration for Silver Spring businesses — downtown Silver Spring, Wheaton, Takoma Park, the Discovery corridor. About 65 miles from our Stafford studio.",
+    whyLocal: [
+      "Familiar with Silver Spring's mix of nonprofits, media companies, and small professional firms.",
+      "Independent practitioner — no agency layer between you and the person writing the code.",
+      "Production AI experience: shipped systems, not pitch decks.",
+      "Same-day async responses for active projects.",
+    ],
+  },
+  {
+    slug: "annapolis-md",
+    type: "City",
+    name: "Annapolis, Maryland",
+    shortName: "Annapolis, MD",
+    region: "Maryland",
+    geo: { latitude: 38.9784, longitude: -76.4922 },
+    distanceFromHomeMiles: 90,
+    intro:
+      "Web design, custom web apps, and AI integration for Annapolis businesses — historic downtown, Eastport, the West Street corridor, USNA-adjacent firms. About 90 miles from our Stafford studio; we deliver async-first.",
+    whyLocal: [
+      "Comfortable with maritime, hospitality, and government-adjacent client work that defines Annapolis.",
+      "Senior practitioner — same person from scope to launch.",
+      "AI integration scoped honestly: practical for small teams, not enterprise overkill.",
+      "Monthly in-person check-ins available if useful.",
     ],
   },
   {

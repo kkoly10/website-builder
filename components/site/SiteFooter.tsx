@@ -49,6 +49,8 @@ export default function SiteFooter() {
               /fr/locations and 404.
             */}
             <Link href="/locations" locale="en">{t("links.locations")}</Link>
+            {/* Blog is English-only too — same forcing as /locations. */}
+            <Link href="/blog" locale="en">{t("links.blog")}</Link>
             <Link href="/faq">{t("links.faq")}</Link>
             <Link href="/about">{t("links.about")}</Link>
             <Link href="/start">{t("links.start")}</Link>
