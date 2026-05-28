@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import styles from "./design-direction-form.module.css";
 import {
   type DesignControlLevel,
   type WebsiteDesignDirection,
@@ -62,6 +63,7 @@ function PillSelect<T extends string>({
             key={option}
             type="button"
             aria-pressed={selected}
+            className={styles.pill}
             onClick={() => {
               if (multi) {
                 const arr = value as T[];
@@ -104,14 +106,7 @@ function TasteSliderRow({
   onChange: (v: number) => void;
 }) {
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "minmax(80px, 110px) 1fr minmax(80px, 110px)",
-        gap: 12,
-        alignItems: "center",
-      }}
-    >
+    <div className={styles.tasteSliderRow}>
       <span style={{ fontSize: 13, color: "var(--muted)", textAlign: "right" }}>{leftLabel}</span>
       <input
         type="range"
@@ -148,7 +143,7 @@ function ReferenceListEditor({
   return (
     <div style={{ display: "grid", gap: 12 }}>
       {value.map((item, index) => (
-        <div key={index} style={{ display: "grid", gap: 8, gridTemplateColumns: "1fr auto" }}>
+        <div key={index} className={styles.referenceItem}>
           <div style={{ display: "grid", gap: 6 }}>
             <input
               className="input"
@@ -339,7 +334,7 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit, 
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "grid", gap: 24 }}>
+    <form onSubmit={handleSubmit} className={styles.form}>
       {/* Control level */}
       <fieldset style={{ border: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
         <legend className="fieldLabel" style={{ marginBottom: 4 }}>

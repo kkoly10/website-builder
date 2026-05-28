@@ -1,0 +1,89 @@
+/* Mobile pass for the design-direction form (Task 5).
+ *
+ * Scope is deliberately narrow: targeted overrides for the four real
+ * mobile risks the inline-styled form has, not a wholesale rewrite of
+ * every cosmetic inline style. The form will still ship most of its
+ * layout via inline styles; this module just makes mobile usable.
+ */
+
+/* Wrapper applied to the <form>. Anchors descendant overrides. */
+.form {
+  display: grid;
+  gap: 24px;
+}
+
+/* iOS Safari auto-zooms on focus into any text input <16px. Every
+ * text-y input in this form gets bumped to 16px so the viewport
+ * doesn't jump every time the client taps a field. */
+.form input[type="text"],
+.form input[type="url"],
+.form input[type="email"],
+.form textarea {
+  font-size: 16px;
+}
+
+/* Pill buttons (mood, visual style, typography, imagery, content tone).
+ * Original inline style was 8px 14px padding → ~36px height. Bump to
+ * ~40px min-height for a comfortable tap target on touch devices. */
+.pill {
+  min-height: 40px;
+}
+
+/* Taste-spectrum slider row.
+ *
+ * Desktop: [leftLabel] [-- slider --] [rightLabel] in a 3-col grid.
+ * On very narrow phones (<480px), the labels squeeze the slider too
+ * tight. Stack so the slider gets the full width and labels sit on
+ * its row above. */
+.tasteSliderRow {
+  display: grid;
+  grid-template-columns: minmax(80px, 110px) 1fr minmax(80px, 110px);
+  gap: 12px;
+  align-items: center;
+}
+
+@media (max-width: 480px) {
+  .tasteSliderRow {
+    grid-template-columns: auto auto;
+    grid-template-rows: auto auto;
+    gap: 4px 12px;
+    justify-content: space-between;
+  }
+  /* Slider takes both columns on the second row. */
+  .tasteSliderRow > input[type="range"] {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  /* Left label keeps its left position; remove right-align so the
+   * label hugs the left edge naturally. */
+  .tasteSliderRow > span:first-child {
+    text-align: left;
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .tasteSliderRow > span:last-child {
+    text-align: right;
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+/* Reference editor row.
+ *
+ * Desktop: [URL + reason stack] [✕ remove button]
+ * Mobile: stack so URL/reason fields get full width and the "✕"
+ * button sits below them, right-aligned. */
+.referenceItem {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .referenceItem {
+    grid-template-columns: 1fr;
+  }
+  .referenceItem > button {
+    justify-self: end;
+  }
+}

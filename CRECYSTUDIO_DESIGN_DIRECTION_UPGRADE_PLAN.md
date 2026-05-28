@@ -281,8 +281,9 @@ everything. For a $1.8k-$10k client that's a real frustration.
 
 ---
 
-## Task 5 — Mobile pass via CSS module
+## Task 5 — Mobile pass via CSS module ✅ DONE
 
+**Status:** ✅ shipped (targeted CSS module, not full inline-style migration)
 **Effort:** half day
 **Why:** the form is 495 lines of inline `style={{}}` props with zero media
 queries. Reference editor's `gridTemplateColumns: "1fr auto"` and the
