@@ -68,26 +68,38 @@ async function handleRefundOrDispute(event: any, eventType: string) {
   const charge = event?.data?.object;
   if (!charge) return;
 
-  // The session that originally collected the payment links back via
-  // payment_intent. We have to look up the session from our own
-  // stripe_processed_sessions table (we don't persist payment_intent
-  // mappings separately) — best-effort search by metadata.
   const paymentIntentId = String(charge.payment_intent || "").trim();
   if (!paymentIntentId) {
     console.warn(`[stripe-webhook] ${eventType} with no payment_intent`, charge.id);
     return;
   }
 
-  // We persisted the session.id (not the payment_intent) in stripe_processed_sessions.
-  // Quotes store the session.id in quote.debug.internal.payment.session_id, so we
-  // can match there. Search quotes with this session_id.
+  // Match on the exact payment_intent inside the debug JSONB at the DB
+  // level instead of fetching every quote with any payment metadata
+  // and filtering in memory. Postgres can evaluate the `->>` operator
+  // against the JSONB column directly, and there's only ever 1 (or 0)
+  // quotes for a given payment_intent.
   const { data: matchingQuotes } = await supabaseAdmin
     .from("quotes")
     .select("id, debug, status, deposit_status")
-    .filter("debug->internal->payment->>session_id", "not.is", null);
+    .filter("debug->internal->payment->>payment_intent", "eq", paymentIntentId)
+    .limit(1);
 
   if (!matchingQuotes?.length) {
-    console.warn(`[stripe-webhook] ${eventType}: no quotes with payment metadata to scan`);
+    // Escalate to Sentry — Stripe has confirmed a refund/dispute on a
+    // payment that we can't trace back to a quote. Possible causes:
+    // (1) the original payment was for a non-website lane and we never
+    // persisted the payment_intent on a quote row (ecom/ops have their
+    // own state tables); (2) the quote was deleted; (3) data drift. In
+    // every case a human needs to reconcile the customer's portal
+    // status manually.
+    captureBackgroundError(
+      new Error(`stripe-webhook: ${eventType} with no matching quote`),
+      {
+        where: "stripe-webhook.refund_unmatched",
+        extra: { eventType, paymentIntentId, chargeId: charge.id, eventId: event.id },
+      }
+    );
     return;
   }
 
@@ -95,13 +107,6 @@ async function handleRefundOrDispute(event: any, eventType: string) {
     const debug = safeObj(q.debug);
     const internal = safeObj(debug.internal);
     const payment = safeObj(internal.payment);
-    // Match by payment_intent — populated in confirmWebsiteQuotePayment
-    // when the original session settled. A previous version of this
-    // also tried `payment.session_id === charge.payment_intent`, but
-    // those are different ID namespaces (cs_... vs pi_...) and will
-    // never match — that branch was dropped.
-    const sessionMatches = String(payment.payment_intent || "") === paymentIntentId;
-    if (!sessionMatches) continue;
 
     const now = new Date().toISOString();
     const history = Array.isArray((internal as any).history) ? ((internal as any).history as any[]) : [];
@@ -111,16 +116,35 @@ async function handleRefundOrDispute(event: any, eventType: string) {
     // event ID against this quote, do nothing. Stripe retries on any
     // non-2xx response (including the 503 we return for concurrent
     // checkout sessions) and will also retry on its own internal
-    // network blips. Without this guard each retry appends a duplicate
-    // history entry, polluting the audit trail. The deposit_status
-    // flip itself is already state-idempotent (same value re-set), so
-    // the only collateral was log noise — but on a refund storm that
-    // noise hides the real signal.
+    // network blips. NOTE: this handles retries of the same event, not
+    // Stripe's legitimate multi-event refund lifecycle (where a single
+    // refund can emit multiple charge.refunded events for incremental
+    // reconciliation). Cumulative-amount tracking for partial refunds
+    // is a follow-up.
     const alreadyProcessed = history.some(
       (h) => h && typeof h === "object" && h.eventId === event.id,
     );
     if (alreadyProcessed) {
       console.log(`[stripe-webhook] ${eventType} ${event.id} already applied to quote ${q.id} — skipping`);
+      return;
+    }
+
+    // Only flip status if the quote was previously paid. A refund/
+    // dispute event for a quote in `pending` / `cancelled` / `new`
+    // means data drift, not a refund-of-paid — silently rewriting
+    // those rows to "refunded" makes the audit trail lie. Log and
+    // escalate so a human can reconcile.
+    const prevDepositStatus = String(q.deposit_status || "").toLowerCase();
+    if (prevDepositStatus !== "paid") {
+      captureBackgroundError(
+        new Error(
+          `stripe-webhook: ${eventType} on quote ${q.id} with non-paid deposit_status=${prevDepositStatus}`
+        ),
+        {
+          where: "stripe-webhook.refund_on_unpaid",
+          extra: { eventType, quoteId: q.id, prevDepositStatus, paymentIntentId, eventId: event.id },
+        }
+      );
       return;
     }
 
@@ -141,8 +165,6 @@ async function handleRefundOrDispute(event: any, eventType: string) {
       .from("quotes")
       .update({
         debug: { ...debug, internal: nextInternal },
-        // deposit_status reflects the new state so /portal/[token] shows
-        // it accurately instead of stale "paid".
         deposit_status: action === "refunded" ? "refunded" : "disputed",
       })
       .eq("id", q.id);
@@ -150,8 +172,6 @@ async function handleRefundOrDispute(event: any, eventType: string) {
     console.warn(`[stripe-webhook] ${eventType} applied to quote ${q.id}`);
     return;
   }
-
-  console.warn(`[stripe-webhook] ${eventType}: no matching quote for payment_intent ${paymentIntentId}`);
 }
 
 async function confirmWebsiteQuotePayment(session: any, quoteId: string) {
@@ -194,8 +214,13 @@ async function confirmWebsiteQuotePayment(session: any, quoteId: string) {
 
   await supabaseAdmin.from("quotes").update({ status: "paid", debug: nextDebug }).eq("id", quoteId);
 
+  // Use explicit isFinite check instead of `|| null`. The fallback
+  // pattern swallows legitimate $0 amounts (rare but possible on
+  // promo/test sessions) as "unknown" rather than recording the
+  // actual zero.
+  const rawAmount = Number(session.amount_total ?? NaN);
   await markDepositPaidForQuoteId(quoteId, {
-    amountCents: Number(session.amount_total ?? 0) || null,
+    amountCents: Number.isFinite(rawAmount) ? rawAmount : null,
     checkoutUrl: null,
     paidAt: now,
     reference: String(session.id || ""),

@@ -7,6 +7,73 @@ import { ensureCustomerPortalForQuoteId } from "@/lib/customerPortal";
 import { sendEventNotification } from "@/lib/notifications";
 import { captureBackgroundError } from "@/lib/sentry";
 
+// Money math constants. The `portal.deposit_amount_cents` column is the
+// canonical store; everything user-facing (Stripe amount, debug log,
+// `quotes.deposit_amount`) is in whole USD.
+const CENTS_PER_DOLLAR = 100;
+// portal.deposit_amount_cents holds (firm_price_dollars * 50), i.e. half
+// the firm price in cents — so dividing by 50 reconstructs the original
+// firm-price dollar figure. Keeping the constant named so the math line
+// is readable; this is intentional, not a bug.
+const PORTAL_FIRM_PRICE_CENTS_DIVISOR = 50;
+// Half of the firm price is taken as the deposit.
+const DEPOSIT_RATIO = 0.5;
+// Floor on any auto-computed deposit. Stripe rejects too-small amounts
+// and a $50 deposit doesn't make sense for a $200 project.
+const MIN_DEPOSIT_USD = 100;
+// Fallback used when ops pricing returns no band at all — gives the
+// half-of-200 = $100 floor that historically matched MIN_DEPOSIT_USD.
+const FALLBACK_OPS_PRICING_TARGET_USD = 200;
+// Last-resort base URL for transactional emails (workspace links).
+// Mirrored from the Resend templates' default.
+const DEFAULT_BASE_URL = "https://crecystudio.com";
+
+function dollarsToCents(dollars: number): number {
+  return dollars * CENTS_PER_DOLLAR;
+}
+
+function centsToDollars(cents: number): number {
+  return cents / CENTS_PER_DOLLAR;
+}
+
+function resolveBaseUrl(): string {
+  return (process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_BASE_URL)
+    .trim()
+    .replace(/\/$/, "");
+}
+
+// Narrow row shapes covering only the columns this module reads. Avoids
+// `as any` at every column access without requiring the full Supabase
+// generated types (which this repo doesn't ship).
+type WebsiteQuoteRow = {
+  id: string;
+  public_token: string | null;
+  lead_id: string | null;
+  lead_email: string | null;
+  estimate_total: number | null;
+  tier_recommended: string | null;
+  status: string | null;
+  deposit_status: string | null;
+  deposit_link: string | null;
+  debug: Record<string, unknown> | null;
+};
+
+type CustomerPortalRow = {
+  id: string;
+  access_token: string | null;
+  deposit_status: string | null;
+  deposit_amount_cents: number | null;
+  deposit_checkout_url: string | null;
+};
+
+type EcomQuoteRow = {
+  id: string;
+  status: string | null;
+  quote_json: Record<string, unknown> | null;
+  estimate_setup_fee: number | null;
+  estimate_monthly_fee: number | null;
+};
+
 function str(value: unknown, fallback = "") {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
 }
@@ -29,26 +96,27 @@ export async function ensureWebsiteQuoteDepositLink(args: {
   quoteToken?: string | null;
   depositAmount?: number;
 }) {
-  const { data: quote, error: quoteError } = await supabaseAdmin
+  const { data: quoteData, error: quoteError } = await supabaseAdmin
     .from("quotes")
     .select("id, public_token, lead_id, lead_email, estimate_total, tier_recommended, status, deposit_status, deposit_link, debug")
     .eq("id", args.quoteId)
     .maybeSingle();
 
   if (quoteError) throw new Error(quoteError.message);
-  if (!quote) throw new Error("Quote not found.");
+  if (!quoteData) throw new Error("Quote not found.");
+  const quote = quoteData as WebsiteQuoteRow;
 
-  const portal = await ensureCustomerPortalForQuoteId(args.quoteId);
+  const portal = (await ensureCustomerPortalForQuoteId(args.quoteId)) as CustomerPortalRow | null;
   if (str(portal?.deposit_checkout_url) && str(portal?.deposit_status) !== "paid") {
     return {
-      depositUrl: str(portal.deposit_checkout_url),
-      depositAmount: roundMoney(Number(portal.deposit_amount_cents ?? 0) / 100),
+      depositUrl: str(portal!.deposit_checkout_url),
+      depositAmount: roundMoney(centsToDollars(Number(portal!.deposit_amount_cents ?? 0))),
       sessionId: "",
       reused: true,
     };
   }
 
-  let customerEmail = str((quote as any).lead_email);
+  let customerEmail = str(quote.lead_email);
   if (!customerEmail && quote.lead_id) {
     const { data: lead, error: leadError } = await supabaseAdmin
       .from("leads")
@@ -57,25 +125,34 @@ export async function ensureWebsiteQuoteDepositLink(args: {
       .maybeSingle();
 
     if (leadError) throw new Error(leadError.message);
-    customerEmail = str((lead as any)?.email);
+    customerEmail = str((lead as { email?: string } | null)?.email);
   }
 
   if (!customerEmail || !customerEmail.includes("@")) {
     throw new Error("Lead email missing; cannot create deposit link.");
   }
 
-  const debug = safeObj((quote as any).debug);
+  const debug = safeObj(quote.debug);
   const internal = safeObj(debug.internal);
-  const token = str(args.quoteToken) || str((portal as any)?.access_token) || str((quote as any).public_token);
+  const token = str(args.quoteToken) || str(portal?.access_token) || str(quote.public_token);
   const firmPrice =
     roundMoney(args.depositAmount) * 2 ||
-    roundMoney(Number((portal as any)?.deposit_amount_cents ?? 0) / 50) ||
+    roundMoney(Number(portal?.deposit_amount_cents ?? 0) / PORTAL_FIRM_PRICE_CENTS_DIVISOR) ||
     roundMoney(internal.final_price) ||
-    roundMoney((quote as any).estimate_total);
+    roundMoney(quote.estimate_total);
   const depositAmount =
     roundMoney(args.depositAmount) ||
-    roundMoney(Number((portal as any)?.deposit_amount_cents ?? 0) / 100) ||
-    Math.max(100, Math.round(firmPrice * 0.5));
+    roundMoney(centsToDollars(Number(portal?.deposit_amount_cents ?? 0))) ||
+    Math.max(MIN_DEPOSIT_USD, Math.round(firmPrice * DEPOSIT_RATIO));
+
+  // Stripe rejects 0-amount checkout sessions with a 400 — fail fast
+  // with a clean error instead of letting the user click through to
+  // a broken Stripe page.
+  if (depositAmount <= 0) {
+    throw new Error(
+      `Cannot create deposit link: computed deposit amount is ${depositAmount} USD.`
+    );
+  }
 
   const successUrl = `${args.baseUrl}/deposit/success?session_id={CHECKOUT_SESSION_ID}`;
   const cancelParams = new URLSearchParams({ quoteId: args.quoteId });
@@ -83,7 +160,7 @@ export async function ensureWebsiteQuoteDepositLink(args: {
   const cancelUrl = `${args.baseUrl}/estimate?${cancelParams.toString()}`;
 
   const session = await stripeCreateCheckoutSession({
-    amountUsdCents: depositAmount * 100,
+    amountUsdCents: dollarsToCents(depositAmount),
     customerEmail,
     quoteId: args.quoteId,
     successUrl,
@@ -117,18 +194,18 @@ export async function ensureWebsiteQuoteDepositLink(args: {
     },
   };
 
-  const nextStatus = str((quote as any).status) === "paid" ? "paid" : "deposit_sent";
-  const nextDepositStatus = str((quote as any).deposit_status) === "paid" ? "paid" : "pending";
+  const nextStatus = str(quote.status) === "paid" ? "paid" : "deposit_sent";
+  const nextDepositStatus = str(quote.deposit_status) === "paid" ? "paid" : "pending";
 
   const { error: projectError } = await supabaseAdmin
     .from("customer_portal_projects")
     .update({
       deposit_status: nextDepositStatus,
-      deposit_amount_cents: depositAmount * 100,
+      deposit_amount_cents: dollarsToCents(depositAmount),
       deposit_checkout_url: session.url,
       updated_at: now,
     })
-    .eq("id", (portal as any).id);
+    .eq("id", portal!.id);
 
   if (projectError) throw new Error(projectError.message);
 
@@ -180,7 +257,7 @@ async function getOrCreateEcomQuote(ecomIntakeId: string) {
   return data;
 }
 
-function getDefaultEcommerceDepositAmount(quote: any) {
+function getDefaultEcommerceDepositAmount(quote: EcomQuoteRow | null) {
   const setupFee = roundMoney(quote?.estimate_setup_fee);
   const monthlyFee = roundMoney(quote?.estimate_monthly_fee);
   const deposit = safeObj(safeObj(quote?.quote_json).deposit);
@@ -188,9 +265,9 @@ function getDefaultEcommerceDepositAmount(quote: any) {
 
   if (existingAmount > 0) return existingAmount;
   if (setupFee > 0 && monthlyFee > 0) return setupFee;
-  if (setupFee > 0) return Math.max(100, Math.round(setupFee * 0.5));
-  if (monthlyFee > 0) return Math.max(100, Math.round(monthlyFee * 0.5));
-  return 100;
+  if (setupFee > 0) return Math.max(MIN_DEPOSIT_USD, Math.round(setupFee * DEPOSIT_RATIO));
+  if (monthlyFee > 0) return Math.max(MIN_DEPOSIT_USD, Math.round(monthlyFee * DEPOSIT_RATIO));
+  return MIN_DEPOSIT_USD;
 }
 
 function buildOpsPricingInput(intake: any) {
@@ -225,7 +302,7 @@ export async function ensureEcommerceDepositLink(args: {
   if (intakeError) throw new Error(intakeError.message);
   if (!intake) throw new Error("E-commerce intake not found.");
 
-  const quote = await getOrCreateEcomQuote(args.ecomIntakeId);
+  const quote = (await getOrCreateEcomQuote(args.ecomIntakeId)) as EcomQuoteRow;
   const quoteJson = safeObj(quote?.quote_json);
   const deposit = safeObj(quoteJson.deposit);
 
@@ -239,11 +316,16 @@ export async function ensureEcommerceDepositLink(args: {
   }
 
   const depositAmount = roundMoney(args.depositAmount) || getDefaultEcommerceDepositAmount(quote);
+  if (depositAmount <= 0) {
+    throw new Error(
+      `Cannot create deposit link: computed deposit amount is ${depositAmount} USD.`
+    );
+  }
   const successUrl = `${args.baseUrl}/deposit/success?session_id={CHECKOUT_SESSION_ID}`;
   const cancelUrl = `${args.baseUrl}/deposit/cancel?lane=ecommerce&ecomIntakeId=${encodeURIComponent(args.ecomIntakeId)}`;
 
   const session = await stripeCreateCheckoutSession({
-    amountUsdCents: depositAmount * 100,
+    amountUsdCents: dollarsToCents(depositAmount),
     customerEmail: str(intake.email),
     successUrl,
     cancelUrl,
@@ -335,7 +417,7 @@ export async function confirmEcommerceDepositPayment(args: {
 
   const quoteJson = safeObj(quote?.quote_json);
   const deposit = safeObj(quoteJson.deposit);
-  const depositAmountDollars = roundMoney((args.session.amount_total ?? 0) / 100);
+  const depositAmountDollars = roundMoney(centsToDollars(args.session.amount_total ?? 0));
   const nextQuoteJson = {
     ...quoteJson,
     deposit: {
@@ -399,8 +481,7 @@ async function notifyEcommerceDepositReceived(args: {
   const leadEmail = str(intake.email);
   if (!leadEmail.includes("@")) return;
 
-  const baseUrl = (process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com").trim().replace(/\/$/, "");
-  const workspaceUrl = `${baseUrl}/portal/ecommerce/${encodeURIComponent(args.ecomIntakeId)}`;
+  const workspaceUrl = `${resolveBaseUrl()}/portal/ecommerce/${encodeURIComponent(args.ecomIntakeId)}`;
 
   await sendEventNotification({
     event: "deposit_received",
@@ -443,14 +524,22 @@ export async function ensureOpsDepositLink(args: {
   }
 
   const pricing = getOpsPricing(buildOpsPricingInput(intake));
-  const defaultAmount = roundMoney(state.depositAmount) || Math.max(100, Math.round((pricing.band?.target || pricing.band?.min || 200) * 0.5));
+  const pricingTarget = pricing.band?.target || pricing.band?.min || FALLBACK_OPS_PRICING_TARGET_USD;
+  const defaultAmount =
+    roundMoney(state.depositAmount) ||
+    Math.max(MIN_DEPOSIT_USD, Math.round(pricingTarget * DEPOSIT_RATIO));
   const depositAmount = roundMoney(args.depositAmount) || defaultAmount;
+  if (depositAmount <= 0) {
+    throw new Error(
+      `Cannot create deposit link: computed deposit amount is ${depositAmount} USD.`
+    );
+  }
 
   const successUrl = `${args.baseUrl}/deposit/success?session_id={CHECKOUT_SESSION_ID}`;
   const cancelUrl = `${args.baseUrl}/deposit/cancel?lane=ops&opsIntakeId=${encodeURIComponent(args.opsIntakeId)}`;
 
   const session = await stripeCreateCheckoutSession({
-    amountUsdCents: depositAmount * 100,
+    amountUsdCents: dollarsToCents(depositAmount),
     customerEmail: str(intake.email),
     successUrl,
     cancelUrl,
@@ -509,7 +598,7 @@ export async function confirmOpsDepositPayment(args: {
     .maybeSingle();
   const wasAlreadyPaid = str(intakeBefore?.status).toLowerCase() === "deposit_paid";
 
-  const depositAmountDollars = roundMoney((args.session.amount_total ?? 0) / 100);
+  const depositAmountDollars = roundMoney(centsToDollars(args.session.amount_total ?? 0));
   await saveWorkspaceState(
     args.opsIntakeId,
     {
@@ -554,8 +643,7 @@ async function notifyOpsDepositReceived(args: {
   const leadEmail = str(intake.email);
   if (!leadEmail.includes("@")) return;
 
-  const baseUrl = (process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com").trim().replace(/\/$/, "");
-  const workspaceUrl = `${baseUrl}/portal/ops/${encodeURIComponent(args.opsIntakeId)}`;
+  const workspaceUrl = `${resolveBaseUrl()}/portal/ops/${encodeURIComponent(args.opsIntakeId)}`;
 
   await sendEventNotification({
     event: "deposit_received",
