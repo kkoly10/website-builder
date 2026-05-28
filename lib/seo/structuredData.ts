@@ -196,7 +196,7 @@ export function organizationNode(): GraphNode {
     logo: `${SITE_URL}/brand/crecy-d1-horizontal-light.svg`,
     image: `${SITE_URL}/brand/crecy-d1-horizontal-light.svg`,
     description:
-      "Independent web studio serving the DMV (Stafford, Fredericksburg, Richmond, DC, Maryland) and English-speaking clients across the US, Canada, and UK. Premium websites, custom web apps and SaaS products, AI integration — by a founder who's shipped three production SaaS products of his own.",
+      "Independent web studio serving the DMV (Stafford, Fredericksburg, Richmond, DC, Maryland) and English-speaking clients across the US, Canada, and UK. Premium websites, custom web apps and SaaS products, AI integration — by a founder running four production SaaS products of his own (Fleiko, Proveo, Korent, Kocre IT) across fleet, contractor, rental, and IT-services verticals.",
     slogan: "Independent web studio. Premium craft.",
     foundingDate: "2024",
     founder: { "@id": FOUNDER_ID },
@@ -227,12 +227,13 @@ export function organizationNode(): GraphNode {
     knowsAbout: [
       "Web development",
       "Custom web applications",
-      // SaaS coverage. The studio owns and operates three production
+      // SaaS coverage. The studio owns and operates four production
       // SaaS products (Fleiko fleet SaaS, Proveo contractor SaaS,
-      // TechDesk IT helpdesk SaaS), which is rare authority for
-      // these queries — but until these phrases were on the schema,
-      // Google had no way to match the studio to "SaaS development
-      // agency" / "B2B SaaS builder" / "SaaS MVP" searches.
+      // Korent rental SaaS, Kocre IT helpdesk SaaS), which is rare
+      // authority for these queries — but until these phrases were
+      // on the schema, Google had no way to match the studio to
+      // "SaaS development agency" / "B2B SaaS builder" / "SaaS MVP"
+      // searches.
       "SaaS development",
       "B2B SaaS development",
       "SaaS product development",
@@ -297,7 +298,7 @@ export function localBusinessNode(): GraphNode {
     image: `${SITE_URL}/brand/crecy-d1-horizontal-light.svg`,
     logo: `${SITE_URL}/brand/crecy-d1-horizontal-light.svg`,
     description:
-      "Web studio in Stafford, VA building websites, custom web apps, SaaS products, and AI integrations. Serves the DMV — Fredericksburg, Richmond, Ashland, Washington DC, Maryland — plus remote clients across the US, Canada, and UK.",
+      "Web studio in Stafford, VA building websites, custom web apps, SaaS products, and AI integrations. Founder runs four production SaaS products of his own (Fleiko, Proveo, Korent, Kocre IT). Serves the DMV — Fredericksburg, Richmond, Ashland, Washington DC, Maryland — plus remote clients across the US, Canada, and UK.",
     address: postalAddressNode(),
     geo: geoNode(),
     areaServed: areaServedNodes(),

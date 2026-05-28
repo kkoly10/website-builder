@@ -21,17 +21,24 @@ export async function generateMetadata({
   };
 }
 
-const VENTURE_KEYS = ["fleiko", "proveo", "techdesk"] as const;
+// Order matters — first in the list = first card on the page. Korent
+// appended after the original three to avoid disrupting the existing
+// hierarchy (Fleiko + Proveo are the studio's flagship case studies
+// per the AI integration page's hero stats). Adjust here if a later
+// hero ordering decision changes that.
+const VENTURE_KEYS = ["fleiko", "proveo", "korent", "techdesk"] as const;
 
 const VENTURE_LIVE_URL: Record<(typeof VENTURE_KEYS)[number], string> = {
   fleiko: "https://fleiko.com",
   proveo: "https://proveohq.com",
+  korent: "https://korent.app",
   techdesk: "https://kocreit.com",
 };
 
 const VENTURE_CASE_STUDY_HREF: Partial<Record<(typeof VENTURE_KEYS)[number], string>> = {
   fleiko: "/work/fleiko",
   proveo: "/work/proveo",
+  korent: "/work/korent",
   techdesk: "/work/techdesk",
 };
 

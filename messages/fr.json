@@ -224,8 +224,8 @@
     "successCta": "Voir le processus"
   },
   "home": {
-    "metaTitle": "CrecyStudio | Sites web, systèmes web et IA",
-    "metaDescription": "Studio web indépendant. Sites premium, systèmes web sur mesure et produits dopés à l'IA — par un praticien. Un espace unique du devis au lancement.",
+    "metaTitle": "CrecyStudio | Sites web, applications web, SaaS et IA",
+    "metaDescription": "Studio web indépendant. Sites web, applications web sur mesure, développement SaaS, intégration IA — par un fondateur qui exploite quatre produits SaaS qu'il a construits.",
     "heroLabel": "Studio web indépendant / depuis 2024",
     "heroTitle": "Conçu pour là où vous allez, <em>pas pour là où vous êtes.</em>",
     "heroSub": "D'un site web soigné à un système sur mesure complet avec IA de production intégrée — par un praticien qui a livré les deux.",
@@ -317,7 +317,7 @@
     "ventures": {
       "label": "Projets du studio",
       "title": "De vrais systèmes que nous avons livrés.",
-      "intro": "Je n'intègre pas seulement l'IA dans les projets clients — j'ai construit et lancé deux produits propulsés par l'IA que je possède et exploite. Fleiko fait tourner un copilote IA pour des alertes flotte en temps réel. Proveo utilise la détection photo par IA pour automatiser les flux de travail des contractants. C'est ce parcours que j'apporte à votre projet.",
+      "intro": "Je n'intègre pas seulement l'IA dans les projets clients — j'ai construit et lancé quatre produits SaaS propulsés par l'IA que je possède et exploite. Fleiko fait tourner un copilote IA pour des alertes flotte en temps réel. Proveo utilise la détection photo par IA pour automatiser les flux de travail des contractants. Korent embarque un Copilote Opérateur IA en lecture seule — une couche d'aide intégrée, flottante et contextuelle, propulsée par OpenAI et Anthropic Claude. Kocre IT exécute un helpdesk propulsé par l'IA pour le support informatique externalisé. C'est ce parcours que j'apporte à votre projet.",
       "fleiko": {
         "name": "Fleiko",
         "tagline": "Plateforme de gestion de flotte pour PME",
@@ -384,7 +384,7 @@
       "name": "Komlan Kouhiko",
       "role": "Fondateur et praticien unique",
       "bio1": "Je ne suis pas passé par une agence ni par un cursus en informatique. En 2024, j'ai lancé une activité de location de voitures en Virginie du Nord avec 7 véhicules et une police d'assurance commerciale. Turo prélevait une part importante de chaque réservation, alors j'ai appris à construire ma propre plateforme — un système complet de réservation et de gestion de flotte — et j'ai gardé les bénéfices. J'ai opéré cette entreprise pendant plus d'un an, en gérant simultanément les opérations, les clients et le code.",
-      "bio2": "Quand les coûts opérationnels m'ont poussé à pivoter, j'ai publié sur Facebook Marketplace en proposant de construire des sites web. J'ai obtenu quelques clients. Ils ont apprécié le travail. Depuis, j'ai livré des plateformes opérationnelles pour un centre de réparation, une boutique de dropshipping, des services IT et la gestion de flotte — ainsi que deux produits SaaS en production aujourd'hui.",
+      "bio2": "Quand les coûts opérationnels m'ont poussé à pivoter, j'ai publié sur Facebook Marketplace en proposant de construire des sites web. J'ai obtenu quelques clients. Ils ont apprécié le travail. Depuis, j'ai livré des plateformes opérationnelles pour un centre de réparation, une boutique de dropshipping, des services IT et la gestion de flotte — ainsi que quatre produits SaaS (Fleiko, Proveo, Korent, Kocre IT) en production aujourd'hui.",
       "bio3": "Chaque projet chez CrecyStudio passe par moi. Pas de juniors, pas de transferts. Vous travaillez avec un constructeur qui s'est assis à votre place.",
       "linkedin": "Connectons-nous sur LinkedIn →",
       "linkedinHref": "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407"
@@ -2775,6 +2775,17 @@
         "linkLabel": "Visiter proveohq.com",
         "caseStudyLink": "Plongée technique"
       },
+      "korent": {
+        "name": "Korent",
+        "tagline": "SaaS de location multi-niveaux pour opérateurs de fêtes, événements et gonflables",
+        "summary": "SaaS de location multi-locataire pour les entreprises de location de fêtes, d'événements et de gonflables. Vitrine de réservation en ligne avec disponibilité en temps réel, tableau de bord opérateur pour produits / commandes / paiements / livraisons, espace mobile pour l'équipe et un Copilote Opérateur IA en lecture seule pour l'aide intégrée (OpenAI / Anthropic Claude). Abonnements Stripe à quatre niveaux ; Postgres multi-locataire avec RLS sur chaque table.",
+        "chip1": "SaaS multi-locataire",
+        "chip2": "Copilote Opérateur IA",
+        "chip3": "Abonnements Stripe",
+        "chip4": "Gestion des livraisons",
+        "linkLabel": "Visiter korent.app",
+        "caseStudyLink": "Plongée technique"
+      },
       "techdesk": {
         "name": "Kocre IT Services",
         "tagline": "Helpdesk IA pour les entreprises de support IT télécommande",
@@ -3421,6 +3432,33 @@
     "closingTitle": "Vous construisez quelque chose où la confiance est une fonctionnalité produit, pas juste une politique ?",
     "closingBody": "C'est le type de travail d'architecture que nous faisons — des systèmes où l'IA et la logique déterministe sont chacune utilisées là où elles sont appropriées, pas de manière interchangeable.",
     "closingCta": "Démarrer une conversation",
+    "closingCtaSecondary": "Voir notre processus"
+  },
+  "workKorent": {
+    "metaTitle": "Korent — Plongée technique SaaS de location | CrecyStudio",
+    "metaDescription": "Comment nous avons construit Korent — une plateforme SaaS multi-niveaux pour l'industrie de la location de fêtes et gonflables avec réservation en ligne, inventaire en temps réel, gestion des livraisons, paiements Stripe et un Copilote Opérateur IA intégré.",
+    "back": "Retour aux réalisations",
+    "kicker": "Étude de cas technique / Korent",
+    "title": "Korent — SaaS détenu pour l'industrie de la location de fêtes et d'événements",
+    "subtitle": "SaaS de location multi-niveaux — réservation en ligne, inventaire en temps réel, gestion des livraisons, contrats numériques, paiements Stripe et un Copilote Opérateur IA en lecture seule pour l'aide intégrée. Construit et exploité par CrecyStudio.",
+    "chips": {
+      "stack": "Next.js + TypeScript + Supabase",
+      "ai": "Copilote Opérateur IA",
+      "pattern": "Abonnements SaaS multi-niveaux",
+      "market": "Location de fêtes / gonflables / événements"
+    },
+    "s1Title": "Le marché pour lequel nous l'avons construit",
+    "s1Body": "Les opérateurs de location de fêtes et d'événements — entreprises de châteaux gonflables, locations d'équipement, magasins de gonflables — géraient des activités entières au téléphone, par SMS, avec des accords papier et des feuilles Excel partagées. Les clients appelaient pour demander la disponibilité d'une unité pour samedi, s'entendaient dire « laissez-moi vérifier et je vous rappelle », et réservaient ailleurs avant le rappel. Les doubles réservations étaient courantes parce que deux membres du personnel éditaient la même feuille de calcul depuis des téléphones différents. Les itinéraires de livraison étaient planifiés en regardant les adresses sur Google Maps le matin même. Rien de tout cela ne passe à l'échelle au-delà d'une poignée de commandes par week-end, et les logiciels existants étaient soit destinés aux grandes entreprises (500 $/mois minimum) soit des outils de calendrier sans fonctionnalités. L'opportunité était claire : un SaaS de location sérieux, au prix des petits opérateurs réels.",
+    "s2Title": "Ce que nous avons construit",
+    "s2Body": "Korent est une plateforme complète de gestion de location : une vitrine de réservation côté client où les acheteurs peuvent parcourir le catalogue, vérifier la disponibilité en temps réel et réserver en ligne sans appel téléphonique ; un tableau de bord opérateur pour gérer produits, commandes, clients, paiements et livraisons ; un espace mobile pour l'équipe qui gère les livraisons et les ramassages ; et un Copilote Opérateur IA en lecture seule qui aide les opérateurs à naviguer dans le tableau de bord, répond aux questions « comment je… » de manière contextuelle, et propose des invites suggérées par page (propulsé par OpenAI ou Anthropic Claude lorsque configuré, avec une base de connaissances intégrée en repli). La plateforme gère les paiements Stripe, les décharges automatiques, les rappels, les permissions d'équipe basées sur les rôles et la planification des livraisons. Les niveaux d'abonnement vont d'un plan gratuit (inventaire et commandes limités) aux niveaux Starter, Pro et Growth — tarification positionnée pour la taille d'opérateur qui existe réellement sur ce marché.",
+    "s3Title": "Architecture SaaS multi-locataire",
+    "s3Body": "Korent est un SaaS multi-locataire — chaque opérateur a son propre tenant avec données isolées, vitrine personnalisée et facturation d'abonnement indépendante. Construit sur Next.js (App Router) + TypeScript côté frontend, Supabase (Postgres + Auth + Storage) comme dorsale de données et Vercel pour l'hébergement. L'authentification utilise @supabase/ssr avec sécurité au niveau des lignes sur chaque table — une entreprise de châteaux gonflables de Stafford ne peut jamais lire les données d'une entreprise de location de remorques du Texas, même en manipulant les URL. Les abonnements Stripe alimentent le modèle de facturation à quatre niveaux. La logique de prévention des conflits d'inventaire s'exécute comme une fonction Postgres — les doubles réservations sont impossibles au niveau de la base de données, pas seulement de l'interface. La feuille de route s'étend au-delà des gonflables vers la location de fêtes générale et la location de remorques — le modèle de données est structuré pour que les verticales s'enclenchent sans forker la base de code.",
+    "s4Title": "Là où l'IA aide vraiment",
+    "s4Body": "L'IA de Korent est conçue comme un copilote strict — une couche d'aide intégrée, en lecture seule. Le Copilote Opérateur IA vit comme un assistant flottant sur chaque page du tableau de bord, propulsé par OpenAI ou Anthropic Claude lorsqu'une clé API est configurée (avec une base de connaissances intégrée en repli). Il est contextuel — il sait sur quelle page se trouve l'opérateur, où il en est dans la configuration et ce qui est pertinent à demander — et propose des invites suggérées par route afin que les opérateurs puissent demander « comment configurer les acomptes ? » ou « quelle est la différence entre Starter et Pro ? » sans quitter le tableau de bord. Il ne modifie jamais les données. Nous avons choisi cette forme parce que les utilisateurs de Korent font passer de l'argent réel par Stripe et prennent de vrais engagements clients — une mauvaise action IA coûterait une réservation ou un remboursement. La garantie d'inventaire stricte qui empêche les doubles réservations vit dans la base de données comme une fonction Postgres, pas dans la couche IA. Même discipline d'autonomie dans nos quatre produits SaaS : l'IA aide là où elle ne peut pas nuire ; le code déterministe porte la charge là où les enjeux sont.",
+    "callout": "Korent est notre troisième produit SaaS détenu. Même discipline d'ingénierie que nous apportons au travail client — multi-locataire dès le premier jour, RLS sur chaque table, IA dosée selon le niveau d'autonomie que les enjeux autorisent (lecture seule ici), facturation qui gère les annulations et les prorations sans que personne n'ait à y penser.",
+    "closingTitle": "Vous construisez un SaaS comme Korent ?",
+    "closingBody": "Qu'il s'agisse d'un SaaS vertical pour un marché mal desservi, d'une plateforme multi-locataire avec un modèle de données complexe, ou d'un MVP SaaS à livrer en 6-10 semaines — nous l'avons fait pour nous-mêmes quatre fois et pour des clients plus encore. Nous pouvons cadrer le vôtre.",
+    "closingCta": "Démarrer un projet SaaS",
     "closingCtaSecondary": "Voir notre processus"
   },
   "workTechdesk": {
