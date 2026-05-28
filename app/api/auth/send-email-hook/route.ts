@@ -3,6 +3,7 @@ import { sendAuthEmail, type AuthEmailActionType } from "@/lib/authEmails";
 import { normalizeEmailLocale } from "@/lib/i18n/emailStrings";
 import { captureBackgroundError } from "@/lib/sentry";
 import { verifyStandardWebhook } from "@/lib/standardWebhooks";
+import { normalizeEmail } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
@@ -48,10 +49,14 @@ async function resolveLocale(email: string, userMetadata: Record<string, unknown
   if (metaLocale) return normalizeEmailLocale(metaLocale);
 
   try {
+    // NFC-normalize so a precomposed-Unicode lead email still matches
+    // a decomposed auth email (or vice versa). Without this the locale
+    // lookup silently misses and the user gets the default-English
+    // auth email even though they registered as fr/es.
     const { data } = await supabaseAdmin
       .from("leads")
       .select("preferred_locale")
-      .eq("email", email.toLowerCase())
+      .eq("email", normalizeEmail(email))
       .maybeSingle();
     if (data?.preferred_locale) return normalizeEmailLocale(data.preferred_locale);
   } catch (err) {

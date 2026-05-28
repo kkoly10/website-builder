@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import {
   createSupabaseServerClient,
   getSiteUrl,
+  normalizeEmail,
   safeNextPath,
 } from "@/lib/supabase/server";
 
@@ -30,7 +31,13 @@ export default async function CreateAccountPage({
     "use server";
 
     const token = String(formData.get("token") || "").trim();
-    const email = String(formData.get("email") || "").trim().toLowerCase();
+    // NFC-normalize so the project-lead email comparison below is
+    // homograph-safe — without this an attacker could register
+    // `émail@…` (decomposed: e + U+0301) against a legitimate lead
+    // stored as `émail@…` (precomposed: U+00E9) and pass the
+    // `projectLeadEmail !== email` check that's supposed to gate
+    // portal account creation to the original lead.
+    const email = normalizeEmail(String(formData.get("email") || ""));
     const password = String(formData.get("password") || "");
 
     if (!token) {
@@ -78,7 +85,7 @@ export default async function CreateAccountPage({
       );
     }
 
-    const projectLeadEmail = String(project.lead_email || "").toLowerCase();
+    const projectLeadEmail = normalizeEmail(project.lead_email);
 
     if (!projectLeadEmail || projectLeadEmail !== email) {
       redirect(

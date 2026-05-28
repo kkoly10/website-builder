@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
@@ -24,7 +24,10 @@ export async function GET() {
     return NextResponse.json({ ok: false, error: "Not authenticated." }, { status: 401 });
   }
 
-  const email = (user.email || "").trim().toLowerCase();
+  // NFC-normalize before joining — see delete-account/route.ts for the
+  // homograph rationale. An export that quietly omits rows because of
+  // Unicode normalization drift would fail GDPR Article 20.
+  const email = normalizeEmail(user.email);
 
   // Collect everything in parallel. .maybeSingle()/.select with email
   // filters keep the queries scoped to the requester; admin operations
