@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import styles from "./design-direction-form.module.css";
 import {
   type DesignControlLevel,
@@ -214,6 +215,7 @@ function ReferenceListEditor({
 }
 
 export default function DesignDirectionForm({ initial, saving, error, onSubmit, onSaveDraft }: Props) {
+  const t = useTranslations("portalToken.designDirection");
   // Prefer in-progress draft values over the underlying record's stored
   // values. Falls back to the record when no draft exists. Lets the client
   // close the tab mid-form and resume where they left off.
@@ -356,7 +358,7 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit, 
       {/* Control level */}
       <fieldset style={{ border: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
         <legend className="fieldLabel" style={{ marginBottom: 4 }}>
-          How involved do you want to be?
+          {t("controlLevelLegend")}
         </legend>
         {CONTROL_LEVEL_OPTIONS.map((option) => {
           const selected = controlLevel === option.value;
@@ -402,64 +404,64 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit, 
       {/* Taste spectrum — adjective-pair sliders. Forces a real lean on each
           axis where pill mush ("Clean + Premium + Modern") can't. */}
       <fieldset style={{ border: "none", padding: 0, margin: 0, display: "grid", gap: 14 }}>
-        <legend className="fieldLabel" style={{ marginBottom: 0 }}>How does it feel?</legend>
+        <legend className="fieldLabel" style={{ marginBottom: 0 }}>{t("tasteLegend")}</legend>
         <p style={{ fontSize: 12, color: "var(--muted)", margin: 0, lineHeight: 1.5 }}>
-          Slide each axis to where your taste actually sits — even a small lean tells us a lot.
+          {t("tasteHelper")}
         </p>
         <TasteSliderRow
-          leftLabel="Calm"
-          rightLabel="Energetic"
+          leftLabel={t("tasteAxes.calm")}
+          rightLabel={t("tasteAxes.energetic")}
           value={taste.calmEnergetic}
-          onChange={(v) => setTaste((t) => ({ ...t, calmEnergetic: v }))}
+          onChange={(v) => setTaste((prev) => ({ ...prev, calmEnergetic: v }))}
         />
         <TasteSliderRow
-          leftLabel="Traditional"
-          rightLabel="Modern"
+          leftLabel={t("tasteAxes.traditional")}
+          rightLabel={t("tasteAxes.modern")}
           value={taste.traditionalModern}
-          onChange={(v) => setTaste((t) => ({ ...t, traditionalModern: v }))}
+          onChange={(v) => setTaste((prev) => ({ ...prev, traditionalModern: v }))}
         />
         <TasteSliderRow
-          leftLabel="Stripped"
-          rightLabel="Layered"
+          leftLabel={t("tasteAxes.stripped")}
+          rightLabel={t("tasteAxes.layered")}
           value={taste.strippedLayered}
-          onChange={(v) => setTaste((t) => ({ ...t, strippedLayered: v }))}
+          onChange={(v) => setTaste((prev) => ({ ...prev, strippedLayered: v }))}
         />
         <TasteSliderRow
-          leftLabel="Warm-toned"
-          rightLabel="Cool-toned"
+          leftLabel={t("tasteAxes.warmToned")}
+          rightLabel={t("tasteAxes.coolToned")}
           value={taste.warmCool}
-          onChange={(v) => setTaste((t) => ({ ...t, warmCool: v }))}
+          onChange={(v) => setTaste((prev) => ({ ...prev, warmCool: v }))}
         />
       </fieldset>
 
       {/* Brand mood */}
       <div style={{ display: "grid", gap: 8 }}>
-        <label className="fieldLabel">Brand mood (pick up to 3)</label>
+        <label className="fieldLabel">{t("brandMoodLabel")}</label>
         <PillSelect
           options={BRAND_MOOD_OPTIONS}
           value={brandMood}
           onChange={(v) => setBrandMood(v as string[])}
           multi
           max={3}
-          ariaLabel="Brand mood"
+          ariaLabel={t("brandMoodAria")}
         />
       </div>
 
       {/* Visual style */}
       <div style={{ display: "grid", gap: 8 }}>
-        <label className="fieldLabel">Visual style</label>
+        <label className="fieldLabel">{t("visualStyleLabel")}</label>
         <PillSelect
           options={VISUAL_STYLE_OPTIONS}
           value={visualStyle}
           onChange={(v) => setVisualStyle(v as string)}
-          ariaLabel="Visual style"
+          ariaLabel={t("visualStyleAria")}
           renderVisual={(opt) => <StyleSketch sketch={VISUAL_STYLE_VISUALS[opt]} />}
         />
       </div>
 
       {/* Color guidance */}
       <div style={{ display: "grid", gap: 12 }}>
-        <label className="fieldLabel">Color guidance</label>
+        <label className="fieldLabel">{t("colorGuidanceLabel")}</label>
         <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
           {(["yes", "no", "not_sure"] as const).map((opt) => (
             <label key={opt} style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 14 }}>
@@ -470,21 +472,25 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit, 
                 checked={brandColorsKnown === opt}
                 onChange={() => setBrandColorsKnown(opt)}
               />
-              {opt === "yes" ? "I have brand colors" : opt === "no" ? "No brand colors yet" : "Not sure"}
+              {opt === "yes"
+                ? t("brandColorsKnown.yes")
+                : opt === "no"
+                  ? t("brandColorsKnown.no")
+                  : t("brandColorsKnown.notSure")}
             </label>
           ))}
         </div>
         <input
           className="input"
           type="text"
-          placeholder="Preferred colors (e.g. navy, white, gold)"
+          placeholder={t("preferredColorsPlaceholder")}
           value={preferredColors}
           onChange={(e) => setPreferredColors(e.target.value)}
         />
         <input
           className="input"
           type="text"
-          placeholder="Colors to avoid"
+          placeholder={t("colorsToAvoidPlaceholder")}
           value={colorsToAvoid}
           onChange={(e) => setColorsToAvoid(e.target.value)}
         />
@@ -494,31 +500,31 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit, 
             checked={letCrecyChoosePalette}
             onChange={(e) => setLetCrecyChoosePalette(e.target.checked)}
           />
-          Let CrecyStudio choose the final palette.
+          {t("letStudioChoosePalette")}
         </label>
       </div>
 
       {/* Typography feel */}
       <div style={{ display: "grid", gap: 8 }}>
-        <label className="fieldLabel">Typography feel</label>
+        <label className="fieldLabel">{t("typographyFeelLabel")}</label>
         <PillSelect
           options={TYPOGRAPHY_FEEL_OPTIONS}
           value={typographyFeel}
           onChange={(v) => setTypographyFeel(v as string)}
-          ariaLabel="Typography feel"
+          ariaLabel={t("typographyFeelAria")}
           renderVisual={(opt) => <TypeSample sample={TYPOGRAPHY_FEEL_VISUALS[opt]} />}
         />
       </div>
 
       {/* Imagery direction */}
       <div style={{ display: "grid", gap: 8 }}>
-        <label className="fieldLabel">Imagery direction</label>
+        <label className="fieldLabel">{t("imageryDirectionLabel")}</label>
         <PillSelect
           options={IMAGERY_DIRECTION_OPTIONS}
           value={imageryDirection}
           onChange={(v) => setImageryDirection(v as string[])}
           multi
-          ariaLabel="Imagery direction"
+          ariaLabel={t("imageryDirectionAria")}
           renderVisual={(opt) => <ImageryGlyph glyph={IMAGERY_DIRECTION_VISUALS[opt]} />}
         />
       </div>
@@ -526,54 +532,54 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit, 
       {/* Reference websites */}
       <div style={{ display: "grid", gap: 12 }}>
         <div>
-          <label className="fieldLabel">Websites you like (up to 3)</label>
+          <label className="fieldLabel">{t("likedWebsitesLabel")}</label>
           <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
-            Be specific in the reason: layout, colors, tone, simplicity, premium feel, etc.
+            {t("likedWebsitesHelper")}
           </p>
         </div>
         <ReferenceListEditor
           value={likedWebsites}
           onChange={setLikedWebsites}
           max={3}
-          urlPlaceholder="https://example.com"
-          reasonPlaceholder="What you like about it"
-          addLabel="Add a liked website"
-          removeLabel="Remove liked website"
+          urlPlaceholder={t("urlPlaceholder")}
+          reasonPlaceholder={t("likedWebsitesReasonPlaceholder")}
+          addLabel={t("likedWebsitesAdd")}
+          removeLabel={t("likedWebsitesRemove")}
         />
       </div>
 
       <div style={{ display: "grid", gap: 12 }}>
-        <label className="fieldLabel">Websites you dislike (up to 2, optional)</label>
+        <label className="fieldLabel">{t("dislikedWebsitesLabel")}</label>
         <ReferenceListEditor
           value={dislikedWebsites}
           onChange={setDislikedWebsites}
           max={2}
-          urlPlaceholder="https://example.com"
-          reasonPlaceholder="What you don't like about it"
-          addLabel="Add a disliked website"
-          removeLabel="Remove disliked website"
+          urlPlaceholder={t("urlPlaceholder")}
+          reasonPlaceholder={t("dislikedWebsitesReasonPlaceholder")}
+          addLabel={t("dislikedWebsitesAdd")}
+          removeLabel={t("dislikedWebsitesRemove")}
         />
       </div>
 
       {/* Content tone */}
       <div style={{ display: "grid", gap: 8 }}>
-        <label className="fieldLabel">Content tone (pick 1 or 2)</label>
+        <label className="fieldLabel">{t("contentToneLabel")}</label>
         <PillSelect
           options={CONTENT_TONE_OPTIONS}
           value={contentTone}
           onChange={(v) => setContentTone(v as string[])}
           multi
           max={2}
-          ariaLabel="Content tone"
+          ariaLabel={t("contentToneAria")}
         />
       </div>
 
       {/* Brand assets */}
       <div style={{ display: "grid", gap: 12 }}>
-        <label className="fieldLabel">Existing brand assets</label>
+        <label className="fieldLabel">{t("brandAssetsLabel")}</label>
         <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
           <div style={{ display: "grid", gap: 6 }}>
-            <span style={{ fontSize: 12, color: "var(--muted)" }}>Logo</span>
+            <span style={{ fontSize: 12, color: "var(--muted)" }}>{t("logoLabel")}</span>
             <div style={{ display: "flex", gap: 8 }}>
               {(["yes", "no", "in_progress"] as const).map((opt) => (
                 <label key={opt} style={{ display: "flex", gap: 4, alignItems: "center", fontSize: 13 }}>
@@ -584,13 +590,17 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit, 
                     checked={hasLogo === opt}
                     onChange={() => setHasLogo(opt)}
                   />
-                  {opt === "yes" ? "Yes" : opt === "no" ? "No" : "In progress"}
+                  {opt === "yes"
+                    ? t("yesNo.yes")
+                    : opt === "no"
+                      ? t("yesNo.no")
+                      : t("yesNo.inProgress")}
                 </label>
               ))}
             </div>
           </div>
           <div style={{ display: "grid", gap: 6 }}>
-            <span style={{ fontSize: 12, color: "var(--muted)" }}>Brand guide</span>
+            <span style={{ fontSize: 12, color: "var(--muted)" }}>{t("brandGuideLabel")}</span>
             <div style={{ display: "flex", gap: 8 }}>
               {(["yes", "no"] as const).map((opt) => (
                 <label key={opt} style={{ display: "flex", gap: 4, alignItems: "center", fontSize: 13 }}>
@@ -601,7 +611,7 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit, 
                     checked={hasBrandGuide === opt}
                     onChange={() => setHasBrandGuide(opt)}
                   />
-                  {opt === "yes" ? "Yes" : "No"}
+                  {opt === "yes" ? t("yesNo.yes") : t("yesNo.no")}
                 </label>
               ))}
             </div>
@@ -610,7 +620,7 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit, 
         <textarea
           className="input"
           rows={3}
-          placeholder="Any notes about existing brand assets, fonts, colors, or guidelines"
+          placeholder={t("brandAssetsNotesPlaceholder")}
           value={brandAssetsNotes}
           onChange={(e) => setBrandAssetsNotes(e.target.value)}
         />
@@ -618,11 +628,11 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit, 
 
       {/* Client notes */}
       <div style={{ display: "grid", gap: 8 }}>
-        <label className="fieldLabel">Anything else we should know?</label>
+        <label className="fieldLabel">{t("clientNotesLabel")}</label>
         <textarea
           className="input"
           rows={3}
-          placeholder="Optional context about your audience, tone, competitors, deadlines, etc."
+          placeholder={t("clientNotesPlaceholder")}
           value={clientNotes}
           onChange={(e) => setClientNotes(e.target.value)}
         />
@@ -648,10 +658,7 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit, 
           style={{ marginTop: 4 }}
         />
         <div style={{ fontSize: 13, color: "var(--fg)", lineHeight: 1.6 }}>
-          I approve this design direction. CrecyStudio will make professional decisions around
-          layout, spacing, typography, responsive behavior, and visual hierarchy based on this
-          direction. Major style changes after approval may affect the timeline or require a
-          change order.
+          {t("approvalTerms")}
         </div>
       </label>
 
@@ -678,7 +685,7 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit, 
           disabled={saving || !approvedDirectionTerms}
           style={{ padding: "12px 22px", fontSize: 14 }}
         >
-          {saving ? "Submitting..." : "Submit design direction"}
+          {saving ? t("submittingButton") : t("submitButton")}
           <span className="btnArrow"> →</span>
         </button>
         {onSaveDraft ? (
