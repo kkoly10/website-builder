@@ -7,12 +7,18 @@ import { useEffect, useMemo, useState } from "react";
 import { trackEvent } from "@/lib/analytics/client";
 import ScrollReveal from "@/components/site/ScrollReveal";
 
-type ProjectType = "website" | "web_app" | "ai_integration" | "automation" | "ecommerce" | "rescue";
+// Use the canonical LeadProjectType so this picker stays in sync with the
+// rest of the codebase. Adds "client_portal" to the picker — previously
+// users couldn't reach the Client Portal intake from this screen even
+// though /portal-intake exists.
+import type { LeadProjectType } from "@/lib/workflows/types";
+type ProjectType = LeadProjectType;
 
 const PROJECT_TYPE_KEYS: ProjectType[] = [
   "website",
   "web_app",
   "ai_integration",
+  "client_portal",
   "automation",
   "ecommerce",
   "rescue",
@@ -21,6 +27,7 @@ const PROJECT_TYPE_KEYS: ProjectType[] = [
 const PROJECT_TYPE_ROUTES: Record<Exclude<ProjectType, "website">, string> = {
   web_app: "/custom-app-intake",
   ai_integration: "/build/ai-intake",
+  client_portal: "/portal-intake",
   automation: "/ops-intake",
   ecommerce: "/ecommerce/intake",
   rescue: "/rescue-intake",
