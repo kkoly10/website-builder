@@ -6,6 +6,7 @@ import {
   type WebsiteDesignDirection,
   type WebsiteDesignDirectionInput,
   type ReferenceWebsite,
+  type TasteSpectrum,
   BRAND_MOOD_OPTIONS,
   CONTENT_TONE_OPTIONS,
   CONTROL_LEVEL_OPTIONS,
@@ -77,6 +78,42 @@ function PillSelect<T extends string>({
           </button>
         );
       })}
+    </div>
+  );
+}
+
+function TasteSliderRow({
+  leftLabel,
+  rightLabel,
+  value,
+  onChange,
+}: {
+  leftLabel: string;
+  rightLabel: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "minmax(80px, 110px) 1fr minmax(80px, 110px)",
+        gap: 12,
+        alignItems: "center",
+      }}
+    >
+      <span style={{ fontSize: 13, color: "var(--muted)", textAlign: "right" }}>{leftLabel}</span>
+      <input
+        type="range"
+        min={-2}
+        max={2}
+        step={1}
+        value={value}
+        onChange={(e) => onChange(parseInt(e.target.value, 10))}
+        aria-label={`${leftLabel} to ${rightLabel}`}
+        style={{ width: "100%" }}
+      />
+      <span style={{ fontSize: 13, color: "var(--muted)" }}>{rightLabel}</span>
     </div>
   );
 }
@@ -155,8 +192,15 @@ function ReferenceListEditor({
 
 export default function DesignDirectionForm({ initial, saving, error, onSubmit }: Props) {
   const [controlLevel, setControlLevel] = useState<DesignControlLevel>(initial.controlLevel);
-  const [brandMood, setBrandMood] = useState<string[]>(initial.brandMood);
+  // Filter to current allowlist so historical mood values (pre-sharpening)
+  // don't render as "selected" against pills that no longer exist. Old
+  // values are still safe in the stored record; they just won't pre-select
+  // on a resubmission flow.
+  const [brandMood, setBrandMood] = useState<string[]>(
+    initial.brandMood.filter((m) => (BRAND_MOOD_OPTIONS as readonly string[]).includes(m)),
+  );
   const [visualStyle, setVisualStyle] = useState<string>(initial.visualStyle);
+  const [taste, setTaste] = useState<TasteSpectrum>(initial.taste);
   const [brandColorsKnown, setBrandColorsKnown] = useState(initial.brandColorsKnown);
   const [preferredColors, setPreferredColors] = useState(initial.preferredColors);
   const [colorsToAvoid, setColorsToAvoid] = useState(initial.colorsToAvoid);
@@ -178,6 +222,7 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit }
       controlLevel,
       brandMood,
       visualStyle,
+      taste,
       brandColorsKnown,
       preferredColors,
       colorsToAvoid,
@@ -241,6 +286,39 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit }
             </label>
           );
         })}
+      </fieldset>
+
+      {/* Taste spectrum — adjective-pair sliders. Forces a real lean on each
+          axis where pill mush ("Clean + Premium + Modern") can't. */}
+      <fieldset style={{ border: "none", padding: 0, margin: 0, display: "grid", gap: 14 }}>
+        <legend className="fieldLabel" style={{ marginBottom: 0 }}>How does it feel?</legend>
+        <p style={{ fontSize: 12, color: "var(--muted)", margin: 0, lineHeight: 1.5 }}>
+          Slide each axis to where your taste actually sits — even a small lean tells us a lot.
+        </p>
+        <TasteSliderRow
+          leftLabel="Calm"
+          rightLabel="Energetic"
+          value={taste.calmEnergetic}
+          onChange={(v) => setTaste((t) => ({ ...t, calmEnergetic: v }))}
+        />
+        <TasteSliderRow
+          leftLabel="Traditional"
+          rightLabel="Modern"
+          value={taste.traditionalModern}
+          onChange={(v) => setTaste((t) => ({ ...t, traditionalModern: v }))}
+        />
+        <TasteSliderRow
+          leftLabel="Stripped"
+          rightLabel="Layered"
+          value={taste.strippedLayered}
+          onChange={(v) => setTaste((t) => ({ ...t, strippedLayered: v }))}
+        />
+        <TasteSliderRow
+          leftLabel="Warm-toned"
+          rightLabel="Cool-toned"
+          value={taste.warmCool}
+          onChange={(v) => setTaste((t) => ({ ...t, warmCool: v }))}
+        />
       </fieldset>
 
       {/* Brand mood */}

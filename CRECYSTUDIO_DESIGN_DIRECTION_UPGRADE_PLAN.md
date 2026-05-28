@@ -115,8 +115,9 @@ the kind. This is the only literal lie on the form.
 
 ---
 
-## Task 2 — Sharpen mood word choices
+## Task 2 — Sharpen mood word choices ✅ DONE
 
+**Status:** ✅ shipped (bundled with Task 3)
 **Effort:** 1-2 hours
 **Why:** today's mood pills are bland and overlapping (Clean / Premium /
 Modern can all describe the same look). Sharper, more contrastive words
@@ -161,8 +162,9 @@ force a real taste signal.
 
 ---
 
-## Task 3 — Adjective-pair sliders (taste spectrum)
+## Task 3 — Adjective-pair sliders (taste spectrum) ✅ DONE
 
+**Status:** ✅ shipped (bundled with Task 2)
 **Effort:** half day
 **Why:** the single largest taste-signal improvement. Forces a position on
 each of four spectra that the pills can't surface.

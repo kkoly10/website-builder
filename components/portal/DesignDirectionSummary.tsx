@@ -34,11 +34,64 @@ function joinList(values: string[] | undefined | null) {
   return values.join(", ");
 }
 
+// Read-only 5-tick visualization of a single taste axis. Used by both
+// client and admin (admin re-renders Summary in DesignDirectionAdminPanel),
+// so a single update here surfaces taste data to both surfaces.
+function TasteBar({
+  leftLabel,
+  rightLabel,
+  value,
+}: {
+  leftLabel: string;
+  rightLabel: string;
+  value: number;
+}) {
+  const ticks = [-2, -1, 0, 1, 2];
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "minmax(80px, 110px) 1fr minmax(80px, 110px)",
+        gap: 8,
+        alignItems: "center",
+      }}
+    >
+      <span style={{ fontSize: 12, color: "var(--muted)", textAlign: "right" }}>{leftLabel}</span>
+      <div style={{ display: "flex", gap: 6, justifyContent: "space-between", alignItems: "center" }}>
+        {ticks.map((t) => (
+          <span
+            key={t}
+            aria-hidden
+            style={{
+              width: t === value ? 12 : 8,
+              height: t === value ? 12 : 8,
+              borderRadius: 999,
+              background: t === value ? "var(--accent)" : "var(--rule)",
+              transition: "all 120ms ease",
+            }}
+          />
+        ))}
+      </div>
+      <span style={{ fontSize: 12, color: "var(--muted)" }}>{rightLabel}</span>
+    </div>
+  );
+}
+
 export default function DesignDirectionSummary({ value }: { value: WebsiteDesignDirection }) {
   const t = useTranslations("portalToken.directionModule");
   return (
     <div style={{ display: "grid", gap: 12 }}>
       <Row label="Direction">{controlLevelLabel(value.controlLevel)}</Row>
+      {value.taste ? (
+        <Row label="Taste">
+          <div style={{ display: "grid", gap: 8 }}>
+            <TasteBar leftLabel="Calm" rightLabel="Energetic" value={value.taste.calmEnergetic} />
+            <TasteBar leftLabel="Traditional" rightLabel="Modern" value={value.taste.traditionalModern} />
+            <TasteBar leftLabel="Stripped" rightLabel="Layered" value={value.taste.strippedLayered} />
+            <TasteBar leftLabel="Warm-toned" rightLabel="Cool-toned" value={value.taste.warmCool} />
+          </div>
+        </Row>
+      ) : null}
       <Row label="Brand mood">{joinList(value.brandMood)}</Row>
       <Row label="Visual style">{value.visualStyle}</Row>
       <Row label="Colors">
