@@ -2,6 +2,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import styles from "./service-page.module.css";
+import { LOCAL_BUSINESS_CONSTANTS } from "@/lib/seo/structuredData";
 
 // Pulled to module scope because the component destructures a `process` prop
 // (workflow ProcessStep array). Inside the component body, `process` resolves
@@ -13,6 +14,21 @@ const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com")
 // crawlers resolve it against the Org node declared once in the locale
 // layout, instead of treating it as a second Organization entity.
 const ORG_ID = `${SITE_URL}/#organization`;
+
+// Service-page areaServed mirrors the LocalBusiness areaServed (DMV
+// cities + US/CA/GB countries). Previously this said "Worldwide" which
+// tells Google the service has no specific market — kills local pack
+// visibility for service queries like "AI integration in Fredericksburg".
+const SERVICE_AREA_SERVED = [
+  ...LOCAL_BUSINESS_CONSTANTS.servedPlaces.map((place) => ({
+    "@type": place.type,
+    name: place.name,
+  })),
+  ...LOCAL_BUSINESS_CONSTANTS.servedCountries.map((country) => ({
+    "@type": "Country",
+    name: country,
+  })),
+];
 
 type CTA = {
   label: string;
@@ -145,13 +161,19 @@ export default function ServicePage({
   // results. Pricing values are kept descriptive (text from the cards)
   // rather than numeric — many cards are "Scoped to project" or use
   // ranges that aren't a single number.
+  //
+  // areaServed mirrors the LocalBusiness service area (DMV cities +
+  // US/CA/GB countries) so a search like "AI integration Fredericksburg"
+  // matches both the city signal AND the service signal at once. The
+  // previous "Worldwide" value let the page rank globally for the
+  // service name but nowhere specifically.
   const serviceSchema = {
     "@context": "https://schema.org",
     "@type": "Service",
     name: title,
     description: intro,
     provider: { "@id": ORG_ID },
-    areaServed: "Worldwide",
+    areaServed: SERVICE_AREA_SERVED,
     offers: pricingCards.map((card) => ({
       "@type": "Offer",
       name: card.label,
