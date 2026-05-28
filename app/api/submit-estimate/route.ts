@@ -33,6 +33,7 @@ const PROJECT_TYPE_VALUES = [
   "ecommerce",
   "rescue",
   "ai_integration",
+  "client_portal",
 ] as const;
 type ProjectType = (typeof PROJECT_TYPE_VALUES)[number];
 

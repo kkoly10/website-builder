@@ -187,13 +187,16 @@ export default function PortalIntakeClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          projectType: "web_app",
+          // First-class lane. Previously this routed as
+          // projectType: "web_app" + intakeRaw.projectSubType: "portal"
+          // workaround; the lane is wired end-to-end now. See
+          // CRECYSTUDIO_CLIENT_PORTAL_LANE_WIRING_PLAN.md.
+          projectType: "client_portal",
           contactName: form.contactName,
           email: form.email,
           phone: form.phone || undefined,
           preferredLocale: locale,
           intakeRaw: {
-            projectSubType: "portal",
             companyName: form.companyName,
             accessType: form.accessType,
             currentProcess: form.currentProcess,

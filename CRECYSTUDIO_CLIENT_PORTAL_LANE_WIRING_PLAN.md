@@ -562,8 +562,9 @@ Tier mapping verified against the landing page:
 
 ---
 
-## Task 5 — Wire the intake submit + routing
+## Task 5 — Wire the intake submit + routing ✅ DONE
 
+**Status:** ✅ shipped
 **Effort:** half day
 **Why:** intake currently sends `projectType: "web_app"` with
 `projectSubType: "portal"` workaround. Once `client_portal` exists as
@@ -601,9 +602,10 @@ Branch on `projectType`. When `"client_portal"`:
 
 ---
 
-## Task 6 — Migration plan for existing mistagged leads
+## Task 6 — Migration plan for existing mistagged leads ✅ DECIDED
 
-**Effort:** **1 hour** (analysis + decision; potentially a one-time SQL)
+**Status:** ✅ Decision locked — **Option A** (leave existing as web_app)
+**Effort:** **1 hour** (decision; no SQL needed)
 **Why:** **v1 missed this entirely.** Existing portal-intake submissions
 are stored with `projectType: "web_app"` + `intakeRaw.projectSubType: "portal"`.
 After Task 1 ships, these stay as `web_app` unless migrated.
@@ -642,9 +644,10 @@ migration once portal lane is battle-tested.
 
 ---
 
-## Task 7 — Decide schema duplication vs. extension
+## Task 7 — Decide schema duplication vs. extension ✅ DECIDED
 
-**Effort:** 30 min (decision; no code yet)
+**Status:** ✅ Decision locked — **Duplicate** (own schema, consistent with pattern)
+**Effort:** 30 min (decision)
 **Why:** **v1 made this choice silently.** My `PORTAL_DIRECTION_SCHEMA`
 duplicates much of `PRODUCT_DIRECTION_SCHEMA`'s structure. There's a
 real argument that "client_portal = web_app + access-control extensions" —
