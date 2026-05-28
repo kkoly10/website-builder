@@ -147,18 +147,29 @@ export async function POST(req: Request) {
     const rl = await enforceRateLimitDurable({ key: `submit-estimate:${ip}`, limit: 12, windowMs: 60_000 });
     if (!rl.ok) return rateLimitResponse(rl.resetAt);
 
-    const body = (await req.json().catch(() => ({}))) as LooseObj;
-
     // The intake form's quote_json + intake_raw can legitimately be a
     // few KB (multi-step intake with notes and answers) but should not
-    // be megabytes. Cap roughly at 200 KB serialized to keep abusive
-    // payloads out of the JSONB columns while leaving headroom for the
-    // legitimate "I wrote three paragraphs in the notes field" case.
+    // be megabytes. Cap roughly at 200 KB to keep abusive payloads out
+    // of the JSONB columns while leaving headroom for the legitimate
+    // "I wrote three paragraphs in the notes field" case. Check the
+    // header BEFORE parsing so an attacker can't OOM the route by
+    // streaming a 1 GB body that we then JSON.parse.
+    const declaredLength = Number(req.headers.get("content-length") || 0);
+    if (Number.isFinite(declaredLength) && declaredLength > 200_000) {
+      return NextResponse.json(
+        { ok: false, error: "Request body too large." },
+        { status: 413 }
+      );
+    }
+
+    const body = (await req.json().catch(() => ({}))) as LooseObj;
+
+    // Fallback size check for clients that omit Content-Length or send
+    // a chunked body; covers the post-parse worst case.
     let bodySize = 0;
     try {
       bodySize = JSON.stringify(body).length;
     } catch {
-      // unserializable input — e.g. circular ref — refuse it
       return NextResponse.json(
         { ok: false, error: "Invalid request body." },
         { status: 400 }

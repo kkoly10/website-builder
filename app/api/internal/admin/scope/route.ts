@@ -6,6 +6,11 @@ import { requireAdminRoute, enforceAdminRateLimit } from "@/lib/routeAuth";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isUuid(v: string): boolean {
+  return UUID_RE.test(v);
+}
+
 function pickPiePayload(row: any) {
   return (
     row?.report_json ??
@@ -88,8 +93,11 @@ export async function POST(req: NextRequest) {
     // -----------------------------------------
     if (action === "create_from_pie") {
       const quoteId = String(body?.quoteId || "");
-      if (!quoteId) {
-        return NextResponse.json({ ok: false, error: "Missing quoteId" }, { status: 400 });
+      if (!quoteId || !isUuid(quoteId)) {
+        return NextResponse.json(
+          { ok: false, error: "Missing or invalid quoteId" },
+          { status: 400 }
+        );
       }
 
       const projectId = await ensureProjectIdForQuote(quoteId);
@@ -218,9 +226,9 @@ export async function POST(req: NextRequest) {
     // -----------------------------------------
     if (action === "update_snapshot") {
       const scopeSnapshotId = String(body?.scopeSnapshotId || "");
-      if (!scopeSnapshotId) {
+      if (!scopeSnapshotId || !isUuid(scopeSnapshotId)) {
         return NextResponse.json(
-          { ok: false, error: "Missing scopeSnapshotId" },
+          { ok: false, error: "Missing or invalid scopeSnapshotId" },
           { status: 400 }
         );
       }
@@ -261,8 +269,11 @@ export async function POST(req: NextRequest) {
     // -----------------------------------------
     if (action === "create_manual") {
       const quoteId = String(body?.quoteId || "");
-      if (!quoteId) {
-        return NextResponse.json({ ok: false, error: "Missing quoteId" }, { status: 400 });
+      if (!quoteId || !isUuid(quoteId)) {
+        return NextResponse.json(
+          { ok: false, error: "Missing or invalid quoteId" },
+          { status: 400 }
+        );
       }
 
       const projectId = await ensureProjectIdForQuote(quoteId);
