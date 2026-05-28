@@ -1116,6 +1116,10 @@
       "ai_integration": {
         "label": "AI integration",
         "desc": "Add a production AI layer to an existing product or system."
+      },
+      "client_portal": {
+        "label": "Client portal",
+        "desc": "A private workspace your customers actually use."
       }
     },
     "goalQuestion": "What's the primary goal?",

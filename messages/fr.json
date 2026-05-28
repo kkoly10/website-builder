@@ -1116,6 +1116,10 @@
       "ai_integration": {
         "label": "Intégration IA",
         "desc": "Ajouter une couche IA de production à un produit ou système existant."
+      },
+      "client_portal": {
+        "label": "Portail client",
+        "desc": "Un espace de travail privé que vos clients utilisent vraiment."
       }
     },
     "goalQuestion": "Quel est l'objectif principal ?",

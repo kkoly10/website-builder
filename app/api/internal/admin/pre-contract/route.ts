@@ -52,12 +52,13 @@ function listOrFallback(values: string[], fallback: string): string {
 
 function buildTitle(projectType: string): string {
   switch (projectType) {
-    case "web_app":       return "CUSTOM WEB APP PRE-CONTRACT DRAFT";
-    case "automation":    return "WORKFLOW AUTOMATION PRE-CONTRACT DRAFT";
-    case "ecommerce":     return "E-COMMERCE STORE PRE-CONTRACT DRAFT";
-    case "rescue":        return "WEBSITE RESCUE PRE-CONTRACT DRAFT";
-    case "client_portal": return "CLIENT PORTAL PRE-CONTRACT DRAFT";
-    default:              return "WEBSITE PROJECT PRE-CONTRACT DRAFT";
+    case "web_app":        return "CUSTOM WEB APP PRE-CONTRACT DRAFT";
+    case "automation":     return "WORKFLOW AUTOMATION PRE-CONTRACT DRAFT";
+    case "ecommerce":      return "E-COMMERCE STORE PRE-CONTRACT DRAFT";
+    case "rescue":         return "WEBSITE RESCUE PRE-CONTRACT DRAFT";
+    case "client_portal":  return "CLIENT PORTAL PRE-CONTRACT DRAFT";
+    case "ai_integration": return "AI INTEGRATION PRE-CONTRACT DRAFT";
+    default:               return "WEBSITE PROJECT PRE-CONTRACT DRAFT";
   }
 }
 
@@ -102,6 +103,13 @@ function buildProjectSummaryBlock(workspace: any, projectType: string): string {
 - Access type: ${accessType}
 - Data isolation model: ${multiTenancyModel}
 - Timeline: ${timeline}`;
+    }
+    case "ai_integration": {
+      return `Client is engaging Provider for an AI integration engagement.
+- Project type: AI integration
+- Timeline: ${timeline}
+- Specific scope, autonomy level, and human-in-the-loop requirements
+  finalized during the discovery sprint.`;
     }
     default: {
       const tierLabel = workspace.scopeSnapshot?.tierLabel || workspace.quote?.tier;
@@ -247,6 +255,22 @@ ${complianceRequirements}
 
 Success metric:
 ${successMetric}`;
+    }
+
+    case "ai_integration": {
+      // AI integration scope is finalized during a paid discovery sprint;
+      // the intake doesn't capture autonomy / cost-of-failure / data-
+      // sensitivity / volume signals in structured form, so we summarize
+      // what we know and defer the rest to discovery.
+      return `Provider will scope and deliver an AI integration engagement.
+Specific use case, autonomy level (suggest / confirm / auto / autonomous),
+data sensitivity, audit-trail requirements, and target volume are
+finalized during the discovery sprint and become contract attachments
+before build kickoff.
+
+Production AI delivery commitments include: confidence-gated autonomy
+where applicable, human-in-the-loop on costly mistakes, audit logging,
+and a measurable success metric agreed upfront.`;
     }
 
     default: {

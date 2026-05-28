@@ -5,13 +5,17 @@ import { useEffect, useMemo, useState } from "react";
 import type { AdminProjectData } from "@/lib/adminProjectData";
 import ProjectControlClient from "./[id]/ProjectControlClient";
 
-type LaneFilter = "all" | "website" | "web_app" | "automation" | "ecommerce" | "rescue" | "client_portal";
+// Filter values use the canonical LeadProjectType so adding a lane updates
+// the picker automatically. "all" is the only non-lane value.
+import type { LeadProjectType } from "@/lib/workflows/types";
+type LaneFilter = "all" | LeadProjectType;
 
 const LANE_FILTER_OPTIONS: { value: LaneFilter; label: string }[] = [
   { value: "all", label: "All lanes" },
   { value: "website", label: "Websites" },
   { value: "web_app", label: "Web apps" },
   { value: "client_portal", label: "Client portals" },
+  { value: "ai_integration", label: "AI integration" },
   { value: "automation", label: "Automation" },
   { value: "ecommerce", label: "E-commerce" },
   { value: "rescue", label: "Rescue" },
