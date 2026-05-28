@@ -119,6 +119,25 @@ export default async function BlogIndexPage({
             </Link>
           ))}
         </div>
+
+        <div style={{ height: 64 }} />
+
+        <section className="panel" style={{ padding: 24 }}>
+          <h2 className="h2">Working on something we&apos;ve written about?</h2>
+          <p className="p" style={{ marginTop: 12 }}>
+            Book a free 20-minute discovery call. Whether it&apos;s an AI
+            integration, a custom web app, or a website rescue — we&apos;ll
+            walk the scope honestly and tell you what fits.
+          </p>
+          <div style={{ display: "flex", gap: 12, marginTop: 16, flexWrap: "wrap" }}>
+            <Link href="/book" className="btn btnPrimary">
+              Book discovery call <span className="btnArrow">→</span>
+            </Link>
+            <Link href="/contact" className="btn btnGhost">
+              Or send a message
+            </Link>
+          </div>
+        </section>
       </main>
     </>
   );

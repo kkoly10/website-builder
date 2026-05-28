@@ -115,6 +115,24 @@ export default async function LocationsIndexPage({
           Canada, and the United Kingdom. Same workflow, same workspace,
           same accountability — just no in-person kickoff.
         </p>
+
+        <div style={{ height: 48 }} />
+
+        <section className="panel" style={{ padding: 24 }}>
+          <h2 className="h2">Start a project from anywhere in the DMV</h2>
+          <p className="p" style={{ marginTop: 12 }}>
+            Book a free 20-minute discovery call. No pitch, no commitment —
+            just a conversation about what you&apos;re building.
+          </p>
+          <div style={{ display: "flex", gap: 12, marginTop: 16, flexWrap: "wrap" }}>
+            <Link href="/book" className="btn btnPrimary">
+              Book discovery call <span className="btnArrow">→</span>
+            </Link>
+            <Link href="/contact" className="btn btnGhost">
+              Or send a message
+            </Link>
+          </div>
+        </section>
       </main>
     </>
   );
