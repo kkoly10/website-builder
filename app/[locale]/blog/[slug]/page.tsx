@@ -102,6 +102,12 @@ function renderBlock(block: BlogBlock, i: number) {
         </ul>
       );
     case "callout":
+      // Every callout in the catalog ends in a discovery-call CTA —
+      // rendering a real anchor here turns the text into a clickable
+      // /book internal link, which (a) gives the reader an actual
+      // next step and (b) gives Google a high-value internal link
+      // from the blog post into the booking funnel. Without this,
+      // the blog generates impressions but no clicks into the funnel.
       return (
         <aside
           key={i}
@@ -115,6 +121,11 @@ function renderBlock(block: BlogBlock, i: number) {
           }}
         >
           <p className="p" style={{ margin: 0 }}>{block.text}</p>
+          <div style={{ marginTop: 16 }}>
+            <Link href="/book" className="btn btnPrimary">
+              Book a discovery call <span className="btnArrow">→</span>
+            </Link>
+          </div>
         </aside>
       );
   }

@@ -402,7 +402,7 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         type: "p",
         text:
-          "Two of our own products run agents. Fleiko has an AI copilot that flags vehicle issues (Level 2 — suggests, fleet manager confirms). Proveo has a confidence-gated agent that processes contractor photo submissions (Level 3 — high-confidence auto-approves, low-confidence routes to human review). Techdesk auto-resolves IT tickets via a six-gate engine (Level 3 with strict gating). All three are agents because the volume justifies the engineering investment and the actions are individually low-stakes.",
+          "Three of our own products run AI, at different autonomy levels — which is how we know the distinction matters in practice. Fleiko has an AI copilot that flags vehicle issues (Level 2 — suggests, fleet manager confirms). Proveo has a confidence-gated agent that processes contractor photo submissions (Level 3 — high-confidence auto-approves, low-confidence routes to human review). TechDesk auto-resolves IT tickets via a six-gate engine (Level 3 with strict gating). Two of those are agents, one is a copilot, and each one is shaped by the cost-of-wrong for its specific action — not by which level sounded better in a pitch.",
       },
       { type: "h2", text: "When copilots are the right call" },
       {
