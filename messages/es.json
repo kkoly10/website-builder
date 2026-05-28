@@ -2275,7 +2275,63 @@
       "submitError": "Error al enviar la dirección.",
       "submitDesignDirectionError": "Error al enviar la dirección de diseño.",
       "submitButton": "Enviar dirección",
-      "submitButtonSaving": "Enviando…"
+      "submitButtonSaving": "Enviando…",
+      "subtitle": {
+        "design": {
+          "notStarted": "Elige la dirección visual antes de que comience la construcción completa.",
+          "waitingOnClient": "Elige tu dirección de diseño. CrecyStudio la utilizará para tomar decisiones profesionales sobre maquetación, tipografía y jerarquía visual.",
+          "submitted": "CrecyStudio está revisando tu dirección.",
+          "underReview": "CrecyStudio está revisando tu dirección.",
+          "changesRequested": "CrecyStudio necesita más detalles antes de bloquear la dirección.",
+          "approved": "Tu dirección de diseño ha sido aprobada.",
+          "locked": "La dirección de diseño está bloqueada. Los cambios mayores requieren una orden de cambio."
+        },
+        "product": {
+          "notStarted": "Cuéntanos cómo debe funcionar la aplicación antes de iniciar el desarrollo.",
+          "waitingOnClient": "Cuéntanos cómo debe funcionar la aplicación. Lo convertiremos en el alcance del MVP antes de comenzar el desarrollo.",
+          "submitted": "CrecyStudio está revisando tu dirección de producto.",
+          "underReview": "CrecyStudio está revisando tu dirección de producto.",
+          "changesRequested": "CrecyStudio necesita más detalles antes de bloquear el alcance del MVP.",
+          "approved": "Dirección de producto aprobada. El alcance del MVP seguirá a continuación.",
+          "locked": "Dirección de producto bloqueada. Los cambios mayores de alcance requieren una orden de cambio."
+        },
+        "workflow": {
+          "notStarted": "Cuéntanos sobre el proceso manual que quieres automatizar.",
+          "waitingOnClient": "Cuéntanos sobre el proceso manual que quieres automatizar. Lo convertiremos en el plan de automatización antes de comenzar la construcción.",
+          "submitted": "CrecyStudio está revisando tu dirección de flujo de trabajo.",
+          "underReview": "CrecyStudio está revisando tu dirección de flujo de trabajo.",
+          "changesRequested": "CrecyStudio necesita más detalles antes de bloquear el alcance de la automatización.",
+          "approved": "Dirección de flujo de trabajo aprobada.",
+          "locked": "Dirección de flujo de trabajo bloqueada. Añadir nuevos disparadores o herramientas requiere una orden de cambio."
+        },
+        "store": {
+          "notStarted": "Cuéntanos cómo debe funcionar tu tienda antes de comenzar a construir.",
+          "waitingOnClient": "Cuéntanos cómo debe funcionar tu tienda. Lo convertiremos en el plan de construcción.",
+          "submitted": "CrecyStudio está revisando tu dirección de tienda.",
+          "underReview": "CrecyStudio está revisando tu dirección de tienda.",
+          "changesRequested": "CrecyStudio necesita más detalles antes de bloquear el alcance de la tienda.",
+          "approved": "Dirección de tienda aprobada.",
+          "locked": "Dirección de tienda bloqueada. Añadir nuevas plataformas o cambios mayores en el checkout requiere una orden de cambio."
+        },
+        "rescue": {
+          "notStarted": "Cuéntanos qué está roto para poder armar el plan de reparación.",
+          "waitingOnClient": "Cuéntanos qué está roto para poder armar el plan de reparación.",
+          "submitted": "CrecyStudio está revisando los detalles del rescate.",
+          "underReview": "CrecyStudio está revisando los detalles del rescate.",
+          "changesRequested": "CrecyStudio necesita más detalles antes de bloquear el plan de reparación.",
+          "approved": "Plan de reparación aprobado.",
+          "locked": "Plan de reparación bloqueado. Los nuevos problemas fuera de la lista prioritaria se documentarán por separado."
+        },
+        "portal": {
+          "notStarted": "Cuéntanos cómo debe funcionar el portal antes de iniciar el desarrollo.",
+          "waitingOnClient": "Cuéntanos cómo debe funcionar el portal — acceso, roles, funciones, integraciones, cumplimiento — y bloquearemos el alcance antes de la construcción.",
+          "submitted": "CrecyStudio está revisando tu dirección de portal.",
+          "underReview": "CrecyStudio está revisando tu dirección de portal.",
+          "changesRequested": "CrecyStudio necesita más detalles antes de bloquear el alcance del portal.",
+          "approved": "Dirección de portal aprobada. El plan de permisos e integraciones seguirá.",
+          "locked": "Dirección de portal bloqueada. Los cambios mayores de alcance requieren una orden de cambio."
+        }
+      }
     },
     "requiredActions": {
       "title": "Acción requerida de su parte",

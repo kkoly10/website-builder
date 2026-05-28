@@ -2275,7 +2275,63 @@
       "submitError": "Failed to submit direction.",
       "submitDesignDirectionError": "Failed to submit design direction.",
       "submitButton": "Submit direction",
-      "submitButtonSaving": "Submitting..."
+      "submitButtonSaving": "Submitting...",
+      "subtitle": {
+        "design": {
+          "notStarted": "Choose the visual direction before the full build begins.",
+          "waitingOnClient": "Choose your design direction. CrecyStudio will use it to make professional decisions about layout, typography, and visual hierarchy.",
+          "submitted": "CrecyStudio is reviewing your direction.",
+          "underReview": "CrecyStudio is reviewing your direction.",
+          "changesRequested": "CrecyStudio needs more detail before locking the direction.",
+          "approved": "Your design direction has been approved.",
+          "locked": "Design direction is locked. Major changes require a change order."
+        },
+        "product": {
+          "notStarted": "Tell us how the app should work before development starts.",
+          "waitingOnClient": "Tell us how the app should work. We'll turn this into the MVP scope before development starts.",
+          "submitted": "CrecyStudio is reviewing your product direction.",
+          "underReview": "CrecyStudio is reviewing your product direction.",
+          "changesRequested": "CrecyStudio needs more detail before MVP scope can be locked.",
+          "approved": "Product direction approved. MVP scope will follow.",
+          "locked": "Product direction locked. Major scope changes require a change order."
+        },
+        "workflow": {
+          "notStarted": "Tell us about the manual process you want automated.",
+          "waitingOnClient": "Tell us about the manual process you want automated. We'll turn this into the automation plan before build starts.",
+          "submitted": "CrecyStudio is reviewing your workflow direction.",
+          "underReview": "CrecyStudio is reviewing your workflow direction.",
+          "changesRequested": "CrecyStudio needs more detail before locking the automation scope.",
+          "approved": "Workflow direction approved.",
+          "locked": "Workflow direction locked. Adding new triggers or tools requires a change order."
+        },
+        "store": {
+          "notStarted": "Tell us how your store should work before we start building.",
+          "waitingOnClient": "Tell us how your store should work. We'll turn this into the build plan.",
+          "submitted": "CrecyStudio is reviewing your store direction.",
+          "underReview": "CrecyStudio is reviewing your store direction.",
+          "changesRequested": "CrecyStudio needs more detail before locking the store scope.",
+          "approved": "Store direction approved.",
+          "locked": "Store direction locked. Adding new platforms or major checkout changes requires a change order."
+        },
+        "rescue": {
+          "notStarted": "Tell us what's broken so we can put together the fix plan.",
+          "waitingOnClient": "Tell us what's broken so we can put together the fix plan.",
+          "submitted": "CrecyStudio is reviewing the rescue details.",
+          "underReview": "CrecyStudio is reviewing the rescue details.",
+          "changesRequested": "CrecyStudio needs more detail before the fix plan can be locked.",
+          "approved": "Fix plan approved.",
+          "locked": "Fix plan locked. New issues outside the priority list will be documented separately."
+        },
+        "portal": {
+          "notStarted": "Tell us how the portal should work before development starts.",
+          "waitingOnClient": "Tell us how the portal should work — access, roles, features, integrations, compliance — and we'll lock the scope before build.",
+          "submitted": "CrecyStudio is reviewing your portal direction.",
+          "underReview": "CrecyStudio is reviewing your portal direction.",
+          "changesRequested": "CrecyStudio needs more detail before the portal scope can be locked.",
+          "approved": "Portal direction approved. Permissions and integrations plan will follow.",
+          "locked": "Portal direction locked. Major scope changes require a change order."
+        }
+      }
     },
     "requiredActions": {
       "title": "Action needed from you",
