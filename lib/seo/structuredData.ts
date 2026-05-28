@@ -34,10 +34,18 @@ const GBP_URL = process.env.NEXT_PUBLIC_GBP_URL?.trim() || "https://share.google
 
 // External profiles the Organization controls. Listed in schema.org `sameAs`
 // so Google's Knowledge Graph and AI search (Perplexity, ChatGPT browsing)
-// can disambiguate the entity across the open web. Add new ones here.
+// can disambiguate the entity across the open web. More platforms here =
+// stronger entity-confidence signal — Google cross-references the URLs to
+// confirm the studio is one consistent entity across surfaces, which is
+// the foundation of the Knowledge Graph. Add new ones here.
+//
+// Tracking params (?mibextid=…, ?igsh=…, ?utm_source=qr) stripped from the
+// canonical URLs so schema validators don't flag them as redirect-laden.
 const SAME_AS_URLS = [
   "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407",
   "https://github.com/kkoly10",
+  "https://www.facebook.com/share/1GFn42rFuS/",
+  "https://www.instagram.com/crecystudio",
   GBP_URL,
 ].filter(Boolean) as string[];
 
