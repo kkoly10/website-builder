@@ -109,6 +109,53 @@ function areaServedNodes(): GraphNode[] {
   ];
 }
 
+// Canonical service catalog. Each entry is the @id of the Service
+// node declared on its dedicated landing page (via `serviceNode()` or
+// `aiIntegrationServiceNode()`). The Organization node references
+// these by @id in `hasOfferCatalog` — that's the schema.org-blessed
+// way to tell Google "this organization offers these N services, and
+// the authoritative page for each one lives at this URL."
+//
+// Why this matters for SEO: without these references, Google has to
+// guess whether to show the homepage or a service page when someone
+// searches "website design Stafford" or "AI integration consultant".
+// The homepage tends to win because it has more inbound links. With
+// these references, the service @ids become the canonical entities
+// for their respective queries — Google routes service-specific
+// queries to the service page, brand-level queries to the homepage.
+//
+// Slugs must match the service page paths in app/[locale]/{slug}/.
+const SERVICE_CATALOG: { slug: string; name: string }[] = [
+  { slug: "websites", name: "Website design & development" },
+  { slug: "custom-web-apps", name: "Custom web app development" },
+  { slug: "ai-integration", name: "AI integration" },
+  { slug: "systems", name: "Workflow automation" },
+  { slug: "ecommerce", name: "E-commerce development" },
+  { slug: "client-portals", name: "Client portal development" },
+  { slug: "website-rescue", name: "Website rescue" },
+  { slug: "care-plans", name: "Website maintenance & care plans" },
+];
+
+function serviceCatalogOfferings(): GraphNode {
+  return {
+    "@type": "OfferCatalog",
+    name: "CrecyStudio services",
+    itemListElement: SERVICE_CATALOG.map((service) => ({
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "Service",
+        // @id references the Service node emitted by the service
+        // page itself. Google reads this as "the canonical Service
+        // entity is over there", not "here's a duplicate Service."
+        "@id": `${SITE_URL}/${service.slug}#service`,
+        name: service.name,
+        url: `${SITE_URL}/${service.slug}`,
+        provider: { "@id": ORG_ID },
+      },
+    })),
+  };
+}
+
 export function organizationNode(): GraphNode {
   // ProfessionalService is the schema.org subtype that fits a small web
   // studio — more specific than bare Organization, and what AI search
@@ -188,6 +235,13 @@ export function organizationNode(): GraphNode {
       "Website rescue",
       "Website maintenance",
     ],
+    // hasOfferCatalog lists the 8 services with @id references back
+    // to the dedicated service-page Service nodes. This is the move
+    // that nudges Google to show /websites instead of / for "website
+    // design" queries, /ai-integration for "AI integration", etc. —
+    // the @id reference makes the service page the canonical entity
+    // for its query, not just one of many pages mentioning the term.
+    hasOfferCatalog: serviceCatalogOfferings(),
   };
 }
 
@@ -247,6 +301,22 @@ export function websiteNode(): GraphNode {
     name: "CrecyStudio",
     publisher: { "@id": ORG_ID },
     inLanguage: ["en", "fr", "es"],
+    // SearchAction enables Google's sitelinks searchbox on the
+    // CrecyStudio brand result — a small inline search field that
+    // lets users query the site directly from the SERP. The query
+    // gets passed to /search?q={search_term_string} (when we have a
+    // search page) or to Google's intent-routing fallback. Without
+    // this, brand searches surface only the homepage; with it,
+    // Google can deep-link to service pages, case studies, etc. via
+    // the searchbox flow.
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${SITE_URL}/search?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
   };
 }
 
@@ -446,7 +516,13 @@ export function aiIntegrationServiceNode(opts: {
   const url = absoluteUrl(opts.pageUrl);
   return {
     "@type": "Service",
-    "@id": `${url}#ai-integration-service`,
+    // @id matches the SERVICE_CATALOG reference on the Organization
+    // node (which uses `{slug}#service`) — so when Google resolves the
+    // catalog reference for ai-integration, this rich node IS the
+    // entity, not a separate one. Keeping a single @id per service
+    // prevents Knowledge Graph from treating the basic ServicePage
+    // Service node and this rich one as two different entities.
+    "@id": `${url}#service`,
     name: opts.serviceName,
     description: opts.serviceDescription,
     url,

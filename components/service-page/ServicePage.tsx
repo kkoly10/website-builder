@@ -108,6 +108,15 @@ export type ServicePageProps = {
   projectType?: string;
   founderCallout?: boolean;
   riskReversal?: string;
+  // URL slug of this service page (e.g. "websites", "ai-integration").
+  // Used to anchor the Service JSON-LD @id at `${SITE_URL}/${slug}#service`,
+  // which makes the per-page Service node the canonical entity for the
+  // SERVICE_CATALOG references in the Organization node — so Google
+  // routes service-specific queries to this page instead of the
+  // homepage. Optional for backward compat with any caller that
+  // hasn't been updated yet; without it the Service node is still
+  // emitted but without an @id (less strong of a signal).
+  serviceSlug?: string;
 };
 
 export default function ServicePage({
@@ -144,6 +153,7 @@ export default function ServicePage({
   projectType,
   founderCallout,
   riskReversal,
+  serviceSlug,
 }: ServicePageProps) {
   const t = useTranslations("servicePage");
   const tCross = useTranslations("crossLinks");
@@ -170,6 +180,14 @@ export default function ServicePage({
   const serviceSchema = {
     "@context": "https://schema.org",
     "@type": "Service",
+    // @id anchors this Service to the URL Google should send service-
+    // specific queries to. The Organization node's hasOfferCatalog
+    // references the same @id by URL, so the catalog → service →
+    // dedicated-page chain is explicit.
+    ...(serviceSlug && {
+      "@id": `${SITE_URL}/${serviceSlug}#service`,
+      url: `${SITE_URL}/${serviceSlug}`,
+    }),
     name: title,
     description: intro,
     provider: { "@id": ORG_ID },
