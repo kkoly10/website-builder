@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, normalizeEmail } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
@@ -44,7 +44,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const email = (user.email || "").trim().toLowerCase();
+  // NFC-normalize before joining on email — leads/quotes/portal rows
+  // may have been written from forms with precomposed Unicode while
+  // the auth row uses decomposed (or vice versa). Without NFC two
+  // visually-identical emails compare as different strings and the
+  // anonymization silently misses rows.
+  const email = normalizeEmail(user.email);
   const userId = user.id;
   const anonEmail = `deleted+${userId}@crecystudio.invalid`;
   const anonName = "Deleted user";
