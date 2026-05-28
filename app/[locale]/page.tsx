@@ -42,7 +42,7 @@ const JOURNEY_KEYS = [
 
 const WHAT_WE_BUILD_CARDS = [
   { key: "webApps",       href: "/custom-web-apps",                    event: "cta_home_card_web_apps"        },
-  { key: "aiIntegration", href: "/build/intro?projectType=ai_integration", event: "cta_home_card_ai_integration"  },
+  { key: "aiIntegration", href: "/ai-integration", event: "cta_home_card_ai_integration"  },
   { key: "portals",       href: "/client-portals",                     event: "cta_home_card_portals"         },
   { key: "automation",    href: "/systems",                            event: "cta_home_card_automation"      },
   { key: "websites",      href: "/websites",                           event: "cta_home_card_websites"        },
@@ -50,7 +50,7 @@ const WHAT_WE_BUILD_CARDS = [
 ] as const;
 
 const START_HERE_CARDS = [
-  { key: "ai",        href: "/build/intro?projectType=ai_integration" },
+  { key: "ai",        href: "/ai-integration" },
   { key: "complex",   href: "/custom-web-apps"                      },
   { key: "app",       href: "/custom-web-apps"                      },
   { key: "portal",    href: "/client-portals"                       },

@@ -2008,6 +2008,7 @@ const DESIGN_DIRECTION_EDITABLE_KEYS = [
   "controlLevel",
   "brandMood",
   "visualStyle",
+  "taste",
   "brandColorsKnown",
   "preferredColors",
   "colorsToAvoid",

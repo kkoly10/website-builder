@@ -21,6 +21,7 @@
     "ecommerce": "E-commerce",
     "websiteRescue": "Rescate web",
     "systems": "Sistemas",
+    "aiIntegration": "Integración de IA",
     "process": "Proceso",
     "work": "Proyectos",
     "pricing": "Precios",
@@ -116,6 +117,7 @@
       "websites": "Sitios web",
       "ecommerce": "E-commerce",
       "systems": "Sistemas",
+      "aiIntegration": "Integración de IA",
       "process": "Proceso",
       "work": "Proyectos",
       "pricing": "Precios",
@@ -972,6 +974,10 @@
     "carePlans": "Planes de mantenimiento"
   },
   "servicesMeta": {
+    "aiIntegration": {
+      "metaTitle": "Integración de IA | IA en producción, construida con barreras de seguridad",
+      "metaDescription": "No vendemos demos de IA. Operamos tres sistemas de IA en producción — con umbral de confianza, barreras de seguridad y supervisión humana. Construimos lo mismo para tu negocio."
+    },
     "websites": {
       "metaTitle": "Construcción de sitios web | Sitios premium enfocados en conversión",
       "metaDescription": "Construcción de sitios web premium para empresas de servicios que necesitan más confianza, mensaje más claro y mejor conversión de leads."

@@ -21,6 +21,7 @@
     "ecommerce": "E-commerce",
     "websiteRescue": "Website rescue",
     "systems": "Systems",
+    "aiIntegration": "AI integration",
     "process": "Process",
     "work": "Work",
     "pricing": "Pricing",
@@ -116,6 +117,7 @@
       "websites": "Websites",
       "ecommerce": "E-commerce",
       "systems": "Systems",
+      "aiIntegration": "AI integration",
       "process": "Process",
       "work": "Work",
       "pricing": "Pricing",
@@ -972,6 +974,10 @@
     "carePlans": "Care plans"
   },
   "servicesMeta": {
+    "aiIntegration": {
+      "metaTitle": "AI Integration | Production AI, Built With Guardrails",
+      "metaDescription": "We don't sell AI demos. We run three production AI systems of our own — confidence-gated, guardrailed, human-in-the-loop. We build the same for your business."
+    },
     "websites": {
       "metaTitle": "Website Building | Premium, Conversion-Focused Websites",
       "metaDescription": "Premium website building for service businesses that need stronger trust, clearer messaging, and better lead conversion."

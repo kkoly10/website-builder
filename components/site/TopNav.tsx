@@ -74,6 +74,7 @@ export default function TopNav({
     { href: "/ecommerce", label: t("ecommerce") },
     { href: "/website-rescue", label: t("websiteRescue") },
     { href: "/systems", label: t("systems") },
+    { href: "/ai-integration", label: t("aiIntegration") },
     { href: "/process", label: t("process") },
     { href: "/work", label: t("work") },
     { href: "/faq", label: t("faq") },

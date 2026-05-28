@@ -31,6 +31,18 @@ export type ReferenceWebsite = {
   reason: string;
 };
 
+// Four taste-spectrum axes the client positions themselves on. Each is an
+// integer in [-2, +2] where 0 is neutral and the extremes lean toward the
+// left/right label respectively. The pills above (mood, style) capture
+// preference; these capture *tradeoff* — pills allow "Clean + Premium +
+// Modern" mush; sliders force a real lean.
+export type TasteSpectrum = {
+  calmEnergetic: number;       // -2 calm … +2 energetic
+  traditionalModern: number;   // -2 traditional … +2 modern
+  strippedLayered: number;     // -2 stripped … +2 layered
+  warmCool: number;            // -2 warm-toned … +2 cool-toned
+};
+
 export type WebsiteDesignDirection = {
   status: WebsiteDesignDirectionStatus;
 
@@ -38,6 +50,7 @@ export type WebsiteDesignDirection = {
 
   brandMood: string[];
   visualStyle: string;
+  taste: TasteSpectrum;
 
   brandColorsKnown: BrandColorsKnown;
   preferredColors: string;
@@ -85,19 +98,23 @@ export type WebsiteDesignDirectionInput = Omit<
 // ─── Option lists ────────────────────────────────────────────────────────
 // Single source of truth for both client form and admin display.
 
+// Sharpened to be evocative and contrastive — older bland words ("Clean",
+// "Modern", "Premium") often overlap and surface no real taste signal. The
+// new list forces a real preference. Existing records with old values still
+// render via DesignDirectionSummary (which displays stored strings as-is).
 export const BRAND_MOOD_OPTIONS = [
-  "Clean",
-  "Premium",
-  "Friendly",
-  "Bold",
-  "Minimal",
-  "Modern",
-  "Luxury",
-  "Warm",
-  "Technical",
-  "Trustworthy",
-  "Energetic",
-  "Creative",
+  "Editorial",
+  "Architectural",
+  "Confident",
+  "Inviting",
+  "Stripped",
+  "Refined",
+  "Magazine",
+  "Crafted",
+  "Quiet",
+  "Daring",
+  "Warm-toned",
+  "Cool-toned",
 ] as const;
 
 export const VISUAL_STYLE_OPTIONS = [
@@ -173,7 +190,8 @@ export const CONTROL_LEVEL_OPTIONS: {
   {
     value: "premium_concept_review",
     label: "Premium concept review",
-    description: "I want to compare up to 2 visual directions before full build.",
+    description:
+      "I want extra design depth and a more polished concept handoff before the full build.",
     recommendedTier: "Premium only",
   },
 ];
@@ -185,6 +203,12 @@ export const DEFAULT_WEBSITE_DESIGN_DIRECTION: WebsiteDesignDirection = {
   controlLevel: "crecystudio_led",
   brandMood: [],
   visualStyle: "",
+  taste: {
+    calmEnergetic: 0,
+    traditionalModern: 0,
+    strippedLayered: 0,
+    warmCool: 0,
+  },
   brandColorsKnown: "not_sure",
   preferredColors: "",
   colorsToAvoid: "",
@@ -229,6 +253,28 @@ function asStringArray(value: unknown, max = 20): string[] {
     .map((item) => item.trim())
     .filter(Boolean)
     .slice(0, max);
+}
+
+// Clamp a single taste-spectrum axis to [-2, +2] integer. Anything
+// non-numeric, NaN, or out of range collapses to 0 (neutral). This is
+// intentionally tolerant — older records without a `taste` field, or a
+// malformed client payload, default to neutral rather than failing.
+function coerceTasteAxis(value: unknown): number {
+  if (typeof value !== "number" || Number.isNaN(value)) return 0;
+  const n = Math.round(value);
+  if (n < -2) return -2;
+  if (n > 2) return 2;
+  return n;
+}
+
+function coerceTaste(value: unknown): TasteSpectrum {
+  const obj = (value && typeof value === "object" ? value : {}) as Record<string, unknown>;
+  return {
+    calmEnergetic: coerceTasteAxis(obj.calmEnergetic),
+    traditionalModern: coerceTasteAxis(obj.traditionalModern),
+    strippedLayered: coerceTasteAxis(obj.strippedLayered),
+    warmCool: coerceTasteAxis(obj.warmCool),
+  };
 }
 
 function asReferenceList(
@@ -349,6 +395,7 @@ export function validateDesignDirectionInput(
       controlLevel,
       brandMood,
       visualStyle,
+      taste: coerceTaste(r.taste),
       brandColorsKnown,
       preferredColors: asString(r.preferredColors, 2000),
       colorsToAvoid: asString(r.colorsToAvoid, 2000),
