@@ -316,8 +316,9 @@ Foundational for Task 6.
 
 ---
 
-## Task 6 — Visual references next to options
+## Task 6 — Visual references next to options ✅ DONE
 
+**Status:** ✅ shipped
 **Effort:** ~1.5 days (curation + UI)
 **Why:** the single biggest perception lift. Today the client picks "Bold &
 Premium" with zero visual idea of what it looks like. Adding visuals turns

@@ -168,6 +168,52 @@ export const CONTENT_TONE_OPTIONS = [
   "Playful",
 ] as const;
 
+// Visual keys for each option, used by the form's PillSelect to render a
+// small SVG sketch / type sample / glyph next to each label. Kept here so
+// the data stays the single source of truth — the component just looks up
+// the rendering key. NOT i18n-keyed: the visual asset is the same across
+// locales; only the human-readable label changes.
+export const VISUAL_STYLE_VISUALS: Record<
+  (typeof VISUAL_STYLE_OPTIONS)[number],
+  string
+> = {
+  "Clean & Professional": "clean-pro",
+  "Bold & Premium": "bold-prem",
+  "Warm & Friendly": "warm-friendly",
+  "Modern & Tech": "modern-tech",
+  "Luxury / Editorial": "luxury-editorial",
+  "Local Business / Trust-first": "local-trust",
+  "Creative / Portfolio-style": "creative-portfolio",
+};
+
+export const TYPOGRAPHY_FEEL_VISUALS: Record<
+  (typeof TYPOGRAPHY_FEEL_OPTIONS)[number],
+  string
+> = {
+  "Modern and clean": "modern-clean",
+  "Elegant and premium": "elegant-premium",
+  "Bold and strong": "bold-strong",
+  "Friendly and approachable": "friendly-approachable",
+  "Technical and minimal": "technical-minimal",
+  "Follow existing brand fonts": "follow-brand",
+  "Let CrecyStudio choose": "studio-choose",
+};
+
+export const IMAGERY_DIRECTION_VISUALS: Record<
+  (typeof IMAGERY_DIRECTION_OPTIONS)[number],
+  string
+> = {
+  "Real photography": "real-photo",
+  "Stock photography": "stock-photo",
+  "Founder/team photos": "person",
+  "Product/service photos": "product",
+  "Before/after images": "before-after",
+  Icons: "icons",
+  Illustrations: "illustration",
+  "App screenshots/mockups": "phone",
+  "Minimal imagery": "minimal",
+};
+
 export const CONTROL_LEVEL_OPTIONS: {
   value: DesignControlLevel;
   label: string;

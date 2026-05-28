@@ -12,9 +12,17 @@ import {
   CONTENT_TONE_OPTIONS,
   CONTROL_LEVEL_OPTIONS,
   IMAGERY_DIRECTION_OPTIONS,
+  IMAGERY_DIRECTION_VISUALS,
   TYPOGRAPHY_FEEL_OPTIONS,
+  TYPOGRAPHY_FEEL_VISUALS,
   VISUAL_STYLE_OPTIONS,
+  VISUAL_STYLE_VISUALS,
 } from "@/lib/designDirection";
+import {
+  ImageryGlyph,
+  StyleSketch,
+  TypeSample,
+} from "./design-direction-visuals";
 
 type Props = {
   initial: WebsiteDesignDirection;
@@ -44,6 +52,7 @@ function PillSelect<T extends string>({
   multi = false,
   max,
   ariaLabel,
+  renderVisual,
 }: {
   options: readonly T[];
   value: T[] | T;
@@ -51,6 +60,10 @@ function PillSelect<T extends string>({
   multi?: boolean;
   max?: number;
   ariaLabel: string;
+  // Optional visual rendered to the left of each pill's label. Used by
+  // visual-style / typography / imagery options to give the client an
+  // actual idea of what each choice looks like instead of just text.
+  renderVisual?: (option: T) => React.ReactNode;
 }) {
   const isSelected = (option: T) =>
     multi ? (value as T[]).includes(option) : value === option;
@@ -58,6 +71,7 @@ function PillSelect<T extends string>({
     <div role="group" aria-label={ariaLabel} style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
       {options.map((option) => {
         const selected = isSelected(option);
+        const visual = renderVisual?.(option);
         return (
           <button
             key={option}
@@ -84,9 +98,13 @@ function PillSelect<T extends string>({
               fontWeight: selected ? 700 : 500,
               cursor: "pointer",
               transition: "all 120ms ease",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: visual ? 8 : 0,
             }}
           >
-            {option}
+            {visual}
+            <span>{option}</span>
           </button>
         );
       })}
@@ -435,6 +453,7 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit, 
           value={visualStyle}
           onChange={(v) => setVisualStyle(v as string)}
           ariaLabel="Visual style"
+          renderVisual={(opt) => <StyleSketch sketch={VISUAL_STYLE_VISUALS[opt]} />}
         />
       </div>
 
@@ -487,6 +506,7 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit, 
           value={typographyFeel}
           onChange={(v) => setTypographyFeel(v as string)}
           ariaLabel="Typography feel"
+          renderVisual={(opt) => <TypeSample sample={TYPOGRAPHY_FEEL_VISUALS[opt]} />}
         />
       </div>
 
@@ -499,6 +519,7 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit, 
           onChange={(v) => setImageryDirection(v as string[])}
           multi
           ariaLabel="Imagery direction"
+          renderVisual={(opt) => <ImageryGlyph glyph={IMAGERY_DIRECTION_VISUALS[opt]} />}
         />
       </div>
 
