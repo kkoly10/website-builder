@@ -121,6 +121,11 @@
     "rightsReserved": "Todos los derechos reservados.",
     "links": {
       "aria": "Pie de página",
+      "columnServices": "Servicios",
+      "columnStudio": "Estudio",
+      "columnResources": "Recursos",
+      "columnGetStarted": "Comenzar",
+      "columnLegal": "Legal",
       "websites": "Sitios web",
       "ecommerce": "E-commerce",
       "systems": "Sistemas",
