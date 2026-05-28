@@ -82,9 +82,9 @@ Translations (every text change must be reflected here):
 
 ---
 
-## Task 1 — Fix the "premium concept review" broken promise
+## Task 1 — Fix the "premium concept review" broken promise ✅ DONE
 
-**Status:** standalone, do FIRST (independent commit)
+**Status:** ✅ shipped (standalone commit)
 **Effort:** 10 minutes
 **Why:** integrity — the form currently promises *"I want to compare up to
 2 visual directions before full build,"* and the system delivers nothing of

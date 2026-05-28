@@ -173,7 +173,8 @@ export const CONTROL_LEVEL_OPTIONS: {
   {
     value: "premium_concept_review",
     label: "Premium concept review",
-    description: "I want to compare up to 2 visual directions before full build.",
+    description:
+      "I want extra design depth and a more polished concept handoff before the full build.",
     recommendedTier: "Premium only",
   },
 ];
