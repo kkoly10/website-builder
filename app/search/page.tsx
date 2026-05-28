@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 // Site search fallback. We don't have a built-in search index — for a
@@ -8,11 +9,17 @@ import { redirect } from "next/navigation";
 // validates that the target URL resolves before enabling the
 // sitelinks searchbox on brand SERPs. We 302 to Google's `site:`
 // query so users land on a real result page.
-//
-// Returns 404 when no query is provided — prevents accidental
-// indexing of /search itself as a thin page.
 
 export const dynamic = "force-dynamic";
+
+// Noindex/nofollow on the route itself — the SearchAction validator
+// hits this URL but we don't want it appearing as a thin landing
+// page in search results, and we don't want crawlers following the
+// outbound Google `site:` redirect (which would just bounce them
+// back to our own pages they've already indexed).
+export const metadata: Metadata = {
+  robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
+};
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -34,9 +41,6 @@ export default async function SearchRedirectPage({
   const sp = await searchParams;
   const query = pickParam(sp, "q").trim();
   if (!query) {
-    // 404 keeps an empty /search out of the index; Google's
-    // SearchAction validator tests with a query string so this is
-    // fine for the validator path.
     return (
       <main className="container section">
         <h1 className="h1">Search</h1>
