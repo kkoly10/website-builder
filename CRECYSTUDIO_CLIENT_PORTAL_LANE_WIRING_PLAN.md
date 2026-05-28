@@ -809,6 +809,21 @@ operating rule):**
   matches schema field order (cosmetic; runtime didn't care)
 - 3 new tests for the indicative flag (45 tests total, all green)
 
+**Round 3 — production DB migration (caught by E2E):**
+- E2E against production immediately surfaced what lint+build+45 unit
+  tests had missed: the Postgres `project_type_enum` doesn't include
+  `client_portal`. Submit-estimate returned HTTP 500 with
+  `invalid input value for enum project_type_enum: "client_portal"`.
+- Fix: `supabase/migrations/20260528_add_client_portal_to_project_type_enum.sql`
+  — additive + idempotent, mirrors the 20260512 ai_integration
+  pattern exactly. **Must be applied to production Supabase before
+  the lane works end-to-end.**
+- **Lesson for the recon-before-build rule:** when adding a new
+  `ProjectType` union value, the database `project_type_enum` must
+  be extended alongside the TypeScript union. Earlier plans
+  (v1/v2/v2.1) didn't flag this. Future plans should include a
+  "database schema check" line item whenever a TS enum is touched.
+
 **Deferred (acknowledged, not fixed in this lane work):**
 - Structured permissions matrix UI (row × column × CRUD grid). The
   textarea where clients write the matrix in prose is the weakest

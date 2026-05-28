@@ -72,12 +72,15 @@ type MessageSummary = {
   lastRole: "client" | "studio" | "internal" | null;
 };
 
-export type ProjectType =
-  | "website"
-  | "web_app"
-  | "automation"
-  | "ecommerce"
-  | "rescue";
+// Use the canonical LeadProjectType from lib/workflows/types so admin
+// surfaces correctly recognize all lead categories (not just workflow lanes).
+// Previously a local 5-value subset silently coerced "client_portal" and
+// "ai_integration" leads into "website" via coerceProjectType, breaking
+// admin pipeline routing for those lanes.
+import { LEAD_PROJECT_TYPES, type LeadProjectType } from "@/lib/workflows/types";
+// Re-export under the historic name so existing consumers
+// (`import { ProjectType } from "@/lib/adminProjectData"`) keep working.
+export type ProjectType = LeadProjectType;
 
 export type AdminProjectData = {
   quoteId: string;
@@ -205,17 +208,13 @@ function summarizeMessages(messages: PortalMessage[]): MessageSummary {
   };
 }
 
-const VALID_PROJECT_TYPES: ProjectType[] = [
-  "website",
-  "web_app",
-  "automation",
-  "ecommerce",
-  "rescue",
-];
-
-function coerceProjectType(value: unknown): ProjectType {
-  if (typeof value === "string" && (VALID_PROJECT_TYPES as string[]).includes(value)) {
-    return value as ProjectType;
+// Use the canonical lead set from lib/workflows/types so all 7 categories
+// (6 workflow lanes + ai_integration leads) flow through correctly. Falling
+// back to "website" still happens for genuinely unknown strings — that's
+// the safety net, not a feature.
+function coerceProjectType(value: unknown): LeadProjectType {
+  if (typeof value === "string" && (LEAD_PROJECT_TYPES as readonly string[]).includes(value)) {
+    return value as LeadProjectType;
   }
   return "website";
 }

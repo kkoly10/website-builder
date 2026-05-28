@@ -8,6 +8,7 @@ import { resolveQuoteAccess, sameNormalizedEmail } from "@/lib/accessControl";
 import { pickPreferredLocale } from "@/lib/preferredLocale";
 import { ensureCustomerPortalForQuoteId } from "@/lib/customerPortal";
 import { captureBackgroundError } from "@/lib/sentry";
+import { LEAD_PROJECT_TYPES, type LeadProjectType } from "@/lib/workflows/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,21 +27,14 @@ function firstString(...vals: any[]) {
   return "";
 }
 
-const PROJECT_TYPE_VALUES = [
-  "website",
-  "web_app",
-  "automation",
-  "ecommerce",
-  "rescue",
-  "ai_integration",
-  "client_portal",
-] as const;
-type ProjectType = (typeof PROJECT_TYPE_VALUES)[number];
-
-function readProjectType(...vals: unknown[]): { value: ProjectType; explicit: boolean } {
+// Uses the canonical LEAD_PROJECT_TYPES from lib/workflows/types so this
+// validator stays in sync with the rest of the codebase. Previously a local
+// copy of the array drifted from the canonical set and silently downgraded
+// unknown values.
+function readProjectType(...vals: unknown[]): { value: LeadProjectType; explicit: boolean } {
   for (const v of vals) {
-    if (typeof v === "string" && (PROJECT_TYPE_VALUES as readonly string[]).includes(v)) {
-      return { value: v as ProjectType, explicit: true };
+    if (typeof v === "string" && (LEAD_PROJECT_TYPES as readonly string[]).includes(v)) {
+      return { value: v as LeadProjectType, explicit: true };
     }
   }
   return { value: "website", explicit: false };
