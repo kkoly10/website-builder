@@ -393,6 +393,114 @@ export const RESCUE_WORKFLOW_TEMPLATE: WorkflowTemplate = {
   },
 };
 
+// ─── Client Portal ───────────────────────────────────────────────────────
+
+export const CLIENT_PORTAL_WORKFLOW_TEMPLATE: WorkflowTemplate = {
+  projectType: "client_portal",
+  label: "Client Portal",
+  directionType: "portal_direction",
+  milestones: [
+    { key: "discovery_complete", title: "Discovery complete", owner: "studio", sortOrder: 10 },
+    { key: "portal_direction_approved", title: "Portal direction approved", owner: "client", sortOrder: 20 },
+    { key: "roles_permissions_locked", title: "Roles & permissions locked", owner: "client", sortOrder: 30 },
+    { key: "integration_plan_confirmed", title: "Integration plan confirmed", owner: "client", sortOrder: 40 },
+    { key: "ux_flow_approved", title: "Wireframes / UX flow approved", owner: "client", sortOrder: 50 },
+    { key: "foundation_built", title: "Portal foundation built", owner: "studio", sortOrder: 60 },
+    { key: "features_built", title: "Core features built", owner: "studio", sortOrder: 70 },
+    { key: "integrations_connected", title: "Integrations connected", owner: "studio", sortOrder: 80 },
+    { key: "qa_complete", title: "QA + audit trail testing complete", owner: "studio", sortOrder: 90 },
+    { key: "uat_complete", title: "Client UAT complete", owner: "client", sortOrder: 100 },
+    { key: "production_launch", title: "Production launch", owner: "studio", sortOrder: 110 },
+    { key: "handoff_support", title: "Handoff & support", owner: "studio", sortOrder: 120 },
+  ],
+  requiredActions: [
+    {
+      key: "complete_portal_direction",
+      title: "Complete Portal Direction",
+      description:
+        "Confirm portal purpose, access type, roles, permissions, features, integrations, multi-tenancy, compliance, audit trail, notifications, screens, auth, branding, and success metric.",
+      owner: "client",
+      status: "waiting_on_client",
+      unlocksMilestone: "portal_direction_approved",
+    },
+    {
+      key: "approve_roles_permissions",
+      title: "Approve roles & permissions matrix",
+      description: "Sign off on the role-by-permission grid we'll build against.",
+      owner: "client",
+      status: "not_started",
+      unlocksMilestone: "roles_permissions_locked",
+    },
+    {
+      key: "approve_integrations_plan",
+      title: "Approve integrations plan",
+      description: "Sign off on the list of external systems and the read/write/sync direction for each.",
+      owner: "client",
+      status: "not_started",
+      unlocksMilestone: "integration_plan_confirmed",
+    },
+    {
+      key: "approve_wireframes",
+      title: "Approve UX flow / wireframes",
+      description: "Review the main screens and workflow sequence before full development.",
+      owner: "client",
+      status: "not_started",
+      unlocksMilestone: "ux_flow_approved",
+    },
+    {
+      key: "complete_uat",
+      title: "Complete UAT testing",
+      description: "Test the portal using real scenarios and submit issues in one complete batch.",
+      owner: "client",
+      status: "not_started",
+      unlocksMilestone: "uat_complete",
+    },
+    {
+      key: "approve_production_launch",
+      title: "Approve production launch",
+      description: "Confirm the portal is ready for production use.",
+      owner: "client",
+      status: "not_started",
+      unlocksMilestone: "production_launch",
+    },
+  ],
+  launchChecks: [
+    { key: "production_env", title: "Production environment configured", owner: "studio" },
+    { key: "auth_permissions", title: "Authentication & per-role permissions tested", owner: "studio" },
+    { key: "data_isolation", title: "Multi-tenant data isolation tested (if applicable)", owner: "studio" },
+    { key: "audit_trail", title: "Audit trail logged for sensitive actions", owner: "studio" },
+    { key: "integrations", title: "All integrations tested in production", owner: "studio" },
+    { key: "compliance_review", title: "Compliance requirements verified", owner: "studio" },
+    { key: "email_notifications", title: "Email/in-app notifications tested", owner: "studio" },
+    { key: "admin_access", title: "Admin access + role escalation tested", owner: "studio" },
+    { key: "handoff_docs", title: "Handoff documentation provided", owner: "studio" },
+  ],
+  direction: {
+    type: "portal_direction",
+    status: "waiting_on_client",
+    // Key order matches PORTAL_DIRECTION_SCHEMA.fields order so reading
+    // this payload alongside the schema reads naturally. Runtime doesn't
+    // care about object key order — this is purely for code clarity.
+    payload: {
+      portalPurpose: "",
+      accessType: "",
+      userRoles: [],
+      rolePermissions: "",
+      authMethod: "",
+      keyFeatures: [],
+      screenInventory: [],
+      integrations: [],
+      integrationFlows: "",
+      multiTenancyModel: "",
+      complianceRequirements: [],
+      auditTrailEvents: "",
+      notificationsEvents: "",
+      brandingRequirements: [],
+      successMetric: "",
+    },
+  },
+};
+
 // ─── Unified export ──────────────────────────────────────────────────────
 
 export const WORKFLOW_TEMPLATES: Record<ProjectType, WorkflowTemplate> = {
@@ -401,6 +509,7 @@ export const WORKFLOW_TEMPLATES: Record<ProjectType, WorkflowTemplate> = {
   automation: AUTOMATION_WORKFLOW_TEMPLATE,
   ecommerce: ECOMMERCE_WORKFLOW_TEMPLATE,
   rescue: RESCUE_WORKFLOW_TEMPLATE,
+  client_portal: CLIENT_PORTAL_WORKFLOW_TEMPLATE,
 };
 
 export function getWorkflowTemplate(projectType: ProjectType): WorkflowTemplate {

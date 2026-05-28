@@ -9,7 +9,8 @@ export type PricingLane =
   | "ecommerce"
   | "web_app"
   | "rescue"
-  | "ai_integration";
+  | "ai_integration"
+  | "client_portal";
 
 // Normalize a stored lane string to the canonical PricingLane. Accepts
 // the legacy "ops" value (returns "automation") so old persisted data
@@ -17,7 +18,14 @@ export type PricingLane =
 // not in the canonical set falls back to "website".
 export function normalizePricingLane(lane: string | null | undefined): PricingLane {
   if (lane === "ops" || lane === "automation") return "automation";
-  if (lane === "website" || lane === "ecommerce" || lane === "web_app" || lane === "rescue" || lane === "ai_integration") {
+  if (
+    lane === "website" ||
+    lane === "ecommerce" ||
+    lane === "web_app" ||
+    lane === "rescue" ||
+    lane === "ai_integration" ||
+    lane === "client_portal"
+  ) {
     return lane;
   }
   return "website";
@@ -64,6 +72,35 @@ export type RescueTierKey =
   | "basic_rescue"
   | "full_rescue_sprint"
   | "custom_rescue_scope";
+
+// Phase 4.x — client portal lane. Tier names match the landing page
+// at /client-portals (Portal add-on / Standalone / Enterprise). Input
+// field values mirror PortalIntakeClient's form shape so the engine
+// takes raw form values without a mapping layer in between.
+export type PortalTierKey =
+  | "portal_add_on"
+  | "standalone_portal"
+  | "enterprise_portal"
+  | "custom_portal_scope";
+
+export type PortalPricingInput = {
+  // Mirrors the PortalIntakeClient form constants directly.
+  accessType: string;           // "clients" | "team" | "both" (form free-string)
+  userCount: string;            // USER_COUNT_OPTIONS: "under-25" | "25-100" | "100-500" | "500-2000" | "2000-plus"
+  features: string[];           // FEATURE_OPTIONS multi-select
+  integrations: string[];       // free-string multi-select
+  compliance: string[];         // multi-select (empty = no compliance)
+  budget: string;               // BUDGET_OPTIONS: "15k-25k" | "25k-50k" | "50k-100k" | "100k-plus" | "guidance" | ""
+  budgetFlexibility: string;    // form value
+  hasTechTeam: string;          // TECH_TEAM_OPTIONS: "yes" | "no" | "one-person"
+  // Signals not currently captured by the intake form — default false at
+  // intake time. Admin can refine tier later once the portal_direction
+  // form surfaces multi-tenant / white-label / custom-domain decisions.
+  isMultiTenant?: boolean;
+  hasWhiteLabel?: boolean;
+  hasCustomDomain?: boolean;
+  isAddOn?: boolean;
+};
 
 export type PricingReasonImpact = "supporting" | "upward" | "custom" | "fit";
 

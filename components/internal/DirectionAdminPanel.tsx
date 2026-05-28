@@ -44,6 +44,7 @@ const TITLE_BY_TYPE: Record<GenericDirection["type"], string> = {
   workflow_direction: "Workflow Direction",
   store_direction: "Store Direction",
   rescue_diagnosis: "Rescue Diagnosis",
+  portal_direction: "Portal Direction",
 };
 
 export default function DirectionAdminPanel({

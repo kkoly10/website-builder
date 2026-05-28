@@ -24,6 +24,13 @@ export type FieldDef = {
   // Per-field constraints
   maxItems?: number;
   maxLength?: number;
+  // Optional section header. When a field's section differs from the
+  // previous field's section, DirectionForm renders a visible heading
+  // before the field. Lets long schemas (e.g. PORTAL_DIRECTION_SCHEMA
+  // with 15 fields) group into logical clusters instead of feeling like
+  // a wall of inputs. Backward-compatible — schemas without sections
+  // render exactly as before.
+  section?: string;
 };
 
 export type DirectionSchema = {
@@ -255,6 +262,206 @@ export const RESCUE_DIAGNOSIS_SCHEMA: DirectionSchema = {
   ],
 };
 
+// ─── Portal Direction (client_portal) ────────────────────────────────────
+
+const PORTAL_ACCESS_TYPES = [
+  "Clients only",
+  "Team only",
+  "Both clients and team",
+  "External partners",
+] as const;
+
+const PORTAL_KEY_FEATURES = [
+  "Payments / Stripe",
+  "File uploads + storage",
+  "Milestones + timeline",
+  "Messaging",
+  "Scheduling / booking",
+  "Custom forms",
+  "Multi-tenant data isolation",
+  "White-label branding",
+] as const;
+
+const PORTAL_MULTI_TENANCY_OPTIONS = [
+  "Single tenant (one organization)",
+  "Shared data across all users",
+  "Multi-tenant with strict per-org data isolation",
+] as const;
+
+const PORTAL_COMPLIANCE_OPTIONS = [
+  "GDPR",
+  "HIPAA",
+  "SOC 2",
+  "Accessibility (WCAG 2.1 AA)",
+  "PCI DSS",
+  "Other",
+] as const;
+
+const PORTAL_AUTH_METHOD_OPTIONS = [
+  "Email + password",
+  "Magic link (passwordless email)",
+  "Single sign-on (SSO / Google Workspace / Microsoft 365)",
+  "Social login (Google / Apple)",
+  "Invite-only (admin creates accounts)",
+  "Not sure — recommend the right one",
+] as const;
+
+const PORTAL_BRANDING_OPTIONS = [
+  "Custom logo",
+  "Custom colors",
+  "Custom domain (e.g. portal.yourdomain.com)",
+  "Custom email-from address",
+  "Full white-label (no CrecyStudio attribution)",
+  "Match existing brand guidelines",
+] as const;
+
+export const PORTAL_DIRECTION_SCHEMA: DirectionSchema = {
+  fields: [
+    {
+      key: "portalPurpose",
+      label: "What does this portal do?",
+      type: "textarea",
+      required: true,
+      helpText: "One paragraph: the portal's core job and the problem it solves.",
+      maxLength: 4000,
+      section: "Identity",
+    },
+    {
+      key: "accessType",
+      label: "Who has access?",
+      type: "select",
+      required: true,
+      options: PORTAL_ACCESS_TYPES,
+      section: "Access & roles",
+    },
+    {
+      key: "userRoles",
+      label: "User roles",
+      type: "string-list",
+      required: true,
+      helpText:
+        "Distinct roles (e.g. Admin, Reviewer, Billing-only, External Partner). Separate from raw permissions — combine when a user has multiple roles.",
+      maxItems: 8,
+      section: "Access & roles",
+    },
+    {
+      key: "rolePermissions",
+      label: "What can each role do?",
+      type: "textarea",
+      required: true,
+      helpText:
+        "High-level permissions per role. Example: \"Admin: full access. Reviewer: read + comment on milestones. Billing-only: invoices + payment only.\" The detailed matrix gets locked during build.",
+      maxLength: 4000,
+      section: "Access & roles",
+    },
+    {
+      key: "authMethod",
+      label: "How do users sign in?",
+      type: "select",
+      required: true,
+      options: PORTAL_AUTH_METHOD_OPTIONS,
+      helpText:
+        "Drives the auth provider build + how onboarding flows work for new users.",
+      section: "Access & roles",
+    },
+    {
+      key: "keyFeatures",
+      label: "Must-have features",
+      type: "pills-multi",
+      required: true,
+      options: PORTAL_KEY_FEATURES,
+      helpText: "Pick the features the portal can't ship without.",
+      maxItems: 8,
+      section: "Features & screens",
+    },
+    {
+      key: "screenInventory",
+      label: "Main screens / pages",
+      type: "string-list",
+      required: true,
+      helpText:
+        "List the main screens users will see (e.g. Dashboard, Projects, Files, Messages, Billing, Settings). The IA gets refined during wireframes; this is the starting set.",
+      maxItems: 15,
+      section: "Features & screens",
+    },
+    {
+      key: "integrations",
+      label: "External systems to connect",
+      type: "string-list",
+      helpText:
+        "CRM, accounting, file storage, Airtable/Sheets/Postgres — what the portal needs to read or write to.",
+      maxItems: 12,
+      section: "Integrations",
+    },
+    {
+      key: "integrationFlows",
+      label: "For each integration: read, write, or sync?",
+      type: "textarea",
+      helpText:
+        "For each integration above, note direction (portal → external, external → portal, or two-way sync) and frequency (real-time, hourly, daily).",
+      maxLength: 3000,
+      section: "Integrations",
+    },
+    {
+      key: "multiTenancyModel",
+      label: "Data isolation model",
+      type: "select",
+      required: true,
+      options: PORTAL_MULTI_TENANCY_OPTIONS,
+      helpText:
+        "For B2B portals serving multiple client organizations, strict per-org isolation is the boutique-tier default and what compliance frameworks require.",
+      section: "Compliance & data",
+    },
+    {
+      key: "complianceRequirements",
+      label: "Compliance / regulatory needs",
+      type: "pills-multi",
+      options: PORTAL_COMPLIANCE_OPTIONS,
+      helpText: "Pick all that apply. Each adds specific build requirements.",
+      maxItems: 6,
+      section: "Compliance & data",
+    },
+    {
+      key: "auditTrailEvents",
+      label: "What actions need an audit trail?",
+      type: "textarea",
+      helpText:
+        "What user/admin actions should be logged for compliance, troubleshooting, or accountability. Example: \"all payments, role changes, file deletions, login from new IP.\"",
+      maxLength: 2000,
+      section: "Compliance & data",
+    },
+    {
+      key: "notificationsEvents",
+      label: "What triggers notifications?",
+      type: "textarea",
+      helpText:
+        "What events generate email or in-app alerts. Example: \"milestone completed, file uploaded, message received, payment failed.\"",
+      maxLength: 2000,
+      section: "Compliance & data",
+    },
+    {
+      key: "brandingRequirements",
+      label: "Branding scope",
+      type: "pills-multi",
+      options: PORTAL_BRANDING_OPTIONS,
+      helpText:
+        "Pick what applies. Full white-label and custom domain typically lift the project into the Standalone or Enterprise tier.",
+      maxItems: 6,
+      section: "Branding",
+    },
+    {
+      key: "successMetric",
+      label: "How will you know it's working?",
+      type: "textarea",
+      required: true,
+      helpText:
+        "What changes about your operation when this portal is live? Concrete is better than vague.",
+      maxLength: 2000,
+      section: "Success",
+    },
+  ],
+};
+
 // ─── Resolver ────────────────────────────────────────────────────────────
 
 export const DIRECTION_SCHEMA_BY_TYPE: Partial<Record<DirectionType, DirectionSchema>> = {
@@ -262,6 +469,7 @@ export const DIRECTION_SCHEMA_BY_TYPE: Partial<Record<DirectionType, DirectionSc
   workflow_direction: WORKFLOW_DIRECTION_SCHEMA,
   store_direction: STORE_DIRECTION_SCHEMA,
   rescue_diagnosis: RESCUE_DIAGNOSIS_SCHEMA,
+  portal_direction: PORTAL_DIRECTION_SCHEMA,
   // design_direction intentionally absent — handled by Phase 2A's
   // WebsiteDesignDirection components, not the generic flow.
 };
