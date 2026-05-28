@@ -362,6 +362,345 @@ export const BLOG_POSTS: BlogPost[] = [
     tags: ["AI integration", "RAG"],
     readingMinutes: 9,
   },
+  {
+    slug: "ai-agents-vs-ai-copilots",
+    title: "AI agents vs AI copilots: when to build each one",
+    description:
+      "An AI agent acts on its own. An AI copilot suggests and waits for confirm. Most projects are wrongly scoped as agents when copilots would ship better — how to tell which fits.",
+    headline: "AI agents vs AI copilots: when each one actually makes sense",
+    publishedAt: "2026-05-25",
+    lead:
+      "There's a clean line between an AI agent and an AI copilot — but vendors blur it constantly because \"agent\" sounds more impressive in a pitch deck. The distinction matters a lot for what you actually build, how you guardrail it, and how often it costs you money or trust when it goes wrong. Here's how to tell which one your project needs.",
+    body: [
+      { type: "h2", text: "The one-line difference" },
+      {
+        type: "p",
+        text:
+          "A copilot suggests; you confirm. An agent acts; you review (maybe). That's it. Everything else — the model choice, the tools it has access to, the prompts — is downstream of that single question.",
+      },
+      {
+        type: "p",
+        text:
+          "We've shipped both for clients. The shape of the engagement is wildly different. A copilot can ship in weeks because the surface is just \"draft + display + accept/reject button.\" An agent takes months because every action it takes needs guardrails, audit, rollback, and confidence gates. Wrong choice early means either an overbuilt copilot (you paid for autonomy you don't use) or a fragile agent (it acts without enough oversight and breaks production).",
+      },
+      { type: "h2", text: "The four levels of autonomy, plainly" },
+      {
+        type: "list",
+        items: [
+          "Level 1 — Read-only: the AI summarizes, classifies, drafts. A human reads the output and decides what to do. Lowest risk. Most projects belong here.",
+          "Level 2 — One-click confirm: the AI prepares an action (send email, update CRM, generate invoice). A human clicks Approve. The AI never acts unilaterally.",
+          "Level 3 — Confidence-gated autonomy: above a confidence threshold, the AI acts. Below it, the action goes to a human queue. Production AI built right.",
+          "Level 4 — Fully autonomous: the AI acts without a gate. Used only when the cost-of-wrong is genuinely low and the action is reversible.",
+        ],
+      },
+      { type: "h2", text: "When agents are the right call" },
+      {
+        type: "p",
+        text:
+          "Agents (Levels 3-4) make sense when the action is high-volume, low-cost-of-wrong, and reversible. Sorting incoming support tickets into queues. Tagging photos by content type. Triaging emails by urgency. The worst case for any individual action is \"a human re-sorts one item\" — not \"the customer churned\" or \"we owe a refund.\"",
+      },
+      {
+        type: "p",
+        text:
+          "Two of our own products run agents. Fleiko has an AI copilot that flags vehicle issues (Level 2 — suggests, fleet manager confirms). Proveo has a confidence-gated agent that processes contractor photo submissions (Level 3 — high-confidence auto-approves, low-confidence routes to human review). Techdesk auto-resolves IT tickets via a six-gate engine (Level 3 with strict gating). All three are agents because the volume justifies the engineering investment and the actions are individually low-stakes.",
+      },
+      { type: "h2", text: "When copilots are the right call" },
+      {
+        type: "p",
+        text:
+          "Copilots (Levels 1-2) win for anything customer-facing, anything with money / identity / legal consequence, and anything where one wrong action erodes trust. A copilot that drafts a customer reply is great; an agent that auto-sends customer replies will, eventually, send something that costs you a relationship.",
+      },
+      {
+        type: "p",
+        text:
+          "If the action is rare or high-stakes, the engineering investment for confidence gating + audit + rollback doesn't pay off — a human review step is cheaper. Copilot wins on cost-per-feature and on trust.",
+      },
+      { type: "h2", text: "The cost dimension nobody mentions" },
+      {
+        type: "p",
+        text:
+          "Agents that fail in production are expensive to debug. Every misfire pulls engineering time, customer support time, and sometimes refund processing. The team has to maintain prompt evals, drift detection, alerting. The total cost-of-ownership is meaningfully higher than running a copilot.",
+      },
+      {
+        type: "p",
+        text:
+          "Copilots that fail just get ignored. A user clicks Reject on a bad suggestion. The output never reached anyone but the user who asked for it. The cost of a failed copilot suggestion is approximately zero.",
+      },
+      { type: "h2", text: "The scoping question we ask" },
+      {
+        type: "p",
+        text:
+          "Write out the three highest-stakes outputs your AI could plausibly produce. Imagine each one happening in production with no human gate. If any of those three would be a real problem — refund-triggering, customer-relationship-damaging, brand-damaging — you need a copilot, or at minimum a confidence gate. Agent territory only when all three are \"would be a minor inconvenience at worst.\"",
+      },
+      {
+        type: "p",
+        text:
+          "Most clients who tell us they want \"an AI agent\" walk through this and realize they want a copilot. That's fine — copilots ship faster and cost less, and they upgrade to an agent later once the data tells them the agent is safe.",
+      },
+      {
+        type: "callout",
+        text:
+          "Scoping an AI build and not sure whether you need an agent or a copilot? Free 20-minute discovery call — we'll walk through your specific use case and tell you honestly which one fits.",
+      },
+    ],
+    keywords: [
+      "AI agents vs AI copilots",
+      "AI agent development",
+      "AI copilot development",
+      "production AI",
+      "autonomous AI",
+      "AI scoping",
+    ],
+    tags: ["AI integration", "AI agents"],
+    readingMinutes: 7,
+  },
+  {
+    slug: "local-seo-dmv-2026-playbook",
+    title: "Local SEO for DMV small businesses: 2026 playbook",
+    description:
+      "A practical 2026 walkthrough for ranking on Google in the DMV — Google Business Profile setup, NAP consistency, on-site schema, reviews, and the local-citation strategy that actually moves rankings.",
+    headline: "Local SEO for DMV small businesses: the 2026 playbook",
+    publishedAt: "2026-05-27",
+    lead:
+      "Local SEO has gotten less mysterious in 2026. The mechanics that move you in the local pack are well-documented; the work is doing them, consistently, with a real business behind them. Here's the playbook we run for DMV small businesses — and the same checklist we use on our own site.",
+    body: [
+      { type: "h2", text: "Why local SEO is the highest-ROI channel for DMV small businesses" },
+      {
+        type: "p",
+        text:
+          "Roughly half of all Google searches have local intent — and that share is higher for the kinds of services DMV small businesses sell. Someone searching \"web designer Stafford VA\" or \"accountant in Bethesda\" is closer to buying than someone searching \"how websites work.\" The local pack (the map + three businesses at the top of a local query) is the most valuable real estate Google gives you, and the rules for getting in are deterministic — not an algorithm guessing game.",
+      },
+      { type: "h2", text: "The three pillars of local pack ranking" },
+      {
+        type: "p",
+        text:
+          "Google's local algorithm is publicly described as a function of three factors: proximity, relevance, prominence. Most of the work is on the second two — proximity you mostly can't change without moving.",
+      },
+      { type: "h3", text: "Proximity" },
+      {
+        type: "p",
+        text:
+          "How close your registered business address is to the searcher. For a Stafford-based studio, Stafford searchers see us higher than Richmond searchers do. You can't fake this; trying to (P.O. boxes in other cities) gets flagged. The work is being honest about where you are and tuning the other two pillars.",
+      },
+      { type: "h3", text: "Relevance" },
+      {
+        type: "p",
+        text:
+          "How well your Google Business Profile category, services, and on-site content match the user's query. \"Web designer\" needs to appear on your GBP, your site title, your homepage h1, your service page metadata. Specificity wins: \"AI integration\" is better than \"technology consulting.\"",
+      },
+      { type: "h3", text: "Prominence" },
+      {
+        type: "p",
+        text:
+          "How well-known you are across the web — measured by reviews, citations on local directories, backlinks from local press, and the consistency of your name/address/phone (NAP) across all of those. Prominence is the slowest pillar to build and the most under-invested in.",
+      },
+      { type: "h2", text: "Pillar 1 — Google Business Profile, set up correctly" },
+      {
+        type: "list",
+        items: [
+          "Name: legal business name, no keyword stuffing (\"CrecyStudio — Best Web Designer in Stafford\" gets you suspended).",
+          "Primary category: the most specific one Google offers. \"Website designer\" beats \"Marketing agency\" for a web studio.",
+          "Address: real, verifiable. Service-area businesses can hide the street address but the locality has to be real.",
+          "Phone: same number you use everywhere else. NAP consistency starts here.",
+          "Hours: accurate. Google penalizes drift between listed and actual hours.",
+          "Services: enumerate them, with descriptions. Each service slot is a relevance signal.",
+          "Photos: at least 10. Studio shots, founder photo, work-in-progress. Google reads the EXIF metadata and uses image content as a relevance signal.",
+          "Posts: weekly is ideal, monthly is acceptable. Treat it as a freshness signal.",
+        ],
+      },
+      { type: "h2", text: "Pillar 2 — NAP consistency across the web" },
+      {
+        type: "p",
+        text:
+          "Your business name, address, and phone number must be IDENTICAL — to the punctuation — everywhere it appears on the web. Google cross-references these to build confidence that you're a real business. A mismatch (\"CrecyStudio\" vs. \"Crecy Studio\" vs. \"Crecy Studio LLC\") splits the signal and dilutes prominence.",
+      },
+      {
+        type: "p",
+        text:
+          "The platforms that matter, in roughly descending order of weight:",
+      },
+      {
+        type: "list",
+        items: [
+          "Google Business Profile (the canonical source)",
+          "Bing Places (Bing has ~7% search share — easy win)",
+          "Apple Maps Connect (Siri, Apple Maps results)",
+          "Facebook Business",
+          "LinkedIn Company Page",
+          "Yelp (matters more than you'd expect for certain categories)",
+          "Better Business Bureau (especially for B2B)",
+          "Industry directories (web design directories like Clutch, Sortlist, GoodFirms)",
+          "Local chambers of commerce + Chamber listing sites",
+        ],
+      },
+      {
+        type: "p",
+        text:
+          "Once aligned, do not change anything on any of them without changing all of them at once. Add a calendar reminder if your business is likely to rebrand or relocate.",
+      },
+      { type: "h2", text: "Pillar 3 — On-site signals" },
+      {
+        type: "list",
+        items: [
+          "LocalBusiness schema with PostalAddress + geo coordinates + serviceArea — Google reads this directly as a structured-data input.",
+          "Visible address in the footer, exactly matching the schema (Google cross-references visible content against structured data).",
+          "City + service page pattern: a dedicated page per city you serve (/locations/stafford-va, etc.) plus per-service pages with `serviceType` schema. Each page targets a (city × service) combination.",
+          "Local content in titles and h1s: \"Web design in Fredericksburg, VA\" beats generic \"Web design services.\"",
+          "Consistent internal linking: every service page should link to the locations index, and city pages should link to every service.",
+        ],
+      },
+      { type: "h2", text: "Pillar 4 — Reviews" },
+      {
+        type: "p",
+        text:
+          "Reviews are the single highest-CTR organic signal you can earn without buying ads. A business with star ratings in the local pack gets significantly more click-through than one without. The path:",
+      },
+      {
+        type: "list",
+        items: [
+          "Ask every completed-project client for a Google review. Email, not text — text feels pushier.",
+          "Make it stupid easy: include the direct review-write URL in the ask.",
+          "Don't filter (\"only ask the happy ones\"). Google detects review-gating and downweights it.",
+          "Schema.org aggregateRating + Review on your site backs up the GBP reviews — Google reads both.",
+          "Fake reviews are a domain-penalty risk. Don't.",
+        ],
+      },
+      { type: "h2", text: "Pillar 5 — Local citations and backlinks" },
+      {
+        type: "p",
+        text:
+          "Beyond the structured directories from Pillar 2, you want unstructured citations and backlinks from local press and topical authority sites. A mention in a Fredericksburg Patch article. A backlink from a local chamber site. A guest post on a regional industry blog. Each one adds a small amount of prominence; the cumulative effect is what moves you in the local pack over months, not days.",
+      },
+      { type: "h2", text: "The DMV-specific angle" },
+      {
+        type: "p",
+        text:
+          "Federal-adjacent buyers in the DMV search differently than the national average. They weight verifiable credentials more heavily (a LinkedIn profile, a real address, actual photos of a real person), and they often Google a vendor's name to do a basic background check before reaching out. That means your prominence work isn't just about ranking — it's about looking real to a buyer who's already considering you.",
+      },
+      {
+        type: "callout",
+        text:
+          "We run this playbook for our own site (the one you're reading) and for client engagements. If you want a local-SEO audit + the same setup for your business, the discovery call covers it — 20 minutes, no commitment.",
+      },
+    ],
+    keywords: [
+      "local SEO DMV",
+      "local SEO Stafford VA",
+      "Google Business Profile",
+      "NAP consistency",
+      "local pack ranking",
+      "DMV small business SEO",
+    ],
+    tags: ["Local SEO", "DMV"],
+    readingMinutes: 10,
+  },
+  {
+    slug: "web-design-vs-custom-web-app",
+    title: "Web design vs custom web app: knowing which you actually need",
+    description:
+      "Most projects start as \"a website\" but end up needing custom backend logic. Five questions that tell you which budget bracket you're in before you start shopping for a vendor.",
+    headline: "Web design vs custom web app: which one you actually need",
+    publishedAt: "2026-05-28",
+    lead:
+      "We get the same call almost every week: \"I need a new website.\" About 40% of the time, that's right — a marketing website is the right scope. The other 60% of the time, what the buyer actually needs is a custom web app, and they don't know it yet — until they're eight weeks into a \"website\" build and realize the contractor can't build the customer login flow they wanted. These five questions catch the mismatch early.",
+    body: [
+      { type: "h2", text: "The five questions" },
+      { type: "h3", text: "1. Does the site let a visitor do anything beyond fill in a contact form?" },
+      {
+        type: "p",
+        text:
+          "If visitors can book a calendar slot, place an order, submit a complex multi-step intake, see their own data, leave a review tied to an account — you're past marketing-website territory. A contact form is fine; anything involving the visitor's data or state is not.",
+      },
+      { type: "h3", text: "2. Is there ongoing data that changes after launch?" },
+      {
+        type: "p",
+        text:
+          "Marketing websites have content that changes via a CMS — pages, blog posts, occasional copy edits. Custom web apps have data that changes continuously — bookings being created, customer orders, inventory levels, support tickets. If launch is the start of the data lifecycle (not the end of the build), you need an app, not a website.",
+      },
+      { type: "h3", text: "3. Do you need user accounts and login?" },
+      {
+        type: "p",
+        text:
+          "Auth is the line. A website with login is a web app — period. Even a \"simple\" login flow drags in password resets, session management, account recovery, role permissions, GDPR / CCPA data handling. If you need users to log in for any reason, scope for app-level work, not marketing-site work.",
+      },
+      { type: "h3", text: "4. Will admins manage content via the site or via a separate tool?" },
+      {
+        type: "p",
+        text:
+          "Marketing websites use a CMS (Webflow, WordPress, Sanity) where admins edit content. Custom web apps have admin panels where staff manage live data — approve orders, mark tickets resolved, adjust user permissions. If you're describing the admin experience and it sounds more like \"my team uses this to run the business\" than \"my team edits copy here,\" you're in app territory.",
+      },
+      { type: "h3", text: "5. Are there workflow steps the system should handle automatically?" },
+      {
+        type: "p",
+        text:
+          "Marketing websites are stateless: a visitor lands, reads, leaves. Custom apps have flow: a customer signs up, triggers a welcome email, gets matched to a sales rep, schedules a call, the system reminds them at 24 hours, follows up post-call. If you're sketching multi-step workflows where the system carries state across steps, that's a web app.",
+      },
+      { type: "h2", text: "The decision matrix" },
+      {
+        type: "list",
+        items: [
+          "0-1 yes answers → marketing website. Scope a marketing-web vendor.",
+          "2-3 yes answers → web app territory. Scope a custom-web-app vendor; don't hire a pure marketing studio for this.",
+          "4-5 yes answers → definitely a web app. Marketing studios will either decline or bolt on a half-built app and bill you for the broken result.",
+        ],
+      },
+      { type: "h2", text: "Why this matters for cost" },
+      {
+        type: "p",
+        text:
+          "Marketing websites and custom web apps don't just cost different amounts — they cost different orders of magnitude. A well-built marketing website lands in the low five figures. A custom web app starts in the mid five figures and scales into six figures as the data model and workflows grow. If you're buying a $12k \"website\" but you actually need a $60k app, you'll either:",
+      },
+      {
+        type: "list",
+        items: [
+          "Get a $12k website that doesn't do what you need, and pay another vendor $60k to rebuild it from scratch six months later.",
+          "Pay scope-creep change orders as the gap becomes obvious, ending at $40-50k for a half-finished app.",
+          "Discover the mismatch on the discovery call and re-scope before signing — the cheap and easy path.",
+        ],
+      },
+      { type: "h2", text: "Why this matters for vendor selection" },
+      {
+        type: "p",
+        text:
+          "Marketing-web studios are good at what they do: visual design, content strategy, conversion optimization, CMS implementation. They generally don't have the engineering depth for a custom web app, auth flows, complex data models, or production AI work. They'll either decline the project or accept it and outsource the hard parts to a freelance dev who isn't accountable to you.",
+      },
+      {
+        type: "p",
+        text:
+          "Custom-web-app studios (us, for example) handle the engineering depth but often over-engineer marketing sites. Hiring an app studio to build a brochure site is paying for capabilities you don't need. Match the vendor to the work.",
+      },
+      { type: "h2", text: "Common confusion patterns" },
+      {
+        type: "list",
+        items: [
+          "\"It's just a Shopify thing\" → e-commerce platforms like Shopify or BigCommerce cover most stores out of the box. You're in marketing-web territory + some Shopify customization, not custom web app.",
+          "\"Just login functionality\" → there's no \"just login.\" Login is the gateway to web app territory. Even minimal auth changes the security, hosting, and engineering profile of the project.",
+          "\"Just a booking calendar\" → if the booking creates a real reservation tied to a real customer, you have auth, you have state, you have notifications. App territory.",
+          "\"It's like Airbnb but smaller\" → smaller doesn't mean simpler. Marketplace apps are some of the hardest builds — two-sided auth, payments, dispute resolution, reviews, trust signals.",
+        ],
+      },
+      { type: "h2", text: "When you're not sure" },
+      {
+        type: "p",
+        text:
+          "Scope the discovery first; don't commit to a vendor before you know which side of the line you're on. A 20-minute discovery call with someone who builds both can save you the $30k mistake of hiring the wrong type of studio. We do this for free, partly because honest scoping is good business and partly because the wrong-fit project always ends in tears.",
+      },
+      {
+        type: "callout",
+        text:
+          "Not sure if you need a marketing site or a custom web app? Free 20-minute discovery call — we'll walk through your project and tell you which scope fits (even if the answer is \"hire a different studio for this one\").",
+      },
+    ],
+    keywords: [
+      "web design vs web app",
+      "custom web application",
+      "when to build a web app",
+      "web design Stafford VA",
+      "custom software vs website",
+    ],
+    tags: ["Web design", "Custom web apps"],
+    readingMinutes: 8,
+  },
 ];
 
 export function postBySlug(slug: string): BlogPost | undefined {
