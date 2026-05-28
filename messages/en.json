@@ -242,7 +242,7 @@
         },
         "aiIntegration": {
           "title": "AI integration",
-          "body": "AI copilots, detection layers, and intelligent workflows — designed into your system from day one, the way Fleiko and Proveo were built."
+          "body": "AI copilots, detection layers, and intelligent workflows — designed into your system from day one, the way Fleiko, Proveo, Korent, and Kocre IT were built."
         },
         "portals": {
           "title": "Client portals",
@@ -317,7 +317,7 @@
     "ventures": {
       "label": "Studio ventures",
       "title": "Real systems we’ve shipped.",
-      "intro": "I don't just integrate AI into client projects — I've built and shipped two AI-powered products I own and operate. Fleiko runs an AI copilot for real-time fleet alerts. Proveo uses AI photo detection to automate contractor workflows. That track record is what I bring to your project.",
+      "intro": "I don't just integrate AI into client projects — I've built and shipped four AI-powered SaaS products I own and operate. Fleiko runs an AI copilot for real-time fleet alerts. Proveo uses AI photo detection to automate contractor workflows. Korent ships a read-only AI Operator Copilot — a floating, context-aware in-product help layer powered by OpenAI and Anthropic Claude. Kocre IT runs an AI-powered helpdesk for outsourced IT support. That track record is what I bring to your project.",
       "fleiko": {
         "name": "Fleiko",
         "tagline": "Fleet management platform for small businesses",
@@ -384,7 +384,7 @@
       "name": "Komlan Kouhiko",
       "role": "Founder & sole practitioner",
       "bio1": "I didn’t come up through an agency or a computer science program. In 2024, I launched a car rental business in Northern Virginia with 7 cars and a commercial insurance policy. Turo was taking a significant cut of every booking, so I taught myself to build my own platform — a full booking and fleet management system — and kept the profits. I ran that business for over a year, managing operations, customers, and the codebase simultaneously.",
-      "bio2": "When operational costs pushed me to pivot, I posted on Facebook Marketplace offering to build websites. Got a few clients. They liked the work. Since then I’ve shipped operating platforms for a repair center, a dropshipping store, IT services, and fleet management — and two SaaS products that are live today.",
+      "bio2": "When operational costs pushed me to pivot, I posted on Facebook Marketplace offering to build websites. Got a few clients. They liked the work. Since then I’ve shipped operating platforms for a repair center, a dropshipping store, IT services, and fleet management — and four SaaS products (Fleiko, Proveo, Korent, Kocre IT) that are live today.",
       "bio3": "Every project at CrecyStudio comes through me. No juniors, no handoffs. You get a builder who has sat on your side of the table.",
       "linkedin": "Connect on LinkedIn →",
       "linkedinHref": "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407"
@@ -983,7 +983,7 @@
   "servicesMeta": {
     "aiIntegration": {
       "metaTitle": "AI Integration | Production AI, Built With Guardrails",
-      "metaDescription": "We don't sell AI demos. We run three production AI systems of our own — confidence-gated, guardrailed, human-in-the-loop. We build the same for your business."
+      "metaDescription": "We don't sell AI demos. We run four production AI-powered SaaS products of our own (Fleiko, Proveo, Korent, Kocre IT) — confidence-gated, guardrailed, human-in-the-loop. We build the same for your business."
     },
     "websites": {
       "metaTitle": "Website Building | Premium, Conversion-Focused Websites",
@@ -3437,7 +3437,7 @@
       "safety": "6-gate auto-resolve"
     },
     "s1Title": "The operational cost of context",
-    "s1Body": "Running IT support for multiple client organizations means carrying simultaneous context for each — which platforms they're on, what their last issue was, what's been resolved before, which SLA tier they're under. Without tooling, every new ticket starts with 10–15 minutes of history-reading before any actual support happens.\n\nThe second problem is automation risk. Auto-closing tickets based on AI confidence alone would recover that time — but at the cost of reliability. A misclassified ticket that gets auto-resolved is a client problem the operator never sees. Too many false positives and the automation becomes a liability rather than a tool.\n\nTechDesk Pro needed an AI layer that was genuinely useful for context-gathering and drafting, and genuinely conservative about autonomous action — not because the AI was weak, but because the conditions for acting on its output needed to be unambiguous.",
+    "s1Body": "Running IT support for multiple client organizations means carrying simultaneous context for each — which platforms they're on, what their last issue was, what's been resolved before, which SLA tier they're under. Without tooling, every new ticket starts with 10–15 minutes of history-reading before any actual support happens.\n\nThe second problem is automation risk. Auto-closing tickets based on AI confidence alone would recover that time — but at the cost of reliability. A misclassified ticket that gets auto-resolved is a client problem the operator never sees. Too many false positives and the automation becomes a liability rather than a tool.\n\nKocre IT needed an AI layer that was genuinely useful for context-gathering and drafting, and genuinely conservative about autonomous action — not because the AI was weak, but because the conditions for acting on its output needed to be unambiguous.",
     "s2Title": "Ghost Admin — the internal AI brain",
     "s2Body": "Ghost Admin is the orchestration layer. For any open ticket, it fetches a structured context bundle before calling the model:\n\n— The full ticket record with all AI triage fields populated\n— Up to 10 recent client-facing conversation messages\n— Similar previously resolved tickets, matched on title and category\n— KB/SOP drafts already linked to the ticket\n— Published knowledge articles ranked by relevance\n— The client organization's full lifecycle state: agreement status, payment status, onboarding progress, client_status, whether the account flags for human review\n\nGhost sends this bundle to Claude and returns a 10-field JSON: what the ticket is actually about, the most likely blocker, recommended next action, a scope call (standard_support / watch_scope / likely_scoped_work), client reply guidance, lifecycle signals, and a short operator warning for edge cases.\n\nThis context synthesis happens in under 3 seconds and gives the operator a starting position that would otherwise require reading the full ticket history, the client profile, and the knowledge base manually.\n\nGhost also generates follow-up drafts in 6 modes: initial response, progress update, resolution, information gathering, escalation update, and needs assessment. Each draft pulls from the same context bundle — meaning drafts reflect the client's lifecycle stage, not just the issue description.",
     "s3Title": "The auto-resolve gate — six conditions, not one",
@@ -3461,7 +3461,7 @@
     "gate6Title": "No access requirement",
     "gate6Body": "ai_access_needed must be false. If resolving the ticket requires admin access, account changes, or vendor escalation, the gate stays closed.",
     "s4Title": "The knowledge flywheel",
-    "s4Body": "Every ticket that moves through TechDesk Pro makes the next one faster. The flywheel runs in four stages:\n\nTriage enrichment: On ticket creation, AI triage runs immediately — classifying category, scoring confidence, flagging escalation and project risk, estimating time. The ticket is enriched with 10 AI fields before an operator opens it.\n\nContext bundling: When Ghost Admin runs on a ticket, it pulls similar resolved tickets from the database. The more resolved tickets exist, the richer the context bundle. A new Microsoft 365 issue gets context from every previously resolved Microsoft 365 ticket for that client.\n\nKnowledge generation: When a ticket closes, Ghost can generate a KB/SOP draft from the resolution thread. This captures what the issue was, what was tried, and what fixed it — gated strictly to resolved/closed tickets. In-progress tickets never generate drafts.\n\nKnowledge retrieval: Published KB articles rank into future Ghost context bundles. Over time, the system builds institutional memory. By the 50th resolved ticket for a client, new tickets from that client arrive with matched precedents, relevant procedures, and similar past resolutions — automatically.",
+    "s4Body": "Every ticket that moves through Kocre IT makes the next one faster. The flywheel runs in four stages:\n\nTriage enrichment: On ticket creation, AI triage runs immediately — classifying category, scoring confidence, flagging escalation and project risk, estimating time. The ticket is enriched with 10 AI fields before an operator opens it.\n\nContext bundling: When Ghost Admin runs on a ticket, it pulls similar resolved tickets from the database. The more resolved tickets exist, the richer the context bundle. A new Microsoft 365 issue gets context from every previously resolved Microsoft 365 ticket for that client.\n\nKnowledge generation: When a ticket closes, Ghost can generate a KB/SOP draft from the resolution thread. This captures what the issue was, what was tried, and what fixed it — gated strictly to resolved/closed tickets. In-progress tickets never generate drafts.\n\nKnowledge retrieval: Published KB articles rank into future Ghost context bundles. Over time, the system builds institutional memory. By the 50th resolved ticket for a client, new tickets from that client arrive with matched precedents, relevant procedures, and similar past resolutions — automatically.",
     "s5Title": "Sentinel — deterministic monitoring without AI",
     "s5Intro": "Sentinel is the monitoring layer and the clearest example of where AI was deliberately excluded. It runs as a Vercel Cron job every hour, making deterministic checks against all monitored client URLs and ticket data. No model is involved in any monitoring decision:",
     "sentinel": {

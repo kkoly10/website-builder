@@ -402,7 +402,7 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         type: "p",
         text:
-          "Three of our own products run AI, at different autonomy levels — which is how we know the distinction matters in practice. Fleiko has an AI copilot that flags vehicle issues (Level 2 — suggests, fleet manager confirms). Proveo has a confidence-gated agent that processes contractor photo submissions (Level 3 — high-confidence auto-approves, low-confidence routes to human review). TechDesk auto-resolves IT tickets via a six-gate engine (Level 3 with strict gating). Two of those are agents, one is a copilot, and each one is shaped by the cost-of-wrong for its specific action — not by which level sounded better in a pitch.",
+          "Four of our own SaaS products run AI, at different autonomy levels — which is how we know the distinction matters in practice. Fleiko has an AI copilot that flags vehicle issues (Level 2 — suggests, fleet manager confirms). Proveo has a confidence-gated agent that processes contractor photo submissions (Level 3 — high-confidence auto-approves, low-confidence routes to human review). Korent ships a read-only AI Operator Copilot — Level 1 in-product help (context-aware Q&A about the dashboard, suggested prompts per page, OpenAI/Anthropic — never modifies data). Kocre IT auto-resolves IT tickets via a six-gate engine (Level 3 with strict gating). One read-only help layer, one suggest-confirm copilot, and two confidence-gated agents — each shaped by the cost-of-wrong for its specific action, not by which level sounded better in a pitch.",
       },
       { type: "h2", text: "When copilots are the right call" },
       {
@@ -700,6 +700,127 @@ export const BLOG_POSTS: BlogPost[] = [
     ],
     tags: ["Web design", "Custom web apps"],
     readingMinutes: 8,
+  },
+  {
+    slug: "why-korents-ai-is-read-only",
+    title: "Why Korent's AI is read-only (and what that decision actually costs)",
+    description:
+      "Korent's AI Operator Copilot answers questions and never modifies data — by design. A teardown of the autonomy decision behind one of our own SaaS products.",
+    headline: "Why Korent's AI is strictly read-only — a teardown of one autonomy decision",
+    publishedAt: "2026-05-28",
+    lead:
+      "Korent is one of four SaaS products we own and operate. Its AI layer is a floating Operator Copilot that lives on every dashboard page and answers context-aware questions — and that's all it does. No drafting bookings, no nudging delivery routes, no editing customer messages. It can't, by construction. Here's why we shipped it that way, what we gave up, and the framework we use when a client asks for the same shape.",
+    body: [
+      { type: "h2", text: "The constraint, stated plainly" },
+      {
+        type: "p",
+        text:
+          "Korent's AI Operator Copilot has read access to the operator's tenant — orders, products, customers, deliveries, knowledge-base entries — and no write access at all. Operators ask it 'how do I configure deposits?' or 'what's the policy for weather cancellations?' or 'show me orders for next Saturday' and it responds, in context, in the language they wrote in. It doesn't move the booking. It doesn't draft the customer reply. It doesn't reassign the delivery. It points the operator at the right screen, the right setting, or the right policy article — and stops.",
+      },
+      {
+        type: "p",
+        text:
+          "The model behind it (OpenAI or Anthropic Claude, depending on which API key the operator wires up) is plenty capable of more. The constraint is a product decision, not a model limitation.",
+      },
+      { type: "h2", text: "Why we shipped it as read-only" },
+      {
+        type: "h3", text: "The cost-of-wrong is asymmetric" },
+      {
+        type: "p",
+        text:
+          "Rental operators run real money through Stripe and make real commitments to customers. A wrong inventory edit by the AI doesn't cost an extra click — it costs a Saturday-morning delivery that was actually double-booked, or a refund for a unit the customer paid for and didn't get. The value of an AI 'doing it for me' is small (5 minutes saved per task). The cost of an AI getting it wrong is large (a damaged customer relationship that took years to build). When cost-of-wrong is asymmetric like that, the right autonomy level is the one that can't go wrong — read-only.",
+      },
+      { type: "h3", text: "Hard guarantees live in deterministic code, not in the model" },
+      {
+        type: "p",
+        text:
+          "The hard rule in Korent is that double-bookings are impossible. We didn't ship that rule as an AI safeguard. We shipped it as a Postgres function — a database-level constraint that runs on every inventory write, AI or not. That's the right place for a hard guarantee: in the schema, with full transaction semantics, repeatable across every code path, surviving any prompt change or model upgrade. The AI doesn't need to be smart enough to prevent double-bookings because the database is dumb enough to refuse them.",
+      },
+      {
+        type: "p",
+        text:
+          "This is the pattern across all four of our SaaS products: hard guarantees in deterministic code, soft assistance in the AI layer. The AI's job is to make humans faster at understanding their own system. The system's job is to enforce its own invariants.",
+      },
+      { type: "h3", text: "Read-only collapses the audit problem" },
+      {
+        type: "p",
+        text:
+          "When an AI can modify data, you need an audit trail of every modification, a rollback strategy for incorrect ones, a confidence threshold for when to act vs. ask, and a way to explain to a customer why an AI changed something without their consent. Read-only collapses that entire problem. There's nothing to roll back. There's nothing to explain. There's no 'why did the AI move my booking' support ticket — because it can't.",
+      },
+      { type: "h2", text: "What we gave up" },
+      {
+        type: "p",
+        text:
+          "Honest list: we gave up the auto-draft customer reply, the proactive scheduling suggestion, and the 'this looks like a conflict, want me to fix it?' inline action. Each of those would shave a measurable amount of operator time per week. None of them would survive a wrong action without costing more than the time they save.",
+      },
+      {
+        type: "p",
+        text:
+          "We may add a confidence-gated write path eventually — Korent's roadmap leaves room for it. But it won't be a copilot at that point; it'll be an agent, scoped to a specific action (e.g., 'auto-draft replies to FAQ-shaped inbound messages') with strict confidence thresholds, opt-in per operator, and the audit machinery agents need. Different shape, different engineering investment, different launch.",
+      },
+      { type: "h2", text: "The framework, generalized" },
+      {
+        type: "p",
+        text:
+          "When a client asks us to 'add AI' to their SaaS or web app, we walk through four questions before scoping the autonomy level. The answers determine whether the right shape is read-only help (Level 1), suggest-and-confirm copilot (Level 2), confidence-gated agent (Level 3), or fully autonomous agent (Level 4).",
+      },
+      { type: "h3", text: "1. What does a wrong action actually cost?" },
+      {
+        type: "p",
+        text:
+          "Not 'an extra support ticket' — what does it cost the end customer, in money or trust? If the answer is 'a relationship,' you're at Level 1 or 2. If the answer is 'a re-sort,' Level 3 or 4 is on the table.",
+      },
+      { type: "h3", text: "2. Can the hard guarantees live in deterministic code?" },
+      {
+        type: "p",
+        text:
+          "If the constraint that matters (no double-bookings, no negative inventory, no charging the wrong card) can be enforced at the database level or in a service-layer function, do that. Then the AI can be as autonomous as you want without being able to violate the constraint, because the constraint isn't in the AI's hands.",
+      },
+      { type: "h3", text: "3. Is the operator the customer, or the customer's agent?" },
+      {
+        type: "p",
+        text:
+          "Internal AI (helping a human do their job better) tolerates more autonomy than external AI (acting toward the customer on the business's behalf). Korent's copilot helps the operator — but the operator is the one who talks to the customer. We chose to keep that human-to-human handoff intact.",
+      },
+      { type: "h3", text: "4. What's the explainability budget?" },
+      {
+        type: "p",
+        text:
+          "Higher autonomy levels need more 'why did the AI do that' answers. If your team doesn't have an audit/explanation layer (and most small SaaS teams don't), keep the autonomy low until you do. Better to ship a Level 1 copilot that operators love than a Level 3 agent that the founder spends every Monday morning explaining.",
+      },
+      { type: "h2", text: "When read-only is the wrong call" },
+      {
+        type: "p",
+        text:
+          "Read-only is wrong when the action being skipped is high-volume, low-stakes, and reversible — and the cost of NOT acting is more than the cost of getting it wrong occasionally. Sorting incoming tickets into queues. Tagging photos by content. Categorizing inbound emails. Those are agent-shaped problems; insisting on a copilot there means burning operator time on actions a model could safely take.",
+      },
+      {
+        type: "p",
+        text:
+          "Proveo is our counter-example. Its AI agent processes contractor photo submissions — high volume (hundreds a day), low cost-of-wrong per action (a misclassified photo gets corrected on the next pass), reversible (the operator can re-tag). Level 3 agent with a confidence gate fits. A copilot would have meant a human approving every photo, which would have killed the throughput the product was built to enable.",
+      },
+      { type: "h2", text: "The shape is the product decision, not the AI choice" },
+      {
+        type: "p",
+        text:
+          "The thing most teams get wrong is treating autonomy as a model-capability question — 'can GPT do this reliably?' The model can almost certainly do it. The real question is: what's the cost of being wrong, and is the value of being right worth that cost? Korent's copilot is read-only because the math on its specific actions doesn't favor autonomy. Proveo's agent is Level 3 because the math on its specific actions does. Same engineering team, same models, opposite shape — because the products are different, not the AI is different.",
+      },
+      {
+        type: "callout",
+        text:
+          "Scoping AI for a SaaS or web app and not sure whether to ship a copilot or an agent? Free 20-minute call — we'll walk through the four-question framework against your specific actions and the cost-of-wrong for each. crecystudio.com/book.",
+      },
+    ],
+    keywords: [
+      "AI copilot vs agent",
+      "read-only AI",
+      "SaaS AI integration",
+      "AI autonomy levels",
+      "production AI safety",
+      "AI guardrails",
+    ],
+    tags: ["AI integration", "SaaS"],
+    readingMinutes: 7,
   },
 ];
 

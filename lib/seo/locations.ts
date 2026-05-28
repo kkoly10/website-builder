@@ -15,8 +15,13 @@ export type LocationSlug =
   | "washington-dc"
   | "arlington-va"
   | "alexandria-va"
+  | "tysons-va"
+  | "reston-va"
+  | "fairfax-va"
+  | "woodbridge-va"
   | "bethesda-md"
   | "silver-spring-md"
+  | "rockville-md"
   | "annapolis-md"
   | "northern-virginia"
   | "maryland"
@@ -181,6 +186,78 @@ export const LOCATIONS: Location[] = [
     ],
   },
   {
+    slug: "tysons-va",
+    type: "City",
+    name: "Tysons, Virginia",
+    shortName: "Tysons, VA",
+    region: "Virginia",
+    geo: { latitude: 38.9187, longitude: -77.2311 },
+    distanceFromHomeMiles: 45,
+    intro:
+      "Web design, custom web apps, and AI integration for Tysons businesses — the Capital One / Hilton HQ corridor along Westpark, the Tysons Galleria + Tysons Corner Center retail spine, and the consultancies and contractors clustered around the Silver Line metro stations. About 45 miles north of our Stafford studio.",
+    whyLocal: [
+      "Used to Tysons' enterprise procurement rhythm — MSAs, SOWs, NDA-first kickoff, security questionnaire, the works.",
+      "Production AI experience that survives an enterprise security review — auditable autonomy levels, gated writes, full audit trails. Same shape we run in Kocre IT and Proveo.",
+      "Senior independent practitioner — the person quoting is the person writing the code, scoping the migration, and answering the security questions. No junior handoff to a less-experienced team.",
+      "Async-first delivery that fits Tysons-corridor calendars — Greenway / Beltway commutes mean most clients prefer Loom recordings over standing meetings.",
+      "In-person workshop or kickoff at McLean / Tysons Corner / Greensboro on request — same-week availability for serious projects.",
+    ],
+  },
+  {
+    slug: "reston-va",
+    type: "City",
+    name: "Reston, Virginia",
+    shortName: "Reston, VA",
+    region: "Virginia",
+    geo: { latitude: 38.9586, longitude: -77.3570 },
+    distanceFromHomeMiles: 55,
+    intro:
+      "Premium websites, custom web apps, and AI integration for Reston businesses — Reston Town Center along Market Street, the Wiehle-Reston metro hub, the Dulles tech corridor stretching west toward Herndon and Ashburn, and the SaaS / cloud / cybersecurity firms anchored along Sunrise Valley Drive. About 55 miles from our Stafford studio.",
+    whyLocal: [
+      "Strong fit for Reston's SaaS, cybersecurity, and federal-cloud client base — we ship multi-tenant SaaS for a living (four of our own products run that way).",
+      "Production AI work shipped to four owned SaaS products — Korent's read-only Operator Copilot, Fleiko's fleet copilot, Proveo's confidence-gated photo agent, Kocre IT's six-gate auto-resolve engine. Real systems, not pitch-deck AI.",
+      "Direct work with the founder for every engagement — same person scoping, architecting, building, and answering 'why did the AI do that' questions.",
+      "Bilingual workspace (English / French / Spanish) — useful for Reston's globally distributed engineering teams and international hires.",
+      "Async-first delivery with Loom-first communication — fits how distributed Reston teams already work; no productivity tax for in-office vs. remote staff.",
+    ],
+  },
+  {
+    slug: "fairfax-va",
+    type: "City",
+    name: "Fairfax, Virginia",
+    shortName: "Fairfax, VA",
+    region: "Virginia",
+    geo: { latitude: 38.8462, longitude: -77.3064 },
+    distanceFromHomeMiles: 35,
+    intro:
+      "Web design, custom web apps, and AI integration for Fairfax County businesses — historic Old Town Fairfax along Main Street, the GMU-adjacent professional firms, the Mosaic District / Merrifield retail corridor, the Vienna / Oakton small-business corridor along Maple Avenue, and the broader Fairfax County professional services market. About 35 miles north of our Stafford studio.",
+    whyLocal: [
+      "Familiar with Fairfax County's actual client mix — government contractors and consultancies near the courthouse, professional services around Old Town, restaurants and retail in Mosaic / Merrifield, growing service businesses pushing toward Centreville.",
+      "Senior independent practitioner — no agency markup, no junior team, same person from discovery call to launch and beyond.",
+      "In-person discovery calls in Fairfax, Vienna, or Oakton on request — happy to meet at a Mosaic-area coffee shop or your office.",
+      "Same time zone, same week, same accountability as your team — no time-zone hand-off, no offshore middle layer.",
+      "Production AI experience that fits small-team budgets — built and run inside four of our own SaaS products, scoped honestly for what your team actually needs.",
+    ],
+  },
+  {
+    slug: "woodbridge-va",
+    type: "City",
+    name: "Woodbridge, Virginia",
+    shortName: "Woodbridge, VA",
+    region: "Virginia",
+    geo: { latitude: 38.6582, longitude: -77.2497 },
+    distanceFromHomeMiles: 18,
+    intro:
+      "Premium websites and AI integration for Woodbridge and Prince William County businesses — Potomac Mills, Stonebridge at Potomac Town Center, the Lake Ridge / Dale City service-business corridor, the medical and dental practices along Route 1, and the I-95 corridor running north from Quantico through Dumfries. About 20 minutes north of our Stafford studio.",
+    whyLocal: [
+      "Closest city to our Stafford home base — about 20 minutes up I-95 — so in-person meetings in Woodbridge, Lake Ridge, or Potomac Mills are an easy ask, not a logistics negotiation.",
+      "Familiar with Prince William County's small-business mix: service contractors (HVAC, landscaping, auto), independent medical and dental practices, faith communities, growing e-commerce brands shipping out of warehouse space near Potomac Mills.",
+      "Bilingual project workspace (English / French / Spanish) — important for PWC's diverse client and customer base. We can build the customer-facing site or app in two languages without contracting a translator.",
+      "Premium craft at a price point that fits a Prince William service business — not a DC or Northern-Virginia-agency markup.",
+      "Same-day async response during business hours, same-week kickoff slots for serious projects.",
+    ],
+  },
+  {
     slug: "bethesda-md",
     type: "City",
     name: "Bethesda, Maryland",
@@ -212,6 +289,24 @@ export const LOCATIONS: Location[] = [
       "Independent practitioner — no agency layer between you and the person writing the code.",
       "Production AI experience: shipped systems, not pitch decks.",
       "Same-day async responses for active projects.",
+    ],
+  },
+  {
+    slug: "rockville-md",
+    type: "City",
+    name: "Rockville, Maryland",
+    shortName: "Rockville, MD",
+    region: "Maryland",
+    geo: { latitude: 39.0840, longitude: -77.1528 },
+    distanceFromHomeMiles: 70,
+    intro:
+      "Web design, custom web apps, and AI integration for Rockville businesses — downtown Rockville Town Center, the I-270 BioHealth Capital Region biotech corridor running north toward Gaithersburg, the King Farm / Twinbrook tech offices, and Montgomery County professional services firms. About 70 miles from our Stafford studio.",
+    whyLocal: [
+      "Used to working with the I-270 biotech / life-sciences mix — clinical, research-adjacent, and regulated-industry clients where compliance awareness is the default, not the exception.",
+      "AI integration with real safety thinking — confidence-gated autonomy, audit trails, human-in-the-loop for anything customer-touching. The same engineering posture you'd expect a regulated-industry buyer to require.",
+      "Independent senior practitioner — same person scoping, building, and supporting the system through year two. No 'the original developer left the company' problem.",
+      "Async-first delivery that respects how Montgomery County professionals actually work — most communication via Loom and a shared project workspace, in-person check-ins available on request.",
+      "Bilingual project workspace (English / French / Spanish) — useful for Rockville's international research and healthcare workforce.",
     ],
   },
   {

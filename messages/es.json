@@ -242,7 +242,7 @@
         },
         "aiIntegration": {
           "title": "Integración de IA",
-          "body": "Copilotos de IA, capas de detección y flujos inteligentes — diseñados en tu sistema desde el primer día, como se construyeron Fleiko y Proveo."
+          "body": "Copilotos de IA, capas de detección y flujos inteligentes — diseñados en tu sistema desde el primer día, como se construyeron Fleiko, Proveo, Korent y Kocre IT."
         },
         "portals": {
           "title": "Portales para clientes",
@@ -317,7 +317,7 @@
     "ventures": {
       "label": "Proyectos del estudio",
       "title": "Sistemas reales que hemos lanzado.",
-      "intro": "No solo integro IA en proyectos de clientes — he construido y lanzado dos productos impulsados por IA que poseo y opero. Fleiko ejecuta un copiloto IA para alertas de flota en tiempo real. Proveo usa detección de fotos con IA para automatizar flujos de trabajo de contratistas. Ese historial es lo que aporto a su proyecto.",
+      "intro": "No solo integro IA en proyectos de clientes — he construido y lanzado cuatro productos SaaS impulsados por IA que poseo y opero. Fleiko ejecuta un copiloto IA para alertas de flota en tiempo real. Proveo usa detección de fotos con IA para automatizar flujos de trabajo de contratistas. Korent incorpora un Copiloto de Operador IA de solo lectura — una capa de ayuda integrada, flotante y contextual, impulsada por OpenAI y Anthropic Claude. Kocre IT ejecuta un helpdesk con IA para soporte informático externalizado. Ese historial es lo que aporto a su proyecto.",
       "fleiko": {
         "name": "Fleiko",
         "tagline": "Plataforma de gestión de flotas para pequeñas empresas",
@@ -384,7 +384,7 @@
       "name": "Komlan Kouhiko",
       "role": "Fundador y único profesional",
       "bio1": "No vengo de una agencia ni de un programa de ciencias de la computación. En 2024 lancé un negocio de alquiler de coches en el norte de Virginia con 7 vehículos y una póliza de seguro comercial. Turo se llevaba una parte significativa de cada reserva, así que aprendí a construir mi propia plataforma — un sistema completo de reservas y gestión de flota — y me quedé con las ganancias. Operé ese negocio durante más de un año, gestionando simultáneamente las operaciones, los clientes y el código.",
-      "bio2": "Cuando los costos operativos me empujaron a pivotar, publiqué en Facebook Marketplace ofreciendo construir sitios web. Conseguí algunos clientes. Les gustó el trabajo. Desde entonces he lanzado plataformas operativas para un centro de reparaciones, una tienda de dropshipping, servicios IT y gestión de flotas — además de dos productos SaaS que están en producción hoy.",
+      "bio2": "Cuando los costos operativos me empujaron a pivotar, publiqué en Facebook Marketplace ofreciendo construir sitios web. Conseguí algunos clientes. Les gustó el trabajo. Desde entonces he lanzado plataformas operativas para un centro de reparaciones, una tienda de dropshipping, servicios IT y gestión de flotas — además de cuatro productos SaaS (Fleiko, Proveo, Korent, Kocre IT) que están en producción hoy.",
       "bio3": "Cada proyecto en CrecyStudio pasa por mí. Sin juniors, sin traspasos. Trabaja con un constructor que se ha sentado en su lado de la mesa.",
       "linkedin": "Conectemos en LinkedIn →",
       "linkedinHref": "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407"
@@ -983,7 +983,7 @@
   "servicesMeta": {
     "aiIntegration": {
       "metaTitle": "Integración de IA | IA en producción, construida con barreras de seguridad",
-      "metaDescription": "No vendemos demos de IA. Operamos tres sistemas de IA en producción — con umbral de confianza, barreras de seguridad y supervisión humana. Construimos lo mismo para tu negocio."
+      "metaDescription": "No vendemos demos de IA. Operamos cuatro productos SaaS con IA en producción (Fleiko, Proveo, Korent, Kocre IT) — con umbral de confianza, barreras de seguridad y supervisión humana. Construimos lo mismo para tu negocio."
     },
     "websites": {
       "metaTitle": "Construcción de sitios web | Sitios premium enfocados en conversión",
@@ -3437,7 +3437,7 @@
       "safety": "Resolución auto en 6 condiciones"
     },
     "s1Title": "El costo operativo del contexto",
-    "s1Body": "Gestionar soporte IT para múltiples organizaciones clientes significa llevar contexto simultáneo de cada una — qué plataformas usan, cuál fue su último problema, qué se ha resuelto antes, qué SLA aplica. Sin herramientas, cada nuevo ticket comienza con 10-15 minutos de lectura de historial antes de cualquier soporte real.\n\nEl segundo problema es el riesgo de automatización. Cerrar tickets automáticamente basándose solo en la confianza IA recuperaría ese tiempo — pero a costa de la fiabilidad. Un ticket mal clasificado que se resuelve automáticamente es un problema del cliente que el operador nunca ve.\n\nTechDesk Pro necesitaba una capa IA genuinamente útil para síntesis de contexto y redacción, y genuinamente conservadora para acciones autónomas — no porque la IA fuera débil, sino porque las condiciones para actuar sobre su resultado debían ser inequívocas.",
+    "s1Body": "Gestionar soporte IT para múltiples organizaciones clientes significa llevar contexto simultáneo de cada una — qué plataformas usan, cuál fue su último problema, qué se ha resuelto antes, qué SLA aplica. Sin herramientas, cada nuevo ticket comienza con 10-15 minutos de lectura de historial antes de cualquier soporte real.\n\nEl segundo problema es el riesgo de automatización. Cerrar tickets automáticamente basándose solo en la confianza IA recuperaría ese tiempo — pero a costa de la fiabilidad. Un ticket mal clasificado que se resuelve automáticamente es un problema del cliente que el operador nunca ve.\n\nKocre IT necesitaba una capa IA genuinamente útil para síntesis de contexto y redacción, y genuinamente conservadora para acciones autónomas — no porque la IA fuera débil, sino porque las condiciones para actuar sobre su resultado debían ser inequívocas.",
     "s2Title": "Ghost Admin — el cerebro IA interno",
     "s2Body": "Ghost Admin es la capa de orquestación. Para cualquier ticket abierto, obtiene un paquete de contexto estructurado antes de llamar al modelo:\n\n— El ticket completo con todos los campos de triaje IA\n— Hasta 10 mensajes recientes del cliente\n— Tickets similares resueltos previamente, emparejados por título y categoría\n— Borradores KB/SOP ya vinculados al ticket\n— Artículos de conocimiento publicados clasificados por relevancia\n— El estado completo del ciclo de vida de la organización: estado del acuerdo, estado de pago, progreso de incorporación\n\nGhost envía este paquete a Claude y devuelve un JSON de 10 campos: de qué trata realmente el ticket, el bloqueo más probable, la acción recomendada, una llamada de alcance (support_estándar / vigilar_alcance / trabajo_de_alcance), señales de ciclo de vida y una advertencia corta para el operador.\n\nEsta síntesis de contexto ocurre en menos de 3 segundos. Ghost también genera borradores de seguimiento en 6 modos: respuesta inicial, actualización de progreso, resolución, recopilación de información, actualización de escalada y evaluación de necesidades. Cada borrador usa el mismo paquete — lo que significa que los borradores reflejan la etapa del ciclo de vida del cliente, no solo la descripción del problema.",
     "s3Title": "El portal de resolución automática — seis condiciones, no una",
@@ -3461,7 +3461,7 @@
     "gate6Title": "Sin requisito de acceso",
     "gate6Body": "ai_access_needed debe ser false. Si resolver el ticket requiere acceso de administrador, cambios de cuenta o escalada con proveedor, el portal permanece cerrado.",
     "s4Title": "El volante de conocimiento",
-    "s4Body": "Cada ticket que pasa por TechDesk Pro hace el siguiente más rápido. El volante funciona en cuatro etapas:\n\nEnriquecimiento por triaje: Al crear el ticket, el triaje IA se ejecuta inmediatamente — clasificando categoría, puntuando confianza, marcando riesgo de escalada y proyecto. El ticket se enriquece con 10 campos IA antes de que el operador lo abra.\n\nConstrucción del paquete de contexto: Cuando Ghost Admin se ejecuta en un ticket, extrae tickets similares resueltos previamente. Cuantos más tickets resueltos existen, más rico es el contexto.\n\nGeneración de conocimiento: Cuando un ticket se cierra, Ghost puede generar un borrador KB/SOP del hilo de resolución. Esto está estrictamente limitado a tickets resueltos/cerrados. Los tickets en progreso nunca generan borradores.\n\nRecuperación de conocimiento: Los artículos KB publicados se clasifican en futuros paquetes de Ghost. Con el tiempo, el sistema acumula memoria institucional. En el ticket 50 resuelto para un cliente, los nuevos tickets llegan con precedentes relevantes automáticamente.",
+    "s4Body": "Cada ticket que pasa por Kocre IT hace el siguiente más rápido. El volante funciona en cuatro etapas:\n\nEnriquecimiento por triaje: Al crear el ticket, el triaje IA se ejecuta inmediatamente — clasificando categoría, puntuando confianza, marcando riesgo de escalada y proyecto. El ticket se enriquece con 10 campos IA antes de que el operador lo abra.\n\nConstrucción del paquete de contexto: Cuando Ghost Admin se ejecuta en un ticket, extrae tickets similares resueltos previamente. Cuantos más tickets resueltos existen, más rico es el contexto.\n\nGeneración de conocimiento: Cuando un ticket se cierra, Ghost puede generar un borrador KB/SOP del hilo de resolución. Esto está estrictamente limitado a tickets resueltos/cerrados. Los tickets en progreso nunca generan borradores.\n\nRecuperación de conocimiento: Los artículos KB publicados se clasifican en futuros paquetes de Ghost. Con el tiempo, el sistema acumula memoria institucional. En el ticket 50 resuelto para un cliente, los nuevos tickets llegan con precedentes relevantes automáticamente.",
     "s5Title": "Sentinel — monitoreo determinista sin IA",
     "s5Intro": "Sentinel es la capa de monitoreo y el ejemplo más claro de donde la IA fue deliberadamente excluida. Se ejecuta como un Cron de Vercel cada hora, realizando verificaciones deterministas contra todas las URLs de clientes monitoreados y datos de tickets. Ningún modelo interviene en ninguna decisión de monitoreo:",
     "sentinel": {
