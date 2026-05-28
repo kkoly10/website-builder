@@ -49,67 +49,14 @@ const TITLE_KEY_BY_TYPE: Record<GenericDirection["type"], string> = {
   portal_direction: "portal",
 };
 
-const SUBTITLE_BY_TYPE_AND_STATUS: Record<
-  GenericDirection["type"],
-  Record<GenericDirection["status"], string>
-> = {
-  // design_direction is handled by Phase 2A's DesignDirectionCard, but we
-  // include a copy here in case the resolver ever falls through.
-  design_direction: {
-    not_started: "Choose the visual direction before the full build begins.",
-    waiting_on_client: "Choose your design direction. CrecyStudio will use it to make professional decisions about layout, typography, and visual hierarchy.",
-    submitted: "CrecyStudio is reviewing your direction.",
-    under_review: "CrecyStudio is reviewing your direction.",
-    changes_requested: "CrecyStudio needs more detail before locking the direction.",
-    approved: "Your design direction has been approved.",
-    locked: "Design direction is locked. Major changes require a change order.",
-  },
-  product_direction: {
-    not_started: "Tell us how the app should work before development starts.",
-    waiting_on_client: "Tell us how the app should work. We'll turn this into the MVP scope before development starts.",
-    submitted: "CrecyStudio is reviewing your product direction.",
-    under_review: "CrecyStudio is reviewing your product direction.",
-    changes_requested: "CrecyStudio needs more detail before MVP scope can be locked.",
-    approved: "Product direction approved. MVP scope will follow.",
-    locked: "Product direction locked. Major scope changes require a change order.",
-  },
-  workflow_direction: {
-    not_started: "Tell us about the manual process you want automated.",
-    waiting_on_client: "Tell us about the manual process you want automated. We'll turn this into the automation plan before build starts.",
-    submitted: "CrecyStudio is reviewing your workflow direction.",
-    under_review: "CrecyStudio is reviewing your workflow direction.",
-    changes_requested: "CrecyStudio needs more detail before locking the automation scope.",
-    approved: "Workflow direction approved.",
-    locked: "Workflow direction locked. Adding new triggers or tools requires a change order.",
-  },
-  store_direction: {
-    not_started: "Tell us how your store should work before we start building.",
-    waiting_on_client: "Tell us how your store should work. We'll turn this into the build plan.",
-    submitted: "CrecyStudio is reviewing your store direction.",
-    under_review: "CrecyStudio is reviewing your store direction.",
-    changes_requested: "CrecyStudio needs more detail before locking the store scope.",
-    approved: "Store direction approved.",
-    locked: "Store direction locked. Adding new platforms or major checkout changes requires a change order.",
-  },
-  rescue_diagnosis: {
-    not_started: "Tell us what's broken so we can put together the fix plan.",
-    waiting_on_client: "Tell us what's broken so we can put together the fix plan.",
-    submitted: "CrecyStudio is reviewing the rescue details.",
-    under_review: "CrecyStudio is reviewing the rescue details.",
-    changes_requested: "CrecyStudio needs more detail before the fix plan can be locked.",
-    approved: "Fix plan approved.",
-    locked: "Fix plan locked. New issues outside the priority list will be documented separately.",
-  },
-  portal_direction: {
-    not_started: "Tell us how the portal should work before development starts.",
-    waiting_on_client: "Tell us how the portal should work — access, roles, features, integrations, compliance — and we'll lock the scope before build.",
-    submitted: "CrecyStudio is reviewing your portal direction.",
-    under_review: "CrecyStudio is reviewing your portal direction.",
-    changes_requested: "CrecyStudio needs more detail before the portal scope can be locked.",
-    approved: "Portal direction approved. Permissions and integrations plan will follow.",
-    locked: "Portal direction locked. Major scope changes require a change order.",
-  },
-};
+// Subtitle copy now lives in messages/*.json under
+// portalToken.directionModule.subtitle.<typeKey>.<statusKey>. typeKey
+// reuses TITLE_KEY_BY_TYPE (design / product / workflow / store /
+// rescue / portal); statusKey reuses STATUS_PILL_KEY (camelCase status
+// names matching the existing statusPill keys). Single source of truth
+// for direction copy across en/fr/es, replacing the previous
+// SUBTITLE_BY_TYPE_AND_STATUS map that hardcoded English for every
+// direction type × status combination (~42 strings).
 
 export default function DirectionCard({ value, onSubmit }: Props) {
   const t = useTranslations("portalToken.directionModule");
@@ -119,7 +66,7 @@ export default function DirectionCard({ value, onSubmit }: Props) {
   const pillStyle = STATUS_PILL_STYLE[value.status];
   const pillLabel = t(`statusPill.${STATUS_PILL_KEY[value.status]}`);
   const title = t(`title.${TITLE_KEY_BY_TYPE[value.type]}`);
-  const subtitle = SUBTITLE_BY_TYPE_AND_STATUS[value.type][value.status];
+  const subtitle = t(`subtitle.${TITLE_KEY_BY_TYPE[value.type]}.${STATUS_PILL_KEY[value.status]}`);
 
   if (!schema) {
     // Shouldn't reach here for the 4 generic lanes — design_direction

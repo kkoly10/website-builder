@@ -2275,7 +2275,63 @@
       "submitError": "Échec de l'envoi de la direction.",
       "submitDesignDirectionError": "Échec de l'envoi de la direction de design.",
       "submitButton": "Envoyer la direction",
-      "submitButtonSaving": "Envoi en cours…"
+      "submitButtonSaving": "Envoi en cours…",
+      "subtitle": {
+        "design": {
+          "notStarted": "Choisissez la direction visuelle avant le début de la construction complète.",
+          "waitingOnClient": "Choisissez votre direction de design. CrecyStudio l'utilisera pour prendre des décisions professionnelles sur la mise en page, la typographie et la hiérarchie visuelle.",
+          "submitted": "CrecyStudio examine votre direction.",
+          "underReview": "CrecyStudio examine votre direction.",
+          "changesRequested": "CrecyStudio a besoin de plus de détails avant de verrouiller la direction.",
+          "approved": "Votre direction de design a été approuvée.",
+          "locked": "La direction de design est verrouillée. Les changements majeurs nécessitent un avenant."
+        },
+        "product": {
+          "notStarted": "Dites-nous comment l'application doit fonctionner avant le début du développement.",
+          "waitingOnClient": "Dites-nous comment l'application doit fonctionner. Nous en ferons le périmètre MVP avant le début du développement.",
+          "submitted": "CrecyStudio examine votre direction produit.",
+          "underReview": "CrecyStudio examine votre direction produit.",
+          "changesRequested": "CrecyStudio a besoin de plus de détails avant de verrouiller le périmètre MVP.",
+          "approved": "Direction produit approuvée. Le périmètre MVP suivra.",
+          "locked": "Direction produit verrouillée. Les changements majeurs de périmètre nécessitent un avenant."
+        },
+        "workflow": {
+          "notStarted": "Parlez-nous du processus manuel que vous voulez automatiser.",
+          "waitingOnClient": "Parlez-nous du processus manuel que vous voulez automatiser. Nous en ferons le plan d'automatisation avant le début de la construction.",
+          "submitted": "CrecyStudio examine votre direction de workflow.",
+          "underReview": "CrecyStudio examine votre direction de workflow.",
+          "changesRequested": "CrecyStudio a besoin de plus de détails avant de verrouiller le périmètre d'automatisation.",
+          "approved": "Direction de workflow approuvée.",
+          "locked": "Direction de workflow verrouillée. Ajouter de nouveaux déclencheurs ou outils nécessite un avenant."
+        },
+        "store": {
+          "notStarted": "Dites-nous comment votre boutique doit fonctionner avant de commencer la construction.",
+          "waitingOnClient": "Dites-nous comment votre boutique doit fonctionner. Nous en ferons le plan de construction.",
+          "submitted": "CrecyStudio examine votre direction de boutique.",
+          "underReview": "CrecyStudio examine votre direction de boutique.",
+          "changesRequested": "CrecyStudio a besoin de plus de détails avant de verrouiller le périmètre de la boutique.",
+          "approved": "Direction de boutique approuvée.",
+          "locked": "Direction de boutique verrouillée. Ajouter de nouvelles plateformes ou des changements majeurs de paiement nécessite un avenant."
+        },
+        "rescue": {
+          "notStarted": "Dites-nous ce qui est cassé afin que nous puissions établir le plan de réparation.",
+          "waitingOnClient": "Dites-nous ce qui est cassé afin que nous puissions établir le plan de réparation.",
+          "submitted": "CrecyStudio examine les détails du sauvetage.",
+          "underReview": "CrecyStudio examine les détails du sauvetage.",
+          "changesRequested": "CrecyStudio a besoin de plus de détails avant de verrouiller le plan de réparation.",
+          "approved": "Plan de réparation approuvé.",
+          "locked": "Plan de réparation verrouillé. Les nouveaux problèmes hors liste prioritaire seront documentés séparément."
+        },
+        "portal": {
+          "notStarted": "Dites-nous comment le portail doit fonctionner avant le début du développement.",
+          "waitingOnClient": "Dites-nous comment le portail doit fonctionner — accès, rôles, fonctionnalités, intégrations, conformité — et nous verrouillerons le périmètre avant la construction.",
+          "submitted": "CrecyStudio examine votre direction de portail.",
+          "underReview": "CrecyStudio examine votre direction de portail.",
+          "changesRequested": "CrecyStudio a besoin de plus de détails avant de verrouiller le périmètre du portail.",
+          "approved": "Direction de portail approuvée. Le plan de permissions et d'intégrations suivra.",
+          "locked": "Direction de portail verrouillée. Les changements majeurs de périmètre nécessitent un avenant."
+        }
+      }
     },
     "requiredActions": {
       "title": "Action requise de votre part",
