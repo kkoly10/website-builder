@@ -111,6 +111,8 @@
   },
   "footer": {
     "blurb": "Independent web studio building premium websites and custom web systems. One workspace from scope to launch.",
+    "address": "Stafford, Virginia · United States",
+    "serviceArea": "Serving the DMV (DC, Maryland, Virginia) and clients across the US, Canada, and UK.",
     "rightsReserved": "All rights reserved.",
     "links": {
       "aria": "Footer",
@@ -121,6 +123,7 @@
       "process": "Process",
       "work": "Work",
       "pricing": "Pricing",
+      "locations": "Locations",
       "faq": "FAQ",
       "contact": "Contact",
       "privacy": "Privacy",

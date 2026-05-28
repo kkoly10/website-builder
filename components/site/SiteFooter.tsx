@@ -12,6 +12,20 @@ export default function SiteFooter() {
           <div className="footerIdentity">
             <p className="footerKicker">{tCommon("siteName")}</p>
             <p className="footerBlurb">{t("blurb")}</p>
+            {/*
+              Visible address is a strong local-SEO signal — Google
+              cross-references the structured-data PostalAddress with
+              what humans see on the page. Listed alongside the
+              service area so the local pack picks up both signals.
+              Kept to city/state to match the LocalBusiness schema
+              (no street per founder preference).
+            */}
+            <p className="footerBlurb" style={{ marginTop: 8, fontSize: 13, opacity: 0.85 }}>
+              {t("address")}
+            </p>
+            <p className="footerBlurb" style={{ marginTop: 4, fontSize: 13, opacity: 0.75 }}>
+              {t("serviceArea")}
+            </p>
           </div>
 
           <div className="footerLinks" aria-label={t("links.aria")}>
@@ -26,6 +40,15 @@ export default function SiteFooter() {
             <Link href="/work">{t("links.work")}</Link>
             <Link href="/care-plans">{t("links.carePlans")}</Link>
             <Link href="/pricing">{t("links.pricing")}</Link>
+            {/*
+              /locations and the city pages are English-only. Forcing
+              `locale="en"` makes the link emit `/locations` regardless
+              of the active locale, so FR/ES users can still navigate
+              to the local-SEO index (they just land on the English
+              version). Without this, clicking from /fr would route to
+              /fr/locations and 404.
+            */}
+            <Link href="/locations" locale="en">{t("links.locations")}</Link>
             <Link href="/faq">{t("links.faq")}</Link>
             <Link href="/about">{t("links.about")}</Link>
             <Link href="/start">{t("links.start")}</Link>

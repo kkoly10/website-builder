@@ -28,5 +28,5 @@ export default async function CarePlansPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const data = getServicePageData(locale, "care_plans");
-  return <ServicePage {...data} />;
+  return <ServicePage {...data} serviceSlug="care-plans" />;
 }

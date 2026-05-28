@@ -28,5 +28,5 @@ export default async function SystemsPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const data = getServicePageData(locale, "systems");
-  return <ServicePage {...data} />;
+  return <ServicePage {...data} serviceSlug="systems" />;
 }

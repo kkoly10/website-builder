@@ -28,5 +28,5 @@ export default async function WebsiteRescuePage({
   const { locale } = await params;
   setRequestLocale(locale);
   const data = getServicePageData(locale, "website_rescue");
-  return <ServicePage {...data} />;
+  return <ServicePage {...data} serviceSlug="website-rescue" />;
 }

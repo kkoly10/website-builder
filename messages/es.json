@@ -111,6 +111,8 @@
   },
   "footer": {
     "blurb": "Estudio web independiente que construye sitios web premium y sistemas web personalizados. Un espacio de trabajo del alcance al lanzamiento.",
+    "address": "Stafford, Virginia · Estados Unidos",
+    "serviceArea": "Al servicio del DMV (DC, Maryland, Virginia) y clientes en EE.UU., Canadá y Reino Unido.",
     "rightsReserved": "Todos los derechos reservados.",
     "links": {
       "aria": "Pie de página",
@@ -121,6 +123,7 @@
       "process": "Proceso",
       "work": "Proyectos",
       "pricing": "Precios",
+      "locations": "Ubicaciones",
       "faq": "FAQ",
       "contact": "Contacto",
       "privacy": "Privacidad",

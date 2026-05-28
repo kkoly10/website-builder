@@ -28,5 +28,5 @@ export default async function WebsitesPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const data = getServicePageData(locale, "websites");
-  return <ServicePage {...data} />;
+  return <ServicePage {...data} serviceSlug="websites" />;
 }
