@@ -45,8 +45,10 @@ async function confirmWebsiteQuotePayment(session: any, quoteId: string) {
 
   const nextDebug = { ...prevDebug, internal: nextInternal };
   await supabaseAdmin.from("quotes").update({ status: "paid", debug: nextDebug }).eq("id", quoteId);
+  // Explicit isFinite — `|| null` swallows legitimate $0 amounts.
+  const rawAmount = Number(session.amount_total ?? NaN);
   await markDepositPaidForQuoteId(quoteId, {
-    amountCents: Number(session.amount_total ?? 0) || null,
+    amountCents: Number.isFinite(rawAmount) ? rawAmount : null,
     paidAt: now,
     reference: String(session.id || ""),
   });

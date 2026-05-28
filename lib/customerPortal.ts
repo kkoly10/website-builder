@@ -3054,8 +3054,11 @@ export async function markDepositPaidForQuoteId(
   const wasAlreadyPaid = cleanString((portal as AnyObj).deposit_status).toLowerCase() === "paid";
 
   const paidAt = safeDate(paymentData?.paidAt) || new Date().toISOString();
-  const amountCents =
-    Number(paymentData?.amountCents ?? portal.deposit_amount_cents ?? 0) || null;
+  // Use isFinite instead of `|| null` so a legitimate $0 amount isn't
+  // discarded as "unknown". Fall through the explicit source chain
+  // (payment data → existing portal row → null).
+  const rawAmount = Number(paymentData?.amountCents ?? portal.deposit_amount_cents ?? NaN);
+  const amountCents = Number.isFinite(rawAmount) ? rawAmount : null;
 
   const { error: projectError } = await supabaseAdmin
     .from("customer_portal_projects")

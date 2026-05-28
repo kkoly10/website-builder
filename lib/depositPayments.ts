@@ -145,6 +145,15 @@ export async function ensureWebsiteQuoteDepositLink(args: {
     roundMoney(centsToDollars(Number(portal?.deposit_amount_cents ?? 0))) ||
     Math.max(MIN_DEPOSIT_USD, Math.round(firmPrice * DEPOSIT_RATIO));
 
+  // Stripe rejects 0-amount checkout sessions with a 400 — fail fast
+  // with a clean error instead of letting the user click through to
+  // a broken Stripe page.
+  if (depositAmount <= 0) {
+    throw new Error(
+      `Cannot create deposit link: computed deposit amount is ${depositAmount} USD.`
+    );
+  }
+
   const successUrl = `${args.baseUrl}/deposit/success?session_id={CHECKOUT_SESSION_ID}`;
   const cancelParams = new URLSearchParams({ quoteId: args.quoteId });
   if (token) cancelParams.set("token", token);
@@ -307,6 +316,11 @@ export async function ensureEcommerceDepositLink(args: {
   }
 
   const depositAmount = roundMoney(args.depositAmount) || getDefaultEcommerceDepositAmount(quote);
+  if (depositAmount <= 0) {
+    throw new Error(
+      `Cannot create deposit link: computed deposit amount is ${depositAmount} USD.`
+    );
+  }
   const successUrl = `${args.baseUrl}/deposit/success?session_id={CHECKOUT_SESSION_ID}`;
   const cancelUrl = `${args.baseUrl}/deposit/cancel?lane=ecommerce&ecomIntakeId=${encodeURIComponent(args.ecomIntakeId)}`;
 
@@ -515,6 +529,11 @@ export async function ensureOpsDepositLink(args: {
     roundMoney(state.depositAmount) ||
     Math.max(MIN_DEPOSIT_USD, Math.round(pricingTarget * DEPOSIT_RATIO));
   const depositAmount = roundMoney(args.depositAmount) || defaultAmount;
+  if (depositAmount <= 0) {
+    throw new Error(
+      `Cannot create deposit link: computed deposit amount is ${depositAmount} USD.`
+    );
+  }
 
   const successUrl = `${args.baseUrl}/deposit/success?session_id={CHECKOUT_SESSION_ID}`;
   const cancelUrl = `${args.baseUrl}/deposit/cancel?lane=ops&opsIntakeId=${encodeURIComponent(args.opsIntakeId)}`;
