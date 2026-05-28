@@ -68,6 +68,41 @@ export default function SiteFooter() {
           <p>
             &copy; {new Date().getFullYear()} {tCommon("siteName")}. {t("rightsReserved")}
           </p>
+          {/*
+            Visible social links matching the sameAs entries in the
+            Organization JSON-LD. Two reasons to render them visibly:
+             1. Reciprocal-link signal — Google cross-checks visible
+                page content against schema sameAs, and a match raises
+                Knowledge Graph confidence.
+             2. Brand reach — visitors who don't book today follow on
+                Instagram / Facebook and re-encounter the brand later.
+            rel="me" identifies these as the same entity (Webmention /
+            Mastodon-style verification); rel="noopener" closes a window
+            handle leak when opening in a new tab.
+          */}
+          <div style={{ display: "flex", gap: 14, fontSize: 13 }}>
+            <a
+              href="https://www.facebook.com/share/1GFn42rFuS/"
+              target="_blank"
+              rel="me noopener noreferrer"
+            >
+              Facebook
+            </a>
+            <a
+              href="https://www.instagram.com/crecystudio"
+              target="_blank"
+              rel="me noopener noreferrer"
+            >
+              Instagram
+            </a>
+            <a
+              href="https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407"
+              target="_blank"
+              rel="me noopener noreferrer"
+            >
+              LinkedIn
+            </a>
+          </div>
           <a href="mailto:hello@crecystudio.com">hello@crecystudio.com</a>
         </div>
       </div>
