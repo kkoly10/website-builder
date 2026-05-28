@@ -317,7 +317,7 @@
     "ventures": {
       "label": "Projets du studio",
       "title": "De vrais systèmes que nous avons livrés.",
-      "intro": "Je n'intègre pas seulement l'IA dans les projets clients — j'ai construit et lancé deux produits propulsés par l'IA que je possède et exploite. Fleiko fait tourner un copilote IA pour des alertes flotte en temps réel. Proveo utilise la détection photo par IA pour automatiser les flux de travail des contractants. C'est ce parcours que j'apporte à votre projet.",
+      "intro": "Je n'intègre pas seulement l'IA dans les projets clients — j'ai construit et lancé quatre produits SaaS propulsés par l'IA que je possède et exploite. Fleiko fait tourner un copilote IA pour des alertes flotte en temps réel. Proveo utilise la détection photo par IA pour automatiser les flux de travail des contractants. Korent gère les opérateurs de location de fêtes et d'événements avec un inventaire et une planification assistés par IA. Kocre IT exécute un helpdesk propulsé par l'IA pour le support informatique externalisé. C'est ce parcours que j'apporte à votre projet.",
       "fleiko": {
         "name": "Fleiko",
         "tagline": "Plateforme de gestion de flotte pour PME",
@@ -384,7 +384,7 @@
       "name": "Komlan Kouhiko",
       "role": "Fondateur et praticien unique",
       "bio1": "Je ne suis pas passé par une agence ni par un cursus en informatique. En 2024, j'ai lancé une activité de location de voitures en Virginie du Nord avec 7 véhicules et une police d'assurance commerciale. Turo prélevait une part importante de chaque réservation, alors j'ai appris à construire ma propre plateforme — un système complet de réservation et de gestion de flotte — et j'ai gardé les bénéfices. J'ai opéré cette entreprise pendant plus d'un an, en gérant simultanément les opérations, les clients et le code.",
-      "bio2": "Quand les coûts opérationnels m'ont poussé à pivoter, j'ai publié sur Facebook Marketplace en proposant de construire des sites web. J'ai obtenu quelques clients. Ils ont apprécié le travail. Depuis, j'ai livré des plateformes opérationnelles pour un centre de réparation, une boutique de dropshipping, des services IT et la gestion de flotte — ainsi que deux produits SaaS en production aujourd'hui.",
+      "bio2": "Quand les coûts opérationnels m'ont poussé à pivoter, j'ai publié sur Facebook Marketplace en proposant de construire des sites web. J'ai obtenu quelques clients. Ils ont apprécié le travail. Depuis, j'ai livré des plateformes opérationnelles pour un centre de réparation, une boutique de dropshipping, des services IT et la gestion de flotte — ainsi que quatre produits SaaS (Fleiko, Proveo, Korent, Kocre IT) en production aujourd'hui.",
       "bio3": "Chaque projet chez CrecyStudio passe par moi. Pas de juniors, pas de transferts. Vous travaillez avec un constructeur qui s'est assis à votre place.",
       "linkedin": "Connectons-nous sur LinkedIn →",
       "linkedinHref": "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407"

@@ -227,12 +227,13 @@ export function organizationNode(): GraphNode {
     knowsAbout: [
       "Web development",
       "Custom web applications",
-      // SaaS coverage. The studio owns and operates three production
+      // SaaS coverage. The studio owns and operates four production
       // SaaS products (Fleiko fleet SaaS, Proveo contractor SaaS,
-      // TechDesk IT helpdesk SaaS), which is rare authority for
-      // these queries — but until these phrases were on the schema,
-      // Google had no way to match the studio to "SaaS development
-      // agency" / "B2B SaaS builder" / "SaaS MVP" searches.
+      // Korent rental SaaS, Kocre IT helpdesk SaaS), which is rare
+      // authority for these queries — but until these phrases were
+      // on the schema, Google had no way to match the studio to
+      // "SaaS development agency" / "B2B SaaS builder" / "SaaS MVP"
+      // searches.
       "SaaS development",
       "B2B SaaS development",
       "SaaS product development",

@@ -317,7 +317,7 @@
     "ventures": {
       "label": "Proyectos del estudio",
       "title": "Sistemas reales que hemos lanzado.",
-      "intro": "No solo integro IA en proyectos de clientes — he construido y lanzado dos productos impulsados por IA que poseo y opero. Fleiko ejecuta un copiloto IA para alertas de flota en tiempo real. Proveo usa detección de fotos con IA para automatizar flujos de trabajo de contratistas. Ese historial es lo que aporto a su proyecto.",
+      "intro": "No solo integro IA en proyectos de clientes — he construido y lanzado cuatro productos SaaS impulsados por IA que poseo y opero. Fleiko ejecuta un copiloto IA para alertas de flota en tiempo real. Proveo usa detección de fotos con IA para automatizar flujos de trabajo de contratistas. Korent gestiona operadores de alquiler de fiestas y eventos con inventario y programación asistidos por IA. Kocre IT ejecuta un helpdesk con IA para soporte informático externalizado. Ese historial es lo que aporto a su proyecto.",
       "fleiko": {
         "name": "Fleiko",
         "tagline": "Plataforma de gestión de flotas para pequeñas empresas",
@@ -384,7 +384,7 @@
       "name": "Komlan Kouhiko",
       "role": "Fundador y único profesional",
       "bio1": "No vengo de una agencia ni de un programa de ciencias de la computación. En 2024 lancé un negocio de alquiler de coches en el norte de Virginia con 7 vehículos y una póliza de seguro comercial. Turo se llevaba una parte significativa de cada reserva, así que aprendí a construir mi propia plataforma — un sistema completo de reservas y gestión de flota — y me quedé con las ganancias. Operé ese negocio durante más de un año, gestionando simultáneamente las operaciones, los clientes y el código.",
-      "bio2": "Cuando los costos operativos me empujaron a pivotar, publiqué en Facebook Marketplace ofreciendo construir sitios web. Conseguí algunos clientes. Les gustó el trabajo. Desde entonces he lanzado plataformas operativas para un centro de reparaciones, una tienda de dropshipping, servicios IT y gestión de flotas — además de dos productos SaaS que están en producción hoy.",
+      "bio2": "Cuando los costos operativos me empujaron a pivotar, publiqué en Facebook Marketplace ofreciendo construir sitios web. Conseguí algunos clientes. Les gustó el trabajo. Desde entonces he lanzado plataformas operativas para un centro de reparaciones, una tienda de dropshipping, servicios IT y gestión de flotas — además de cuatro productos SaaS (Fleiko, Proveo, Korent, Kocre IT) que están en producción hoy.",
       "bio3": "Cada proyecto en CrecyStudio pasa por mí. Sin juniors, sin traspasos. Trabaja con un constructor que se ha sentado en su lado de la mesa.",
       "linkedin": "Conectemos en LinkedIn →",
       "linkedinHref": "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407"
@@ -3457,7 +3457,7 @@
     "s4Body": "La capa IA de Korent está conformada como copiloto, no como agente: hace aflorar lo que un operador experimentado notaría pero uno ocupado podría pasar por alto. La prevención de conflictos de inventario corre proactivamente — cuando un operador edita manualmente las fechas de un pedido, la IA marca posibles solapamientos con otras reservas antes de guardar el cambio, en lenguaje claro. Las sugerencias de programación de entregas miran restricciones de ruta, equipo y ventana horaria y recomiendan ordenamientos que el operador puede aceptar con un clic. La redacción de mensajes al cliente saca contexto del historial del pedido y propone respuestas para consultas comunes (preguntas sobre reembolsos de depósito, políticas de cancelación por clima, preguntas de capacidad). Cada superficie de IA es Nivel 2 — sugiere, el operador confirma — así que una sugerencia IA incorrecta cuesta un clic extra, no una reserva fallida. Misma forma de autonomía que usamos en nuestros cuatro productos SaaS: la IA acelera el juicio del operador sin reemplazarlo.",
     "callout": "Korent es nuestro tercer producto SaaS propio. Misma disciplina de ingeniería que aportamos al trabajo con clientes — multi-tenant desde el día uno, RLS en cada tabla, copilotos IA detrás de confirmación, facturación que maneja cancelaciones y prorrateos sin que nadie tenga que pensar en ello.",
     "closingTitle": "¿Construyendo un SaaS como Korent?",
-    "closingBody": "Ya sea un SaaS vertical para un mercado mal atendido, una plataforma multi-tenant con un modelo de datos complejo, o un MVP de SaaS que necesita enviarse en 6-10 semanas — lo hemos hecho para nosotros mismos cuatro veces y para clientes muchas más. Podemos cadrar el suyo.",
+    "closingBody": "Ya sea un SaaS vertical para un mercado mal atendido, una plataforma multi-tenant con un modelo de datos complejo, o un MVP de SaaS que necesita enviarse en 6-10 semanas — lo hemos hecho para nosotros mismos cuatro veces y para clientes muchas más. Podemos definir el alcance del suyo.",
     "closingCta": "Iniciar un proyecto SaaS",
     "closingCtaSecondary": "Ver cómo trabajamos"
   },
