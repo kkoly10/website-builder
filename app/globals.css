@@ -82,6 +82,37 @@ a { color: inherit; text-decoration: none; }
 .topNavLinkActive::after { background: var(--accent); }
 .navForm { margin: 0; }
 
+.navServicesWrap { position: relative; display: inline-flex; }
+.navServicesTrigger { background: transparent; border: 0; cursor: pointer; font: inherit; }
+.navServicesChevron { display: inline-block; margin-left: .3rem; font-size: .85em; transition: transform .15s ease; }
+.navServicesTrigger[aria-expanded="true"] .navServicesChevron { transform: rotate(180deg); }
+.navServicesPanel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 240px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-top: 0;
+  padding: .4rem;
+  display: grid;
+  gap: .2rem;
+  z-index: 30;
+  box-shadow: 0 8px 24px rgba(0,0,0,.06);
+}
+.navServicesItem {
+  display: block;
+  padding: .65rem .85rem;
+  font: 500 11px/1.2 var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+.navServicesItem:hover { color: var(--ink); border-color: var(--rule); }
+.navServicesItemActive { color: var(--accent); border-color: var(--accent); }
+
 .mobileMenu { display: none; position: relative; }
 .mobileMenuSummary { list-style: none; border: 1px solid var(--rule); background: var(--paper); width: 44px; height: 44px; display: grid; place-items: center; gap: 3px; }
 .mobileMenuSummary span { width: 16px; height: 2px; background: var(--ink); display: block; }

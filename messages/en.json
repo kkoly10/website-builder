@@ -17,6 +17,8 @@
     "decline": "Decline"
   },
   "nav": {
+    "services": "Services",
+    "servicesAria": "Services menu",
     "websites": "Websites",
     "ecommerce": "E-commerce",
     "websiteRescue": "Website rescue",

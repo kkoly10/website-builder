@@ -17,6 +17,8 @@
     "decline": "Rechazar"
   },
   "nav": {
+    "services": "Servicios",
+    "servicesAria": "Menú de servicios",
     "websites": "Sitios web",
     "ecommerce": "E-commerce",
     "websiteRescue": "Rescate web",
