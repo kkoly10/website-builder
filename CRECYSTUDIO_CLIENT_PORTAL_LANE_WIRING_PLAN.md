@@ -1,116 +1,121 @@
-# CrecyStudio — Client Portal Lane Wiring Plan (Week 1)
+# CrecyStudio — Client Portal Lane Wiring Plan (Week 1) — v2
 
-Status: planning · not yet implemented
+Status: planning · not yet implemented · revised after verification reads
 Owner: Komlan
-Scope: wire the Client Portal lane end-to-end so portal-lane intakes stop
-dead-ending into the generic estimate flow
+Scope: wire the Client Portal lane end-to-end so portal-lane intakes get
+the right project type, the right direction schema (matching intake
+depth), and the right pricing engine
+
+## Why v2
+
+V1 of this plan had real flaws I caught on self-review and verified
+against the code. Material corrections:
+
+- **Portal intake is mistagged, not dead-ending.** `PortalIntakeClient.tsx:186`
+  posts `projectType: "web_app"` with `intakeRaw.projectSubType: "portal"`.
+  Existing portal clients run through the **Custom Web App** workflow + a
+  generic `product_direction` form — not "estimate limbo" as v1 claimed.
+  Defect: real but less acute. Mistagging means portal-specific intake
+  data (access type, multi-tenancy, compliance) is captured then ignored
+  because the direction form doesn't ask for it.
+- **Validator is lane-agnostic.** `lib/directions/validate.ts:81` reads
+  the schema via `getDirectionSchema(directionType)` and validates
+  field-by-type. Adding `portal_direction` is just registering the
+  schema — no validator case to add. Saves ~1 hr.
+- **Three pricing tiers, not four.** Verified at
+  `lib/service-pages.ts:1232-1255`: Portal add-on ($5k–$10k), Standalone
+  ($22k–$45k), Enterprise (From $75k).
+- **TS sweep is wider than 30 min.** Five concrete callsites identified
+  (listed below). Closer to ~1.5 hr realistically.
+- **Schema must be richer than v1's 7 fields.** V1 reproduced the very
+  depth-then-collapse defect this plan exists to fix. Now 12 fields
+  matching intake depth + boutique research (permissions matrix, audit
+  trail, data-isolation, integration flows).
+- **Existing mistagged leads** need an operational decision: migrate
+  to `client_portal` or leave as `web_app`. Plan addresses it.
+- **Schema duplication-vs-extension** trade-off flagged for your call.
+- **Sequencing reconsidered** — now that we know Portal isn't dead-ending,
+  the case for "fix Portal first" vs "ship Decision Log first" weakens.
+  Discussion below.
 
 ## Goal
 
-Make Client Portal a coherent service lane like Custom Web App, Automation,
-E-commerce, and Rescue: intake → pricing → workflow template → portal
-direction → admin pipeline.
-
-Right now the lane is **half-built** and **structurally broken**:
-
-- ✅ Marketing landing page at `/client-portals` (4 pricing tiers, 8 FAQs)
-- ✅ Intake form at `/portal-intake` (22 questions, depth on par with other
-  lanes)
-- ❌ **No `client_portal` in the `ProjectType` union** —
-  `lib/workflows/types.ts:10-15` has only website, web_app, automation,
-  ecommerce, rescue
-- ❌ **No `portal_direction` in the `DirectionType` union** — same file
-  lines 17-23
-- ❌ **No workflow template** in `lib/workflows/templates.ts` — every other
-  lane has one with milestones, required actions, launch checks
-- ❌ **No pricing engine** at `lib/pricing/portal.ts` — landing page
-  advertises 4 tiers but intake produces no recommendation
-- ❌ **Intake POSTs to `/api/submit-estimate`** (the *website* intake
-  endpoint at `PortalIntakeClient.tsx:186`) — so leads get misclassified
-  as website projects
-
-Net effect: a customer fills out 22 portal-intake questions, the lead
-becomes either a website lead or a generic estimate, and they never get
-the structured portal experience the landing page promised.
+Make Client Portal a coherent first-class lane: intake correctly tagged
+→ portal-specific pricing → portal-specific workflow template → portal-
+specific direction schema → admin pipeline that treats it as its own
+lane.
 
 ## What this plan does NOT do (deliberately scoped out)
 
-- **Decision log** — separate plan (Week 2). It's lane-agnostic and will
-  benefit every lane including Client Portal.
-- **Weekly Friday digest** — separate plan (Week 3).
-- **Mobile-friendly approval surface** for the generic `DirectionForm` —
-  separate plan; reuses the patterns from
-  `CRECYSTUDIO_DESIGN_DIRECTION_UPGRADE_PLAN.md` Task 5.
-- **Expanding the other generic-direction schemas (store_direction,
-  product_direction, workflow_direction, rescue_diagnosis) past their
-  current 5-6 field state** — those lanes work today, just thin. Even-
-  coverage strategy that the studio deferred in favor of reliability.
-- **Building lane-specific admin panels** beyond what the Client Portal
-  lane needs — admin pipelines for Custom Web App and Rescue can wait.
+- Decision log, weekly digest, mobile-friendly approvals on the generic
+  `DirectionForm` — Week 2/3 plans
+- Expanding other generic schemas past their current 5-6 fields
+- Dedicated `app/internal/admin/portals/` pipeline (defer until volume
+  justifies; lane works with shared pipeline)
+- i18n of direction form labels — same gap exists on every other lane;
+  it's a separate i18n track
 
-## File map
+## Verified file map
 
-Lane wiring touches both sides + i18n:
+**Type definitions (foundation):**
+- `lib/workflows/types.ts:10-15` — `ProjectType` union (add `client_portal`)
+- `lib/workflows/types.ts:17-23` — `DirectionType` union (add `portal_direction`)
+- `lib/workflows/types.ts:82-89` — `ALLOWED_DIRECTION_BY_PROJECT_TYPE`
+  strict map (**critical — v1 missed this**)
+- `lib/workflows/types.ts:91+` — `PROJECT_TYPES` readonly array
 
-**Type definitions (the foundation):**
-- `lib/workflows/types.ts` — extend `ProjectType` + `DirectionType` unions
+**TS exhaustive callsites that will flag** (verified via grep):
+- `lib/customerPortal.ts:628-643` — `directionLabelForProjectType` switch
+- `lib/customerPortal.ts:645-660` — admin equivalent switch
+- `app/api/internal/admin/pre-contract/route.ts:54, 69, 112` — three switches
+  for pre-contract draft titles/bodies/templates
 
 **Direction module:**
-- `lib/directions/schemas.ts` — add `PORTAL_DIRECTION_SCHEMA`
-- `lib/directions/validate.ts` — add a case for `portal_direction` (likely
-  a switch on direction.type — confirm and extend)
-- `lib/directions/state.ts` — confirm no per-type branching is needed
+- `lib/directions/schemas.ts` — add `PORTAL_DIRECTION_SCHEMA` and register
+  it in `getDirectionSchema()`. No new validator case needed.
+- `lib/directions/state.ts` — confirm no per-type branching; spot-check.
 
 **Workflow + pricing:**
-- `lib/workflows/templates.ts` — add `CLIENT_PORTAL_WORKFLOW_TEMPLATE` and
-  register it in the `WORKFLOW_TEMPLATES` map (line 398)
+- `lib/workflows/templates.ts:398-405` — register `CLIENT_PORTAL_WORKFLOW_TEMPLATE`
 - `lib/pricing/portal.ts` — **new file**, mirrors `lib/pricing/web_app.ts`
 
 **Intake routing:**
-- `app/[locale]/portal-intake/PortalIntakeClient.tsx` line 186 — point to
-  the right submit endpoint and pass `projectType: "client_portal"`
-- `app/api/submit-estimate/route.ts` (or whatever the portal endpoint
-  becomes) — branch on `projectType` to call `getPortalPricing()` and tag
-  the lead correctly. Locate during implementation.
+- `app/[locale]/portal-intake/PortalIntakeClient.tsx:186` — change
+  `projectType: "web_app"` to `projectType: "client_portal"`; drop the
+  `intakeRaw.projectSubType: "portal"` workaround
+- `app/api/submit-estimate/route.ts` — branch on `projectType` to call
+  `getPortalPricing()` and tag the lead correctly. Confirm path during
+  implementation.
 
-**Existing types map fanout (TS will flag these via exhaustive switches):**
-- `lib/adminProjectData.ts` — has an overlapping ProjectType per
-  `types.ts:9` comment ("Other modules currently define overlapping
-  ProjectType enums"). Extend.
-- `lib/pricing/types.ts` — same.
-- Any `switch (projectType)` or `Record<ProjectType, ...>` is a TS-flagged
-  callsite once the union grows. Fix each.
+**Existing overlapping ProjectType enums** (the `lib/workflows/types.ts:9`
+comment names them):
+- `lib/adminProjectData.ts` — has its own ProjectType
+- `lib/pricing/types.ts` — has its own ProjectType
+Both must grow `client_portal`.
 
-**Component layer (likely needs no changes — confirm):**
-- `components/portal/directions/DirectionModuleResolver.tsx` should work
-  unchanged since portal_direction will flow through the generic
-  `DirectionCard`. Verify.
-- `components/internal/` — the generic `DirectionAdminPanel` handles
-  portal_direction without modification.
+**Component layer (verified no changes needed):**
+- `components/portal/directions/DirectionModuleResolver.tsx` — already
+  generic, routes by `direction` vs `designDirection` field presence
+- `components/internal/DirectionAdminPanel` (generic) — handles
+  `portal_direction` without modification
 
-**Admin (Client Portal pipeline — DEFERRED to a later track):**
-- A dedicated `app/internal/admin/portals/` pipeline like
-  `ecommerce/`/`ops/` is *nice-to-have* but not required for this lane to
-  function. Lane works with the shared `ProjectControlClient`. Track
-  separately if you want it.
-
-**i18n (translations):**
-- `messages/en.json`, `messages/fr.json`, `messages/es.json` — wherever
-  direction/lane labels live. The DirectionForm already pulls field
-  labels from the schema, so per-field i18n may not be needed; confirm.
+**Admin pipeline (deferred):**
+- Dedicated `app/internal/admin/portals/` like `ecommerce/`/`ops/` —
+  nice-to-have but not needed for the lane to function. Track separately.
 
 ---
 
-## Task 1 — Extend `ProjectType` and `DirectionType` unions
+## Task 1 — Extend the type unions + maps (verified scope)
 
-**Effort:** 30 minutes (most of the time is fixing every TS error the
-expansion triggers)
+**Effort:** **1–1.5 hours** (v1's 30 min was optimistic)
 **Why:** every downstream piece (workflow template, pricing, intake
-routing) gates on these unions. They're the foundation.
+routing) gates on these unions. The map at `types.ts:82` is the
+foundation for "which direction type is allowed for which project type"
+— without it, the lane is unreachable from admin checks.
 
-### Change
+### Changes
 
-In `lib/workflows/types.ts`:
+**`lib/workflows/types.ts`:**
 
 ```ts
 export type ProjectType =
@@ -128,35 +133,55 @@ export type DirectionType =
   | "store_direction"
   | "rescue_diagnosis"
   | "portal_direction";
+
+export const ALLOWED_DIRECTION_BY_PROJECT_TYPE: Record<ProjectType, DirectionType> = {
+  website: "design_direction",
+  web_app: "product_direction",
+  automation: "workflow_direction",
+  ecommerce: "store_direction",
+  rescue: "rescue_diagnosis",
+  client_portal: "portal_direction",  // ← new
+};
+
+export const PROJECT_TYPES: readonly ProjectType[] = [
+  "website",
+  "web_app",
+  "automation",
+  "ecommerce",
+  "rescue",
+  "client_portal",  // ← new
+];
 ```
 
-### Backward compat
+**TS sweep — 5 callsites to fix:**
 
-The "overlapping ProjectType enums" comment at `types.ts:9` means
-`lib/adminProjectData.ts` and `lib/pricing/types.ts` define their own
-`ProjectType` unions. Extend them in parallel. Anywhere TypeScript flags
-a missing case, add `client_portal` handling.
+1. `lib/customerPortal.ts:628-643` — add `case "client_portal": return "Client portal direction";`
+2. `lib/customerPortal.ts:645-660` — add `case "client_portal": return "CrecyStudio portal direction review";`
+3. `app/api/internal/admin/pre-contract/route.ts:54` — add `case "client_portal": return "CLIENT PORTAL PRE-CONTRACT DRAFT";`
+4. `app/api/internal/admin/pre-contract/route.ts:69` — add the body template case
+5. `app/api/internal/admin/pre-contract/route.ts:112` — add the third switch case
+
+**Overlapping ProjectType in:**
+- `lib/adminProjectData.ts` — extend
+- `lib/pricing/types.ts` — extend
 
 ### Acceptance criteria
 
 - `npm run lint` passes
-- No runtime regressions on other lanes
+- No regression on other lanes (each existing lane still routes correctly)
 
 ---
 
-## Task 2 — Add `PORTAL_DIRECTION_SCHEMA`
+## Task 2 — `PORTAL_DIRECTION_SCHEMA` (12 fields, matching intake depth)
 
-**Effort:** 1–2 hours (the design work is picking the right fields, not
-the typing)
-**Why:** the portal-direction module needs a schema to drive
-`DirectionForm` rendering + `validateDirectionPayload` validation.
+**Effort:** 2 hours (mostly designing the right fields; typing is short)
+**Why:** v1's 7-field schema reproduced the depth-then-collapse defect.
+Boutique research called for a **permissions matrix**, **audit-trail
+spec**, **data-isolation diagram** for B2B multi-tenant — none in v1.
+12 fields aligns with intake depth (22 questions) and ships the
+artifacts buyers expect at $5k–$75k+.
 
 ### Schema design
-
-Based on what the portal-intake form already captures (22 questions) and
-what the 2026 boutique research said portal projects need to discover
-(user-role inventory + permissions matrix + integrations + audit-trail
-spec), propose ~7 fields:
 
 ```ts
 // In lib/directions/schemas.ts
@@ -167,8 +192,7 @@ export const PORTAL_DIRECTION_SCHEMA: DirectionSchema = {
       label: "What does this portal do?",
       type: "textarea",
       required: true,
-      helpText:
-        "One paragraph describing the portal's core job and the problem it solves for your team or clients.",
+      helpText: "One paragraph: the portal's core job and the problem it solves.",
       maxLength: 4000,
     },
     {
@@ -184,31 +208,87 @@ export const PORTAL_DIRECTION_SCHEMA: DirectionSchema = {
       type: "string-list",
       required: true,
       helpText:
-        "e.g. Admin, Reviewer, Billing-only, External Partner. Separate from raw permissions — combine when a user has multiple roles.",
+        "Distinct roles (e.g. Admin, Reviewer, Billing-only, External Partner). Separate from raw permissions — combine when a user has multiple roles.",
       maxItems: 8,
+    },
+    {
+      key: "rolePermissions",
+      label: "What can each role do?",
+      type: "textarea",
+      required: true,
+      helpText:
+        "High-level permissions per role. Example: 'Admin: full access. Reviewer: read + comment on milestones. Billing-only: invoices + payment only.' The detailed matrix gets locked during build.",
+      maxLength: 4000,
     },
     {
       key: "keyFeatures",
       label: "Must-have features",
-      type: "string-list",
+      type: "pills-multi",
       required: true,
-      helpText: "The 3–5 features the portal can't ship without.",
-      maxItems: 10,
+      options: [
+        "Payments / Stripe",
+        "File uploads + storage",
+        "Milestones + timeline",
+        "Messaging",
+        "Scheduling / booking",
+        "Custom forms",
+        "Multi-tenant data isolation",
+        "White-label branding",
+      ],
+      helpText: "Pick the features the portal can't ship without.",
+      maxItems: 8,
     },
     {
       key: "integrations",
-      label: "Existing systems to connect",
+      label: "External systems to connect",
       type: "string-list",
       helpText:
-        "CRM, accounting, file storage, Airtable/Sheets/Postgres — what the portal needs to read/write.",
+        "CRM, accounting, file storage, Airtable/Sheets/Postgres. What the portal needs to read or write to.",
       maxItems: 12,
     },
     {
-      key: "notificationsNeeded",
-      label: "What should trigger notifications?",
+      key: "integrationFlows",
+      label: "For each integration: read, write, or sync?",
       type: "textarea",
       helpText:
-        "Which events should email or in-app notify? Helps us scope the audit-trail and notification system.",
+        "For each integration above, note direction (portal → external, external → portal, or two-way sync) and frequency (real-time, hourly, daily).",
+      maxLength: 3000,
+    },
+    {
+      key: "multiTenancyModel",
+      label: "Data isolation model",
+      type: "select",
+      required: true,
+      options: [
+        "Single tenant (one organization)",
+        "Shared data across all users",
+        "Multi-tenant with strict per-org data isolation",
+      ],
+      helpText:
+        "For B2B portals serving multiple client organizations, strict per-org isolation is the boutique-tier default and what compliance frameworks require.",
+    },
+    {
+      key: "complianceRequirements",
+      label: "Compliance / regulatory needs",
+      type: "pills-multi",
+      options: ["GDPR", "HIPAA", "SOC 2", "Accessibility (WCAG 2.1 AA)", "PCI DSS", "Other"],
+      helpText: "Pick all that apply. Each adds specific build requirements.",
+      maxItems: 6,
+    },
+    {
+      key: "auditTrailEvents",
+      label: "What actions need an audit trail?",
+      type: "textarea",
+      helpText:
+        "What user/admin actions should be logged for compliance, troubleshooting, or accountability. Example: 'all payments, role changes, file deletions, login from new IP.'",
+      maxLength: 2000,
+    },
+    {
+      key: "notificationsEvents",
+      label: "What triggers notifications?",
+      type: "textarea",
+      helpText:
+        "What events generate email or in-app alerts. Example: 'milestone completed, file uploaded, message received, payment failed.'",
       maxLength: 2000,
     },
     {
@@ -216,38 +296,42 @@ export const PORTAL_DIRECTION_SCHEMA: DirectionSchema = {
       label: "How will you know it's working?",
       type: "textarea",
       required: true,
-      helpText: "What changes about your operation when this portal is live?",
+      helpText:
+        "What changes about your operation when this portal is live? Concrete is better than vague.",
       maxLength: 2000,
     },
   ],
 };
 ```
 
-### Validator
+### Register the schema
 
-`lib/directions/validate.ts` — find the per-type validation logic (likely
-a switch). Add the `portal_direction` case that maps over the schema's
-fields. The existing pattern for other types should be reusable.
+`lib/directions/schemas.ts` `getDirectionSchema()` — add the case
+returning `PORTAL_DIRECTION_SCHEMA` for `"portal_direction"`.
+**No validator changes needed** — `validateDirectionPayload` reads the
+schema via `getDirectionSchema()` and validates field-by-type
+(`validate.ts:81-110`).
 
 ### Acceptance criteria
 
-- Schema renders in the client-side form
-- Validator rejects payloads with missing required fields
+- All 12 fields render in `DirectionForm` for portal clients
+- Validator rejects payloads missing required fields
 - Validator accepts well-formed payloads
+- Admin reviewer's `DirectionSummary` shows all 12 field values
 
 ---
 
-## Task 3 — Add `CLIENT_PORTAL_WORKFLOW_TEMPLATE`
+## Task 3 — `CLIENT_PORTAL_WORKFLOW_TEMPLATE`
 
-**Effort:** 1–2 hours (design the milestone arc; mostly mechanical typing)
-**Why:** without a workflow template, `ensureCustomerPortalForQuoteId`
-won't know what milestones / required actions / launch checks to seed.
+**Effort:** 2 hours
+**Why:** without a template, `ensureCustomerPortalForQuoteId` won't seed
+the right milestones / required actions / launch checks for a portal
+project. Template structure already validated against
+`CUSTOM_WEB_APP_WORKFLOW_TEMPLATE` (lines 86-180).
 
-### Template design
+### Schema design
 
-Modeled on `CUSTOM_WEB_APP_WORKFLOW_TEMPLATE` (`templates.ts:86-180`)
-since a client portal IS a custom app from a build perspective, but with
-portal-flavored milestones:
+12 milestones tailored to portal builds (vs Custom Web App):
 
 ```ts
 export const CLIENT_PORTAL_WORKFLOW_TEMPLATE: WorkflowTemplate = {
@@ -263,7 +347,7 @@ export const CLIENT_PORTAL_WORKFLOW_TEMPLATE: WorkflowTemplate = {
     { key: "foundation_built", title: "Portal foundation built", owner: "studio", sortOrder: 60 },
     { key: "features_built", title: "Core features built", owner: "studio", sortOrder: 70 },
     { key: "integrations_connected", title: "Integrations connected", owner: "studio", sortOrder: 80 },
-    { key: "qa_complete", title: "QA testing complete", owner: "studio", sortOrder: 90 },
+    { key: "qa_complete", title: "QA + audit trail testing complete", owner: "studio", sortOrder: 90 },
     { key: "uat_complete", title: "Client UAT complete", owner: "client", sortOrder: 100 },
     { key: "production_launch", title: "Production launch", owner: "studio", sortOrder: 110 },
     { key: "handoff_support", title: "Handoff & support", owner: "studio", sortOrder: 120 },
@@ -272,7 +356,7 @@ export const CLIENT_PORTAL_WORKFLOW_TEMPLATE: WorkflowTemplate = {
     {
       key: "complete_portal_direction",
       title: "Complete Portal Direction",
-      description: "Confirm portal purpose, access type, user roles, features, integrations, notifications, and success metric.",
+      description: "Confirm portal purpose, access type, roles, permissions, features, integrations, multi-tenancy model, compliance, audit trail, notifications, and success metric.",
       owner: "client",
       status: "waiting_on_client",
       unlocksMilestone: "portal_direction_approved",
@@ -288,7 +372,7 @@ export const CLIENT_PORTAL_WORKFLOW_TEMPLATE: WorkflowTemplate = {
     {
       key: "approve_integrations_plan",
       title: "Approve integrations plan",
-      description: "Sign off on the list of external systems and how the portal reads/writes each.",
+      description: "Sign off on the list of external systems and the read/write/sync direction for each.",
       owner: "client",
       status: "not_started",
       unlocksMilestone: "integration_plan_confirmed",
@@ -321,11 +405,12 @@ export const CLIENT_PORTAL_WORKFLOW_TEMPLATE: WorkflowTemplate = {
   launchChecks: [
     { key: "production_env", title: "Production environment configured", owner: "studio" },
     { key: "auth_permissions", title: "Authentication & per-role permissions tested", owner: "studio" },
-    { key: "database_writes", title: "Database writes tested", owner: "studio" },
-    { key: "integrations", title: "All integrations tested", owner: "studio" },
+    { key: "data_isolation", title: "Multi-tenant data isolation tested (if applicable)", owner: "studio" },
     { key: "audit_trail", title: "Audit trail logged for sensitive actions", owner: "studio" },
-    { key: "email_notifications", title: "Email/notifications tested", owner: "studio" },
-    { key: "admin_access", title: "Admin access confirmed", owner: "studio" },
+    { key: "integrations", title: "All integrations tested in production", owner: "studio" },
+    { key: "compliance_review", title: "Compliance requirements verified", owner: "studio" },
+    { key: "email_notifications", title: "Email/in-app notifications tested", owner: "studio" },
+    { key: "admin_access", title: "Admin access + role escalation tested", owner: "studio" },
     { key: "handoff_docs", title: "Handoff documentation provided", owner: "studio" },
   ],
   direction: {
@@ -335,18 +420,23 @@ export const CLIENT_PORTAL_WORKFLOW_TEMPLATE: WorkflowTemplate = {
       portalPurpose: "",
       accessType: "",
       userRoles: [],
+      rolePermissions: "",
       keyFeatures: [],
       integrations: [],
-      notificationsNeeded: "",
+      integrationFlows: "",
+      multiTenancyModel: "",
+      complianceRequirements: [],
+      auditTrailEvents: "",
+      notificationsEvents: "",
       successMetric: "",
     },
   },
 };
 ```
 
-### Register the template
+### Register
 
-`lib/workflows/templates.ts:398-405` — add the entry:
+`lib/workflows/templates.ts:398-405`:
 
 ```ts
 export const WORKFLOW_TEMPLATES: Record<ProjectType, WorkflowTemplate> = {
@@ -359,31 +449,17 @@ export const WORKFLOW_TEMPLATES: Record<ProjectType, WorkflowTemplate> = {
 };
 ```
 
-### Acceptance criteria
-
-- Creating a `client_portal` project seeds the milestones, required
-  actions, and launch checks
-- The 12-milestone customer journey strip renders for portal clients
-- `ensureCustomerPortalForQuoteId` doesn't throw for `projectType:
-  "client_portal"`
-
 ---
 
-## Task 4 — Add `lib/pricing/portal.ts`
+## Task 4 — `lib/pricing/portal.ts` (3 tiers, real $ ranges)
 
-**Effort:** half day (the design work is mapping intake questions to
-tiers; the typing is short)
-**Why:** the landing page advertises 4 pricing tiers; the intake produces
-no recommendation today. Sales conversation breaks on "what will this
-cost?"
+**Effort:** half day including a unit test
+**Why:** intake produces no recommendation today. Sales conversation
+breaks on "what will this cost?"
 
 ### Approach
 
-Mirror `lib/pricing/web_app.ts` structurally. Inputs are the intake
-fields (access type, user count, feature set size, integration count,
-budget, timeline). Output is a tier recommendation matching the 4 tiers
-on `/client-portals` (add-on / standalone / advanced / enterprise — read
-exact names from `lib/service-pages.ts:1166-1345`).
+Three tiers matching `lib/service-pages.ts:1232-1255`:
 
 ```ts
 // lib/pricing/portal.ts
@@ -392,97 +468,196 @@ export type PortalPricingInput = {
   userCount: "1-10" | "11-50" | "51-200" | "200+" | "unknown";
   featureCount: number;
   integrationCount: number;
-  budget: "under_5k" | "5k-10k" | "10k-25k" | "25k-50k" | "50k+" | "unknown";
-  hardDeadline: "yes" | "no" | "soft";
+  isMultiTenant: boolean;
+  hasCompliance: boolean;
+  budget: "under_5k" | "5k-10k" | "10k-25k" | "25k-50k" | "50k-100k" | "100k+" | "unknown";
   techTeam: "none" | "some" | "yes";
+  isAddOn: boolean;  // true if customer's existing website-build is in flight
 };
 
+export type PortalPricingTier = "add_on" | "standalone" | "enterprise";
+
 export type PortalPricingResult = {
-  tier: "add_on" | "standalone" | "advanced" | "enterprise";
-  estimateLow: number;
-  estimateHigh: number;
+  tier: PortalPricingTier;
+  label: string;        // "Portal add-on" / "Standalone portal" / "Enterprise build"
+  estimateLow: number;  // dollars
+  estimateHigh: number; // dollars
   rationale: string;
-  flags: string[];
+  flags: string[];      // e.g. "discovery sprint required", "compliance scope adds 20%"
 };
 
 export function getPortalPricing(input: PortalPricingInput): PortalPricingResult {
-  // … scoring + tier selection logic
+  // Add-on: small feature set, < 50 users, 0-2 integrations, single-tenant, no compliance, isAddOn=true
+  // Enterprise: multi-tenant + compliance + 100+ users OR budget 50k+
+  // Standalone: everything else
+  // … scoring logic
 }
 ```
 
+Tier mapping verified against the landing page:
+- **Portal add-on**: $5,000–$10,000 ("Most common starting point")
+- **Standalone portal**: $22,000–$45,000
+- **Enterprise build**: From $75,000 ("Discovery sprint required")
+
+### Unit test
+
+`lib/__tests__/portal-pricing.test.ts` — verify:
+- Lowest input → `add_on` tier
+- Multi-tenant + compliance → `enterprise` tier
+- Mid-tier input → `standalone`
+- Boundary cases (5–10k budget, single-tenant, light compliance)
+
 ### Acceptance criteria
 
-- A buyer who picks "clients only / 1-10 users / 3 features / 1
-  integration" gets the lowest tier
-- Enterprise inputs route to the enterprise tier
-- Returned tier matches what `/client-portals` lists
-- Unit-testable (add test in `lib/__tests__/`)
+- All three tiers reachable via input combinations
+- Unit test green
+- Returned label matches landing page tier name exactly
 
 ---
 
 ## Task 5 — Wire the intake submit + routing
 
-**Effort:** ~half day
-**Why:** the intake form currently posts to the *website* estimate
-endpoint (`PortalIntakeClient.tsx:186` → `/api/submit-estimate`). The
-lead gets created without `projectType: "client_portal"`.
+**Effort:** half day
+**Why:** intake currently sends `projectType: "web_app"` with
+`projectSubType: "portal"` workaround. Once `client_portal` exists as
+a real type, the workaround can drop.
 
-### Change
+### Changes
 
-Two parts:
+**`app/[locale]/portal-intake/PortalIntakeClient.tsx:186`:**
 
-**Frontend (`PortalIntakeClient.tsx`):**
+```diff
+- projectType: "web_app",
++ projectType: "client_portal",
+  ...
+  intakeRaw: {
+-   projectSubType: "portal",
+    ...
+  }
+```
 
-Either:
-- (a) Keep submitting to `/api/submit-estimate` but pass an explicit
-  `projectType: "client_portal"` in the body, OR
-- (b) Submit to a new dedicated `/api/portal-intake/submit` endpoint that
-  knows the lane.
-
-Recommend (a) — less new surface area, follows the pattern Custom Web App
-already uses (it shares the same endpoint per the codebase recon).
-
-**Backend (`app/api/submit-estimate/route.ts` — locate during impl):**
+**`app/api/submit-estimate/route.ts`** (confirm path during impl):
 
 Branch on `projectType`. When `"client_portal"`:
-- Call `getPortalPricing()` instead of the website pricing engine
-- Persist the lead with the right `projectType` so admin sees it as a
-  portal lane
+- Call `getPortalPricing()` (not website or web_app pricing)
+- Persist the lead with `projectType: "client_portal"` so admin master
+  list shows the right lane label
 
 ### Acceptance criteria
 
-- A portal-intake submission creates a lead with
-  `projectType: "client_portal"` in the quotes table
-- Admin dashboard's master list shows the new lead's tier as "portal"-
-  labeled (not "website" / "unspecified")
-- The submission triggers the correct workflow template when
-  `ensureCustomerPortalForQuoteId` runs (Task 3 makes this work)
+- New portal-intake submission creates a lead with
+  `projectType: "client_portal"`
+- Pricing recommendation returned in the response matches one of the 3 tiers
+- Admin master list shows "Client Portal" lane label
+- The submission triggers `CLIENT_PORTAL_WORKFLOW_TEMPLATE` when
+  `ensureCustomerPortalForQuoteId` runs
 
 ---
 
-## Task 6 — End-to-end verification on production
+## Task 6 — Migration plan for existing mistagged leads
 
-**Effort:** ~1 hour (Playwright test, mirroring the pattern used for DD)
-**Why:** confirm the lane works end-to-end, the same way we just verified
-the DD upgrade.
+**Effort:** **1 hour** (analysis + decision; potentially a one-time SQL)
+**Why:** **v1 missed this entirely.** Existing portal-intake submissions
+are stored with `projectType: "web_app"` + `intakeRaw.projectSubType: "portal"`.
+After Task 1 ships, these stay as `web_app` unless migrated.
 
-### Steps
+### The decision
 
-1. As the test customer, submit the `/portal-intake` form
-2. As admin, mark the resulting lead's deposit paid (via the same admin
-   API used in DD testing)
-3. Confirm the portal is created with `portal_direction` populated
-4. Confirm the customer sees the 7-field direction form on their portal
-5. Submit + admin approve + lock the direction
-6. Customer journey shows the 12 portal milestones
+Two options:
 
-Reuse the Playwright harness in `/tmp/dd-test/` from the DD test.
+**Option A — Leave existing leads as `web_app`** (recommended)
+- *Why:* they're already running the Custom Web App workflow template;
+  re-tagging them mid-flight would require re-seeding milestones, which
+  could orphan progress they've already made. Their portals work; the
+  experience is sub-optimal but coherent.
+- *Cost:* admin master list shows them under "Custom Web App" lane, not
+  "Client Portal." Minor admin confusion only.
+
+**Option B — Migrate them with a one-time SQL**
+- *What:* `UPDATE quotes SET project_type = 'client_portal' WHERE
+  intake_raw->>'projectSubType' = 'portal'`; then re-seed portal-direction
+  on their portals (only those still in pre-build stages)
+- *Risk:* mid-flight projects lose their existing direction record (which
+  was `product_direction`, not `portal_direction`). They'd need to
+  re-fill the 12 new portal_direction fields.
+
+### Recommendation
+
+**Option A.** Tag new submissions correctly; let existing ones run out as
+web_app. No SQL needed. If you want a clean cutover later, run the
+migration once portal lane is battle-tested.
 
 ### Acceptance criteria
 
-- Test runs green end-to-end
-- Customer sees the new portal-direction form
-- Admin sees the lane correctly in the master list
+- Decision made and noted in commit message
+- If Option A: a SQL queryable list of mistagged leads, for future
+  reference
+
+---
+
+## Task 7 — Decide schema duplication vs. extension
+
+**Effort:** 30 min (decision; no code yet)
+**Why:** **v1 made this choice silently.** My `PORTAL_DIRECTION_SCHEMA`
+duplicates much of `PRODUCT_DIRECTION_SCHEMA`'s structure. There's a
+real argument that "client_portal = web_app + access-control extensions" —
+extend the existing schema rather than duplicate.
+
+### Trade-off
+
+**Duplication (v1's choice):** each lane has its own schema. Pro: clean
+separation, lanes evolve independently. Con: schema drift, ~60% overlap
+with product_direction.
+
+**Extension:** portal_direction inherits product_direction's base fields,
+adds portal-specific ones (accessType, rolePermissions, multiTenancyModel,
+auditTrail, etc.). Pro: less duplication, shared field improvements
+benefit both. Con: changes to product_direction affect portals.
+
+### Recommendation
+
+**Duplicate.** Reasons:
+1. Every other lane already does this (each direction type has its own
+   schema in `lib/directions/schemas.ts`).
+2. The schemas drift naturally — `permissions matrix` and `audit trail`
+   are core to portals but not to general web apps. Shared schema would
+   accumulate optional fields and become brittle.
+3. The code pattern at `getDirectionSchema()` is already designed for
+   one-schema-per-type.
+
+But flag explicitly: this means if you ship a `permissions matrix UI`
+later, you'd want it in both portals AND web apps. Plan accordingly.
+
+### Acceptance criteria
+
+- Decision noted in plan / commit
+- If Extension: detailed merge plan for shared/portal-only fields
+
+---
+
+## Task 8 — End-to-end Playwright verification
+
+**Effort:** 1 hour
+**Why:** confirm the lane works end-to-end on production. Reuse the
+admin + customer creds + harness pattern from the DD test.
+
+### Test steps
+
+1. Submit `/portal-intake` as the test customer with realistic fake data
+2. Admin marks the new lead's deposit paid via the same admin API
+3. Confirm the new portal is created with `portal_direction: waiting_on_client`
+4. Customer visits the portal — sees the 12-field portal direction form
+5. Fill, draft-save (if Decision Log not yet shipped, just save+submit),
+   submit
+6. Admin marks under review → request changes → customer resubmits → admin
+   approves & locks
+7. Customer sees the 12 portal milestones rendered
+
+### Acceptance criteria
+
+- End-to-end test runs green against production
+- Both admin and customer experience the lane as portal-specific (not
+  web_app-flavored)
 
 ---
 
@@ -490,70 +665,119 @@ Reuse the Playwright harness in `/tmp/dd-test/` from the DD test.
 
 | # | Task | Effort | Notes |
 |---|------|--------|-------|
-| 1 | Extend `ProjectType` + `DirectionType` unions | 30 min | TS-error sweep included |
-| 2 | Add `PORTAL_DIRECTION_SCHEMA` + validator case | 1–2 hr | |
-| 3 | Add `CLIENT_PORTAL_WORKFLOW_TEMPLATE` + register | 1–2 hr | |
-| 4 | Build `lib/pricing/portal.ts` | half day | Includes unit test |
-| 5 | Wire intake submit + routing | half day | |
-| 6 | End-to-end Playwright verification | 1 hr | |
+| 1 | Extend type unions + maps + TS sweep | 1–1.5 hr | 5 callsites verified |
+| 2 | `PORTAL_DIRECTION_SCHEMA` (12 fields) + register | 2 hr | No validator changes needed |
+| 3 | `CLIENT_PORTAL_WORKFLOW_TEMPLATE` + register | 2 hr | 12 milestones / 6 required actions / 9 launch checks |
+| 4 | `lib/pricing/portal.ts` (3 tiers) + unit test | half day | $5–10k / $22–45k / $75k+ |
+| 5 | Intake submit + API routing | half day | Drop `projectSubType` workaround |
+| 6 | Existing-leads migration decision | 1 hr | Recommend Option A (leave) |
+| 7 | Duplication-vs-extension decision | 30 min | Recommend duplication |
+| 8 | E2E Playwright verification | 1 hr | Reuse DD test harness |
 
-Total: **~3–4 focused days**. Matches the original estimate.
+Total: **~3.5–4.5 focused days.** Slightly higher than v1's 3–4 because
+TS sweep is wider than estimated and Task 6/7 are new.
 
 ---
 
 ## Cross-cutting admin-side checklist
 
-Before marking each task done:
+For every task, before marking done:
 
-- [ ] `app/internal/admin/[id]/ProjectControlClient.tsx` doesn't reference a
-      stale field name — handles the new project type
-- [ ] The generic `DirectionAdminPanel` renders for `portal_direction`
-      without throwing
-- [ ] `app/api/internal/portal/admin-update/route.ts` accepts and persists
-      portal direction transitions
-- [ ] Admin master list shows portal projects with a "Client Portal" lane
-      label (not "website" / "unspecified")
-- [ ] Old website/web_app/etc. projects still render correctly — no
-      regression from the union expansion
+- [ ] Admin master list shows portal projects with "Client Portal" lane label
+- [ ] `app/internal/admin/[id]/ProjectControlClient.tsx` handles
+      `client_portal` without errors (no exhaustive-switch crashes)
+- [ ] Generic `DirectionAdminPanel` renders all 12 portal_direction fields
+- [ ] `app/api/internal/portal/admin-update/route.ts` accepts portal
+      direction transitions
+- [ ] Existing `web_app` and other-lane projects render correctly (no
+      regression from union expansion)
+- [ ] Pre-contract draft generation works for the new lane
+
+---
+
+## Success metrics (30 days post-launch)
+
+**v1 missed this.** Without metrics, we don't know if the lane is working.
+
+Track:
+
+1. **Direction form completion rate** — % of portal-intake leads that
+   submit the portal_direction form. Target: ≥70% (matches other lanes'
+   baseline once verified).
+2. **Time from intake → direction-submitted** — median days. Target: ≤7
+   days (boutique norm for direction discovery).
+3. **Conversion rate intake → deposit-paid** — compared against the same
+   metric on other lanes. Establish baseline.
+4. **"What's the status?" support messages from portal clients** — these
+   should drop once the structured experience exists. Target: ≤1 per
+   project lifecycle (down from current N — measure first to know).
+5. **Admin-side time-to-review-submission** — how long admin takes from
+   "submitted" to "under_review" or "approved". Target: ≤2 business days.
+
+Capture baseline numbers in the first 30 days; revisit at day 60.
 
 ---
 
 ## Open questions / decisions still needed
 
-1. **Should portal lane reuse the Custom Web App admin pipeline or get
-   its own?** Recommend reuse for now; build a dedicated pipeline later
-   if portal volume justifies it. Confirm.
-2. **Schema field count.** Proposed 7 fields. Could go to 5 (lighter) or
-   9 (more thorough). Komlan to confirm.
-3. **i18n approach for the new field labels.** The existing
-   product_direction labels are hardcoded English in the schema. Same
-   pattern? Or i18n-key them from the start? Default: hardcoded English
-   for consistency; revisit later.
-4. **Dedicated admin pipeline** (`app/internal/admin/portals/`) — yes/no
-   for this sprint? Default: defer.
+1. **Migration: Option A (leave existing as web_app) vs B (re-tag)?**
+   Recommend A.
+2. **Schema: duplicate vs extend product_direction?** Recommend
+   duplicate (matches existing pattern; cleaner separation).
+3. **Field count.** Proposed 12. Could trim to 8–10 (lighter) or grow
+   to 14–15 (more boutique). Recommend 12 — matches intake depth without
+   overwhelming.
+4. **Dedicated admin pipeline** at `app/internal/admin/portals/` —
+   defer or ship in this sprint? Recommend defer.
+5. **i18n.** Schema labels are hardcoded English on all lanes. Same gap
+   exists everywhere. Don't fix it just for portal — wait for a unified
+   i18n direction-form track.
+
+---
+
+## Sequencing — should Decision Log come first instead?
+
+Now that we know portal-intake **doesn't dead-end** (it just mistags as
+web_app), the case for "fix Portal first" weakens vs. "ship Decision
+Log first."
+
+**Argument for Decision Log first (~2–3 days):**
+- Lane-agnostic; benefits all 6 lanes including portal-as-web_app *today*
+- New portal lane (if shipped after) gets decision log from day one
+- Higher leverage per day of work
+
+**Argument for Portal lane first (~3.5–4.5 days):**
+- Fixes the experience-mismatch defect that affects portal clients NOW
+  (they see product_direction's 5 fields after answering 22 intake
+  questions about portal-specific topics)
+- More visible to portal customers in the short term
+- The 12-field schema directly addresses the depth-then-collapse defect
+
+**My honest recommendation:** Decision Log first, then Portal lane. Both
+are wins; Decision Log compounds across more surface area per day spent.
+
+**Your call** — happy to lock in either sequence.
 
 ---
 
 ## What this unblocks
 
-Once the lane is wired:
+Once the lane ships (regardless of order):
 
-- **Sales no longer dead-ends** on portal intakes
-- **Decision log** (Week 2 plan) will write to the same shape across all
-  lanes including portal
-- **Weekly digest** (Week 3 plan) will use the same milestone state
-- The studio can finally honor the `/client-portals` landing page
-  promise: "fixed scope, known price" + structured workspace experience
+- Portal sales conversations get the right pricing tier
+- Portal clients get a 12-field form matching what they were asked at
+  intake (depth-then-collapse defect closed for this lane)
+- Admin pipeline shows portal projects under their own lane label
+- The studio can deliver against the `/client-portals` landing page
+  promise
 
 ## After this ships
 
-The next-week tracks are independent of each other but follow naturally:
-
-- **Week 2:** Decision log (`CRECYSTUDIO_DECISION_LOG_PLAN.md`) — write it
-  before implementing; lane-agnostic so it benefits website + portal +
-  ecommerce + web_app + automation + rescue at once.
-- **Week 3:** Weekly Friday digest (`CRECYSTUDIO_WEEKLY_DIGEST_PLAN.md`)
-  — same scope-once-benefit-everywhere pattern.
-
-The Automation Roadmap productization (the margin play from the research)
-is parked until after these three reliability tracks ship.
+- **Week 2:** Decision log (if not done first) —
+  `CRECYSTUDIO_DECISION_LOG_PLAN.md`
+- **Week 3:** Weekly Friday digest —
+  `CRECYSTUDIO_WEEKLY_DIGEST_PLAN.md`
+- **Optional later:** Dedicated `app/internal/admin/portals/` pipeline;
+  permissions-matrix UI artifact (shared with web_app lane); audit-trail
+  configurator
+- **Margin play parked:** 2-Week Automation Roadmap productization
