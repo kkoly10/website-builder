@@ -224,8 +224,8 @@
     "successCta": "Voir le processus"
   },
   "home": {
-    "metaTitle": "CrecyStudio | Sites web, systèmes web et IA",
-    "metaDescription": "Studio web indépendant. Sites premium, systèmes web sur mesure et produits dopés à l'IA — par un praticien. Un espace unique du devis au lancement.",
+    "metaTitle": "CrecyStudio | Sites web, applications web, SaaS et IA",
+    "metaDescription": "Studio web indépendant. Sites web, applications web sur mesure, développement SaaS, intégration IA — par un fondateur qui exploite quatre produits SaaS qu'il a construits.",
     "heroLabel": "Studio web indépendant / depuis 2024",
     "heroTitle": "Conçu pour là où vous allez, <em>pas pour là où vous êtes.</em>",
     "heroSub": "D'un site web soigné à un système sur mesure complet avec IA de production intégrée — par un praticien qui a livré les deux.",
@@ -2775,6 +2775,17 @@
         "linkLabel": "Visiter proveohq.com",
         "caseStudyLink": "Plongée technique"
       },
+      "korent": {
+        "name": "Korent",
+        "tagline": "SaaS de location multi-niveaux pour opérateurs de fêtes, événements et gonflables",
+        "summary": "SaaS de location multi-locataire pour les entreprises de location de fêtes, d'événements et de gonflables. Vitrine de réservation en ligne avec disponibilité en temps réel, tableau de bord opérateur pour produits / commandes / paiements / livraisons, espace mobile pour l'équipe et copilotes IA opérateur pour la prévention des conflits d'inventaire et la rédaction de messages clients. Abonnements Stripe à quatre niveaux ; Postgres multi-locataire avec RLS sur chaque table.",
+        "chip1": "SaaS multi-locataire",
+        "chip2": "Copilotes IA opérateur",
+        "chip3": "Abonnements Stripe",
+        "chip4": "Optimisation des livraisons",
+        "linkLabel": "Visiter korent.app",
+        "caseStudyLink": "Plongée technique"
+      },
       "techdesk": {
         "name": "Kocre IT Services",
         "tagline": "Helpdesk IA pour les entreprises de support IT télécommande",
@@ -3421,6 +3432,33 @@
     "closingTitle": "Vous construisez quelque chose où la confiance est une fonctionnalité produit, pas juste une politique ?",
     "closingBody": "C'est le type de travail d'architecture que nous faisons — des systèmes où l'IA et la logique déterministe sont chacune utilisées là où elles sont appropriées, pas de manière interchangeable.",
     "closingCta": "Démarrer une conversation",
+    "closingCtaSecondary": "Voir notre processus"
+  },
+  "workKorent": {
+    "metaTitle": "Korent — Plongée technique SaaS de location | CrecyStudio",
+    "metaDescription": "Comment nous avons construit Korent — une plateforme SaaS multi-niveaux pour l'industrie de la location de fêtes et gonflables avec réservation en ligne, inventaire en temps réel, optimisation des livraisons, paiements Stripe et copilotes IA pour opérateurs.",
+    "back": "Retour aux réalisations",
+    "kicker": "Étude de cas technique / Korent",
+    "title": "Korent — SaaS détenu pour l'industrie de la location de fêtes et d'événements",
+    "subtitle": "SaaS de location multi-niveaux — réservation en ligne, inventaire en temps réel, optimisation des livraisons, contrats numériques, paiements Stripe et copilotes IA pour opérateurs. Construit et exploité par CrecyStudio.",
+    "chips": {
+      "stack": "Next.js + TypeScript + Supabase",
+      "ai": "Copilotes IA opérateur",
+      "pattern": "Abonnements SaaS multi-niveaux",
+      "market": "Location de fêtes / gonflables / événements"
+    },
+    "s1Title": "Le marché pour lequel nous l'avons construit",
+    "s1Body": "Les opérateurs de location de fêtes et d'événements — entreprises de châteaux gonflables, locations d'équipement, magasins de gonflables — géraient des activités entières au téléphone, par SMS, avec des accords papier et des feuilles Excel partagées. Les clients appelaient pour demander la disponibilité d'une unité pour samedi, s'entendaient dire « laissez-moi vérifier et je vous rappelle », et réservaient ailleurs avant le rappel. Les doubles réservations étaient courantes parce que deux membres du personnel éditaient la même feuille de calcul depuis des téléphones différents. Les itinéraires de livraison étaient planifiés en regardant les adresses sur Google Maps le matin même. Rien de tout cela ne passe à l'échelle au-delà d'une poignée de commandes par week-end, et les logiciels existants étaient soit destinés aux grandes entreprises (500 $/mois minimum) soit des outils de calendrier sans fonctionnalités. L'opportunité était claire : un SaaS de location sérieux, au prix des petits opérateurs réels.",
+    "s2Title": "Ce que nous avons construit",
+    "s2Body": "Korent est une plateforme complète de gestion de location : une vitrine de réservation côté client où les acheteurs peuvent parcourir le catalogue, vérifier la disponibilité en temps réel et réserver en ligne sans appel téléphonique ; un tableau de bord opérateur pour gérer produits, commandes, clients, paiements et livraisons ; un espace mobile pour l'équipe qui gère les livraisons et les ramassages ; et une couche de support IA pour opérateurs qui détecte les conflits d'inventaire, suggère des corrections de planification et rédige des réponses clients. La plateforme gère les paiements Stripe, les décharges automatiques, les rappels, les permissions d'équipe basées sur les rôles et l'optimisation des itinéraires de livraison. Les niveaux d'abonnement vont d'un plan gratuit (inventaire et commandes limités) aux niveaux Starter, Pro et Growth — tarification positionnée pour la taille d'opérateur qui existe réellement sur ce marché.",
+    "s3Title": "Architecture SaaS multi-locataire",
+    "s3Body": "Korent est un SaaS multi-locataire — chaque opérateur a son propre tenant avec données isolées, vitrine personnalisée et facturation d'abonnement indépendante. Construit sur Next.js (App Router) + TypeScript côté frontend, Supabase (Postgres + Auth + Storage) comme dorsale de données et Vercel pour l'hébergement. L'authentification utilise @supabase/ssr avec sécurité au niveau des lignes sur chaque table — une entreprise de châteaux gonflables de Stafford ne peut jamais lire les données d'une entreprise de location de remorques du Texas, même en manipulant les URL. Les abonnements Stripe alimentent le modèle de facturation à quatre niveaux. La logique de prévention des conflits d'inventaire s'exécute comme une fonction Postgres — les doubles réservations sont impossibles au niveau de la base de données, pas seulement de l'interface. La feuille de route s'étend au-delà des gonflables vers la location de fêtes générale et la location de remorques — le modèle de données est structuré pour que les verticales s'enclenchent sans forker la base de code.",
+    "s4Title": "Là où l'IA aide vraiment",
+    "s4Body": "La couche IA de Korent est conçue comme un copilote, pas un agent : elle fait remonter ce qu'un opérateur expérimenté remarquerait mais qu'un opérateur occupé pourrait manquer. La prévention des conflits d'inventaire s'exécute de manière proactive — lorsqu'un opérateur modifie manuellement les dates d'une commande, l'IA signale les chevauchements potentiels avec d'autres réservations avant que le changement ne soit sauvegardé, en langage clair. Les suggestions de planification de livraison examinent les contraintes d'itinéraire, d'équipe et de fenêtre horaire et recommandent des ordonnancements que l'opérateur peut accepter en un clic. La rédaction de messages clients tire le contexte de l'historique des commandes et propose des réponses pour les demandes courantes (questions sur les remboursements de caution, politiques d'annulation météo, questions de capacité). Chaque surface IA est de niveau 2 — suggère, l'opérateur confirme — donc une mauvaise suggestion IA coûte un clic supplémentaire, pas une réservation ratée. Même forme d'autonomie que nous utilisons dans nos quatre produits SaaS : l'IA accélère le jugement de l'opérateur sans le remplacer.",
+    "callout": "Korent est notre troisième produit SaaS détenu. Même discipline d'ingénierie que nous apportons au travail client — multi-locataire dès le premier jour, RLS sur chaque table, copilotes IA derrière confirmation, facturation qui gère les annulations et les prorations sans que personne n'ait à y penser.",
+    "closingTitle": "Vous construisez un SaaS comme Korent ?",
+    "closingBody": "Qu'il s'agisse d'un SaaS vertical pour un marché mal desservi, d'une plateforme multi-locataire avec un modèle de données complexe, ou d'un MVP SaaS à livrer en 6-10 semaines — nous l'avons fait pour nous-mêmes quatre fois et pour des clients plus encore. Nous pouvons cadrer le vôtre.",
+    "closingCta": "Démarrer un projet SaaS",
     "closingCtaSecondary": "Voir notre processus"
   },
   "workTechdesk": {

@@ -36,6 +36,7 @@ const STATIC_PAGES: Page[] = [
   { path: "/work/fleiko", priority: 0.7, changeFrequency: "monthly" },
   { path: "/work/proveo", priority: 0.7, changeFrequency: "monthly" },
   { path: "/work/techdesk", priority: 0.7, changeFrequency: "monthly" },
+  { path: "/work/korent", priority: 0.7, changeFrequency: "monthly" },
   { path: "/about", priority: 0.7, changeFrequency: "monthly" },
   { path: "/faq", priority: 0.7, changeFrequency: "monthly" },
   { path: "/contact", priority: 0.6, changeFrequency: "yearly" },

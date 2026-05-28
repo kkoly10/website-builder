@@ -224,8 +224,8 @@
     "successCta": "See the process"
   },
   "home": {
-    "metaTitle": "CrecyStudio | Websites, Web Systems & AI Integration",
-    "metaDescription": "Independent web studio. Premium websites, custom web systems, and AI-powered products — by a practitioner. One workspace from scope to launch.",
+    "metaTitle": "CrecyStudio | Websites, Custom Web Apps, SaaS & AI Integration",
+    "metaDescription": "Independent web studio. Websites, custom web apps, SaaS development, AI integration — by a founder shipping four production SaaS products of his own.",
     "heroLabel": "Independent web studio / est. 2024",
     "heroTitle": "Built for where you’re going, <em>not where you are.</em>",
     "heroSub": "From a polished website to a full custom system with production AI built in — by a practitioner who has shipped both.",
@@ -983,7 +983,7 @@
   "servicesMeta": {
     "aiIntegration": {
       "metaTitle": "AI Integration | Production AI, Built With Guardrails",
-      "metaDescription": "We don't sell AI demos. We run three production AI systems of our own — confidence-gated, guardrailed, human-in-the-loop. We build the same for your business."
+      "metaDescription": "We've built AI integration into four of our own production SaaS products — fleet, contractor, rental, IT services. We build the same for your SaaS or web app."
     },
     "websites": {
       "metaTitle": "Website Building | Premium, Conversion-Focused Websites",
@@ -998,8 +998,8 @@
       "metaDescription": "E-commerce systems for brands that need stronger storefront UX, cleaner checkout flow, and better post-purchase operations."
     },
     "customWebApps": {
-      "metaTitle": "Custom Web Apps | Dashboards, Portals, and Internal Tools",
-      "metaDescription": "Custom web applications for businesses that need more than a website — dashboards, client portals, internal tools, and MVPs built by a practitioner."
+      "metaTitle": "Custom Web Apps & SaaS Development | Dashboards, Portals & Internal Tools",
+      "metaDescription": "Custom web apps and SaaS development — by a founder running four SaaS products of his own (Fleiko, Proveo, Korent, Kocre IT) across fleet, contractor, rental & IT verticals."
     },
     "clientPortals": {
       "metaTitle": "Client Portals | Branded Workspaces Your Clients Actually Use",
@@ -2775,6 +2775,17 @@
         "linkLabel": "Visit proveohq.com",
         "caseStudyLink": "Engineering deep dive"
       },
+      "korent": {
+        "name": "Korent",
+        "tagline": "Multi-tier rental SaaS for party, event & inflatable rental operators",
+        "summary": "Multi-tenant rental SaaS for party, event, and inflatable rental businesses. Online booking storefront with real-time availability, operator dashboard for products / orders / payments / deliveries, crew mobile workspace, and AI operator copilots for inventory conflict prevention and customer-message drafting. Four-tier Stripe subscriptions; multi-tenant Postgres with RLS on every table.",
+        "chip1": "Multi-tenant SaaS",
+        "chip2": "AI Operator Copilots",
+        "chip3": "Stripe Subscriptions",
+        "chip4": "Delivery Routing",
+        "linkLabel": "Visit korent.app",
+        "caseStudyLink": "Engineering deep dive"
+      },
       "techdesk": {
         "name": "Kocre IT Services",
         "tagline": "AI-powered helpdesk for remote IT support businesses",
@@ -3421,6 +3432,33 @@
     "closingTitle": "Building something where trust is a product feature, not just a policy?",
     "closingBody": "This is the kind of architecture work we do — systems where AI and deterministic logic are each used where they're appropriate, not interchangeably.",
     "closingCta": "Start a conversation",
+    "closingCtaSecondary": "See how we work"
+  },
+  "workKorent": {
+    "metaTitle": "Korent — Rental SaaS Engineering Deep Dive | CrecyStudio",
+    "metaDescription": "How we built Korent — a multi-tier SaaS platform for the party and inflatable rental industry with online booking, real-time inventory, delivery routing, Stripe payments, and AI-powered operator copilots.",
+    "back": "Back to work",
+    "kicker": "Engineering case study / Korent",
+    "title": "Korent — owned SaaS for the party and event rental industry",
+    "subtitle": "Multi-tier rental SaaS — online booking, real-time inventory, delivery routing, digital contracts, Stripe payments, and AI-powered operator copilots. Built and operated by CrecyStudio.",
+    "chips": {
+      "stack": "Next.js + TypeScript + Supabase",
+      "ai": "AI operator copilots",
+      "pattern": "Multi-tier SaaS subscriptions",
+      "market": "Party / inflatable / event rentals"
+    },
+    "s1Title": "The market we built it for",
+    "s1Body": "Party and event rental operators — bounce house companies, equipment rental businesses, inflatable rental shops — were running entire operations on phone calls, text messages, paper agreements, and shared spreadsheets. Customers would call to ask if a unit was available for Saturday, get told 'let me check and call you back,' and book elsewhere before the callback came. Double-bookings were common because two staff members were editing the same spreadsheet from different phones. Delivery routes were planned by eyeballing addresses on Google Maps the morning of. None of that scales past a handful of orders a weekend, and the existing software in the space was either enterprise event-management ($500/month minimums) or feature-poor calendar tools that weren't built for rentals. The opening was clear: a serious rental SaaS, priced for actual small operators.",
+    "s2Title": "What we built",
+    "s2Body": "Korent is a full rental management platform: a customer-facing booking storefront where shoppers can browse the catalog, check availability in real time, and book online without a phone call; an operator dashboard for managing products, orders, customers, payments, and deliveries; a crew mobile workspace for the team running deliveries and pickups; and an AI operator support layer that catches inventory conflicts, suggests scheduling fixes, and drafts customer responses. The platform handles Stripe payment processing, automated waivers and reminders, role-based team permissions, and delivery route optimization. Subscription tiers run from a free plan (limited inventory and orders) up through Starter, Pro, and Growth — pricing transparently positioned for the size of operator who actually exists in this market.",
+    "s3Title": "Multi-tenant SaaS architecture",
+    "s3Body": "Korent is a multi-tenant SaaS — every operator has their own tenant with isolated data, branded storefront, and independent subscription billing. Built on Next.js (App Router) + TypeScript on the frontend, Supabase (Postgres + Auth + Storage) as the data backbone, and Vercel for hosting. Auth is handled via @supabase/ssr with row-level security on every table — a Stafford bounce-house company can never read a Texas trailer-rental company's data, even by manipulating URLs. Stripe Subscriptions powers the four-tier billing model. The inventory conflict-prevention logic runs as a Postgres function so double-bookings are impossible at the database level, not just the UI level. Roadmap expands beyond inflatables into general party rentals and trailer rentals — the data model is structured so verticals plug in without forking the codebase.",
+    "s4Title": "Where the AI actually helps",
+    "s4Body": "Korent's AI layer is shaped as a copilot, not an agent: it surfaces what an experienced operator would notice but a busy one might miss. Inventory conflict-prevention runs proactively — when an operator manually edits an order's dates, the AI flags potential overlap with other bookings before the change saves, in plain language. Delivery scheduling suggestions look at route, crew, and time-window constraints and recommend orderings the operator can accept with one click. Customer-message drafting pulls context from the order history and proposes responses for common inquiries (deposit refund questions, weather-cancellation policies, capacity questions). Each AI surface is Level 2 — suggests, operator confirms — so a wrong AI suggestion costs an extra click, not a botched booking. Same autonomy-shape we use across all four of our own SaaS products: AI accelerates the operator's judgment without replacing it.",
+    "callout": "Korent is our third owned SaaS product. Same engineering discipline we bring to client work — multi-tenant from day one, RLS on every table, AI copilots gated behind confirm, billing that handles cancellations and proration without anyone having to think about it.",
+    "closingTitle": "Building a SaaS like Korent?",
+    "closingBody": "Whether it's a vertical SaaS for a market that's underserved, a multi-tenant platform with a complex data model, or a SaaS MVP you need shipped in 6-10 weeks — we've done it for ourselves four times and for clients more than that. We can scope yours.",
+    "closingCta": "Start a SaaS project",
     "closingCtaSecondary": "See how we work"
   },
   "workTechdesk": {

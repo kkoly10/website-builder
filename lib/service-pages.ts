@@ -974,7 +974,7 @@ customWebAppsData.en = {
   eyebrow: "Custom web apps",
   title: "When a website isn't enough, we build the system that runs the business.",
   intro:
-    "We've shipped Fleiko and Proveo ourselves — two AI-powered SaaS products we own and operate. When we build your product, we treat it the same way: real architecture, documented handoff, and nothing we'd be embarrassed to run ourselves.",
+    "We've shipped Fleiko, Proveo, Korent, and Kocre IT ourselves — four SaaS products we own and operate across fleet management, contractor CRM, party rentals, and IT services. When we build your SaaS, web app, or internal tool, we treat it the same way: real architecture, documented handoff, and nothing we'd be embarrassed to run ourselves.",
   heroStats: [
     "Discovery sprint from $2,500",
     "MVP from $18K",
@@ -1665,9 +1665,9 @@ aiIntegrationData.en = {
   eyebrow: "AI integration",
   title: "Anyone can demo AI. We build the version that holds up in production.",
   intro:
-    "The hard part of AI was never the demo — it's everything after: what happens when the model is wrong, how it connects to your real tools, and whether you can trust it unattended. That's the part most vendors skip. We don't, because we've had to solve it for our own products. We run three production AI systems, and we build them the way serious AI has to be built — confidence-gated autonomy, guardrails, a human in the loop where mistakes are costly, and audit trails you can inspect.",
+    "The hard part of AI was never the demo — it's everything after: what happens when the model is wrong, how it connects to your real tools, and whether you can trust it unattended. That's the part most vendors skip. We don't, because we've had to solve it for our own products. We've shipped AI integration into four SaaS products we own and operate (Fleiko, Proveo, Korent, Kocre IT) across four different verticals, and we build them the way serious AI has to be built — confidence-gated autonomy, guardrails, a human in the loop where mistakes are costly, and audit trails you can inspect.",
   heroStats: [
-    "3 production AI systems we built & run",
+    "4 production AI-powered SaaS products we built & run",
     "Guardrails + audit trails built in",
     "Human-in-the-loop by default",
     "You own the code, data & prompts",
