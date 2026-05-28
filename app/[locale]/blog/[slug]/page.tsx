@@ -7,6 +7,7 @@ import {
   articleNode,
   breadcrumbListNode,
   siteGraph,
+  speakableNode,
 } from "@/lib/seo/structuredData";
 import {
   allPostSlugs,
@@ -170,6 +171,16 @@ export default async function BlogPostPage({
 
   const graph = siteGraph([
     articleSchema,
+    // Speakable spec: tells voice assistants and AI search engines
+    // (Perplexity, ChatGPT, Claude) which DOM elements hold the
+    // canonical "answer" for queries like "what does crecystudio say
+    // about RAG vs fine-tuning". Targets stable semantic selectors —
+    // the post's h1 and the lead paragraph below it. CSS-module
+    // class names would get hashed at build time and miss.
+    speakableNode({
+      pageUrl,
+      selectors: ["article h1", "article h1 + .smallNote + p"],
+    }),
     breadcrumbListNode([
       { name: "Home", url: "/" },
       { name: "Blog", url: "/blog" },

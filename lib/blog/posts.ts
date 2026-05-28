@@ -64,8 +64,7 @@ export const BLOG_POSTS: BlogPost[] = [
     description:
       "Before you hire anyone to add AI to your product, walk this checklist. Eleven questions that separate a real production AI build from a demo that breaks in week two.",
     headline: "AI integration in 2026: the eleven questions to scope before you hire",
-    publishedAt: "2026-01-15",
-    updatedAt: "2026-05-28",
+    publishedAt: "2026-05-14",
     lead:
       "Every week a business owner asks us to \"add AI\" to a product. Half the time the right answer is yes; the other half it's a calculator, a workflow tweak, or a search box dressed up in a chatbot UI. Here's the actual scoping checklist we run before quoting an AI integration.",
     body: [
@@ -178,16 +177,15 @@ export const BLOG_POSTS: BlogPost[] = [
     description:
       "How to evaluate web designers, developers, and AI consultants in the DC / Maryland / Virginia area. What to ask, what to ignore, what the actual price ranges look like.",
     headline: "Hiring a web studio in the DMV: what's actually worth asking",
-    publishedAt: "2026-02-08",
-    updatedAt: "2026-05-28",
+    publishedAt: "2026-05-21",
     lead:
-      "The DMV has roughly five times more web design agencies per capita than the national average. Most of them do mediocre work at high prices because federal money is in the air. Here's how to evaluate, what to ask, and what the realistic price ranges look like for Stafford, Fredericksburg, Richmond, Arlington, Bethesda — anywhere from Quantico up to Annapolis.",
+      "The DMV has more web design studios per capita than most US metros — federal contracts in the air, lots of professional buyers. Here's how to evaluate one without getting lost in the noise: what to ask on the discovery call, what to ignore, and what the rough investment levels look like for projects in Stafford, Fredericksburg, Richmond, Arlington, Bethesda — anywhere from Quantico up to Annapolis.",
     body: [
       { type: "h2", text: "The DMV market, briefly" },
       {
         type: "p",
         text:
-          "There are roughly three tiers of web studio in the DMV. The big-three Beltway agencies that primarily serve federal contracts, charge $250k+, and treat sub-$100k projects as charity. The mid-tier shops with 8-30 employees that try to look big-agency at half the price. And the independents — solo founders or 2-3 person studios — who deliver senior work direct, usually for $5k-$50k depending on scope. Each tier exists because their respective clients exist; the question is which tier matches your actual needs.",
+          "Roughly three tiers of web studio operate in the DMV. The large Beltway agencies built around federal contracts, scoped for enterprise work and priced for those budgets. Mid-tier shops with 8-30 employees serving regional businesses. And independents — solo founders or 2-3 person studios — delivering senior work directly. Each tier exists because their respective clients exist; the question is which tier matches the project you actually need.",
       },
       { type: "h2", text: "Five questions worth asking on the discovery call" },
       { type: "h3", text: "1. \"Who's actually going to write the code?\"" },
@@ -231,22 +229,27 @@ export const BLOG_POSTS: BlogPost[] = [
           "\"Award-winning\" badges in the footer — verify what they're for.",
         ],
       },
-      { type: "h2", text: "DMV-specific price ranges (2026)" },
+      { type: "h2", text: "Where investment levels land" },
       {
         type: "p",
         text:
-          "Rough order-of-magnitude for the DMV market, based on what we see when we lose deals on price (we know what the competition quoted) and what we hear from clients who switched to us:",
+          "Pricing varies a lot by scope, complexity, and the specific studio. As rough orientation rather than quotes:",
       },
       {
         type: "list",
         items: [
-          "Simple marketing website (5-10 pages, no custom backend): $5k-$15k from an independent, $25k-$60k from a mid-tier agency, $80k+ from a Beltway shop.",
-          "Custom web app with auth + database + simple admin: $20k-$60k independent, $80k-$250k agency.",
-          "AI integration into an existing product (copilot, agent, RAG): $15k-$60k for a properly scoped build with guardrails; we've heard of $300k quotes from agencies for the same scope.",
-          "E-commerce build on Shopify with custom UX and integrations: $10k-$30k independent, $50k+ agency.",
-          "Workflow automation / internal tool: $8k-$40k independent, $60k+ agency.",
-          "Care plans / monthly maintenance: $200-$1500/month independent, $2k-$10k/month agency.",
+          "Marketing websites typically span low five figures (independent practitioners) to mid five figures and up (mid-tier and enterprise agencies), depending on page count, content strategy, and integrations.",
+          "Custom web apps with auth, database, and admin UI usually start in the mid five figures and scale into six figures as scope grows.",
+          "AI integration projects depend heavily on the autonomy model (drafts-only vs. confirm-to-act vs. fully autonomous), the data pipeline, and the guardrails — scoping it correctly matters more than the headline number.",
+          "E-commerce builds on Shopify or similar platforms typically land in the low-to-mid five figures for a properly scoped storefront.",
+          "Workflow automation and internal tools start in the low five figures and grow with the number of integrations and edge cases.",
+          "Care plans / monthly maintenance arrangements vary widely — from a few hundred a month for a small site to mid-to-high four figures for a complex platform.",
         ],
+      },
+      {
+        type: "p",
+        text:
+          "The actual quote should come from a real scoping conversation, not a public price grid. Anyone willing to quote without one is either guessing or selling a templated product.",
       },
       { type: "h2", text: "Local vs remote" },
       {
@@ -277,8 +280,7 @@ export const BLOG_POSTS: BlogPost[] = [
     description:
       "Most small businesses are sold fine-tuning when they need RAG. A practical breakdown of when to use each, what they cost, and what the production tradeoffs look like.",
     headline: "RAG vs fine-tuning for small businesses: the honest comparison",
-    publishedAt: "2026-03-22",
-    updatedAt: "2026-05-28",
+    publishedAt: "2026-05-28",
     lead:
       "Fine-tuning sounds technical and impressive, so consultants pitch it. Retrieval-augmented generation (RAG) sounds boring, so it doesn't get the slide deck. But for 90% of small-business AI projects, RAG is the right answer and fine-tuning is overkill. Here's how to tell which one you actually need.",
     body: [

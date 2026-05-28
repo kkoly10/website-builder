@@ -3,6 +3,8 @@
 // reference each other by @id — Organization is declared once, then Service
 // and Article nodes link back to it without re-declaring the same fields.
 
+import { aggregateRating, TESTIMONIALS } from "@/lib/seo/testimonials";
+
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com").replace(/\/$/, "");
 
 const ORG_ID = `${SITE_URL}/#organization`;
@@ -279,6 +281,46 @@ export function localBusinessNode(): GraphNode {
       },
     ],
     sameAs: [ORG_ID, ...SAME_AS_URLS],
+    // AggregateRating + Review nodes — only emitted when real
+    // testimonials have been wired into lib/seo/testimonials.ts.
+    // With at least one entry, the LocalBusiness becomes eligible
+    // for star-rating SERP rich results (the single highest-CTR
+    // organic SEO improvement available without buying ads). With
+    // zero entries (current launch state), nothing's emitted —
+    // schema.org allows a LocalBusiness without aggregateRating, and
+    // emitting an empty one would be a Google validator failure.
+    ...(aggregateRating() && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: aggregateRating()!.ratingValue,
+        reviewCount: aggregateRating()!.reviewCount,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      review: TESTIMONIALS.map((testimonial) => ({
+        "@type": "Review",
+        reviewRating: {
+          "@type": "Rating",
+          ratingValue: testimonial.rating,
+          bestRating: 5,
+          worstRating: 1,
+        },
+        author: testimonial.authorOrg
+          ? {
+              "@type": "Person",
+              name: testimonial.authorName,
+              worksFor: {
+                "@type": "Organization",
+                name: testimonial.authorOrg,
+              },
+            }
+          : { "@type": "Person", name: testimonial.authorName },
+        datePublished: testimonial.datePublished,
+        reviewBody: testimonial.text,
+        ...(testimonial.sourceUrl && { url: testimonial.sourceUrl }),
+        itemReviewed: { "@id": LOCAL_BUSINESS_ID },
+      })),
+    }),
   };
 }
 
