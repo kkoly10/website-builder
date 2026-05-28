@@ -12,14 +12,16 @@ export type ProjectType =
   | "web_app"
   | "automation"
   | "ecommerce"
-  | "rescue";
+  | "rescue"
+  | "client_portal";
 
 export type DirectionType =
   | "design_direction"
   | "product_direction"
   | "workflow_direction"
   | "store_direction"
-  | "rescue_diagnosis";
+  | "rescue_diagnosis"
+  | "portal_direction";
 
 export type ActionOwner = "client" | "studio" | "system";
 
@@ -85,6 +87,7 @@ export const ALLOWED_DIRECTION_BY_PROJECT_TYPE: Record<ProjectType, DirectionTyp
   automation: "workflow_direction",
   ecommerce: "store_direction",
   rescue: "rescue_diagnosis",
+  client_portal: "portal_direction",
 };
 
 export const PROJECT_TYPES: readonly ProjectType[] = [
@@ -93,6 +96,7 @@ export const PROJECT_TYPES: readonly ProjectType[] = [
   "automation",
   "ecommerce",
   "rescue",
+  "client_portal",
 ] as const;
 
 export function isProjectType(value: unknown): value is ProjectType {

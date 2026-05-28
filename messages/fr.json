@@ -2188,7 +2188,8 @@
         "product": "Direction produit",
         "workflow": "Direction du workflow",
         "store": "Direction de boutique",
-        "rescue": "Diagnostic de sauvetage"
+        "rescue": "Diagnostic de sauvetage",
+        "portal": "Direction du portail"
       },
       "statusPill": {
         "notStarted": "Non démarré",

@@ -105,8 +105,9 @@ Both must grow `client_portal`.
 
 ---
 
-## Task 1 — Extend the type unions + maps (verified scope)
+## Task 1 — Extend the type unions + maps (verified scope) ✅ DONE
 
+**Status:** ✅ shipped (bundled with Tasks 2 + 3 — TS-coupled)
 **Effort:** **1–1.5 hours** (v1's 30 min was optimistic)
 **Why:** every downstream piece (workflow template, pricing, intake
 routing) gates on these unions. The map at `types.ts:82` is the
@@ -172,8 +173,9 @@ export const PROJECT_TYPES: readonly ProjectType[] = [
 
 ---
 
-## Task 2 — `PORTAL_DIRECTION_SCHEMA` (15 fields, boutique max)
+## Task 2 — `PORTAL_DIRECTION_SCHEMA` (15 fields, boutique max) ✅ DONE
 
+**Status:** ✅ shipped (bundled with Tasks 1 + 3)
 **Effort:** 2.5 hours (3 more fields than v2's 12; the design work
 is meaningfully harder for screenInventory/branding/auth fields)
 **Why:** boutique-max version matches what top studios deliver. Closes
@@ -361,8 +363,9 @@ schema via `getDirectionSchema()` and validates field-by-type
 
 ---
 
-## Task 3 — `CLIENT_PORTAL_WORKFLOW_TEMPLATE`
+## Task 3 — `CLIENT_PORTAL_WORKFLOW_TEMPLATE` ✅ DONE
 
+**Status:** ✅ shipped (bundled with Tasks 1 + 2)
 **Effort:** 2 hours
 **Why:** without a template, `ensureCustomerPortalForQuoteId` won't seed
 the right milestones / required actions / launch checks for a portal

@@ -630,6 +630,7 @@ function clientDirectionLabel(projectType: string | null | undefined): string {
     case "automation": return "Client workflow direction";
     case "ecommerce": return "Client store direction";
     case "rescue": return "Client rescue diagnosis";
+    case "client_portal": return "Client portal direction";
     case "website":
     case null:
     case undefined:
@@ -647,6 +648,7 @@ function studioDirectionReviewLabel(projectType: string | null | undefined): str
     case "automation": return "CrecyStudio workflow direction review";
     case "ecommerce": return "CrecyStudio store direction review";
     case "rescue": return "CrecyStudio rescue diagnosis review";
+    case "client_portal": return "CrecyStudio portal direction review";
     case "website":
     case null:
     case undefined:

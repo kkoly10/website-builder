@@ -52,11 +52,12 @@ function listOrFallback(values: string[], fallback: string): string {
 
 function buildTitle(projectType: string): string {
   switch (projectType) {
-    case "web_app":    return "CUSTOM WEB APP PRE-CONTRACT DRAFT";
-    case "automation": return "WORKFLOW AUTOMATION PRE-CONTRACT DRAFT";
-    case "ecommerce":  return "E-COMMERCE STORE PRE-CONTRACT DRAFT";
-    case "rescue":     return "WEBSITE RESCUE PRE-CONTRACT DRAFT";
-    default:           return "WEBSITE PROJECT PRE-CONTRACT DRAFT";
+    case "web_app":       return "CUSTOM WEB APP PRE-CONTRACT DRAFT";
+    case "automation":    return "WORKFLOW AUTOMATION PRE-CONTRACT DRAFT";
+    case "ecommerce":     return "E-COMMERCE STORE PRE-CONTRACT DRAFT";
+    case "rescue":        return "WEBSITE RESCUE PRE-CONTRACT DRAFT";
+    case "client_portal": return "CLIENT PORTAL PRE-CONTRACT DRAFT";
+    default:              return "WEBSITE PROJECT PRE-CONTRACT DRAFT";
   }
 }
 
@@ -91,6 +92,15 @@ function buildProjectSummaryBlock(workspace: any, projectType: string): string {
 - Project type: Website rescue
 - Site URL: ${currentUrl}
 - Urgency: ${urgency}
+- Timeline: ${timeline}`;
+    }
+    case "client_portal": {
+      const accessType = textOrFallback(workspace.direction?.payload?.accessType, "To be confirmed");
+      const multiTenancyModel = textOrFallback(workspace.direction?.payload?.multiTenancyModel, "To be confirmed");
+      return `Client is engaging Provider for a client portal build.
+- Project type: Client portal
+- Access type: ${accessType}
+- Data isolation model: ${multiTenancyModel}
 - Timeline: ${timeline}`;
     }
     default: {
@@ -204,6 +214,39 @@ ${priorityFixes}
 
 Access required:
 ${accessNeeded}`;
+    }
+
+    case "client_portal": {
+      const portalPurpose = textOrFallback(p.portalPurpose, "To be finalized");
+      const accessType = textOrFallback(p.accessType, "To be confirmed");
+      const userRoles = listOrFallback(cleanList(p.userRoles), "To be finalized");
+      const keyFeatures = listOrFallback(cleanList(p.keyFeatures), "To be finalized");
+      const integrations = listOrFallback(cleanList(p.integrations), "None specified yet");
+      const multiTenancyModel = textOrFallback(p.multiTenancyModel, "To be confirmed");
+      const complianceRequirements = listOrFallback(cleanList(p.complianceRequirements), "None specified");
+      const successMetric = textOrFallback(p.successMetric, "To be confirmed");
+      return `Provider will design, build, and deliver the client portal according to the current approved portal direction.
+
+Portal purpose:
+${portalPurpose}
+
+Access type: ${accessType}
+Data isolation model: ${multiTenancyModel}
+
+User roles:
+${userRoles}
+
+Must-have features:
+${keyFeatures}
+
+Integrations:
+${integrations}
+
+Compliance requirements:
+${complianceRequirements}
+
+Success metric:
+${successMetric}`;
     }
 
     default: {

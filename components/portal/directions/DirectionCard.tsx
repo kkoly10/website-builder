@@ -46,6 +46,7 @@ const TITLE_KEY_BY_TYPE: Record<GenericDirection["type"], string> = {
   workflow_direction: "workflow",
   store_direction: "store",
   rescue_diagnosis: "rescue",
+  portal_direction: "portal",
 };
 
 const SUBTITLE_BY_TYPE_AND_STATUS: Record<
@@ -98,6 +99,15 @@ const SUBTITLE_BY_TYPE_AND_STATUS: Record<
     changes_requested: "CrecyStudio needs more detail before the fix plan can be locked.",
     approved: "Fix plan approved.",
     locked: "Fix plan locked. New issues outside the priority list will be documented separately.",
+  },
+  portal_direction: {
+    not_started: "Tell us how the portal should work before development starts.",
+    waiting_on_client: "Tell us how the portal should work — access, roles, features, integrations, compliance — and we'll lock the scope before build.",
+    submitted: "CrecyStudio is reviewing your portal direction.",
+    under_review: "CrecyStudio is reviewing your portal direction.",
+    changes_requested: "CrecyStudio needs more detail before the portal scope can be locked.",
+    approved: "Portal direction approved. Permissions and integrations plan will follow.",
+    locked: "Portal direction locked. Major scope changes require a change order.",
   },
 };
 
