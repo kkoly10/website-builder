@@ -17,6 +17,8 @@
     "decline": "Rechazar"
   },
   "nav": {
+    "services": "Servicios",
+    "servicesAria": "Menú de servicios",
     "websites": "Sitios web",
     "ecommerce": "E-commerce",
     "websiteRescue": "Rescate web",
@@ -115,10 +117,15 @@
   "footer": {
     "blurb": "Estudio web independiente que construye sitios web premium y sistemas web personalizados. Un espacio de trabajo del alcance al lanzamiento.",
     "address": "Stafford, Virginia · Estados Unidos",
-    "serviceArea": "Al servicio del DMV (DC, Maryland, Virginia) y clientes en EE.UU., Canadá y Reino Unido.",
+    "serviceArea": "Al servicio del DMV — DC, Maryland y Virginia.",
     "rightsReserved": "Todos los derechos reservados.",
     "links": {
       "aria": "Pie de página",
+      "columnServices": "Servicios",
+      "columnStudio": "Estudio",
+      "columnResources": "Recursos",
+      "columnGetStarted": "Comenzar",
+      "columnLegal": "Legal",
       "websites": "Sitios web",
       "ecommerce": "E-commerce",
       "systems": "Sistemas",

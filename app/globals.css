@@ -82,6 +82,37 @@ a { color: inherit; text-decoration: none; }
 .topNavLinkActive::after { background: var(--accent); }
 .navForm { margin: 0; }
 
+.navServicesWrap { position: relative; display: inline-flex; }
+.navServicesTrigger { background: transparent; border: 0; cursor: pointer; font: inherit; }
+.navServicesChevron { display: inline-block; margin-left: .3rem; font-size: .85em; transition: transform .15s ease; }
+.navServicesTrigger[aria-expanded="true"] .navServicesChevron { transform: rotate(180deg); }
+.navServicesPanel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 240px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-top: 0;
+  padding: .4rem;
+  display: grid;
+  gap: .2rem;
+  z-index: 30;
+  box-shadow: 0 8px 24px rgba(0,0,0,.06);
+}
+.navServicesItem {
+  display: block;
+  padding: .65rem .85rem;
+  font: 500 11px/1.2 var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+.navServicesItem:hover { color: var(--ink); border-color: var(--rule); }
+.navServicesItemActive { color: var(--accent); border-color: var(--accent); }
+
 .mobileMenu { display: none; position: relative; }
 .mobileMenuSummary { list-style: none; border: 1px solid var(--rule); background: var(--paper); width: 44px; height: 44px; display: grid; place-items: center; gap: 3px; }
 .mobileMenuSummary span { width: 16px; height: 2px; background: var(--ink); display: block; }
@@ -129,27 +160,60 @@ a { color: inherit; text-decoration: none; }
 .cardInner,.panelBody { padding: 1rem; }
 .panelHeader { padding: .85rem 1rem; border-bottom: 1px solid var(--rule); background: var(--paper-2); }
 
-.footer { border-top: 1px solid var(--rule); padding: 2.3rem 0 2.8rem; color: var(--muted); }
-.footerInner { display: grid; gap: 1.6rem; }
-.footerTop { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 2rem; }
-.footerIdentity { max-width: 34rem; }
-.footerKicker,.footerBottom,.footerLinks a {
+/* Cards / panels rendered as anchors (e.g. <Link className="panel"> on
+   blog index, locations index, locations city-service grid) get an
+   interactive hover so they feel clickable. Scoped to `a.card` /
+   `a.panel` to leave plain decorative cards in admin/portal/etc.
+   untouched. */
+a.card,a.panel {
+  transition: background .18s ease, border-color .18s ease, transform .22s ease, box-shadow .22s ease;
+}
+a.card:hover,a.panel:hover {
+  background: var(--paper-2);
+  border-color: var(--ink);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,.04);
+}
+
+.footer { border-top: 1px solid var(--rule); padding: 3rem 0 2.5rem; color: var(--muted); }
+.footerInner { display: grid; gap: 2.5rem; }
+.footerIdentity { max-width: 36rem; display: grid; gap: .5rem; }
+.footerKicker,.footerCopyright,.footerEmail,.footerSocial a,.footerColumn a {
   font: 500 11px/1.6 var(--font-mono);
   letter-spacing: .08em;
   text-transform: uppercase;
 }
-.footerKicker { margin: 0 0 .65rem; color: var(--ink); }
+.footerKicker { margin: 0 0 .25rem; color: var(--ink); }
 .footerBlurb { margin: 0; color: var(--muted); line-height: 1.7; }
-.footerLinks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem 1rem; }
-.footerLinks a:hover { color: var(--ink); }
+.footerAddress { margin: .5rem 0 0; font-size: 13px; opacity: .85; line-height: 1.6; }
+.footerServiceArea { margin: 0; font-size: 13px; opacity: .75; line-height: 1.6; }
+
+.footerColumns { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2rem 1.5rem; }
+.footerColumn { display: grid; gap: .85rem; }
+.footerColumnHeading {
+  font: 600 11px/1.4 var(--font-mono);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin: 0;
+}
+.footerColumn ul { list-style: none; padding: 0; margin: 0; display: grid; gap: .55rem; }
+.footerColumn a { color: var(--muted); text-decoration: none; }
+.footerColumn a:hover { color: var(--ink); }
+
 .footerBottom {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding-top: 1rem;
+  row-gap: .85rem;
+  column-gap: 1.5rem;
+  padding-top: 1.5rem;
   border-top: 1px solid var(--rule);
 }
-.footerBottom p { margin: 0; }
+.footerCopyright { margin: 0; }
+.footerSocial { display: flex; flex-wrap: wrap; gap: 14px; }
+.footerSocial a:hover,.footerEmail:hover { color: var(--ink); }
 
 .fadeUp,.heroFadeUp,.scaleIn { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: no-preference) {
@@ -159,6 +223,12 @@ a { color: inherit; text-decoration: none; }
   :root.js-anim .fadeUp.inView,
   :root.js-anim .heroFadeUp.inView,
   :root.js-anim .scaleIn.inView { opacity: 1; transform: none; }
+}
+
+/* Honor reduce-motion: keep bg/border color hover for affordance, but
+   suppress the transform lift that visually moves elements. */
+@media (prefers-reduced-motion: reduce) {
+  a.card:hover, a.panel:hover { transform: none; }
 }
 
 .portalStory { border: 1px solid var(--rule); background: var(--paper-2); padding: 1rem; margin: 1.2rem 0 1rem; }
@@ -187,7 +257,8 @@ a { color: inherit; text-decoration: none; }
   .mobileMenu { display: block; }
   .grid2,.grid2stretch { grid-template-columns: 1fr; }
   .topNavInner { min-height: 70px; }
-  .footerTop,.footerBottom { grid-template-columns: 1fr; display: grid; }
+  .footerColumns { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.75rem 1.25rem; }
+  .footerBottom { flex-direction: column; align-items: flex-start; }
   .brandLogo svg { height: 36px; }
 }
 @media (max-width: 360px) {

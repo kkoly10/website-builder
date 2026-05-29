@@ -8,66 +8,84 @@ export default function SiteFooter() {
   return (
     <footer className="footer">
       <div className="container footerInner">
-        <div className="footerTop">
-          <div className="footerIdentity">
-            <p className="footerKicker">{tCommon("siteName")}</p>
-            <p className="footerBlurb">{t("blurb")}</p>
-            {/*
-              Visible address is a strong local-SEO signal — Google
-              cross-references the structured-data PostalAddress with
-              what humans see on the page. Listed alongside the
-              service area so the local pack picks up both signals.
-              Kept to city/state to match the LocalBusiness schema
-              (no street per founder preference).
-            */}
-            <p className="footerBlurb" style={{ marginTop: 8, fontSize: 13, opacity: 0.85 }}>
-              {t("address")}
-            </p>
-            <p className="footerBlurb" style={{ marginTop: 4, fontSize: 13, opacity: 0.75 }}>
-              {t("serviceArea")}
-            </p>
-          </div>
-
-          <div className="footerLinks" aria-label={t("links.aria")}>
-            <Link href="/websites">{t("links.websites")}</Link>
-            <Link href="/ecommerce">{t("links.ecommerce")}</Link>
-            <Link href="/systems">{t("links.systems")}</Link>
-            <Link href="/ai-integration">{t("links.aiIntegration")}</Link>
-            <Link href="/custom-web-apps">{t("links.customWebApps")}</Link>
-            <Link href="/client-portals">{t("links.clientPortals")}</Link>
-            <Link href="/website-rescue">{t("links.websiteRescue")}</Link>
-            <Link href="/process">{t("links.process")}</Link>
-            <Link href="/work">{t("links.work")}</Link>
-            <Link href="/care-plans">{t("links.carePlans")}</Link>
-            <Link href="/pricing">{t("links.pricing")}</Link>
-            {/*
-              /locations and the city pages are English-only. Forcing
-              `locale="en"` makes the link emit `/locations` regardless
-              of the active locale, so FR/ES users can still navigate
-              to the local-SEO index (they just land on the English
-              version). Without this, clicking from /fr would route to
-              /fr/locations and 404.
-            */}
-            <Link href="/locations" locale="en">{t("links.locations")}</Link>
-            {/* Blog is English-only too — same forcing as /locations. */}
-            <Link href="/blog" locale="en">{t("links.blog")}</Link>
-            <Link href="/faq">{t("links.faq")}</Link>
-            <Link href="/about">{t("links.about")}</Link>
-            <Link href="/start">{t("links.start")}</Link>
-            <Link href="/contact">{t("links.contact")}</Link>
-            <Link href="/privacy">{t("links.privacy")}</Link>
-            <Link href="/terms">{t("links.terms")}</Link>
-            <Link href="/refunds">{t("links.refund")}</Link>
-            <Link href="/security">{t("links.security")}</Link>
-            <Link href="/aup">{t("links.aup")}</Link>
-            <Link href="/coming-soon">{t("links.futureServices")}</Link>
-          </div>
+        <div className="footerIdentity">
+          <p className="footerKicker">{tCommon("siteName")}</p>
+          <p className="footerBlurb">{t("blurb")}</p>
+          {/*
+            Visible address is a strong local-SEO signal — Google
+            cross-references the structured-data PostalAddress with
+            what humans see on the page. Listed alongside the
+            service area so the local pack picks up both signals.
+            Kept to city/state to match the LocalBusiness schema
+            (no street per founder preference).
+          */}
+          <p className="footerAddress">{t("address")}</p>
+          <p className="footerServiceArea">{t("serviceArea")}</p>
         </div>
 
+        <nav className="footerColumns" aria-label={t("links.aria")}>
+          <div className="footerColumn">
+            <h3 className="footerColumnHeading">{t("links.columnServices")}</h3>
+            <ul>
+              <li><Link href="/websites">{t("links.websites")}</Link></li>
+              <li><Link href="/ai-integration">{t("links.aiIntegration")}</Link></li>
+              <li><Link href="/custom-web-apps">{t("links.customWebApps")}</Link></li>
+              <li><Link href="/systems">{t("links.systems")}</Link></li>
+              <li><Link href="/ecommerce">{t("links.ecommerce")}</Link></li>
+              <li><Link href="/client-portals">{t("links.clientPortals")}</Link></li>
+              <li><Link href="/website-rescue">{t("links.websiteRescue")}</Link></li>
+            </ul>
+          </div>
+
+          <div className="footerColumn">
+            <h3 className="footerColumnHeading">{t("links.columnStudio")}</h3>
+            <ul>
+              <li><Link href="/process">{t("links.process")}</Link></li>
+              <li><Link href="/work">{t("links.work")}</Link></li>
+              <li><Link href="/about">{t("links.about")}</Link></li>
+              <li><Link href="/care-plans">{t("links.carePlans")}</Link></li>
+              <li><Link href="/pricing">{t("links.pricing")}</Link></li>
+            </ul>
+          </div>
+
+          <div className="footerColumn">
+            <h3 className="footerColumnHeading">{t("links.columnResources")}</h3>
+            <ul>
+              {/* Blog is English-only — force locale="en" so /fr and /es
+                  don't route to non-existent /fr/blog and 404. */}
+              <li><Link href="/blog" locale="en">{t("links.blog")}</Link></li>
+              <li><Link href="/faq">{t("links.faq")}</Link></li>
+              {/* /locations is English-only too — same forcing as /blog. */}
+              <li><Link href="/locations" locale="en">{t("links.locations")}</Link></li>
+              <li><Link href="/coming-soon">{t("links.futureServices")}</Link></li>
+            </ul>
+          </div>
+
+          <div className="footerColumn">
+            <h3 className="footerColumnHeading">{t("links.columnGetStarted")}</h3>
+            <ul>
+              <li><Link href="/start">{t("links.start")}</Link></li>
+              <li><Link href="/contact">{t("links.contact")}</Link></li>
+            </ul>
+          </div>
+
+          <div className="footerColumn">
+            <h3 className="footerColumnHeading">{t("links.columnLegal")}</h3>
+            <ul>
+              <li><Link href="/privacy">{t("links.privacy")}</Link></li>
+              <li><Link href="/terms">{t("links.terms")}</Link></li>
+              <li><Link href="/refunds">{t("links.refund")}</Link></li>
+              <li><Link href="/security">{t("links.security")}</Link></li>
+              <li><Link href="/aup">{t("links.aup")}</Link></li>
+            </ul>
+          </div>
+        </nav>
+
         <div className="footerBottom">
-          <p>
+          <p className="footerCopyright">
             &copy; {new Date().getFullYear()} {tCommon("siteName")}. {t("rightsReserved")}
           </p>
+          <a className="footerEmail" href="mailto:hello@crecystudio.com">hello@crecystudio.com</a>
           {/*
             Visible social links matching the sameAs entries in the
             Organization JSON-LD. Two reasons to render them visibly:
@@ -80,7 +98,7 @@ export default function SiteFooter() {
             Mastodon-style verification); rel="noopener" closes a window
             handle leak when opening in a new tab.
           */}
-          <div style={{ display: "flex", gap: 14, fontSize: 13 }}>
+          <div className="footerSocial">
             <a
               href="https://www.facebook.com/share/1GFn42rFuS/"
               target="_blank"
@@ -103,7 +121,6 @@ export default function SiteFooter() {
               LinkedIn
             </a>
           </div>
-          <a href="mailto:hello@crecystudio.com">hello@crecystudio.com</a>
         </div>
       </div>
     </footer>

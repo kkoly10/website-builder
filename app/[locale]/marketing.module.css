@@ -160,6 +160,29 @@
 .pricingCard,
 .faqCard {
   padding: 1.35rem;
+  transition: background .18s ease, border-color .18s ease, transform .22s ease, box-shadow .22s ease;
+}
+
+.card:hover,
+.faqCard:hover {
+  background: var(--paper-2);
+  border-color: var(--rule-2);
+}
+
+.pricingCard:hover {
+  background: var(--paper-2);
+  border-color: var(--ink);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,.04);
+}
+
+.darkCard {
+  transition: background .18s ease, border-color .18s ease;
+}
+
+.darkCard:hover {
+  background: color-mix(in srgb, var(--ink) 72%, var(--paper) 28%);
+  border-color: color-mix(in srgb, var(--paper) 28%, transparent);
 }
 
 .card {

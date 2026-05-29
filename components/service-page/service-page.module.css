@@ -173,6 +173,13 @@
 .notFitCard {
   border: 1px solid var(--rule);
   padding: 1.5rem;
+  transition: background .18s ease, border-color .18s ease;
+}
+
+.fitCard:hover,
+.notFitCard:hover {
+  background: var(--paper-2);
+  border-color: var(--rule-2);
 }
 
 .fitCard {
@@ -257,6 +264,11 @@
   border-bottom: 1px solid var(--rule);
   display: grid;
   gap: 1rem;
+  transition: background .18s ease;
+}
+
+.problemCard:hover {
+  background: var(--paper-2);
 }
 
 .problemCard:nth-child(2n) {
@@ -280,6 +292,11 @@
 .includeCard {
   padding: 1.4rem;
   border-left: 1px solid var(--rule);
+  transition: background .18s ease;
+}
+
+.includeCard:hover {
+  background: var(--paper-2);
 }
 
 .includeCard:first-child {
@@ -337,6 +354,7 @@
   display: grid;
   align-content: start;
   gap: 1rem;
+  transition: background .18s ease, border-color .18s ease;
 }
 
 .pricingSection {
@@ -355,6 +373,14 @@
   background: var(--paper);
   display: grid;
   gap: 0.9rem;
+  transition: background .18s ease, border-color .18s ease, transform .22s ease, box-shadow .22s ease;
+}
+
+.pricingCard:hover {
+  background: var(--paper-2);
+  border-color: var(--ink);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,.04);
 }
 
 .pricingValue {
@@ -383,6 +409,29 @@
 .crossLinkCard {
   border: 1px solid var(--rule);
   background: var(--paper);
+  transition: background .18s ease, border-color .18s ease, transform .22s ease, box-shadow .22s ease;
+}
+
+.faqCard:hover,
+.finalCard:hover {
+  background: var(--paper-2);
+  border-color: var(--rule-2);
+}
+
+.crossLinkCard:hover {
+  background: var(--paper-2);
+  border-color: var(--ink);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0,0,0,.05);
+}
+
+.crossLinkCard a {
+  transition: color .15s ease, transform .22s ease;
+}
+
+.crossLinkCard:hover a {
+  color: var(--accent);
+  transform: translateX(4px);
 }
 
 .faqCard {

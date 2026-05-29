@@ -74,6 +74,14 @@
   display: grid;
   gap: 0.8rem;
   align-content: start;
+  transition: background .18s ease, border-color .18s ease, transform .22s ease, box-shadow .22s ease;
+}
+
+.card:hover {
+  background: var(--paper-2);
+  border-color: var(--ink);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,.04);
 }
 
 .ventureBadge {
