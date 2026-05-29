@@ -245,9 +245,13 @@
       "label": "What we build",
       "title": "From a polished website to the system that runs the business.",
       "cards": {
+        "saas": {
+          "title": "SaaS development",
+          "body": "Multi-tenant SaaS with billing, retention, and production-safe AI from day one — by a founder shipping four SaaS products of his own."
+        },
         "webApps": {
-          "title": "Custom web apps & SaaS",
-          "body": "SaaS products, dashboards, portals, internal tools, MVPs — with AI built in where it creates real value."
+          "title": "Custom web apps",
+          "body": "Dashboards, portals, internal tools, and MVPs for businesses — software your team uses, not software you sell."
         },
         "aiIntegration": {
           "title": "AI integration",
@@ -280,12 +284,16 @@
     },
     "startHere": {
       "label": "Not sure where to start?",
+      "saas": {
+        "situation": "I have a SaaS idea I want to ship to paying customers",
+        "service": "SaaS development"
+      },
       "website": {
         "situation": "I need a professional website for my business",
         "service": "Websites"
       },
       "app": {
-        "situation": "I have a software idea or internal tool to build",
+        "situation": "I need an internal tool or dashboard for my team",
         "service": "Custom web apps"
       },
       "ai": {
