@@ -231,11 +231,11 @@
     "successCta": "Voir le processus"
   },
   "home": {
-    "metaTitle": "CrecyStudio | Sites web, systèmes web et IA",
-    "metaDescription": "Studio web indépendant. Sites premium, systèmes web sur mesure et produits dopés à l'IA — par un praticien. Un espace unique du devis au lancement.",
+    "metaTitle": "CrecyStudio | Sites web, applis sur mesure, SaaS & IA",
+    "metaDescription": "Studio web indépendant. Sites web, applications sur mesure, développement SaaS, intégration IA — par un fondateur qui exploite quatre produits SaaS en production (Fleiko, Proveo, Korent, Kocre IT).",
     "heroLabel": "Studio web indépendant / depuis 2024",
     "heroTitle": "Conçu pour là où vous allez, <em>pas pour là où vous êtes.</em>",
-    "heroSub": "D'un site web soigné à un système sur mesure complet avec IA de production intégrée — par un praticien qui a livré les deux.",
+    "heroSub": "D'un site web soigné à un SaaS ou une application sur mesure avec IA de production intégrée — par un fondateur qui en a livré quatre des siens.",
     "ctaStart": "Démarrer un projet",
     "ctaProcess": "Voir les réalisations",
     "ctaScarcity": "Nouveaux projets acceptés",
@@ -244,8 +244,8 @@
       "title": "D'un site web soigné au système qui fait tourner l'entreprise.",
       "cards": {
         "webApps": {
-          "title": "Applications web sur mesure",
-          "body": "Tableaux de bord, portails, outils internes, MVPs — avec IA intégrée là où elle apporte une vraie valeur."
+          "title": "Applications sur mesure & SaaS",
+          "body": "Produits SaaS, tableaux de bord, portails, outils internes, MVPs — avec IA intégrée là où elle apporte une vraie valeur."
         },
         "aiIntegration": {
           "title": "Intégration IA",

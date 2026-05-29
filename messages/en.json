@@ -231,11 +231,11 @@
     "successCta": "See the process"
   },
   "home": {
-    "metaTitle": "CrecyStudio | Websites, Web Systems & AI Integration",
-    "metaDescription": "Independent web studio. Premium websites, custom web systems, and AI-powered products — by a practitioner. One workspace from scope to launch.",
+    "metaTitle": "CrecyStudio | Websites, Custom Web Apps, SaaS & AI Integration",
+    "metaDescription": "Independent web studio. Websites, custom web apps, SaaS development, AI integration — by a founder shipping four production SaaS products of his own (Fleiko, Proveo, Korent, Kocre IT).",
     "heroLabel": "Independent web studio / est. 2024",
     "heroTitle": "Built for where you’re going, <em>not where you are.</em>",
-    "heroSub": "From a polished website to a full custom system with production AI built in — by a practitioner who has shipped both.",
+    "heroSub": "From a polished website to a custom SaaS or web app with production AI built in — by a founder who has shipped four of his own.",
     "ctaStart": "Start a project",
     "ctaProcess": "See the work",
     "ctaScarcity": "Taking on new projects",
@@ -244,8 +244,8 @@
       "title": "From a polished website to the system that runs the business.",
       "cards": {
         "webApps": {
-          "title": "Custom web apps",
-          "body": "Dashboards, portals, internal tools, MVPs — with AI built in where it creates real value."
+          "title": "Custom web apps & SaaS",
+          "body": "SaaS products, dashboards, portals, internal tools, MVPs — with AI built in where it creates real value."
         },
         "aiIntegration": {
           "title": "AI integration",
