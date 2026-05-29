@@ -99,6 +99,7 @@ export default function TopNav({
   // Order is the same SEO/search-volume order we had inline before.
   const serviceItems: NavItem[] = [
     { href: "/websites", label: t("websites") },
+    { href: "/saas", label: t("saas") },
     { href: "/ai-integration", label: t("aiIntegration") },
     { href: "/custom-web-apps", label: t("customWebApps") },
     { href: "/systems", label: t("systems") },

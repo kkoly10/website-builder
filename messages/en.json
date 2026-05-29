@@ -20,6 +20,7 @@
     "services": "Services",
     "servicesAria": "Services menu",
     "websites": "Websites",
+    "saas": "SaaS",
     "ecommerce": "E-commerce",
     "websiteRescue": "Website rescue",
     "systems": "Systems",
@@ -127,6 +128,7 @@
       "columnGetStarted": "Get started",
       "columnLegal": "Legal",
       "websites": "Websites",
+      "saas": "SaaS",
       "ecommerce": "E-commerce",
       "systems": "Systems",
       "aiIntegration": "AI integration",
@@ -985,9 +987,15 @@
     "customWebApps": "Custom web apps",
     "clientPortals": "Client portals",
     "websiteRescue": "Website rescue",
-    "carePlans": "Care plans"
+    "carePlans": "Care plans",
+    "aiIntegration": "AI integration",
+    "saas": "SaaS development"
   },
   "servicesMeta": {
+    "saas": {
+      "metaTitle": "SaaS Development | Built by a Founder Shipping 4 SaaS Products",
+      "metaDescription": "SaaS development by a founder who's shipped four production SaaS products of his own (Fleiko, Proveo, Korent, Kocre IT). Multi-tenant + billing + retention designed in from day one. Discovery Sprint from $4k, MVP Sprint from $25k."
+    },
     "aiIntegration": {
       "metaTitle": "AI Integration | Production AI, Built With Guardrails",
       "metaDescription": "We don't sell AI demos. We run four production AI-powered SaaS products of our own (Fleiko, Proveo, Korent, Kocre IT) — confidence-gated, guardrailed, human-in-the-loop. We build the same for your business."

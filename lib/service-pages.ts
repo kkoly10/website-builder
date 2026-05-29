@@ -9,7 +9,8 @@ type ServiceId =
   | "client_portals"
   | "website_rescue"
   | "care_plans"
-  | "ai_integration";
+  | "ai_integration"
+  | "saas";
 
 // ServiceData mirrors ServicePageProps. We translate by swapping locale-keyed
 // objects under each ServiceId. /fr and /es fall back to the en entry if a
@@ -57,11 +58,17 @@ const CROSS_LINKS: Record<ServiceId, ServicePageProps["crossLinks"]> = {
     { id: "customWebApps", href: "/custom-web-apps" },
     { id: "clientPortals", href: "/client-portals" },
   ],
+  saas: [
+    { id: "customWebApps", href: "/custom-web-apps" },
+    { id: "aiIntegration", href: "/ai-integration" },
+    { id: "clientPortals", href: "/client-portals" },
+  ],
 };
 
 const websitesData: Partial<Record<Locale, ServiceData>> = {};
 const systemsData: Partial<Record<Locale, ServiceData>> = {};
 const ecommerceData: Partial<Record<Locale, ServiceData>> = {};
+const saasData: Partial<Record<Locale, ServiceData>> = {};
 
 websitesData.en = {
   eyebrow: "Website building",
@@ -1865,6 +1872,227 @@ aiIntegrationData.en = {
   projectType: "ai_integration",
 };
 
+saasData.en = {
+  eyebrow: "SaaS development",
+  title: "We've shipped four SaaS products of our own. Yours is next.",
+  intro:
+    "Most agencies have never run a SaaS. Most freelancers have never shipped one. We've shipped four — Fleiko (fleet management), Proveo (contractor photo proof), Korent (in-product AI copilot), and Kocre IT (AI-powered helpdesk) — and we still operate them. You get a builder who has lived the billing arguments, the churn analyses, the support tickets, and the 2am infrastructure scares. Not just code — the whole product.",
+  heroStats: [
+    "4 SaaS products we built & run",
+    "Multi-tenant + billing on day one",
+    "Retention loops, not just features",
+    "$0 due until scope is approved",
+  ],
+  primaryCta: { label: "Start a Discovery Sprint", href: "/build/intro" },
+  secondaryCta: { label: "See our SaaS products", href: "/work" },
+  whoItsForTitle: "Best for founders who want to ship a SaaS, not pitch one.",
+  whoItsFor: [
+    "You're a founder with a SaaS idea and want a builder who has actually shipped one — not a generalist agency learning on your money.",
+    "You've tried no-code, hit the ceiling, and need a real product foundation that scales past 50 users.",
+    "You have an existing SaaS that's stalled, breaking, or unmaintainable, and you need someone to take it over.",
+    "You want a partner who has lived the same problems you'll face — pricing, churn, support, infrastructure — not just code.",
+  ],
+  problemsTitle: "Why most SaaS builds stall before the first paying customer.",
+  problems: [
+    "The builder treated it like a website — no multi-tenancy, no billing, no auth model. Full rebuild required at month 6.",
+    "The agency shipped a demo that worked on three users and broke at fifty. Database, queries, infrastructure all wrong.",
+    "Nobody planned for the boring SaaS parts — Stripe, trial logic, churn handling, RBAC. Six months of extra work after launch.",
+    "The builder vanished post-launch. Nobody knows the codebase, nobody can fix bugs, nobody can ship features.",
+  ],
+  includesTitle: "What we build into your SaaS — from day one, not as an afterthought.",
+  includes: [
+    {
+      title: "Multi-tenant from day one",
+      items: [
+        "Tenant isolation at the database layer with Row Level Security — not just app-level checks that leak when a query is rewritten",
+        "One codebase, many customers — without the painful rewrite at customer #50",
+        "Built the way Fleiko, Korent, and Kocre IT run today",
+      ],
+    },
+    {
+      title: "Billing, auth, and identity built in",
+      items: [
+        "Stripe-powered subscriptions, trial logic, plan upgrades, and dunning flows that actually retain — not a bolt-on after launch",
+        "Auth with role-based access control, team invites, and admin tooling from the first sprint",
+        "The boring-but-essential SaaS layer most agencies skip until it's a problem",
+      ],
+    },
+    {
+      title: "Retention loops, not just features",
+      items: [
+        "Onboarding flows, lifecycle email, and in-product nudges designed before the build, not patched in after churn shows up",
+        "Activation metric defined up front, instrumented from week one",
+        "Built the way Proveo's freemium → paid conversion runs today",
+      ],
+    },
+    {
+      title: "Production-safe AI where it earns its keep",
+      items: [
+        "Confidence-gated AI in the product when it solves a real job — not as a buzzword to put on a deck",
+        "Guardrails, human-in-the-loop, and audit trails — the way all four of our SaaS products are built",
+        "If AI is the centerpiece of your build, see /ai-integration for the deeper engineering",
+      ],
+    },
+  ],
+  proof: {
+    label: "Proof, not promises",
+    title: "We don't sell demos. We run four production SaaS products of our own.",
+    intro:
+      "Built and operated by the same hands that'll build yours. In production today, generating real usage and real lessons that come back into your build.",
+    items: [
+      {
+        name: "Fleiko",
+        detail:
+          "Fleet management SaaS with an AI copilot for cost & maintenance alerts, compliance tracking, and GPS monitoring. Multi-tenant, Stripe-billed, in production.",
+      },
+      {
+        name: "Proveo",
+        detail:
+          "Photo proof + CRM for service contractors. AI-detected before/after with cryptographic provenance. Freemium → paid conversion live, in production.",
+      },
+      {
+        name: "Korent",
+        detail:
+          "Floating, context-aware AI Operator Copilot — a read-only help layer embedded inside other products. Powered by OpenAI and Anthropic Claude. In production.",
+      },
+      {
+        name: "Kocre IT",
+        detail:
+          "AI-powered helpdesk for outsourced IT support — auto-resolves tickets only above 90% confidence and escalates the rest. Multi-tenant by client org. In production.",
+      },
+    ],
+  },
+  pricingTitle: "Priced for what it takes to ship — not what it takes to demo.",
+  pricingIntro:
+    "Every track starts with the Discovery Sprint — a fixed-price scope of your actual build. You walk away with a real proposal whether you continue with us or not. After Discovery, $0 is due on the larger engagement until scope is approved. We publish bands so you can self-qualify instead of burning 90 minutes on a sales call.",
+  pricingCards: [
+    {
+      label: "/ DISCOVERY SPRINT",
+      value: "Starting at $4,000",
+      detail:
+        "1–2 weeks fixed-price. We scope your SaaS for real — architecture, multi-tenancy model, billing plan, sequencing, and a fixed-price proposal for the full build. Yours to keep whether you continue or not.",
+      meta: "The front door",
+    },
+    {
+      label: "/ MVP SPRINT",
+      value: "Starting at $25,000",
+      detail:
+        "8–12 weeks, fixed-price. From scoped plan to live SaaS with paying customers — multi-tenancy, Stripe billing, auth, and the core flow that earns money. Most builds land between $25k and $45k.",
+      meta: "Most common",
+    },
+    {
+      label: "/ BUILD & OPERATE",
+      value: "Starting at $6,000 / mo",
+      detail:
+        "Monthly retainer. A senior builder on retainer for ongoing features, infrastructure, and on-call. Sized to your real velocity, not a fixed contractor headcount.",
+      meta: "Post-launch or long-arc builds",
+    },
+    {
+      label: "/ SAAS RESCUE",
+      value: "Starting at $5,000 audit",
+      detail:
+        "Fixed audit (5–10 working days) of a stalled or breaking SaaS — written remediation plan, prioritized. Stabilization engagement (T&M or retainer) follows based on what the audit finds.",
+      meta: "For existing SaaS",
+    },
+  ],
+  processTitle: "From idea to paying customer — without the MVP-that-stalls trap.",
+  processIntro:
+    "Every track starts the same way: we scope the real work first, validate before committing to a full build, and ship with the boring-but-essential SaaS plumbing in place from day one.",
+  process: [
+    {
+      step: "/ 01 — WEEK 1–2",
+      title: "Discovery Sprint",
+      detail:
+        "We scope your SaaS: architecture, billing model, multi-tenancy, core flows, and sequencing. You walk away with a fixed-price proposal for the full build.",
+    },
+    {
+      step: "/ 02 — WEEKS 2–4",
+      title: "Foundation",
+      detail:
+        "Auth, billing, multi-tenancy, and core schema in place. The boring-but-essential SaaS layer that lets everything else move fast — without rebuilds at month 6.",
+    },
+    {
+      step: "/ 03 — WEEKS 4–10",
+      title: "Core build",
+      detail:
+        "The flow that earns money — built, tested, and integrated with Stripe, auth, transactional email, and admin tooling. Real users in staging by week 8.",
+    },
+    {
+      step: "/ 04 — LAUNCH",
+      title: "Go live",
+      detail:
+        "Production deploy. Payment live, billing wired, retention flows triggering. Real paying customers — not a demo URL with three test accounts.",
+    },
+    {
+      step: "/ 05 — OPERATE",
+      title: "Build & Operate (optional)",
+      detail:
+        "Monthly retainer to keep shipping features, monitoring infrastructure, and tuning retention loops while you focus on growth. Not a leash — opt in or out anytime.",
+    },
+  ],
+  bestFitTitle: "Start here if you want to ship paying customers, not just an MVP that sits.",
+  bestFit: [
+    "You have a real audience or first ten customers in mind — not a 'build it and they'll come' bet.",
+    "You want a builder who'll be on the hook past launch, not just at the demo.",
+    "You're OK paying for a Discovery Sprint to scope the real work before committing to a build.",
+  ],
+  notFitTitle: "Probably not the right first move if…",
+  notFit: [
+    "You mainly need a marketing website or e-commerce store — start with our /websites or /ecommerce lane.",
+    "You want the cheapest possible MVP and don't care if it survives past ten users.",
+    "You don't have a clear use case or audience yet — start with our automation audit or a strategy call before committing to a build.",
+    "You expect equity-only — we don't take equity-only as a solo studio. Cash engagements only.",
+  ],
+  faqTitle: "What founders ask before committing to a SaaS build.",
+  faqs: [
+    {
+      question: "How is this different from your Custom Web Apps service?",
+      answer:
+        "Custom Web Apps is for internal tools, portals, and bespoke client apps — software you build for a specific business to use. SaaS Development is for product businesses — software you sell as a subscription to many customers, with multi-tenancy, billing, retention, and support designed in from day one. If your buyer is your customer (not your team), you want this service.",
+    },
+    {
+      question: "Do you take equity?",
+      answer:
+        "No equity-only deals. We're a solo operating studio, not a co-founder. Cash engagements only — that keeps incentives clean and lets us deliver to multiple founders at once. If you're looking for a technical co-founder, we're happy to refer you instead.",
+    },
+    {
+      question: "What if I already have a half-built SaaS that's broken or stalled?",
+      answer:
+        "That's exactly what SaaS Rescue is for. We start with a fixed-fee audit (5–10 working days), give you a written remediation plan, and you decide whether to engage us for the rebuild or take the plan elsewhere. No retainer commitment from the audit.",
+    },
+    {
+      question: "Can you keep operating it after launch?",
+      answer:
+        "Yes — Build & Operate is the retainer track. We keep shipping features, monitoring infrastructure, tuning retention loops, and being on-call. Sized to your real velocity, not a fixed contractor headcount.",
+    },
+    {
+      question: "Why should I trust you with my SaaS over an agency?",
+      answer:
+        "Because we've shipped four of our own — Fleiko, Proveo, Korent, Kocre IT — and still operate them. We've lived the billing arguments, churn analyses, support tickets, and infrastructure scares. Most agencies have shipped websites and apps; we've shipped products and run them at 2am. That difference shows up at month 6 of your build.",
+    },
+    {
+      question: "Do you publish prices because you're cheap?",
+      answer:
+        "We publish 'starting at' bands so you can self-qualify instead of burning 90 minutes on a discovery call to learn we're out of budget. Final pricing comes from the Discovery Sprint — which is fixed-price too, and yours to keep whether you continue with us or not.",
+    },
+    {
+      question: "What tech stack do you build on?",
+      answer:
+        "Default: Next.js (React) on the frontend, Supabase (Postgres + Auth + Storage with Row Level Security) for the backend, Stripe for billing, Resend for transactional email, Vercel for hosting. We pick this stack because it gets you to multi-tenant and production-safe AI fast, with no surprise licensing costs. We'll swap parts if your build genuinely needs it.",
+    },
+  ],
+  crossLinks: CROSS_LINKS.saas,
+  finalTitle: "Tell us the SaaS you're trying to ship.",
+  finalText:
+    "We'll tell you honestly whether we're the right partner — and if we are, the Discovery Sprint scopes the real build for a fixed fee. No discovery-call obligation, no equity ask.",
+  finalPrimaryCta: { label: "Start a Discovery Sprint", href: "/build/intro" },
+  finalSecondaryCta: { label: "See our SaaS products", href: "/work" },
+  projectType: "saas",
+  founderCallout: true,
+  riskReversal:
+    "$0 due until Discovery Sprint scope is signed. No equity, no retainer commitment from the audit or the discovery.",
+};
+
 export function getServicePageData(locale: string, id: ServiceId): ServiceData {
   const dataMap: Record<ServiceId, Partial<Record<Locale, ServiceData>>> = {
     websites: websitesData,
@@ -1875,6 +2103,7 @@ export function getServicePageData(locale: string, id: ServiceId): ServiceData {
     website_rescue: websiteRescueData,
     care_plans: carePlansData,
     ai_integration: aiIntegrationData,
+    saas: saasData,
   };
   const map = dataMap[id];
   const normalized = (locale === "fr" || locale === "es" ? locale : "en") as Locale;
