@@ -20,6 +20,7 @@
     "services": "Services",
     "servicesAria": "Menu des services",
     "websites": "Sites web",
+    "saas": "SaaS",
     "ecommerce": "E-commerce",
     "websiteRescue": "Rescue de site",
     "systems": "Systèmes",
@@ -127,6 +128,7 @@
       "columnGetStarted": "Démarrer",
       "columnLegal": "Mentions légales",
       "websites": "Sites web",
+      "saas": "SaaS",
       "ecommerce": "E-commerce",
       "systems": "Systèmes",
       "aiIntegration": "Intégration IA",
@@ -985,9 +987,15 @@
     "customWebApps": "Applications web sur mesure",
     "clientPortals": "Portails clients",
     "websiteRescue": "Sauvetage de site",
-    "carePlans": "Plans de maintenance"
+    "carePlans": "Plans de maintenance",
+    "aiIntegration": "Intégration IA",
+    "saas": "Développement SaaS"
   },
   "servicesMeta": {
+    "saas": {
+      "metaTitle": "Développement SaaS | Par un fondateur qui exploite 4 SaaS",
+      "metaDescription": "Développement SaaS par un fondateur qui a livré quatre produits SaaS en production (Fleiko, Proveo, Korent, Kocre IT). Multi-tenant + facturation + rétention conçus dès le premier jour. Sprint Discovery à partir de 4 000 $, Sprint MVP à partir de 25 000 $."
+    },
     "aiIntegration": {
       "metaTitle": "Intégration IA | De l'IA en production, avec des garde-fous",
       "metaDescription": "Nous ne vendons pas de démos d'IA. Nous exploitons quatre produits SaaS propulsés par l'IA (Fleiko, Proveo, Korent, Kocre IT) — à seuil de confiance, encadrés, avec supervision humaine. Nous construisons la même chose pour votre entreprise."

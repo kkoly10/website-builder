@@ -137,6 +137,7 @@ function areaServedNodes(): GraphNode[] {
 // Slugs must match the service page paths in app/[locale]/{slug}/.
 const SERVICE_CATALOG: { slug: string; name: string }[] = [
   { slug: "websites", name: "Website design & development" },
+  { slug: "saas", name: "SaaS development" },
   { slug: "custom-web-apps", name: "Custom web app development" },
   { slug: "ai-integration", name: "AI integration" },
   { slug: "systems", name: "Workflow automation" },

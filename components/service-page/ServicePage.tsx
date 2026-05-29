@@ -39,7 +39,7 @@ type CrossLink = {
   // id maps to the crossLinks.{id} dictionary entry. Letting the component
   // own the label lookup keeps service-pages.ts free of locale concerns
   // for cross-references.
-  id: "websites" | "ecommerce" | "systems" | "customWebApps" | "clientPortals" | "websiteRescue" | "carePlans";
+  id: "websites" | "ecommerce" | "systems" | "customWebApps" | "clientPortals" | "websiteRescue" | "carePlans" | "aiIntegration" | "saas";
   href: string;
 };
 

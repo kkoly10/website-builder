@@ -26,6 +26,7 @@ const STATIC_PAGES: Page[] = [
   { path: "/websites", priority: 0.9, changeFrequency: "monthly" },
   { path: "/ecommerce", priority: 0.9, changeFrequency: "monthly" },
   { path: "/systems", priority: 0.9, changeFrequency: "monthly" },
+  { path: "/saas", priority: 0.9, changeFrequency: "monthly" },
   { path: "/custom-web-apps", priority: 0.8, changeFrequency: "monthly" },
   { path: "/client-portals", priority: 0.8, changeFrequency: "monthly" },
   { path: "/website-rescue", priority: 0.8, changeFrequency: "monthly" },

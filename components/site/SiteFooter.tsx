@@ -28,6 +28,7 @@ export default function SiteFooter() {
             <h3 className="footerColumnHeading">{t("links.columnServices")}</h3>
             <ul>
               <li><Link href="/websites">{t("links.websites")}</Link></li>
+              <li><Link href="/saas">{t("links.saas")}</Link></li>
               <li><Link href="/ai-integration">{t("links.aiIntegration")}</Link></li>
               <li><Link href="/custom-web-apps">{t("links.customWebApps")}</Link></li>
               <li><Link href="/systems">{t("links.systems")}</Link></li>
