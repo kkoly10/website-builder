@@ -1943,22 +1943,22 @@ saasData.en = {
       {
         name: "Fleiko",
         detail:
-          "Fleet management SaaS with an AI copilot for cost & maintenance alerts, compliance tracking, and GPS monitoring. Multi-tenant, Stripe-billed, in production.",
+          "Live in production since 2026 — fleet management SaaS with an AI copilot for cost & maintenance alerts, compliance tracking, and GPS monitoring. Multi-tenant, Stripe-billed.",
       },
       {
         name: "Proveo",
         detail:
-          "Photo proof + CRM for service contractors. AI-detected before/after with cryptographic provenance. Freemium → paid conversion live, in production.",
+          "Live in production since 2026 — photo proof + CRM for service contractors. AI-detected before/after with cryptographic provenance. Freemium → paid conversion live.",
       },
       {
         name: "Korent",
         detail:
-          "Floating, context-aware AI Operator Copilot — a read-only help layer embedded inside other products. Powered by OpenAI and Anthropic Claude. In production.",
+          "Live in production since 2026 — floating, context-aware AI Operator Copilot, a read-only help layer embedded inside other products. Powered by OpenAI and Anthropic Claude.",
       },
       {
         name: "Kocre IT",
         detail:
-          "AI-powered helpdesk for outsourced IT support — auto-resolves tickets only above 90% confidence and escalates the rest. Multi-tenant by client org. In production.",
+          "Live in production since 2026 — AI-powered helpdesk for outsourced IT support. Auto-resolves tickets only above 90% confidence, escalates the rest. Multi-tenant by client org.",
       },
     ],
   },

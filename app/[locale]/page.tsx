@@ -41,22 +41,24 @@ const JOURNEY_KEYS = [
 ] as const;
 
 const WHAT_WE_BUILD_CARDS = [
-  { key: "webApps",       href: "/custom-web-apps",                    event: "cta_home_card_web_apps"        },
-  { key: "aiIntegration", href: "/ai-integration", event: "cta_home_card_ai_integration"  },
-  { key: "portals",       href: "/client-portals",                     event: "cta_home_card_portals"         },
-  { key: "automation",    href: "/systems",                            event: "cta_home_card_automation"      },
-  { key: "websites",      href: "/websites",                           event: "cta_home_card_websites"        },
-  { key: "ecommerce",     href: "/ecommerce",                          event: "cta_home_card_ecommerce"       },
+  { key: "saas",          href: "/saas",                              event: "cta_home_card_saas"             },
+  { key: "webApps",       href: "/custom-web-apps",                   event: "cta_home_card_web_apps"         },
+  { key: "aiIntegration", href: "/ai-integration",                    event: "cta_home_card_ai_integration"   },
+  { key: "portals",       href: "/client-portals",                    event: "cta_home_card_portals"          },
+  { key: "automation",    href: "/systems",                           event: "cta_home_card_automation"       },
+  { key: "websites",      href: "/websites",                          event: "cta_home_card_websites"         },
+  { key: "ecommerce",     href: "/ecommerce",                         event: "cta_home_card_ecommerce"        },
 ] as const;
 
 const START_HERE_CARDS = [
-  { key: "ai",        href: "/ai-integration" },
-  { key: "complex",   href: "/custom-web-apps"                      },
-  { key: "app",       href: "/custom-web-apps"                      },
-  { key: "portal",    href: "/client-portals"                       },
+  { key: "saas",      href: "/saas"                                  },
+  { key: "ai",        href: "/ai-integration"                        },
+  { key: "complex",   href: "/custom-web-apps"                       },
+  { key: "app",       href: "/custom-web-apps"                       },
+  { key: "portal",    href: "/client-portals"                        },
   { key: "website",   href: "/websites"                              },
-  { key: "ecommerce", href: "/ecommerce"                            },
-  { key: "rescue",    href: "/website-rescue"                       },
+  { key: "ecommerce", href: "/ecommerce"                             },
+  { key: "rescue",    href: "/website-rescue"                        },
 ] as const;
 
 export default async function Home({

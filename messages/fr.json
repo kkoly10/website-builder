@@ -245,9 +245,13 @@
       "label": "Ce que nous construisons",
       "title": "D'un site web soigné au système qui fait tourner l'entreprise.",
       "cards": {
+        "saas": {
+          "title": "Développement SaaS",
+          "body": "SaaS multi-tenant avec facturation, rétention et IA sécurisée en production dès le premier jour — par un fondateur qui exploite quatre produits SaaS qu'il a livrés lui-même."
+        },
         "webApps": {
-          "title": "Applications sur mesure & SaaS",
-          "body": "Produits SaaS, tableaux de bord, portails, outils internes, MVPs — avec IA intégrée là où elle apporte une vraie valeur."
+          "title": "Applications web sur mesure",
+          "body": "Tableaux de bord, portails, outils internes et MVPs pour entreprises — des logiciels que votre équipe utilise, pas des logiciels que vous vendez."
         },
         "aiIntegration": {
           "title": "Intégration IA",
@@ -280,12 +284,16 @@
     },
     "startHere": {
       "label": "Pas sûr par où commencer ?",
+      "saas": {
+        "situation": "J'ai une idée de SaaS que je veux livrer à des clients payants",
+        "service": "Développement SaaS"
+      },
       "website": {
         "situation": "J'ai besoin d'un site web professionnel pour mon entreprise",
         "service": "Sites web"
       },
       "app": {
-        "situation": "J'ai une idée de logiciel ou un outil interne à créer",
+        "situation": "J'ai besoin d'un outil interne ou d'un tableau de bord pour mon équipe",
         "service": "Applications web sur mesure"
       },
       "ai": {

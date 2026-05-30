@@ -73,6 +73,7 @@ export async function generateMetadata({
 // always points at the canonical service.
 const SERVICES: { slug: string; name: string; href: string; blurb: string }[] = [
   { slug: "websites", name: "Premium websites", href: "/websites", blurb: "Conversion-focused websites for service businesses." },
+  { slug: "saas", name: "SaaS development", href: "/saas", blurb: "Production SaaS — multi-tenant, billing, retention from day one. By a founder who runs four of his own." },
   { slug: "custom-web-apps", name: "Custom web apps", href: "/custom-web-apps", blurb: "Dashboards, portals, MVPs, internal tools." },
   { slug: "ai-integration", name: "AI integration", href: "/ai-integration", blurb: "Production AI copilots, agents, RAG, GPT-4/Claude integration." },
   { slug: "systems", name: "Workflow automation", href: "/systems", blurb: "Intake, routing, status tracking, admin systems." },
