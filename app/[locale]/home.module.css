@@ -143,9 +143,13 @@
 
 .diff,
 .how,
-.pricing,
-.closing {
+.pricing {
   padding: 4.8rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.closing {
+  padding: 3.2rem 0;
   border-bottom: 1px solid var(--rule);
 }
 
@@ -430,7 +434,7 @@
 .closing h2 {
   margin-top: 0.8rem;
   max-width: 12ch;
-  font-size: clamp(2.6rem, 6vw, 6rem);
+  font-size: clamp(2.2rem, 4.5vw, 3.8rem);
   line-height: 0.95;
 }
 
@@ -827,14 +831,14 @@
 
 /* ── Founder section ─────────────────────────────────────────────── */
 .founder {
-  padding: 5rem 0;
+  padding: 3.5rem 0;
   border-bottom: 1px solid var(--rule);
 }
 
 .founderInner {
   display: grid;
   grid-template-columns: 240px 1fr;
-  gap: 3.5rem;
+  gap: 2.5rem;
   align-items: start;
 }
 
@@ -902,6 +906,10 @@
 }
 
 @media (max-width: 720px) {
+  .founder {
+    padding: 2.5rem 0;
+  }
+
   .founderInner {
     grid-template-columns: 1fr;
     gap: 2rem;
@@ -910,5 +918,9 @@
   .founderImg {
     width: 160px;
     height: 160px;
+  }
+
+  .closing {
+    padding: 2.2rem 0;
   }
 }
