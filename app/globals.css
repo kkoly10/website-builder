@@ -175,11 +175,11 @@ a.card:hover,a.panel:hover {
   box-shadow: 0 6px 14px rgba(0,0,0,.04);
 }
 
-.footer { border-top: 1px solid var(--rule); padding: 3rem 0 2.5rem; color: var(--muted); }
-.footerInner { display: grid; gap: 2.5rem; }
+.footer { border-top: 1px solid var(--rule); padding: 2rem 0 1.5rem; color: var(--muted); }
+.footerInner { display: grid; gap: 1.75rem; }
 .footerIdentity { max-width: 36rem; display: grid; gap: .5rem; }
 .footerKicker,.footerCopyright,.footerEmail,.footerSocial a,.footerColumn a {
-  font: 500 11px/1.6 var(--font-mono);
+  font: 500 11px/1.4 var(--font-mono);
   letter-spacing: .08em;
   text-transform: uppercase;
 }
@@ -188,8 +188,21 @@ a.card:hover,a.panel:hover {
 .footerAddress { margin: .5rem 0 0; font-size: 13px; opacity: .85; line-height: 1.6; }
 .footerServiceArea { margin: 0; font-size: 13px; opacity: .75; line-height: 1.6; }
 
-.footerColumns { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2rem 1.5rem; }
-.footerColumn { display: grid; gap: .85rem; }
+/*
+  align-items: start prevents short columns (Get Started: 2 items,
+  Studio: 5 items) from being stretched to the height of the tallest
+  column (Services: 8 items) and visually distributing their links
+  with extra vertical padding. With stretch (the grid default),
+  mobile especially suffered because the 2-column wrap put a 2-item
+  column next to an 8-item column in the same row.
+*/
+.footerColumns {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1.5rem 1.5rem;
+  align-items: start;
+}
+.footerColumn { display: grid; gap: .6rem; }
 .footerColumnHeading {
   font: 600 11px/1.4 var(--font-mono);
   letter-spacing: .12em;
@@ -197,7 +210,7 @@ a.card:hover,a.panel:hover {
   color: var(--ink);
   margin: 0;
 }
-.footerColumn ul { list-style: none; padding: 0; margin: 0; display: grid; gap: .55rem; }
+.footerColumn ul { list-style: none; padding: 0; margin: 0; display: grid; gap: .4rem; }
 .footerColumn a { color: var(--muted); text-decoration: none; }
 .footerColumn a:hover { color: var(--ink); }
 
@@ -208,7 +221,7 @@ a.card:hover,a.panel:hover {
   justify-content: space-between;
   row-gap: .85rem;
   column-gap: 1.5rem;
-  padding-top: 1.5rem;
+  padding-top: 1.25rem;
   border-top: 1px solid var(--rule);
 }
 .footerCopyright { margin: 0; }
@@ -257,7 +270,7 @@ a.card:hover,a.panel:hover {
   .mobileMenu { display: block; }
   .grid2,.grid2stretch { grid-template-columns: 1fr; }
   .topNavInner { min-height: 70px; }
-  .footerColumns { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.75rem 1.25rem; }
+  .footerColumns { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem 1.25rem; }
   .footerBottom { flex-direction: column; align-items: flex-start; }
   .brandLogo svg { height: 36px; }
 }
