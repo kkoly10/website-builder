@@ -153,11 +153,15 @@ export function emailWrap(
   const darkModeBlock = `
     body, .body-bg { background:#0f0f0f !important; }
     .card { background:#1a1a1a !important; border-color:#2a2a2a !important; }
-    /* Keep header banner white in dark mode. The brand wordmark is
-       black-on-transparent — flipping the header to dark would make
-       the logo invisible. White banner against the inverted card is
-       intentional (matches the "letterhead" pattern Stripe/Linear use). */
-    .card-header { background:#ffffff !important; border-bottom-color:#ececec !important; }
+    /* Header in dark mode: flip background to dark AND swap to the
+       cream-on-transparent variant of the logo. Previously the header
+       was force-kept white because the light logo (black wordmark on
+       transparent PNG) would have been invisible against a dark card.
+       Adding a dark logo variant lets the whole card unify visually
+       in dark mode — the white-letterhead look was a stop-gap. */
+    .card-header { background:#1a1a1a !important; border-bottom-color:#2a2a2a !important; }
+    .logo-light { display:none !important; max-height:0 !important; max-width:0 !important; overflow:hidden !important; }
+    .logo-dark { display:inline-block !important; max-height:none !important; max-width:280px !important; overflow:visible !important; }
     .card-body { color:#e8e8e8 !important; }
     .card-body p, .card-body td { color:#cccccc !important; }
     .card-body h1, .card-body h2 { color:#ffffff !important; }
@@ -207,7 +211,9 @@ export function emailWrap(
     }
     [data-ogsc] .body-bg { background:#0f0f0f !important; }
     [data-ogsc] .card { background:#1a1a1a !important; border-color:#2a2a2a !important; }
-    [data-ogsc] .card-header { background:#ffffff !important; border-bottom-color:#ececec !important; }
+    [data-ogsc] .card-header { background:#1a1a1a !important; border-bottom-color:#2a2a2a !important; }
+    [data-ogsc] .logo-light { display:none !important; max-height:0 !important; max-width:0 !important; overflow:hidden !important; }
+    [data-ogsc] .logo-dark { display:inline-block !important; max-height:none !important; max-width:280px !important; overflow:visible !important; }
     [data-ogsc] .card-body { color:#e8e8e8 !important; }
     [data-ogsc] .card-body p, [data-ogsc] .card-body td { color:#cccccc !important; }
     [data-ogsc] .card-body h1, [data-ogsc] .card-body h2 { color:#ffffff !important; }
@@ -232,7 +238,7 @@ export function emailWrap(
     [data-ogsc] .cta-link { background:#ffffff !important; color:#111111 !important; }
     [data-ogsb] .body-bg { background:#0f0f0f !important; }
     [data-ogsb] .card { background:#1a1a1a !important; }
-    [data-ogsb] .card-header { background:#ffffff !important; }
+    [data-ogsb] .card-header { background:#1a1a1a !important; }
     [data-ogsb] .card-footer { background:#141414 !important; }
     [data-ogsb] .callout td { background:#141414 !important; }
     [data-ogsb] .admin-badge td { background:#2a2a2a !important; }
@@ -265,20 +271,23 @@ ${preheaderHtml}
 
         <!-- Header: bitmap logo (PNG rendered at 2x for retina) with
              text-based fallback for clients that block remote images.
-             SVG isn't reliable for email (Gmail/Outlook strip it). -->
-        <!-- Header banner: white background so the brand mark (black
-             "crecy" + grey "studio" wordmark on transparent PNG) reads
-             at full contrast. Native PNG is 560×100; we render at 280×50
-             so the source is a 2× retina asset. Centered alignment +
-             generous padding gives the email a clean "letterhead" feel.
-             A class is on the td so dark-mode rules can keep the header
-             light even when the card body inverts — the alternative
-             (flipping the header to dark) would lose the brand colors
-             entirely since the wordmark is dark-on-transparent. -->
+             SVG isn't reliable for email (Gmail/Outlook strip it).
+
+             Two img tags ship — a light variant (dark-on-transparent
+             wordmark, default visible) and a dark variant (cream-on-
+             transparent wordmark, hidden by default). The dark-mode
+             CSS in <style> hides the light one and reveals the dark
+             one when @media (prefers-color-scheme: dark) matches, or
+             when Outlook 365 adds [data-ogsc] / [data-ogsb] markers.
+             Clients that strip <style> tags entirely (a small minority)
+             just see the light logo on whatever background — same as
+             before. Both PNGs are 560×100 native, rendered at 280×50
+             so the source is a 2× retina asset. -->
         <tr>
           <td class="card-header" align="center" style="background:#ffffff;padding:28px 32px;border-bottom:1px solid #ececec">
-            <a href="${SITE_URL}" style="text-decoration:none;display:inline-block">
-              <img src="${SITE_URL}/brand/crecy-email-logo.png" alt="CrecyStudio" width="280" height="50" style="display:block;border:0;outline:none;text-decoration:none;height:auto;max-width:280px;width:100%;color:#111111;font-family:Arial,Helvetica,sans-serif;font-size:24px;font-weight:bold;line-height:50px;letter-spacing:-0.01em">
+            <a href="${SITE_URL}" style="text-decoration:none;display:inline-block;line-height:0">
+              <img class="logo-light" src="${SITE_URL}/brand/crecy-email-logo.png" alt="CrecyStudio" width="280" height="50" style="display:inline-block;border:0;outline:none;text-decoration:none;height:auto;max-width:280px;width:100%;color:#111111;font-family:Arial,Helvetica,sans-serif;font-size:24px;font-weight:bold;line-height:50px;letter-spacing:-0.01em">
+              <img class="logo-dark" src="${SITE_URL}/brand/crecy-email-logo-dark.png" alt="" width="280" height="50" style="display:none;border:0;outline:none;text-decoration:none;height:auto;max-width:0;width:100%;color:#f8f1e8;font-family:Arial,Helvetica,sans-serif;font-size:24px;font-weight:bold;line-height:50px;letter-spacing:-0.01em;max-height:0;overflow:hidden">
             </a>
           </td>
         </tr>

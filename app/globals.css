@@ -175,18 +175,33 @@ a.card:hover,a.panel:hover {
   box-shadow: 0 6px 14px rgba(0,0,0,.04);
 }
 
-.footer { border-top: 1px solid var(--rule); padding: 2rem 0 1.5rem; color: var(--muted); }
-.footerInner { display: grid; gap: 1.75rem; }
-.footerIdentity { max-width: 36rem; display: grid; gap: .5rem; }
+.footer { border-top: 1px solid var(--rule); padding: 1.5rem 0 1.25rem; color: var(--muted); }
+
+/*
+  Desktop layout: identity block on the left, link columns on the
+  right, bottom strip spanning both. Cuts ~180px of vertical space
+  vs the previous stacked layout where identity → columns → bottom
+  ate nearly half the viewport. At <=980px the grid collapses back
+  to a single column (mobile media query below).
+*/
+.footerInner {
+  display: grid;
+  gap: 1.25rem 2.5rem;
+  grid-template-columns: minmax(220px, 25%) 1fr;
+  grid-template-areas:
+    "identity columns"
+    "bottom bottom";
+}
+.footerIdentity { grid-area: identity; max-width: 36rem; display: grid; gap: .5rem; }
 .footerKicker,.footerCopyright,.footerEmail,.footerSocial a,.footerColumn a {
   font: 500 11px/1.4 var(--font-mono);
   letter-spacing: .08em;
   text-transform: uppercase;
 }
 .footerKicker { margin: 0 0 .25rem; color: var(--ink); }
-.footerBlurb { margin: 0; color: var(--muted); line-height: 1.7; }
-.footerAddress { margin: .5rem 0 0; font-size: 13px; opacity: .85; line-height: 1.6; }
-.footerServiceArea { margin: 0; font-size: 13px; opacity: .75; line-height: 1.6; }
+.footerBlurb { margin: 0; color: var(--muted); line-height: 1.55; }
+.footerAddress { margin: .5rem 0 0; font-size: 13px; opacity: .85; line-height: 1.5; }
+.footerServiceArea { margin: 0; font-size: 13px; opacity: .75; line-height: 1.5; }
 
 /*
   align-items: start prevents short columns (Get Started: 2 items,
@@ -197,9 +212,10 @@ a.card:hover,a.panel:hover {
   column next to an 8-item column in the same row.
 */
 .footerColumns {
+  grid-area: columns;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 1.5rem 1.5rem;
+  gap: 1.25rem 1.25rem;
   align-items: start;
 }
 .footerColumn { display: grid; gap: .6rem; }
@@ -215,6 +231,7 @@ a.card:hover,a.panel:hover {
 .footerColumn a:hover { color: var(--ink); }
 
 .footerBottom {
+  grid-area: bottom;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -270,6 +287,13 @@ a.card:hover,a.panel:hover {
   .mobileMenu { display: block; }
   .grid2,.grid2stretch { grid-template-columns: 1fr; }
   .topNavInner { min-height: 70px; }
+  /* Collapse the identity/columns side-by-side back to a stack so
+     the columns don't get squeezed under a quarter of the viewport. */
+  .footerInner {
+    grid-template-columns: 1fr;
+    grid-template-areas: "identity" "columns" "bottom";
+    gap: 1.25rem;
+  }
   .footerColumns { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem 1.25rem; }
   .footerBottom { flex-direction: column; align-items: flex-start; }
   .brandLogo svg { height: 36px; }
