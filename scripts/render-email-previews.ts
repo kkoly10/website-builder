@@ -305,6 +305,7 @@ for (const lang of LOCALES) {
       "Wed May 27 · 2:00 PM ET",
       new Date("2026-05-27T18:00:00Z"),
       lang,
+      "https://meet.google.com/abc-defg-hij",
     ),
   });
 }
@@ -323,6 +324,7 @@ addPreview({
     "website",
     "Tuesday or Wednesday afternoon ET",
     "Wed May 27 · 2:00 PM ET",
+    "https://meet.google.com/abc-defg-hij",
   ),
 });
 

@@ -25,6 +25,7 @@ function buildCalendarInvite(
   adminEmail: string | null,
   start: Date,
   slotLabel: string,
+  meetUrl: string | null,
 ): string {
   const fmt = (d: Date) => d.toISOString().replace(/[-:.]/g, "").slice(0, 15) + "Z";
   const end = new Date(start.getTime() + 20 * 60 * 1000);
@@ -32,6 +33,17 @@ function buildCalendarInvite(
   const esc = (s: string) =>
     s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
 
+  // When a Meet URL is generated, set it as the event LOCATION (RFC
+  // 5545 standard for video conferencing) AND prepend it to the
+  // DESCRIPTION so calendar clients that don't render LOCATION as a
+  // clickable link still surface the join URL. Apple Calendar, Google
+  // Calendar, and Outlook all auto-detect the URL as a join button.
+  const descriptionLines = [
+    "Your 20-min discovery call with Komlan Kouhiko.",
+    ...(meetUrl ? ["", `Join Google Meet: ${meetUrl}`] : []),
+    "",
+    slotLabel,
+  ];
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
@@ -49,10 +61,8 @@ function buildCalendarInvite(
       ? [`ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=Komlan Kouhiko:mailto:${adminEmail}`]
       : []),
     `SUMMARY:Discovery call — CrecyStudio`,
-    // Drop the duplicated "free" from the description — premium brands
-    // don't emphasise "free" three times. The marketing page sets that
-    // expectation; the calendar entry just states the meeting.
-    `DESCRIPTION:Your 20-min discovery call with Komlan Kouhiko.\\n\\n${esc(slotLabel)}`,
+    ...(meetUrl ? [`LOCATION:${esc(meetUrl)}`] : []),
+    `DESCRIPTION:${descriptionLines.map(esc).join("\\n")}`,
     "STATUS:CONFIRMED",
     "SEQUENCE:0",
     "END:VEVENT",
@@ -92,23 +102,31 @@ function parseSelectedSlot(selectedSlot: string): Date | null {
 }
 
 async function maybeCreateCalendarEvent(
+  callId: string,
   name: string,
   email: string,
   availabilityNote: string | null,
   selectedSlot: string | null,
   slotLabel: string | null,
-): Promise<void> {
+): Promise<{ meetUrl: string | null }> {
   const client = await getCalendarClient();
-  if (!client) return;
+  if (!client) return { meetUrl: null };
   const { calendar, calendarId } = client;
 
-  await runCalendarOp("book-discovery-call.calendar_insert", async () => {
+  const result = await runCalendarOp("book-discovery-call.calendar_insert", async () => {
     if (selectedSlot) {
       const start = parseSelectedSlot(selectedSlot);
       if (!start) throw new Error("Could not parse selectedSlot: " + selectedSlot);
       const end = new Date(start.getTime() + 20 * 60 * 1000);
+      // conferenceDataVersion: 1 is REQUIRED for createRequest to
+      // generate a Meet link — without it the API silently ignores
+      // the conferenceData payload entirely and returns the event
+      // with no entry points. requestId must be unique per request;
+      // using callId guarantees idempotency if this insert is retried
+      // (Google de-dupes conference creation by requestId).
       return calendar.events.insert({
         calendarId,
+        conferenceDataVersion: 1,
         requestBody: {
           summary: `Discovery call — ${name}`,
           description: `${slotLabel || selectedSlot}\n\nReview at: ${SITE_URL}/internal/admin`,
@@ -116,10 +134,18 @@ async function maybeCreateCalendarEvent(
           end: { dateTime: end.toISOString() },
           status: "confirmed",
           guestsCanSeeOtherGuests: false,
+          conferenceData: {
+            createRequest: {
+              requestId: callId,
+              conferenceSolutionKey: { type: "hangoutsMeet" },
+            },
+          },
         },
       });
     }
-    // Fallback: tentative placeholder (no specific time)
+    // Pending bookings (no slot selected via the textarea fallback)
+    // don't get a Meet link — the calendar event is tentative and
+    // gets a real time + Meet attached once the studio responds.
     const now = new Date();
     const end = new Date(now.getTime() + 20 * 60 * 1000);
     return calendar.events.insert({
@@ -133,6 +159,29 @@ async function maybeCreateCalendarEvent(
       },
     });
   });
+
+  // Meet URL lives in conferenceData.entryPoints filtered by
+  // entryPointType === "video". The phone/sip entry points exist
+  // alongside but aren't useful for an emailed CTA. If the result is
+  // null (calendar op failed and was logged to Sentry) or the
+  // createRequest came back status.statusCode === "pending" (rare
+  // but documented async case — see Google Calendar API docs), we
+  // proceed without a Meet URL. The .ics invite + emails still
+  // ship; the client just doesn't get a one-click join link.
+  if (!result) return { meetUrl: null };
+  const entryPoints = result.data.conferenceData?.entryPoints ?? [];
+  const meetUrl = entryPoints.find((e) => e.entryPointType === "video")?.uri ?? null;
+  if (!meetUrl && selectedSlot) {
+    captureBackgroundError(new Error("Meet URL missing from conferenceData"), {
+      where: "book-discovery-call.meet_url_missing",
+      extra: {
+        callId,
+        conferenceStatus: result.data.conferenceData?.createRequest?.status?.statusCode ?? null,
+        entryPointTypes: entryPoints.map((e) => e.entryPointType ?? null),
+      },
+    });
+  }
+  return { meetUrl };
 }
 
 async function findLeadByEmail(email: string) {
@@ -226,14 +275,39 @@ export async function POST(req: Request) {
     if (insert.error) throw new Error(insert.error.message);
     const callId = String(insert.data.id);
 
-    await maybeCreateCalendarEvent(name, email, availabilityNote, selectedSlot, slotLabel);
+    const { meetUrl } = await maybeCreateCalendarEvent(
+      callId,
+      name,
+      email,
+      availabilityNote,
+      selectedSlot,
+      slotLabel,
+    );
+
+    // Persist the Meet URL so admin tooling can surface it without
+    // re-hitting Google Calendar, and so any future reminder/cron
+    // re-sends the same link. Best-effort: a failure here is logged
+    // but doesn't roll back the booking — the URL still went out in
+    // the email + .ics, the DB just won't reflect it.
+    if (meetUrl) {
+      const updateRes = await supabaseAdmin
+        .from("discovery_calls")
+        .update({ meet_join_url: meetUrl })
+        .eq("id", callId);
+      if (updateRes.error) {
+        captureBackgroundError(updateRes.error, {
+          where: "book-discovery-call.meet_url_persist",
+          extra: { callId },
+        });
+      }
+    }
 
     // Build .ics invite when a specific slot was booked
     const slotStart = scheduledAt && selectedSlot ? parseSelectedSlot(selectedSlot) : null;
     const icsAttachment = slotStart && slotLabel
       ? {
           filename: "discovery-call.ics",
-          content: buildCalendarInvite(callId, name, email, ADMIN_EMAIL || null, slotStart, slotLabel),
+          content: buildCalendarInvite(callId, name, email, ADMIN_EMAIL || null, slotStart, slotLabel, meetUrl),
           content_type: "text/calendar; method=REQUEST; charset=UTF-8",
         }
       : null;
@@ -246,7 +320,7 @@ export async function POST(req: Request) {
           ? t("discovery.subject_scheduled", emailLang)
           : t("discovery.subject_pending", emailLang),
         html: scheduledAt && slotLabel
-          ? buildDiscoveryClientEmailScheduled(name, slotLabel, slotStart, emailLang)
+          ? buildDiscoveryClientEmailScheduled(name, slotLabel, slotStart, emailLang, meetUrl)
           : buildDiscoveryClientEmail(name, emailLang),
         ...(icsAttachment ? { attachments: [icsAttachment] } : {}),
       });
@@ -266,7 +340,7 @@ export async function POST(req: Request) {
           to: ADMIN_EMAIL,
           from: FROM_EMAIL,
           subject: `Discovery call — ${name}${slotLabel ? " · scheduled" : " · request"}`,
-          html: buildDiscoveryAdminEmail(callId, name, email, company, projectType, availabilityNote, slotLabel),
+          html: buildDiscoveryAdminEmail(callId, name, email, company, projectType, availabilityNote, slotLabel, meetUrl),
           ...(icsAttachment ? { attachments: [icsAttachment] } : {}),
         });
       } catch (emailErr) {
