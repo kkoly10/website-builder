@@ -65,13 +65,46 @@ function buildCalendarButtonsHtml(start: Date, slotLabel: string, lang: EmailLoc
   </div>`;
 }
 
-export function buildDiscoveryClientEmailScheduled(name: string, slotLabel: string, start: Date | null, lang: EmailLocale): string {
+// Prominent "Open Google Meet" CTA rendered above the calendar
+// add-to-calendar buttons. Lives in its own block (not inside the
+// existing buttons row) because the join link is the highest-intent
+// action in the email — the client is going to click it at call time.
+// Mirrors the .cta-link styling pattern used elsewhere so the dark-
+// mode rules pick it up without a separate override.
+function buildMeetCtaHtml(meetUrl: string, lang: EmailLocale): string {
+  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:0 0 22px">
+    <tr>
+      <td style="padding:0 0 8px">
+        <p style="margin:0;font-size:11px;color:#888888;letter-spacing:0.08em;text-transform:uppercase;font-weight:600;font-family:Arial,Helvetica,sans-serif">${escHtml(t("discovery.meet_label", lang))}</p>
+      </td>
+    </tr>
+    <tr>
+      <td class="cta-link" style="background:#111111;border-radius:4px">
+        <a href="${escHtml(meetUrl)}" class="cta-link" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;padding:13px 26px;font-size:14px;font-weight:bold;font-family:Arial,Helvetica,sans-serif;border-radius:4px">${escHtml(t("discovery.meet_cta", lang))} &#x2192;</a>
+      </td>
+    </tr>
+  </table>`;
+}
+
+export function buildDiscoveryClientEmailScheduled(
+  name: string,
+  slotLabel: string,
+  start: Date | null,
+  lang: EmailLocale,
+  meetUrl?: string | null,
+): string {
   const trimmedName = name.trim();
   const headlineHtml = trimmedName
     ? escHtml(t("discovery.headline_scheduled", lang, { name: trimmedName }))
     : escHtml(t("discovery.headline_scheduled_anon", lang));
   const slot = escHtml(slotLabel);
   const buttons = start ? buildCalendarButtonsHtml(start, slotLabel, lang) : "";
+  // Meet CTA renders ABOVE the add-to-calendar buttons because joining
+  // the call is the highest-intent action in this email — the calendar
+  // buttons are utility, the join link is the moment-of-truth click.
+  // Omitted when no Meet URL was generated (rare async-pending case or
+  // when Google Calendar integration wasn't configured at all).
+  const meetCta = meetUrl ? buildMeetCtaHtml(meetUrl, lang) : "";
   return emailWrap(`
     <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.02em;line-height:1.2">${headlineHtml}</h1>
     <p style="margin:0 0 28px;font-size:13px;color:#888888;letter-spacing:0.06em;text-transform:uppercase">${escHtml(t("discovery.eyebrow", lang))}</p>
@@ -83,6 +116,7 @@ export function buildDiscoveryClientEmailScheduled(name: string, slotLabel: stri
         </td>
       </tr>
     </table>
+    ${meetCta}
     ${buttons}
     <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("discovery.scheduled_attachment_note", lang))}</p>
     <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7">${escHtml(t("discovery.scheduled_reply_note", lang))}</p>
@@ -107,15 +141,24 @@ export function buildDiscoveryAdminEmail(
   projectType: string | null,
   availabilityNote: string | null,
   slotLabel: string | null,
+  meetUrl?: string | null,
 ): string {
   const s = (v: string | null) => escHtml(v || "—");
   const adminUrl = `${SITE_URL}/internal/admin`;
+  // Meet row only renders when the calendar integration generated a
+  // URL — keeps the admin email tidy for pending requests (no slot,
+  // no Meet) and for the rare case where Meet generation came back
+  // pending. row-value class gets the dark-mode link-color override.
+  const meetRow: [string, string] | null = meetUrl
+    ? ["Meet", `<a href="${escHtml(meetUrl)}" class="body-link" style="color:#0066cc;font-family:monospace;font-size:12px;word-break:break-all">${escHtml(meetUrl)}</a>`]
+    : null;
   const rows: [string, string][] = [
     ["Name", s(name)],
     ["Email", `<a href="mailto:${escHtml(email)}" style="color:#111111">${escHtml(email)}</a>`],
     ["Company", s(company)],
     ["Building", s(projectType)],
     [slotLabel ? "Scheduled" : "Availability", slotLabel ? `<strong>${s(slotLabel)}</strong>` : s(availabilityNote)],
+    ...(meetRow ? [meetRow] : []),
     ["Call ID", `<span style="font-family:monospace;font-size:12px;color:#888888">${escHtml(callId)}</span>`],
   ];
   return emailWrap(`

@@ -622,6 +622,21 @@ const STRINGS: Record<string, LocalizedString> = {
     fr: "Ajouter à votre calendrier",
     es: "Añadir a su calendario",
   },
+  "discovery.meet_label": {
+    en: "Join the call",
+    fr: "Rejoindre l'appel",
+    es: "Únase a la llamada",
+  },
+  "discovery.meet_cta": {
+    en: "Open Google Meet",
+    fr: "Ouvrir Google Meet",
+    es: "Abrir Google Meet",
+  },
+  "discovery.meet_note": {
+    en: "The Google Meet link is in your calendar invite too — open it from there at call time, or click the button above.",
+    fr: "Le lien Google Meet est également dans votre invitation calendrier — ouvrez-le depuis là au moment de l'appel, ou cliquez sur le bouton ci-dessus.",
+    es: "El enlace de Google Meet también está en su invitación de calendario — ábralo desde allí a la hora de la llamada, o haga clic en el botón de arriba.",
+  },
   "discovery.scheduled_attachment_note": {
     en: "A calendar invite is also attached — your email client will offer to add it with one click.",
     fr: "Une invitation calendrier est également jointe — votre client e-mail vous proposera de l'ajouter en un clic.",
