@@ -6,6 +6,7 @@ import { pickPreferredLocale } from "@/lib/preferredLocale";
 import { sendResendEmail } from "@/lib/resend";
 import { SITE_URL, FROM_EMAIL, ADMIN_EMAIL } from "@/lib/emailHelpers";
 import { captureBackgroundError } from "@/lib/sentry";
+import { getCalendarClient, runCalendarOp } from "@/lib/googleCalendar";
 import { type EmailLocale, normalizeEmailLocale, t } from "@/lib/i18n/emailStrings";
 import {
   buildDiscoveryClientEmail,
@@ -97,25 +98,16 @@ async function maybeCreateCalendarEvent(
   selectedSlot: string | null,
   slotLabel: string | null,
 ): Promise<void> {
-  const calendarId = process.env.GOOGLE_CALENDAR_ID;
-  const serviceEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const serviceKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
-  if (!calendarId || !serviceEmail || !serviceKey) return;
+  const client = await getCalendarClient();
+  if (!client) return;
+  const { calendar, calendarId } = client;
 
-  try {
-    const { google } = await import("googleapis");
-    const auth = new google.auth.JWT({
-      email: serviceEmail,
-      key: serviceKey.replace(/\\n/g, "\n"),
-      scopes: ["https://www.googleapis.com/auth/calendar"],
-    });
-    const calendar = google.calendar({ version: "v3", auth });
-
+  await runCalendarOp("book-discovery-call.calendar_insert", async () => {
     if (selectedSlot) {
       const start = parseSelectedSlot(selectedSlot);
       if (!start) throw new Error("Could not parse selectedSlot: " + selectedSlot);
       const end = new Date(start.getTime() + 20 * 60 * 1000);
-      await calendar.events.insert({
+      return calendar.events.insert({
         calendarId,
         requestBody: {
           summary: `Discovery call — ${name}`,
@@ -126,35 +118,21 @@ async function maybeCreateCalendarEvent(
           guestsCanSeeOtherGuests: false,
         },
       });
-    } else {
-      // Fallback: tentative placeholder (no specific time)
-      const now = new Date();
-      const end = new Date(now.getTime() + 20 * 60 * 1000);
-      await calendar.events.insert({
-        calendarId,
-        requestBody: {
-          summary: `Discovery call — ${name} (${email})`,
-          description: `Availability: ${availabilityNote || "not specified"}\n\nReview at: ${SITE_URL}/internal/admin`,
-          start: { dateTime: now.toISOString() },
-          end: { dateTime: end.toISOString() },
-          status: "tentative",
-        },
-      });
     }
-  } catch (err) {
-    // Calendar failures shouldn't block the booking flow (we already
-    // saved the row + email goes out separately), but they ARE
-    // page-worthy — the studio expects every booking to show up in
-    // Google Calendar. Send to Sentry so a streak of failures is
-    // visible rather than buried in console.warn.
-    captureBackgroundError(err, {
-      where: "book-discovery-call.calendar_insert",
-      extra: {
-        code: (err as { code?: string })?.code,
-        status: (err as { status?: number })?.status,
+    // Fallback: tentative placeholder (no specific time)
+    const now = new Date();
+    const end = new Date(now.getTime() + 20 * 60 * 1000);
+    return calendar.events.insert({
+      calendarId,
+      requestBody: {
+        summary: `Discovery call — ${name} (${email})`,
+        description: `Availability: ${availabilityNote || "not specified"}\n\nReview at: ${SITE_URL}/internal/admin`,
+        start: { dateTime: now.toISOString() },
+        end: { dateTime: end.toISOString() },
+        status: "tentative",
       },
     });
-  }
+  });
 }
 
 async function findLeadByEmail(email: string) {

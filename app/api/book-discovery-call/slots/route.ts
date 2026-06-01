@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { enforceRateLimitDurable, getIpFromHeaders, rateLimitResponse } from "@/lib/rateLimit";
+import { getCalendarClient, runCalendarOp } from "@/lib/googleCalendar";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -116,72 +117,60 @@ export async function GET(req: NextRequest) {
   });
   if (!rl.ok) return rateLimitResponse(rl.resetAt);
 
-  const calendarId = process.env.GOOGLE_CALENDAR_ID;
-  const serviceEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const serviceKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  const client = await getCalendarClient({ readonly: true });
+  if (!client) {
+    return NextResponse.json({ ok: false, noCalendar: true });
+  }
+  const { calendar, calendarId } = client;
 
-  if (!calendarId || !serviceEmail || !serviceKey) {
+  const workingDays = nextWorkingDays(WORKING_DAYS);
+  const timeMin = workingDays[0] + "T00:00:00Z";
+  const lastDay = workingDays[workingDays.length - 1];
+  const [ly, lm, ld] = lastDay.split("-").map(Number);
+  const timeMax = new Date(Date.UTC(ly, lm - 1, ld + 1)).toISOString();
+
+  // runCalendarOp returns null on any failure (logged to Sentry with
+  // the keyDiagnostic so paste mistakes are debuggable). When that
+  // happens, the UI shows the textarea fallback — same UX as having
+  // no calendar configured at all.
+  const freebusyRes = await runCalendarOp("book-discovery-call.slots_freebusy", () =>
+    calendar.freebusy.query({
+      requestBody: { timeMin, timeMax, items: [{ id: calendarId }] },
+    }),
+  );
+  if (!freebusyRes) {
     return NextResponse.json({ ok: false, noCalendar: true });
   }
 
-  try {
-    const workingDays = nextWorkingDays(WORKING_DAYS);
-    const timeMin = workingDays[0] + "T00:00:00Z";
-    const lastDay = workingDays[workingDays.length - 1];
-    const [ly, lm, ld] = lastDay.split("-").map(Number);
-    const timeMax = new Date(Date.UTC(ly, lm - 1, ld + 1)).toISOString();
+  // Google freebusy types `start` / `end` as optional; in practice
+  // they're always present, but a partial payload would produce
+  // `new Date(undefined)` (Invalid Date) and silently break the
+  // overlaps() comparison. Filter blocks that don't have both.
+  const busyPeriods = (freebusyRes.data.calendars?.[calendarId]?.busy ?? [])
+    .filter((b): b is { start: string; end: string } => !!b.start && !!b.end)
+    .map((b) => ({
+      start: new Date(b.start),
+      end: new Date(b.end),
+    }));
 
-    const { google } = await import("googleapis");
-    const auth = new google.auth.JWT({
-      email: serviceEmail,
-      key: serviceKey.replace(/\\n/g, "\n"),
-      scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
-    });
-    const calendar = google.calendar({ version: "v3", auth });
+  const now = new Date();
+  const slots: SlotDay[] = [];
 
-    const freebusyRes = await calendar.freebusy.query({
-      requestBody: {
-        timeMin,
-        timeMax,
-        items: [{ id: calendarId }],
-      },
-    });
+  for (const dateStr of workingDays) {
+    const candidates = generateCandidateSlots(dateStr);
+    const available: string[] = [];
 
-    // Google freebusy types `start` / `end` as optional; in practice
-    // they're always present, but a partial payload would produce
-    // `new Date(undefined)` (Invalid Date) and silently break the
-    // overlaps() comparison. Filter blocks that don't have both.
-    const busyPeriods = (freebusyRes.data.calendars?.[calendarId]?.busy ?? [])
-      .filter((b): b is { start: string; end: string } => !!b.start && !!b.end)
-      .map((b) => ({
-        start: new Date(b.start),
-        end: new Date(b.end),
-      }));
-
-    const now = new Date();
-    const slots: SlotDay[] = [];
-
-    for (const dateStr of workingDays) {
-      const candidates = generateCandidateSlots(dateStr);
-      const available: string[] = [];
-
-      for (const slot of candidates) {
-        if (slot <= now) continue; // skip past slots
-        const slotEnd = new Date(slot.getTime() + SLOT_DURATION_MS);
-        const busy = busyPeriods.some((b) => overlaps(slot, slotEnd, b.start, b.end));
-        if (!busy) available.push(formatTime(slot));
-      }
-
-      if (available.length > 0) {
-        slots.push({ date: dateStr, label: getDayLabel(dateStr), times: available });
-      }
+    for (const slot of candidates) {
+      if (slot <= now) continue; // skip past slots
+      const slotEnd = new Date(slot.getTime() + SLOT_DURATION_MS);
+      const busy = busyPeriods.some((b) => overlaps(slot, slotEnd, b.start, b.end));
+      if (!busy) available.push(formatTime(slot));
     }
 
-    return NextResponse.json({ ok: true, slots });
-  } catch (err: any) {
-    console.error("[slots] error message:", err?.message);
-    console.error("[slots] error code:", err?.code);
-    console.error("[slots] error status:", err?.status ?? err?.response?.status);
-    return NextResponse.json({ ok: false, noCalendar: true });
+    if (available.length > 0) {
+      slots.push({ date: dateStr, label: getDayLabel(dateStr), times: available });
+    }
   }
+
+  return NextResponse.json({ ok: true, slots });
 }
