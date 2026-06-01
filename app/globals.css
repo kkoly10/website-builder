@@ -183,16 +183,25 @@ a.card:hover,a.panel:hover {
   vs the previous stacked layout where identity → columns → bottom
   ate nearly half the viewport. At <=980px the grid collapses back
   to a single column (mobile media query below).
+
+  align-items: start documents the intended top-aligned behavior so
+  if .footerIdentity ever stops being a nested grid (and stops
+  visually masking the default stretch), the layout stays correct.
+
+  Row gap is column-only (0 row) — the bottom row's border-top +
+  padding-top is the visual separator. A row gap on top of that
+  triple-stacks the separation and reads as a layout glitch.
 */
 .footerInner {
   display: grid;
-  gap: 1.25rem 2.5rem;
+  gap: 0 2.5rem;
   grid-template-columns: minmax(220px, 25%) 1fr;
   grid-template-areas:
     "identity columns"
     "bottom bottom";
+  align-items: start;
 }
-.footerIdentity { grid-area: identity; max-width: 36rem; display: grid; gap: .5rem; }
+.footerIdentity { grid-area: identity; display: grid; gap: .5rem; }
 .footerKicker,.footerCopyright,.footerEmail,.footerSocial a,.footerColumn a {
   font: 500 11px/1.4 var(--font-mono);
   letter-spacing: .08em;
@@ -215,7 +224,7 @@ a.card:hover,a.panel:hover {
   grid-area: columns;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 1.25rem 1.25rem;
+  gap: 1.25rem;
   align-items: start;
 }
 .footerColumn { display: grid; gap: .6rem; }
@@ -288,13 +297,20 @@ a.card:hover,a.panel:hover {
   .grid2,.grid2stretch { grid-template-columns: 1fr; }
   .topNavInner { min-height: 70px; }
   /* Collapse the identity/columns side-by-side back to a stack so
-     the columns don't get squeezed under a quarter of the viewport. */
+     the columns don't get squeezed under a quarter of the viewport.
+     Restore the row gap (desktop has 0 since the bottom strip's
+     border is the separator); on mobile the rows are stacked, so a
+     small row gap reads better than a hard divide. */
   .footerInner {
     grid-template-columns: 1fr;
     grid-template-areas: "identity" "columns" "bottom";
     gap: 1.25rem;
   }
-  .footerColumns { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem 1.25rem; }
+  /* Cap blurb width on mobile so it doesn't span the full viewport
+     and become a wall of text. Desktop doesn't need this — the
+     identity column is capped at 25% width by the grid. */
+  .footerIdentity { max-width: 36rem; }
+  .footerColumns { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
   .footerBottom { flex-direction: column; align-items: flex-start; }
   .brandLogo svg { height: 36px; }
 }
