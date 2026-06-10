@@ -111,10 +111,18 @@ export async function generateMetadata({
       // exact locale the user is reading, not the root.
       url: canonicalPath,
       locale: OG_LOCALES[locale] ?? OG_LOCALES[routing.defaultLocale],
-      alternateLocale: routing.locales
-        .filter((l) => l !== locale)
-        .map((l) => OG_LOCALES[l])
-        .filter(Boolean),
+      // For English-only paths (/locations, /blog and their dynamic
+      // children) skip the fr_FR / es_ES alternateLocale entries —
+      // the localized variants 404, and listing them as OG alternates
+      // misleads social/embed previewers the same way emitting fr/es
+      // hreflang misled Googlebot. Mirrors the hreflang fix above so
+      // hreflang and og:locale agree.
+      alternateLocale: isEnglishOnlyPath(unprefixed)
+        ? []
+        : routing.locales
+            .filter((l) => l !== locale)
+            .map((l) => OG_LOCALES[l])
+            .filter(Boolean),
     },
   };
 }
