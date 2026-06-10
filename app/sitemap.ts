@@ -2,17 +2,12 @@ import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
 import { allLocationSlugs } from "@/lib/seo/locations";
 import { BLOG_POSTS } from "@/lib/blog/posts";
+import { isEnglishOnlyPath } from "@/lib/seo/englishOnlyPaths";
 
 type Page = {
   path: string;
   priority: number;
   changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
-  // English-only pages skip the FR/ES sitemap entries and the
-  // FR/ES hreflang alternates. Set for /locations and the city
-  // landing pages: those routes 404 on /fr/ /es/ by design
-  // (English-language local-SEO landing pages targeting the
-  // anglophone DMV — see app/[locale]/locations/[city]/page.tsx).
-  englishOnly?: boolean;
   // Optional override for the sitemap's `lastModified` field.
   // Blog posts pass their updatedAt (or publishedAt) so search
   // engines see the real freshness of the content rather than a
@@ -41,8 +36,8 @@ const STATIC_PAGES: Page[] = [
   { path: "/faq", priority: 0.7, changeFrequency: "monthly" },
   { path: "/contact", priority: 0.6, changeFrequency: "yearly" },
   { path: "/pricing", priority: 0.7, changeFrequency: "monthly" },
-  { path: "/locations", priority: 0.8, changeFrequency: "monthly", englishOnly: true },
-  { path: "/blog", priority: 0.8, changeFrequency: "weekly", englishOnly: true },
+  { path: "/locations", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/blog", priority: 0.8, changeFrequency: "weekly" },
   { path: "/privacy", priority: 0.3, changeFrequency: "yearly" },
   { path: "/terms", priority: 0.3, changeFrequency: "yearly" },
   { path: "/aup", priority: 0.3, changeFrequency: "yearly" },
@@ -52,23 +47,23 @@ const STATIC_PAGES: Page[] = [
 
 // City landing pages — one per slug in LOCATIONS. Generated rather
 // than hardcoded so adding a new city to lib/seo/locations.ts
-// automatically registers it in the sitemap.
+// automatically registers it in the sitemap. English-only by
+// path-prefix match in isEnglishOnlyPath() — see below.
 const LOCATION_PAGES: Page[] = allLocationSlugs().map((slug) => ({
   path: `/locations/${slug}`,
   priority: 0.7,
   changeFrequency: "monthly" as const,
-  englishOnly: true,
 }));
 
 // Blog posts — auto-registered from lib/blog/posts.ts so adding a
 // new post registers in the sitemap without touching this file.
 // Slightly higher priority than location pages (blog posts are the
 // primary inbound-traffic surface for non-brand keyword queries).
+// English-only by path-prefix match in isEnglishOnlyPath().
 const BLOG_POST_PAGES: Page[] = BLOG_POSTS.map((post) => ({
   path: `/blog/${post.slug}`,
   priority: 0.75,
   changeFrequency: "monthly" as const,
-  englishOnly: true,
   // Use the post's own freshness signal instead of build time.
   lastModified: post.updatedAt || post.publishedAt,
 }));
@@ -87,10 +82,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date().toISOString();
 
   return PAGES.flatMap((page) => {
-    // Locales this page actually exists at. englishOnly pages skip
-    // FR/ES entirely — both sitemap entries and hreflang alternates —
-    // because the page 404s on those locales.
-    const emittedLocales = page.englishOnly
+    // Locales this page actually exists at. English-only paths
+    // (/locations, /blog and their dynamic children) skip FR/ES
+    // entirely — both sitemap entries and hreflang alternates —
+    // because the page 404s on those locales. Driven by the shared
+    // isEnglishOnlyPath() so the sitemap and the locale layout's
+    // page-level hreflang agree (mismatch sends Googlebot to crawl
+    // /fr/locations / /fr/blog and harvest 404s into Search Console).
+    const englishOnly = isEnglishOnlyPath(page.path);
+    const emittedLocales = englishOnly
       ? ([routing.defaultLocale] as readonly string[])
       : routing.locales;
 

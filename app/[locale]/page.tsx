@@ -247,7 +247,17 @@ function HomeContent() {
                 </h3>
               </div>
 
-              <TrackLink href="/demos/portal" event="cta_home_portal_preview" className={styles.portalCta}>
+              {/*
+                rel="nofollow" because /demos/* is covered by the
+                robots.txt Disallow list (it redirects to /portal/demo,
+                which is gated). Without nofollow, Googlebot follows
+                the link from the indexed homepage, hits the Disallow
+                rule, and surfaces a "Blocked by robots.txt" report in
+                Search Console for every recrawl. The link itself is
+                a marketing CTA (preview the portal experience), so
+                we want users to click it but crawlers to skip it.
+              */}
+              <TrackLink href="/demos/portal" event="cta_home_portal_preview" className={styles.portalCta} rel="nofollow">
                 {t("diff.openPreview")} -&gt;
               </TrackLink>
             </div>
