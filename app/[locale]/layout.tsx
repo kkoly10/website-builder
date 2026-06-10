@@ -13,6 +13,7 @@ import {
   siteGraph,
   websiteNode,
 } from "@/lib/seo/structuredData";
+import { isEnglishOnlyPath } from "@/lib/seo/englishOnlyPaths";
 
 // Pages here are server-rendered on every request (auth state, locale, and
 // per-page metadata all vary). Locale validation happens in LocaleLayout
@@ -38,8 +39,20 @@ function localeAwareLanguages(unprefixedPath: string) {
   // unprefixedPath always starts with "/". For each configured locale, build
   // the absolute href Next will join against metadataBase: default locale at
   // the root (no prefix), other locales prefixed (/fr..., /es...).
+  //
+  // English-only paths (/locations, /blog and their dynamic children)
+  // skip the non-English alternates entirely. The underlying page calls
+  // notFound() for non-default locales, so emitting /fr/locations or
+  // /es/blog as a hreflang sends Googlebot to crawl a guaranteed 404
+  // and ends up in Search Console as "Not found (404)" + "Excluded by
+  // 'noindex' tag" reports. Matches the sitemap's englishOnly flag.
+  const englishOnly = isEnglishOnlyPath(unprefixedPath);
+  const emittedLocales = englishOnly
+    ? ([routing.defaultLocale] as readonly string[])
+    : routing.locales;
+
   const languages: Record<string, string> = {};
-  for (const code of routing.locales) {
+  for (const code of emittedLocales) {
     const prefix = code === routing.defaultLocale ? "" : `/${code}`;
     languages[code] = unprefixedPath === "/" ? prefix || "/" : `${prefix}${unprefixedPath}`;
   }
