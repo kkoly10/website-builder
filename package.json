@@ -21,6 +21,7 @@
     "@sentry/nextjs": "^10.53.1",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.49.1",
+    "@vercel/analytics": "^2.0.1",
     "googleapis": "^171.4.0",
     "next": "^16.1.6",
     "next-intl": "^4.11.0",
