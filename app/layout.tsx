@@ -7,6 +7,7 @@ import TopNav from "@/components/site/TopNav";
 import CookieConsentBanner from "@/components/site/CookieConsentBanner";
 import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 import { routing } from "@/i18n/routing";
+import { Analytics } from "@vercel/analytics/next";
 
 // Page-level alternates.languages live in app/[locale]/layout.tsx so they
 // reflect the current path (e.g. /websites <-> /fr/websites <-> /es/websites)
@@ -126,6 +127,7 @@ export default async function RootLayout({
           </div>
           <CookieConsentBanner />
         </NextIntlClientProvider>
+        <Analytics />
       </body>
     </html>
   );
