@@ -16,6 +16,11 @@ export async function generateMetadata({
   return {
     title: t("metaTitle"),
     description: t("metaDescription"),
+    // Post-conversion thank-you page — noindex. No SEO value, and an
+    // indexable success page is a classic "thin content" / "Crawled -
+    // not indexed" flag in Search Console. Matches /ops-thank-you and
+    // /deposit/success.
+    robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
     openGraph: { title: t("metaTitle"), description: t("metaDescription") },
     twitter: { title: t("metaTitle"), description: t("metaDescription") },
   };

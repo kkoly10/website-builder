@@ -55,7 +55,20 @@ const nextConfig = {
   },
 
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // API routes are robots-disallowed, but Google's JS crawler still
+      // discovers them as form-action / fetch() targets in page code,
+      // tries to GET them, and gets a 405/401 — which surfaces in Search
+      // Console as "Blocked due to other 4xx issue". X-Robots-Tag:
+      // noindex tells crawlers to drop these from the index regardless
+      // of the status code, clearing the report. These are JSON
+      // endpoints with no indexable content; noindex is always correct.
+      {
+        source: "/api/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+    ];
   },
 };
 
