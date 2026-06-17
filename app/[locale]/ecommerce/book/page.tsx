@@ -23,6 +23,11 @@ export async function generateMetadata({
   return {
     title: t("metaTitle"),
     description: t("metaDescription"),
+    // Funnel page (booking step) — noindex to match its siblings
+    // (/ecommerce/intake, /book, /start, etc.). Keeps a thin
+    // conversion page out of the index and out of GSC's
+    // "Crawled - currently not indexed" bucket.
+    robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
     openGraph: { title: t("metaTitle"), description: t("metaDescription") },
     twitter: { title: t("metaTitle"), description: t("metaDescription") },
   };
