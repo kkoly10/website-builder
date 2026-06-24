@@ -38,7 +38,7 @@ export default async function OpsPortalEntryPage({
           <p className="p">{t("body")}</p>
           <div className="row" style={{ marginTop: 14 }}>
             <Link href="/portal" className="btn btnPrimary">
-              {t("ctaBack")} <span className="btnArrow">→</span>
+              {t("ctaBack")}
             </Link>
             <Link href="/ops-intake" className="btn btnGhost">
               {t("ctaIntake")}

@@ -74,7 +74,7 @@ export default function ForgotPasswordClient() {
 
         <button className="btn btnPrimary" type="submit" disabled={submitting}>
           {submitting ? tForgot("submitting") : tForgot("submit")}
-          <span className="btnArrow">→</span>
+         
         </button>
       </form>
 

@@ -71,7 +71,7 @@ function MissingPanel() {
 
             <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
               <Link href="/ecommerce/intake" className="btn btnPrimary">
-                {t("ctaStart")} <span className="btnArrow">→</span>
+                {t("ctaStart")}
               </Link>
               <Link href="/" className="btn btnGhost">
                 {t("ctaHome")}

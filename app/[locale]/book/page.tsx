@@ -82,7 +82,7 @@ function BookMissingPanel() {
 
           <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
             <Link className="btn btnPrimary" href="/estimate">
-              {t("ctaEstimate")} <span className="btnArrow">→</span>
+              {t("ctaEstimate")}
             </Link>
             <Link className="btn btnGhost" href="/build">
               {t("ctaEdit")}

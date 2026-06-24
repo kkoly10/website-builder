@@ -168,14 +168,14 @@ function TechDeskContent() {
               event="cta_techdesk_case_study_contact"
               className="btn btnPrimary"
             >
-              {t("closingCta")} <span className="btnArrow">-&gt;</span>
+              {t("closingCta")}
             </TrackLink>
             <TrackLink
               href="/process"
               event="cta_techdesk_case_study_process"
               className="btn"
             >
-              {t("closingCtaSecondary")} <span className="btnArrow">-&gt;</span>
+              {t("closingCtaSecondary")}
             </TrackLink>
           </div>
         </div>

@@ -1253,7 +1253,7 @@ export default function PortalClient({
                     className="btn btnPrimary"
                     style={{ fontSize: 13 }}
                   >
-                    {tPreview("openPreview")} <span className="btnArrow">→</span>
+                    {tPreview("openPreview")}
                   </a>
                 ) : (
                   <button className="btn btnGhost" disabled>
@@ -1592,7 +1592,7 @@ export default function PortalClient({
                   className="btn btnPrimary"
                   disabled={saving || !canSubmitAsset}
                 >
-                  {saving ? tAssets("submitting") : tAssets("submit")} <span className="btnArrow">→</span>
+                  {saving ? tAssets("submitting") : tAssets("submit")}
                 </button>
                 <button
                   type="button"

@@ -38,7 +38,7 @@ export default async function DepositCancelPage({ searchParams }: { searchParams
       <div style={{ height: 18 }} />
 
       <Link className="btn btnPrimary" href="/">
-        {t("backHome")} <span className="btnArrow">→</span>
+        {t("backHome")}
       </Link>
     </main>
   );

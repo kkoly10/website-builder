@@ -95,7 +95,7 @@ function OpsThankYouContent({
                     href={`/signup?next=${encodeURIComponent(customerNext)}`}
                     className="btn btnPrimary"
                   >
-                    {t("createAccountCta")} <span className="btnArrow">→</span>
+                    {t("createAccountCta")}
                   </Link>
 
                   <Link

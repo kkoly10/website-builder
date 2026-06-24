@@ -47,11 +47,6 @@
   line-height: 0.94;
 }
 
-.title em {
-  color: var(--accent);
-  font-style: italic;
-}
-
 .intro,
 .sectionIntro,
 .card p,

@@ -501,7 +501,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
             <button className="btn btnGhost" disabled={saving} onClick={() => applyAction({ type: "ensure_deposit_link" })}>{saving ? tActions("preparing") : tActions("prepareDeposit")}</button>
           ) : null}
           {bundle.workspace.depositUrl && bundle.workspace.depositStatus !== "paid" ? (
-            <a className="btn btnPrimary" href={bundle.workspace.depositUrl} target="_blank" rel="noreferrer">{tActions("payDeposit")} <span className="btnArrow">→</span></a>
+            <a className="btn btnPrimary" href={bundle.workspace.depositUrl} target="_blank" rel="noreferrer">{tActions("payDeposit")}</a>
           ) : null}
         </div>
       </Drawer>

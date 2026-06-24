@@ -330,7 +330,7 @@ export default function DirectionForm({
           style={{ padding: "12px 22px", fontSize: 14 }}
         >
           {saving ? "Submitting..." : "Submit direction"}
-          <span className="btnArrow"> →</span>
+         
         </button>
       </div>
     </form>

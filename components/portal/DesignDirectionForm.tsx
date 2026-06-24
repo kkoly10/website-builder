@@ -686,7 +686,7 @@ export default function DesignDirectionForm({ initial, saving, error, onSubmit, 
           style={{ padding: "12px 22px", fontSize: 14 }}
         >
           {saving ? t("submittingButton") : t("submitButton")}
-          <span className="btnArrow"> →</span>
+         
         </button>
         {onSaveDraft ? (
           <span style={{ fontSize: 12, color: "var(--muted)" }} aria-live="polite">

@@ -109,14 +109,14 @@ function WorkContent() {
               event="cta_work_closing_start"
               className="btn btnPrimary"
             >
-              {t("ctaPrimary")} <span className="btnArrow">-&gt;</span>
+              {t("ctaPrimary")}
             </TrackLink>
             <TrackLink
               href="/contact?type=web_app"
               event="cta_work_closing_custom_app"
               className="btn btnGhost"
             >
-              {t("ctaSecondary")} <span className="btnArrow">-&gt;</span>
+              {t("ctaSecondary")}
             </TrackLink>
           </div>
         </div>

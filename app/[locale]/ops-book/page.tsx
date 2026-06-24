@@ -79,7 +79,7 @@ function MissingPanel() {
 
             <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
               <Link href="/systems" className="btn btnPrimary">
-                {t("missing.ctaStart")} <span className="btnArrow">→</span>
+                {t("missing.ctaStart")}
               </Link>
               <Link href="/" className="btn btnGhost">
                 {t("missing.ctaHome")}
@@ -124,7 +124,7 @@ function LoadErrorPanel({ errorMessage }: { errorMessage?: string }) {
 
             <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
               <Link href="/systems" className="btn btnPrimary">
-                {t("missing.ctaStart")} <span className="btnArrow">→</span>
+                {t("missing.ctaStart")}
               </Link>
               <Link href="/" className="btn btnGhost">
                 {t("missing.ctaHome")}

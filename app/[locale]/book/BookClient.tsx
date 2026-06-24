@@ -151,7 +151,7 @@ export default function BookClient({ quoteId, quoteToken }: Props) {
           <p className="p" style={{ marginTop: 16, color: "var(--muted)" }}>{tSuccess("body")}</p>
 
           <div style={{ marginTop: 32, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a className="btn btnPrimary" href={nextUrl}>{tSuccess("openPortal")} <span className="btnArrow">→</span></a>
+            <a className="btn btnPrimary" href={nextUrl}>{tSuccess("openPortal")}</a>
             <a className="btn btnGhost" href={signupHref}>{tSuccess("createAccount")}</a>
             <a className="btn btnGhost" href={loginHref}>{tSuccess("logIn")}</a>
           </div>
@@ -198,7 +198,7 @@ export default function BookClient({ quoteId, quoteToken }: Props) {
 
             <div style={{ marginTop: 12, display: "flex", gap: 12, justifyContent: "flex-end" }}>
               <button className="btn btnPrimary" type="submit" disabled={loading || !effectiveQuoteId}>
-                {loading ? t("submitting") : t("submit")} <span className="btnArrow">→</span>
+                {loading ? t("submitting") : t("submit")}
               </button>
             </div>
           </form>

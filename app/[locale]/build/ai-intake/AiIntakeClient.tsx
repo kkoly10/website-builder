@@ -889,7 +889,7 @@ export default function AiIntakeClient() {
             onClick={() => setStep((s) => s + 1)}
             style={{ opacity: canAdvance() ? 1 : 0.45, cursor: canAdvance() ? "pointer" : "not-allowed" }}
           >
-            {t("nav.next")} <span className="btnArrow">→</span>
+            {t("nav.next")}
           </button>
         ) : (
           <button
@@ -900,7 +900,6 @@ export default function AiIntakeClient() {
             style={{ opacity: loading ? 0.6 : 1 }}
           >
             {loading ? t("nav.submitting") : t("nav.submit")}
-            {!loading && <span className="btnArrow">→</span>}
           </button>
         )}
       </div>

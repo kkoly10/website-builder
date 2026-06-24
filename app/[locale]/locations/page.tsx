@@ -126,7 +126,7 @@ export default async function LocationsIndexPage({
           </p>
           <div style={{ display: "flex", gap: 12, marginTop: 16, flexWrap: "wrap" }}>
             <Link href="/book" className="btn btnPrimary">
-              Book discovery call <span className="btnArrow">→</span>
+              Book discovery call
             </Link>
             <Link href="/contact" className="btn btnGhost">
               Or send a message
