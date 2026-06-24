@@ -12,8 +12,8 @@ export default function manifest(): MetadataRoute.Manifest {
       "Independent web studio building premium websites, custom web systems, and AI-powered products.",
     start_url: "/",
     display: "standalone",
-    background_color: "#FAFAF7",
-    theme_color: "#c43e2b",
+    background_color: "#ffffff",
+    theme_color: "#a8362b",
     icons: [
       // Modern browsers prefer SVG when offered.
       { src: "/icon.svg", type: "image/svg+xml", sizes: "any", purpose: "any" },

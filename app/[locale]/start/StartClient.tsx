@@ -250,7 +250,7 @@ export default function StartClient() {
       {error && (
         <div role="alert" style={{
           marginBottom: "1rem", padding: "0.75rem 1rem", border: "1px solid currentColor",
-          color: "var(--accent-2, #c0392b)", fontSize: "0.875rem", lineHeight: 1.5,
+          color: "var(--accent-2, #8c2c23)", fontSize: "0.875rem", lineHeight: 1.5,
         }}>
           {error}
         </div>

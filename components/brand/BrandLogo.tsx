@@ -18,18 +18,18 @@ export default function BrandLogo({
         style={{ display: "block" }}
       >
         <g transform="translate(0,2)">
-          <path d="M4 2 L4 34 L12 26 L22 40 L28 36 L18 22 L30 20 Z" fill="#1a1210" />
-          <circle cx="8" cy="40" r="3" fill="#c43e2b" />
+          <path d="M4 2 L4 34 L12 26 L22 40 L28 36 L18 22 L30 20 Z" fill="#0d0d0d" />
+          <circle cx="8" cy="40" r="3" fill="#a8362b" />
         </g>
         <text
           x="50"
           y="33"
           fontSize={28}
           fontWeight={600}
-          fontFamily="var(--font-display, 'Sora', sans-serif)"
+          fontFamily="var(--font-display, 'Inter', sans-serif)"
           letterSpacing="-0.8"
         >
-          <tspan fill="#1a1210">Crecy</tspan><tspan fill="#c43e2b" fontWeight={300}>Studio</tspan>
+          <tspan fill="#0d0d0d">Crecy</tspan><tspan fill="#a8362b" fontWeight={300}>Studio</tspan>
         </text>
       </svg>
       {showTag ? (

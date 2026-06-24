@@ -1,29 +1,53 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
+/*
+  Redesign tokens — white + burnt red, Apple/OpenAI-inspired neutral palette.
+  Replaces the previous cream + terracotta (Anthropic-mimicry) tokens.
+
+  Greys are pulled from Apple's design system; the burnt red accent is a
+  single brand color used sparingly. Mono and display fonts collapse to
+  a single Inter stack to drop the "Vercel/Linear/AI-generated" trifecta.
+*/
 :root {
-  --paper: #f3ede1;
-  --paper-2: #ebe4d4;
-  --paper-3: #e3dcc8;
-  --paper-4: #ddd5be;
-  --ink: #0c0c0c;
-  --ink-2: #1a1a1a;
-  --ink-3: #2a2a2a;
-  --muted: #6b6457;
-  --muted-2: #8a8273;
-  --rule: #d8cfba;
-  --rule-2: #c8bfaa;
-  --accent: #c2381f;
-  --accent-2: #9d2c17;
-  --accent-soft: #e8c4ba;
-  --accent-bg: #f4dfd9;
-  --internal-bg: #ede5cf;
+  /* Backgrounds */
+  --paper: #ffffff;        /* Pure white — primary */
+  --paper-2: #fafafa;      /* Apple section break */
+  --paper-3: #f5f5f7;      /* Apple tertiary surface */
+  --paper-4: #ebebef;      /* Deeper neutral */
+
+  /* Text */
+  --ink: #0d0d0d;          /* Near-black — primary text (OpenAI exact) */
+  --ink-2: #1d1d1f;        /* Apple's exact display text */
+  --ink-3: #2c2c2e;        /* Apple's exact subhead */
+  --muted: #6e6e73;        /* Apple's exact muted grey */
+  --muted-2: #8e8e93;      /* Apple's exact secondary */
+
+  /* Borders */
+  --rule: #e5e5e7;         /* Apple's exact hairline */
+  --rule-2: #d2d2d7;       /* Apple's exact stronger border */
+
+  /* Burnt red — single brand accent, used sparingly */
+  --accent: #a8362b;
+  --accent-2: #8c2c23;     /* Hover / pressed */
+  --accent-soft: #f7d9d4;  /* Light wash */
+  --accent-bg: #fbeae7;    /* Whisper-soft brand-tinted bg */
+
+  /* Internal admin uses neutral, not brand color */
+  --internal-bg: #f5f5f7;
+
+  /* Success states (greens unchanged — they're green) */
   --success: #2d5016;
-  --success-bg: #d9e3c8;
-  --font-display: 'Inter Tight', sans-serif;
-  --font-body: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --success-bg: #e8f4d6;
+
+  /* Typography — Inter only. Drops Inter Tight + JetBrains Mono entirely.
+     --font-mono kept as an alias for existing eyebrow usage; PR 2 will
+     remove those eyebrow patterns site-wide. */
+  --font-display: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body:    'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:    'Inter', system-ui, sans-serif;
+
   --max: 1320px;
-  --radius: 4px;
+  --radius: 12px;          /* 4px → 12px — softer, more Apple/OpenAI */
   --shadow: none;
   /* legacy compatibility aliases mapped to paper/ink tokens */
   --fg: var(--ink);

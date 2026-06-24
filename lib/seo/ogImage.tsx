@@ -8,27 +8,27 @@ export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png" as const;
 
 const COLORS = {
-  background: "#FAFAF7",
-  ink: "#1a1210",
-  muted: "#8a7d74",
-  accent: "#c43e2b",
+  background: "#ffffff",
+  ink: "#0d0d0d",
+  muted: "#6e6e73",
+  accent: "#a8362b",
 };
 
-// Inter Tight is the site's display font (app/globals.css line 22). Fetching
-// at render time avoids dragging webpack/turbopack config in to bundle a
-// TTF; Vercel caches the rendered PNG so this fetch only runs on first
+// Inter is the site's display font (app/globals.css). Fetching at render
+// time avoids dragging webpack/turbopack config in to bundle a TTF;
+// Vercel caches the rendered PNG so this fetch only runs on first
 // generation per (locale, headline) pair. Inside a warm container we cache
 // the buffer in module scope so repeat renders skip the fetch entirely.
 const fontCache: Partial<Record<400 | 700, ArrayBuffer>> = {};
 
-async function loadInterTight(weight: 400 | 700): Promise<ArrayBuffer> {
+async function loadInter(weight: 400 | 700): Promise<ArrayBuffer> {
   if (fontCache[weight]) return fontCache[weight]!;
 
   // Older UA forces Google Fonts to serve TTF rather than WOFF2 — Satori's
   // WOFF2 support is version-dependent and silently falling back to "no
   // font found" produces a blank-looking OG card. TTF is universally safe.
   const css = await fetch(
-    `https://fonts.googleapis.com/css2?family=Inter+Tight:wght@${weight}&display=swap`,
+    `https://fonts.googleapis.com/css2?family=Inter:wght@${weight}&display=swap`,
     {
       headers: {
         "User-Agent":
@@ -44,11 +44,11 @@ async function loadInterTight(weight: 400 | 700): Promise<ArrayBuffer> {
   const preferred =
     sources.find(([, , fmt]) => fmt === "truetype" || fmt === "opentype") ?? sources[0];
   if (!preferred) {
-    throw new Error(`Failed to parse Inter Tight ${weight} from Google Fonts CSS`);
+    throw new Error(`Failed to parse Inter ${weight} from Google Fonts CSS`);
   }
 
   const res = await fetch(preferred[1]);
-  if (!res.ok) throw new Error(`Failed to fetch Inter Tight ${weight}: ${res.status}`);
+  if (!res.ok) throw new Error(`Failed to fetch Inter ${weight}: ${res.status}`);
   const buffer = await res.arrayBuffer();
   fontCache[weight] = buffer;
   return buffer;
@@ -61,8 +61,8 @@ export async function renderOgImage(opts: {
   eyebrow?: string;
 }): Promise<ImageResponse> {
   const [interBold, interRegular] = await Promise.all([
-    loadInterTight(700),
-    loadInterTight(400),
+    loadInter(700),
+    loadInter(400),
   ]);
 
   return new ImageResponse(
@@ -76,7 +76,7 @@ export async function renderOgImage(opts: {
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "72px 96px",
-          fontFamily: "Inter Tight",
+          fontFamily: "Inter",
         }}
       >
         {/* Top row: brand mark + crecystudio wordmark */}
@@ -146,8 +146,8 @@ export async function renderOgImage(opts: {
     {
       ...OG_SIZE,
       fonts: [
-        { name: "Inter Tight", data: interBold, weight: 700 },
-        { name: "Inter Tight", data: interRegular, weight: 400 },
+        { name: "Inter", data: interBold, weight: 700 },
+        { name: "Inter", data: interRegular, weight: 400 },
       ],
     }
   );
