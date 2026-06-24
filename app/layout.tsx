@@ -51,7 +51,7 @@ export const metadata: Metadata = {
 // Android Chrome when the site is open. Kept in the viewport export
 // (separate from `metadata`) per Next 14+ convention.
 export const viewport: Viewport = {
-  themeColor: "#c43e2b",
+  themeColor: "#a8362b",
 };
 
 export const dynamic = "force-dynamic";

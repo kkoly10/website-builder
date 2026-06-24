@@ -44,8 +44,8 @@ export default function CookieConsentBanner() {
         right: 16,
         maxWidth: 540,
         margin: "0 auto",
-        background: "#1a1210",
-        color: "#f8f1e8",
+        background: "#0d0d0d",
+        color: "#ffffff",
         padding: "20px 22px",
         borderRadius: 12,
         boxShadow: "0 12px 32px rgba(0,0,0,0.24)",
@@ -56,11 +56,11 @@ export default function CookieConsentBanner() {
       <p id="cc-title" style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>
         {t("title")}
       </p>
-      <p id="cc-body" style={{ margin: "8px 0 16px", fontSize: 13, lineHeight: 1.5, color: "#cdb9aa" }}>
+      <p id="cc-body" style={{ margin: "8px 0 16px", fontSize: 13, lineHeight: 1.5, color: "#a1a1a6" }}>
         {t("body")}{" "}
         <a
           href="/privacy"
-          style={{ color: "#f8f1e8", textDecoration: "underline" }}
+          style={{ color: "#ffffff", textDecoration: "underline" }}
         >
           {t("learnMore")}
         </a>
@@ -70,7 +70,7 @@ export default function CookieConsentBanner() {
           type="button"
           onClick={() => decide("accepted")}
           style={{
-            background: "#c43e2b",
+            background: "#a8362b",
             color: "#fff",
             border: 0,
             padding: "9px 16px",
@@ -87,8 +87,8 @@ export default function CookieConsentBanner() {
           onClick={() => decide("declined")}
           style={{
             background: "transparent",
-            color: "#f8f1e8",
-            border: "1px solid #4a3a32",
+            color: "#ffffff",
+            border: "1px solid #3a3a3c",
             padding: "9px 16px",
             borderRadius: 6,
             fontSize: 13,

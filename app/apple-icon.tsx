@@ -15,7 +15,7 @@ export default function AppleIcon() {
         style={{
           width: "100%",
           height: "100%",
-          background: "#1a1210",
+          background: "#0d0d0d",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -24,9 +24,9 @@ export default function AppleIcon() {
         <svg width="105" height="128" viewBox="0 0 36 44">
           <path
             d="M4 2 L4 34 L12 26 L22 40 L28 36 L18 22 L30 20 Z"
-            fill="#f8f1e8"
+            fill="#ffffff"
           />
-          <circle cx="8" cy="40" r="3" fill="#c43e2b" />
+          <circle cx="8" cy="40" r="3" fill="#a8362b" />
         </svg>
       </div>
     ),
