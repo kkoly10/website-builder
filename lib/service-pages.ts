@@ -131,18 +131,18 @@ websitesData.en = {
   pricingIntro:
     "Every project is scoped on what you actually need — no monthly hostage fees, no surprise add-ons. Pick a starting point and we'll send a fixed estimate within 24 hours. One new client from your site typically covers this investment in the first 90 days.",
   pricingCards: [
-    { label: "/ STARTER", value: "$1,800 - $2,400", detail: "For a clean, credible single-page site that does one job well." },
-    { label: "/ GROWTH", value: "$3,500 - $4,500", detail: "For most small businesses ready to look the part and convert." },
-    { label: "/ PREMIUM", value: "$6,500 - $10,000+", detail: "For businesses that need a real site with depth, content, and moving parts." },
+    { label: "STARTER", value: "$1,800 - $2,400", detail: "For a clean, credible single-page site that does one job well." },
+    { label: "GROWTH", value: "$3,500 - $4,500", detail: "For most small businesses ready to look the part and convert." },
+    { label: "PREMIUM", value: "$6,500 - $10,000+", detail: "For businesses that need a real site with depth, content, and moving parts." },
   ],
   processTitle: "Four steps. No surprises.",
   processIntro:
     "You'll always know where things stand. No disappearing freelancers, no vague timelines, no wondering if we're still working on it.",
   process: [
-    { step: "/ 01 — DAY 1", title: "Tell us what you need", detail: "Fill out a 10-minute intake about your business, goals, and timeline. No sales call required to get started." },
-    { step: "/ 02 — DAY 2", title: "Get a detailed estimate", detail: "Our system scores your project and generates a scope with pricing, pages, features, and timeline — usually within 24 hours." },
-    { step: "/ 03 — WEEK 1–3", title: "We build, you review live", detail: "You see a live preview, upload content, and submit feedback. Everything happens in your private workspace — no scattered emails." },
-    { step: "/ 04 — LAUNCH DAY", title: "Launch and handoff", detail: "Domain connected, analytics set up, forms tested, SEO basics done. We hand you the keys. The code is yours." },
+    { step: "01 — DAY 1", title: "Tell us what you need", detail: "Fill out a 10-minute intake about your business, goals, and timeline. No sales call required to get started." },
+    { step: "02 — DAY 2", title: "Get a detailed estimate", detail: "Our system scores your project and generates a scope with pricing, pages, features, and timeline — usually within 24 hours." },
+    { step: "03 — WEEK 1–3", title: "We build, you review live", detail: "You see a live preview, upload content, and submit feedback. Everything happens in your private workspace — no scattered emails." },
+    { step: "04 — LAUNCH DAY", title: "Launch and handoff", detail: "Domain connected, analytics set up, forms tested, SEO basics done. We hand you the keys. The code is yours." },
   ],
   bestFitTitle: "Start here if your first impression is the bottleneck.",
   bestFit: [
@@ -236,18 +236,18 @@ websitesData.fr = {
   pricingIntro:
     "Chaque projet est chiffré sur ce dont vous avez vraiment besoin — aucune mensualité prison, aucun extra surprise. Choisissez un point de départ et nous envoyons une estimation fixe sous 24 heures.",
   pricingCards: [
-    { label: "/ STARTER", value: "1 800 $ - 2 400 $", detail: "Pour un site mono-page propre et crédible qui doit bien faire une seule chose." },
-    { label: "/ GROWTH", value: "3 500 $ - 4 500 $", detail: "Pour la plupart des petites entreprises prêtes à paraître sérieuses et convertir." },
-    { label: "/ PREMIUM", value: "6 500 $ - 10 000 $+", detail: "Pour les entreprises qui ont besoin d'un vrai site avec profondeur, contenu et pièces mobiles." },
+    { label: "STARTER", value: "1 800 $ - 2 400 $", detail: "Pour un site mono-page propre et crédible qui doit bien faire une seule chose." },
+    { label: "GROWTH", value: "3 500 $ - 4 500 $", detail: "Pour la plupart des petites entreprises prêtes à paraître sérieuses et convertir." },
+    { label: "PREMIUM", value: "6 500 $ - 10 000 $+", detail: "Pour les entreprises qui ont besoin d'un vrai site avec profondeur, contenu et pièces mobiles." },
   ],
   processTitle: "Quatre étapes. Aucune surprise.",
   processIntro:
     "Vous saurez toujours où on en est. Pas de freelance qui disparaît, pas de calendriers flous, pas d'incertitude sur l'état du travail.",
   process: [
-    { step: "/ 01 — JOUR 1", title: "Dites-nous ce dont vous avez besoin", detail: "Remplissez un intake de 10 minutes sur votre entreprise, vos objectifs et votre calendrier. Aucun appel commercial requis pour commencer." },
-    { step: "/ 02 — JOUR 2", title: "Recevez une estimation détaillée", detail: "Notre système évalue votre projet et génère une portée avec tarifs, pages, fonctionnalités et calendrier — généralement sous 24 heures." },
-    { step: "/ 03 — SEM 1-3", title: "On construit, vous validez en direct", detail: "Vous voyez un aperçu en direct, téléversez du contenu et soumettez vos retours. Tout passe par votre espace privé — pas de courriels dispersés." },
-    { step: "/ 04 — JOUR DE LANCEMENT", title: "Lancement et remise", detail: "Domaine connecté, analytics installé, formulaires testés, bases SEO faites. On vous remet les clés. Le code est à vous." },
+    { step: "01 — JOUR 1", title: "Dites-nous ce dont vous avez besoin", detail: "Remplissez un intake de 10 minutes sur votre entreprise, vos objectifs et votre calendrier. Aucun appel commercial requis pour commencer." },
+    { step: "02 — JOUR 2", title: "Recevez une estimation détaillée", detail: "Notre système évalue votre projet et génère une portée avec tarifs, pages, fonctionnalités et calendrier — généralement sous 24 heures." },
+    { step: "03 — SEM 1-3", title: "On construit, vous validez en direct", detail: "Vous voyez un aperçu en direct, téléversez du contenu et soumettez vos retours. Tout passe par votre espace privé — pas de courriels dispersés." },
+    { step: "04 — JOUR DE LANCEMENT", title: "Lancement et remise", detail: "Domaine connecté, analytics installé, formulaires testés, bases SEO faites. On vous remet les clés. Le code est à vous." },
   ],
   bestFitTitle: "Commencez ici si votre première impression est le goulet d'étranglement.",
   bestFit: [
@@ -339,18 +339,18 @@ websitesData.es = {
   pricingIntro:
     "Cada proyecto se cotiza según lo que realmente necesitas — sin cuotas mensuales rehén, sin extras sorpresa. Elige un punto de partida y enviaremos una estimación fija dentro de 24 horas.",
   pricingCards: [
-    { label: "/ STARTER", value: "$1.800 - $2.400", detail: "Para un sitio de una página limpio y creíble que hace una sola cosa bien." },
-    { label: "/ GROWTH", value: "$3.500 - $4.500", detail: "Para la mayoría de pequeñas empresas listas para verse a la altura y convertir." },
-    { label: "/ PREMIUM", value: "$6.500 - $10.000+", detail: "Para empresas que necesitan un sitio real con profundidad, contenido y piezas en movimiento." },
+    { label: "STARTER", value: "$1.800 - $2.400", detail: "Para un sitio de una página limpio y creíble que hace una sola cosa bien." },
+    { label: "GROWTH", value: "$3.500 - $4.500", detail: "Para la mayoría de pequeñas empresas listas para verse a la altura y convertir." },
+    { label: "PREMIUM", value: "$6.500 - $10.000+", detail: "Para empresas que necesitan un sitio real con profundidad, contenido y piezas en movimiento." },
   ],
   processTitle: "Cuatro pasos. Sin sorpresas.",
   processIntro:
     "Siempre sabrás dónde están las cosas. Sin freelances que desaparecen, sin plazos vagos, sin preguntarte si seguimos trabajando.",
   process: [
-    { step: "/ 01 — DÍA 1", title: "Cuéntanos qué necesitas", detail: "Llena un intake de 10 minutos sobre tu negocio, objetivos y plazos. No se requiere llamada de venta para empezar." },
-    { step: "/ 02 — DÍA 2", title: "Recibe una estimación detallada", detail: "Nuestro sistema puntúa tu proyecto y genera un alcance con precios, páginas, funciones y plazos — normalmente en menos de 24 horas." },
-    { step: "/ 03 — SEM 1-3", title: "Construimos, tú revisas en vivo", detail: "Ves una vista previa en vivo, subes contenido y envías comentarios. Todo pasa por tu espacio privado — sin correos dispersos." },
-    { step: "/ 04 — DÍA DE LANZAMIENTO", title: "Lanzamiento y traspaso", detail: "Dominio conectado, analítica configurada, formularios probados, bases de SEO listas. Te entregamos las llaves. El código es tuyo." },
+    { step: "01 — DÍA 1", title: "Cuéntanos qué necesitas", detail: "Llena un intake de 10 minutos sobre tu negocio, objetivos y plazos. No se requiere llamada de venta para empezar." },
+    { step: "02 — DÍA 2", title: "Recibe una estimación detallada", detail: "Nuestro sistema puntúa tu proyecto y genera un alcance con precios, páginas, funciones y plazos — normalmente en menos de 24 horas." },
+    { step: "03 — SEM 1-3", title: "Construimos, tú revisas en vivo", detail: "Ves una vista previa en vivo, subes contenido y envías comentarios. Todo pasa por tu espacio privado — sin correos dispersos." },
+    { step: "04 — DÍA DE LANZAMIENTO", title: "Lanzamiento y traspaso", detail: "Dominio conectado, analítica configurada, formularios probados, bases de SEO listas. Te entregamos las llaves. El código es tuyo." },
   ],
   bestFitTitle: "Empieza aquí si tu primera impresión es el cuello de botella.",
   bestFit: [
@@ -1766,19 +1766,19 @@ aiIntegrationData.en = {
     "Every build is scoped on autonomy, risk, data sensitivity, and volume — you see the price before you commit, and $0 is due until scope is approved. We define the outcome we're moving and validate it on your real data before the full build, so you're never betting on a number we made up. Production AI also has real ongoing costs (monitoring, tuning, tokens, infrastructure), available as an optional ops retainer.",
   pricingCards: [
     {
-      label: "/ SINGLE INTEGRATION",
+      label: "SINGLE INTEGRATION",
       value: "$10,000 - $20,000",
       detail:
         "One focused AI capability shipped into your business — a single agent, an extraction pipeline, or a support copilot. Live, gated, and supervised.",
     },
     {
-      label: "/ PRODUCTION SYSTEM",
+      label: "PRODUCTION SYSTEM",
       value: "$25,000 - $50,000",
       detail:
         "Multiple AI capabilities working together across your tools, with confidence gating, review steps, logging, and handoffs designed in.",
     },
     {
-      label: "/ ARCHITECTURE BUILD",
+      label: "ARCHITECTURE BUILD",
       value: "$50,000 - $100,000+",
       detail:
         "A full AI layer for your operation — multi-agent orchestration, custom models, and the infrastructure to run it reliably at scale.",
@@ -1789,25 +1789,25 @@ aiIntegrationData.en = {
     "We don't start with the model. We start with the job to be done, the cost of getting it wrong, and how you'll know it worked.",
   process: [
     {
-      step: "/ 01 — WEEK 1",
+      step: "01 — WEEK 1",
       title: "Scope the real job",
       detail:
         "Use case, autonomy level, what a mistake costs, and the metric we're moving — hours saved, response time, error rate.",
     },
     {
-      step: "/ 02 — WEEK 1–2",
+      step: "02 — WEEK 1–2",
       title: "Prove it on your data",
       detail:
         "We validate against your real inputs and edge cases before committing to a full build. Honest results, not a cherry-picked demo.",
     },
     {
-      step: "/ 03 — BUILD",
+      step: "03 — BUILD",
       title: "Ship to production",
       detail:
         "Built into your tools with the confidence gates, guardrails, logging, and human-in-the-loop steps that keep it trustworthy. Tested with real data before go-live.",
     },
     {
-      step: "/ 04 — LAUNCH + RUN",
+      step: "04 — LAUNCH + RUN",
       title: "Measure & maintain",
       detail:
         "We track the metric we promised, tune it, and optionally run ongoing ops so it keeps working as your business changes.",
@@ -1967,28 +1967,28 @@ saasData.en = {
     "Every track starts with the Discovery Sprint — a fixed-price scope of your actual build. You walk away with a real proposal whether you continue with us or not. After Discovery, $0 is due on the larger engagement until scope is approved. We publish bands so you can self-qualify instead of burning 90 minutes on a sales call.",
   pricingCards: [
     {
-      label: "/ DISCOVERY SPRINT",
+      label: "DISCOVERY SPRINT",
       value: "Starting at $4,000",
       detail:
         "1–2 weeks fixed-price. We scope your SaaS for real — architecture, multi-tenancy model, billing plan, sequencing, and a fixed-price proposal for the full build. Yours to keep whether you continue or not.",
       meta: "The front door",
     },
     {
-      label: "/ MVP SPRINT",
+      label: "MVP SPRINT",
       value: "Starting at $25,000",
       detail:
         "8–12 weeks, fixed-price. From scoped plan to live SaaS with paying customers — multi-tenancy, Stripe billing, auth, and the core flow that earns money. Most builds land between $25k and $45k.",
       meta: "Most common",
     },
     {
-      label: "/ BUILD & OPERATE",
+      label: "BUILD & OPERATE",
       value: "Starting at $6,000 / mo",
       detail:
         "Monthly retainer. A senior builder on retainer for ongoing features, infrastructure, and on-call. Sized to your real velocity, not a fixed contractor headcount.",
       meta: "Post-launch or long-arc builds",
     },
     {
-      label: "/ SAAS RESCUE",
+      label: "SAAS RESCUE",
       value: "Starting at $5,000 audit",
       detail:
         "Fixed audit (5–10 working days) of a stalled or breaking SaaS — written remediation plan, prioritized. Stabilization engagement (T&M or retainer) follows based on what the audit finds.",
@@ -2000,31 +2000,31 @@ saasData.en = {
     "Every track starts the same way: we scope the real work first, validate before committing to a full build, and ship with the boring-but-essential SaaS plumbing in place from day one.",
   process: [
     {
-      step: "/ 01 — WEEK 1–2",
+      step: "01 — WEEK 1–2",
       title: "Discovery Sprint",
       detail:
         "We scope your SaaS: architecture, billing model, multi-tenancy, core flows, and sequencing. You walk away with a fixed-price proposal for the full build.",
     },
     {
-      step: "/ 02 — WEEKS 2–4",
+      step: "02 — WEEKS 2–4",
       title: "Foundation",
       detail:
         "Auth, billing, multi-tenancy, and core schema in place. The boring-but-essential SaaS layer that lets everything else move fast — without rebuilds at month 6.",
     },
     {
-      step: "/ 03 — WEEKS 4–10",
+      step: "03 — WEEKS 4–10",
       title: "Core build",
       detail:
         "The flow that earns money — built, tested, and integrated with Stripe, auth, transactional email, and admin tooling. Real users in staging by week 8.",
     },
     {
-      step: "/ 04 — LAUNCH",
+      step: "04 — LAUNCH",
       title: "Go live",
       detail:
         "Production deploy. Payment live, billing wired, retention flows triggering. Real paying customers — not a demo URL with three test accounts.",
     },
     {
-      step: "/ 05 — OPERATE",
+      step: "05 — OPERATE",
       title: "Build & Operate (optional)",
       detail:
         "Monthly retainer to keep shipping features, monitoring infrastructure, and tuning retention loops while you focus on growth. Not a leash — opt in or out anytime.",

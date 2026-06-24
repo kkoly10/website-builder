@@ -386,18 +386,18 @@
     "how": {
       "label": "Proceso",
       "title": "Tres pasos. Sin adivinanzas.",
-      "step1Phase": "/ 01 - Recepción",
+      "step1Phase": "01 - Recepción",
       "step1Title": "Cuéntenos qué debe lograr el sitio web",
       "step1Body": "Usted nos envía lo esencial: negocio, oferta, páginas, objetivos y urgencia. Definimos el alcance contra la realidad en lugar de adivinar desde una llamada de ventas.",
-      "step2Phase": "/ 02 - Construcción",
+      "step2Phase": "02 - Construcción",
       "step2Title": "Siga todo el proyecto en un solo espacio de trabajo",
       "step2Body": "Revisa hitos, vistas previas, archivos y próximos pasos en un solo lugar. Sin cadenas de correo dispersas y sin preguntarse qué sigue.",
-      "step3Phase": "/ 03 - Lanzamiento",
+      "step3Phase": "03 - Lanzamiento",
       "step3Title": "Lance manteniendo intacta la propiedad",
       "step3Body": "Conectamos el dominio, probamos los formularios y entregamos el sistema terminado. Su código, contenido y cuentas siguen siendo suyos."
     },
     "founder": {
-      "label": "/ Con quién está trabajando",
+      "label": "Con quién está trabajando",
       "name": "Komlan Kouhiko",
       "role": "Fundador y único profesional",
       "bio1": "No vengo de una agencia ni de un programa de ciencias de la computación. En 2024 lancé un negocio de alquiler de coches en el norte de Virginia con 7 vehículos y una póliza de seguro comercial. Turo se llevaba una parte significativa de cada reserva, así que aprendí a construir mi propia plataforma — un sistema completo de reservas y gestión de flota — y me quedé con las ganancias. Operé ese negocio durante más de un año, gestionando simultáneamente las operaciones, los clientes y el código.",
@@ -443,19 +443,19 @@
       "sectionLabel": "Niveles de sitios web",
       "sectionTitle": "La mayoría de proyectos web caen en uno de estos rangos.",
       "starter": {
-        "label": "/ Starter",
+        "label": "Starter",
         "value": "$1,800 – $2,400",
         "detail": "Para un sitio de una página, limpio y creíble, que debe hacer bien una sola cosa.",
         "meta": "Una página / mobile-first / lanzamiento rápido"
       },
       "growth": {
-        "label": "/ Crecimiento",
+        "label": "Crecimiento",
         "value": "$3,500 – $4,500",
         "detail": "Para la mayoría de negocios de servicios que necesitan un sitio multipágina y una mejor primera impresión.",
         "meta": "4–6 páginas / captura de leads / espacio de revisión"
       },
       "premium": {
-        "label": "/ Premium",
+        "label": "Premium",
         "value": "$6,500 – $10,000+",
         "detail": "Para empresas que necesitan profundidad de contenido, integraciones y mayor alcance arquitectónico.",
         "meta": "8+ páginas / alcance avanzado / implementación más profunda"
@@ -467,25 +467,25 @@
       "sectionTitle": "Paneles, portales, herramientas internas y MVPs.",
       "note": "Todos los proyectos de aplicación empiezan con una llamada estratégica. Solo rangos — el alcance y la complejidad determinan el número final.",
       "discovery": {
-        "label": "/ Sprint de descubrimiento",
+        "label": "Sprint de descubrimiento",
         "value": "$2,500 – $5,000",
         "detail": "Compromiso de definición pagado de 1 a 2 semanas para proyectos que necesitan claridad antes del compromiso MVP.",
         "meta": "1–2 semanas / brief escrito / da forma al MVP"
       },
       "mvp": {
-        "label": "/ MVP",
+        "label": "MVP",
         "value": "$18,000 – $35,000",
         "detail": "Aplicación web multi-rol con autenticación, modelo de datos personalizado e integraciones funcionales.",
         "meta": "Auth personalizada / modelo de datos / integraciones / lista para lanzar"
       },
       "standard": {
-        "label": "/ Estándar",
+        "label": "Estándar",
         "value": "$35,000 – $75,000",
         "detail": "Aplicación de grado producción con flujos complejos, soporte multi-tenant o arquitectura de datos significativa.",
         "meta": "Flujos complejos / multi-tenant / arquitectura avanzada"
       },
       "custom": {
-        "label": "/ Personalizado",
+        "label": "Personalizado",
         "value": "$75,000+",
         "detail": "Construcciones a gran escala o multi-sistema donde el alcance se determina en descubrimiento.",
         "meta": "Alcance personalizado / multi-sistema / descubrimiento requerido"
@@ -496,19 +496,19 @@
       "sectionLabel": "Automatización de flujos",
       "sectionTitle": "Deje de hacer la misma tarea dos veces.",
       "quickFix": {
-        "label": "/ Arreglo rápido",
+        "label": "Arreglo rápido",
         "value": "$1,000 – $1,800",
         "detail": "Un proceso roto o manual diagnosticado y automatizado.",
         "meta": "Flujo único / documentado / le pertenece"
       },
       "opsSystem": {
-        "label": "/ Sistema de operaciones",
+        "label": "Sistema de operaciones",
         "value": "$2,000 – $3,800",
         "detail": "De dos a cuatro flujos conectados con documentación y entrega limpia.",
         "meta": "2–4 flujos / documentados / formación incluida"
       },
       "systemsPartner": {
-        "label": "/ Socio de sistemas",
+        "label": "Socio de sistemas",
         "value": "$500 – $1,250/mo",
         "detail": "Mantenimiento continuo de automatización y mejoras iterativas a su stack operativo.",
         "meta": "Mensualidad / mantenimiento + mejoras"
@@ -519,19 +519,19 @@
       "sectionLabel": "E-commerce",
       "sectionTitle": "Tiendas construidas, operadas y reparadas.",
       "build": {
-        "label": "/ Construcción",
+        "label": "Construcción",
         "value": "$1,800 – $4,000+",
         "detail": "Nueva tienda o reconstrucción completa — definida tras la recepción según plataforma, productos y objetivos de conversión.",
         "meta": "Nueva construcción / plataforma alineada / enfocada en conversión"
       },
       "run": {
-        "label": "/ Operación",
+        "label": "Operación",
         "value": "$500 – $1,800/mo",
         "detail": "Operaciones mensuales: actualizaciones de productos, seguimiento de pedidos, analítica y mantenimiento de plataforma.",
         "meta": "Mensualidad / ops + analítica / cuidado de plataforma"
       },
       "fix": {
-        "label": "/ Corrección",
+        "label": "Corrección",
         "value": "$1,200",
         "detail": "Reparación específica — checkout roto, problemas de diseño móvil, migración de plataforma o auditoría de conversión.",
         "meta": "Corrección única / definida por adelantado / entrega rápida"
@@ -542,13 +542,13 @@
       "sectionLabel": "Rescate de sitio web",
       "sectionTitle": "Arregle lo que tiene sin una reconstrucción completa.",
       "audit": {
-        "label": "/ Auditoría de rescate",
+        "label": "Auditoría de rescate",
         "value": "$1,000 – $1,500",
         "detail": "Diagnóstico de 3 a 5 días con informe escrito y lista de correcciones priorizada — contrate el sprint o no.",
         "meta": "3–5 días / informe escrito / consejo independiente"
       },
       "sprint": {
-        "label": "/ Sprint de rescate",
+        "label": "Sprint de rescate",
         "value": "$3,500 – $6,500",
         "detail": "Auditoría más implementación de 1 a 2 semanas de las correcciones de mayor impacto. La tarifa de auditoría se aplica al sprint.",
         "meta": "Auditoría incluida / sprint 1–2 semanas / correcciones de alto impacto"
@@ -560,19 +560,19 @@
       "sectionTitle": "Su sitio se mantiene sano después del lanzamiento.",
       "note": "Planes mensuales facturados en USD. Compromiso mínimo de 3 meses, mensual después.",
       "care": {
-        "label": "/ Mantenimiento",
+        "label": "Mantenimiento",
         "value": "$400/mo",
         "detail": "Revisión mensual, monitoreo, actualizaciones de contenido, actualizaciones de plugins y resumen mensual por correo.",
         "meta": "Banco 2h / acuse 48h / resolución 5d"
       },
       "carePlus": {
-        "label": "/ Mantenimiento+",
+        "label": "Mantenimiento+",
         "value": "$850/mo",
         "detail": "Mantenimiento más pequeñas mejoras, revisión de analíticas, panel de actividad del portal y tiempos de respuesta más cortos.",
         "meta": "Banco 5h / acuse 24h / resolución 3d"
       },
       "carePro": {
-        "label": "/ Mantenimiento Pro",
+        "label": "Mantenimiento Pro",
         "value": "$2,250/mo",
         "detail": "Mantenimiento+ más un sprint de mejora mensual, una llamada estratégica de 30 minutos y SLA prioritario.",
         "meta": "Banco 8h + sprint / acuse 4h / resolución 1d / llamada estratégica"
@@ -588,22 +588,22 @@
     "intro": "Cada vía usa el mismo ritmo de ejecución para que el alcance se mantenga visible, el precio entendible, y nadie se pregunte qué pasa después.",
     "lead": "El objetivo no es que el proceso parezca elegante. El objetivo es que sea difícil que el trabajo desaparezca en silencio.",
     "step1": {
-      "step": "/ 01 - Recepción",
+      "step": "01 - Recepción",
       "title": "Cuéntanos qué necesita el negocio",
       "body": "Envías el intake específico de tu vía — objetivos, restricciones, ejemplos y urgencia. Komlan lo revisa personalmente y vuelve en 24 horas con preguntas o un borrador de alcance. No se requiere llamada de ventas para empezar."
     },
     "step2": {
-      "step": "/ 02 - Alcance",
+      "step": "02 - Alcance",
       "title": "Recibe una estimación real",
       "body": "Komlan envía un alcance por escrito: páginas o funcionalidades, rango de precio fijo, plazo y supuestos. Nada empieza hasta que lo hayas revisado y aprobado por escrito — sin acuerdos verbales."
     },
     "step3": {
-      "step": "/ 03 - Construcción",
+      "step": "03 - Construcción",
       "title": "Revísalo todo en el espacio de trabajo",
       "body": "El trabajo pasa por tu espacio privado. Ves cada hito a medida que se entrega, envías comentarios en un solo lugar y apruebas antes de que nada salga en vivo. Komlan es la única persona construyendo — sin subcontratistas, sin traspasos."
     },
     "step4": {
-      "step": "/ 04 - Lanzamiento",
+      "step": "04 - Lanzamiento",
       "title": "Sal en vivo con un traspaso limpio",
       "body": "QA, configuración del dominio, analíticas y un traspaso documentado de todo lo que necesitas para mantener el trabajo. Eres dueño de todos los archivos. Si quieres soporte continuo, hay un plan de cuidado disponible — sin presión ni atadura."
     },
