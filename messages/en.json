@@ -234,10 +234,10 @@
   },
   "home": {
     "metaTitle": "CrecyStudio | Websites, Custom Web Apps, SaaS & AI Integration",
-    "metaDescription": "Independent web studio. Websites, custom web apps, SaaS development, AI integration — by a founder shipping four production SaaS products of his own (Fleiko, Proveo, Korent, Kocre IT).",
-    "heroLabel": "Independent web studio / est. 2024",
-    "heroTitle": "Built for where you’re going, <em>not where you are.</em>",
-    "heroSub": "From a polished website to a custom SaaS or web app with production AI built in — by a founder who has shipped four of his own.",
+    "metaDescription": "Independent web studio building websites, custom web apps, SaaS, and AI integration for growth-focused businesses.",
+    "heroLabel": "Independent web studio. Est. 2024.",
+    "heroTitle": "Built for where you're going, not where you are.",
+    "heroSub": "From a polished website to a custom SaaS or web app with production AI built in.",
     "ctaStart": "Start a project",
     "ctaProcess": "See the work",
     "ctaScarcity": "Taking on new projects",
@@ -408,7 +408,7 @@
     },
     "closing": {
       "label": "Ready when you are.",
-      "title": "Let’s build something <em>worth talking about.</em>",
+      "title": "Let's build something worth talking about.",
       "cta": "Let’s talk",
       "ctaSecondary": "Start an estimate",
       "ctaPricing": "See all pricing"
@@ -1006,7 +1006,7 @@
     },
     "aiIntegration": {
       "metaTitle": "AI Integration | Production AI, Built With Guardrails",
-      "metaDescription": "We don't sell AI demos. We run four production AI-powered SaaS products of our own (Fleiko, Proveo, Korent, Kocre IT) — confidence-gated, guardrailed, human-in-the-loop. We build the same for your business."
+      "metaDescription": "Production AI integration for service businesses. Confidence-gated, guardrailed, human-in-the-loop. We build the systems we use to run our own products."
     },
     "websites": {
       "metaTitle": "Website Building | Premium, Conversion-Focused Websites",
@@ -1022,19 +1022,19 @@
     },
     "customWebApps": {
       "metaTitle": "Custom Web Apps | Dashboards, Portals, and Internal Tools",
-      "metaDescription": "Custom web applications for businesses that need more than a website — dashboards, client portals, internal tools, and MVPs built by a practitioner."
+      "metaDescription": "Custom web applications for businesses that need more than a website. Dashboards, client portals, internal tools, and MVPs built by a practitioner."
     },
     "clientPortals": {
       "metaTitle": "Client Portals | Branded Workspaces Your Clients Actually Use",
-      "metaDescription": "Private project workspaces with milestones, messaging, file sharing, invoicing, and agreements — owned by you, branded to your business."
+      "metaDescription": "Private project workspaces with milestones, messaging, file sharing, invoicing, and agreements. Owned by you, branded to your business."
     },
     "websiteRescue": {
       "metaTitle": "Website Rescue | Fix What's Broken Without a Full Rebuild",
-      "metaDescription": "Website audit and sprint service for small businesses with a site that's slow, broken on mobile, or not converting — fixed in 1–2 weeks."
+      "metaDescription": "Website audit and sprint service for small businesses with a site that's slow, broken on mobile, or not converting. Fixed in 1 to 2 weeks."
     },
     "carePlans": {
       "metaTitle": "Care Plans | Monthly Website and System Maintenance",
-      "metaDescription": "Three monthly care plans that keep your site or custom system healthy — content updates, monitoring, small features, and improvement sprints."
+      "metaDescription": "Three monthly care plans that keep your site or custom system healthy. Content updates, monitoring, small features, and improvement sprints."
     }
   },
   "auth": {
