@@ -123,7 +123,7 @@ function renderBlock(block: BlogBlock, i: number) {
           <p className="p" style={{ margin: 0 }}>{block.text}</p>
           <div style={{ marginTop: 16 }}>
             <Link href="/book" className="btn btnPrimary">
-              Book a discovery call <span className="btnArrow">→</span>
+              Book a discovery call
             </Link>
           </div>
         </aside>

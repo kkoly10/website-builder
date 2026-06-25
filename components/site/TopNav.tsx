@@ -220,7 +220,7 @@ export default function TopNav({
                 {tCommon("login")}
               </Link>
               <Link href={startProjectHref} className="btn btnPrimary">
-                {tCommon("startProject")} <span className="btnArrow">-&gt;</span>
+                {tCommon("startProject")}
               </Link>
             </>
           )}
@@ -270,7 +270,7 @@ export default function TopNav({
                     {tCommon("login")}
                   </Link>
                   <Link href={startProjectHref} className="btn btnPrimary mobileMenuPrimary">
-                    {tCommon("startProject")} <span className="btnArrow">-&gt;</span>
+                    {tCommon("startProject")}
                   </Link>
                 </>
               )}

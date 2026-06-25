@@ -54,7 +54,7 @@ export default async function InternalHomePage() {
           </p>
           <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
             <Link href="/internal/dashboard" className="btn btnPrimary">
-              Open Dashboard <span className="btnArrow">→</span>
+              Open Dashboard
             </Link>
             <Link href="/internal/admin" className="btn btnGhost">
               Open Website Pipeline
@@ -70,7 +70,7 @@ export default async function InternalHomePage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div style={{ fontWeight: 900, color: "var(--fg)", fontSize: 18 }}>Web Design Pipeline</div>
               <Link href="/internal/admin" className="btn btnPrimary" style={{ padding: "6px 12px", fontSize: 13 }}>
-                Open Web Pipeline <span className="btnArrow">→</span>
+                Open Web Pipeline
               </Link>
             </div>
 
@@ -112,7 +112,7 @@ export default async function InternalHomePage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div style={{ fontWeight: 900, color: "var(--fg)", fontSize: 18 }}>Workflow Ops Pipeline</div>
               <Link href="/internal/admin/ops" className="btn btnPrimary" style={{ padding: "6px 12px", fontSize: 13 }}>
-                Open Ops Pipeline <span className="btnArrow">→</span>
+                Open Ops Pipeline
               </Link>
             </div>
 

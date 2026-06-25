@@ -744,7 +744,7 @@ export default function RescueIntakeClient() {
             disabled={!canAdvance()}
             style={{ opacity: canAdvance() ? 1 : 0.5 }}
           >
-            {t("nav.continue")} <span className="btnArrow">→</span>
+            {t("nav.continue")}
           </button>
         ) : (
           <button

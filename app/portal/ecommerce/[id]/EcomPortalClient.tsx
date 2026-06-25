@@ -420,7 +420,7 @@ export default function EcomPortalClient({ data }: { data: EcommerceWorkspaceBun
           ) : null}
           {workspace.depositUrl && workspace.depositStatus !== "paid" ? (
             <a className="btn btnPrimary" href={workspace.depositUrl} target="_blank" rel="noreferrer">
-              {tActions("payDeposit")} <span className="btnArrow">→</span>
+              {tActions("payDeposit")}
             </a>
           ) : null}
         </div>

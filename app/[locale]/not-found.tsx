@@ -30,7 +30,7 @@ export default async function NotFound() {
 
       <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
         <Link href="/" className="btn btnPrimary">
-          {t("backHome")} <span className="btnArrow">&#8594;</span>
+          {t("backHome")}
         </Link>
         <Link href="/contact" className="btn btnGhost">
           {t("contactUs")}

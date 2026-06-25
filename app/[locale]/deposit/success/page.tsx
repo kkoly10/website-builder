@@ -186,7 +186,7 @@ export default async function DepositSuccessPage({ searchParams }: { searchParam
       <div style={{ height: 18 }} />
 
       <a className="btn btnPrimary" href={backHref}>
-        {t("returnToWorkspace")} <span className="btnArrow">→</span>
+        {t("returnToWorkspace")}
       </a>
     </main>
   );

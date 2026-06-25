@@ -92,7 +92,7 @@ export default function ResetPasswordClient() {
 
         <button className="btn btnPrimary" type="submit" disabled={submitting}>
           {submitting ? tReset("submitting") : tReset("submit")}
-          <span className="btnArrow">→</span>
+         
         </button>
       </form>
 

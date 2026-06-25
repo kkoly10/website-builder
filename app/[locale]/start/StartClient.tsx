@@ -157,7 +157,7 @@ export default function StartClient() {
           {t("successDetail")}
         </p>
         <Link href="/process" className="btn btnPrimary">
-          {t("successCta")} <span className="btnArrow">→</span>
+          {t("successCta")}
         </Link>
       </div>
     );
@@ -266,8 +266,7 @@ export default function StartClient() {
           (!noCalendar && (!selectedDate || !selectedTime))
         }
       >
-        {loading ? t("submitting") : t("submit")}{" "}
-        {!loading && <span className="btnArrow">→</span>}
+        {loading ? t("submitting") : t("submit")}
       </button>
     </form>
   );

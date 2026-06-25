@@ -140,10 +140,10 @@ function AboutContent() {
           <p className={styles.sectionLabel}>{tAbout("ctaLabel")}</p>
           <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginTop: "1rem" }}>
             <Link href="/build/intro" className="btn btnPrimary">
-              {tAbout("ctaLowTicket")} <span className="btnArrow">→</span>
+              {tAbout("ctaLowTicket")}
             </Link>
             <Link href="/contact" className="btn">
-              {tAbout("ctaHighTicket")} <span className="btnArrow">→</span>
+              {tAbout("ctaHighTicket")}
             </Link>
           </div>
         </div>

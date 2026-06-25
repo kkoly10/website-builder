@@ -76,7 +76,7 @@ export default function EstimateClient({ view }: Props) {
         <p className="p maxW860">{t("empty.body")}</p>
         <div className="estimateEmptyActions">
           <Link href="/build/intro" className="btn btnPrimary">
-            {t("empty.ctaQuote")} <span className="btnArrow">-&gt;</span>
+            {t("empty.ctaQuote")}
           </Link>
           <Link href="/portal" className="btn btnGhost">
             {t("empty.ctaPortal")}

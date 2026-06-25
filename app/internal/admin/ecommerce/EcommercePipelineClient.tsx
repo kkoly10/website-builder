@@ -112,7 +112,7 @@ export default function EcommercePipelineClient({ initialRows }: { initialRows: 
                     <span style={{ padding: "7px 10px", borderRadius: 999, background: phaseTone.bg, border: `1px solid ${phaseTone.border}`, color: phaseTone.color, fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em" }}>Phase {phaseTone.label}</span>
                   </div>
                   <div className="row">
-                    <Link href={row.links.detail} className="btn btnPrimary">Open E-commerce Project <span className="btnArrow">→</span></Link>
+                    <Link href={row.links.detail} className="btn btnPrimary">Open E-commerce Project</Link>
                     <Link href={row.links.portal} className="btn btnGhost">Client Workspace</Link>
                   </div>
                 </div>

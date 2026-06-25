@@ -498,7 +498,7 @@ export default function EcommerceIntakeClient() {
             <button className="btn btnGhost" onClick={back}>← {t("nav.back")}</button>
             {step < totalSteps ? (
               <button className="btn btnPrimary" onClick={next} disabled={step === 1 && (!form.businessName.trim() || !form.contactName.trim() || !emailValid)}>
-                {t("nav.continue")} <span className="btnArrow">→</span>
+                {t("nav.continue")}
               </button>
             ) : (
               <button
@@ -511,7 +511,7 @@ export default function EcommerceIntakeClient() {
                   !emailValid
                 }
               >
-                {submitting ? t("nav.submitting") : t("nav.submit")} <span className="btnArrow">→</span>
+                {submitting ? t("nav.submitting") : t("nav.submit")}
               </button>
             )}
           </div>

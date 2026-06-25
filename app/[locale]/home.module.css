@@ -58,11 +58,6 @@
   line-height: 0.97;
 }
 
-.heroTitle span {
-  font-style: italic;
-  color: var(--accent);
-}
-
 .heroSub,
 .diffLede,
 .howStep p,
@@ -210,11 +205,6 @@
   font-size: clamp(2rem, 4vw, 3rem);
   line-height: 1;
   color: var(--paper);
-}
-
-.portalHero h3 em {
-  color: var(--accent);
-  font-style: italic;
 }
 
 .portalCta {
@@ -428,11 +418,6 @@
   max-width: 12ch;
   font-size: clamp(2.2rem, 4.5vw, 3.8rem);
   line-height: 0.95;
-}
-
-.closing h2 em {
-  color: var(--accent);
-  font-style: italic;
 }
 
 .closing .btn {

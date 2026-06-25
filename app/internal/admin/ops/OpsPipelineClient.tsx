@@ -240,7 +240,7 @@ export default function OpsPipelineClient({
 
                   <div className="row">
                     <Link href={row.links.detail} className="btn btnPrimary">
-                      Open Ops Project <span className="btnArrow">→</span>
+                      Open Ops Project
                     </Link>
                     <Link href={row.links.portal} className="btn btnGhost">
                       Client Workspace

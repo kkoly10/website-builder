@@ -48,7 +48,7 @@ export default function ProblemSwitcher() {
         <p className={styles.impact}>{active.impact}</p>
         <div className={styles.actions}>
           <Link href={active.cta.href} className="btn btnPrimary">
-            {active.cta.label} <span className="btnArrow">→</span>
+            {active.cta.label}
           </Link>
           <Link href={active.learn.href} className="btn btnGhost">
             {active.learn.label}

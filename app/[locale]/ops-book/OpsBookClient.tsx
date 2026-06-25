@@ -217,7 +217,7 @@ export default function OpsBookClient({ intake }: { intake: Intake }) {
             </Link>
 
             <button className="btn btnPrimary" type="button" onClick={requestCall} disabled={status === "sending"}>
-              {status === "sending" ? t("submitting") : t("submit")} <span className="btnArrow">→</span>
+              {status === "sending" ? t("submitting") : t("submit")}
             </button>
           </div>
 

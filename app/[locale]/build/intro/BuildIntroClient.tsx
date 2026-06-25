@@ -436,7 +436,7 @@ export default function BuildIntroClient() {
               event: "cta_build_intro_continue",
               metadata: { goal: quiz.goal, pages: quiz.pages, timeline: quiz.timeline, contentReady: quiz.contentReady, budget: quiz.budget },
             })}>
-            {t("continueCta")} <span className="btnArrow">→</span>
+            {t("continueCta")}
           </Link>
           <Link href="/systems" className="btn btnGhost">
             {t("altSystemsCta")}

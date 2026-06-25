@@ -101,7 +101,7 @@ function HomeContent() {
 
           <div className={styles.heroActions}>
             <TrackLink href="/build/intro" event="cta_home_hero_quote" className="btn btnPrimary">
-              {t("ctaStart")} <span className="btnArrow">-&gt;</span>
+              {t("ctaStart")}
             </TrackLink>
             <TrackLink href="/work" event="cta_home_hero_work" className={styles.heroSecondaryCta}>
               {t("ctaProcess")}
@@ -360,10 +360,10 @@ function HomeContent() {
           </h2>
           <div className={styles.closingActions}>
             <TrackLink href="/start" event="cta_home_closing_start" className="btn btnPrimary">
-              {t("closing.cta")} <span className="btnArrow">-&gt;</span>
+              {t("closing.cta")}
             </TrackLink>
             <TrackLink href="/build/intro" event="cta_home_closing_estimate" className="btn">
-              {t("closing.ctaSecondary")} <span className="btnArrow">-&gt;</span>
+              {t("closing.ctaSecondary")}
             </TrackLink>
           </div>
           <p className={styles.closingPricingLink}>

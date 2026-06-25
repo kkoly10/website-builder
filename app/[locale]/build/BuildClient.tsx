@@ -260,7 +260,7 @@ export default function BuildClient() {
               <div style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.5 }}>{t(`modes.${opt.key}.desc`)}</div>
               <div style={{ marginTop: "auto", paddingTop: 8 }}>
                 <span className={`btn ${opt.primary ? "btnPrimary" : "btnGhost"}`} style={{ pointerEvents: "none" }}>
-                  {t(`modes.${opt.key}.cta`)} <span className="btnArrow">→</span>
+                  {t(`modes.${opt.key}.cta`)}
                 </span>
               </div>
             </button>
@@ -494,9 +494,9 @@ export default function BuildClient() {
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 20 }}>
           <button className="btn btnGhost" onClick={back} disabled={submitting}>← {t("nav.back")}</button>
           {step < TOTAL_STEPS ? (
-            <button className="btn btnPrimary" onClick={next}>{t("nav.continue")} <span className="btnArrow">→</span></button>
+            <button className="btn btnPrimary" onClick={next}>{t("nav.continue")}</button>
           ) : (
-            <button className="btn btnPrimary" onClick={submit} disabled={submitting}>{t("nav.generateEstimate")} <span className="btnArrow">→</span></button>
+            <button className="btn btnPrimary" onClick={submit} disabled={submitting}>{t("nav.generateEstimate")}</button>
           )}
         </div>
       )}
