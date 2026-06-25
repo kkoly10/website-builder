@@ -29,9 +29,7 @@
 .tierName,
 .portalCardTitle {
   margin: 0;
-  font: 500 11px/1.3 var(--font-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font: 500 13px/1.4 var(--font-body);
 }
 
 .heroLabel,
@@ -39,12 +37,6 @@
 .proofLabel,
 .portalCardTitle {
   color: var(--muted);
-}
-
-.heroLabel::before,
-.sectionLabel::before {
-  content: "/ ";
-  color: var(--accent);
 }
 
 .heroTitle,

@@ -19,9 +19,7 @@
 .pricingMeta,
 .processStep {
   margin: 0;
-  font: 500 11px/1.3 var(--font-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font: 500 13px/1.4 var(--font-body);
 }
 
 .eyebrow,
@@ -31,12 +29,6 @@
 .problemIndex,
 .pricingMeta {
   color: var(--muted);
-}
-
-.sectionLabel::before,
-.eyebrow::before {
-  content: "/ ";
-  color: var(--accent);
 }
 
 .heroTitle,

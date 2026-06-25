@@ -25,15 +25,8 @@
 
 .kicker {
   margin: 0;
-  font: 500 11px/1.3 var(--font-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font: 500 13px/1.4 var(--font-body);
   color: var(--muted);
-}
-
-.kicker::before {
-  content: "/ ";
-  color: var(--accent);
 }
 
 .title {

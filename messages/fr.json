@@ -386,18 +386,18 @@
     "how": {
       "label": "Processus",
       "title": "Trois étapes. Aucune devinette.",
-      "step1Phase": "/ 01 - Intake",
+      "step1Phase": "01 - Intake",
       "step1Title": "Dites-nous ce que le site doit accomplir",
       "step1Body": "Vous envoyez l'essentiel : entreprise, offre, pages, objectifs, urgence. On cadre selon la réalité, sans deviner depuis un appel commercial.",
-      "step2Phase": "/ 02 - Construction",
+      "step2Phase": "02 - Construction",
       "step2Title": "Suivez tout le projet dans un seul espace de travail",
       "step2Body": "Vous consultez les jalons, aperçus, fichiers et prochaines étapes au même endroit. Pas de chaîne d'e-mails éparpillée ni de questions sur la suite.",
-      "step3Phase": "/ 03 - Lancement",
+      "step3Phase": "03 - Lancement",
       "step3Title": "Passez en production avec la propriété intacte",
       "step3Body": "On connecte le domaine, on teste les formulaires et on livre le système fini. Votre code, votre contenu et vos comptes vous appartiennent."
     },
     "founder": {
-      "label": "/ Avec qui vous travaillez",
+      "label": "Avec qui vous travaillez",
       "name": "Komlan Kouhiko",
       "role": "Fondateur et praticien unique",
       "bio1": "Je ne suis pas passé par une agence ni par un cursus en informatique. En 2024, j'ai lancé une activité de location de voitures en Virginie du Nord avec 7 véhicules et une police d'assurance commerciale. Turo prélevait une part importante de chaque réservation, alors j'ai appris à construire ma propre plateforme — un système complet de réservation et de gestion de flotte — et j'ai gardé les bénéfices. J'ai opéré cette entreprise pendant plus d'un an, en gérant simultanément les opérations, les clients et le code.",
@@ -443,19 +443,19 @@
       "sectionLabel": "Paliers de sites web",
       "sectionTitle": "La plupart des sites tombent dans l'une de ces bandes.",
       "starter": {
-        "label": "/ Starter",
+        "label": "Starter",
         "value": "$1,800 – $2,400",
         "detail": "Pour un site mono-page net et crédible qui doit bien faire une seule chose.",
         "meta": "Mono-page / mobile-first / lancement rapide"
       },
       "growth": {
-        "label": "/ Croissance",
+        "label": "Croissance",
         "value": "$3,500 – $4,500",
         "detail": "Pour la plupart des entreprises de services qui ont besoin d'un site multi-pages et d'une meilleure première impression.",
         "meta": "4–6 pages / capture de leads / espace de révision"
       },
       "premium": {
-        "label": "/ Premium",
+        "label": "Premium",
         "value": "$6,500 – $10,000+",
         "detail": "Pour les entreprises qui ont besoin de profondeur de contenu, d'intégrations et d'une portée architecturale plus large.",
         "meta": "8+ pages / périmètre avancé / mise en œuvre approfondie"
@@ -467,25 +467,25 @@
       "sectionTitle": "Tableaux de bord, portails, outils internes et MVPs.",
       "note": "Tous les projets d'application commencent par un appel stratégique. Fourchettes uniquement — le périmètre et la complexité déterminent le chiffre final.",
       "discovery": {
-        "label": "/ Sprint de découverte",
+        "label": "Sprint de découverte",
         "value": "$2,500 – $5,000",
         "detail": "Engagement de cadrage payant de 1 à 2 semaines pour les projets qui ont besoin d'être définis avant un engagement MVP.",
         "meta": "1–2 semaines / brief écrit / cadre le MVP"
       },
       "mvp": {
-        "label": "/ MVP",
+        "label": "MVP",
         "value": "$18,000 – $35,000",
         "detail": "Application web multi-rôles avec authentification, modèle de données sur mesure et intégrations fonctionnelles.",
         "meta": "Auth sur mesure / modèle de données / intégrations / prêt à lancer"
       },
       "standard": {
-        "label": "/ Standard",
+        "label": "Standard",
         "value": "$35,000 – $75,000",
         "detail": "Application de niveau production avec flux complexes, support multi-tenant ou architecture de données significative.",
         "meta": "Flux complexes / multi-tenant / architecture avancée"
       },
       "custom": {
-        "label": "/ Sur mesure",
+        "label": "Sur mesure",
         "value": "$75,000+",
         "detail": "Constructions à grande échelle ou multi-systèmes dont le périmètre est défini en découverte.",
         "meta": "Périmètre sur mesure / multi-systèmes / découverte requise"
@@ -496,19 +496,19 @@
       "sectionLabel": "Automatisation des flux",
       "sectionTitle": "Arrêtez de refaire la même tâche deux fois.",
       "quickFix": {
-        "label": "/ Correction rapide",
+        "label": "Correction rapide",
         "value": "$1,000 – $1,800",
         "detail": "Un processus manuel ou défaillant diagnostiqué et automatisé.",
         "meta": "Flux unique / documenté / vous appartient"
       },
       "opsSystem": {
-        "label": "/ Système d'opérations",
+        "label": "Système d'opérations",
         "value": "$2,000 – $3,800",
         "detail": "Deux à quatre flux connectés avec documentation et transfert propre.",
         "meta": "2–4 flux / documentés / formation incluse"
       },
       "systemsPartner": {
-        "label": "/ Partenaire systèmes",
+        "label": "Partenaire systèmes",
         "value": "$500 – $1,250/mo",
         "detail": "Maintenance continue d'automatisation et améliorations itératives de votre pile opérationnelle.",
         "meta": "Forfait mensuel / maintenance + améliorations"
@@ -519,19 +519,19 @@
       "sectionLabel": "E-commerce",
       "sectionTitle": "Boutiques construites, gérées et réparées.",
       "build": {
-        "label": "/ Construction",
+        "label": "Construction",
         "value": "$1,800 – $4,000+",
         "detail": "Nouvelle boutique ou refonte complète — cadrée après l'intake selon la plateforme, les produits et les objectifs de conversion.",
         "meta": "Nouvelle construction / plateforme adaptée / orientée conversion"
       },
       "run": {
-        "label": "/ Exploitation",
+        "label": "Exploitation",
         "value": "$500 – $1,800/mo",
         "detail": "Opérations mensuelles : mises à jour produits, suivi des commandes, analyse et maintenance plateforme.",
         "meta": "Forfait mensuel / ops + analyses / soin de la plateforme"
       },
       "fix": {
-        "label": "/ Correction",
+        "label": "Correction",
         "value": "$1,200",
         "detail": "Réparation ciblée — checkout cassé, problèmes de mise en page mobile, migration de plateforme ou audit de conversion.",
         "meta": "Correction unique / cadrée d'avance / livraison rapide"
@@ -542,13 +542,13 @@
       "sectionLabel": "Sauvetage de site web",
       "sectionTitle": "Réparez l'existant sans tout reconstruire.",
       "audit": {
-        "label": "/ Audit de sauvetage",
+        "label": "Audit de sauvetage",
         "value": "$1,000 – $1,500",
         "detail": "Diagnostic de 3 à 5 jours avec rapport écrit et liste de correctifs priorisée — que vous engagiez le sprint ou non.",
         "meta": "3–5 jours / rapport écrit / conseil indépendant"
       },
       "sprint": {
-        "label": "/ Sprint de sauvetage",
+        "label": "Sprint de sauvetage",
         "value": "$3,500 – $6,500",
         "detail": "Audit plus mise en œuvre de 1 à 2 semaines des corrections à plus fort impact. Les frais d'audit s'appliquent au sprint.",
         "meta": "Audit inclus / sprint 1–2 semaines / corrections à fort impact"
@@ -560,19 +560,19 @@
       "sectionTitle": "Votre site reste en bonne santé après le lancement.",
       "note": "Plans mensuels facturés en USD. Engagement minimum de 3 mois, mois par mois ensuite.",
       "care": {
-        "label": "/ Maintenance",
+        "label": "Maintenance",
         "value": "$400/mo",
         "detail": "Bilan mensuel, surveillance, mises à jour de contenu, mises à jour de plugins et résumé mensuel par e-mail.",
         "meta": "Banque 2h / accusé 48h / résolution 5j"
       },
       "carePlus": {
-        "label": "/ Maintenance+",
+        "label": "Maintenance+",
         "value": "$850/mo",
         "detail": "Maintenance plus petites évolutions, revue d'analyses, tableau d'activité du portail et délais de réponse plus courts.",
         "meta": "Banque 5h / accusé 24h / résolution 3j"
       },
       "carePro": {
-        "label": "/ Maintenance Pro",
+        "label": "Maintenance Pro",
         "value": "$2,250/mo",
         "detail": "Maintenance+ plus un sprint d'amélioration mensuel, un appel stratégique de 30 minutes et un SLA prioritaire.",
         "meta": "Banque 8h + sprint / accusé 4h / résolution 1j / appel stratégie"
@@ -588,22 +588,22 @@
     "intro": "Chaque axe utilise le même rythme d'exécution pour que la portée reste visible, le tarif compréhensible et que personne ne se demande ce qui vient ensuite.",
     "lead": "L'objectif n'est pas de faire un processus chic. L'objectif est de rendre difficile la disparition silencieuse du travail.",
     "step1": {
-      "step": "/ 01 - Intake",
+      "step": "01 - Intake",
       "title": "Dites-nous ce dont l'entreprise a besoin",
       "body": "Vous remplissez l'intake spécifique à votre axe — objectifs, contraintes, exemples et urgence. Komlan le lit personnellement et revient sous 24 heures avec des questions ou un brouillon de périmètre. Aucun appel commercial requis pour commencer."
     },
     "step2": {
-      "step": "/ 02 - Portée",
+      "step": "02 - Portée",
       "title": "Recevez une vraie estimation",
       "body": "Komlan envoie une portée écrite : pages ou fonctionnalités, fourchette de prix fixe, calendrier et hypothèses. Rien ne commence avant que vous l'ayez examinée et approuvée par écrit — aucun accord verbal."
     },
     "step3": {
-      "step": "/ 03 - Construction",
+      "step": "03 - Construction",
       "title": "Tout passer en revue dans l'espace de travail",
       "body": "Le travail passe par votre espace privé. Vous voyez chaque jalon au fur et à mesure, soumettez vos retours en un seul endroit et approuvez avant toute mise en ligne. Komlan est le seul à construire — aucun sous-traitant, aucune transmission."
     },
     "step4": {
-      "step": "/ 04 - Lancement",
+      "step": "04 - Lancement",
       "title": "Mise en ligne avec une remise propre",
       "body": "QA, configuration du domaine, analytics et une remise documentée de tout ce qu'il faut pour maintenir le travail. Vous possédez tous les fichiers. Si vous souhaitez un support continu, un plan de soin est disponible — sans pression ni engagement."
     },
