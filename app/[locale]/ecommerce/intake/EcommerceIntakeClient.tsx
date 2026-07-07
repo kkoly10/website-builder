@@ -271,7 +271,7 @@ export default function EcommerceIntakeClient() {
                 <button key={path} type="button" onClick={() => selectPath(path)} style={{ display: "grid", gridTemplateColumns: "12px 1fr auto", gap: 16, alignItems: "center", padding: "22px 24px", borderRadius: 16, border: `1px solid ${selected ? style.border : "var(--rule)"}`, background: selected ? style.bg : "var(--paper)", cursor: "pointer", textAlign: "left", transition: "border-color 0.2s, background 0.2s, transform 0.2s" }}>
                   <div style={{ width: 12, height: 12, borderRadius: "50%", background: style.color, opacity: selected ? 1 : 0.4 }} />
                   <div>
-                    <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 500, color: "var(--ink)", letterSpacing: "-0.02em" }}>{tPath(`${path}.label`)}</div>
+                    <div style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 500, color: "var(--ink)", letterSpacing: "-0.02em" }}>{tPath(`${path}.label`)}</div>
                     <div style={{ fontSize: 14, color: "var(--muted)", marginTop: 4, lineHeight: 1.5 }}>{tPath(`${path}.description`)}</div>
                   </div>
                   <div style={{ fontSize: 18, color: style.color, opacity: 0.6 }}>→</div>

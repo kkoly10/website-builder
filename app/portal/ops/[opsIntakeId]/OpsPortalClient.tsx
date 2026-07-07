@@ -249,7 +249,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
 
           {bundle.intake.painPoints.length > 0 && (
             <div style={{ marginTop: 14, padding: "14px 16px", borderRadius: 12, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{tFound("painPointsLabel")}</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", marginBottom: 8 }}>{tFound("painPointsLabel")}</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {bundle.intake.painPoints.map((p) => (
                   <span key={p} className="portalFeatureTag">{p}</span>
@@ -282,7 +282,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
 
           {bundle.workspace.nextActions.length > 0 && (
             <div style={{ marginTop: 12, padding: "14px 16px", borderRadius: 12, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{tProgress("nextSteps")}</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", marginBottom: 8 }}>{tProgress("nextSteps")}</div>
               {bundle.workspace.nextActions.slice(0, 3).map((a) => (
                 <div key={a} style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, paddingLeft: 12, borderLeft: "2px solid var(--rule)", marginBottom: 6 }}>{a}</div>
               ))}
@@ -341,11 +341,11 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
                     <div style={{ fontSize: 15, fontWeight: 600, color: "var(--fg)" }}>{auto.name}</div>
                     <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 3, lineHeight: 1.5 }}>{auto.purpose}</div>
                     <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "var(--rule)", border: "1px solid var(--stroke)", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{auto.priority}</span>
-                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "var(--rule)", border: "1px solid var(--stroke)", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{auto.toolRecommendation}</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "var(--rule)", border: "1px solid var(--stroke)", color: "var(--muted)" }}>{auto.priority}</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "var(--rule)", border: "1px solid var(--stroke)", color: "var(--muted)" }}>{auto.toolRecommendation}</span>
                     </div>
                   </div>
-                  <span style={{ padding: "5px 12px", borderRadius: 999, fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: meta.color, background: meta.bg, border: `1px solid ${meta.border}` }}>{lookupStatus(auto.status)}</span>
+                  <span style={{ padding: "5px 12px", borderRadius: 999, fontSize: 11, fontWeight: 600, color: meta.color, background: meta.bg, border: `1px solid ${meta.border}` }}>{lookupStatus(auto.status)}</span>
                 </div>
               );
             })}
@@ -366,7 +366,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
                   <div style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)" }}>{auto.name}</div>
                   <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 2 }}>{auto.toolRecommendation}</div>
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 600, color: "var(--success)", textTransform: "uppercase" }}>{tLive("liveBadge")}</span>
+                <span style={{ fontSize: 10, fontWeight: 600, color: "var(--success)" }}>{tLive("liveBadge")}</span>
               </div>
             ))}
           </div>
@@ -414,7 +414,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
                     <div style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)" }}>{a.label}</div>
                     {a.notes && <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 2 }}>{a.notes}</div>}
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: a.status.toLowerCase() === "pending" ? "var(--accent)" : "var(--success)" }}>{lookupStatus(a.status)}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: a.status.toLowerCase() === "pending" ? "var(--accent)" : "var(--success)" }}>{lookupStatus(a.status)}</span>
                 </div>
               ))}
             </div>
@@ -463,7 +463,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
         <Drawer label={tIncidents("label")} value={`${bundle.workspace.incidents.length}`}>
           {bundle.workspace.incidents.map((inc) => (
             <div key={inc.id} className="portalDrawerRow" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}><span className="portalDrawerVal">{inc.title}</span><span style={{ fontSize: 10, fontWeight: 600, color: inc.severity.toLowerCase() === "high" ? "var(--accent)" : "var(--muted)", textTransform: "uppercase" }}>{inc.severity}</span></div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}><span className="portalDrawerVal">{inc.title}</span><span style={{ fontSize: 10, fontWeight: 600, color: inc.severity.toLowerCase() === "high" ? "var(--accent)" : "var(--muted)" }}>{inc.severity}</span></div>
               <span className="portalDrawerKey">{inc.summary || inc.resolution}</span>
             </div>
           ))}
@@ -486,7 +486,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
         <div className="portalDrawerRow"><span className="portalDrawerKey">{tAgreement("accepted")}</span><span className="portalDrawerVal">{fmtDate(bundle.workspace.agreementAcceptedAt, locale)}</span></div>
         {(bundle.workspace as any).agreementText ? (
           <div style={{ marginTop: 8, padding: 12, borderRadius: 10, background: "var(--panel2)", border: "1px solid var(--stroke)" }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>{tAgreement("agreementHeader")}</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", marginBottom: 6 }}>{tAgreement("agreementHeader")}</div>
             <div style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{(bundle.workspace as any).agreementText}</div>
           </div>
         ) : null}

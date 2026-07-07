@@ -254,7 +254,7 @@ export default function BuildClient() {
                 transition: "border-color 0.2s, transform 0.2s",
                 display: "flex", flexDirection: "column", gap: 12,
               }}>
-              <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 500, color: "var(--fg)", letterSpacing: "-0.02em" }}>
+              <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 500, color: "var(--fg)", letterSpacing: "-0.02em" }}>
                 {t(`modes.${opt.key}.title`)}
               </div>
               <div style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.5 }}>{t(`modes.${opt.key}.desc`)}</div>
@@ -304,7 +304,7 @@ export default function BuildClient() {
           <div className="portalPanelHeader"><h2 className="portalPanelTitle">{t("step2.title")}</h2></div>
           {form.mode === "guided" && (
             <div style={{ padding: "14px 16px", borderRadius: 12, border: "1px solid var(--stroke)", background: "var(--panel2)", marginBottom: 16 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>{t("step2.suggestedSetup")}</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", marginBottom: 6 }}>{t("step2.suggestedSetup")}</div>
               <div style={{ fontSize: 14, color: "var(--fg)" }}>
                 {t("step2.typeLabel")} <strong>{tEnumTypes(suggested.websiteType ?? form.websiteType)}</strong>
                 {suggested.booking && <> · {t("step2.bookingEnabled")}</>}

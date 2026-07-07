@@ -83,7 +83,7 @@ export default function EcommercePipelineClient({ initialRows }: { initialRows: 
                     <div className="pDark" style={{ marginTop: 6 }}>{row.contactName} • {row.email}</div>
                     <div className="pDark" style={{ marginTop: 4 }}>ID #{row.ecomIntakeId.slice(0, 8)} • {fmtDate(row.createdAt)} • {pretty(row.mode)}</div>
                   </div>
-                  <div style={{ display: "inline-flex", alignItems: "center", padding: "8px 12px", borderRadius: 999, background: intakeTone.bg, border: `1px solid ${intakeTone.border}`, color: intakeTone.color, fontWeight: 800, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em" }}>{intakeTone.label}</div>
+                  <div style={{ display: "inline-flex", alignItems: "center", padding: "8px 12px", borderRadius: 999, background: intakeTone.bg, border: `1px solid ${intakeTone.border}`, color: intakeTone.color, fontWeight: 800, fontSize: 12 }}>{intakeTone.label}</div>
                 </div>
 
                 <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))", gap: 12 }}>
@@ -109,7 +109,7 @@ export default function EcommercePipelineClient({ initialRows }: { initialRows: 
 
                 <div className="row" style={{ marginTop: 16, justifyContent: "space-between" }}>
                   <div className="row">
-                    <span style={{ padding: "7px 10px", borderRadius: 999, background: phaseTone.bg, border: `1px solid ${phaseTone.border}`, color: phaseTone.color, fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em" }}>Phase {phaseTone.label}</span>
+                    <span style={{ padding: "7px 10px", borderRadius: 999, background: phaseTone.bg, border: `1px solid ${phaseTone.border}`, color: phaseTone.color, fontSize: 12, fontWeight: 800 }}>Phase {phaseTone.label}</span>
                   </div>
                   <div className="row">
                     <Link href={row.links.detail} className="btn btnPrimary">Open E-commerce Project</Link>
@@ -128,7 +128,7 @@ export default function EcommercePipelineClient({ initialRows }: { initialRows: 
 function Tile({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ border: "1px solid var(--stroke)", borderRadius: 14, background: "var(--panel2)", padding: 14 }}>
-      <div style={{ color: "var(--muted)", fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>{label}</div>
+      <div style={{ color: "var(--muted)", fontSize: 12, fontWeight: 800, marginBottom: 6 }}>{label}</div>
       <div style={{ color: "var(--fg)", fontWeight: 800, fontSize: 15, lineHeight: 1.35 }}>{value}</div>
     </div>
   );

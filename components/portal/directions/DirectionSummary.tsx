@@ -19,8 +19,6 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
         style={{
           fontSize: 12,
           color: "var(--muted)",
-          letterSpacing: "0.04em",
-          textTransform: "uppercase",
           fontWeight: 700,
         }}
       >
@@ -75,8 +73,6 @@ export default function DirectionSummary({
             style={{
               fontSize: 11,
               color: "var(--muted)",
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
               fontWeight: 700,
               marginBottom: 4,
             }}

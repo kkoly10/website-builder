@@ -87,7 +87,7 @@ export default function RequiredActionsAdminPanel({
     <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
         <div>
-          <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Required actions</h3>
+          <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Required actions</h3>
           <div style={{ fontSize: 12, color: "var(--muted-2)", marginTop: 4 }}>
             Add ad-hoc actions, force-complete on the client&apos;s behalf, or unstick an owned action.
           </div>
@@ -124,8 +124,8 @@ export default function RequiredActionsAdminPanel({
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", flexWrap: "wrap" }}>
                   <div style={{ flex: 1, minWidth: 240 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
-                      <span style={{ background: ob.bg, color: ob.fg, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>{ob.label}</span>
-                      <span style={{ background: sb.bg, color: sb.fg, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>{sb.label}</span>
+                      <span style={{ background: ob.bg, color: ob.fg, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, letterSpacing: 0.5 }}>{ob.label}</span>
+                      <span style={{ background: sb.bg, color: sb.fg, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, letterSpacing: 0.5 }}>{sb.label}</span>
                       <span style={{ fontSize: 11, color: "var(--muted-2)", fontFamily: "monospace" }}>{action.actionKey}</span>
                     </div>
                     {isEditing ? (
@@ -223,7 +223,7 @@ export default function RequiredActionsAdminPanel({
 
       {/* New action form */}
       <div style={{ borderTop: "1px solid var(--rule)", paddingTop: 16 }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 10, letterSpacing: 0.5 }}>
           Add ad-hoc action
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr", gap: 8, marginBottom: 8 }}>

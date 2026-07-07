@@ -113,7 +113,7 @@ function SecurityContent() {
                     <div key={n} style={{ display: "contents" }}>
                       <div style={{ padding: ".6rem .85rem", borderBottom: n !== "4" ? "1px solid var(--rule)" : undefined, background: "var(--paper)", fontWeight: 500 }}>{t(`sp${n}Name`)}</div>
                       <div style={{ padding: ".6rem .85rem", borderBottom: n !== "4" ? "1px solid var(--rule)" : undefined, borderLeft: "1px solid var(--rule)", background: "var(--paper)", color: "var(--ink-2)" }}>{t(`sp${n}Role`)}</div>
-                      <div style={{ padding: ".6rem .85rem", borderBottom: n !== "4" ? "1px solid var(--rule)" : undefined, borderLeft: "1px solid var(--rule)", background: "var(--paper)", color: "var(--muted)", font: "500 11px/1.5 var(--font-mono)", textTransform: "uppercase", letterSpacing: ".04em", display: "flex", alignItems: "center" }}>{t(`sp${n}Region`)}</div>
+                      <div style={{ padding: ".6rem .85rem", borderBottom: n !== "4" ? "1px solid var(--rule)" : undefined, borderLeft: "1px solid var(--rule)", background: "var(--paper)", color: "var(--muted)", font: "500 11px/1.5 var(--font-mono)", letterSpacing: ".04em", display: "flex", alignItems: "center" }}>{t(`sp${n}Region`)}</div>
                     </div>
                   ))}
                 </div>

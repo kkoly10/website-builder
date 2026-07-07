@@ -86,7 +86,7 @@ export default async function InternalHomePage() {
             </div>
 
             <div>
-              <div style={{ fontWeight: 800, color: "var(--muted)", marginBottom: 8, fontSize: 13, textTransform: "uppercase", letterSpacing: 1 }}>Recent Web Leads</div>
+              <div style={{ fontWeight: 800, color: "var(--muted)", marginBottom: 8, fontSize: 13, letterSpacing: 1 }}>Recent Web Leads</div>
               <div >
                 {(recentWeb ?? []).length === 0 ? (
                   <div className="pDark">No web quotes yet.</div>
@@ -128,7 +128,7 @@ export default async function InternalHomePage() {
             </div>
 
             <div>
-              <div style={{ fontWeight: 800, color: "var(--muted)", marginBottom: 8, fontSize: 13, textTransform: "uppercase", letterSpacing: 1 }}>Recent Ops Leads</div>
+              <div style={{ fontWeight: 800, color: "var(--muted)", marginBottom: 8, fontSize: 13, letterSpacing: 1 }}>Recent Ops Leads</div>
               <div >
                 {(recentOps ?? []).length === 0 ? (
                   <div className="pDark">No ops intakes yet.</div>

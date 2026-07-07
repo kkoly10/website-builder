@@ -443,7 +443,7 @@ function LaunchCheckItem({ label, done }: { label: string; done: boolean }) {
         </div>
         <span style={{ fontSize: 13, fontWeight: 500, color: done ? "var(--ink)" : "var(--muted)" }}>{label}</span>
       </div>
-      <span style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: done ? "var(--success)" : "var(--muted-2)" }}>
+      <span style={{ fontSize: 10, fontWeight: 600, color: done ? "var(--success)" : "var(--muted-2)" }}>
         {done ? "Ready" : "Pending"}
       </span>
     </div>
@@ -1370,7 +1370,7 @@ export default function ProjectControlClient({
             <div className="kicker"><span className="kickerDot" /> Project control</div>
           </div>
           <h1 style={{
-            fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(28px, 3.5vw, 38px)",
+            fontFamily: "var(--font-display)", fontSize: "clamp(28px, 3.5vw, 38px)",
             fontWeight: 500, color: "var(--ink)", letterSpacing: "-0.03em", margin: "8px 0 6px",
           }}>
             {data.leadName}
@@ -1430,7 +1430,7 @@ export default function ProjectControlClient({
         }}>
           <PieRing score={data.pie.score} size={46} />
           <div>
-            <div style={{ fontSize: 10, fontWeight: 600, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: "0.08em" }}>PIE</div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: "var(--muted-2)" }}>PIE</div>
             <div style={{ fontSize: 13, fontWeight: 600, color: pt.color }}>{data.pie.exists ? pt.label : "Missing"}</div>
           </div>
         </div>
@@ -1457,7 +1457,7 @@ export default function ProjectControlClient({
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.3fr) minmax(0,0.7fr)", gap: 16 }}>
           {/* Pricing */}
           <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
-            <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>Pricing controls</h3>
+            <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>Pricing controls</h3>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <Field label="Discount %"><input className="input" type="number" value={data.adminPricing.discountPercent}
                 onChange={(e) => setData((p) => ({ ...p, adminPricing: { ...p.adminPricing, discountPercent: Number(e.target.value || 0) } }))} /></Field>
@@ -1478,7 +1478,7 @@ export default function ProjectControlClient({
           {/* PIE + Proposal */}
           <div style={{ display: "grid", gap: 16 }}>
             <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
-              <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>PIE snapshot</h3>
+              <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>PIE snapshot</h3>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <ReadOnly label="Score" value={data.pie.score != null ? String(data.pie.score) : "—"} />
                 <ReadOnly label="Tier" value={data.pie.tier || "—"} />
@@ -1490,8 +1490,8 @@ export default function ProjectControlClient({
                 return (
                   <div style={{ marginTop: 12 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-2)" }}>Route</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: routeColor, padding: "2px 8px", border: `1px solid ${routeColor}`, borderRadius: 6, textTransform: "uppercase" }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: "var(--muted-2)" }}>Route</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: routeColor, padding: "2px 8px", border: `1px solid ${routeColor}`, borderRadius: 6 }}>
                         {fp || "—"}
                       </span>
                       {isOverridden && (
@@ -1508,7 +1508,7 @@ export default function ProjectControlClient({
                       </details>
                     )}
                     <div style={{ marginTop: 10 }}>
-                      <label style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-2)", display: "block", marginBottom: 4 }}>Override route</label>
+                      <label style={{ fontSize: 10, fontWeight: 600, color: "var(--muted-2)", display: "block", marginBottom: 4 }}>Override route</label>
                       <select className="select" style={{ fontSize: 12 }}
                         value={data.pie.routing.manualOverride || ""}
                         onChange={(e) => {
@@ -1533,7 +1533,7 @@ export default function ProjectControlClient({
                 const pct = tgt != null ? Math.min(100, Math.max(0, ((tgt - lo) / range) * 100)) : null;
                 return (
                   <div style={{ marginTop: 12 }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-2)", marginBottom: 4 }}>Price band</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: "var(--muted-2)", marginBottom: 4 }}>Price band</div>
                     <div style={{ position: "relative", height: 6, background: "var(--paper-2)", borderRadius: 4, border: "1px solid var(--rule)" }}>
                       {pct != null && (
                         <div style={{ position: "absolute", top: -3, left: `${pct}%`, width: 12, height: 12, background: "var(--accent)", borderRadius: "50%", transform: "translateX(-50%)", border: "2px solid var(--paper)" }} />
@@ -1560,7 +1560,7 @@ export default function ProjectControlClient({
             </div>
 
             <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
-              <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>Proposal</h3>
+              <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>Proposal</h3>
               {data.proposalLifecycle && (() => {
                 const pl = data.proposalLifecycle;
                 const statusColor: Record<string, string> = {
@@ -1571,12 +1571,12 @@ export default function ProjectControlClient({
                 return (
                   <div style={{ marginBottom: 12, padding: "10px 14px", background: "var(--paper-2)", borderRadius: 10, border: "1px solid var(--rule)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: sc, padding: "2px 7px", border: `1px solid ${sc}`, borderRadius: 5 }}>{pl.status}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: sc, padding: "2px 7px", border: `1px solid ${sc}`, borderRadius: 5 }}>{pl.status}</span>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
                       {(["sentAt", "viewedAt", "acceptedAt"] as const).map((k) => (
                         <div key={k}>
-                          <div style={{ fontSize: 9, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{k.replace("At", "")}</div>
+                          <div style={{ fontSize: 9, color: "var(--muted-2)" }}>{k.replace("At", "")}</div>
                           <div style={{ fontSize: 11, color: pl[k] ? "var(--ink)" : "var(--muted-2)" }}>{pl[k] ? fmtDateTime(pl[k]) : "—"}</div>
                         </div>
                       ))}
@@ -1616,7 +1616,7 @@ export default function ProjectControlClient({
       {activeTab === "scope" && (
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 16 }}>
           <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
-            <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>Scope snapshot</h3>
+            <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>Scope snapshot</h3>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <Field label="Tier label"><input className="input" value={data.scopeSnapshot.tierLabel} onChange={(e) => setData((p) => ({ ...p, scopeSnapshot: { ...p.scopeSnapshot, tierLabel: e.target.value } }))} /></Field>
               <Field label="Platform"><input className="input" value={data.scopeSnapshot.platform} onChange={(e) => setData((p) => ({ ...p, scopeSnapshot: { ...p.scopeSnapshot, platform: e.target.value } }))} /></Field>
@@ -1643,7 +1643,7 @@ export default function ProjectControlClient({
           {/* Scope History + Change Orders */}
           <div style={{ display: "grid", gap: 16 }}>
             <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
-              <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>Scope history</h3>
+              <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>Scope history</h3>
               {data.workspaceHistory.scopeVersions.length === 0
                 ? <div style={{ fontSize: 13, color: "var(--muted-2)" }}>No saved versions yet.</div>
                 : data.workspaceHistory.scopeVersions.map((v) => (
@@ -1655,7 +1655,7 @@ export default function ProjectControlClient({
             </div>
 
             <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
-              <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>Change orders</h3>
+              <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>Change orders</h3>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <Field label="Title"><input className="input" value={newChangeOrder.title} onChange={(e) => setNewChangeOrder((p) => ({ ...p, title: e.target.value }))} placeholder="Add booking flow" /></Field>
                 <Field label="Status"><select className="select" value={newChangeOrder.status} onChange={(e) => setNewChangeOrder((p) => ({ ...p, status: e.target.value }))}>{changeOrderStatusOptions.map((o) => <option key={o} value={o}>{pretty(o)}</option>)}</select></Field>
@@ -1700,7 +1700,7 @@ export default function ProjectControlClient({
               Component handles legacy / non-website fallbacks itself. */}
           {data.projectType === "website" && data.designDirection ? (
             <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
-              <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>Design Direction</h3>
+              <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>Design Direction</h3>
               <DesignDirectionAdminPanel
                 quoteId={data.quoteId}
                 designDirection={data.designDirection}
@@ -1743,7 +1743,7 @@ export default function ProjectControlClient({
               direction record. Legacy non-website portals get nothing. */}
           {data.projectType !== "website" && data.direction ? (
             <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
-              <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>
+              <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>
                 {data.direction.type === "product_direction" ? "Product Direction"
                   : data.direction.type === "workflow_direction" ? "Workflow Direction"
                   : data.direction.type === "store_direction" ? "Store Direction"
@@ -1799,7 +1799,7 @@ export default function ProjectControlClient({
 
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 16 }}>
           <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
-            <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>Publishing controls</h3>
+            <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>Publishing controls</h3>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <Field label="Preview URL"><input className="input" value={data.portalAdmin.previewUrl} onChange={(e) => setData((p) => ({ ...p, portalAdmin: { ...p.portalAdmin, previewUrl: e.target.value } }))} placeholder="https://preview.vercel.app" /></Field>
               <Field label="Production URL"><input className="input" value={data.portalAdmin.productionUrl} onChange={(e) => setData((p) => ({ ...p, portalAdmin: { ...p.portalAdmin, productionUrl: e.target.value } }))} placeholder="https://client.com" /></Field>
@@ -1826,7 +1826,7 @@ export default function ProjectControlClient({
           {/* State + Timeline */}
           <div style={{ display: "grid", gap: 16 }}>
             <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
-              <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>Workspace state</h3>
+              <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>Workspace state</h3>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <Field label="Quote status"><select className="select" value={data.status} onChange={(e) => setData((p) => ({ ...p, status: e.target.value }))}>{statusOptions.map((o) => <option key={o} value={o}>{o}</option>)}</select></Field>
                 <Field label="Workspace status"><select className="select" value={data.portalStateAdmin.clientStatus} onChange={(e) => setData((p) => ({ ...p, portalStateAdmin: { ...p.portalStateAdmin, clientStatus: e.target.value } }))}>{workspaceStatusOptions.map((o) => <option key={o} value={o}>{o}</option>)}</select></Field>
@@ -1854,7 +1854,7 @@ export default function ProjectControlClient({
             </div>
 
             <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
-              <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 14px" }}>Milestones</h3>
+              <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 14px" }}>Milestones</h3>
               <div style={{ display: "grid", gap: 6 }}>
                 {data.portalStateAdmin.milestones.map((m) => (
                   <label key={m.key} style={{
@@ -1891,7 +1891,7 @@ export default function ProjectControlClient({
           <div style={{ gridColumn: "1 / -1", background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 16, flexWrap: "wrap", marginBottom: 18 }}>
               <div>
-                <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Invoices</h3>
+                <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Invoices</h3>
                 <div style={{ fontSize: 13, color: "var(--muted-2)", marginTop: 6 }}>
                   Create milestone, final, retainer, or deposit invoices and send Stripe checkout links to the client.
                 </div>
@@ -1989,7 +1989,7 @@ export default function ProjectControlClient({
                             <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)" }}>
                               {pretty(invoice.invoiceType)} invoice
                             </div>
-                            <span style={{ ...tone, borderRadius: 999, padding: "4px 10px", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                            <span style={{ ...tone, borderRadius: 999, padding: "4px 10px", fontSize: 10, fontWeight: 700 }}>
                               {pretty(invoice.status)}
                             </span>
                           </div>
@@ -2001,7 +2001,7 @@ export default function ProjectControlClient({
                         </div>
                         <div style={{ textAlign: "right" }}>
                           <div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)" }}>{money(invoice.amount)}</div>
-                          <div style={{ fontSize: 11, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                          <div style={{ fontSize: 11, color: "var(--muted-2)" }}>
                             {invoice.currency}
                           </div>
                         </div>
@@ -2101,7 +2101,7 @@ export default function ProjectControlClient({
       {activeTab === "agreement" && (
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 16 }}>
           <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
-            <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>Pre-contract draft</h3>
+            <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>Pre-contract draft</h3>
             <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
               <button className="btn btnPrimary" disabled={busy} style={{ fontSize: 12, padding: "7px 14px" }} onClick={generatePreContract}>
                 {data.preContractDraft ? "Regenerate →" : "Generate draft →"}
@@ -2114,7 +2114,7 @@ export default function ProjectControlClient({
           </div>
 
           <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
-            <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>Published agreement</h3>
+            <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>Published agreement</h3>
             <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
               <button className="btn btnGhost" disabled={busy} style={{ fontSize: 12, padding: "7px 14px" }} onClick={copyDraftToPublished}>Copy from draft</button>
               <button className="btn btnGhost" disabled={busy || !data.publishedAgreementText.trim()} style={{ fontSize: 12, padding: "7px 14px" }}
@@ -2142,7 +2142,7 @@ export default function ProjectControlClient({
 
             {data.agreementAcceptance ? (
               <div style={{ marginTop: 14, padding: 14, borderRadius: 12, border: "1px solid var(--rule)", background: "var(--paper-2)" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 10 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", marginBottom: 10 }}>
                   Acceptance audit
                 </div>
                 <div style={{ display: "grid", gap: 8, fontSize: 13, color: "var(--muted)" }}>
@@ -2206,7 +2206,7 @@ export default function ProjectControlClient({
           <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22, marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 18 }}>
               <div>
-                <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Project timeline</h3>
+                <h3 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Project timeline</h3>
                 <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
                   Full event history across client, studio, and system actions.
                 </div>
@@ -2243,7 +2243,7 @@ export default function ProjectControlClient({
               ) : (
                 filteredActivity.map((item) => (
                   <div key={item.id} style={{ display: "grid", gridTemplateColumns: "84px minmax(0,1fr)", gap: 14, padding: "12px 14px", border: "1px solid var(--rule)", borderRadius: 12, background: item.actorRole === "system" ? "var(--paper-2)" : "var(--paper)" }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: item.actorRole === "client" ? "var(--accent)" : item.actorRole === "studio" ? "var(--ink)" : "var(--muted-2)" }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: item.actorRole === "client" ? "var(--accent)" : item.actorRole === "studio" ? "var(--ink)" : "var(--muted-2)" }}>
                       {pretty(item.actorRole)}
                     </div>
                     <div>
@@ -2263,7 +2263,7 @@ export default function ProjectControlClient({
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
               <PieRing score={readiness.percent} size={64} />
               <div>
-                <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Launch readiness</h3>
+                <h3 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Launch readiness</h3>
                 <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 2 }}>
                   {readiness.completed} of {readiness.checks.length} checks passed · {readiness.blockers.length} remaining
                 </div>
@@ -2293,7 +2293,7 @@ export default function ProjectControlClient({
           <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22, marginTop: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", marginBottom: 18 }}>
               <div>
-                <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Messages</h3>
+                <h3 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Messages</h3>
                 <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
                   {data.messageSummary.unreadCount} unread client message{data.messageSummary.unreadCount === 1 ? "" : "s"}
                 </div>
@@ -2314,7 +2314,7 @@ export default function ProjectControlClient({
                     <div key={group.key}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                         <div style={{ flex: 1, height: 1, background: "var(--rule)" }} />
-                        <div style={{ fontSize: 11, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{group.label}</div>
+                        <div style={{ fontSize: 11, color: "var(--muted-2)" }}>{group.label}</div>
                         <div style={{ flex: 1, height: 1, background: "var(--rule)" }} />
                       </div>
 
@@ -2367,8 +2367,7 @@ export default function ProjectControlClient({
                                     : "var(--paper)",
                                 fontSize: 11,
                                 fontWeight: 700,
-                                textTransform: "uppercase",
-                              }}
+                                }}
                             >
                               {entry.senderRole === "internal"
                                 ? "IN"
@@ -2449,7 +2448,7 @@ export default function ProjectControlClient({
                       Internal note
                     </button>
                   </div>
-                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: messageMode === "internal" ? "var(--ink)" : "var(--accent)" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: messageMode === "internal" ? "var(--ink)" : "var(--accent)" }}>
                     {messageMode === "internal" ? "Only visible to studio" : "Client will receive email notification"}
                   </div>
                 </div>
@@ -2500,7 +2499,7 @@ export default function ProjectControlClient({
           {/* Assets */}
           <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Submitted assets</h3>
+              <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Submitted assets</h3>
               <span style={{ fontSize: 11, fontWeight: 600, color: "var(--muted-2)", background: "rgba(255,255,255,0.05)", padding: "3px 8px", borderRadius: 999 }}>
                 {data.clientSync.assets.length}
               </span>
@@ -2538,7 +2537,7 @@ export default function ProjectControlClient({
 
             {/* Admin add-on-behalf form */}
             <div style={{ borderTop: "1px solid var(--rule)", marginTop: 14, paddingTop: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", letterSpacing: 0.5, marginBottom: 8 }}>
                 Add asset on client&apos;s behalf
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.2fr 0.8fr", gap: 6, marginBottom: 6 }}>
@@ -2564,7 +2563,7 @@ export default function ProjectControlClient({
           {/* Revisions */}
           <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Revision requests</h3>
+              <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Revision requests</h3>
               <span style={{ fontSize: 11, fontWeight: 600, color: "var(--muted-2)", background: "rgba(255,255,255,0.05)", padding: "3px 8px", borderRadius: 999 }}>
                 {data.clientSync.revisions.length}
               </span>
@@ -2578,7 +2577,7 @@ export default function ProjectControlClient({
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 10 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: r.priority === "high" ? "var(--accent)" : "var(--muted-2)", textTransform: "uppercase" }}>{r.priority} priority</div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: r.priority === "high" ? "var(--accent)" : "var(--muted-2)" }}>{r.priority} priority</div>
                       <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4, lineHeight: 1.5 }}>{r.message}</div>
                       <div style={{ fontSize: 11, color: "var(--muted-2)", marginTop: 4 }}>{fmtDate(r.createdAt)}</div>
                     </div>
@@ -2602,7 +2601,7 @@ export default function ProjectControlClient({
 
             {/* Admin record-on-behalf form (call-in feedback) */}
             <div style={{ borderTop: "1px solid var(--rule)", marginTop: 14, paddingTop: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", letterSpacing: 0.5, marginBottom: 8 }}>
                 Record revision on client&apos;s behalf
               </div>
               <textarea
@@ -2658,7 +2657,7 @@ export default function ProjectControlClient({
           onClick={() => setConfirmAction(null)}>
           <div style={{ background: "var(--paper)", border: "1px solid var(--rule-2)", borderRadius: 18, padding: "28px 28px 22px", maxWidth: 460, width: "90%" }}
             onClick={(e) => e.stopPropagation()}>
-            <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 500, fontSize: 20, color: "var(--ink)" }}>{confirmAction.title}</div>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 20, color: "var(--ink)" }}>{confirmAction.title}</div>
             <p style={{ marginTop: 10, fontSize: 14, color: "var(--muted)", lineHeight: 1.6 }}>{confirmAction.description}</p>
             <div style={{ display: "flex", gap: 8, marginTop: 18 }}>
               <button className="btn btnGhost" onClick={() => setConfirmAction(null)}>Cancel</button>

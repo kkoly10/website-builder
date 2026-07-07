@@ -262,8 +262,6 @@ export default function DirectionForm({
                 style={{
                   fontSize: 11,
                   fontWeight: 700,
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
                   color: "var(--muted)",
                   borderBottom: "1px solid var(--rule)",
                   paddingBottom: 8,
