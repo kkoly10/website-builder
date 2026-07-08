@@ -147,7 +147,7 @@ export default function DesignDirectionPayloadEditor({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label style={{ display: "grid", gap: 6 }}>
-      <span style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 700 }}>
+      <span style={{ fontSize: 11, color: "var(--muted)", fontWeight: 700 }}>
         {label}
       </span>
       {children}

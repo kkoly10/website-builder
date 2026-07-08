@@ -875,9 +875,7 @@ export default function PortalClient({
             fontSize: 11,
             fontFamily: "var(--font-mono)",
             color: "color-mix(in srgb, var(--paper) 55%, transparent)",
-            letterSpacing: "0.04em",
-            textTransform: "uppercase",
-          }}>
+            }}>
             Demo workspace — read-only · data resets periodically
           </span>
           <a
@@ -887,8 +885,7 @@ export default function PortalClient({
               fontFamily: "var(--font-mono)",
               color: "var(--accent-soft, #e06c5a)",
               textDecoration: "none",
-              letterSpacing: "0.03em",
-            }}
+              }}
           >
             Start a real project →
           </a>
@@ -1151,7 +1148,7 @@ export default function PortalClient({
                             ? tInvoiceTypes(invoice.invoiceType)
                             : `${prettyFallback(invoice.invoiceType)} invoice`}
                         </div>
-                        <span style={{ ...tone, borderRadius: 999, padding: "4px 10px", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                        <span style={{ ...tone, borderRadius: 999, padding: "4px 10px", fontSize: 10, fontWeight: 700 }}>
                           {lookup(tInvoiceStatuses, invoice.status)}
                         </span>
                       </div>
@@ -1166,7 +1163,7 @@ export default function PortalClient({
                       <div style={{ fontSize: 20, fontWeight: 700, color: "var(--ink)" }}>
                         {money(invoice.amount, locale)}
                       </div>
-                      <div style={{ fontSize: 11, color: "var(--muted-2)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                      <div style={{ fontSize: 11, color: "var(--muted-2)" }}>
                         {invoice.currency}
                       </div>
                     </div>
@@ -1449,7 +1446,7 @@ export default function PortalClient({
           ) : (
             bundle.activityFeed.map((item) => (
               <div key={item.id} style={{ display: "grid", gridTemplateColumns: "72px minmax(0,1fr)", gap: 14, padding: "14px 16px", borderRadius: 14, border: "1px solid var(--rule)", background: "var(--paper-2)" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: item.actorRole === "client" ? "var(--accent)" : "var(--muted-2)" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: item.actorRole === "client" ? "var(--accent)" : "var(--muted-2)" }}>
                   {lookup(tActivityActors, item.actorRole)}
                 </div>
                 <div>
@@ -1808,7 +1805,7 @@ export default function PortalClient({
             marginTop: 8, padding: 12, borderRadius: 10,
             background: "var(--paper-2)", border: "1px solid var(--rule)",
           }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", marginBottom: 4 }}>
               {tDetailRows("intakeNotes")}
             </div>
             <p className="p" style={{ margin: 0, fontSize: 14 }}>{bundle.scope.notes}</p>
@@ -1855,7 +1852,7 @@ export default function PortalClient({
             marginTop: 8, padding: 12, borderRadius: 10,
             background: "var(--paper-2)", border: "1px solid var(--rule)",
           }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", marginBottom: 4 }}>
               {tDetailRows("depositNotes")}
             </div>
             <p className="p" style={{ margin: 0, fontSize: 14 }}>{bundle.quote.deposit.notes}</p>
@@ -1866,7 +1863,7 @@ export default function PortalClient({
             marginTop: 8, padding: 12, borderRadius: 10,
             background: "var(--paper-2)", border: "1px solid var(--rule)",
           }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", marginBottom: 10 }}>
               {tDetailRows("publishedAgreement")}
             </div>
 

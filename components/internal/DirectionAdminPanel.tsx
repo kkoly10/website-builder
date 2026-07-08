@@ -151,8 +151,6 @@ export default function DirectionAdminPanel({
           style={{
             fontSize: 11,
             fontWeight: 700,
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
             padding: "6px 12px",
             borderRadius: 999,
             border: `1px solid ${pill.border}`,

@@ -453,7 +453,7 @@ export default function OpsProjectControlClient({ initialData }: { initialData: 
 }
 
 function StatusBadge({ toneValue, children }: { toneValue: { bg: string; border: string; color: string }; children: any }) {
-  return <span style={{ padding: "8px 12px", borderRadius: 999, background: toneValue.bg, border: `1px solid ${toneValue.border}`, color: toneValue.color, fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em" }}>{children}</span>;
+  return <span style={{ padding: "8px 12px", borderRadius: 999, background: toneValue.bg, border: `1px solid ${toneValue.border}`, color: toneValue.color, fontSize: 12, fontWeight: 800 }}>{children}</span>;
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {

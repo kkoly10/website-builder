@@ -133,7 +133,7 @@ export default async function VerifyPage({
     <main style={containerStyle}>
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 40, paddingBottom: 32, borderBottom: "2px solid #1a1a1a" }}>
-        <div style={{ fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", color: "#666", marginBottom: 12 }}>
+        <div style={{ fontSize: 13, color: "#666", marginBottom: 12 }}>
           CrecyStudio · Web Design & Development
         </div>
         <h1 style={{ fontFamily: "Georgia, serif", fontSize: 32, fontWeight: 400, margin: "0 0 8px" }}>
@@ -152,7 +152,7 @@ export default async function VerifyPage({
 
       {/* Certificate ID */}
       <section style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#888", marginBottom: 6 }}>Certificate ID</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: "#888", marginBottom: 6 }}>Certificate ID</div>
         <div style={{ fontFamily: "monospace", fontSize: 13, background: "#f5f5f5", padding: "8px 12px", borderRadius: 4, border: "1px solid #e0e0e0" }}>
           {data.id}
         </div>
@@ -161,12 +161,12 @@ export default async function VerifyPage({
       {/* Parties */}
       <section style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 28 }}>
         <div style={{ padding: "14px 16px", border: "1px solid #e0e0e0", borderRadius: 8 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#888", marginBottom: 6 }}>From (Studio)</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "#888", marginBottom: 6 }}>From (Studio)</div>
           <div style={{ fontFamily: "Georgia, serif", fontSize: 16, fontWeight: 400, marginBottom: 2 }}>CrecyStudio</div>
           <div style={{ fontFamily: "monospace", fontSize: 12, color: "#666" }}>hello@crecystudio.com</div>
         </div>
         <div style={{ padding: "14px 16px", border: "1px solid #e0e0e0", borderRadius: 8 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#888", marginBottom: 6 }}>To (Client)</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "#888", marginBottom: 6 }}>To (Client)</div>
           <div style={{ fontFamily: "Georgia, serif", fontSize: 16, fontWeight: 400, marginBottom: 2 }}>{leadName || "—"}</div>
           {/* Masked: full email kept in DB for audit, public sees first 2 chars only */}
           <div style={{ fontFamily: "monospace", fontSize: 12, color: "#666" }}>{maskedEmail}</div>
@@ -178,13 +178,13 @@ export default async function VerifyPage({
          trail. The body_hash + accepted_at give enough proof to verify
          "this signature happened" without leaking signer details. */}
       <section style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#888", marginBottom: 10 }}>Audit Trail</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: "#888", marginBottom: 10 }}>Audit Trail</div>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "#f5f5f5" }}>
-              <th style={{ textAlign: "left", padding: "8px 12px", fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", color: "#666", borderBottom: "1px solid #e0e0e0" }}>Event</th>
-              <th style={{ textAlign: "left", padding: "8px 12px", fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", color: "#666", borderBottom: "1px solid #e0e0e0" }}>Detail</th>
-              <th style={{ textAlign: "left", padding: "8px 12px", fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", color: "#666", borderBottom: "1px solid #e0e0e0" }}>Date</th>
+              <th style={{ textAlign: "left", padding: "8px 12px", fontWeight: 700, fontSize: 11, color: "#666", borderBottom: "1px solid #e0e0e0" }}>Event</th>
+              <th style={{ textAlign: "left", padding: "8px 12px", fontWeight: 700, fontSize: 11, color: "#666", borderBottom: "1px solid #e0e0e0" }}>Detail</th>
+              <th style={{ textAlign: "left", padding: "8px 12px", fontWeight: 700, fontSize: 11, color: "#666", borderBottom: "1px solid #e0e0e0" }}>Date</th>
             </tr>
           </thead>
           <tbody>
@@ -205,7 +205,7 @@ export default async function VerifyPage({
       {/* Document fingerprint — the canonical proof. Anyone can rehash
          the agreement text and compare to this value. Doesn't leak PII. */}
       <section style={{ marginBottom: 32 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#888", marginBottom: 6 }}>Document Fingerprint (SHA-256)</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: "#888", marginBottom: 6 }}>Document Fingerprint (SHA-256)</div>
         <div style={{ fontFamily: "monospace", fontSize: 12, wordBreak: "break-all", background: "#f5f5f5", padding: "8px 12px", borderRadius: 4, border: "1px solid #e0e0e0", color: "#444" }}>
           {data.body_hash || "Not available"}
         </div>

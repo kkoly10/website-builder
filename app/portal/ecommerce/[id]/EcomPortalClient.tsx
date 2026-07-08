@@ -112,7 +112,7 @@ function ItemList({ items, lookupStatus }: {
           <div key={item.id} style={{ border: `1px solid ${tone.border}`, background: tone.bg, borderRadius: 12, padding: "12px 14px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
               <div style={{ color: "var(--fg)", fontWeight: 700, fontSize: 14 }}>{item.title}</div>
-              <span style={{ padding: "4px 8px", borderRadius: 999, border: `1px solid ${tone.border}`, color: tone.color, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700 }}>{lookupStatus(item.status)}</span>
+              <span style={{ padding: "4px 8px", borderRadius: 999, border: `1px solid ${tone.border}`, color: tone.color, fontSize: 10, fontWeight: 700 }}>{lookupStatus(item.status)}</span>
             </div>
             {item.notes ? <div style={{ marginTop: 6, color: "var(--muted)", fontSize: 13, lineHeight: 1.55 }}>{item.notes}</div> : null}
           </div>
@@ -281,7 +281,7 @@ export default function EcomPortalClient({ data }: { data: EcommerceWorkspaceBun
             <Row label={tWorkspace("waitingOn")} value={workspace.waitingOn} />
           </div>
           <div style={{ marginTop: 14, padding: "14px 16px", borderRadius: 12, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>{tWorkspace("serviceSummaryLabel")}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", marginBottom: 6 }}>{tWorkspace("serviceSummaryLabel")}</div>
             <div style={{ color: "var(--fg)", fontWeight: 700 }}>{workspace.serviceSummary}</div>
             {workspace.onboardingSummary ? <div style={{ marginTop: 6, color: "var(--muted)", lineHeight: 1.6, fontSize: 13 }}>{workspace.onboardingSummary}</div> : null}
           </div>
@@ -300,7 +300,7 @@ export default function EcomPortalClient({ data }: { data: EcommerceWorkspaceBun
               <MetricCard label={tProposal("monthlyFee")} value={money(quote?.estimate_monthly_fee, locale)} />
             </div>
             <div style={{ padding: "14px 16px", borderRadius: 12, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>{tProposal("fulfillmentLabel")}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", marginBottom: 6 }}>{tProposal("fulfillmentLabel")}</div>
               <div style={{ color: "var(--fg)", fontWeight: 700 }}>{quote?.estimate_fulfillment_model || tProposal("fulfillmentTbc")}</div>
             </div>
             <div style={{ fontSize: 12, color: "var(--muted2)" }}>{tProposal("lastUpdated", { date: fmtDate(quote?.updated_at || quote?.created_at, locale) })}</div>
@@ -447,7 +447,7 @@ export default function EcomPortalClient({ data }: { data: EcommerceWorkspaceBun
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ padding: "16px 18px", borderRadius: 12, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)" }}>{label}</div>
       <div style={{ marginTop: 4, color: "var(--fg)", fontWeight: 800, fontSize: 24 }}>{value}</div>
     </div>
   );

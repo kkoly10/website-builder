@@ -145,7 +145,7 @@ function FieldRow({
   disabled: boolean;
 }) {
   const labelEl = (
-    <span style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 700 }}>
+    <span style={{ fontSize: 11, color: "var(--muted)", fontWeight: 700 }}>
       {field.label}
       {field.helpText ? (
         <span style={{ display: "block", fontSize: 10, color: "var(--muted-2)", textTransform: "none", letterSpacing: "normal", marginTop: 2 }}>

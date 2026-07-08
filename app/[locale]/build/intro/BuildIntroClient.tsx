@@ -405,7 +405,7 @@ export default function BuildIntroClient() {
           marginBottom: 16,
         }}>
           <div style={{
-            fontFamily: "'Playfair Display', Georgia, serif",
+            fontFamily: "var(--font-display)",
             fontSize: 22, fontWeight: 500, color: "var(--fg)",
             letterSpacing: "-0.02em",
           }}>

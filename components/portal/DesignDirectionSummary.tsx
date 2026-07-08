@@ -29,7 +29,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
         borderBottom: "1px solid var(--rule)",
       }}
     >
-      <div style={{ fontSize: 12, color: "var(--muted)", letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 700 }}>
+      <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 700 }}>
         {label}
       </div>
       <div style={{ fontSize: 14, color: "var(--fg)", lineHeight: 1.6 }}>
@@ -193,7 +193,7 @@ export default function DesignDirectionSummary({ value }: { value: WebsiteDesign
             lineHeight: 1.6,
           }}
         >
-          <div style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>
+          <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 700, marginBottom: 4 }}>
             {t("noteFromCrecyStudio")}
           </div>
           {value.adminPublicNote}

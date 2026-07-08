@@ -178,9 +178,7 @@ export default function OpsPipelineClient({
                       color: tone.color,
                       fontWeight: 800,
                       fontSize: 12,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                    }}
+                      }}
                   >
                     {tone.label}
                   </div>
@@ -227,9 +225,7 @@ export default function OpsPipelineClient({
                         color: callTone.color,
                         fontSize: 12,
                         fontWeight: 800,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.08em",
-                      }}
+                        }}
                     >
                       Call {callTone.label}
                     </span>
@@ -271,8 +267,6 @@ function InfoTile({ label, value }: { label: string; value: string }) {
           color: "var(--muted)",
           fontSize: 12,
           fontWeight: 800,
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
           marginBottom: 6,
         }}
       >
