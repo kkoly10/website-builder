@@ -155,3 +155,14 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* 44px tap target on touch widths (brand/BRAND.md §11). These are
+   standalone links in their own row, not prose links, so WCAG 2.5.8's
+   inline exemption does not cover them. */
+@media (max-width: 620px) {
+.ventureLink {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}

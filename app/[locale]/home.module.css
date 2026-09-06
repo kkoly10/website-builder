@@ -269,12 +269,20 @@
 .portalCta {
   display: inline-flex;
   align-items: center;
-  min-height: 42px;
-  padding: 0.8rem 1rem;
-  border: 1px solid color-mix(in srgb, var(--paper) 18%, transparent);
-  background: color-mix(in srgb, var(--ink) 86%, var(--paper) 14%);
+  /* Was 42px — two short of the 44px floor (brand/BRAND.md §11). */
+  min-height: 44px;
+  padding: 0.78rem 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--paper) 22%, transparent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--paper) 8%, transparent);
   color: var(--paper);
-  font: 500 13.5px/1 var(--font-body);
+  font: 600 14.5px/1.2 var(--font-body);
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.portalCta:hover {
+  background: color-mix(in srgb, var(--paper) 14%, transparent);
+  border-color: color-mix(in srgb, var(--paper) 36%, transparent);
 }
 
 .journey {
@@ -542,10 +550,15 @@
   .proofItem {
     border-left: none;
     border-top: 1px solid var(--rule);
+    /* Restore the gutter the desktop rule strips from the first cell. Once
+       the row stacks there is no leading edge to align to, so the flush-left
+       first item just read as a misaligned one. */
+    padding-left: clamp(1rem, 1.8vw, 1.75rem);
   }
 
   .proofItem:first-child {
     border-top: none;
+    padding-left: clamp(1rem, 1.8vw, 1.75rem);
   }
 
   .portalHead,
@@ -956,5 +969,18 @@
 
   .closing {
     padding: 2.2rem 0;
+  }
+}
+
+/* 44px tap target on touch widths (brand/BRAND.md §11). These are
+   standalone links in their own row, not prose links, so WCAG 2.5.8's
+   inline exemption does not cover them. */
+@media (max-width: 620px) {
+.ventureLink,
+.founderLinkedIn,
+.venturesCtaLink {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
 }

@@ -464,7 +464,8 @@ export default function ServicePage({
             {crossLinks.map((link) => (
               <article key={link.href} className={styles.crossLinkCard}>
                 <h3>{tCross(link.id)}</h3>
-                <Link href={link.href}>{t("exploreLane")} -&gt;</Link>
+                {/* The bare "->" is gone here as everywhere else (BRAND.md §7). */}
+                <Link href={link.href}>{t("exploreLane")}</Link>
               </article>
             ))}
           </div>
