@@ -122,12 +122,16 @@ function AboutContent() {
       <section style={{ padding: "3rem 0", borderTop: "1px solid var(--rule)" }}>
         <div className="container">
           <p className={styles.sectionLabel}>{tAbout("wontTake.label")}</p>
-          <h2 className={styles.venturesTitle}>{tAbout("wontTake.title")}</h2>
+          {/* sectionTitle, not venturesTitle. The latter is the DARK ventures
+              heading (color: var(--paper)) and this section sits on the light
+              canvas, so the heading rendered invisible — white on white under
+              the old palette too, which is why it was never noticed. */}
+          <h2 className={styles.sectionTitle}>{tAbout("wontTake.title")}</h2>
           <p className={styles.founderBio} style={{ marginBottom: "1.25rem" }}>{tAbout("wontTake.intro")}</p>
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: ".6rem" }}>
             {(["0","1","2","3","4"] as const).map((i) => (
               <li key={i} style={{ display: "flex", gap: ".75rem", alignItems: "baseline" }}>
-                <span style={{ font: "500 11px/1 var(--font-mono)", color: "var(--muted)", flexShrink: 0 }}>✕</span>
+                <span style={{ font: "500 13px/1 var(--font-body)", color: "var(--muted)", flexShrink: 0 }}>✕</span>
                 <span style={{ fontSize: ".95rem", color: "var(--ink)", lineHeight: 1.65 }}>{tAbout(`wontTake.${i}`)}</span>
               </li>
             ))}

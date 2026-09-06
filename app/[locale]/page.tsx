@@ -49,6 +49,10 @@ const WHAT_WE_BUILD_CARDS = [
   { key: "automation",    href: "/systems",                           event: "cta_home_card_automation"       },
   { key: "websites",      href: "/websites",                          event: "cta_home_card_websites"         },
   { key: "ecommerce",     href: "/ecommerce",                         event: "cta_home_card_ecommerce"        },
+  // whatWeBuild.cards.rescue is translated in all three locales and was never
+  // rendered — the array carried 7 of the 8 defined cards. Restoring it also
+  // completes the 4x2 grid, which was leaving an empty cell.
+  { key: "rescue",        href: "/website-rescue",                    event: "cta_home_card_rescue"           },
 ] as const;
 
 const START_HERE_CARDS = [
@@ -161,7 +165,7 @@ function HomeContent() {
               <Link key={card.key} href={card.href} className={styles.startHereCard}>
                 <p className={styles.startHereSituation}>{t(`startHere.${card.key}.situation`)}</p>
                 <p className={styles.startHereService}>{t(`startHere.${card.key}.service`)}</p>
-                <span className={styles.startHereArrow} aria-hidden>→</span>
+
               </Link>
             ))}
           </div>
@@ -185,7 +189,6 @@ function HomeContent() {
               >
                 <h3 className={styles.wbCardTitle}>{t(`whatWeBuild.cards.${card.key}.title`)}</h3>
                 <p className={styles.wbCardBody}>{t(`whatWeBuild.cards.${card.key}.body`)}</p>
-                <span className={styles.wbCardArrow} aria-hidden>-&gt;</span>
               </TrackLink>
             ))}
           </div>
