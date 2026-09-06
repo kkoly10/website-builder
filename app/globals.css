@@ -549,14 +549,30 @@ a.card:hover,a.panel:hover {
 .footerSocial { display: flex; flex-wrap: wrap; gap: 14px; }
 .footerSocial a:hover,.footerEmail:hover { color: var(--ink); }
 
+/* Scroll-reveal. Content is VISIBLE by default and only hidden where
+   something can reveal it again — so a JS failure leaves a readable page,
+   never a blank one.
+   
+   The gate is `@media (scripting: enabled)` rather than a class set by an
+   inline script. The script wrote to documentElement, and once <html> carried
+   the next/font className that became a real hydration attribute mismatch:
+   React logs "a tree hydrated but some attributes didn't match" and does not
+   patch it. Moving the script to <body> just moved the mismatch, because the
+   script runs during parse and React hydrates <body> too. A media query is
+   evaluated by the browser with no DOM mutation at all, so there is nothing
+   to mismatch and no suppressHydrationWarning masking real problems.
+   
+   Where `scripting` is unsupported the query does not match, the elements
+   stay visible, and the page is fully readable — failing in the safe
+   direction. */
 .fadeUp,.heroFadeUp,.scaleIn { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: no-preference) {
-  :root.js-anim .fadeUp,
-  :root.js-anim .heroFadeUp,
-  :root.js-anim .scaleIn { opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s ease; }
-  :root.js-anim .fadeUp.inView,
-  :root.js-anim .heroFadeUp.inView,
-  :root.js-anim .scaleIn.inView { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  .fadeUp,
+  .heroFadeUp,
+  .scaleIn { opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s ease; }
+  .fadeUp.inView,
+  .heroFadeUp.inView,
+  .scaleIn.inView { opacity: 1; transform: none; }
 }
 
 /* Honor reduce-motion: keep bg/border color hover for affordance, but
