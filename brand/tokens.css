@@ -119,6 +119,12 @@
   --cs-shadow-xl: 0 28px 60px -30px rgba(26, 18, 16, 0.28);
 
   /* ── Layout ─────────────────────────────────────────────────────────── */
+  /* The sticky header's height. The pricing sub-nav pins beneath it and
+   * section scroll-margin clears it, so all three read this one value —
+   * they had already drifted (nav 72px, sub-nav pinned at 78px, leaving a
+   * 6px gap that content scrolled through). */
+  --cs-header-h: 72px;
+
   --cs-gutter: clamp(20px, 4.5vw, 56px);
   --cs-maxw: 1280px;
   --cs-maxw-prose: 68ch;

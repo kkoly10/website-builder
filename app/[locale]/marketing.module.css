@@ -248,7 +248,9 @@
 
 .pricingNav {
   position: sticky;
-  top: 78px;
+  /* Pinned to the header token, not a hardcoded 78px. The header is 72px, so
+     the literal left a 6px gap that page content scrolled through. */
+  top: var(--header-h);
   z-index: 20;
   background: var(--paper);
   border-bottom: 1px solid var(--rule);

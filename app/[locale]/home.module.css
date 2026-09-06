@@ -928,9 +928,13 @@
 }
 
 .founderBio {
-  font-size: 0.95rem;
-  line-height: 1.7;
-  color: var(--body);
+  /* var(--body) is not a token and never was — the declaration was invalid,
+     so this inherited instead of setting a colour. Capped to a readable
+     measure too: it was running the full container width. */
+  max-width: 68ch;
+  font-size: var(--cs-size-body);
+  line-height: var(--cs-leading-body);
+  color: var(--ink-2);
   margin-bottom: 0.9rem;
 }
 
