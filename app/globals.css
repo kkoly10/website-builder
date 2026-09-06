@@ -1,101 +1,201 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import "../brand/tokens.css";
 
 /*
-  Redesign tokens — white + burnt red, Apple/OpenAI-inspired neutral palette.
-  Replaces the previous cream + terracotta (Anthropic-mimicry) tokens.
+  CrecyStudio design system — see brand/BRAND.md.
 
-  Greys are pulled from Apple's design system; the burnt red accent is a
-  single brand color used sparingly. Mono and display fonts collapse to
-  a single Inter stack to drop the "Vercel/Linear/AI-generated" trifecta.
+  brand/tokens.css is the SINGLE SOURCE OF TRUTH. Nothing below may invent a
+  value; every declaration here aliases a --cs-* token.
+
+  Why an alias layer instead of a find-and-replace across 53 pages: the site
+  already refers to --ink / --paper / --accent / --rule in ~3,200 lines of CSS
+  modules. Repointing those names at the brand tokens moves the whole site onto
+  the new palette in one step, with no chance of a page being missed and left
+  on the old greys. The legacy names are kept deliberately.
+
+  What changed and why (BRAND.md §0): the previous palette was Apple's exact
+  greys (#f5f5f7 / #6e6e73 / #e5e5e7, commented as such), a cool #0d0d0d black
+  and a muted #a8362b red — none of which are CrecyStudio's. The logo masters
+  specify #1a1210 warm ink, #c43e2b vermilion and Sora. Borrowed neutrals plus
+  one typeface plus `--shadow: none` is the default look of a generated landing
+  page. This puts the site back in its own clothes.
+
+  Fonts are loaded via next/font in app/layout.tsx, not an @import here — the
+  old `@import url(fonts.googleapis.com)` was a render-blocking third-party
+  request on every page.
 */
 :root {
-  /* Backgrounds */
-  --paper: #ffffff;        /* Pure white — primary */
-  --paper-2: #fafafa;      /* Apple section break */
-  --paper-3: #f5f5f7;      /* Apple tertiary surface */
-  --paper-4: #ebebef;      /* Deeper neutral */
+  /* ── Surfaces ───────────────────────────────────────────────────────── */
+  --paper: var(--cs-paper);        /* warm canvas — NOT pure white */
+  --paper-2: var(--cs-paper-2);
+  --paper-3: var(--cs-paper-3);
+  --paper-4: var(--cs-rule);
+  --surface: var(--cs-surface);    /* white, for things lifted off the canvas */
 
-  /* Text */
-  --ink: #0d0d0d;          /* Near-black — primary text (OpenAI exact) */
-  --ink-2: #1d1d1f;        /* Apple's exact display text */
-  --ink-3: #2c2c2e;        /* Apple's exact subhead */
-  --muted: #6e6e73;        /* Apple's exact muted grey */
-  --muted-2: #8e8e93;      /* Apple's exact secondary */
+  /* ── Text ───────────────────────────────────────────────────────────── */
+  --ink: var(--cs-ink);
+  --ink-2: var(--cs-ink-2);
+  --ink-3: var(--cs-ink-3);
+  --muted: var(--cs-muted);        /* AA at body size — see BRAND.md §2 */
+  --muted-2: var(--cs-muted-2);    /* large text / UI only */
 
-  /* Borders */
-  --rule: #e5e5e7;         /* Apple's exact hairline */
-  --rule-2: #d2d2d7;       /* Apple's exact stronger border */
+  /* ── Rules ──────────────────────────────────────────────────────────── */
+  --rule: var(--cs-rule);
+  --rule-2: var(--cs-rule-2);
+  --rule-on-ink: var(--cs-rule-on-ink);
 
-  /* Burnt red — single brand accent, used sparingly */
-  --accent: #a8362b;
-  --accent-2: #8c2c23;     /* Hover / pressed */
-  --accent-soft: #f7d9d4;  /* Light wash */
-  --accent-bg: #fbeae7;    /* Whisper-soft brand-tinted bg */
+  /* ── Accent. Sparingly: BRAND.md §2. ────────────────────────────────── */
+  --accent: var(--cs-accent);
+  --accent-2: var(--cs-accent-600);
+  --accent-700: var(--cs-accent-700);
+  --accent-on-ink: var(--cs-accent-on-ink);
+  --accent-soft: var(--cs-accent-300);
+  --accent-bg: var(--cs-wash);
 
-  /* Internal admin uses neutral, not brand color */
-  --internal-bg: #f5f5f7;
+  --internal-bg: var(--cs-paper-2);
 
-  /* Success states (greens unchanged — they're green) */
-  --success: #2d5016;
-  --success-bg: #e8f4d6;
+  --success: var(--cs-success);
+  --success-bg: var(--cs-success-wash);
+  --warning: var(--cs-warning);
+  --warning-bg: var(--cs-warning-wash);
+  --error: var(--cs-error);
+  --error-bg: var(--cs-error-wash);
 
-  /* Typography — Inter only. Drops Inter Tight + JetBrains Mono entirely.
-     --font-mono kept as an alias for existing eyebrow usage; PR 2 will
-     remove those eyebrow patterns site-wide. */
-  --font-display: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-body:    'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono:    'Inter', system-ui, sans-serif;
+  /* ── Type. Display is marketing headlines ONLY (BRAND.md §3). ───────── */
+  --font-display: var(--cs-font-display);
+  --font-body: var(--cs-font-body);
+  --font-wordmark: var(--cs-font-wordmark);
+  /* --font-mono is a legacy alias only. It resolves to the body face so any
+     surviving call site renders correctly; do not add new uses. The
+     mono-uppercase eyebrow pattern was removed in redesign Phase 2 and must
+     not come back (BRAND.md §3). */
+  --font-mono: var(--cs-font-body);
 
-  --max: 1320px;
-  --radius: 12px;          /* 4px → 12px — softer, more Apple/OpenAI */
-  --shadow: none;
-  /* legacy compatibility aliases mapped to paper/ink tokens */
+  --max: var(--cs-maxw);
+  --gutter: var(--cs-gutter);
+
+  --radius-sm: var(--cs-radius-sm);
+  --radius: var(--cs-radius-md);
+  --radius-lg: var(--cs-radius-lg);
+  --radius-xl: var(--cs-radius-xl);
+  --radius-pill: var(--cs-radius-pill);
+
+  --shadow-sm: var(--cs-shadow-sm);
+  --shadow: var(--cs-shadow-md);
+  --shadow-lg: var(--cs-shadow-lg);
+  --shadow-xl: var(--cs-shadow-xl);
+
+  --ease: var(--cs-ease);
+  --dur-fast: var(--cs-dur-fast);
+  --dur: var(--cs-dur);
+
+  /* Legacy compatibility aliases, still referenced by older modules. */
   --fg: var(--ink);
   --muted2: var(--muted-2);
   --stroke: var(--rule);
   --stroke2: var(--rule-2);
-  --panel: var(--paper);
+  --panel: var(--surface);
   --panel2: var(--paper-2);
 }
 
 * { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); }
-body { font: 400 16px/1.55 var(--font-body); }
+body {
+  font: 400 var(--cs-size-body)/var(--cs-leading-body) var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Horizontal page overflow at any width is a hard failure (BRAND.md §11). */
+  overflow-x: hidden;
+}
 a { color: inherit; text-decoration: none; }
+img, svg, video { display: block; max-width: 100%; }
+section { scroll-margin-top: 92px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
 
 .skipLink { position: absolute; left: 12px; top: -40px; background: var(--ink); color: var(--paper); padding: 8px 10px; z-index: 40; }
 .skipLink:focus-visible { top: 12px; }
-:where(a,button,summary,input,select,textarea):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:where(a,button,summary,input,select,textarea):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
 
-.container { width: min(var(--max), calc(100% - 2rem)); margin: 0 auto; }
-.section { padding: 4.5rem 0; }
+/* Gutter is fluid (20px phone -> 56px desktop) rather than a flat 1rem, so
+   the measure breathes on wide screens instead of the text running edge to
+   edge inside a 1280px box. min-width:0 keeps grid children from blowing the
+   container out. */
+.container {
+  width: 100%;
+  max-width: var(--max);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+  min-width: 0;
+}
+.section { padding: clamp(3.5rem, 7vw, 6rem) 0; }
+.sectionTight { padding: clamp(2.5rem, 4.5vw, 3.5rem) 0; }
+/* Alternating section grounds. The warm canvas is the default; paper-2 marks
+   a break without needing a border on everything. */
+.sectionAlt { background: var(--paper-2); }
+.sectionInk { background: var(--ink); color: var(--paper); }
+.sectionInk .h2, .sectionInk .h3 { color: var(--paper); }
+.sectionInk .p { color: color-mix(in srgb, var(--paper) 76%, transparent); }
 
 .siteShell { min-height: 100vh; }
 .mainContent { min-height: calc(100vh - 240px); }
 
-.topNav { position: sticky; top: 0; z-index: 25; border-bottom: 1px solid var(--rule); background: color-mix(in srgb, var(--paper) 94%, transparent); }
-.topNavInner { width: min(var(--max), calc(100% - 2rem)); margin: 0 auto; min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.brandLogo { display: inline-flex; flex-direction: column; gap: .45rem; }
-.brandLogo svg { height: 40px; width: auto; }
-.brandLogoSub { font: 500 10px/1.2 var(--font-mono); color: var(--muted); }
+.topNav {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  border-bottom: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--paper) 86%, transparent);
+  backdrop-filter: saturate(1.4) blur(12px);
+  -webkit-backdrop-filter: saturate(1.4) blur(12px);
+}
+.topNavInner {
+  width: 100%;
+  max-width: var(--max);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.brandLogo { display: inline-flex; flex-direction: column; gap: .35rem; }
+.brandLogo svg { height: 34px; width: auto; }
+.brandLogoSub { font: 500 var(--cs-size-caption)/1.2 var(--font-body); color: var(--muted); }
 
 .navDesktop { display: flex; align-items: center; gap: 1rem; }
 .navDesktopCta { justify-content: flex-end; }
 .navLinks { display: flex; flex-wrap: wrap; gap: 0; align-items: center; }
+/* Nav links: body face at a readable 14.5px, sentence case. The old 11px
+   mono-uppercase was both the AI tell and below a comfortable reading size. */
 .topNavLink {
   position: relative;
   display: inline-flex;
   align-items: center;
-  min-height: 78px;
-  padding: 0 .9rem;
-  color: var(--muted);
-  font: 500 11px/1 var(--font-mono);
+  min-height: 72px;
+  padding: 0 .85rem;
+  color: var(--ink-3);
+  font: 500 14.5px/1 var(--font-body);
+  letter-spacing: -0.005em;
+  transition: color var(--dur-fast) var(--ease);
 }
 .topNavLink::after {
   content: "";
   position: absolute;
-  left: .9rem;
-  right: .9rem;
+  left: .85rem;
+  right: .85rem;
   bottom: -1px;
   height: 2px;
   background: transparent;
@@ -110,23 +210,24 @@ a { color: inherit; text-decoration: none; }
 .navServicesTrigger[aria-expanded="true"] .navServicesChevron { transform: rotate(180deg); }
 .navServicesPanel {
   position: absolute;
-  top: 100%;
+  top: calc(100% - 1px);
   left: 0;
-  min-width: 240px;
-  background: var(--paper);
+  min-width: 248px;
+  background: var(--surface);
   border: 1px solid var(--rule);
-  border-top: 0;
+  border-radius: var(--radius);
   padding: .4rem;
   display: grid;
-  gap: .2rem;
+  gap: .1rem;
   z-index: 30;
-  box-shadow: 0 8px 24px rgba(0,0,0,.06);
+  box-shadow: var(--shadow-lg);
 }
 .navServicesItem {
   display: block;
-  padding: .65rem .85rem;
-  font: 500 11px/1.2 var(--font-mono);
-  color: var(--muted);
+  padding: .68rem .85rem;
+  border-radius: var(--radius-sm);
+  font: 500 14px/1.3 var(--font-body);
+  color: var(--ink-3);
   text-decoration: none;
   border: 1px solid transparent;
 }
@@ -134,12 +235,13 @@ a { color: inherit; text-decoration: none; }
 .navServicesItemActive { color: var(--accent); border-color: var(--accent); }
 
 .mobileMenu { display: none; position: relative; }
-.mobileMenuSummary { list-style: none; border: 1px solid var(--rule); background: var(--paper); width: 44px; height: 44px; display: grid; place-items: center; gap: 3px; }
+.mobileMenuSummary { list-style: none; border: 1px solid var(--rule-2); border-radius: var(--radius); background: var(--surface); width: 44px; height: 44px; display: grid; place-items: center; gap: 3px; cursor: pointer; }
 .mobileMenuSummary span { width: 16px; height: 2px; background: var(--ink); display: block; }
 .mobileMenuSummary::-webkit-details-marker { display: none; }
-.mobileMenuPanel { position: absolute; right: 0; top: calc(100% + 8px); width: min(320px, calc(100vw - 2rem)); border: 1px solid var(--rule); background: var(--paper); padding: .6rem; }
-.mobileMenuLinks { display: grid; gap: .45rem; }
-.mobileMenuLinks a { padding: .72rem .8rem; border: 1px solid var(--rule); background: var(--paper); font: 500 11px/1.2 var(--font-mono); }
+.mobileMenuPanel { position: absolute; right: 0; top: calc(100% + 8px); width: min(320px, calc(100vw - 2rem)); border: 1px solid var(--rule); border-radius: var(--radius-lg); background: var(--surface); padding: .6rem; box-shadow: var(--shadow-lg); }
+.mobileMenuLinks { display: grid; gap: .35rem; }
+.mobileMenuLinks a { display: flex; align-items: center; min-height: 44px; padding: .72rem .85rem; border: 1px solid transparent; border-radius: var(--radius-sm); background: transparent; font: 500 15px/1.3 var(--font-body); }
+.mobileMenuLinks a:hover { background: var(--paper-2); }
 .mobileMenuLinkActive { border-color: var(--accent) !important; color: var(--accent); }
 .mobileMenuForm { margin: 0; }
 /* mobileMenuSignout: ghost-style CTA (Sign Out, Log in) — ensure ink border
@@ -147,43 +249,189 @@ a { color: inherit; text-decoration: none; }
 .mobileMenuSignout { width: 100%; border-color: var(--ink); }
 .mobileMenuPrimary { width: 100%; background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
-.kicker,.metaLabel { font: 500 13px/1.4 var(--font-body); color: var(--muted); display: inline-flex; align-items: center; gap: .5rem; }
+/* Section labels. Sentence case, body face — NOT mono-uppercase. That
+   pattern was removed in redesign Phase 2 as an AI tell (BRAND.md §3). */
+.kicker,.metaLabel {
+  font: 600 var(--cs-size-small)/var(--cs-leading-small) var(--font-body);
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+}
 .kickerDot { display: none; }
-.h1 { margin: 0; font: 700 clamp(2.2rem, 7vw, 5.3rem)/.93 var(--font-display); letter-spacing: -0.04em; }
-.h2 { margin: 0; font: 600 clamp(1.7rem, 4.5vw, 3rem)/1.02 var(--font-display); letter-spacing: -0.03em; }
-.h3 { margin: 0; font: 600 clamp(1.25rem, 3vw, 1.9rem)/1.1 var(--font-display); letter-spacing: -0.02em; }
-.p { margin: .75rem 0 0; color: var(--ink-2); }
+
+/* H1/H2 are the display serif; H3 drops to the body face in bold. A serif at
+   card-title size reads decorative rather than structural, and the display
+   face is marketing-only (BRAND.md §3) — H3 is used inside admin and portal.
+   The negative tracking is load-bearing, not a flourish. */
+.h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 0;
+  font-size: var(--cs-size-h1);
+  line-height: var(--cs-leading-h1);
+  letter-spacing: var(--cs-tracking-h1);
+  text-wrap: balance;
+}
+.h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-variation-settings: "opsz" 96, "SOFT" 0, "WONK" 0;
+  font-size: var(--cs-size-h2);
+  line-height: var(--cs-leading-h2);
+  letter-spacing: var(--cs-tracking-h2);
+  text-wrap: balance;
+}
+.h3 {
+  margin: 0;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--cs-size-h3);
+  line-height: var(--cs-leading-h3);
+  letter-spacing: var(--cs-tracking-h3);
+}
+/* One emphasised word per headline, maximum (BRAND.md §2). */
+.accentWord { color: var(--accent); }
+.sectionInk .accentWord { color: var(--accent-on-ink); }
+
+.p { margin: .75rem 0 0; color: var(--ink-2); max-width: var(--cs-maxw-prose); }
 .pDark { margin: .6rem 0 0; color: var(--muted); }
+.lede {
+  margin: 1.1rem 0 0;
+  color: var(--ink-3);
+  font-size: var(--cs-size-lede);
+  line-height: var(--cs-leading-lede);
+  max-width: 56ch;
+}
 
 /* Buttons — Apple/OpenAI pill aesthetic: sentence case, generous padding,
    rounded pill border-radius. No mono, no uppercase, no tracking —
    those were the AI tells we shed in the redesign. .btnArrow rule
    kept as harmless dead code (the spans were removed sitewide in
    Phase 3); will sweep in a future cleanup. */
-.btn { display:inline-flex; align-items:center; justify-content:center; gap:.4rem; padding:.85rem 1.4rem; border:1px solid transparent; border-radius: 999px; font:600 14px/1.2 var(--font-body); transition: .2s ease; }
+/* Buttons. radius-md, not a 999px pill — the pill is the single most-copied
+   SaaS-template detail and reading as a template is the problem we are
+   solving (BRAND.md §4). 44px min-height is the touch-target floor (§11).
+   No trailing arrows: stripped in redesign Phase 3, not coming back. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  min-height: 44px;
+  padding: .78rem 1.35rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font: 600 14.5px/1.2 var(--font-body);
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease),
+              border-color var(--dur-fast) var(--ease),
+              color var(--dur-fast) var(--ease);
+}
+/* The workhorse. Ink, not accent — so that when accent DOES appear it means
+   something (BRAND.md §7). */
 .btnPrimary { background: var(--ink); color: var(--paper); }
-.btnPrimary:hover { background: #000; }
-.btnGhost { border-color: var(--ink); background: transparent; color: var(--ink); }
-.btnGhost:hover { background: var(--paper-2); }
-.btnLg { padding: 1.05rem 1.7rem; font-size: 15px; }
-.btnArrow { transform: translateY(-1px); }
+.btnPrimary:hover { background: var(--cs-ink-2); }
+
+/* One accent button per page, on the single most important action. */
+.btnAccent { background: var(--accent); color: #fff; }
+.btnAccent:hover { background: var(--accent-2); }
+
+.btnGhost { border-color: var(--rule-2); background: transparent; color: var(--ink); }
+.btnGhost:hover { border-color: var(--ink); background: var(--surface); }
+
+/* Tertiary: a rule under the label, no box. Replaces the old ghost-link. */
+.btnQuiet {
+  min-height: 44px;
+  padding: .78rem 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  box-shadow: inset 0 -1px 0 var(--rule-2);
+}
+.btnQuiet:hover { box-shadow: inset 0 -1px 0 var(--ink); }
+
+.btnLg { min-height: 52px; padding: 1rem 1.7rem; font-size: 15.5px; }
+
+/* On a dark panel the ink button disappears; invert it. */
+.sectionInk .btnPrimary { background: var(--paper); color: var(--ink); }
+.sectionInk .btnPrimary:hover { background: #fff; }
+.sectionInk .btnGhost { border-color: var(--rule-on-ink); color: var(--paper); }
+.sectionInk .btnGhost:hover { border-color: var(--paper); background: transparent; }
+
+/* Dead code from redesign Phase 3 (the arrow spans were removed sitewide). */
+.btnArrow { display: none; }
 
 .row { display: flex; gap: .6rem; flex-wrap: wrap; }
 .grid2stretch { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }
 .serviceCardList { margin: .9rem 0 0; padding-left: 1.1rem; color: var(--ink-2); }
 
-.badge { display: inline-flex; align-items: center; padding: .2rem .55rem; border: 1px solid var(--rule); background: var(--paper-2); font: 500 11px/1.4 var(--font-mono); color: var(--muted); }
-.badgeHot { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
+/* Badges are the one pill-shaped thing in the system (BRAND.md §4). */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .28rem .68rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  font: 600 var(--cs-size-caption)/var(--cs-leading-caption) var(--font-body);
+  color: var(--muted);
+}
+/* accent-700 not accent: 7.62 on the wash vs 4.61 (BRAND.md §2). */
+.badgeHot { border-color: var(--accent-soft); background: var(--accent-bg); color: var(--accent-700); }
+.badgeInk { border-color: var(--rule-on-ink); background: transparent; color: var(--paper); }
+/* Status is never colour-only — the dot is paired with its label (§11). */
+.badgeLive::before {
+  content: "";
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  flex: none;
+}
 
 .statRow { display: flex; gap: .75rem; flex-wrap: wrap; padding: .75rem 0; }
 .stat { display: grid; gap: .2rem; min-width: 80px; }
-.statNum { font: 700 clamp(1.4rem,3vw,2rem)/.95 var(--font-display); letter-spacing: -.04em; color: var(--ink); }
-.statLab { font: 500 11px/1.3 var(--font-mono); color: var(--muted); }
+.statNum {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-variation-settings: "opsz" 96, "SOFT" 0, "WONK" 0;
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+  line-height: 1;
+  letter-spacing: -0.028em;
+  color: var(--ink);
+}
+.statLab { font: 500 var(--cs-size-small)/1.4 var(--font-body); color: var(--muted); }
 
-.card,.panel { border: 1px solid var(--rule); background: var(--paper); }
-.cardInner,.panelBody { padding: 1rem; }
-.panelHeader { padding: .85rem 1rem; border-bottom: 1px solid var(--rule); background: var(--paper-2); }
+/* Cards are WHITE on the warm canvas, so they read as lifted without needing
+   a heavy border. That is the whole reason the canvas is not pure white
+   (BRAND.md §2) — the old system had white-on-white and had to draw a box
+   around everything to make it visible. */
+.card,.panel {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.cardInner,.panelBody { padding: clamp(1.05rem, 1.8vw, 1.5rem); }
+.panelHeader {
+  padding: .9rem clamp(1.05rem, 1.8vw, 1.5rem);
+  border-bottom: 1px solid var(--rule);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--paper-2);
+}
+/* Dark card, for the hero product panel and closing CTA. */
+.cardInk {
+  border-color: var(--rule-on-ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+.cardInk .h3 { color: var(--paper); }
+.cardInk .p, .cardInk .pDark { color: color-mix(in srgb, var(--paper) 74%, transparent); }
 
 /* Cards / panels rendered as anchors (e.g. <Link className="panel"> on
    blog index, locations index, locations city-service grid) get an
@@ -194,13 +442,19 @@ a.card,a.panel {
   transition: background .18s ease, border-color .18s ease, transform .22s ease, box-shadow .22s ease;
 }
 a.card:hover,a.panel:hover {
-  background: var(--paper-2);
-  border-color: var(--ink);
+  border-color: var(--rule-2);
   transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0,0,0,.04);
+  /* Warm-tinted shadow. A neutral/black shadow over warm paper reads as dirt
+     (BRAND.md §6). */
+  box-shadow: var(--shadow);
 }
 
-.footer { border-top: 1px solid var(--rule); padding: 1.5rem 0 1.25rem; color: var(--muted); }
+.footer {
+  border-top: 1px solid var(--rule);
+  background: var(--paper-2);
+  padding: clamp(2.5rem, 4vw, 3.5rem) 0 1.75rem;
+  color: var(--muted);
+}
 
 /*
   Desktop layout: identity block on the left, link columns on the
@@ -227,8 +481,10 @@ a.card:hover,a.panel:hover {
   align-items: start;
 }
 .footerIdentity { grid-area: identity; display: grid; gap: .5rem; }
+/* 11px mono was below a comfortable reading size and used the removed
+   eyebrow pattern. Body face at 14px. */
 .footerKicker,.footerCopyright,.footerEmail,.footerSocial a,.footerColumn a {
-  font: 500 11px/1.4 var(--font-mono);
+  font: 500 14px/1.5 var(--font-body);
 }
 .footerKicker { margin: 0 0 .25rem; color: var(--ink); }
 .footerBlurb { margin: 0; color: var(--muted); line-height: 1.55; }
@@ -252,7 +508,8 @@ a.card:hover,a.panel:hover {
 }
 .footerColumn { display: grid; gap: .6rem; }
 .footerColumnHeading {
-  font: 600 11px/1.4 var(--font-mono);
+  font: 700 var(--cs-size-caption)/1.4 var(--font-body);
+  letter-spacing: 0.02em;
   color: var(--ink);
   margin: 0;
 }
@@ -291,14 +548,13 @@ a.card:hover,a.panel:hover {
   a.card:hover, a.panel:hover { transform: none; }
 }
 
-.portalStory { border: 1px solid var(--rule); background: var(--paper-2); padding: 1rem; margin: 1.2rem 0 1rem; }
-.portalStoryKicker { font: 500 11px/1 var(--font-mono); color: var(--muted); }
-.portalStoryHeadline { margin: .45rem 0; font: 600 clamp(1.6rem,4vw,2.8rem)/1 var(--font-display); }
+.portalStory { border: 1px solid var(--rule); border-radius: var(--radius-lg); background: var(--surface); padding: clamp(1.1rem,2vw,1.6rem); margin: 1.4rem 0 1rem; }
+.portalStoryKicker { font: 600 var(--cs-size-small)/1.4 var(--font-body); color: var(--muted); }
 .portalStoryBody { margin: 0; color: var(--ink-2); }
-.portalStoryCta { display: inline-flex; align-items:center; gap:.4rem; padding:.65rem .85rem; margin-top:.9rem; border:1px solid var(--ink); background: var(--ink); color: var(--paper); font: 500 12px/1 var(--font-mono); }
+.portalStoryCta { display: inline-flex; align-items:center; gap:.4rem; min-height:44px; padding:.7rem 1.2rem; margin-top:1rem; border:1px solid var(--ink); border-radius: var(--radius); background: var(--ink); color: var(--paper); font: 600 14.5px/1 var(--font-body); }
 .portalStoryMeta { margin-top: .7rem; }
-.portalStoryMetaItem { font: 500 11px/1 var(--font-mono); color: var(--muted); }
-.portalSectionLabel { font: 500 11px/1 var(--font-mono); color: var(--muted); margin-bottom: .5rem; }
+.portalStoryMetaItem { font: 500 13px/1.4 var(--font-body); color: var(--muted); }
+.portalSectionLabel { font: 500 13px/1 var(--font-body); color: var(--muted); margin-bottom: .5rem; }
 
 .portalJourney { border: 1px solid var(--rule); background: var(--paper); padding: .85rem; }
 .portalJourneyTrack { overflow-x: auto; }
@@ -355,7 +611,7 @@ a.card:hover,a.panel:hover {
 .supportTimelineStep { color: var(--accent); }
 .supportFaqRows { display: grid; gap: .85rem; }
 .supportFaqRow { display: grid; grid-template-columns: 56px 1fr; gap: .75rem; padding-top: .75rem; border-top: 1px solid var(--rule); }
-.supportFaqIndex { margin: 0; font: 500 11px/1 var(--font-mono); color: var(--muted); }
+.supportFaqIndex { margin: 0; font: 500 13px/1 var(--font-body); color: var(--muted); }
 .supportFaqQuestion { margin: 0; font-size: clamp(1.05rem, 2.2vw, 1.35rem); }
 
 /* product/app primitives */
@@ -368,11 +624,11 @@ a.card:hover,a.panel:hover {
 .productCard { border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper); }
 .productCardPad { padding: 1.05rem 1.2rem; }
 .productSplit { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; align-items: center; }
-.productMetaRow { display: flex; gap: .85rem; margin-top: .35rem; flex-wrap: wrap; font-size: 12px; color: var(--muted-2); }
+.productMetaRow { display: flex; gap: .85rem; margin-top: .35rem; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
 .productTitleRow { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; }
 .productTitle { margin: 0; font: 600 1.1rem/1.1 var(--font-display); letter-spacing: -0.02em; color: var(--ink); }
-.productChip { display: inline-flex; padding: 3px 10px; border-radius: 999px; font: 600 10px/1.2 var(--font-mono); }
-.productEmpty { text-align: center; padding: 3rem; border: 1px dashed var(--rule); border-radius: var(--radius); color: var(--muted-2); margin-top: .5rem; }
+.productChip { display: inline-flex; padding: 3px 10px; border-radius: 999px; font: 600 12.5px/1.2 var(--font-body); }
+.productEmpty { text-align: center; padding: 3rem; border: 1px dashed var(--rule); border-radius: var(--radius); color: var(--muted); margin-top: .5rem; }
 .productEmptyTitle { margin: 0 0 .4rem; font: 600 1.35rem/1.1 var(--font-display); color: var(--ink); }
 .productBtnSm { font-size: 12px; padding: 8px 16px; }
 
@@ -385,8 +641,8 @@ a.card:hover,a.panel:hover {
 .maxW860 { max-width: 860px; }
 .supportCardsStack { display: grid; gap: .75rem; }
 
-.fieldLabel { font: 600 11px/1.2 var(--font-mono); color: var(--muted); margin-bottom: .45rem; }
-.smallNote { font-size: 12px; color: var(--muted-2); }
+.fieldLabel { font: 600 13px/1.2 var(--font-body); color: var(--muted); margin-bottom: .45rem; }
+.smallNote { font-size: 12px; color: var(--muted); }
 .input,.select,.textarea {
   width: 100%;
   border: 1px solid var(--rule);
@@ -398,14 +654,13 @@ a.card:hover,a.panel:hover {
 }
 .textarea { resize: vertical; min-height: 108px; }
 .pills { display: flex; flex-wrap: wrap; gap: .45rem; }
-.pill { border: 1px solid var(--rule); background: var(--paper-2); border-radius: 999px; padding: 4px 10px; font: 600 11px/1.2 var(--font-mono); color: var(--muted); }
+.pill { border: 1px solid var(--rule); background: var(--paper-2); border-radius: 999px; padding: 4px 10px; font: 600 13px/1.2 var(--font-body); color: var(--muted); }
 
 .portalPanel { border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper); padding: 1rem; }
 .portalPanelHeader { margin-bottom: .9rem; padding-bottom: .7rem; border-bottom: 1px solid var(--rule); }
-.portalPanelTitle { margin: 0; font: 600 1.25rem/1.1 var(--font-display); letter-spacing: -0.02em; }
 
 .portalDrawerToggle { width: 100%; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper-2); display: flex; justify-content: space-between; align-items: center; padding: .75rem .85rem; cursor: pointer; }
-.portalDrawerToggleLabel { font: 600 11px/1.2 var(--font-mono); color: var(--muted); }
+.portalDrawerToggleLabel { font: 600 13px/1.2 var(--font-body); color: var(--muted); }
 .portalDrawerToggleValue { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; color: var(--ink); }
 .portalDrawerArrow { display: inline-block; transition: transform .2s ease; }
 .portalDrawerArrowOpen { transform: rotate(180deg); }
@@ -420,9 +675,9 @@ a.card:hover,a.panel:hover {
 .productLaneSummary { display: block; padding: 20px 22px; transition: border-color .2s ease, transform .2s ease; }
 .productLaneSummary:hover { transform: translateY(-1px); }
 .productLaneHead { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-.productLaneLabel { font: 600 11px/1.2 var(--font-mono); }
+.productLaneLabel { font: 600 13px/1.2 var(--font-body); }
 .productLaneCount { font: 600 28px/1 var(--font-display); letter-spacing: -0.02em; color: var(--ink); }
-.productLaneMeta { margin-top: 4px; font-size: 12px; color: var(--muted-2); }
+.productLaneMeta { margin-top: 4px; font-size: 12px; color: var(--muted); }
 .productLaneCta { margin-top: 12px; font-size: 13px; font-weight: 600; }
 .productProjectCard { padding: 18px 22px; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 16px; }
 .productSummary { margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: var(--muted); max-width: 500px; }
@@ -441,15 +696,15 @@ a.card:hover,a.panel:hover {
 /* customer portal */
 .portalShell { padding-bottom: 3rem; }
 .portalStory { margin: 1.2rem 0 1rem; padding: 1.35rem; border: 1px solid var(--rule); background: var(--paper); }
-.portalStoryKicker { display: inline-flex; align-items: center; gap: .5rem; font: 500 11px/1.2 var(--font-mono); color: var(--muted); }
+.portalStoryKicker { display: inline-flex; align-items: center; gap: .5rem; font: 500 13px/1.2 var(--font-body); color: var(--muted); }
 .portalStoryKickerDot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent); }
-.portalStoryHeadline { margin: .85rem 0 .7rem; font: 700 clamp(2rem, 4.5vw, 4rem)/.98 var(--font-display); letter-spacing: -.04em; }
+.portalStoryHeadline { margin: .9rem 0 .75rem; font-family: var(--font-display); font-weight: 500; font-variation-settings: "opsz" 96, "SOFT" 0, "WONK" 0; font-size: clamp(1.9rem, 4vw, 3.2rem); line-height: 1.04; letter-spacing: -0.028em; }
 .portalStoryBody { margin: 0; max-width: 56ch; color: var(--ink-2); line-height: 1.75; }
 .portalStoryActions { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.1rem; align-items: center; }
-.portalStoryCta { display: inline-flex; align-items: center; gap: .4rem; min-height: 42px; padding: .75rem .95rem; border: 1px solid var(--ink); background: var(--ink); color: var(--paper); font: 500 11px/1 var(--font-mono); }
+.portalStoryCta { display: inline-flex; align-items: center; gap: .4rem; min-height: 42px; padding: .75rem .95rem; border: 1px solid var(--ink); background: var(--ink); color: var(--paper); font: 500 13px/1 var(--font-body); }
 .portalStoryCtaArrow { transform: translateY(-1px); }
 .portalStoryMeta { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: .9rem; }
-.portalStoryMetaItem { font: 500 11px/1.3 var(--font-mono); color: var(--muted); }
+.portalStoryMetaItem { font: 500 13px/1.3 var(--font-body); color: var(--muted); }
 .portalError { margin: 0 0 1rem; padding: .85rem 1rem; border-left: 3px solid var(--accent); background: var(--accent-bg); color: var(--accent-2); font-size: 14px; }
 
 .portalDepositBanner { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: flex-end; margin-bottom: 1rem; padding: 1rem 1.15rem; border: 1px solid var(--rule); background: var(--paper); }
@@ -460,9 +715,9 @@ a.card:hover,a.panel:hover {
 .portalDepositLead p { margin: 0; max-width: 52ch; color: var(--ink-2); line-height: 1.65; }
 .portalDepositActions { display: flex; flex-wrap: wrap; gap: .7rem; align-items: center; }
 .portalDepositAmount { display: inline-flex; align-items: center; min-height: 42px; padding: .7rem .9rem; border: 1px solid var(--rule); background: var(--paper-2); font: 600 1rem/1 var(--font-display); letter-spacing: -.02em; }
-.portalDepositMeta { font: 500 11px/1.4 var(--font-mono); color: var(--muted); }
+.portalDepositMeta { font: 500 13px/1.4 var(--font-body); color: var(--muted); }
 
-.portalSectionLabel { font: 500 11px/1.2 var(--font-mono); color: var(--muted); margin-bottom: .7rem; }
+.portalSectionLabel { font: 500 13px/1.2 var(--font-body); color: var(--muted); margin-bottom: .7rem; }
 .portalJourney { margin-bottom: 1rem; padding: 1rem 1.1rem; border: 1px solid var(--rule); background: var(--paper); }
 .portalJourneyTrack { overflow-x: auto; }
 .portalJourneyLine { position: relative; height: 1px; margin: 1.2rem 0 .85rem; background: var(--rule); }
@@ -478,7 +733,7 @@ a.card:hover,a.panel:hover {
 .portalJourneyLabelDone { color: var(--ink); }
 .portalJourneyLabelActive { color: var(--accent); }
 .portalJourneyLabelPending { color: var(--muted); }
-.portalJourneyDate { font-size: 11px; color: var(--muted-2); }
+.portalJourneyDate { font-size: 11px; color: var(--muted); }
 .portalMilestoneList { display: grid; gap: .65rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
 .portalMilestoneItem { display: flex; gap: .75rem; align-items: flex-start; }
 .portalMilestoneBox { width: 18px; height: 18px; border: 1px solid var(--rule-2); background: var(--paper); display: grid; place-items: center; flex-shrink: 0; }
@@ -489,11 +744,11 @@ a.card:hover,a.panel:hover {
 .portalMilestoneBoxActive .portalMilestoneBoxInner { background: var(--accent); }
 .portalMilestoneCopy { display: flex; flex-direction: column; gap: .1rem; }
 .portalMilestoneLabel { font-weight: 600; color: var(--ink); }
-.portalMilestoneDate { font-size: 12px; color: var(--muted-2); margin-top: .15rem; }
+.portalMilestoneDate { font-size: 12px; color: var(--muted); margin-top: .15rem; }
 
 .portalNote { display: flex; gap: .8rem; margin-bottom: 1rem; padding: 1rem 1.05rem; border: 1px solid var(--rule); background: var(--paper-2); }
-.portalNoteIcon { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 999px; background: var(--ink); color: var(--paper); font: 600 12px/1 var(--font-mono); flex-shrink: 0; }
-.portalNoteLabel { font: 500 11px/1.3 var(--font-mono); color: var(--accent); margin-bottom: .3rem; }
+.portalNoteIcon { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 999px; background: var(--ink); color: var(--paper); font: 600 13.5px/1 var(--font-body); flex-shrink: 0; }
+.portalNoteLabel { font: 500 13px/1.3 var(--font-body); color: var(--accent); margin-bottom: .3rem; }
 .portalNoteText { color: var(--ink-2); line-height: 1.65; }
 
 .portalGrid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1rem; }
@@ -501,18 +756,18 @@ a.card:hover,a.panel:hover {
 .portalPanel { border: 1px solid var(--rule); background: var(--paper); padding: 1rem; }
 .portalPanelHeader { display: flex; justify-content: space-between; gap: .75rem; align-items: center; margin-bottom: .9rem; padding-bottom: .75rem; border-bottom: 1px solid var(--rule); }
 .portalPanelTitle { margin: 0; font: 600 1.2rem/1.1 var(--font-display); letter-spacing: -.02em; }
-.portalPanelCount { font: 500 11px/1.3 var(--font-mono); color: var(--muted); }
+.portalPanelCount { font: 500 13px/1.3 var(--font-body); color: var(--muted); }
 
 .portalPreviewCard { display: grid; gap: .9rem; }
 .portalPreviewImg { display: flex; justify-content: space-between; gap: .75rem; align-items: center; min-height: 120px; padding: 1rem; border: 1px solid var(--rule); background: var(--paper-2); }
-.portalPreviewImgLabel { font: 500 11px/1.4 var(--font-mono); color: var(--muted); max-width: 18ch; }
-.portalPreviewLiveBadge { display: inline-flex; align-items: center; gap: .45rem; padding: .35rem .55rem; border: 1px solid var(--rule); background: var(--paper); font: 500 11px/1.2 var(--font-mono); }
+.portalPreviewImgLabel { font: 500 13px/1.4 var(--font-body); color: var(--muted); max-width: 18ch; }
+.portalPreviewLiveBadge { display: inline-flex; align-items: center; gap: .45rem; padding: .35rem .55rem; border: 1px solid var(--rule); background: var(--paper); font: 500 13px/1.2 var(--font-body); }
 .portalPreviewLiveDot { width: 7px; height: 7px; border-radius: 999px; background: var(--accent); }
 .portalPreviewBody { display: grid; gap: .8rem; }
 .portalPreviewUrl { font-size: 14px; line-height: 1.6; color: var(--ink-2); word-break: break-word; }
 
 .portalInfoNote { margin-top: .85rem; padding: .85rem .95rem; border: 1px solid var(--rule); background: var(--paper-2); }
-.portalInfoNoteLabel { font: 500 11px/1.3 var(--font-mono); color: var(--accent); margin-bottom: .35rem; }
+.portalInfoNoteLabel { font: 500 13px/1.3 var(--font-body); color: var(--accent); margin-bottom: .35rem; }
 .portalInfoNoteText { margin: 0; color: var(--ink-2); line-height: 1.65; }
 
 .portalLaunchSummary { display: grid; gap: .9rem; }
@@ -528,19 +783,19 @@ a.card:hover,a.panel:hover {
 .portalLaunchCheckBoxInner { width: 8px; height: 8px; border-radius: 999px; background: transparent; }
 .portalLaunchCheckDone .portalLaunchCheckBox { background: var(--ink); border-color: var(--ink); }
 .portalLaunchCheckDone .portalLaunchCheckBoxInner { background: var(--paper); }
-.portalLaunchAside { margin-top: 1rem; color: var(--muted-2); font-size: 13px; line-height: 1.65; }
+.portalLaunchAside { margin-top: 1rem; color: var(--muted); font-size: 13px; line-height: 1.65; }
 
 .portalUploadZone { display: grid; place-items: center; gap: .5rem; min-height: 180px; margin-bottom: 1rem; padding: 1.2rem; border: 1px dashed var(--rule-2); background: var(--paper); cursor: pointer; text-align: center; }
 .portalUploadIcon { width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid var(--rule); background: var(--paper-2); }
 .portalUploadText { font-weight: 600; color: var(--ink); }
-.portalUploadHint { font-size: 13px; color: var(--muted-2); }
+.portalUploadHint { font-size: 13px; color: var(--muted); }
 .portalUploadForm { display: grid; gap: .9rem; margin-bottom: 1rem; }
 .portalInlineGrid2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
-.portalEmptyState { padding: .95rem; border: 1px dashed var(--rule); color: var(--muted-2); text-align: center; font-size: 14px; }
+.portalEmptyState { padding: .95rem; border: 1px dashed var(--rule); color: var(--muted); text-align: center; font-size: 14px; }
 .portalAsset { display: flex; justify-content: space-between; gap: .8rem; align-items: center; padding: .8rem 0; border-top: 1px solid var(--rule); }
 .portalAssetName { font-weight: 600; color: var(--ink); }
-.portalAssetMeta { margin-top: .2rem; font-size: 12px; color: var(--muted-2); line-height: 1.5; }
-.portalPill { display: inline-flex; align-items: center; padding: .3rem .55rem; border: 1px solid var(--rule); background: var(--paper-2); font: 500 11px/1.2 var(--font-mono); color: var(--muted); }
+.portalAssetMeta { margin-top: .2rem; font-size: 12px; color: var(--muted); line-height: 1.5; }
+.portalPill { display: inline-flex; align-items: center; padding: .3rem .55rem; border: 1px solid var(--rule); background: var(--paper-2); font: 500 13px/1.2 var(--font-body); color: var(--muted); }
 .portalPillSubmitted { color: var(--ink); }
 .portalPillReceived { border-color: var(--ink); color: var(--ink); background: var(--paper); }
 .portalPillApproved { border-color: var(--success); color: var(--success); background: var(--success-bg); }
@@ -549,24 +804,24 @@ a.card:hover,a.panel:hover {
 .portalFeedbackArea { width: 100%; min-height: 132px; padding: .85rem .95rem; border: 1px solid var(--rule); background: var(--paper-2); color: var(--ink); resize: vertical; font: 500 14px/1.6 var(--font-body); }
 .portalFeedbackRow { display: flex; justify-content: space-between; gap: .75rem; align-items: center; flex-wrap: wrap; }
 .portalPriorityRow { display: flex; flex-wrap: wrap; gap: .5rem; }
-.portalPriorityPill { padding: .45rem .7rem; border: 1px solid var(--rule); background: var(--paper); color: var(--muted); font: 500 11px/1.2 var(--font-mono); }
+.portalPriorityPill { padding: .45rem .7rem; border: 1px solid var(--rule); background: var(--paper); color: var(--muted); font: 500 13px/1.2 var(--font-body); }
 .portalPriorityPillActive { color: var(--paper); background: var(--ink); border-color: var(--ink); }
 .portalPriorityPillHigh.portalPriorityPillActive { background: var(--accent); border-color: var(--accent); }
-.portalFeedbackBtn { min-height: 42px; padding: .8rem 1rem; border: 1px solid var(--accent); background: var(--accent); color: var(--paper); font: 500 11px/1 var(--font-mono); }
+.portalFeedbackBtn { min-height: 42px; padding: .8rem 1rem; border: 1px solid var(--accent); background: var(--accent); color: var(--paper); font: 500 13px/1 var(--font-body); }
 
 .portalRev { margin-top: .75rem; padding: .9rem 1rem; border-left: 3px solid var(--ink); background: var(--paper); border-top: 1px solid var(--rule); border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
 .portalRevHigh { border-left-color: var(--accent); }
 .portalRevNew { background: var(--paper-2); }
 .portalRevTop { display: flex; justify-content: space-between; gap: .7rem; align-items: center; margin-bottom: .55rem; flex-wrap: wrap; }
-.portalRevStatus,.portalRevPriority { font: 500 11px/1.2 var(--font-mono); }
+.portalRevStatus,.portalRevPriority { font: 500 13px/1.2 var(--font-body); }
 .portalRevStatus { color: var(--muted); }
 .portalRevPriorityHigh { color: var(--accent); }
 .portalRevPriorityNormal { color: var(--ink); }
 .portalRevMsg { color: var(--ink); line-height: 1.65; }
-.portalRevDate { margin-top: .55rem; font-size: 12px; color: var(--muted-2); }
+.portalRevDate { margin-top: .55rem; font-size: 12px; color: var(--muted); }
 
 .portalDrawerToggle { width: 100%; display: flex; justify-content: space-between; gap: .75rem; align-items: center; padding: .85rem .95rem; border: 1px solid var(--rule); background: var(--paper); cursor: pointer; }
-.portalDrawerToggleLabel { font: 500 11px/1.2 var(--font-mono); color: var(--muted); }
+.portalDrawerToggleLabel { font: 500 13px/1.2 var(--font-body); color: var(--muted); }
 .portalDrawerToggleValue { display: inline-flex; gap: .4rem; align-items: center; font-weight: 600; color: var(--ink); }
 .portalDrawerContent { margin-bottom: .75rem; border-left: 1px solid var(--rule); border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); background: var(--paper); max-height: 0; overflow: hidden; transition: max-height .25s ease; }
 .portalDrawerContentOpen { max-height: 3600px; }
@@ -574,7 +829,7 @@ a.card:hover,a.panel:hover {
 .portalDrawerKey { font-size: 12px; color: var(--muted); }
 .portalDrawerVal { font-size: 13px; color: var(--ink); font-weight: 600; text-align: right; }
 .portalDrawerValPaid { color: var(--success); }
-.portalFeatureTag { display: inline-flex; padding: .3rem .55rem; border: 1px solid var(--rule); background: var(--paper-2); font: 500 11px/1.2 var(--font-mono); color: var(--muted); }
+.portalFeatureTag { display: inline-flex; padding: .3rem .55rem; border: 1px solid var(--rule); background: var(--paper-2); font: 500 13px/1.2 var(--font-body); color: var(--muted); }
 
 .portalHub .productHeroActions { margin-top: 1rem; }
 .portalHubSummary { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .95fr); gap: 1rem; margin-bottom: 1.25rem; }
@@ -582,7 +837,7 @@ a.card:hover,a.panel:hover {
 .portalHubCard { display: grid; gap: .8rem; padding: 1.1rem 1.2rem; border: 1px solid var(--rule); background: var(--paper); }
 .portalHubCardPrimary { background: var(--paper-2); }
 .portalHubCardHead { display: flex; justify-content: space-between; gap: .75rem; align-items: center; }
-.portalHubEyebrow,.portalHubMeta,.portalHubCta,.portalHubStatus { font: 500 11px/1.2 var(--font-mono); }
+.portalHubEyebrow,.portalHubMeta,.portalHubCta,.portalHubStatus { font: 500 13px/1.2 var(--font-body); }
 .portalHubEyebrow,.portalHubMeta { color: var(--muted); }
 .portalHubCount { font: 700 clamp(2.2rem, 5vw, 3.6rem)/.95 var(--font-display); letter-spacing: -.05em; color: var(--ink); }
 .portalHubBody { margin: 0; color: var(--ink-2); line-height: 1.65; }
@@ -634,7 +889,7 @@ a.card:hover,a.panel:hover {
 .adminDashPriorityHead,
 .adminDashTableHead,
 .adminDashStageMeta,
-.adminDashCapacityLegend { font: 500 11px/1.3 var(--font-mono); }
+.adminDashCapacityLegend { font: 500 13px/1.3 var(--font-body); }
 .adminSidebarEyebrow,
 .adminSidebarCount,
 .adminDashMuted,
@@ -665,7 +920,7 @@ a.card:hover,a.panel:hover {
 .adminProjectRowMeta { margin-top: .6rem; justify-content: flex-start; flex-wrap: wrap; }
 .adminProjectTier,
 .adminDetailContact,
-.adminNextAction { font-size: 12px; color: var(--muted-2); }
+.adminNextAction { font-size: 12px; color: var(--muted); }
 .adminProjectRowFoot { margin-top: .7rem; align-items: flex-start; }
 .adminDaysInStage { display: inline-flex; align-items: center; gap: .4rem; font-size: 12px; color: var(--muted); }
 .adminDaysInStageWarn,
@@ -678,11 +933,11 @@ a.card:hover,a.panel:hover {
 .adminStagePillWarm { color: var(--accent); border-color: rgba(175, 103, 53, .28); background: rgba(175, 103, 53, .08); }
 .adminStagePillGood { color: #1f5f3b; border-color: rgba(31, 95, 59, .28); background: rgba(31, 95, 59, .08); }
 .adminStagePillMuted,
-.adminDetailBadgeSoft { color: var(--muted-2); background: var(--paper-2); }
+.adminDetailBadgeSoft { color: var(--muted); background: var(--paper-2); }
 .adminDetailActions { display: flex; gap: .65rem; flex-wrap: wrap; }
 .adminDetailBadgeRow { margin: .9rem 0 1.2rem; justify-content: flex-start; flex-wrap: wrap; }
 .adminDetailEmpty,
-.adminEmptyState { padding: 1rem; border: 1px dashed var(--rule); color: var(--muted-2); text-align: center; }
+.adminEmptyState { padding: 1rem; border: 1px dashed var(--rule); color: var(--muted); text-align: center; }
 .adminWorkbenchEmbedded { border: 1px solid var(--rule); background: var(--paper); padding: 1rem; }
 
 .adminDashWrap { display: grid; gap: 1rem; margin-top: 1.1rem; }
@@ -704,7 +959,7 @@ a.card:hover,a.panel:hover {
 .adminDashBarCol { display: grid; gap: .45rem; align-items: end; }
 .adminDashBarTrack { display: flex; align-items: end; justify-content: center; min-height: 170px; padding: .2rem; background: var(--paper-2); }
 .adminDashBarFill { width: 100%; background: linear-gradient(180deg, rgba(175,103,53,.95), rgba(34,31,28,.95)); }
-.adminDashBarValue { font-size: 11px; color: var(--muted-2); line-height: 1.4; }
+.adminDashBarValue { font-size: 11px; color: var(--muted); line-height: 1.4; }
 .adminDashStageList,
 .adminDashPriorityList,
 .adminDashFeed { display: grid; gap: .75rem; }
@@ -732,32 +987,32 @@ a.card:hover,a.panel:hover {
 .adminDashFeedDotAlert { background: #9b4033; }
 .adminDashFeedDotNeutral { background: var(--ink); }
 
-.adminMessageBadge { display: inline-flex; align-items: center; min-height: 20px; padding: 0 .45rem; border-radius: 999px; background: var(--accent-bg); color: var(--accent-2); font: 700 10px/1 var(--font-mono); }
+.adminMessageBadge { display: inline-flex; align-items: center; min-height: 20px; padding: 0 .45rem; border-radius: 999px; background: var(--accent-bg); color: var(--accent-2); font: 700 12.5px/1 var(--font-body); }
 .adminProjectMessagePreview { display: grid; gap: .25rem; margin-top: .8rem; padding-top: .75rem; border-top: 1px solid var(--rule); text-align: left; }
-.adminProjectMessageRole { font: 600 10px/1.2 var(--font-mono); color: var(--accent); }
+.adminProjectMessageRole { font: 600 12.5px/1.2 var(--font-body); color: var(--accent); }
 .adminProjectMessageText { font-size: 12px; line-height: 1.5; color: var(--ink-2); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
-.adminProjectMessageTime { font-size: 11px; color: var(--muted-2); }
+.adminProjectMessageTime { font-size: 11px; color: var(--muted); }
 
 .portalMessageIntro { margin-top: .35rem; font-size: 13px; line-height: 1.6; color: var(--muted); max-width: 52ch; }
 .portalMessageThread { display: grid; gap: .95rem; margin-bottom: 1rem; }
 .portalMessageDay { display: grid; grid-template-columns: 1fr auto 1fr; gap: .8rem; align-items: center; margin-bottom: .6rem; }
 .portalMessageDay span { display: block; height: 1px; background: var(--rule); }
-.portalMessageDay div { font: 500 11px/1.2 var(--font-mono); color: var(--muted-2); }
+.portalMessageDay div { font: 500 13px/1.2 var(--font-body); color: var(--muted); }
 .portalMessageGroup { display: grid; gap: .75rem; }
 .portalMessageCard { display: grid; grid-template-columns: 36px minmax(0,1fr); gap: .85rem; padding: .95rem 1rem; border-radius: 14px; border: 1px solid var(--rule); }
 .portalMessageCardStudio { background: var(--paper); border-left: 3px solid var(--accent); }
 .portalMessageCardClient { background: var(--paper-2); }
-.portalMessageAvatar { width: 36px; height: 36px; border-radius: 999px; display: grid; place-items: center; font: 700 11px/1 var(--font-mono); }
+.portalMessageAvatar { width: 36px; height: 36px; border-radius: 999px; display: grid; place-items: center; font: 700 13px/1 var(--font-body); }
 .portalMessageAvatarStudio { background: var(--accent); color: var(--paper); }
 .portalMessageAvatarClient { background: var(--paper-3); color: var(--ink); }
 .portalMessageBody { min-width: 0; }
 .portalMessageMeta { display: flex; flex-wrap: wrap; gap: .45rem .55rem; align-items: center; }
 .portalMessageSender { font-size: 14px; font-weight: 700; color: var(--ink); }
-.portalMessageTime { font-size: 11px; color: var(--muted-2); }
+.portalMessageTime { font-size: 11px; color: var(--muted); }
 .portalMessageText { margin-top: .55rem; font-size: 14px; line-height: 1.7; color: var(--ink-2); white-space: pre-wrap; }
 .portalMessageAttachmentRow { margin-top: .7rem; }
 .portalAttachmentChip { display: inline-flex; align-items: center; gap: .55rem; min-height: 34px; padding: .45rem .65rem; border: 1px solid var(--rule); border-radius: 999px; background: var(--paper); color: var(--ink); font-size: 12px; font-weight: 600; }
-.portalAttachmentMeta { font-size: 11px; color: var(--muted-2); }
+.portalAttachmentMeta { font-size: 11px; color: var(--muted); }
 .portalMessageComposer { display: grid; gap: .8rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
 .portalMessageActions { display: flex; justify-content: space-between; gap: .75rem; align-items: center; flex-wrap: wrap; }
 .portalMessageAttachWrap { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; }
@@ -802,7 +1057,7 @@ a.card:hover,a.panel:hover {
   display: flex;
   flex-wrap: wrap;
   gap: .55rem;
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
   color: var(--muted);
 }
 .estimateBreadcrumbSep { color: var(--rule-2); }
@@ -815,7 +1070,7 @@ a.card:hover,a.panel:hover {
   display: inline-flex;
   align-items: center;
   gap: .65rem;
-  font: 500 11px/1.2 var(--font-mono);
+  font: 500 13px/1.2 var(--font-body);
   color: var(--muted);
 }
 .estimateHeroLabel::before {
@@ -839,7 +1094,7 @@ a.card:hover,a.panel:hover {
 }
 .estimateHeroMeta {
   margin: 1rem 0 0;
-  font: 500 11px/1.4 var(--font-mono);
+  font: 500 13px/1.4 var(--font-body);
   color: var(--muted);
 }
 .estimateModule {
@@ -847,7 +1102,7 @@ a.card:hover,a.panel:hover {
   border-bottom: 1px solid var(--rule);
 }
 .estimateSectionLabel {
-  font: 500 11px/1.2 var(--font-mono);
+  font: 500 13px/1.2 var(--font-body);
   color: var(--muted);
 }
 .estimateSectionTitle {
@@ -899,7 +1154,7 @@ a.card:hover,a.panel:hover {
 .estimateScopeRow:last-child { border-bottom: none; padding-bottom: 0; }
 .estimateScopeKey {
   padding-top: .2rem;
-  font: 500 10px/1.2 var(--font-mono);
+  font: 500 12.5px/1.2 var(--font-body);
   color: var(--muted);
 }
 .estimateScopeValue {
@@ -913,7 +1168,7 @@ a.card:hover,a.panel:hover {
   color: var(--muted);
   font-size: .93rem;
 }
-.estimateScopeCaveatInline { color: var(--muted-2); }
+.estimateScopeCaveatInline { color: var(--muted); }
 .estimatePriceRail { display: grid; gap: .9rem; }
 .estimateContextCard {
   padding: 1.1rem 1.2rem;
@@ -921,7 +1176,7 @@ a.card:hover,a.panel:hover {
 }
 .estimateContextLabel {
   margin-bottom: .55rem;
-  font: 500 10px/1.2 var(--font-mono);
+  font: 500 12.5px/1.2 var(--font-body);
   color: var(--accent);
 }
 .estimateContextList {
@@ -952,7 +1207,7 @@ a.card:hover,a.panel:hover {
   color: var(--paper);
 }
 .estimatePriceLabel {
-  font: 500 10px/1.2 var(--font-mono);
+  font: 500 12.5px/1.2 var(--font-body);
   color: var(--accent-soft);
 }
 .estimatePriceAmount {
@@ -984,7 +1239,7 @@ a.card:hover,a.panel:hover {
   border-top: 1px solid rgba(243, 237, 225, .14);
 }
 .estimateSplitLabel {
-  font: 500 10px/1.2 var(--font-mono);
+  font: 500 12.5px/1.2 var(--font-body);
   color: rgba(243, 237, 225, .55);
 }
 .estimateSplitValue {
@@ -1005,7 +1260,7 @@ a.card:hover,a.panel:hover {
   padding: 0 1.2rem;
   border: 1px solid transparent;
   cursor: pointer;
-  font: 500 12px/1.2 var(--font-mono);
+  font: 500 13.5px/1.2 var(--font-body);
   transition: background .2s ease, color .2s ease, border-color .2s ease;
 }
 .estimatePrimaryButton {
@@ -1055,7 +1310,7 @@ a.card:hover,a.panel:hover {
 .estimateIncludedLabel,
 .estimateProcessLabel,
 .estimateTierName {
-  font: 500 10px/1.2 var(--font-mono);
+  font: 500 12.5px/1.2 var(--font-body);
 }
 .estimateIncludedLabel,
 .estimateProcessLabel { color: var(--accent); }
@@ -1141,7 +1396,7 @@ a.card:hover,a.panel:hover {
   padding: 4px 10px;
   background: var(--accent);
   color: var(--paper);
-  font: 500 10px/1.2 var(--font-mono);
+  font: 500 12.5px/1.2 var(--font-body);
 }
 .estimateTierName { color: var(--muted); }
 .estimateTierRange {
@@ -1159,8 +1414,8 @@ a.card:hover,a.panel:hover {
   margin-top: 1rem;
   padding-top: .9rem;
   border-top: 1px solid var(--rule);
-  color: var(--muted-2);
-  font: 500 10px/1.4 var(--font-mono);
+  color: var(--muted);
+  font: 500 12.5px/1.4 var(--font-body);
 }
 .estimateFaqGrid {
   display: grid;
@@ -1289,3 +1544,183 @@ a.card:hover,a.panel:hover {
 
 /* Inline loading/hint state */
 .hint { color: var(--muted); font: 500 13px/1.5 var(--font-body); }
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   BRAND.md §3: the display serif is MARKETING ONLY — never in the portal or
+   admin console. Those surfaces are data-dense and a serif at label and
+   table-cell size reads decorative rather than structural.
+
+   Under the previous system this rule cost nothing, because --font-display
+   and --font-body were both Inter. Now that the display face is a real serif,
+   every one of these would have become one. Rebinding the custom property on
+   the selectors themselves is why this is one block instead of ~30 edits: any
+   descendant resolving var(--font-display) picks up the body face here.
+
+   portalStory* is deliberately excluded — it is a marketing promo block that
+   also renders on /build and /ecommerce/intake, so it keeps the serif.
+   ───────────────────────────────────────────────────────────────────────── */
+.adminDashCapacityPct,
+.adminDashCardTitle,
+.adminDashKpiValue,
+.adminDetailTitle,
+.portalDepositAmount,
+.portalDepositLead,
+.portalHubCount,
+.portalLaunchInfo,
+.portalLaunchPercent,
+.portalPanelTitle,
+.productEmptyTitle,
+.productLaneCount,
+.productTitle {
+  --font-display: var(--cs-font-body);
+  font-family: var(--font-display);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Hero workspace panel (components/home/HeroPanel.tsx)
+
+   A dark card on the warm canvas. This is the one place a heavy shadow is
+   earned — the panel is genuinely lifted off the page, and the shadow is
+   warm-tinted so it does not read as dirt over the paper (BRAND.md §6).
+
+   Accent text inside uses --accent-on-ink, not --accent: pure vermilion is
+   only 3.58:1 on --cs-ink and cannot carry small text there (BRAND.md §2).
+   ───────────────────────────────────────────────────────────────────────── */
+.heroPanel {
+  margin: 0;
+  border: 1px solid var(--rule-on-ink);
+  border-radius: var(--radius-xl);
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+}
+
+.heroPanelBar {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .7rem 1rem;
+  border-bottom: 1px solid var(--rule-on-ink);
+  background: color-mix(in srgb, var(--paper) 5%, transparent);
+}
+.heroPanelDots {
+  flex: none;
+  width: 38px;
+  height: 8px;
+  /* Three window dots drawn as one element — no extra markup for decoration. */
+  background-image: radial-gradient(circle 4px at 4px 4px, color-mix(in srgb, var(--paper) 26%, transparent) 98%, transparent),
+                    radial-gradient(circle 4px at 19px 4px, color-mix(in srgb, var(--paper) 26%, transparent) 98%, transparent),
+                    radial-gradient(circle 4px at 34px 4px, color-mix(in srgb, var(--paper) 26%, transparent) 98%, transparent);
+}
+.heroPanelUrl {
+  font: 500 12.5px/1.4 var(--font-body);
+  color: color-mix(in srgb, var(--paper) 58%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.heroPanelBody { padding: clamp(1.1rem, 2vw, 1.6rem); }
+
+.heroPanelHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.heroPanelEyebrow {
+  margin: 0;
+  font: 600 13px/1.4 var(--font-body);
+  color: color-mix(in srgb, var(--paper) 56%, transparent);
+}
+.heroPanelTitle {
+  margin: .25rem 0 0;
+  font: 700 clamp(1.15rem, 1.6vw, 1.4rem)/1.2 var(--font-body);
+  letter-spacing: -0.016em;
+}
+.heroPanelBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .3rem .68rem;
+  border: 1px solid var(--rule-on-ink);
+  border-radius: var(--radius-pill);
+  font: 600 12.5px/1.4 var(--font-body);
+  color: var(--paper);
+  flex: none;
+}
+.heroPanelBadgeDot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #7bbd86;
+  flex: none;
+}
+
+.heroPanelSteps {
+  list-style: none;
+  margin: 1.35rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+.heroPanelStep {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .7rem;
+  padding: .72rem 0;
+  border-top: 1px solid var(--rule-on-ink);
+  font: 500 14.5px/1.3 var(--font-body);
+}
+.heroPanelStepMark {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--paper) 26%, transparent);
+}
+.heroPanelStep.is-done .heroPanelStepMark {
+  background: #7bbd86;
+  border-color: #7bbd86;
+}
+.heroPanelStep.is-active .heroPanelStepMark {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+.heroPanelStepName { color: color-mix(in srgb, var(--paper) 88%, transparent); }
+.heroPanelStep.is-pending .heroPanelStepName { color: color-mix(in srgb, var(--paper) 46%, transparent); }
+.heroPanelStepState {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--paper) 52%, transparent);
+}
+.heroPanelStep.is-active .heroPanelStepState { color: var(--accent-on-ink); }
+
+.heroPanelFoot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.1rem;
+  padding-top: .95rem;
+  border-top: 1px solid var(--rule-on-ink);
+  font: 500 13px/1.4 var(--font-body);
+}
+.heroPanelFootKey { color: color-mix(in srgb, var(--paper) 54%, transparent); }
+.heroPanelFootVal { color: var(--paper); font-weight: 600; }
+
+/* Visually hidden but available to assistive tech. Used where a state is
+   carried visually by a mark alone (BRAND.md §11: no colour-only status). */
+.srOnly {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

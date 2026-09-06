@@ -1,0 +1,130 @@
+/* CrecyStudio design tokens — the single source of truth.
+ *
+ * Keep brand/tokens.css, brand/tokens.json and brand/BRAND.md in step; change
+ * all three together or none. app/globals.css may only ALIAS a token defined
+ * here, never invent a value.
+ *
+ * Anchored in the logo masters (crecysstudio svglogo.zip), which are the
+ * authority for the three brand colours and the wordmark face:
+ *   crecy-d1-horizontal-light.svg  ink #1a1210, accent #c43e2b, muted #8a7d74
+ *   crecy-icon.svg                 the same pair on the arrow mark
+ * The previous palette had drifted off these (#0d0d0d cool black, #a8362b
+ * muted red, and Apple's exact greys #f5f5f7/#6e6e73/#e5e5e7) — the site was
+ * not wearing its own brand, which is most of why it read as generic. */
+
+:root {
+  /* ── Ink: warm near-black, from the logo mark ───────────────────────── */
+  --cs-ink: #1a1210;        /* Headlines, primary text, dark panels */
+  --cs-ink-2: #33251f;      /* Body copy on light */
+  --cs-ink-3: #5c4a42;      /* Supporting copy */
+  /* The logo's taupe #8a7d74 is only 3.86:1 on the paper — it fails AA for
+   * small text, and the old design used the equivalent token for footer
+   * links, eyebrows and captions. So the exact logo value is kept for the
+   * WORDMARK, and the text ramp is darkened to clear 4.5:1 on the darkest
+   * light surface (--cs-paper-3), with saturation nudged up so it stays
+   * visibly warm instead of drifting grey. Verified, not assumed. */
+  --cs-muted: #76675d;      /* 5.26 on paper, 4.51 on paper-3 — AA body */
+  --cs-muted-2: #958378;    /* 3.51 on paper — LARGE TEXT / UI ONLY, never body */
+  --cs-brand-taupe: #8a7d74; /* Logo master value. Wordmark only. */
+
+  /* ── Accent: vermilion, from the logo dot. Used sparingly. ──────────── */
+  --cs-accent: #c43e2b;
+  --cs-accent-600: #a83324; /* Hover / pressed */
+  --cs-accent-700: #8c2a1e; /* Text on tinted washes — AA on --cs-wash */
+  --cs-accent-300: #e8907f; /* Rules, quiet marks; 7.67 on ink */
+  /* Pure vermilion is only 3.58:1 on --cs-ink, so it may not carry small text
+   * on a dark panel. This is the lightened form that clears AA there. */
+  --cs-accent-on-ink: #d55340; /* 4.52 on ink — accent text on dark panels */
+  --cs-wash: #fbf0ec;       /* Tinted card / badge background */
+
+  /* ── Paper: warm off-white. Never pure #ffffff for the canvas. ──────── */
+  --cs-paper: #fdfbf9;      /* Page canvas */
+  --cs-paper-2: #f7f3ef;    /* Section break */
+  --cs-paper-3: #efe9e3;    /* Tertiary surface */
+  --cs-surface: #ffffff;    /* Cards and fields sit ABOVE the canvas */
+
+  /* ── Rules: warm, not neutral grey ──────────────────────────────────── */
+  --cs-rule: #e7ded7;
+  --cs-rule-2: #d5c8bf;
+  --cs-rule-on-ink: rgba(253, 251, 249, 0.16);
+
+  /* ── Status ─────────────────────────────────────────────────────────── */
+  --cs-success: #2f6d3a;
+  --cs-success-wash: #e9f2e7;
+  --cs-warning: #9a6212;
+  --cs-warning-wash: #fbf1e0;
+  --cs-error: #b3261e;
+  --cs-error-wash: #fbeae8;
+
+  /* ── Typography ─────────────────────────────────────────────────────── */
+  /* Display  — Fraunces, marketing headlines ONLY. Never in portal/admin.
+   * Body/UI  — Manrope, everything else.
+   * Wordmark — Sora, the logo and nothing else (the masters specify it).
+   * The next/font variables are set in app/layout.tsx. */
+  --cs-font-display: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
+  --cs-font-body: var(--font-manrope), "Helvetica Neue", Arial, sans-serif;
+  --cs-font-wordmark: var(--font-sora), var(--font-manrope), sans-serif;
+
+  /* Fluid marketing scale. The tight negative tracking is load-bearing —
+   * it is most of the difference between "set in a font" and "typeset". */
+  --cs-size-h1: clamp(2.9rem, 5.2vw, 4.6rem);
+  --cs-leading-h1: 1.02;
+  --cs-tracking-h1: -0.03em;
+
+  --cs-size-h2: clamp(2.1rem, 3.6vw, 3.1rem);
+  --cs-leading-h2: 1.06;
+  --cs-tracking-h2: -0.026em;
+
+  --cs-size-h3: clamp(1.25rem, 1.8vw, 1.5rem);
+  --cs-leading-h3: 1.24;
+  --cs-tracking-h3: -0.016em;
+
+  --cs-size-lede: clamp(1.06rem, 1.25vw, 1.22rem);
+  --cs-leading-lede: 1.62;
+
+  --cs-size-body: 16px;
+  --cs-leading-body: 1.68;
+
+  --cs-size-small: 14px;
+  --cs-leading-small: 1.55;
+
+  --cs-size-caption: 12.5px;
+  --cs-leading-caption: 1.45;
+
+  /* ── Radius. Capped at 16px; nothing pill-shaped except badges. ─────── */
+  --cs-radius-sm: 6px;
+  --cs-radius-md: 9px;
+  --cs-radius-lg: 12px;
+  --cs-radius-xl: 16px;
+  --cs-radius-pill: 999px;
+
+  /* ── Spacing (8pt base) ─────────────────────────────────────────────── */
+  --cs-space-1: 4px;
+  --cs-space-2: 8px;
+  --cs-space-3: 12px;
+  --cs-space-4: 16px;
+  --cs-space-5: 24px;
+  --cs-space-6: 32px;
+  --cs-space-7: 40px;
+  --cs-space-8: 64px;
+  --cs-space-9: 80px;
+  --cs-space-10: 96px;
+  --cs-space-11: 128px;
+
+  /* ── Shadows. Warm-tinted, not black — a neutral shadow on warm paper
+   * reads as dirt. Prefer a rule to a shadow; these are for lifts only. */
+  --cs-shadow-sm: 0 1px 2px rgba(26, 18, 16, 0.05);
+  --cs-shadow-md: 0 4px 14px rgba(26, 18, 16, 0.07);
+  --cs-shadow-lg: 0 14px 34px -12px rgba(26, 18, 16, 0.16);
+  --cs-shadow-xl: 0 28px 60px -30px rgba(26, 18, 16, 0.28);
+
+  /* ── Layout ─────────────────────────────────────────────────────────── */
+  --cs-gutter: clamp(20px, 4.5vw, 56px);
+  --cs-maxw: 1280px;
+  --cs-maxw-prose: 68ch;
+
+  /* ── Motion ─────────────────────────────────────────────────────────── */
+  --cs-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --cs-dur-fast: 0.16s;
+  --cs-dur: 0.24s;
+}

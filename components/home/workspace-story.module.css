@@ -37,7 +37,7 @@
   display: grid;
   place-items: center;
   font-size: 0.75rem;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
 }
 
 .detail {

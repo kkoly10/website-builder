@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import TrackLink from "@/components/site/TrackLink";
 import ScrollReveal from "@/components/site/ScrollReveal";
+import HeroPanel from "@/components/home/HeroPanel";
 import styles from "./home.module.css";
 
 export const dynamic = "force-dynamic";
@@ -91,23 +92,42 @@ function HomeContent() {
     <main className={styles.page}>
       <ScrollReveal />
 
+      {/*
+        Split hero: copy left, live workspace panel right. The previous
+        single-column hero left the entire right half of a 1440px viewport
+        empty, which is why the headline had to run to 5.3rem to fill the
+        space — and an enormous sans headline on flat white is the generic
+        look we are moving off. The panel also earns the space: it shows the
+        product rather than describing it.
+      */}
       <header className={styles.hero}>
-        <div className="container">
-          <p className={styles.heroLabel}>{t("heroLabel")}</p>
-          <h1 className={styles.heroTitle}>
-            {t.rich("heroTitle", { em: (chunks) => <span>{chunks}</span> })}
-          </h1>
-          <p className={styles.heroSub}>{t("heroSub")}</p>
+        <div className={`container ${styles.heroGrid}`}>
+          <div className={styles.heroContent}>
+            <p className={styles.heroLabel}>{t("heroLabel")}</p>
+            <h1 className={styles.heroTitle}>
+              {t.rich("heroTitle", {
+                em: (chunks) => <span className="accentWord">{chunks}</span>,
+              })}
+            </h1>
+            <p className={styles.heroSub}>{t("heroSub")}</p>
 
-          <div className={styles.heroActions}>
-            <TrackLink href="/build/intro" event="cta_home_hero_quote" className="btn btnPrimary">
-              {t("ctaStart")}
-            </TrackLink>
-            <TrackLink href="/work" event="cta_home_hero_work" className={styles.heroSecondaryCta}>
-              {t("ctaProcess")}
-            </TrackLink>
+            <div className={styles.heroActions}>
+              <TrackLink href="/build/intro" event="cta_home_hero_quote" className="btn btnAccent btnLg">
+                {t("ctaStart")}
+              </TrackLink>
+              <TrackLink href="/work" event="cta_home_hero_work" className="btn btnGhost btnLg">
+                {t("ctaProcess")}
+              </TrackLink>
+            </div>
+            <p className={styles.heroScarcity}>
+              <span className={styles.heroScarcityDot} aria-hidden />
+              {t("ctaScarcity")}
+            </p>
           </div>
-          <p className={styles.heroScarcity}>{t("ctaScarcity")}</p>
+
+          <div className={styles.heroAside}>
+            <HeroPanel />
+          </div>
         </div>
       </header>
 

@@ -8,6 +8,51 @@ import CookieConsentBanner from "@/components/site/CookieConsentBanner";
 import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 import { routing } from "@/i18n/routing";
 import { Analytics } from "@vercel/analytics/next";
+import { Fraunces, Manrope, Sora } from "next/font/google";
+
+/* Three faces, three jobs (brand/BRAND.md §3). Loaded through next/font so the
+ * files are self-hosted and hashed into the build — the previous
+ * `@import url(fonts.googleapis.com)` in globals.css was a render-blocking
+ * third-party request on every page, and a transient fetch failure there is a
+ * flash of unstyled text in production. */
+
+// Display: marketing headlines only. Variable, so one file covers 400-700.
+// `axes` is left at the defaults for SOFT/WONK — a confident editorial serif,
+// not a whimsical one.
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  // Variable, with the non-weight axes declared so the display sizes can pin
+  // them. Requesting static weights instead drops opsz from the file, and
+  // `font-optical-sizing: auto` then silently does nothing — which is exactly
+  // what happened on the first pass: the headline rendered at the low optical
+  // size (thick, closed, condensed) instead of the display cut. Compared
+  // side by side at 64px before choosing; see brand/BRAND.md §3.
+  weight: "variable",
+  axes: ["SOFT", "WONK", "opsz"],
+  style: ["normal", "italic"],
+  variable: "--font-fraunces",
+  display: "swap",
+});
+
+// Body and UI: everything that is not a marketing headline or the wordmark.
+const manrope = Manrope({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-manrope",
+  display: "swap",
+});
+
+// Wordmark only. The logo masters set the lockup in Sora; without it the
+// inline SVG falls back to a system sans and the header stops matching the
+// brand files. One weight is all the lockup uses.
+const sora = Sora({
+  subsets: ["latin"],
+  weight: ["300", "600", "700"],
+  variable: "--font-sora",
+  display: "swap",
+});
+
+const fontVars = `${fraunces.variable} ${manrope.variable} ${sora.variable}`;
 
 // Page-level alternates.languages live in app/[locale]/layout.tsx so they
 // reflect the current path (e.g. /websites <-> /fr/websites <-> /es/websites)
@@ -51,7 +96,8 @@ export const metadata: Metadata = {
 // Android Chrome when the site is open. Kept in the viewport export
 // (separate from `metadata`) per Next 14+ convention.
 export const viewport: Viewport = {
-  themeColor: "#a8362b",
+  // Brand vermilion, matching the logo master (crecy-icon.svg).
+  themeColor: "#c43e2b",
 };
 
 export const dynamic = "force-dynamic";
@@ -101,7 +147,7 @@ export default async function RootLayout({
   // don't need the Organization graph.
 
   return (
-    <html lang={locale}>
+    <html lang={locale} className={fontVars}>
       <body>
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js-anim')" }} />
         <a href="#main-content" className="skipLink">

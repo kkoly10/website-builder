@@ -17,7 +17,24 @@
 }
 
 .hero {
-  padding: 6rem 0 5rem;
+  padding: clamp(3rem, 6vw, 5.5rem) 0 clamp(3.5rem, 6vw, 6rem);
+}
+
+/* Copy left, product panel right. Collapses to a single column at 980px —
+   below that the panel would be too narrow to read as a product surface, so
+   it stacks under the copy rather than shrinking. */
+.heroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
+  gap: clamp(2rem, 4vw, 4rem);
+  align-items: center;
+}
+
+.heroContent { min-width: 0; }
+.heroAside { min-width: 0; }
+
+@media (max-width: 980px) {
+  .heroGrid { grid-template-columns: minmax(0, 1fr); gap: 2.5rem; }
 }
 
 .heroLabel,
@@ -29,7 +46,7 @@
 .tierName,
 .portalCardTitle {
   margin: 0;
-  font: 500 13px/1.4 var(--font-body);
+  font: 600 14px/1.5 var(--font-body);
 }
 
 .heroLabel,
@@ -48,16 +65,22 @@
 .closing h2 {
   margin: 0;
   font-family: var(--font-display);
-  letter-spacing: -0.04em;
+  font-weight: 500;
+  /* opsz 96/144 is the display cut. Without pinning it the serif renders at
+     its TEXT optical size — thicker, more closed, and noticeably clumsier.
+     See brand/BRAND.md §3. */
+  font-variation-settings: "opsz" 96, "SOFT" 0, "WONK" 0;
+  letter-spacing: -0.026em;
 }
 
 .heroTitle {
-  margin-top: 1.2rem;
-  max-width: 16ch;
-  font-size: clamp(2.8rem, 6.5vw, 5.6rem);
-  line-height: 0.98;
-  font-weight: 700;
-  letter-spacing: -0.025em;
+  margin-top: 1.1rem;
+  max-width: 18ch;
+  font-size: clamp(2.6rem, 4.4vw, 4rem);
+  line-height: 1.03;
+  letter-spacing: -0.03em;
+  font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 0;
+  text-wrap: balance;
 }
 
 .heroSub,
@@ -68,64 +91,84 @@
 .lane p,
 .portalCardMeta {
   margin: 0;
-  color: var(--ink-2);
+  color: var(--ink-3);
 }
 
 .heroSub {
-  margin-top: 1.5rem;
-  max-width: 56ch;
-  font-size: clamp(1.02rem, 1.5vw, 1.18rem);
-  line-height: 1.75;
+  margin-top: 1.35rem;
+  max-width: 48ch;
+  font-size: var(--cs-size-lede);
+  line-height: var(--cs-leading-lede);
 }
 
 .heroActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.9rem;
+  gap: 0.75rem;
   margin-top: 2rem;
 }
 
 .heroScarcity {
-  margin-top: 0.9rem;
-  font: 500 11px/1.3 var(--font-mono);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+  font: 500 14px/1.4 var(--font-body);
   color: var(--muted);
 }
 
-.heroSecondaryCta {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.95rem 0;
-  border-bottom: 1px solid var(--ink);
-  font-size: 15px;
-  font-weight: 500;
+/* Availability is a status, so it gets a mark as well as a colour — never
+   colour alone (brand/BRAND.md §11). */
+.heroScarcityDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  flex: none;
 }
 
+/* Four value propositions, not four statistics. They were set at
+   clamp(2rem, 4vw, 2.8rem) — stat size — which is why "Production AI" broke
+   over two lines and "Founder-built" hyphenated, leaving the four labels
+   sitting at four different heights. These are short PHRASES, so they are
+   typeset as headings at heading size and the row aligns. */
 .proof {
   border-top: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
+  background: var(--paper-2);
 }
 
 .proofGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
 }
 
 .proofItem {
-  padding: 1.4rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: clamp(1.5rem, 2.4vw, 2.1rem) clamp(1rem, 1.8vw, 1.75rem);
   border-left: 1px solid var(--rule);
 }
 
 .proofItem:first-child {
   border-left: none;
+  padding-left: 0;
 }
 
 .proofValue {
-  font-size: clamp(2rem, 4vw, 2.8rem);
-  line-height: 1;
+  margin: 0;
+  font: 700 clamp(1.05rem, 1.5vw, 1.24rem)/1.25 var(--font-body);
+  letter-spacing: -0.016em;
+  color: var(--ink);
+  text-wrap: balance;
 }
 
 .proofLabel {
-  margin-top: 0.6rem;
+  margin: 0;
+  color: var(--muted);
+  font-weight: 500;
 }
 
 .diff,
@@ -185,7 +228,7 @@
 
 .portalUrl {
   margin: 0;
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
   color: color-mix(in srgb, var(--paper) 42%, transparent);
   letter-spacing: 0.08em;
 }
@@ -215,7 +258,7 @@
   border: 1px solid color-mix(in srgb, var(--paper) 18%, transparent);
   background: color-mix(in srgb, var(--ink) 86%, var(--paper) 14%);
   color: var(--paper);
-  font: 500 12px/1 var(--font-mono);
+  font: 500 13.5px/1 var(--font-body);
 }
 
 .journey {
@@ -241,7 +284,7 @@
 }
 
 .jname {
-  font: 500 10px/1.3 var(--font-mono);
+  font: 500 12.5px/1.3 var(--font-body);
   color: color-mix(in srgb, var(--paper) 62%, transparent);
 }
 
@@ -399,7 +442,7 @@
   border: 1px solid var(--ink);
   background: transparent;
   color: var(--ink);
-  font: 500 12px/1 var(--font-mono);
+  font: 500 13.5px/1 var(--font-body);
 }
 
 .tierFeatured .tierCta {
@@ -452,7 +495,7 @@
 .laneLink {
   display: inline-flex;
   margin-top: 1rem;
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
 }
 
 @media (max-width: 980px) {
@@ -556,7 +599,7 @@
 
 .wbCardArrow {
   display: inline-block;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   color: var(--accent);
   font-size: 0.95rem;
   margin-top: 0.4rem;
@@ -569,7 +612,7 @@
 
 .wbCardBadge {
   margin: 0;
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
   color: var(--muted);
   align-self: end;
 }
@@ -612,7 +655,7 @@
 }
 .startHereCard:hover { background: var(--paper-2); transform: translateY(-2px); }
 .startHereSituation { margin: 0; font-size: .85rem; color: var(--ink); line-height: 1.4; }
-.startHereService { margin: 0; font: 500 11px/1 var(--font-mono); color: var(--muted); }
+.startHereService { margin: 0; font: 500 13px/1 var(--font-body); color: var(--muted); }
 .startHereArrow {
   display: inline-block;
   font-size: .85rem;
@@ -661,7 +704,7 @@
 
 .venturesLabel {
   margin: 0;
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
   color: color-mix(in srgb, var(--paper) 52%, transparent);
 }
 
@@ -707,7 +750,7 @@
 
 .ventureTagline {
   margin: 0;
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
   color: color-mix(in srgb, var(--paper) 52%, transparent);
 }
 
@@ -727,12 +770,12 @@
 .ventureChip {
   padding: 0.25rem 0.6rem;
   border: 1px solid color-mix(in srgb, var(--paper) 18%, transparent);
-  font: 500 10px/1.3 var(--font-mono);
+  font: 500 12.5px/1.3 var(--font-body);
   color: color-mix(in srgb, var(--paper) 62%, transparent);
 }
 
 .ventureLink {
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
   color: var(--accent);
   text-decoration: none;
   transition: opacity 0.15s;
@@ -747,7 +790,7 @@
 }
 
 .venturesCtaLink {
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
   color: color-mix(in srgb, var(--paper) 62%, transparent);
   text-decoration: none;
   transition: color 0.15s;
@@ -766,7 +809,7 @@
 
 .closingPricingLink {
   margin-top: 1.2rem;
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
 }
 
 .closingPricingLink a {
@@ -821,7 +864,7 @@
 }
 
 .founderRole {
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
   color: var(--accent);
   margin-bottom: 1.4rem;
 }
@@ -841,7 +884,7 @@
 
 .founderLinkedIn {
   display: inline-block;
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
   color: var(--accent);
   text-decoration: none;
   transition: color 0.15s;
