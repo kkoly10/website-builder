@@ -56,14 +56,24 @@
   color: var(--muted);
 }
 
+/* Card and step titles use the BODY face (brand/BRAND.md §3). .portalHero h3
+   stays in the display group: it is a real display line inside the marketing
+   portal frame, not a card title. */
+.howStep h3,
+.lane h3 {
+  margin: 0;
+  font-family: var(--font-body);
+  font-weight: 700;
+  letter-spacing: -0.016em;
+}
+
 .heroTitle,
 .sectionTitle,
 .portalHero h3,
-.howStep h3,
-.lane h3,
 .tierPrice,
 .closing h2 {
   margin: 0;
+  max-width: 22ch;
   font-family: var(--font-display);
   font-weight: 500;
   /* opsz 96/144 is the display cut. Without pinning it the serif renders at
@@ -194,9 +204,12 @@
 
 .sectionTitle {
   margin-top: 0.8rem;
-  max-width: 14ch;
-  font-size: clamp(2.1rem, 4vw, 4.4rem);
-  line-height: 1.02;
+  /* Was clamp(..., 4vw, 4rem+) = 57.6px at 1440, LARGER than the 56px h1 on
+     every page that used it. Capped below the h1 scale, and the 14-15ch
+     measure widened — at that size it forced four and five line headings. */
+  font-size: clamp(1.85rem, 3.2vw, 2.75rem);
+  line-height: 1.06;
+  max-width: 22ch;
 }
 
 .diffLede,
@@ -247,8 +260,8 @@
 
 .portalHero h3 {
   margin-top: 0.65rem;
-  max-width: 11ch;
-  font-size: clamp(2rem, 4vw, 3rem);
+  max-width: 14ch;
+  font-size: clamp(1.75rem, 2.8vw, 2.4rem);
   line-height: 1;
   color: var(--paper);
 }
@@ -375,8 +388,8 @@
 
 .howStep h3 {
   margin-top: 1rem;
-  font-size: clamp(1.35rem, 2.5vw, 1.9rem);
-  line-height: 1.08;
+  font-size: clamp(1.05rem, 1.4vw, 1.2rem);
+  line-height: 1.28;
 }
 
 .howStep p {
@@ -497,8 +510,8 @@
 }
 
 .lane h3 {
-  font-size: clamp(1.35rem, 2.4vw, 1.8rem);
-  line-height: 1.08;
+  font-size: clamp(1.05rem, 1.4vw, 1.2rem);
+  line-height: 1.28;
 }
 
 .lane p {
@@ -726,10 +739,13 @@
 .venturesTitle {
   margin: 0;
   font-family: var(--font-display);
-  letter-spacing: -0.04em;
-  font-size: clamp(1.8rem, 3.5vw, 3rem);
-  line-height: 1.05;
+  font-weight: 500;
+  font-variation-settings: "opsz" 96, "SOFT" 0, "WONK" 0;
+  letter-spacing: -0.026em;
+  font-size: clamp(1.85rem, 3.2vw, 2.75rem);
+  line-height: 1.06;
   color: var(--paper);
+  text-wrap: balance;
 }
 
 /* 60ch on .venturesHead was still ~1000px of running text on a dark ground,
@@ -883,11 +899,13 @@
 }
 
 .founderName {
-  font-size: clamp(1.6rem, 3vw, 2.2rem);
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 0;
+  font-size: clamp(2.3rem, 3.8vw, 3.3rem);
   letter-spacing: -0.03em;
-  margin: 0.4rem 0 0.2rem;
-  line-height: 1.15;
+  margin: 0.5rem 0 0.3rem;
+  line-height: 1.05;
 }
 
 .founderRole {

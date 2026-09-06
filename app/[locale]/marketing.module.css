@@ -22,21 +22,42 @@
 }
 
 .title,
+/* Section headings keep the display serif; card titles do not
+   (brand/BRAND.md §3). Weight and axes are set here rather than left to the
+   browser's default `bold` — Fraunces at 700 with no opsz is the thick text
+   cut, not the display one. */
 .sectionTitle,
-.card h3,
-.darkCard h3,
-.faqCard h3,
 .proseSection h2 {
   margin: 0;
   font-family: var(--font-display);
-  letter-spacing: -0.04em;
+  font-weight: 500;
+  font-variation-settings: "opsz" 96, "SOFT" 0, "WONK" 0;
+  letter-spacing: -0.026em;
+  text-wrap: balance;
 }
 
+.card h3,
+.darkCard h3,
+.faqCard h3 {
+  margin: 0;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: clamp(1.05rem, 1.4vw, 1.2rem);
+  line-height: 1.28;
+  letter-spacing: -0.016em;
+}
+
+/* Was 6rem into a 13ch measure — five lines of 96px type for any real page
+   title. Matched to the shared display scale. */
 .title {
-  margin-top: 1rem;
-  max-width: 13ch;
-  font-size: clamp(2.8rem, 7vw, 6rem);
-  line-height: 0.94;
+  margin-top: 0.9rem;
+  max-width: 20ch;
+  font-weight: 500;
+  font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 0;
+  font-size: clamp(2.4rem, 4vw, 3.5rem);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
 }
 
 .intro,
@@ -69,9 +90,12 @@
 }
 
 .sectionTitle {
-  font-size: clamp(2rem, 4vw, 4rem);
-  line-height: 1.02;
-  max-width: 15ch;
+  /* Was clamp(..., 4vw, 4rem+) = 57.6px at 1440, LARGER than the 56px h1 on
+     every page that used it. Capped below the h1 scale, and the 14-15ch
+     measure widened — at that size it forced four and five line headings. */
+  font-size: clamp(1.85rem, 3.2vw, 2.75rem);
+  line-height: 1.06;
+  max-width: 22ch;
 }
 
 .darkBand {
@@ -195,8 +219,9 @@
 
 .pricingValue {
   margin: 0;
-  font: 600 clamp(2rem, 4vw, 3rem)/1 var(--font-display);
-  letter-spacing: -0.04em;
+  font: 500 clamp(1.9rem, 3vw, 2.6rem)/1.05 var(--font-display);
+  font-variation-settings: "opsz" 96, "SOFT" 0, "WONK" 0;
+  letter-spacing: -0.028em;
 }
 
 .pricingMeta {
