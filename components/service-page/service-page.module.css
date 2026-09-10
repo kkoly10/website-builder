@@ -3,11 +3,22 @@
 }
 
 .hero {
-  padding: 5.8rem 0 3.2rem;
+  padding: clamp(3rem, 5.5vw, 5rem) 0 clamp(2.5rem, 4vw, 3.5rem);
 }
 
 .heroInner {
-  max-width: 64rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: clamp(1.75rem, 4vw, 4rem);
+  align-items: end;
+}
+
+.heroLead { min-width: 0; }
+.heroSupport { min-width: 0; padding-bottom: 0.35rem; }
+
+@media (max-width: 940px) {
+  .heroInner { grid-template-columns: minmax(0, 1fr); align-items: start; gap: 1.5rem; }
+  .heroSupport { padding-bottom: 0; }
 }
 
 .eyebrow,
@@ -31,26 +42,48 @@
   color: var(--muted);
 }
 
+/* Marketing headings only. Weight and axes are set HERE rather than left to
+   the browser's default `bold` for h2/h3 — Fraunces at 700 with no opsz is
+   the thick text cut, which is what made these read as clumsy slabs.
+   Card titles are deliberately NOT in this group; see below. */
 .heroTitle,
 .sectionTitle,
 .darkTitle,
-.finalTitle,
-.fitCard h3,
-.notFitCard h3,
+.finalTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-variation-settings: "opsz" 96, "SOFT" 0, "WONK" 0;
+  letter-spacing: -0.026em;
+  text-wrap: balance;
+}
+
+/* Card titles use the BODY face in bold (brand/BRAND.md §3): a serif at card
+   size reads as decoration rather than structure. `.fitCard h3` and
+   `.notFitCard h3` were also dead selectors — that markup renders h2. */
 .includeCard h3,
 .processCard h3,
 .faqCard h3,
-.crossLinkCard h3 {
+.crossLinkCard h3,
+.fitNote h3 {
   margin: 0;
-  font-family: var(--font-display);
-  letter-spacing: -0.035em;
+  font-family: var(--font-body);
+  font-weight: 700;
+  letter-spacing: -0.016em;
 }
 
+/* Was clamp(2.8rem, 7vw, 6rem) capped at 13ch — 96px type forced into a
+   13-character measure, which is four lines for any real service title.
+   Matches the shared display scale now. */
 .heroTitle {
-  margin-top: 1rem;
-  font-size: clamp(2.8rem, 7vw, 6rem);
-  line-height: 0.94;
-  max-width: 13ch;
+  margin-top: 0.9rem;
+  font-weight: 500;
+  font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 0;
+  font-size: clamp(2.4rem, 4vw, 3.5rem);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  max-width: 20ch;
+  text-wrap: balance;
 }
 
 .heroIntro,
@@ -67,39 +100,50 @@
 }
 
 .heroIntro {
-  margin-top: 1.3rem;
-  max-width: 58ch;
-  font-size: clamp(1.02rem, 1.6vw, 1.2rem);
-  line-height: 1.7;
+  margin-top: 0;
+  max-width: 46ch;
+  color: var(--ink-3);
+  font-size: var(--cs-size-lede);
+  line-height: var(--cs-leading-lede);
 }
 
 .heroActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8rem;
-  margin-top: 2rem;
+  gap: 0.7rem;
+  margin-top: 1.6rem;
 }
 
+/* These were square (no radius) and 13.5px while the global .btn is
+   radius-md at 14.5px — two different button systems on the same site.
+   Matched to the global primitive; see brand/BRAND.md §7. */
 .primaryButton,
 .secondaryButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 44px;
-  padding: 0.8rem 1rem;
-  border: 1px solid var(--ink);
-  font: 500 12px/1 var(--font-mono);
+  padding: 0.78rem 1.35rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font: 600 14.5px/1.2 var(--font-body);
+  letter-spacing: -0.005em;
+  transition: background var(--dur-fast) var(--ease),
+              border-color var(--dur-fast) var(--ease);
 }
 
 .primaryButton {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--accent);
+  color: #fff;
 }
+.primaryButton:hover { background: var(--cs-accent-600); }
 
 .secondaryButton {
   background: transparent;
+  border-color: var(--rule-2);
   color: var(--ink);
 }
+.secondaryButton:hover { border-color: var(--ink); background: var(--surface); }
 
 .proofBar {
   border-top: 1px solid var(--rule);
@@ -122,7 +166,7 @@
 
 .proofItem p {
   margin: 0;
-  font: 500 11px/1.7 var(--font-mono);
+  font: 500 13px/1.7 var(--font-body);
   color: var(--ink);
 }
 
@@ -137,12 +181,16 @@
   margin-bottom: 2rem;
 }
 
+/* Was clamp(2rem, 4vw, 4rem), which computed to 57.6px against a 56px h1 —
+   the section headings were literally larger than the page title. Capped
+   below the h1 scale, and the 15ch measure widened: at 4rem it forced every
+   section heading into four or five lines. */
 .sectionTitle,
 .darkTitle,
 .finalTitle {
-  font-size: clamp(2rem, 4vw, 4rem);
-  line-height: 1.02;
-  max-width: 15ch;
+  font-size: clamp(1.85rem, 3.2vw, 2.75rem);
+  line-height: 1.06;
+  max-width: 22ch;
 }
 
 .sectionIntro,
@@ -199,7 +247,7 @@
 
 .markerList span {
   color: var(--accent);
-  font: 700 16px/1 var(--font-mono);
+  font: 700 16px/1 var(--font-body);
   transform: translateY(3px);
 }
 
@@ -294,9 +342,10 @@
 .includeCard h3,
 .processCard h3,
 .faqCard h3,
-.crossLinkCard h3 {
-  font-size: clamp(1.3rem, 2.4vw, 1.8rem);
-  line-height: 1.08;
+.crossLinkCard h3,
+.fitNote h3 {
+  font-size: clamp(1.05rem, 1.4vw, 1.2rem);
+  line-height: 1.28;
 }
 
 .processBand {
@@ -457,8 +506,12 @@
 
 .crossLinkCard a {
   display: inline-flex;
-  margin-top: 1rem;
-  font: 500 11px/1.3 var(--font-mono);
+  align-items: center;
+  /* 44px tap target — this is a standalone card link, not prose, so WCAG
+     2.5.8's inline exemption does not apply. It measured 17px. */
+  min-height: 44px;
+  margin-top: .5rem;
+  font: 600 14px/1.3 var(--font-body);
   color: var(--ink);
 }
 
@@ -524,8 +577,8 @@
 .founderCallout { padding: 2.4rem 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
 .founderCalloutInner { display: flex; gap: 1.25rem; align-items: flex-start; }
 .founderCalloutImg { border-radius: 50%; flex-shrink: 0; object-fit: cover; }
-.founderCalloutName { margin: 0 0 .5rem; font: 500 11px/1 var(--font-mono); color: var(--muted); }
+.founderCalloutName { margin: 0 0 .5rem; font: 500 13px/1 var(--font-body); color: var(--muted); }
 .founderCalloutText { margin: 0 0 .75rem; font-size: .95rem; line-height: 1.65; color: var(--ink); }
-.founderCalloutLink { font: 500 13px/1 var(--font-mono); color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.founderCalloutLink { font: 500 13px/1 var(--font-body); color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 560px) { .founderCalloutInner { flex-direction: column; } }
 .riskReversal { margin-top: .75rem; font-size: .82rem; color: var(--muted); line-height: 1.5; }

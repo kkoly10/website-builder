@@ -212,18 +212,31 @@ export default function ServicePage({
       />
       <section className={styles.hero}>
         <div className="container">
+          {/*
+            Two columns: headline left, intro and CTAs right. Single-column
+            put a 6rem headline capped at 13ch on the left and left the whole
+            right half of a 1440px viewport empty, so a long service title
+            ("A website that makes people trust your business before they even
+            call you.") ran to four lines of 96px type and pushed the CTAs
+            below the fold. Collapses to one column at 940px.
+          */}
           <div className={styles.heroInner}>
-            <p className={styles.eyebrow}>{eyebrow}</p>
-            <h1 className={styles.heroTitle}>{title}</h1>
-            <p className={styles.heroIntro}>{intro}</p>
+            <div className={styles.heroLead}>
+              <p className={styles.eyebrow}>{eyebrow}</p>
+              <h1 className={styles.heroTitle}>{title}</h1>
+            </div>
 
-            <div className={styles.heroActions}>
-              <Link href={primaryCtaHref} className={styles.primaryButton}>
-                {primaryCta.label}
-              </Link>
-              <Link href={secondaryCta.href} className={styles.secondaryButton}>
-                {secondaryCta.label}
-              </Link>
+            <div className={styles.heroSupport}>
+              <p className={styles.heroIntro}>{intro}</p>
+
+              <div className={styles.heroActions}>
+                <Link href={primaryCtaHref} className={styles.primaryButton}>
+                  {primaryCta.label}
+                </Link>
+                <Link href={secondaryCta.href} className={styles.secondaryButton}>
+                  {secondaryCta.label}
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -451,7 +464,8 @@ export default function ServicePage({
             {crossLinks.map((link) => (
               <article key={link.href} className={styles.crossLinkCard}>
                 <h3>{tCross(link.id)}</h3>
-                <Link href={link.href}>{t("exploreLane")} -&gt;</Link>
+                {/* The bare "->" is gone here as everywhere else (BRAND.md §7). */}
+                <Link href={link.href}>{t("exploreLane")}</Link>
               </article>
             ))}
           </div>

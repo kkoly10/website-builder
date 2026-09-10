@@ -17,7 +17,24 @@
 }
 
 .hero {
-  padding: 6rem 0 5rem;
+  padding: clamp(3rem, 6vw, 5.5rem) 0 clamp(3.5rem, 6vw, 6rem);
+}
+
+/* Copy left, product panel right. Collapses to a single column at 980px —
+   below that the panel would be too narrow to read as a product surface, so
+   it stacks under the copy rather than shrinking. */
+.heroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
+  gap: clamp(2rem, 4vw, 4rem);
+  align-items: center;
+}
+
+.heroContent { min-width: 0; }
+.heroAside { min-width: 0; }
+
+@media (max-width: 980px) {
+  .heroGrid { grid-template-columns: minmax(0, 1fr); gap: 2.5rem; }
 }
 
 .heroLabel,
@@ -29,7 +46,7 @@
 .tierName,
 .portalCardTitle {
   margin: 0;
-  font: 500 13px/1.4 var(--font-body);
+  font: 600 14px/1.5 var(--font-body);
 }
 
 .heroLabel,
@@ -39,25 +56,41 @@
   color: var(--muted);
 }
 
+/* Card and step titles use the BODY face (brand/BRAND.md §3). .portalHero h3
+   stays in the display group: it is a real display line inside the marketing
+   portal frame, not a card title. */
+.howStep h3,
+.lane h3 {
+  margin: 0;
+  font-family: var(--font-body);
+  font-weight: 700;
+  letter-spacing: -0.016em;
+}
+
 .heroTitle,
 .sectionTitle,
 .portalHero h3,
-.howStep h3,
-.lane h3,
 .tierPrice,
 .closing h2 {
   margin: 0;
+  max-width: 22ch;
   font-family: var(--font-display);
-  letter-spacing: -0.04em;
+  font-weight: 500;
+  /* opsz 96/144 is the display cut. Without pinning it the serif renders at
+     its TEXT optical size — thicker, more closed, and noticeably clumsier.
+     See brand/BRAND.md §3. */
+  font-variation-settings: "opsz" 96, "SOFT" 0, "WONK" 0;
+  letter-spacing: -0.026em;
 }
 
 .heroTitle {
-  margin-top: 1.2rem;
-  max-width: 16ch;
-  font-size: clamp(2.8rem, 6.5vw, 5.6rem);
-  line-height: 0.98;
-  font-weight: 700;
-  letter-spacing: -0.025em;
+  margin-top: 1.1rem;
+  max-width: 18ch;
+  font-size: clamp(2.6rem, 4.4vw, 4rem);
+  line-height: 1.03;
+  letter-spacing: -0.03em;
+  font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 0;
+  text-wrap: balance;
 }
 
 .heroSub,
@@ -68,64 +101,84 @@
 .lane p,
 .portalCardMeta {
   margin: 0;
-  color: var(--ink-2);
+  color: var(--ink-3);
 }
 
 .heroSub {
-  margin-top: 1.5rem;
-  max-width: 56ch;
-  font-size: clamp(1.02rem, 1.5vw, 1.18rem);
-  line-height: 1.75;
+  margin-top: 1.35rem;
+  max-width: 48ch;
+  font-size: var(--cs-size-lede);
+  line-height: var(--cs-leading-lede);
 }
 
 .heroActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.9rem;
+  gap: 0.75rem;
   margin-top: 2rem;
 }
 
 .heroScarcity {
-  margin-top: 0.9rem;
-  font: 500 11px/1.3 var(--font-mono);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+  font: 500 14px/1.4 var(--font-body);
   color: var(--muted);
 }
 
-.heroSecondaryCta {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.95rem 0;
-  border-bottom: 1px solid var(--ink);
-  font-size: 15px;
-  font-weight: 500;
+/* Availability is a status, so it gets a mark as well as a colour — never
+   colour alone (brand/BRAND.md §11). */
+.heroScarcityDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  flex: none;
 }
 
+/* Four value propositions, not four statistics. They were set at
+   clamp(2rem, 4vw, 2.8rem) — stat size — which is why "Production AI" broke
+   over two lines and "Founder-built" hyphenated, leaving the four labels
+   sitting at four different heights. These are short PHRASES, so they are
+   typeset as headings at heading size and the row aligns. */
 .proof {
   border-top: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
+  background: var(--paper-2);
 }
 
 .proofGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
 }
 
 .proofItem {
-  padding: 1.4rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: clamp(1.5rem, 2.4vw, 2.1rem) clamp(1rem, 1.8vw, 1.75rem);
   border-left: 1px solid var(--rule);
 }
 
 .proofItem:first-child {
   border-left: none;
+  padding-left: 0;
 }
 
 .proofValue {
-  font-size: clamp(2rem, 4vw, 2.8rem);
-  line-height: 1;
+  margin: 0;
+  font: 700 clamp(1.05rem, 1.5vw, 1.24rem)/1.25 var(--font-body);
+  letter-spacing: -0.016em;
+  color: var(--ink);
+  text-wrap: balance;
 }
 
 .proofLabel {
-  margin-top: 0.6rem;
+  margin: 0;
+  color: var(--muted);
+  font-weight: 500;
 }
 
 .diff,
@@ -151,9 +204,12 @@
 
 .sectionTitle {
   margin-top: 0.8rem;
-  max-width: 14ch;
-  font-size: clamp(2.1rem, 4vw, 4.4rem);
-  line-height: 1.02;
+  /* Was clamp(..., 4vw, 4rem+) = 57.6px at 1440, LARGER than the 56px h1 on
+     every page that used it. Capped below the h1 scale, and the 14-15ch
+     measure widened — at that size it forced four and five line headings. */
+  font-size: clamp(1.85rem, 3.2vw, 2.75rem);
+  line-height: 1.06;
+  max-width: 22ch;
 }
 
 .diffLede,
@@ -183,11 +239,13 @@
   color: color-mix(in srgb, var(--paper) 72%, transparent);
 }
 
+/* 42% paper on the ink ground measured 4.0:1 — just under AA for 13px.
+   Raised to 58%, and the 0.08em tracking dropped: it was there to make the
+   old mono face read as a URL and it is not doing that job in Manrope. */
 .portalUrl {
   margin: 0;
-  font: 500 11px/1.3 var(--font-mono);
-  color: color-mix(in srgb, var(--paper) 42%, transparent);
-  letter-spacing: 0.08em;
+  font: 500 13px/1.3 var(--font-body);
+  color: color-mix(in srgb, var(--paper) 58%, transparent);
 }
 
 .portalHero {
@@ -196,13 +254,14 @@
 }
 
 .portalEyebrow {
-  color: var(--accent);
+  /* Measured 3.58:1 as pure --accent on the ink ground. */
+  color: var(--accent-on-ink);
 }
 
 .portalHero h3 {
   margin-top: 0.65rem;
-  max-width: 11ch;
-  font-size: clamp(2rem, 4vw, 3rem);
+  max-width: 14ch;
+  font-size: clamp(1.75rem, 2.8vw, 2.4rem);
   line-height: 1;
   color: var(--paper);
 }
@@ -210,12 +269,20 @@
 .portalCta {
   display: inline-flex;
   align-items: center;
-  min-height: 42px;
-  padding: 0.8rem 1rem;
-  border: 1px solid color-mix(in srgb, var(--paper) 18%, transparent);
-  background: color-mix(in srgb, var(--ink) 86%, var(--paper) 14%);
+  /* Was 42px — two short of the 44px floor (brand/BRAND.md §11). */
+  min-height: 44px;
+  padding: 0.78rem 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--paper) 22%, transparent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--paper) 8%, transparent);
   color: var(--paper);
-  font: 500 12px/1 var(--font-mono);
+  font: 600 14.5px/1.2 var(--font-body);
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.portalCta:hover {
+  background: color-mix(in srgb, var(--paper) 14%, transparent);
+  border-color: color-mix(in srgb, var(--paper) 36%, transparent);
 }
 
 .journey {
@@ -241,7 +308,7 @@
 }
 
 .jname {
-  font: 500 10px/1.3 var(--font-mono);
+  font: 500 12.5px/1.3 var(--font-body);
   color: color-mix(in srgb, var(--paper) 62%, transparent);
 }
 
@@ -260,7 +327,8 @@
 }
 
 .jstepActive .jname {
-  color: var(--accent);
+  /* As above — pure --accent cannot carry 12.5px text on the ink ground. */
+  color: var(--accent-on-ink);
 }
 
 .portalCards {
@@ -271,10 +339,20 @@
 }
 
 .portalCard {
-  padding: 1rem;
+  padding: 1.1rem;
   border: 1px solid color-mix(in srgb, var(--paper) 14%, transparent);
-  background: color-mix(in srgb, var(--ink) 82%, var(--paper) 18%);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--paper) 6%, transparent);
 }
+
+/* .portalCardTitle inherits --muted from the shared label group at the top of
+   this file, which is a LIGHT-ground colour and measured 1.99:1 inside this
+   dark card. Dark-ground cards need their own label colour. */
+.portalCard .portalCardTitle {
+  color: color-mix(in srgb, var(--paper) 62%, transparent);
+}
+.portalCard .portalCardValue { color: var(--paper); }
+.portalCard .portalCardMeta { color: color-mix(in srgb, var(--paper) 58%, transparent); }
 
 .portalCardValue {
   margin: 0.6rem 0 0;
@@ -318,8 +396,8 @@
 
 .howStep h3 {
   margin-top: 1rem;
-  font-size: clamp(1.35rem, 2.5vw, 1.9rem);
-  line-height: 1.08;
+  font-size: clamp(1.05rem, 1.4vw, 1.2rem);
+  line-height: 1.28;
 }
 
 .howStep p {
@@ -399,7 +477,7 @@
   border: 1px solid var(--ink);
   background: transparent;
   color: var(--ink);
-  font: 500 12px/1 var(--font-mono);
+  font: 500 13.5px/1 var(--font-body);
 }
 
 .tierFeatured .tierCta {
@@ -440,8 +518,8 @@
 }
 
 .lane h3 {
-  font-size: clamp(1.35rem, 2.4vw, 1.8rem);
-  line-height: 1.08;
+  font-size: clamp(1.05rem, 1.4vw, 1.2rem);
+  line-height: 1.28;
 }
 
 .lane p {
@@ -452,7 +530,7 @@
 .laneLink {
   display: inline-flex;
   margin-top: 1rem;
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
 }
 
 @media (max-width: 980px) {
@@ -472,10 +550,15 @@
   .proofItem {
     border-left: none;
     border-top: 1px solid var(--rule);
+    /* Restore the gutter the desktop rule strips from the first cell. Once
+       the row stacks there is no leading edge to align to, so the flush-left
+       first item just read as a misaligned one. */
+    padding-left: clamp(1rem, 1.8vw, 1.75rem);
   }
 
   .proofItem:first-child {
     border-top: none;
+    padding-left: clamp(1rem, 1.8vw, 1.75rem);
   }
 
   .portalHead,
@@ -507,30 +590,37 @@
   max-width: 60ch;
 }
 
+/* 4x2 for the 8 services. At 3 columns the 8th card left a dead cell, and
+   the gap-as-border trick made that cell read as a broken panel rather than
+   whitespace. */
 .whatWeBuildGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1px;
   background: var(--rule);
   border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 .wbCard {
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: 0.55rem;
-  padding: 1.6rem 1.4rem;
-  background: var(--paper);
+  grid-template-rows: auto 1fr;
+  gap: 0.5rem;
+  padding: clamp(1.3rem, 1.9vw, 1.7rem) clamp(1.1rem, 1.5vw, 1.4rem);
+  background: var(--surface);
   text-decoration: none;
   color: inherit;
-  min-height: 170px;
-  transition: background 0.15s ease, transform 0.22s ease, box-shadow 0.22s ease;
+  min-height: 148px;
+  transition: background var(--dur) var(--ease);
 }
 
+/* No transform here. The cards are separated by a 1px gap over a shared
+   background, so lifting one tears the seam open against its neighbours —
+   a hover state that visibly breaks the grid it lives in. Background is
+   enough of an affordance inside a bordered table like this. */
 .wbCard:hover {
   background: var(--paper-2);
-  transform: translateY(-3px);
-  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.07);
 }
 
 .wbCard:focus-visible {
@@ -538,13 +628,16 @@
   outline-offset: -2px;
 }
 
+/* Body face, not the display serif. A serif at card-title size reads as
+   decoration rather than structure (brand/BRAND.md §3) — and at 1.35rem in a
+   four-across grid it was also the widest possible setting of the longest
+   labels. */
 .wbCardTitle {
   margin: 0;
-  font-family: var(--font-display);
-  letter-spacing: -0.02em;
-  font-size: 1.35rem;
-  line-height: 1.15;
+  font: 700 1.06rem/1.25 var(--font-body);
+  letter-spacing: -0.016em;
   color: var(--ink);
+  text-wrap: balance;
 }
 
 .wbCardBody {
@@ -554,22 +647,15 @@
   line-height: 1.55;
 }
 
-.wbCardArrow {
-  display: inline-block;
-  font-family: var(--font-mono);
-  color: var(--accent);
-  font-size: 0.95rem;
-  margin-top: 0.4rem;
-  transition: transform 0.22s ease;
-}
-
-.wbCard:hover .wbCardArrow {
-  transform: translateX(5px);
-}
+/* The bare "->" glyphs are gone. An unlabelled arrow in the corner of an
+   already-clickable card is decoration, not affordance — the same reason
+   trailing arrows were stripped from buttons in redesign Phase 3. Kept as
+   an empty rule so any stale reference is inert rather than unstyled. */
+.wbCardArrow { display: none; }
 
 .wbCardBadge {
   margin: 0;
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
   color: var(--muted);
   align-self: end;
 }
@@ -612,20 +698,18 @@
 }
 .startHereCard:hover { background: var(--paper-2); transform: translateY(-2px); }
 .startHereSituation { margin: 0; font-size: .85rem; color: var(--ink); line-height: 1.4; }
-.startHereService { margin: 0; font: 500 11px/1 var(--font-mono); color: var(--muted); }
-.startHereArrow {
-  display: inline-block;
-  font-size: .85rem;
-  color: var(--muted);
-  align-self: end;
-  transition: transform 0.2s ease;
-}
-.startHereCard:hover .startHereArrow { transform: translateX(3px); }
+.startHereService { margin: 0; font: 500 13px/1 var(--font-body); color: var(--muted); }
+/* Bare arrow removed (see .wbCardArrow). Kept as an inert rule so a stale
+   reference renders nothing rather than an unstyled glyph. */
+.startHereArrow { display: none; }
 
-@media (max-width: 880px) {
+@media (max-width: 1040px) {
   .whatWeBuildGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+@media (max-width: 880px) {
   .startHereGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -661,24 +745,31 @@
 
 .venturesLabel {
   margin: 0;
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
   color: color-mix(in srgb, var(--paper) 52%, transparent);
 }
 
 .venturesTitle {
   margin: 0;
   font-family: var(--font-display);
-  letter-spacing: -0.04em;
-  font-size: clamp(1.8rem, 3.5vw, 3rem);
-  line-height: 1.05;
+  font-weight: 500;
+  font-variation-settings: "opsz" 96, "SOFT" 0, "WONK" 0;
+  letter-spacing: -0.026em;
+  font-size: clamp(1.85rem, 3.2vw, 2.75rem);
+  line-height: 1.06;
   color: var(--paper);
+  text-wrap: balance;
 }
 
+/* 60ch on .venturesHead was still ~1000px of running text on a dark ground,
+   which is where a paragraph stops being read and starts being skipped.
+   Reverse type also needs a shorter measure than dark-on-light. */
 .venturesIntro {
   margin: 0;
-  color: color-mix(in srgb, var(--paper) 68%, var(--muted));
-  line-height: 1.75;
-  font-size: 0.95rem;
+  max-width: 58ch;
+  color: color-mix(in srgb, var(--paper) 72%, transparent);
+  line-height: 1.72;
+  font-size: var(--cs-size-lede);
 }
 
 .venturesGrid {
@@ -688,12 +779,19 @@
 }
 
 .ventureCard {
-  padding: 1.6rem;
-  border: 1px solid color-mix(in srgb, var(--paper) 12%, transparent);
-  background: color-mix(in srgb, var(--ink) 82%, var(--paper) 18%);
+  padding: clamp(1.4rem, 2.2vw, 2rem);
+  border: 1px solid color-mix(in srgb, var(--paper) 14%, transparent);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--paper) 5%, transparent);
   display: grid;
   gap: 0.7rem;
   align-content: start;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+
+.ventureCard:hover {
+  border-color: color-mix(in srgb, var(--paper) 26%, transparent);
+  background: color-mix(in srgb, var(--paper) 8%, transparent);
 }
 
 .ventureName {
@@ -707,7 +805,7 @@
 
 .ventureTagline {
   margin: 0;
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
   color: color-mix(in srgb, var(--paper) 52%, transparent);
 }
 
@@ -727,13 +825,14 @@
 .ventureChip {
   padding: 0.25rem 0.6rem;
   border: 1px solid color-mix(in srgb, var(--paper) 18%, transparent);
-  font: 500 10px/1.3 var(--font-mono);
+  font: 500 12.5px/1.3 var(--font-body);
   color: color-mix(in srgb, var(--paper) 62%, transparent);
 }
 
 .ventureLink {
-  font: 500 11px/1.3 var(--font-mono);
-  color: var(--accent);
+  font: 600 13.5px/1.3 var(--font-body);
+  /* Measured 3.58:1 as pure --accent on the dark ventures ground. */
+  color: var(--accent-on-ink);
   text-decoration: none;
   transition: opacity 0.15s;
 }
@@ -747,7 +846,7 @@
 }
 
 .venturesCtaLink {
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
   color: color-mix(in srgb, var(--paper) 62%, transparent);
   text-decoration: none;
   transition: color 0.15s;
@@ -766,7 +865,7 @@
 
 .closingPricingLink {
   margin-top: 1.2rem;
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
 }
 
 .closingPricingLink a {
@@ -813,23 +912,29 @@
 }
 
 .founderName {
-  font-size: clamp(1.6rem, 3vw, 2.2rem);
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 0;
+  font-size: clamp(2.3rem, 3.8vw, 3.3rem);
   letter-spacing: -0.03em;
-  margin: 0.4rem 0 0.2rem;
-  line-height: 1.15;
+  margin: 0.5rem 0 0.3rem;
+  line-height: 1.05;
 }
 
 .founderRole {
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
   color: var(--accent);
   margin-bottom: 1.4rem;
 }
 
 .founderBio {
-  font-size: 0.95rem;
-  line-height: 1.7;
-  color: var(--body);
+  /* var(--body) is not a token and never was — the declaration was invalid,
+     so this inherited instead of setting a colour. Capped to a readable
+     measure too: it was running the full container width. */
+  max-width: 68ch;
+  font-size: var(--cs-size-body);
+  line-height: var(--cs-leading-body);
+  color: var(--ink-2);
   margin-bottom: 0.9rem;
 }
 
@@ -841,7 +946,7 @@
 
 .founderLinkedIn {
   display: inline-block;
-  font: 500 11px/1.3 var(--font-mono);
+  font: 500 13px/1.3 var(--font-body);
   color: var(--accent);
   text-decoration: none;
   transition: color 0.15s;
@@ -868,5 +973,18 @@
 
   .closing {
     padding: 2.2rem 0;
+  }
+}
+
+/* 44px tap target on touch widths (brand/BRAND.md §11). These are
+   standalone links in their own row, not prose links, so WCAG 2.5.8's
+   inline exemption does not cover them. */
+@media (max-width: 620px) {
+.ventureLink,
+.founderLinkedIn,
+.venturesCtaLink {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
 }
