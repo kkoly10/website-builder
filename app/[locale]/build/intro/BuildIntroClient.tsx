@@ -168,7 +168,17 @@ export default function BuildIntroClient() {
   if (projectType !== null && projectType !== "website") {
     return (
       <main className="container" style={{ maxWidth: 780, padding: "48px 0 80px" }}>
-        <p style={{ color: "var(--muted)", fontSize: 14 }}>{t("redirecting")}</p>
+        <h1
+          style={{
+            margin: 0,
+            color: "var(--fg)",
+            fontFamily: "var(--font-display)",
+            fontSize: 24,
+            fontWeight: 500,
+          }}
+        >
+          {t("redirecting")}
+        </h1>
       </main>
     );
   }

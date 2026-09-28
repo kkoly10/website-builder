@@ -107,7 +107,7 @@ export default function SiteFooter() {
           </nav>
           <div className="footerSocial">
             <a
-              href="https://www.facebook.com/share/1GFn42rFuS/"
+              href="https://www.facebook.com/profile.php?id=61590331942425"
               target="_blank"
               rel="me noopener noreferrer"
             >

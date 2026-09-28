@@ -18,6 +18,7 @@ export default function ConversionShell({
   children,
   footer,
   maxWidth = 440,
+  titleAs = "h1",
 }: {
   kicker?: string;
   title: string;
@@ -26,7 +27,10 @@ export default function ConversionShell({
   children?: ReactNode;
   footer?: ReactNode;
   maxWidth?: number;
+  titleAs?: "h1" | "h2";
 }) {
+  const TitleTag = titleAs;
+
   return (
     <main
       className="container"
@@ -41,7 +45,7 @@ export default function ConversionShell({
                 {kicker}
               </div>
             ) : null}
-            <h1 className="h2">{title}</h1>
+            <TitleTag className="h2">{title}</TitleTag>
             {subtitle ? (
               <p className="pDark" style={{ marginTop: 6 }}>
                 {subtitle}

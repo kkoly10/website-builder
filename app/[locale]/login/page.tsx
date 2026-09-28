@@ -39,5 +39,5 @@ export default async function LoginPage({
 
 function LoginLoadingCard() {
   const t = useTranslations("auth.login");
-  return <ConversionShell kicker={t("loadingKicker")} title={t("loadingTitle")} />;
+  return <ConversionShell kicker={t("loadingKicker")} title={t("loadingTitle")} titleAs="h2" />;
 }

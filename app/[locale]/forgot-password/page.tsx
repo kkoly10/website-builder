@@ -39,5 +39,5 @@ export default async function ForgotPasswordPage({
 
 function ForgotLoadingCard() {
   const t = useTranslations("auth.forgotPassword");
-  return <ConversionShell kicker={t("loadingKicker")} title={t("title")} />;
+  return <ConversionShell kicker={t("loadingKicker")} title={t("title")} titleAs="h2" />;
 }

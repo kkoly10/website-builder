@@ -44,7 +44,7 @@ const GBP_URL = process.env.NEXT_PUBLIC_GBP_URL?.trim() || "https://share.google
 const SAME_AS_URLS = [
   "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407",
   "https://github.com/kkoly10",
-  "https://www.facebook.com/share/1GFn42rFuS/",
+  "https://www.facebook.com/profile.php?id=61590331942425",
   "https://www.instagram.com/crecystudio",
   GBP_URL,
 ].filter(Boolean) as string[];

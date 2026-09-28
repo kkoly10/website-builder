@@ -275,9 +275,8 @@ function HomeContent() {
           <h2>{t("workInView.workspace.title")}</h2>
           <p>{t("workInView.workspace.body")}</p>
           <TrackLink
-            href="/demos/portal"
+            href="/process"
             event="cta_home_work_in_view_workspace"
-            rel="nofollow"
             className={styles.darkLink}
           >
             {t("workInView.workspace.cta")} <span aria-hidden>↗</span>
