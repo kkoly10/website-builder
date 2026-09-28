@@ -1871,3 +1871,29 @@ body:has(.workInViewHome) .footerSocial a:hover {
 body:has(.workInViewHome) .footerBottom {
   border-top-color: #303944;
 }
+
+.footerLanguages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.footerLanguages a {
+  color: var(--muted);
+  font: 500 14px/1.5 var(--font-body);
+  text-decoration: none;
+}
+
+.footerLanguages a:hover,
+.footerLanguages a:focus-visible {
+  color: var(--ink);
+}
+
+body:has(.workInViewHome) .footerLanguages a {
+  color: #aeb6bf;
+}
+
+body:has(.workInViewHome) .footerLanguages a:hover,
+body:has(.workInViewHome) .footerLanguages a:focus-visible {
+  color: #ffffff;
+}

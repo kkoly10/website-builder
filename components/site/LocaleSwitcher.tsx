@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { usePathname as useRawPathname, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+import { isEnglishOnlyPath } from "@/lib/seo/englishOnlyPaths";
 
 const LABELS: Record<string, string> = {
   en: "EN",
@@ -74,6 +75,16 @@ export default function LocaleSwitcher({
       // segment, then let i18n routing re-prefix for the target locale.
       const stripped =
         rawPathname.replace(/^\/(?:en|fr|es)(?=\/|$)/, "") || "/";
+
+      // Blog and Locations are intentionally English-only. The old switcher
+      // could send a visitor from /blog to /fr/blog or /es/blog, which hard
+      // 404 by design. For those route families, switching away from English
+      // lands on the selected locale's homepage instead of a dead URL.
+      if (next !== "en" && isEnglishOnlyPath(stripped)) {
+        router.replace("/", { locale: next });
+        return;
+      }
+
       router.replace(`${stripped}${suffix}`, { locale: next });
     });
   }

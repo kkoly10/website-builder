@@ -30,7 +30,7 @@ export async function generateMetadata({
       alternates: englishOnlyAlternates("/blog"),
     };
   }
-  const title = "Blog — practical writing on AI, web, and how we build | CrecyStudio";
+  const title = "Web & AI Insights for Small Business | CrecyStudio";
   const description =
     "Long-form pieces on AI integration, hiring a web studio, RAG vs fine-tuning, local DMV business tech — written by the founder of CrecyStudio.";
   return {

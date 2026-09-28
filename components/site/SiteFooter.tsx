@@ -100,6 +100,11 @@ export default function SiteFooter() {
             Mastodon-style verification); rel="noopener" closes a window
             handle leak when opening in a new tab.
           */}
+          <nav className="footerLanguages" aria-label="Language versions">
+            <RawLink href="/" hrefLang="en">English</RawLink>
+            <RawLink href="/fr" hrefLang="fr">Français</RawLink>
+            <RawLink href="/es" hrefLang="es">Español</RawLink>
+          </nav>
           <div className="footerSocial">
             <a
               href="https://www.facebook.com/share/1GFn42rFuS/"

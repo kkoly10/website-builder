@@ -64,8 +64,9 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: "ai-integration-checklist-2026",
     title: "AI integration checklist: what to actually scope in 2026",
+    seoTitle: "AI Integration Checklist for 2026",
     description:
-      "Before you hire anyone to add AI to your product, walk this checklist. Eleven questions that separate a real production AI build from a demo that breaks in week two.",
+      "An 11-point checklist for scoping production AI: accuracy, data, autonomy, guardrails, audit, cost, latency, and ownership before you hire.",
     headline: "AI integration in 2026: the eleven questions to scope before you hire",
     publishedAt: "2026-05-14",
     lead:
@@ -178,7 +179,7 @@ export const BLOG_POSTS: BlogPost[] = [
     slug: "hiring-a-web-studio-in-the-dmv",
     title: "Hiring a web studio in the DMV: a no-BS guide",
     description:
-      "How to evaluate web designers, developers, and AI consultants in the DC / Maryland / Virginia area. What to ask, what to ignore, what the actual price ranges look like.",
+      "How to evaluate web studios in DC, Maryland, and Virginia: who builds the work, ownership, handoff, pricing, and the questions worth asking.",
     headline: "Hiring a web studio in the DMV: what's actually worth asking",
     publishedAt: "2026-05-21",
     lead:
@@ -282,7 +283,7 @@ export const BLOG_POSTS: BlogPost[] = [
     title: "RAG vs fine-tuning: which one your small business actually needs",
     seoTitle: "RAG vs Fine-Tuning for Small Business",
     description:
-      "Most small businesses are sold fine-tuning when they need RAG. A practical breakdown of when to use each, what they cost, and what the production tradeoffs look like.",
+      "RAG vs fine-tuning for small business: when to use each, what they cost, how they handle changing knowledge, and the production tradeoffs.",
     headline: "RAG vs fine-tuning for small businesses: the honest comparison",
     publishedAt: "2026-05-28",
     lead:
@@ -369,8 +370,9 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: "ai-agents-vs-ai-copilots",
     title: "AI agents vs AI copilots: when to build each one",
+    seoTitle: "AI Agents vs Copilots: What to Build",
     description:
-      "An AI agent acts on its own. An AI copilot suggests and waits for confirm. Most projects are wrongly scoped as agents when copilots would ship better — how to tell which fits.",
+      "Learn when to build an AI agent versus a copilot, how autonomy levels change risk, and where confidence gates and human review belong.",
     headline: "AI agents vs AI copilots: when each one actually makes sense",
     publishedAt: "2026-05-25",
     lead:
@@ -461,8 +463,9 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: "local-seo-dmv-2026-playbook",
     title: "Local SEO for DMV small businesses: 2026 playbook",
+    seoTitle: "Local SEO for DMV Small Businesses",
     description:
-      "A practical 2026 walkthrough for ranking on Google in the DMV — Google Business Profile setup, NAP consistency, on-site schema, reviews, and the local-citation strategy that actually moves rankings.",
+      "A practical DMV local SEO guide covering Google Business Profile, on-site schema, NAP consistency, reviews, citations, and local landing pages.",
     headline: "Local SEO for DMV small businesses: the 2026 playbook",
     publishedAt: "2026-05-27",
     lead:
@@ -603,7 +606,7 @@ export const BLOG_POSTS: BlogPost[] = [
     title: "Web design vs custom web app: knowing which you actually need",
     seoTitle: "Web Design vs Custom Web App",
     description:
-      "Most projects start as \"a website\" but end up needing custom backend logic. Five questions that tell you which budget bracket you're in before you start shopping for a vendor.",
+      "Learn whether your project needs a marketing website or a custom web app using five questions about users, data, workflows, auth, and integrations.",
     headline: "Web design vs custom web app: which one you actually need",
     publishedAt: "2026-05-28",
     lead:

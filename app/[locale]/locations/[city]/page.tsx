@@ -63,8 +63,8 @@ export async function generateMetadata({
   }
   // Value-first title that front-loads the local SEO target. Brand
   // comes after the pipe — better SERP CTR than brand-first format.
-  const title = `Web Design & AI Integration in ${location.shortName} | CrecyStudio`;
-  const description = `Independent web studio serving ${location.shortName}. Premium websites, custom web apps, AI integration, and workflow automation — by a senior practitioner who ships.`;
+  const title = `Web Design in ${location.shortName} | CrecyStudio`;
+  const description = `Web design and custom software for businesses in ${location.shortName}. CrecyStudio builds websites, web apps, SaaS, AI integrations, and automation.`;
   return {
     title,
     description,

@@ -156,8 +156,8 @@
     }
   },
   "about": {
-    "metaTitle": "À propos | CrecyStudio",
-    "metaDescription": "Découvrez Komlan Kouhiko, fondateur de CrecyStudio — le studio web indépendant qui conçoit des sites premium et des systèmes web personnalisés.",
+    "metaTitle": "À propos de CrecyStudio | Studio web en Virginie",
+    "metaDescription": "Découvrez CrecyStudio, studio indépendant en Virginie pour sites web, SaaS, applications sur mesure et intégrations IA en production.",
     "proof": {
       "saas": "Plateformes SaaS en production",
       "systems": "Systèmes d'entreprise livrés",
@@ -557,8 +557,8 @@
     }
   },
   "pricing": {
-    "metaTitle": "Tarifs | CrecyStudio",
-    "metaDescription": "Fourchettes de prix claires avant le début des travaux. Estimations fixes cadrées sur votre projet, sans rétention forcée ni surprises.",
+    "metaTitle": "Tarifs web & logiciel sur mesure | CrecyStudio",
+    "metaDescription": "Découvrez nos fourchettes pour sites web, SaaS, applications sur mesure, intégration IA et automatisation avant le cadrage du projet.",
     "label": "Tarifs",
     "title": "Fourchettes claires avant le début des travaux.",
     "intro": "Tous les prix sont en USD. On cadre d'abord, on envoie une estimation écrite, et on garde le chiffre aligné sur le projet réel — pas de rétention forcée, pas de surprises.",
@@ -714,8 +714,8 @@
     }
   },
   "process": {
-    "metaTitle": "Processus | CrecyStudio",
-    "metaDescription": "Un processus simple avec des jalons clairs. Même rythme d'exécution pour le web, l'e-commerce et les systèmes pour que la portée reste visible.",
+    "metaTitle": "Processus de développement web | CrecyStudio",
+    "metaDescription": "Découvrez comment CrecyStudio cadre, conçoit, développe et lance sites web, SaaS, intégrations IA et logiciels sur mesure.",
     "label": "Processus",
     "title": "Un processus simple avec des jalons clairs.",
     "intro": "Chaque axe utilise le même rythme d'exécution pour que la portée reste visible, le tarif compréhensible et que personne ne se demande ce qui vient ensuite.",
@@ -761,8 +761,8 @@
     "ctaSecondary": "Voir les tarifs"
   },
   "faq": {
-    "metaTitle": "FAQ | CrecyStudio",
-    "metaDescription": "Réponses claires sur la portée, la propriété, les délais et le fonctionnement de l'espace de travail avant toute signature.",
+    "metaTitle": "FAQ projets web & logiciel | CrecyStudio",
+    "metaDescription": "Réponses sur le cadrage, les tarifs, la propriété, les délais, les révisions, la communication et l’espace client CrecyStudio.",
     "label": "FAQ",
     "title": "Des réponses avant de vous engager.",
     "intro": "Réponses claires sur la portée, la propriété, les délais et le fonctionnement de l'espace de travail avant toute signature.",
@@ -1134,40 +1134,40 @@
   },
   "servicesMeta": {
     "saas": {
-      "metaTitle": "Développement SaaS | Par un fondateur qui exploite 4 SaaS",
-      "metaDescription": "Développement SaaS par un fondateur qui a livré quatre produits SaaS en production (Fleiko, Proveo, Korent, Kocre IT). Multi-tenant + facturation + rétention conçus dès le premier jour. Sprint Discovery à partir de 4 000 $, Sprint MVP à partir de 25 000 $."
+      "metaTitle": "Développement SaaS | CrecyStudio",
+      "metaDescription": "Développement SaaS en production : multi-tenant, facturation, onboarding et IA. Découvrez nos produits réels puis cadrez votre solution."
     },
     "aiIntegration": {
-      "metaTitle": "Intégration IA | De l'IA en production, avec des garde-fous",
-      "metaDescription": "Nous ne vendons pas de démos d'IA. Nous exploitons quatre produits SaaS propulsés par l'IA (Fleiko, Proveo, Korent, Kocre IT) — à seuil de confiance, encadrés, avec supervision humaine. Nous construisons la même chose pour votre entreprise."
+      "metaTitle": "Intégration IA pour entreprises | CrecyStudio",
+      "metaDescription": "Intégration IA en production avec seuils de confiance, garde-fous et supervision humaine pour des workflows métier réellement utilisés."
     },
     "websites": {
-      "metaTitle": "Création de sites web | Sites premium axés sur la conversion",
-      "metaDescription": "Création de sites web premium pour les entreprises de services qui ont besoin de plus de confiance, d'un message plus clair et d'une meilleure conversion des prospects."
+      "metaTitle": "Création de sites web | CrecyStudio",
+      "metaDescription": "Sites web premium pour entreprises de services : message clair, crédibilité, conversion et expérience mobile rapide et professionnelle."
     },
     "systems": {
-      "metaTitle": "Automatisation de workflow | Audit, construction et nettoyage opérationnel",
-      "metaDescription": "Automatisation de workflow pour les entreprises qui ont besoin d'une meilleure prise en charge des demandes, du routage, du suivi de statut et des systèmes d'administration."
+      "metaTitle": "Automatisation des workflows | CrecyStudio",
+      "metaDescription": "Automatisation des workflows métier : prise en charge des demandes, routage, suivi de statut, tableaux de bord et systèmes administratifs."
     },
     "ecommerce": {
-      "metaTitle": "Systèmes e-commerce | Vitrine, paiement et flux opérationnel",
-      "metaDescription": "Systèmes e-commerce pour les marques qui ont besoin d'une meilleure vitrine, d'un paiement plus fluide et d'opérations post-achat plus propres."
+      "metaTitle": "Développement e-commerce | CrecyStudio",
+      "metaDescription": "Systèmes e-commerce avec vitrine, checkout et opérations post-achat conçus pour une expérience client plus claire et plus fiable."
     },
     "customWebApps": {
-      "metaTitle": "Applications web sur mesure | Tableaux de bord, portails et outils internes",
-      "metaDescription": "Applications web sur mesure pour les entreprises qui ont besoin de plus qu'un site — tableaux de bord, portails clients, outils internes et MVPs construits par un praticien."
+      "metaTitle": "Applications web sur mesure | CrecyStudio",
+      "metaDescription": "Applications web sur mesure pour tableaux de bord, portails clients, outils internes et MVP adaptés aux opérations réelles de votre entreprise."
     },
     "clientPortals": {
-      "metaTitle": "Portails clients | Espaces de travail brandés que vos clients utilisent vraiment",
-      "metaDescription": "Espaces de travail de projet privés avec jalons, messagerie, partage de fichiers, facturation et accords — vous appartiennent, à votre image."
+      "metaTitle": "Portails clients sur mesure | CrecyStudio",
+      "metaDescription": "Portails clients privés avec jalons, messagerie, fichiers, facturation, validations et accès sécurisé, entièrement adaptés à votre marque."
     },
     "websiteRescue": {
-      "metaTitle": "Sauvetage de site web | Réparez l'existant sans tout reconstruire",
-      "metaDescription": "Service d'audit et de sprint pour les PME dont le site est lent, cassé sur mobile ou ne convertit pas — corrigé en 1 à 2 semaines."
+      "metaTitle": "Réparation de sites web | CrecyStudio",
+      "metaDescription": "Audit et sprint de réparation pour sites lents, cassés sur mobile ou peu convertissants, sans imposer une reconstruction complète."
     },
     "carePlans": {
-      "metaTitle": "Plans de maintenance | Entretien mensuel de site et de système",
-      "metaDescription": "Trois plans mensuels qui maintiennent votre site ou votre système sur mesure en bonne santé — mises à jour de contenu, surveillance, petites évolutions et sprints d'amélioration."
+      "metaTitle": "Maintenance de sites web | CrecyStudio",
+      "metaDescription": "Maintenance mensuelle pour sites web et systèmes sur mesure : contenu, surveillance, petites évolutions et améliorations continues."
     }
   },
   "auth": {
@@ -2900,8 +2900,8 @@
     }
   },
   "work": {
-    "metaTitle": "Réalisations | CrecyStudio",
-    "metaDescription": "Une sélection de systèmes que nous avons livrés — y compris les nôtres. SaaS de location multi-tenant, plateforme augmentée par IA pour contractants de service, et projets clients.",
+    "metaTitle": "Projets web, SaaS & IA | CrecyStudio",
+    "metaDescription": "Découvrez des sites web, produits SaaS et systèmes IA réellement construits par CrecyStudio, dont Fleiko, Proveo, Crecy OS et Kocre IT.",
     "kicker": "Sélection de réalisations",
     "title": "De vrais systèmes que nous avons livrés — <em>y compris les nôtres.</em>",
     "subtitle": "Trois produits studio que nous avons construits, lançons et exploitons. Plus du travail client dont les noms sont parfois anonymisés.",
@@ -3507,8 +3507,8 @@
     "closingCtaSecondary": "Voir notre processus"
   },
   "workProveo": {
-    "metaTitle": "Moteur de confiance Proveo — Architecture technique | CrecyStudio",
-    "metaDescription": "Comment nous avons construit un système d'authentification de photos pour entrepreneurs de services avec GPT-4o Vision, hachage de provenance côté client et un moteur de badge déterministe.",
+    "metaTitle": "Proveo : moteur de confiance | CrecyStudio",
+    "metaDescription": "Découvrez comment Proveo vérifie les preuves photo avec vision IA, hachage de provenance et moteur de badges déterministe.",
     "back": "Retour aux projets",
     "kicker": "Étude de cas technique / Proveo",
     "title": "Construire un système de confiance pour photos où l'IA identifie les preuves mais ne décide jamais du verdict.",
@@ -3580,8 +3580,8 @@
     "closingCtaSecondary": "Voir notre processus"
   },
   "workTechdesk": {
-    "metaTitle": "Étude de cas Kocre IT Services | CrecyStudio",
-    "metaDescription": "Comment nous avons construit un helpdesk IA avec Ghost Admin, un portail de résolution automatique en six critères, un volant de connaissances auto-composé et la surveillance déterministe Sentinel.",
+    "metaTitle": "Kocre IT : helpdesk IA | CrecyStudio",
+    "metaDescription": "Découvrez comment Kocre IT combine contexte Ghost Admin, résolution automatique en six critères, capitalisation des connaissances et supervision.",
     "back": "Retour aux projets",
     "kicker": "Étude de cas technique / Kocre IT Services",
     "title": "Construire un helpdesk IA où la machine rédige, conseille et surveille — mais ne ferme jamais un ticket sur la seule confiance.",

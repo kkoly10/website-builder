@@ -156,8 +156,8 @@
     }
   },
   "about": {
-    "metaTitle": "About | CrecyStudio",
-    "metaDescription": "Learn about Komlan Kouhiko, founder of CrecyStudio — the independent web studio building premium websites and custom systems.",
+    "metaTitle": "About CrecyStudio | Virginia Web & Software Studio",
+    "metaDescription": "Meet CrecyStudio, an independent Virginia studio building websites, SaaS products, custom web apps and production AI systems for growing businesses.",
     "proof": {
       "saas": "SaaS platforms in production",
       "systems": "Business systems shipped",
@@ -557,8 +557,8 @@
     }
   },
   "pricing": {
-    "metaTitle": "Pricing | CrecyStudio",
-    "metaDescription": "Clear pricing ranges before the work starts. Fixed estimates scoped to your project, with no hostage retainers or surprise add-ons.",
+    "metaTitle": "Web & Software Development Pricing | CrecyStudio",
+    "metaDescription": "See clear pricing ranges for websites, SaaS, custom web apps, AI integration and workflow automation before your project is scoped.",
     "label": "Pricing",
     "title": "Clear ranges before the work starts.",
     "intro": "All prices are USD. We scope first, send a written estimate, and keep the number tied to the actual project — no hostage retainers, no surprise add-ons.",
@@ -714,8 +714,8 @@
     }
   },
   "process": {
-    "metaTitle": "Process | CrecyStudio",
-    "metaDescription": "A simple process with clear milestones. Same execution rhythm for websites, e-commerce, and systems work so the scope stays visible.",
+    "metaTitle": "Web & Software Development Process | CrecyStudio",
+    "metaDescription": "See how CrecyStudio scopes, designs, builds and launches websites, SaaS products, AI integrations and custom software with clear milestones.",
     "label": "Process",
     "title": "A simple process with clear milestones.",
     "intro": "Every lane uses the same execution rhythm so the scope stays visible, the pricing stays understandable, and nobody wonders what happens next.",
@@ -761,8 +761,8 @@
     "ctaSecondary": "See pricing"
   },
   "faq": {
-    "metaTitle": "FAQ | CrecyStudio",
-    "metaDescription": "Clear answers on scope, ownership, timelines, and how the project workspace works before anything is signed.",
+    "metaTitle": "Web & Software Project FAQ | CrecyStudio",
+    "metaDescription": "Answers about scope, pricing, ownership, timelines, revisions, project communication and the CrecyStudio client workspace.",
     "label": "FAQ",
     "title": "Answers before you commit.",
     "intro": "Clear answers on scope, ownership, timelines, and how the project workspace works before anything is signed.",
@@ -1134,8 +1134,8 @@
   },
   "servicesMeta": {
     "saas": {
-      "metaTitle": "SaaS Development | Built by a Founder Shipping 4 SaaS Products",
-      "metaDescription": "SaaS development by a founder who's shipped four production SaaS products of his own (Fleiko, Proveo, Korent, Kocre IT). Multi-tenant + billing + retention designed in from day one. Discovery Sprint from $4k, MVP Sprint from $25k."
+      "metaTitle": "SaaS Development | CrecyStudio",
+      "metaDescription": "Production SaaS development for multi-tenant apps, billing, onboarding and AI. See real products we operate, then scope the right build."
     },
     "aiIntegration": {
       "metaTitle": "AI Integration | Production AI, Built With Guardrails",
@@ -1158,8 +1158,8 @@
       "metaDescription": "Custom web applications for businesses that need more than a website. Dashboards, client portals, internal tools, and MVPs built by a practitioner."
     },
     "clientPortals": {
-      "metaTitle": "Client Portals | Branded Workspaces Your Clients Actually Use",
-      "metaDescription": "Private project workspaces with milestones, messaging, file sharing, invoicing, and agreements. Owned by you, branded to your business."
+      "metaTitle": "Client Portal Development | CrecyStudio",
+      "metaDescription": "Custom client portals with branded workspaces, messaging, files, approvals, invoicing and secure access, built around your business workflow."
     },
     "websiteRescue": {
       "metaTitle": "Website Rescue | Fix What's Broken Without a Full Rebuild",
@@ -2900,8 +2900,8 @@
     }
   },
   "work": {
-    "metaTitle": "Work | CrecyStudio",
-    "metaDescription": "Selected systems we've shipped — including our own. Multi-tenant rental SaaS, AI-augmented service-contractor platform, and client work.",
+    "metaTitle": "Web, SaaS & AI Projects | CrecyStudio",
+    "metaDescription": "Explore real websites, SaaS products and AI-enabled systems built by CrecyStudio, including Fleiko, Proveo, Crecy OS and Kocre IT.",
     "kicker": "Selected work",
     "title": "Real systems we've shipped — <em>including our own.</em>",
     "subtitle": "Three studio ventures we built, run, and operate. Plus client work where the names are sometimes anonymized.",
@@ -3507,8 +3507,8 @@
     "closingCtaSecondary": "See how we work"
   },
   "workProveo": {
-    "metaTitle": "Proveo Trust Engine — Engineering Deep Dive | CrecyStudio",
-    "metaDescription": "How we built a photo authentication system for service contractors using GPT-4o vision, client-side provenance hashing, and a deterministic badge engine that AI can't override.",
+    "metaTitle": "Proveo Trust Engine Case Study | CrecyStudio",
+    "metaDescription": "How Proveo verifies contractor photo evidence with vision AI, provenance hashing, and a deterministic badge engine that AI cannot override.",
     "back": "Back to work",
     "kicker": "Engineering case study / Proveo",
     "title": "Building a photo trust system where AI identifies the evidence but never decides the verdict.",
@@ -3580,8 +3580,8 @@
     "closingCtaSecondary": "See how we work"
   },
   "workTechdesk": {
-    "metaTitle": "Kocre IT Services — Engineering Deep Dive | CrecyStudio",
-    "metaDescription": "How we built an AI-powered IT helpdesk with Ghost Admin context synthesis, a six-gate auto-resolve engine, a self-compounding knowledge flywheel, and deterministic Sentinel monitoring.",
+    "metaTitle": "Kocre IT AI Helpdesk Case Study | CrecyStudio",
+    "metaDescription": "How Kocre IT uses Ghost Admin context, a six-gate auto-resolve engine, knowledge capture, and deterministic monitoring for safer AI support.",
     "back": "Back to work",
     "kicker": "Engineering case study / Kocre IT Services",
     "title": "Building an AI helpdesk where the machine drafts, advises, and monitors — but never resolves a ticket on confidence alone.",
