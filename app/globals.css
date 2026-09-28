@@ -1779,3 +1779,95 @@ a.card:hover,a.panel:hover {
   }
   .footerColumn ul { gap: 0; }
 }
+
+/* Homepage-only "Work in View" chrome.
+   The rest of CrecyStudio keeps the Phase 6 brand system; this home state
+   deliberately follows the evidence-led cool-white product-studio direction. */
+.topNavHome {
+  border-bottom-color: #cdd2d8;
+  background: color-mix(in srgb, #f6f7f8 96%, transparent);
+}
+
+.topNavHome .topNavInner {
+  max-width: 1600px;
+  min-height: 74px;
+  padding-inline: clamp(20px, 4vw, 64px);
+}
+
+.topNavHome .topNavLink {
+  min-height: 74px;
+  color: #30363d;
+}
+
+.topNavHome .topNavLink:hover,
+.topNavHome .topNavLink:focus-visible {
+  color: #14171b;
+}
+
+.topNavHome .topNavLink::after {
+  bottom: 0;
+  background: transparent;
+}
+
+.topNavHome .btn {
+  border-radius: 0;
+}
+
+.topNavHome .btnPrimary {
+  background: #14171b;
+  color: #ffffff;
+}
+
+.topNavHome .btnPrimary:hover {
+  background: #c62f25;
+}
+
+.topNavHome .btnGhost {
+  border-color: #cdd2d8;
+  color: #14171b;
+}
+
+.topNavHome .mobileMenuSummary,
+.topNavHome .mobileMenuPanel,
+.topNavHome .mobileMenuLinks a {
+  border-radius: 0;
+}
+
+@media (max-width: 980px) {
+  .topNavHome .topNavInner {
+    min-height: 64px;
+  }
+}
+
+/* The Work in View homepage ends on vermilion; keep the shared footer from
+   dropping back into the warm-paper Phase 6 palette on this route only. */
+body:has(.workInViewHome) .footer {
+  border-top-color: #303944;
+  background: #0e1115;
+  color: #aeb6bf;
+}
+
+body:has(.workInViewHome) .footerKicker,
+body:has(.workInViewHome) .footerColumnHeading {
+  color: #f6f7f8;
+}
+
+body:has(.workInViewHome) .footerBlurb,
+body:has(.workInViewHome) .footerAddress,
+body:has(.workInViewHome) .footerServiceArea,
+body:has(.workInViewHome) .footerCopyright,
+body:has(.workInViewHome) .footerEmail,
+body:has(.workInViewHome) .footerSocial a,
+body:has(.workInViewHome) .footerColumn a {
+  color: #aeb6bf;
+}
+
+body:has(.workInViewHome) .footerColumn a:hover,
+body:has(.workInViewHome) .footerEmail:hover,
+body:has(.workInViewHome) .footerSocial a:hover {
+  color: #ffffff;
+}
+
+body:has(.workInViewHome) .footerBottom {
+  border-top-color: #303944;
+}

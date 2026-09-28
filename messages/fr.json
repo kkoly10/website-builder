@@ -36,7 +36,9 @@
     "admin": "Admin",
     "language": "Langue",
     "primaryAria": "Principale",
-    "footerAria": "Pied de page"
+    "footerAria": "Pied de page",
+    "capabilities": "Expertises",
+    "about": "À propos"
   },
   "notFound": {
     "metaTitle": "Page introuvable | CrecyStudio",
@@ -233,8 +235,8 @@
     "successCta": "Voir le processus"
   },
   "home": {
-    "metaTitle": "CrecyStudio | Sites web, applis sur mesure, SaaS & IA",
-    "metaDescription": "Studio web indépendant. Sites web, applications sur mesure, développement SaaS, intégration IA — par un fondateur qui exploite quatre produits SaaS en production (Fleiko, Proveo, Korent, Kocre IT).",
+    "metaTitle": "CrecyStudio | Sites web, SaaS, IA et logiciels sur mesure",
+    "metaDescription": "Studio numérique indépendant créant des sites web, produits SaaS, applications web sur mesure et systèmes d'IA en production.",
     "heroLabel": "Studio web indépendant / depuis 2024",
     "heroTitle": "Conçu pour là où vous allez, <em>pas</em> pour là où vous êtes.",
     "heroSub": "D'un site web soigné à un SaaS ou une application sur mesure avec IA de production intégrée — par un fondateur qui en a livré quatre des siens.",
@@ -421,6 +423,137 @@
       "ecomTitle": "Corrections e-commerce",
       "ecomBody": "Vitrine, paiement et nettoyage opérationnel pour les boutiques en ligne qui perdent du temps ou des conversions.",
       "ecomLink": "Explorer l'e-commerce"
+    },
+    "workInView": {
+      "hero": {
+        "label": "Studio de produits numériques indépendant / Virginie, États-Unis",
+        "line1": "Du travail qui",
+        "line2": "doit fonctionner.",
+        "body": "Sites web, produits SaaS et systèmes intégrant l'IA, conçus et développés comme de vrais produits opérationnels, pas comme des pièces de présentation.",
+        "workCta": "Voir les projets",
+        "projectCta": "Démarrer un projet"
+      },
+      "index": {
+        "aria": "Projets sélectionnés",
+        "label": "Projets sélectionnés",
+        "live": "En ligne"
+      },
+      "evidence": {
+        "software": {
+          "title": "Logiciels en production",
+          "body": "Des produits fonctionnels, pas des maquettes statiques"
+        },
+        "web": {
+          "title": "Web + application",
+          "body": "Présentation et couches opérationnelles"
+        },
+        "ai": {
+          "title": "IA en production",
+          "body": "IA intégrée aux flux du produit"
+        },
+        "workspace": {
+          "title": "Espace privé",
+          "body": "Du cadrage au lancement au même endroit"
+        }
+      },
+      "work": {
+        "label": "01 / Projets sélectionnés",
+        "title": "Voyez les preuves. Lisez ensuite le discours.",
+        "body": "Les produits ci-dessous sont publics et fonctionnels. Il ne s'agit pas de décorer un portfolio avec des captures d'écran, mais de montrer le niveau de réflexion produit, de design d'interface et d'ingénierie que CrecyStudio peut apporter à un projet client.",
+        "disclosure": "Transparence : ces produits sont des projets détenus par le studio et démontrent ses capacités d'ingénierie. Ils ne sont pas présentés comme des témoignages clients ni comme des recommandations de tiers."
+      },
+      "projects": {
+        "open": "Ouvrir le produit",
+        "fleiko": {
+          "name": "Fleiko",
+          "short": "Logiciel d'opérations de flotte",
+          "body": "Logiciel d'opérations de flotte pour petites entreprises, avec dossiers véhicules, maintenance, conformité, visibilité des coûts et alertes opérationnelles.",
+          "ownership": "Produit du studio / Opérations de flotte",
+          "visualLabel": "Interface produit publique / données de démonstration",
+          "imageAlt": "Interface d'aperçu de flotte Fleiko"
+        },
+        "proveo": {
+          "name": "Proveo",
+          "short": "Plateforme pour entreprises de services",
+          "body": "Une plateforme pour entreprises de services réunissant page client, devis, réservation, preuve de travail, CRM et paiements.",
+          "ownership": "Produit du studio / Logiciel pour services",
+          "visualLabel": "Entreprise de démonstration publique / données fictives",
+          "imageAlt": "Page de démonstration Proveo pour une entreprise de peinture"
+        },
+        "kocre": {
+          "name": "Kocre IT",
+          "short": "Portail de services informatiques",
+          "body": "Support informatique géré présenté comme un système client cohérent : marketing, évaluation, demandes de support, santé système et portail client.",
+          "ownership": "Produit du studio / Opérations IT",
+          "visualLabel": "Site produit public / interface produit",
+          "imageAlt": "Site public Kocre IT et interface du portail client"
+        },
+        "crecyos": {
+          "name": "Crecy OS",
+          "short": "Système d'opérations locatives",
+          "body": "Logiciel d'opérations locatives reliant biens, résidents, propriétaires, paiements, maintenance, documents et données financières.",
+          "ownership": "Produit du studio / Opérations locatives",
+          "visualLabel": "Site produit public / données de démonstration",
+          "imageAlt": "Interface du produit d'opérations locatives Crecy OS"
+        }
+      },
+      "capabilities": {
+        "label": "02 / Expertises",
+        "title": "Ce que le travail démontre.",
+        "websites": {
+          "title": "Sites web",
+          "body": "Des sites marketing crédibles qui expliquent l'offre et guident vers la prochaine action.",
+          "proof": "Voir : Proveo / Kocre IT"
+        },
+        "saas": {
+          "title": "Produits SaaS",
+          "body": "Applications multi-tenant avec comptes, flux, facturation et interfaces opérationnelles.",
+          "proof": "Voir : Fleiko / Crecy OS"
+        },
+        "ai": {
+          "title": "Intégration IA",
+          "body": "L'IA au cœur des flux produit pour les décisions, le triage, la détection et l'assistance opérationnelle.",
+          "proof": "Voir : produits du studio"
+        },
+        "systems": {
+          "title": "Systèmes sur mesure",
+          "body": "Portails, tableaux de bord, outils internes, automatisation et interfaces adaptées au fonctionnement réel de l'entreprise.",
+          "proof": "Voir : espace client / portails"
+        }
+      },
+      "workspace": {
+        "label": "03 / Système de livraison",
+        "title": "Aucune disparition après le lancement du projet.",
+        "body": "Chaque projet dispose d'un espace privé unique pour le périmètre, les fichiers, les jalons, les factures, les aperçus, les retours, les validations et le lancement.",
+        "cta": "Voir comment les projets avancent",
+        "visualLabel": "Aperçu de l'espace / données de démonstration",
+        "imageAlt": "Aperçu de l'espace client CrecyStudio"
+      },
+      "process": {
+        "label": "04 / Processus",
+        "define": {
+          "title": "Définir",
+          "body": "Clarifier le problème, l'utilisateur, le périmètre et le critère de réussite avant d'élargir le travail."
+        },
+        "build": {
+          "title": "Construire",
+          "body": "Design et ingénierie avancent ensemble, avec des aperçus fonctionnels plutôt qu'une longue phase sans visibilité."
+        },
+        "ship": {
+          "title": "Livrer",
+          "body": "Lancer, vérifier, transférer la propriété et laisser un système compréhensible après la livraison."
+        }
+      },
+      "studio": {
+        "label": "05 / Studio",
+        "title": "Petit par choix. Le travail reste proche de la construction.",
+        "body": "CrecyStudio est un studio indépendant en Virginie spécialisé dans les sites web, SaaS, intégration IA et applications web sur mesure. Une structure volontairement petite pour garder la stratégie, le design et l’ingénierie proches du cadrage au lancement.",
+        "cta": "À propos de CrecyStudio"
+      },
+      "closing": {
+        "title": "Un projet qui mérite d'être construit ?",
+        "cta": "Démarrer un projet"
+      }
     }
   },
   "pricing": {

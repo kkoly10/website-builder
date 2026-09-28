@@ -36,7 +36,9 @@
     "admin": "Admin",
     "language": "Language",
     "primaryAria": "Primary",
-    "footerAria": "Footer"
+    "footerAria": "Footer",
+    "capabilities": "Capabilities",
+    "about": "About"
   },
   "notFound": {
     "metaTitle": "Page not found | CrecyStudio",
@@ -233,8 +235,8 @@
     "successCta": "See the process"
   },
   "home": {
-    "metaTitle": "CrecyStudio | Websites, Custom Web Apps, SaaS & AI Integration",
-    "metaDescription": "Independent web studio building websites, custom web apps, SaaS, and AI integration for growth-focused businesses.",
+    "metaTitle": "CrecyStudio | Websites, SaaS, AI & Custom Software",
+    "metaDescription": "Independent digital product studio building websites, SaaS products, custom web applications, and production AI systems.",
     "heroLabel": "Independent web studio. Est. 2024.",
     "heroTitle": "Built for where you're going, <em>not</em> where you are.",
     "heroSub": "From a polished website to a custom SaaS or web app with production AI built in.",
@@ -421,6 +423,137 @@
       "ecomTitle": "E-commerce fixes",
       "ecomBody": "Storefront, checkout, and ops cleanup for online shops leaking time or conversions.",
       "ecomLink": "Explore e-commerce"
+    },
+    "workInView": {
+      "hero": {
+        "label": "Independent digital product studio / Virginia, USA",
+        "line1": "Work that",
+        "line2": "has to work.",
+        "body": "Websites, SaaS products, and AI-enabled systems designed and engineered as real working products, not presentation pieces.",
+        "workCta": "See selected work",
+        "projectCta": "Start a project"
+      },
+      "index": {
+        "aria": "Selected work",
+        "label": "Selected work",
+        "live": "Live"
+      },
+      "evidence": {
+        "software": {
+          "title": "Production software",
+          "body": "Working products, not static mockups"
+        },
+        "web": {
+          "title": "Web + application",
+          "body": "Presentation and operational layers"
+        },
+        "ai": {
+          "title": "Production AI",
+          "body": "AI embedded into product workflows"
+        },
+        "workspace": {
+          "title": "Private workspace",
+          "body": "Scope through launch in one place"
+        }
+      },
+      "work": {
+        "label": "01 / Selected work",
+        "title": "Open the proof. Then read the pitch.",
+        "body": "The products below are public and working. The point is not to decorate a portfolio with screenshots. It is to show the level of product thinking, interface design, and engineering CrecyStudio can bring to a client build.",
+        "disclosure": "Ownership disclosure: these featured products are studio-owned ventures and demonstrations of engineering capability. They are not presented as client testimonials or third-party endorsements."
+      },
+      "projects": {
+        "open": "Open live product",
+        "fleiko": {
+          "name": "Fleiko",
+          "short": "Fleet operations software",
+          "body": "Fleet operations software for small businesses, with vehicle records, maintenance, compliance, cost visibility, and operational alerts.",
+          "ownership": "Studio-owned product / Fleet operations",
+          "visualLabel": "Public product interface / demonstration data",
+          "imageAlt": "Fleiko fleet overview product interface"
+        },
+        "proveo": {
+          "name": "Proveo",
+          "short": "Service-business platform",
+          "body": "A service-business platform combining a customer-facing page with quote, booking, proof-of-work, CRM, and payment workflows.",
+          "ownership": "Studio-owned product / Service-business software",
+          "visualLabel": "Public demonstration business / fabricated demo data",
+          "imageAlt": "Proveo demonstration business page for a painting company"
+        },
+        "kocre": {
+          "name": "Kocre IT",
+          "short": "Managed IT portal",
+          "body": "Managed IT support presented as one coherent customer system: marketing, assessment, support requests, system health, and a client portal.",
+          "ownership": "Studio-owned product / IT operations",
+          "visualLabel": "Public product site / product UI",
+          "imageAlt": "Kocre IT public website and client portal interface"
+        },
+        "crecyos": {
+          "name": "Crecy OS",
+          "short": "Rental operations system",
+          "body": "Rental operations software connecting properties, residents, owners, payments, maintenance, documents, and financial records.",
+          "ownership": "Studio-owned product / Rental operations",
+          "visualLabel": "Public product site / demonstration data",
+          "imageAlt": "Crecy OS rental operations product interface"
+        }
+      },
+      "capabilities": {
+        "label": "02 / Capabilities",
+        "title": "What the work demonstrates.",
+        "websites": {
+          "title": "Websites",
+          "body": "High-trust marketing sites that explain the offer and move people toward the next action.",
+          "proof": "See: Proveo / Kocre IT"
+        },
+        "saas": {
+          "title": "SaaS products",
+          "body": "Multi-tenant applications with accounts, workflows, billing, and operational interfaces.",
+          "proof": "See: Fleiko / Crecy OS"
+        },
+        "ai": {
+          "title": "AI integration",
+          "body": "AI inside product workflows, supporting decisions, triage, detection, and operational assistance.",
+          "proof": "See: studio products"
+        },
+        "systems": {
+          "title": "Custom systems",
+          "body": "Portals, dashboards, internal tools, automation, and interfaces tied to the way the business actually runs.",
+          "proof": "See: workspace / portals"
+        }
+      },
+      "workspace": {
+        "label": "03 / Delivery system",
+        "title": "No disappearing act after kickoff.",
+        "body": "Every project gets one private workspace for scope, files, milestones, invoices, preview links, feedback, approvals, and launch status.",
+        "cta": "See how projects run",
+        "visualLabel": "Workspace preview / demonstration project data",
+        "imageAlt": "CrecyStudio client workspace preview"
+      },
+      "process": {
+        "label": "04 / Process",
+        "define": {
+          "title": "Define",
+          "body": "Get the problem, user, scope, and success condition clear before work expands."
+        },
+        "build": {
+          "title": "Build",
+          "body": "Design and engineering move together, with working previews instead of a long reveal cycle."
+        },
+        "ship": {
+          "title": "Ship",
+          "body": "Launch, verify, hand over ownership, and leave the system understandable after delivery."
+        }
+      },
+      "studio": {
+        "label": "05 / Studio",
+        "title": "Small by design. Work stays close to the build.",
+        "body": "CrecyStudio is an independent Virginia studio for websites, SaaS, AI integration, and custom web applications. Small enough to keep strategy, design, and engineering close from scope through launch.",
+        "cta": "About CrecyStudio"
+      },
+      "closing": {
+        "title": "Have something worth building?",
+        "cta": "Start a project"
+      }
     }
   },
   "pricing": {

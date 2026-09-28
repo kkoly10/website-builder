@@ -2,13 +2,26 @@ import { useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import Image from "next/image";
+import { Archivo, Archivo_Narrow } from "next/font/google";
 import { Link } from "@/i18n/navigation";
 import TrackLink from "@/components/site/TrackLink";
-import ScrollReveal from "@/components/site/ScrollReveal";
-import HeroPanel from "@/components/home/HeroPanel";
 import styles from "./home.module.css";
 
 export const dynamic = "force-dynamic";
+
+const archivo = Archivo({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-home-body",
+  display: "swap",
+});
+
+const archivoNarrow = Archivo_Narrow({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-home-display",
+  display: "swap",
+});
 
 export async function generateMetadata({
   params,
@@ -31,39 +44,50 @@ export async function generateMetadata({
   };
 }
 
-const JOURNEY_KEYS = [
-  ["intake", "done"],
-  ["agreement", "done"],
-  ["deposit", "done"],
-  ["content", "done"],
-  ["build", "done"],
-  ["review", "active"],
-  ["launch", "pending"],
+const PROJECTS = [
+  {
+    key: "fleiko",
+    number: "01",
+    href: "https://fleiko.com",
+    image: "/work-in-view/fleiko-dashboard.png",
+    width: 1280,
+    height: 545,
+    className: "projectFleiko",
+  },
+  {
+    key: "proveo",
+    number: "02",
+    href: "https://proveohq.com",
+    image: "/work-in-view/proveo-demo.png",
+    width: 1280,
+    height: 900,
+    className: "projectProveo",
+  },
+  {
+    key: "kocre",
+    number: "03",
+    href: "https://kocreit.com",
+    image: "/work-in-view/kocre-site.png",
+    width: 1280,
+    height: 900,
+    className: "projectKocre",
+  },
+  {
+    key: "crecyos",
+    number: "04",
+    href: "https://crecyos.com",
+    image: "/work-in-view/crecyos-top.png",
+    width: 1280,
+    height: 900,
+    className: "projectCrecyos",
+  },
 ] as const;
 
-const WHAT_WE_BUILD_CARDS = [
-  { key: "saas",          href: "/saas",                              event: "cta_home_card_saas"             },
-  { key: "webApps",       href: "/custom-web-apps",                   event: "cta_home_card_web_apps"         },
-  { key: "aiIntegration", href: "/ai-integration",                    event: "cta_home_card_ai_integration"   },
-  { key: "portals",       href: "/client-portals",                    event: "cta_home_card_portals"          },
-  { key: "automation",    href: "/systems",                           event: "cta_home_card_automation"       },
-  { key: "websites",      href: "/websites",                          event: "cta_home_card_websites"         },
-  { key: "ecommerce",     href: "/ecommerce",                         event: "cta_home_card_ecommerce"        },
-  // whatWeBuild.cards.rescue is translated in all three locales and was never
-  // rendered — the array carried 7 of the 8 defined cards. Restoring it also
-  // completes the 4x2 grid, which was leaving an empty cell.
-  { key: "rescue",        href: "/website-rescue",                    event: "cta_home_card_rescue"           },
-] as const;
-
-const START_HERE_CARDS = [
-  { key: "saas",      href: "/saas"                                  },
-  { key: "ai",        href: "/ai-integration"                        },
-  { key: "complex",   href: "/custom-web-apps"                       },
-  { key: "app",       href: "/custom-web-apps"                       },
-  { key: "portal",    href: "/client-portals"                        },
-  { key: "website",   href: "/websites"                              },
-  { key: "ecommerce", href: "/ecommerce"                             },
-  { key: "rescue",    href: "/website-rescue"                        },
+const CAPABILITIES = [
+  { key: "websites", href: "/websites", event: "cta_home_capability_websites" },
+  { key: "saas", href: "/saas", event: "cta_home_capability_saas" },
+  { key: "ai", href: "/ai-integration", event: "cta_home_capability_ai" },
+  { key: "systems", href: "/custom-web-apps", event: "cta_home_capability_systems" },
 ] as const;
 
 export default async function Home({
@@ -73,330 +97,239 @@ export default async function Home({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+
   return <HomeContent />;
 }
 
 function HomeContent() {
   const t = useTranslations("home");
 
-  const proofItems = [
-    { value: t("proof.deliveryValue"), label: t("proof.delivery") },
-    { value: t("proof.ownershipValue"), label: t("proof.ownership") },
-    { value: t("proof.noUpfrontValue"), label: t("proof.noUpfront") },
-    { value: t("proof.workspaceValue"), label: t("proof.workspace") },
-  ];
-
-  const howSteps = [
-    { phase: t("how.step1Phase"), title: t("how.step1Title"), body: t("how.step1Body") },
-    { phase: t("how.step2Phase"), title: t("how.step2Title"), body: t("how.step2Body") },
-    { phase: t("how.step3Phase"), title: t("how.step3Title"), body: t("how.step3Body") },
-  ];
-
   return (
-    <main className={styles.page}>
-      <ScrollReveal />
-
-      {/*
-        Split hero: copy left, live workspace panel right. The previous
-        single-column hero left the entire right half of a 1440px viewport
-        empty, which is why the headline had to run to 5.3rem to fill the
-        space — and an enormous sans headline on flat white is the generic
-        look we are moving off. The panel also earns the space: it shows the
-        product rather than describing it.
-      */}
+    <div
+      className={[
+        "workInViewHome",
+        styles.workInViewPage,
+        archivo.variable,
+        archivoNarrow.variable,
+      ].join(" ")}
+    >
       <header className={styles.hero}>
-        <div className={`container ${styles.heroGrid}`}>
-          <div className={styles.heroContent}>
-            <p className={styles.heroLabel}>{t("heroLabel")}</p>
+        <div className={styles.heroGrid}>
+          <div className={styles.heroCopy}>
+            <p className={styles.kicker}>{t("workInView.hero.label")}</p>
             <h1 className={styles.heroTitle}>
-              {t.rich("heroTitle", {
-                em: (chunks) => <span className="accentWord">{chunks}</span>,
-              })}
+              <span>{t("workInView.hero.line1")}</span>
+              <span className={styles.heroAccent}>{t("workInView.hero.line2")}</span>
             </h1>
-            <p className={styles.heroSub}>{t("heroSub")}</p>
-
+            <p className={styles.heroLead}>{t("workInView.hero.body")}</p>
             <div className={styles.heroActions}>
-              <TrackLink href="/build/intro" event="cta_home_hero_quote" className="btn btnAccent btnLg">
-                {t("ctaStart")}
-              </TrackLink>
-              <TrackLink href="/work" event="cta_home_hero_work" className="btn btnGhost btnLg">
-                {t("ctaProcess")}
+              <a className={[styles.action, styles.actionAccent].join(" ")} href="#work">
+                <span>{t("workInView.hero.workCta")}</span>
+                <span aria-hidden>↓</span>
+              </a>
+              <TrackLink
+                href="/build/intro"
+                event="cta_home_work_in_view_start"
+                className={styles.action}
+              >
+                <span>{t("workInView.hero.projectCta")}</span>
+                <span aria-hidden>↗</span>
               </TrackLink>
             </div>
-            <p className={styles.heroScarcity}>
-              <span className={styles.heroScarcityDot} aria-hidden />
-              {t("ctaScarcity")}
-            </p>
           </div>
 
-          <div className={styles.heroAside}>
-            <HeroPanel />
-          </div>
+          <aside className={styles.heroIndex} aria-label={t("workInView.index.aria")}>
+            <div className={styles.indexHead}>
+              <span>{t("workInView.index.label")}</span>
+              <span>2024—26</span>
+            </div>
+            {PROJECTS.map((project) => (
+              <a
+                key={project.key}
+                href={"#" + project.key}
+                className={styles.indexRow}
+              >
+                <span className={styles.indexNum}>{project.number}</span>
+                <Image
+                  className={styles.indexThumb}
+                  src={project.image}
+                  alt=""
+                  width={74}
+                  height={48}
+                  sizes="74px"
+                />
+                <span className={styles.indexCopy}>
+                  <span className={styles.indexName}>
+                    {t("workInView.projects." + project.key + ".name")}
+                  </span>
+                  <span className={styles.indexDesc}>
+                    {t("workInView.projects." + project.key + ".short")}
+                  </span>
+                </span>
+                <span className={styles.indexStatus}>
+                  {t("workInView.index.live")} <span aria-hidden>↗</span>
+                </span>
+              </a>
+            ))}
+          </aside>
+        </div>
+
+        <div className={styles.evidenceStrip}>
+          {(["software", "web", "ai", "workspace"] as const).map((key) => (
+            <div key={key} className={styles.evidence}>
+              <strong>{t("workInView.evidence." + key + ".title")}</strong>
+              <span>{t("workInView.evidence." + key + ".body")}</span>
+            </div>
+          ))}
         </div>
       </header>
 
-      <section className={styles.proof}>
-        <div className={`container ${styles.proofGrid}`}>
-          {proofItems.map((item, i) => (
-            <article
-              key={item.label}
-              className={`${styles.proofItem} fadeUp`}
-              style={{ transitionDelay: `${i * 80}ms` }}
+      <section id="work" className={styles.workIntro}>
+        <p className={styles.sectionMarker}>{t("workInView.work.label")}</p>
+        <div className={styles.workIntroCopy}>
+          <h2>{t("workInView.work.title")}</h2>
+          <p className={styles.workIntroBody}>{t("workInView.work.body")}</p>
+          <p className={styles.disclosure}>{t("workInView.work.disclosure")}</p>
+        </div>
+      </section>
+
+      {PROJECTS.map((project) => (
+        <section
+          id={project.key}
+          key={project.key}
+          className={[styles.project, styles[project.className]].join(" ")}
+        >
+          <div className={styles.projectInner}>
+            <div className={styles.projectCaption}>
+              <span className={styles.projectNumber}>{project.number}</span>
+              <h2>{t("workInView.projects." + project.key + ".name")}</h2>
+              <p className={styles.projectBody}>
+                {t("workInView.projects." + project.key + ".body")}
+              </p>
+              <div className={styles.projectBottom}>
+                <p className={styles.ownership}>
+                  {t("workInView.projects." + project.key + ".ownership")}
+                </p>
+                <a
+                  href={project.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.projectLink}
+                >
+                  {t("workInView.projects.open")} <span aria-hidden>↗</span>
+                </a>
+              </div>
+            </div>
+
+            <figure className={styles.projectVisual}>
+              <figcaption>
+                {t("workInView.projects." + project.key + ".visualLabel")}
+              </figcaption>
+              <Image
+                src={project.image}
+                alt={t("workInView.projects." + project.key + ".imageAlt")}
+                width={project.width}
+                height={project.height}
+                sizes="(max-width: 760px) 100vw, (max-width: 1200px) 68vw, 900px"
+                className={styles.projectImage}
+              />
+            </figure>
+          </div>
+        </section>
+      ))}
+
+      <section id="capabilities" className={styles.capabilities}>
+        <div className={styles.capabilitiesHead}>
+          <p className={styles.sectionMarker}>{t("workInView.capabilities.label")}</p>
+          <h2>{t("workInView.capabilities.title")}</h2>
+        </div>
+
+        <div className={styles.capabilityRows}>
+          {CAPABILITIES.map((item) => (
+            <TrackLink
+              key={item.key}
+              href={item.href}
+              event={item.event}
+              className={styles.capabilityRow}
             >
-              <p className={styles.proofValue}>{item.value}</p>
-              <p className={styles.proofLabel}>{item.label}</p>
+              <span className={styles.capabilityTitle}>
+                {t("workInView.capabilities." + item.key + ".title")}
+              </span>
+              <span className={styles.capabilityBody}>
+                {t("workInView.capabilities." + item.key + ".body")}
+              </span>
+              <span className={styles.capabilityProof}>
+                {t("workInView.capabilities." + item.key + ".proof")}
+              </span>
+              <span className={styles.capabilityArrow} aria-hidden>
+                ↗
+              </span>
+            </TrackLink>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.workspace}>
+        <div className={styles.workspaceCopy}>
+          <p className={styles.darkMarker}>{t("workInView.workspace.label")}</p>
+          <h2>{t("workInView.workspace.title")}</h2>
+          <p>{t("workInView.workspace.body")}</p>
+          <TrackLink
+            href="/demos/portal"
+            event="cta_home_work_in_view_workspace"
+            rel="nofollow"
+            className={styles.darkLink}
+          >
+            {t("workInView.workspace.cta")} <span aria-hidden>↗</span>
+          </TrackLink>
+        </div>
+        <figure className={styles.workspaceVisual}>
+          <figcaption>{t("workInView.workspace.visualLabel")}</figcaption>
+          <Image
+            src="/work-in-view/workspace-public.png"
+            alt={t("workInView.workspace.imageAlt")}
+            width={1280}
+            height={730}
+            sizes="(max-width: 760px) 100vw, 62vw"
+            className={styles.workspaceImage}
+          />
+        </figure>
+      </section>
+
+      <section id="process" className={styles.process}>
+        <p className={styles.sectionMarker}>{t("workInView.process.label")}</p>
+        <div className={styles.steps}>
+          {(["define", "build", "ship"] as const).map((key, index) => (
+            <article key={key} className={styles.step}>
+              <span className={styles.stepNumber}>0{index + 1}</span>
+              <h2>{t("workInView.process." + key + ".title")}</h2>
+              <p>{t("workInView.process." + key + ".body")}</p>
             </article>
           ))}
         </div>
       </section>
 
-      <section className={`${styles.positioning} fadeUp`}>
-        <div className="container">
-          <p className={styles.sectionLabel}>{t("positioning.kicker")}</p>
-          <p className={styles.positioningStatement}>{t("positioning.statement")}</p>
+      <section className={styles.studioNote}>
+        <p className={styles.sectionMarker}>{t("workInView.studio.label")}</p>
+        <div>
+          <h2>{t("workInView.studio.title")}</h2>
+          <p>{t("workInView.studio.body")}</p>
+          <Link href="/about" className={styles.studioLink}>
+            {t("workInView.studio.cta")} <span aria-hidden>↗</span>
+          </Link>
         </div>
       </section>
 
-      <section className={styles.startHere}>
-        <div className="container">
-          <p className={styles.sectionLabel}>{t("startHere.label")}</p>
-          <div className={styles.startHereGrid}>
-            {START_HERE_CARDS.map((card) => (
-              <Link key={card.key} href={card.href} className={styles.startHereCard}>
-                <p className={styles.startHereSituation}>{t(`startHere.${card.key}.situation`)}</p>
-                <p className={styles.startHereService}>{t(`startHere.${card.key}.service`)}</p>
-
-              </Link>
-            ))}
-          </div>
-        </div>
+      <section className={styles.closing}>
+        <h2>{t("workInView.closing.title")}</h2>
+        <TrackLink
+          href="/build/intro"
+          event="cta_home_work_in_view_closing"
+          className={styles.closingCta}
+        >
+          {t("workInView.closing.cta")} <span aria-hidden>↗</span>
+        </TrackLink>
       </section>
-
-      <section id="what-we-build" className={styles.whatWeBuild}>
-        <div className="container">
-          <div className={`${styles.whatWeBuildHead} fadeUp`}>
-            <p className={styles.sectionLabel}>{t("whatWeBuild.label")}</p>
-            <h2 className={styles.sectionTitle}>{t("whatWeBuild.title")}</h2>
-          </div>
-          <div className={styles.whatWeBuildGrid}>
-            {WHAT_WE_BUILD_CARDS.map((card, i) => (
-              <TrackLink
-                key={card.key}
-                href={card.href}
-                event={card.event}
-                className={`${styles.wbCard} fadeUp`}
-                style={{ transitionDelay: `${i * 70}ms` }}
-              >
-                <h3 className={styles.wbCardTitle}>{t(`whatWeBuild.cards.${card.key}.title`)}</h3>
-                <p className={styles.wbCardBody}>{t(`whatWeBuild.cards.${card.key}.body`)}</p>
-              </TrackLink>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className={`${styles.ventures} fadeUp`}>
-        <div className="container">
-          <div className={styles.venturesHead}>
-            <p className={styles.venturesLabel}>{t("ventures.label")}</p>
-            <h2 className={styles.venturesTitle}>{t("ventures.title")}</h2>
-            <p className={styles.venturesIntro}>{t("ventures.intro")}</p>
-          </div>
-          <div className={styles.venturesGrid}>
-            <article className={styles.ventureCard}>
-              <p className={styles.ventureName}>{t("ventures.fleiko.name")}</p>
-              <p className={styles.ventureTagline}>{t("ventures.fleiko.tagline")}</p>
-              <p className={styles.ventureDetail}>{t("ventures.fleiko.detail")}</p>
-              <div className={styles.ventureChips}>
-                <span className={styles.ventureChip}>{t("ventures.fleiko.chip1")}</span>
-                <span className={styles.ventureChip}>{t("ventures.fleiko.chip2")}</span>
-              </div>
-              <a
-                href={t("ventures.fleiko.url")}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.ventureLink}
-              >
-                {t("ventures.fleiko.link")} -&gt;
-              </a>
-            </article>
-            <article className={styles.ventureCard}>
-              <p className={styles.ventureName}>{t("ventures.proveo.name")}</p>
-              <p className={styles.ventureTagline}>{t("ventures.proveo.tagline")}</p>
-              <p className={styles.ventureDetail}>{t("ventures.proveo.detail")}</p>
-              <div className={styles.ventureChips}>
-                <span className={styles.ventureChip}>{t("ventures.proveo.chip1")}</span>
-                <span className={styles.ventureChip}>{t("ventures.proveo.chip2")}</span>
-              </div>
-              <a
-                href={t("ventures.proveo.url")}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.ventureLink}
-              >
-                {t("ventures.proveo.link")} -&gt;
-              </a>
-            </article>
-          </div>
-          <p className={styles.venturesCta}>
-            <TrackLink href="/work" event="cta_home_ventures_work" className={styles.venturesCtaLink}>
-              {t("ventures.cta")} -&gt;
-            </TrackLink>
-          </p>
-        </div>
-      </section>
-
-      <section className={`${styles.diff} fadeUp`}>
-        <div className="container">
-          <div className={styles.diffHead}>
-            <div>
-              <p className={styles.sectionLabel}>{t("diff.label")}</p>
-              <h2 className={styles.sectionTitle}>{t("diff.title")}</h2>
-            </div>
-            <p className={styles.diffLede}>{t("diff.lede")}</p>
-          </div>
-
-          <div className={styles.portalFrame}>
-            <div className={styles.portalHead}>
-              <p className={styles.portalKicker}>{t("diff.kicker")}</p>
-              <p className={styles.portalUrl}>{t("diff.url")}</p>
-            </div>
-
-            <div className={styles.portalHero}>
-              <div>
-                <p className={styles.portalEyebrow}>{t("diff.eyebrow")}</p>
-                <h3>
-                  {t.rich("diff.ready", { em: (chunks) => <em>{chunks}</em> })}
-                </h3>
-              </div>
-
-              {/*
-                rel="nofollow" because /demos/* is covered by the
-                robots.txt Disallow list (it redirects to /portal/demo,
-                which is gated). Without nofollow, Googlebot follows
-                the link from the indexed homepage, hits the Disallow
-                rule, and surfaces a "Blocked by robots.txt" report in
-                Search Console for every recrawl. The link itself is
-                a marketing CTA (preview the portal experience), so
-                we want users to click it but crawlers to skip it.
-              */}
-              <TrackLink href="/demos/portal" event="cta_home_portal_preview" className={styles.portalCta} rel="nofollow">
-                {t("diff.openPreview")} -&gt;
-              </TrackLink>
-            </div>
-
-            <div className={styles.journey}>
-              {JOURNEY_KEYS.map(([key, state]) => (
-                <div
-                  key={key}
-                  className={`${styles.jstep} ${
-                    state === "done"
-                      ? styles.jstepDone
-                      : state === "active"
-                        ? styles.jstepActive
-                        : ""
-                  }`}
-                >
-                  <span className={styles.jdot} />
-                  <span className={styles.jname}>{t(`diff.journey.${key}`)}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className={styles.portalCards}>
-              <article className={styles.portalCard}>
-                <p className={styles.portalCardTitle}>{t("diff.currentMilestone")}</p>
-                <p className={styles.portalCardValue}>{t("diff.currentMilestoneValue")}</p>
-                <p className={styles.portalCardMeta}>{t("diff.currentMilestoneMeta")}</p>
-              </article>
-              <article className={styles.portalCard}>
-                <p className={styles.portalCardTitle}>{t("diff.deposit")}</p>
-                <p className={styles.portalCardValue}>{t("diff.depositValue")}</p>
-                <p className={styles.portalCardMeta}>{t("diff.depositMeta")}</p>
-              </article>
-              <article className={styles.portalCard}>
-                <p className={styles.portalCardTitle}>{t("diff.launchTarget")}</p>
-                <p className={styles.portalCardValue}>{t("diff.launchTargetValue")}</p>
-                <p className={styles.portalCardMeta}>{t("diff.launchTargetMeta")}</p>
-              </article>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className={`${styles.how} fadeUp`}>
-        <div className="container">
-          <div className={styles.howHead}>
-            <p className={styles.sectionLabel}>{t("how.label")}</p>
-            <h2 className={styles.sectionTitle}>{t("how.title")}</h2>
-          </div>
-
-          <div className={styles.howSteps}>
-            {howSteps.map((step) => (
-              <article key={step.phase} className={styles.howStep}>
-                <p className={styles.howStepNum}>{step.phase}</p>
-                <h3>{step.title}</h3>
-                <p>{step.body}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className={`${styles.founder} fadeUp`}>
-        <div className="container">
-          <div className={styles.founderInner}>
-            <div className={styles.founderPhotoWrap}>
-              <Image
-                src="/about/komlan.jpg"
-                alt="Komlan Kouhiko, founder of CrecyStudio"
-                width={220}
-                height={220}
-                className={styles.founderImg}
-              />
-            </div>
-            <div className={styles.founderContent}>
-              <p className={styles.sectionLabel}>{t("founder.label")}</p>
-              <h2 className={styles.founderName}>{t("founder.name")}</h2>
-              <p className={styles.founderRole}>{t("founder.role")}</p>
-              <p className={styles.founderBio}>{t("founder.bio1")}</p>
-              <p className={styles.founderBio}>{t("founder.bio2")}</p>
-              <p className={styles.founderBio}>{t("founder.bio3")}</p>
-              <a
-                href={t("founder.linkedinHref")}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.founderLinkedIn}
-              >
-                {t("founder.linkedin")}
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className={`${styles.closing} fadeUp`}>
-        <div className="container">
-          <p className={styles.sectionLabel}>{t("closing.label")}</p>
-          <h2>
-            {t.rich("closing.title", { em: (chunks) => <em>{chunks}</em> })}
-          </h2>
-          <div className={styles.closingActions}>
-            <TrackLink href="/start" event="cta_home_closing_start" className="btn btnPrimary">
-              {t("closing.cta")}
-            </TrackLink>
-            <TrackLink href="/build/intro" event="cta_home_closing_estimate" className="btn">
-              {t("closing.ctaSecondary")}
-            </TrackLink>
-          </div>
-          <p className={styles.closingPricingLink}>
-            <TrackLink href="/pricing" event="cta_home_closing_pricing">
-              {t("closing.ctaPricing")}
-            </TrackLink>
-          </p>
-        </div>
-      </section>
-
-    </main>
+    </div>
   );
 }

@@ -1,990 +1,1100 @@
-.page {
-  padding-bottom: 2rem;
+.workInViewPage {
+  --home-paper: #f6f7f8;
+  --home-white: #ffffff;
+  --home-ink: #14171b;
+  --home-ink-2: #30363d;
+  --home-muted: #626a73;
+  --home-line: #cdd2d8;
+  --home-matte: #e7eaed;
+  --home-red: #c62f25;
+  --home-red-hover: #a9231d;
+  --home-green: #2b7650;
+  --home-yellow: #a97900;
+  --home-dark: #10151c;
+  --home-dark-2: #1a2028;
+  --home-dark-line: #343d47;
+  --home-pad: clamp(20px, 4vw, 64px);
+  --home-display: var(--font-home-display), "Arial Narrow", sans-serif;
+  --home-body: var(--font-home-body), "Helvetica Neue", Arial, sans-serif;
+
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  border-inline: 1px solid var(--home-line);
+  background: var(--home-paper);
+  color: var(--home-ink);
+  font-family: var(--home-body);
+  font-size: 16px;
+  line-height: 1.5;
+  overflow: clip;
 }
 
-/* ─── Hero cascade (fires on load, no scroll trigger needed) ───────── */
-@keyframes heroCascade {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: none; }
+.workInViewPage :where(h1, h2, h3, p, figure) {
+  margin-top: 0;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .heroLabel    { animation: heroCascade 0.5s ease both 0.04s; }
-  .heroTitle    { animation: heroCascade 0.6s ease both 0.16s; }
-  .heroSub      { animation: heroCascade 0.5s ease both 0.32s; }
-  .heroActions  { animation: heroCascade 0.5s ease both 0.46s; }
-  .heroScarcity { animation: heroCascade 0.45s ease both 0.58s; }
+.workInViewPage :where(a) {
+  color: inherit;
+}
+
+.kicker,
+.sectionMarker,
+.darkMarker,
+.projectVisual figcaption,
+.workspaceVisual figcaption,
+.indexHead,
+.ownership {
+  font: 600 11px/1.25 var(--home-body);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
 }
 
 .hero {
-  padding: clamp(3rem, 6vw, 5.5rem) 0 clamp(3.5rem, 6vw, 6rem);
+  min-height: 830px;
+  border-bottom: 1px solid var(--home-line);
+  padding: 80px var(--home-pad) 0;
 }
 
-/* Copy left, product panel right. Collapses to a single column at 980px —
-   below that the panel would be too narrow to read as a product surface, so
-   it stacks under the copy rather than shrinking. */
 .heroGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
-  gap: clamp(2rem, 4vw, 4rem);
-  align-items: center;
+  grid-template-columns: minmax(0, 7fr) minmax(340px, 5fr);
+  gap: 5vw;
+  align-items: start;
 }
 
-.heroContent { min-width: 0; }
-.heroAside { min-width: 0; }
-
-@media (max-width: 980px) {
-  .heroGrid { grid-template-columns: minmax(0, 1fr); gap: 2.5rem; }
+.heroCopy {
+  padding-top: 25px;
 }
 
-.heroLabel,
-.sectionLabel,
-.proofLabel,
-.portalKicker,
-.portalEyebrow,
-.howStepNum,
-.tierName,
-.portalCardTitle {
-  margin: 0;
-  font: 600 14px/1.5 var(--font-body);
-}
-
-.heroLabel,
-.sectionLabel,
-.proofLabel,
-.portalCardTitle {
-  color: var(--muted);
-}
-
-/* Card and step titles use the BODY face (brand/BRAND.md §3). .portalHero h3
-   stays in the display group: it is a real display line inside the marketing
-   portal frame, not a card title. */
-.howStep h3,
-.lane h3 {
-  margin: 0;
-  font-family: var(--font-body);
-  font-weight: 700;
-  letter-spacing: -0.016em;
-}
-
-.heroTitle,
-.sectionTitle,
-.portalHero h3,
-.tierPrice,
-.closing h2 {
-  margin: 0;
-  max-width: 22ch;
-  font-family: var(--font-display);
-  font-weight: 500;
-  /* opsz 96/144 is the display cut. Without pinning it the serif renders at
-     its TEXT optical size — thicker, more closed, and noticeably clumsier.
-     See brand/BRAND.md §3. */
-  font-variation-settings: "opsz" 96, "SOFT" 0, "WONK" 0;
-  letter-spacing: -0.026em;
+.kicker {
+  margin-bottom: 0;
+  color: var(--home-muted);
 }
 
 .heroTitle {
-  margin-top: 1.1rem;
-  max-width: 18ch;
-  font-size: clamp(2.6rem, 4.4vw, 4rem);
-  line-height: 1.03;
-  letter-spacing: -0.03em;
-  font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 0;
-  text-wrap: balance;
+  max-width: 900px;
+  margin: 28px 0 34px;
+  font-family: var(--home-display);
+  font-size: clamp(82px, 9.6vw, 148px);
+  font-weight: 600;
+  line-height: 0.83;
+  letter-spacing: -0.055em;
+  text-transform: uppercase;
 }
 
-.heroSub,
-.diffLede,
-.howStep p,
-.tierDesc,
-.pricingLede,
-.lane p,
-.portalCardMeta {
-  margin: 0;
-  color: var(--ink-3);
+.heroTitle span {
+  display: block;
 }
 
-.heroSub {
-  margin-top: 1.35rem;
-  max-width: 48ch;
-  font-size: var(--cs-size-lede);
-  line-height: var(--cs-leading-lede);
+.heroAccent {
+  color: var(--home-red);
+}
+
+.heroLead {
+  max-width: 650px;
+  margin-bottom: 36px;
+  color: var(--home-ink-2);
+  font-size: 20px;
+  line-height: 1.55;
 }
 
 .heroActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 2rem;
+  gap: 12px;
 }
 
-.heroScarcity {
+.action {
   display: inline-flex;
+  min-height: 54px;
   align-items: center;
-  gap: 0.5rem;
-  margin-top: 1.1rem;
-  font: 500 14px/1.4 var(--font-body);
-  color: var(--muted);
+  justify-content: space-between;
+  gap: 30px;
+  padding: 15px 18px;
+  border: 1px solid var(--home-ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--home-ink);
+  font: 650 14px/1.2 var(--home-body);
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
 }
 
-/* Availability is a status, so it gets a mark as well as a colour — never
-   colour alone (brand/BRAND.md §11). */
-.heroScarcityDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--success);
-  flex: none;
+.action:hover {
+  transform: translateY(-1px);
 }
 
-/* Four value propositions, not four statistics. They were set at
-   clamp(2rem, 4vw, 2.8rem) — stat size — which is why "Production AI" broke
-   over two lines and "Founder-built" hyphenated, leaving the four labels
-   sitting at four different heights. These are short PHRASES, so they are
-   typeset as headings at heading size and the row aligns. */
-.proof {
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
-  background: var(--paper-2);
+.actionAccent {
+  border-color: var(--home-red);
+  background: var(--home-red);
+  color: var(--home-white);
 }
 
-.proofGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0;
+.actionAccent:hover {
+  border-color: var(--home-red-hover);
+  background: var(--home-red-hover);
 }
 
-.proofItem {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  padding: clamp(1.5rem, 2.4vw, 2.1rem) clamp(1rem, 1.8vw, 1.75rem);
-  border-left: 1px solid var(--rule);
+.heroIndex {
+  margin-top: 29px;
+  padding-left: 28px;
+  border-left: 1px solid var(--home-line);
 }
 
-.proofItem:first-child {
-  border-left: none;
-  padding-left: 0;
-}
-
-.proofValue {
-  margin: 0;
-  font: 700 clamp(1.05rem, 1.5vw, 1.24rem)/1.25 var(--font-body);
-  letter-spacing: -0.016em;
-  color: var(--ink);
-  text-wrap: balance;
-}
-
-.proofLabel {
-  margin: 0;
-  color: var(--muted);
-  font-weight: 500;
-}
-
-.diff,
-.how,
-.pricing {
-  padding: 4.8rem 0;
-  border-bottom: 1px solid var(--rule);
-}
-
-.closing {
-  padding: 3.2rem 0;
-  border-bottom: 1px solid var(--rule);
-}
-
-.diffHead,
-.pricingHead {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-  gap: 2rem;
-  align-items: end;
-  margin-bottom: 2rem;
-}
-
-.sectionTitle {
-  margin-top: 0.8rem;
-  /* Was clamp(..., 4vw, 4rem+) = 57.6px at 1440, LARGER than the 56px h1 on
-     every page that used it. Capped below the h1 scale, and the 14-15ch
-     measure widened — at that size it forced four and five line headings. */
-  font-size: clamp(1.85rem, 3.2vw, 2.75rem);
-  line-height: 1.06;
-  max-width: 22ch;
-}
-
-.diffLede,
-.pricingLede {
-  max-width: 52ch;
-  line-height: 1.75;
-}
-
-.portalFrame {
-  border: 1px solid color-mix(in srgb, var(--paper) 16%, transparent);
-  background: var(--ink);
-  padding: 1.35rem;
-}
-
-.portalHead,
-.portalHero {
+.indexHead {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--home-ink);
+  color: var(--home-muted);
 }
 
-.portalHead {
+.indexRow {
+  display: grid;
+  grid-template-columns: 44px 74px minmax(0, 1fr) auto;
+  gap: 16px;
   align-items: center;
+  min-height: 92px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--home-line);
+  transition: background 160ms ease;
 }
 
-.portalKicker {
-  color: color-mix(in srgb, var(--paper) 72%, transparent);
+.indexRow:hover {
+  background: color-mix(in srgb, var(--home-white) 55%, transparent);
 }
 
-/* 42% paper on the ink ground measured 4.0:1 — just under AA for 13px.
-   Raised to 58%, and the 0.08em tracking dropped: it was there to make the
-   old mono face read as a URL and it is not doing that job in Manrope. */
-.portalUrl {
-  margin: 0;
-  font: 500 13px/1.3 var(--font-body);
-  color: color-mix(in srgb, var(--paper) 58%, transparent);
-}
-
-.portalHero {
-  margin-top: 2rem;
-  align-items: end;
-}
-
-.portalEyebrow {
-  /* Measured 3.58:1 as pure --accent on the ink ground. */
-  color: var(--accent-on-ink);
-}
-
-.portalHero h3 {
-  margin-top: 0.65rem;
-  max-width: 14ch;
-  font-size: clamp(1.75rem, 2.8vw, 2.4rem);
-  line-height: 1;
-  color: var(--paper);
-}
-
-.portalCta {
-  display: inline-flex;
-  align-items: center;
-  /* Was 42px — two short of the 44px floor (brand/BRAND.md §11). */
-  min-height: 44px;
-  padding: 0.78rem 1.35rem;
-  border: 1px solid color-mix(in srgb, var(--paper) 22%, transparent);
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--paper) 8%, transparent);
-  color: var(--paper);
-  font: 600 14.5px/1.2 var(--font-body);
-  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
-}
-
-.portalCta:hover {
-  background: color-mix(in srgb, var(--paper) 14%, transparent);
-  border-color: color-mix(in srgb, var(--paper) 36%, transparent);
-}
-
-.journey {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin-top: 2rem;
-  padding-top: 1.2rem;
-  border-top: 1px solid color-mix(in srgb, var(--paper) 14%, transparent);
-}
-
-.jstep {
-  display: grid;
-  gap: 0.55rem;
-}
-
-.jdot {
-  width: 14px;
-  height: 14px;
-  border: 1px solid color-mix(in srgb, var(--paper) 18%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--ink) 70%, var(--paper) 30%);
-}
-
-.jname {
-  font: 500 12.5px/1.3 var(--font-body);
-  color: color-mix(in srgb, var(--paper) 62%, transparent);
-}
-
-.jstepDone .jdot {
-  background: var(--paper);
-  border-color: var(--paper);
-}
-
-.jstepDone .jname {
-  color: var(--paper);
-}
-
-.jstepActive .jdot {
-  background: var(--accent);
-  border-color: var(--accent);
-}
-
-.jstepActive .jname {
-  /* As above — pure --accent cannot carry 12.5px text on the ink ground. */
-  color: var(--accent-on-ink);
-}
-
-.portalCards {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.9rem;
-  margin-top: 2rem;
-}
-
-.portalCard {
-  padding: 1.1rem;
-  border: 1px solid color-mix(in srgb, var(--paper) 14%, transparent);
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--paper) 6%, transparent);
-}
-
-/* .portalCardTitle inherits --muted from the shared label group at the top of
-   this file, which is a LIGHT-ground colour and measured 1.99:1 inside this
-   dark card. Dark-ground cards need their own label colour. */
-.portalCard .portalCardTitle {
-  color: color-mix(in srgb, var(--paper) 62%, transparent);
-}
-.portalCard .portalCardValue { color: var(--paper); }
-.portalCard .portalCardMeta { color: color-mix(in srgb, var(--paper) 58%, transparent); }
-
-.portalCardValue {
-  margin: 0.6rem 0 0;
-  font: 600 clamp(1.4rem, 3vw, 2rem)/1 var(--font-display);
-  letter-spacing: -0.03em;
-  color: var(--paper);
-}
-
-.portalCardMeta {
-  margin-top: 0.55rem;
-  color: color-mix(in srgb, var(--paper) 68%, var(--muted));
-  line-height: 1.6;
-}
-
-.howHead {
-  margin-bottom: 2rem;
-}
-
-.howSteps {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.howStep {
-  padding: 0 1.5rem;
-  border-left: 1px solid var(--rule);
-}
-
-.howStep:first-child {
-  padding-left: 0;
-  border-left: none;
-}
-
-.howStep:last-child {
-  padding-right: 0;
-}
-
-.howStepNum {
-  color: var(--accent);
-}
-
-.howStep h3 {
-  margin-top: 1rem;
-  font-size: clamp(1.05rem, 1.4vw, 1.2rem);
-  line-height: 1.28;
-}
-
-.howStep p {
-  margin-top: 0.85rem;
-  line-height: 1.75;
-}
-
-.pricing {
-  background: var(--paper-2);
-}
-
-.tiers {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.tier {
-  padding: 1.6rem;
-  border: 1px solid var(--rule);
-  background: var(--paper);
-  display: grid;
-  gap: 0.9rem;
-}
-
-.tierFeatured {
-  border-color: var(--ink);
-}
-
-.tierName {
-  color: var(--muted);
-}
-
-.tierPrice {
-  font-size: clamp(2rem, 4vw, 3rem);
+.indexNum {
+  font-family: var(--home-display);
+  font-size: 30px;
   line-height: 1;
 }
 
-.tierDesc {
-  line-height: 1.7;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--rule);
+.indexThumb {
+  width: 74px;
+  height: 48px;
+  border: 1px solid var(--home-line);
+  background: var(--home-matte);
+  object-fit: cover;
 }
 
-.tier ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.7rem;
+.indexCopy {
+  display: block;
+  min-width: 0;
 }
 
-.tier li {
-  position: relative;
-  padding-left: 1rem;
-  color: var(--ink-2);
-  line-height: 1.6;
-}
-
-.tier li::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0.7rem;
-  width: 4px;
-  height: 4px;
-  background: var(--accent);
-  border-radius: 999px;
-}
-
-.tierCta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  margin-top: 0.5rem;
-  border: 1px solid var(--ink);
-  background: transparent;
-  color: var(--ink);
-  font: 500 13.5px/1 var(--font-body);
-}
-
-.tierFeatured .tierCta {
-  background: var(--ink);
-  color: var(--paper);
-}
-
-.closing h2 {
-  margin-top: 0.8rem;
-  max-width: 12ch;
-  font-size: clamp(2.2rem, 4.5vw, 3.8rem);
+.indexName {
+  display: block;
+  font-family: var(--home-display);
+  font-size: 32px;
   line-height: 0.95;
+  text-transform: uppercase;
 }
 
-.closing .btn {
-  margin-top: 2rem;
+.indexDesc {
+  display: block;
+  margin-top: 7px;
+  color: var(--home-muted);
+  font-size: 12px;
 }
 
-.also {
-  padding: 2.8rem 0 3rem;
+.indexStatus {
+  color: var(--home-green);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
-.alsoGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 220px) 1fr;
-  gap: 2rem;
-}
-
-.lanes {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.lane {
-  padding: 1.1rem 0 0;
-  border-top: 1px solid var(--rule);
-}
-
-.lane h3 {
-  font-size: clamp(1.05rem, 1.4vw, 1.2rem);
-  line-height: 1.28;
-}
-
-.lane p {
-  margin-top: 0.8rem;
-  line-height: 1.7;
-}
-
-.laneLink {
-  display: inline-flex;
-  margin-top: 1rem;
-  font: 500 13px/1.3 var(--font-body);
-}
-
-@media (max-width: 980px) {
-  .proofGrid,
-  .portalCards,
-  .howSteps,
-  .tiers,
-  .alsoGrid,
-  .lanes,
-  .diffHead,
-  .pricingHead,
-  .journey,
-  .venturesGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .proofItem {
-    border-left: none;
-    border-top: 1px solid var(--rule);
-    /* Restore the gutter the desktop rule strips from the first cell. Once
-       the row stacks there is no leading edge to align to, so the flush-left
-       first item just read as a misaligned one. */
-    padding-left: clamp(1rem, 1.8vw, 1.75rem);
-  }
-
-  .proofItem:first-child {
-    border-top: none;
-    padding-left: clamp(1rem, 1.8vw, 1.75rem);
-  }
-
-  .portalHead,
-  .portalHero {
-    display: grid;
-  }
-
-  .howStep {
-    padding: 1.2rem 0 0;
-    border-left: none;
-    border-top: 1px solid var(--rule);
-  }
-
-  .howStep:first-child {
-    padding-top: 0;
-    border-top: none;
-  }
-}
-
-.whatWeBuild {
-  padding: 4rem 0 4.5rem;
-  border-bottom: 1px solid var(--rule);
-}
-
-.whatWeBuildHead {
-  margin: 0 0 2rem;
-  display: grid;
-  gap: 0.7rem;
-  max-width: 60ch;
-}
-
-/* 4x2 for the 8 services. At 3 columns the 8th card left a dead cell, and
-   the gap-as-border trick made that cell read as a broken panel rather than
-   whitespace. */
-.whatWeBuildGrid {
+.evidenceStrip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1px;
-  background: var(--rule);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
+  margin-top: 72px;
+  border-top: 1px solid var(--home-line);
 }
 
-.wbCard {
+.evidence {
+  min-height: 103px;
+  padding: 23px 22px 27px;
+  border-right: 1px solid var(--home-line);
+}
+
+.evidence:last-child {
+  border-right: 0;
+}
+
+.evidence strong {
+  display: block;
+  font-size: 15px;
+}
+
+.evidence span {
+  display: block;
+  margin-top: 8px;
+  color: var(--home-muted);
+  font-size: 12px;
+}
+
+.sectionMarker,
+.darkMarker {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0;
+  color: var(--home-muted);
+}
+
+.sectionMarker::before,
+.darkMarker::before {
+  width: 30px;
+  height: 3px;
+  background: var(--home-red);
+  content: "";
+  flex: 0 0 auto;
+}
+
+.workIntro {
   display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 0.5rem;
-  padding: clamp(1.3rem, 1.9vw, 1.7rem) clamp(1.1rem, 1.5vw, 1.4rem);
-  background: var(--surface);
-  text-decoration: none;
-  color: inherit;
-  min-height: 148px;
-  transition: background var(--dur) var(--ease);
+  grid-template-columns: 4fr 7fr 1fr;
+  gap: 30px;
+  padding: 92px var(--home-pad) 64px;
+  border-bottom: 1px solid var(--home-line);
 }
 
-/* No transform here. The cards are separated by a 1px gap over a shared
-   background, so lifting one tears the seam open against its neighbours —
-   a hover state that visibly breaks the grid it lives in. Background is
-   enough of an affordance inside a bordered table like this. */
-.wbCard:hover {
-  background: var(--paper-2);
+.workIntro > .sectionMarker {
+  grid-column: 1;
+  align-self: start;
 }
 
-.wbCard:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
+.workIntroCopy {
+  grid-column: 2;
 }
 
-/* Body face, not the display serif. A serif at card-title size reads as
-   decoration rather than structure (brand/BRAND.md §3) — and at 1.35rem in a
-   four-across grid it was also the widest possible setting of the longest
-   labels. */
-.wbCardTitle {
+.workIntro h2,
+.capabilitiesHead h2,
+.workspace h2,
+.studioNote h2,
+.closing h2 {
   margin: 0;
-  font: 700 1.06rem/1.25 var(--font-body);
-  letter-spacing: -0.016em;
-  color: var(--ink);
-  text-wrap: balance;
+  font-family: var(--home-display);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
 }
 
-.wbCardBody {
-  margin: 0;
-  color: var(--ink-2);
-  font-size: 0.95rem;
+.workIntro h2 {
+  font-size: clamp(52px, 5.4vw, 78px);
+  line-height: 0.96;
+}
+
+.workIntroBody {
+  max-width: 760px;
+  margin: 28px 0 0;
+  color: var(--home-muted);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.disclosure {
+  max-width: 760px;
+  margin: 32px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--home-line);
+  color: var(--home-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.project {
+  border-bottom: 1px solid var(--home-line);
+}
+
+.projectInner {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 52px;
+  min-height: 800px;
+  padding: 72px var(--home-pad) 94px;
+}
+
+.projectCaption {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.projectNumber {
+  margin-bottom: 44px;
+  color: var(--home-red);
+  font-family: var(--home-display);
+  font-size: 96px;
+  line-height: 0.8;
+}
+
+.projectCaption h2 {
+  margin: 0 0 14px;
+  font-family: var(--home-display);
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+}
+
+.projectBody {
+  margin-bottom: 28px;
+  color: var(--home-muted);
+  font-size: 14px;
   line-height: 1.55;
 }
 
-/* The bare "->" glyphs are gone. An unlabelled arrow in the corner of an
-   already-clickable card is decoration, not affordance — the same reason
-   trailing arrows were stripped from buttons in redesign Phase 3. Kept as
-   an empty rule so any stale reference is inert rather than unstyled. */
-.wbCardArrow { display: none; }
+.projectBottom {
+  margin-top: auto;
+}
 
-.wbCardBadge {
+.ownership {
   margin: 0;
-  font: 500 13px/1.3 var(--font-body);
-  color: var(--muted);
-  align-self: end;
+  padding-top: 15px;
+  border-top: 1px solid var(--home-line);
+  color: var(--home-ink);
 }
 
-.positioning {
-  padding: 3.8rem 0;
-  border-bottom: 1px solid var(--rule);
+.projectLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 12px;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 650;
 }
 
-.positioningStatement {
-  font-size: clamp(1.15rem, 2.4vw, 1.45rem);
-  font-weight: 500;
-  line-height: 1.6;
-  letter-spacing: -0.02em;
-  max-width: 72ch;
-  color: var(--fg);
-  margin: 0.8rem 0 0;
+.projectLink span {
+  color: var(--home-red);
 }
 
-.startHere { padding: 2.4rem 0; border-bottom: 1px solid var(--rule); }
-.startHereGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1px;
-  background: var(--rule);
-  border: 1px solid var(--rule);
-  margin-top: 1.2rem;
-}
-.startHereCard {
-  display: grid;
-  grid-template-rows: 1fr auto auto;
-  gap: .4rem;
-  padding: 1.4rem 1.3rem;
-  background: var(--paper);
-  text-decoration: none;
-  transition: background .15s ease, transform 0.2s ease;
-}
-.startHereCard:first-child {
-  grid-column: span 2;
-}
-.startHereCard:hover { background: var(--paper-2); transform: translateY(-2px); }
-.startHereSituation { margin: 0; font-size: .85rem; color: var(--ink); line-height: 1.4; }
-.startHereService { margin: 0; font: 500 13px/1 var(--font-body); color: var(--muted); }
-/* Bare arrow removed (see .wbCardArrow). Kept as an inert rule so a stale
-   reference renders nothing rather than an unstyled glyph. */
-.startHereArrow { display: none; }
-
-@media (max-width: 1040px) {
-  .whatWeBuildGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 880px) {
-  .startHereGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .startHereCard:first-child {
-    grid-column: span 2;
-  }
-}
-
-@media (max-width: 560px) {
-  .whatWeBuildGrid {
-    grid-template-columns: 1fr;
-  }
-  .startHereGrid {
-    grid-template-columns: 1fr;
-  }
-  .startHereCard:first-child {
-    grid-column: span 1;
-  }
-}
-
-.ventures {
-  padding: 4.8rem 0;
-  background: var(--ink);
-  border-bottom: 1px solid color-mix(in srgb, var(--paper) 10%, transparent);
-}
-
-.venturesHead {
-  display: grid;
-  gap: 0.7rem;
-  margin-bottom: 2rem;
-  max-width: 60ch;
-}
-
-.venturesLabel {
-  margin: 0;
-  font: 500 13px/1.3 var(--font-body);
-  color: color-mix(in srgb, var(--paper) 52%, transparent);
-}
-
-.venturesTitle {
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-variation-settings: "opsz" 96, "SOFT" 0, "WONK" 0;
-  letter-spacing: -0.026em;
-  font-size: clamp(1.85rem, 3.2vw, 2.75rem);
-  line-height: 1.06;
-  color: var(--paper);
-  text-wrap: balance;
-}
-
-/* 60ch on .venturesHead was still ~1000px of running text on a dark ground,
-   which is where a paragraph stops being read and starts being skipped.
-   Reverse type also needs a shorter measure than dark-on-light. */
-.venturesIntro {
-  margin: 0;
-  max-width: 58ch;
-  color: color-mix(in srgb, var(--paper) 72%, transparent);
-  line-height: 1.72;
-  font-size: var(--cs-size-lede);
-}
-
-.venturesGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.ventureCard {
-  padding: clamp(1.4rem, 2.2vw, 2rem);
-  border: 1px solid color-mix(in srgb, var(--paper) 14%, transparent);
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--paper) 5%, transparent);
-  display: grid;
-  gap: 0.7rem;
-  align-content: start;
-  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
-}
-
-.ventureCard:hover {
-  border-color: color-mix(in srgb, var(--paper) 26%, transparent);
-  background: color-mix(in srgb, var(--paper) 8%, transparent);
-}
-
-.ventureName {
-  margin: 0;
-  font-family: var(--font-display);
-  letter-spacing: -0.03em;
-  font-size: clamp(1.4rem, 2.5vw, 1.9rem);
-  line-height: 1.1;
-  color: var(--paper);
-}
-
-.ventureTagline {
-  margin: 0;
-  font: 500 13px/1.3 var(--font-body);
-  color: color-mix(in srgb, var(--paper) 52%, transparent);
-}
-
-.ventureDetail {
-  margin: 0;
-  color: color-mix(in srgb, var(--paper) 72%, var(--muted));
-  line-height: 1.6;
-  font-size: 0.9rem;
-}
-
-.ventureChips {
+.projectVisual {
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  min-width: 0;
+  min-height: 620px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 40px;
+  background: var(--home-matte);
 }
 
-.ventureChip {
-  padding: 0.25rem 0.6rem;
-  border: 1px solid color-mix(in srgb, var(--paper) 18%, transparent);
-  font: 500 12.5px/1.3 var(--font-body);
-  color: color-mix(in srgb, var(--paper) 62%, transparent);
+.projectVisual figcaption {
+  position: absolute;
+  top: 15px;
+  left: 16px;
+  z-index: 1;
+  color: var(--home-muted);
 }
 
-.ventureLink {
-  font: 600 13.5px/1.3 var(--font-body);
-  /* Measured 3.58:1 as pure --accent on the dark ventures ground. */
-  color: var(--accent-on-ink);
-  text-decoration: none;
-  transition: opacity 0.15s;
+.projectImage {
+  width: 100%;
+  height: auto;
+  max-height: 660px;
+  object-fit: contain;
+  box-shadow: 0 14px 50px rgba(20, 23, 27, 0.1);
 }
 
-.ventureLink:hover {
-  opacity: 0.75;
+.projectFleiko .projectVisual {
+  background: #dfe7ea;
 }
 
-.venturesCta {
-  margin: 2rem 0 0;
+.projectFleiko .projectNumber {
+  color: var(--home-green);
 }
 
-.venturesCtaLink {
-  font: 500 13px/1.3 var(--font-body);
-  color: color-mix(in srgb, var(--paper) 62%, transparent);
-  text-decoration: none;
-  transition: color 0.15s;
+.projectProveo .projectInner {
+  grid-template-columns: minmax(0, 1fr) 300px;
 }
 
-.venturesCtaLink:hover {
-  color: var(--paper);
+.projectProveo .projectVisual {
+  order: 1;
+  background: #e7eaeb;
 }
 
-.closingActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.8rem;
-  margin-top: 2rem;
+.projectProveo .projectCaption {
+  order: 2;
 }
 
-.closingPricingLink {
-  margin-top: 1.2rem;
-  font: 500 13px/1.3 var(--font-body);
+.projectProveo .projectNumber {
+  color: var(--home-yellow);
 }
 
-.closingPricingLink a {
-  color: var(--muted);
-  text-decoration: none;
-  transition: color 0.15s;
+.projectKocre .projectInner {
+  grid-template-columns: 1fr;
+  padding-top: 62px;
 }
 
-.closingPricingLink a:hover {
-  color: var(--ink);
-}
-
-/* ── Founder section ─────────────────────────────────────────────── */
-.founder {
-  padding: 3.5rem 0;
-  border-bottom: 1px solid var(--rule);
-}
-
-.founderInner {
+.projectKocre .projectCaption {
   display: grid;
-  grid-template-columns: 240px 1fr;
-  gap: 2.5rem;
+  grid-template-columns: 150px 240px minmax(0, 1fr) 230px;
+  gap: 34px;
   align-items: start;
+  padding-top: 22px;
+  border-top: 1px solid var(--home-ink);
 }
 
-.founderPhotoWrap {
-  flex-shrink: 0;
+.projectKocre .projectNumber {
+  margin: 0;
+  color: var(--home-green);
+  font-size: 64px;
 }
 
-.founderImg {
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
-  object-fit: cover;
-  object-position: center top;
-  border: 3px solid var(--rule);
-  display: block;
+.projectKocre .projectCaption h2 {
+  margin: 0;
+  font-size: 42px;
 }
 
-.founderContent {
+.projectKocre .projectBody {
+  margin: 0;
+  max-width: 560px;
+}
+
+.projectKocre .projectBottom {
+  margin: 0;
+}
+
+.projectKocre .ownership {
+  padding: 0;
+  border: 0;
+}
+
+.projectKocre .projectLink {
+  margin-top: 16px;
+}
+
+.projectKocre .projectVisual {
+  min-height: 560px;
+  background: #e4e9e5;
+}
+
+.projectCrecyos {
+  background: var(--home-dark);
+  color: var(--home-white);
+}
+
+.projectCrecyos .projectInner {
+  position: relative;
+  grid-template-columns: 1fr;
+  min-height: 920px;
+  padding-top: 80px;
+  padding-bottom: 80px;
+}
+
+.projectCrecyos .projectCaption {
+  position: absolute;
+  top: 110px;
+  left: var(--home-pad);
+  z-index: 2;
+  width: 280px;
+  padding: 0 28px 28px 0;
+  background: var(--home-dark);
+}
+
+.projectCrecyos .projectNumber {
+  margin-bottom: 54px;
+  color: var(--home-red);
+  font-size: 126px;
+  line-height: 0.72;
+}
+
+.projectCrecyos .projectBody {
+  color: #c9d0d6;
+}
+
+.projectCrecyos .ownership {
+  border-color: var(--home-dark-line);
+  color: var(--home-white);
+}
+
+.projectCrecyos .projectVisual {
+  min-height: 760px;
+  padding: 55px 55px 55px 360px;
+  background: var(--home-dark-2);
+}
+
+.projectCrecyos .projectVisual figcaption {
+  color: #bac2ca;
+}
+
+.capabilities {
+  padding: 92px var(--home-pad) 110px;
+  border-bottom: 1px solid var(--home-line);
+  background: var(--home-white);
+}
+
+.capabilitiesHead {
+  display: grid;
+  grid-template-columns: 4fr 8fr;
+  gap: 40px;
+  margin-bottom: 60px;
+}
+
+.capabilitiesHead h2 {
+  font-size: clamp(48px, 5vw, 72px);
+  line-height: 0.95;
+}
+
+.capabilityRows {
+  border-top: 1px solid var(--home-ink);
+}
+
+.capabilityRow {
+  display: grid;
+  grid-template-columns: 2.5fr 4.5fr 2fr 1fr;
+  gap: 30px;
+  align-items: start;
+  min-height: 88px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--home-ink);
+}
+
+.capabilityTitle {
+  font-family: var(--home-display);
+  font-size: 30px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.capabilityBody,
+.capabilityProof {
+  color: var(--home-muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.capabilityProof {
+  font-size: 12px;
+}
+
+.capabilityArrow {
+  justify-self: end;
+  font-size: 20px;
+  transition: transform 160ms ease;
+}
+
+.capabilityRow:hover .capabilityArrow {
+  transform: translate(2px, -2px);
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 4fr 8fr;
+  border-bottom: 1px solid var(--home-dark-line);
+  background: #0f1216;
+  color: var(--home-white);
+}
+
+.workspaceCopy {
+  padding: 82px var(--home-pad);
+  border-right: 1px solid var(--home-dark-line);
+}
+
+.darkMarker {
+  color: #8e98a3;
+}
+
+.workspace h2 {
+  margin: 18px 0 28px;
+  font-size: clamp(48px, 4.6vw, 64px);
+  line-height: 0.95;
+}
+
+.workspaceCopy > p:not(.darkMarker) {
+  max-width: 430px;
+  margin: 0;
+  color: #bcc3ca;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.darkLink {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 6px;
+  margin-top: 18px;
+  color: var(--home-white);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.darkLink span {
+  color: var(--home-red);
+}
+
+.workspaceVisual {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 0;
+  align-items: center;
+  min-width: 0;
+  padding: 60px;
+  background: #171b20;
 }
 
-.founderName {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 0;
-  font-size: clamp(2.3rem, 3.8vw, 3.3rem);
-  letter-spacing: -0.03em;
-  margin: 0.5rem 0 0.3rem;
-  line-height: 1.05;
+.workspaceVisual figcaption {
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  color: #8e98a3;
 }
 
-.founderRole {
-  font: 500 13px/1.3 var(--font-body);
-  color: var(--accent);
-  margin-bottom: 1.4rem;
+.workspaceImage {
+  width: 100%;
+  height: auto;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.28);
 }
 
-.founderBio {
-  /* var(--body) is not a token and never was — the declaration was invalid,
-     so this inherited instead of setting a colour. Capped to a readable
-     measure too: it was running the full container width. */
-  max-width: 68ch;
-  font-size: var(--cs-size-body);
-  line-height: var(--cs-leading-body);
-  color: var(--ink-2);
-  margin-bottom: 0.9rem;
+.process {
+  display: grid;
+  grid-template-columns: 3fr 9fr;
+  gap: 40px;
+  padding: 86px var(--home-pad);
+  border-bottom: 1px solid var(--home-line);
 }
 
-.founderBio:last-of-type {
-  margin-bottom: 1.2rem;
-  font-weight: 500;
-  color: var(--ink);
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--home-ink);
 }
 
-.founderLinkedIn {
-  display: inline-block;
-  font: 500 13px/1.3 var(--font-body);
-  color: var(--accent);
-  text-decoration: none;
-  transition: color 0.15s;
+.step {
+  min-width: 0;
+  padding: 24px 30px 20px 0;
+  border-right: 1px solid var(--home-line);
 }
 
-.founderLinkedIn:hover {
-  color: var(--ink);
+.step:not(:first-child) {
+  padding-left: 30px;
 }
 
-@media (max-width: 720px) {
-  .founder {
-    padding: 2.5rem 0;
+.step:last-child {
+  border-right: 0;
+}
+
+.stepNumber {
+  color: var(--home-red);
+  font-family: var(--home-display);
+  font-size: 54px;
+  line-height: 1;
+}
+
+.step h2 {
+  margin: 12px 0;
+  font-family: var(--home-display);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.step p {
+  margin: 0;
+  color: var(--home-muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.studioNote {
+  display: grid;
+  grid-template-columns: 4fr 6fr 2fr;
+  gap: 30px;
+  padding: 68px var(--home-pad);
+  border-bottom: 1px solid var(--home-line);
+}
+
+.studioNote > div {
+  grid-column: 2;
+}
+
+.studioNote h2 {
+  font-size: clamp(38px, 4vw, 52px);
+  line-height: 0.96;
+}
+
+.studioNote div > p {
+  max-width: 720px;
+  margin: 22px 0 0;
+  color: var(--home-muted);
+  font-size: 16px;
+  line-height: 1.58;
+}
+
+.studioLink {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.studioLink span {
+  color: var(--home-red);
+}
+
+.closing {
+  display: grid;
+  grid-template-columns: 8fr 4fr;
+  gap: 40px;
+  align-items: end;
+  padding: 88px var(--home-pad) 110px;
+  background: var(--home-red);
+  color: var(--home-white);
+}
+
+.closing h2 {
+  max-width: 950px;
+  font-size: clamp(72px, 8vw, 122px);
+  line-height: 0.84;
+  letter-spacing: -0.04em;
+}
+
+.closingCta {
+  display: inline-flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  justify-self: end;
+  padding: 15px 18px;
+  border: 1px solid var(--home-white);
+  color: var(--home-white);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .heroCopy,
+  .heroIndex {
+    animation: reveal 420ms ease both;
   }
 
-  .founderInner {
+  .heroIndex {
+    animation-delay: 80ms;
+  }
+
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@media (max-width: 1100px) {
+  .hero {
+    min-height: 0;
+  }
+
+  .heroGrid {
     grid-template-columns: 1fr;
-    gap: 2rem;
   }
 
-  .founderImg {
-    width: 160px;
-    height: 160px;
+  .heroIndex {
+    margin-top: 38px;
+    padding: 32px 0 0;
+    border-top: 1px solid var(--home-line);
+    border-left: 0;
+  }
+
+  .projectInner {
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 36px;
+  }
+
+  .projectKocre .projectCaption {
+    grid-template-columns: 110px 200px minmax(0, 1fr) 190px;
+    gap: 22px;
+  }
+
+  .projectCrecyos .projectCaption {
+    width: 250px;
+  }
+
+  .projectCrecyos .projectVisual {
+    padding-left: 320px;
+  }
+}
+
+@media (max-width: 820px) {
+  .workInViewPage {
+    border-inline: 0;
+  }
+
+  .hero {
+    padding: 48px 20px 0;
+  }
+
+  .heroTitle {
+    margin-top: 22px;
+    font-size: clamp(58px, 16vw, 74px);
+    line-height: 0.88;
+  }
+
+  .heroLead {
+    font-size: 17px;
+  }
+
+  .heroActions {
+    display: grid;
+  }
+
+  .action {
+    width: 100%;
+  }
+
+  .indexRow {
+    grid-template-columns: 35px minmax(0, 1fr) auto;
+    min-height: 78px;
+  }
+
+  .indexThumb {
+    display: none;
+  }
+
+  .indexName {
+    font-size: 28px;
+  }
+
+  .evidenceStrip {
+    grid-template-columns: 1fr 1fr;
+    margin: 50px -20px 0;
+  }
+
+  .evidence:nth-child(2) {
+    border-right: 0;
+  }
+
+  .evidence:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--home-line);
+  }
+
+  .workIntro {
+    display: block;
+    padding: 65px 20px 45px;
+  }
+
+  .workIntro h2 {
+    margin-top: 24px;
+    font-size: 50px;
+  }
+
+  .workIntroBody {
+    font-size: 15px;
+  }
+
+  .projectInner,
+  .projectProveo .projectInner,
+  .projectKocre .projectInner,
+  .projectCrecyos .projectInner {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    gap: 28px;
+    padding: 55px 20px 64px;
+  }
+
+  .projectVisual,
+  .projectProveo .projectVisual,
+  .projectKocre .projectVisual,
+  .projectCrecyos .projectVisual {
+    order: 0;
+    min-height: 340px;
+    margin: 0 -20px;
+    padding: 22px;
+  }
+
+  .projectCaption,
+  .projectProveo .projectCaption,
+  .projectKocre .projectCaption,
+  .projectCrecyos .projectCaption {
+    position: static;
+    order: 1;
+    display: flex;
+    width: auto;
+    flex-direction: column;
+    padding: 0;
+    border-top: 0;
+    background: transparent;
+  }
+
+  .projectNumber,
+  .projectKocre .projectNumber,
+  .projectCrecyos .projectNumber {
+    margin: 0 0 24px;
+    font-size: 68px;
+    line-height: 0.9;
+  }
+
+  .projectCaption h2,
+  .projectKocre .projectCaption h2 {
+    font-size: 40px;
+  }
+
+  .projectBottom {
+    margin-top: 20px;
+  }
+
+  .projectKocre .ownership {
+    padding-top: 15px;
+    border-top: 1px solid var(--home-line);
+  }
+
+  .projectImage {
+    max-height: none;
+  }
+
+  .capabilities {
+    padding: 65px 20px;
+  }
+
+  .capabilitiesHead {
+    display: block;
+    margin-bottom: 38px;
+  }
+
+  .capabilitiesHead h2 {
+    margin-top: 18px;
+    font-size: 48px;
+  }
+
+  .capabilityRow {
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    min-height: 0;
+    padding: 26px 0;
+  }
+
+  .capabilityTitle,
+  .capabilityBody,
+  .capabilityProof {
+    grid-column: 1;
+  }
+
+  .capabilityBody {
+    margin-top: 10px;
+  }
+
+  .capabilityProof {
+    margin-top: 4px;
+  }
+
+  .capabilityArrow {
+    grid-column: 2;
+    grid-row: 1 / 4;
+  }
+
+  .workspace {
+    display: block;
+  }
+
+  .workspaceCopy {
+    padding: 60px 20px;
+    border-right: 0;
+  }
+
+  .workspace h2 {
+    font-size: 46px;
+  }
+
+  .workspaceVisual {
+    padding: 52px 20px 20px;
+  }
+
+  .workspaceVisual figcaption {
+    top: 20px;
+    left: 20px;
+  }
+
+  .process {
+    display: block;
+    padding: 60px 20px;
+  }
+
+  .steps {
+    display: block;
+    margin-top: 30px;
+  }
+
+  .step,
+  .step:not(:first-child) {
+    padding: 24px 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--home-line);
+  }
+
+  .step:last-child {
+    border-bottom: 0;
+  }
+
+  .studioNote {
+    display: block;
+    padding: 56px 20px;
+  }
+
+  .studioNote > div {
+    margin-top: 24px;
+  }
+
+  .studioNote h2 {
+    font-size: 38px;
   }
 
   .closing {
-    padding: 2.2rem 0;
+    display: block;
+    padding: 65px 20px 75px;
+  }
+
+  .closing h2 {
+    margin-bottom: 38px;
+    font-size: 64px;
+  }
+
+  .closingCta {
+    width: 100%;
   }
 }
 
-/* 44px tap target on touch widths (brand/BRAND.md §11). These are
-   standalone links in their own row, not prose links, so WCAG 2.5.8's
-   inline exemption does not cover them. */
-@media (max-width: 620px) {
-.ventureLink,
-.founderLinkedIn,
-.venturesCtaLink {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
+@media (max-width: 460px) {
+  .heroTitle {
+    font-size: clamp(52px, 15.5vw, 62px);
+  }
+
+  .indexDesc {
+    font-size: 11px;
+  }
+
+  .indexStatus {
+    font-size: 10px;
+  }
+
+  .evidence {
+    padding-inline: 20px;
+  }
+
+  .projectVisual {
+    min-height: 280px;
+  }
+
+  .workspaceVisual {
+    min-height: 260px;
   }
 }

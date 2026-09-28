@@ -36,7 +36,9 @@
     "admin": "Admin",
     "language": "Idioma",
     "primaryAria": "Principal",
-    "footerAria": "Pie de página"
+    "footerAria": "Pie de página",
+    "capabilities": "Capacidades",
+    "about": "Acerca de"
   },
   "notFound": {
     "metaTitle": "Página no encontrada | CrecyStudio",
@@ -233,8 +235,8 @@
     "successCta": "Ver el proceso"
   },
   "home": {
-    "metaTitle": "CrecyStudio | Sitios web, web apps a medida, SaaS e IA",
-    "metaDescription": "Estudio web independiente. Sitios web, aplicaciones a medida, desarrollo SaaS, integración de IA — por un fundador que opera cuatro productos SaaS en producción (Fleiko, Proveo, Korent, Kocre IT).",
+    "metaTitle": "CrecyStudio | Sitios web, SaaS, IA y software a medida",
+    "metaDescription": "Estudio digital independiente que crea sitios web, productos SaaS, aplicaciones web a medida y sistemas de IA en producción.",
     "heroLabel": "Estudio web independiente / desde 2024",
     "heroTitle": "Hecho para a dónde se dirige, <em>no</em> para dónde está.",
     "heroSub": "Desde un sitio web pulido hasta un SaaS o aplicación a medida con IA de producción integrada — por un fundador que ha lanzado cuatro de los suyos.",
@@ -421,6 +423,137 @@
       "ecomTitle": "Correcciones de e-commerce",
       "ecomBody": "Escaparate, checkout y limpieza operativa para tiendas online que pierden tiempo o conversiones.",
       "ecomLink": "Explorar e-commerce"
+    },
+    "workInView": {
+      "hero": {
+        "label": "Estudio digital independiente / Virginia, EE. UU.",
+        "line1": "Trabajo que",
+        "line2": "tiene que funcionar.",
+        "body": "Sitios web, productos SaaS y sistemas con IA, diseñados y desarrollados como productos reales en funcionamiento, no como piezas de presentación.",
+        "workCta": "Ver trabajos seleccionados",
+        "projectCta": "Iniciar un proyecto"
+      },
+      "index": {
+        "aria": "Trabajos seleccionados",
+        "label": "Trabajos seleccionados",
+        "live": "En vivo"
+      },
+      "evidence": {
+        "software": {
+          "title": "Software en producción",
+          "body": "Productos reales, no maquetas estáticas"
+        },
+        "web": {
+          "title": "Web + aplicación",
+          "body": "Presentación y capas operativas"
+        },
+        "ai": {
+          "title": "IA en producción",
+          "body": "IA integrada en los flujos del producto"
+        },
+        "workspace": {
+          "title": "Espacio privado",
+          "body": "Del alcance al lanzamiento en un solo lugar"
+        }
+      },
+      "work": {
+        "label": "01 / Trabajo seleccionado",
+        "title": "Abre la prueba. Luego lee el discurso.",
+        "body": "Los productos de abajo son públicos y funcionan. No se trata de decorar un portafolio con capturas, sino de mostrar el nivel de pensamiento de producto, diseño de interfaz e ingeniería que CrecyStudio puede aportar a un proyecto de cliente.",
+        "disclosure": "Divulgación: estos productos pertenecen al estudio y demuestran capacidad de ingeniería. No se presentan como testimonios de clientes ni como recomendaciones de terceros."
+      },
+      "projects": {
+        "open": "Abrir producto en vivo",
+        "fleiko": {
+          "name": "Fleiko",
+          "short": "Software de operaciones de flota",
+          "body": "Software de operaciones de flota para pequeñas empresas, con registros de vehículos, mantenimiento, cumplimiento, visibilidad de costos y alertas operativas.",
+          "ownership": "Producto del estudio / Operaciones de flota",
+          "visualLabel": "Interfaz pública / datos de demostración",
+          "imageAlt": "Interfaz general de flota de Fleiko"
+        },
+        "proveo": {
+          "name": "Proveo",
+          "short": "Plataforma para negocios de servicios",
+          "body": "Una plataforma para negocios de servicios que combina página para clientes, cotización, reservas, prueba del trabajo, CRM y pagos.",
+          "ownership": "Producto del estudio / Software para servicios",
+          "visualLabel": "Negocio público de demostración / datos ficticios",
+          "imageAlt": "Página de demostración de Proveo para una empresa de pintura"
+        },
+        "kocre": {
+          "name": "Kocre IT",
+          "short": "Portal de TI administrado",
+          "body": "Soporte de TI administrado presentado como un solo sistema para el cliente: marketing, evaluación, solicitudes, salud del sistema y portal.",
+          "ownership": "Producto del estudio / Operaciones de TI",
+          "visualLabel": "Sitio público / interfaz del producto",
+          "imageAlt": "Sitio público de Kocre IT e interfaz del portal del cliente"
+        },
+        "crecyos": {
+          "name": "Crecy OS",
+          "short": "Sistema de operaciones de alquiler",
+          "body": "Software de operaciones de alquiler que conecta propiedades, residentes, propietarios, pagos, mantenimiento, documentos y registros financieros.",
+          "ownership": "Producto del estudio / Operaciones de alquiler",
+          "visualLabel": "Sitio público / datos de demostración",
+          "imageAlt": "Interfaz del producto de operaciones de alquiler Crecy OS"
+        }
+      },
+      "capabilities": {
+        "label": "02 / Capacidades",
+        "title": "Lo que demuestra el trabajo.",
+        "websites": {
+          "title": "Sitios web",
+          "body": "Sitios de marketing confiables que explican la oferta y llevan a la siguiente acción.",
+          "proof": "Ver: Proveo / Kocre IT"
+        },
+        "saas": {
+          "title": "Productos SaaS",
+          "body": "Aplicaciones multiusuario con cuentas, flujos, facturación e interfaces operativas.",
+          "proof": "Ver: Fleiko / Crecy OS"
+        },
+        "ai": {
+          "title": "Integración de IA",
+          "body": "IA dentro de los flujos del producto para apoyar decisiones, clasificación, detección y asistencia operativa.",
+          "proof": "Ver: productos del estudio"
+        },
+        "systems": {
+          "title": "Sistemas a medida",
+          "body": "Portales, paneles, herramientas internas, automatización e interfaces conectadas con la forma real de operar del negocio.",
+          "proof": "Ver: espacio de trabajo / portales"
+        }
+      },
+      "workspace": {
+        "label": "03 / Sistema de entrega",
+        "title": "Sin desaparecer después del inicio.",
+        "body": "Cada proyecto tiene un espacio privado para alcance, archivos, hitos, facturas, enlaces de vista previa, comentarios, aprobaciones y estado de lanzamiento.",
+        "cta": "Ver cómo avanzan los proyectos",
+        "visualLabel": "Vista previa del espacio / datos de demostración",
+        "imageAlt": "Vista previa del espacio de cliente de CrecyStudio"
+      },
+      "process": {
+        "label": "04 / Proceso",
+        "define": {
+          "title": "Definir",
+          "body": "Aclarar el problema, el usuario, el alcance y la condición de éxito antes de ampliar el trabajo."
+        },
+        "build": {
+          "title": "Construir",
+          "body": "Diseño e ingeniería avanzan juntos, con vistas previas funcionales en lugar de una larga espera."
+        },
+        "ship": {
+          "title": "Lanzar",
+          "body": "Lanzar, verificar, transferir la propiedad y dejar el sistema comprensible después de la entrega."
+        }
+      },
+      "studio": {
+        "label": "05 / Estudio",
+        "title": "Pequeño por diseño. El trabajo se mantiene cerca de la construcción.",
+        "body": "CrecyStudio es un estudio independiente de Virginia para sitios web, SaaS, integración de IA y aplicaciones web a medida. Lo bastante pequeño para mantener estrategia, diseño e ingeniería cerca desde el alcance hasta el lanzamiento.",
+        "cta": "Acerca de CrecyStudio"
+      },
+      "closing": {
+        "title": "¿Tienes algo que valga la pena construir?",
+        "cta": "Iniciar un proyecto"
+      }
     }
   },
   "pricing": {
