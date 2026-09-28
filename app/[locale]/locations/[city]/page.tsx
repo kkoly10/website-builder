@@ -15,6 +15,7 @@ import {
   type Location,
 } from "@/lib/seo/locations";
 import { routing } from "@/i18n/routing";
+import { englishOnlyAlternates } from "@/lib/seo/englishOnlyMetadata";
 
 export const dynamic = "force-dynamic";
 
@@ -46,8 +47,12 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { locale, city } = await params;
+  const pageUrl = `/locations/${city}`;
   if (!isSupportedLocale(locale)) {
-    return { robots: { index: false, follow: false } };
+    return {
+      robots: { index: false, follow: false },
+      alternates: englishOnlyAlternates(pageUrl),
+    };
   }
   const location = locationBySlug(city);
   if (!location) {
@@ -63,7 +68,8 @@ export async function generateMetadata({
   return {
     title,
     description,
-    openGraph: { title, description },
+    alternates: englishOnlyAlternates(pageUrl),
+    openGraph: { title, description, url: pageUrl, locale: "en_US", alternateLocale: [] },
     twitter: { title, description },
   };
 }

@@ -104,14 +104,17 @@ function serviceAreaNode(): GraphNode {
   };
 }
 
+function localAreaServedNodes(): GraphNode[] {
+  return SERVED_PLACES.map((place) => ({
+    "@type": place.type,
+    name: place.name,
+  }));
+}
+
 function areaServedNodes(): GraphNode[] {
-  // Combine specific places + countries so both "web designer in
-  // Fredericksburg VA" and "Canadian web studio" queries get a hit.
+  // Organization-level reach includes remote English-speaking markets.
   return [
-    ...SERVED_PLACES.map((place) => ({
-      "@type": place.type,
-      name: place.name,
-    })),
+    ...localAreaServedNodes(),
     ...SERVED_COUNTRIES.map((country) => ({
       "@type": "Country",
       name: country,
@@ -270,23 +273,24 @@ export function localBusinessNode(): GraphNode {
     image: `${SITE_URL}/brand/crecy-d1-horizontal-light.svg`,
     logo: `${SITE_URL}/brand/crecy-d1-horizontal-light.svg`,
     description:
-      "Web studio in Stafford, VA building websites, custom web apps, SaaS products, and AI integrations. Founder runs four production SaaS products of his own (Fleiko, Proveo, Korent, Kocre IT). Serves the DMV — Fredericksburg, Richmond, Ashland, Washington DC, Maryland — plus remote clients across the US, Canada, and UK.",
+      "Web studio in Stafford, VA building websites, custom web apps, SaaS products, and AI integrations. Serves Stafford, Fredericksburg, Northern Virginia, Washington DC, Maryland, Richmond, Ashland, and the wider DMV.",
     address: postalAddressNode(),
     geo: geoNode(),
-    areaServed: areaServedNodes(),
+    // Keep the LocalBusiness entity local. Remote US/CA/GB reach belongs on
+    // the Organization node above, not on the local service-area signal.
+    areaServed: localAreaServedNodes(),
     serviceArea: serviceAreaNode(),
     ...(BUSINESS_PHONE && { telephone: BUSINESS_PHONE }),
     email: "hello@crecystudio.com",
     priceRange: "$$$",
-    // 24-hour-by-appointment is the right shape for a remote studio —
-    // it tells Google "always reachable async" without claiming a
-    // walk-in storefront.
+    // Match the published Google Business Profile hours exactly so local
+    // business signals stay consistent across Search, Maps, and the website.
     openingHoursSpecification: [
       {
         "@type": "OpeningHoursSpecification",
         dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
         opens: "09:00",
-        closes: "18:00",
+        closes: "17:00",
       },
     ],
     sameAs: [ORG_ID, ...SAME_AS_URLS],

@@ -18,6 +18,9 @@ export type BlogPost = {
   slug: string;
   // SEO title. Front-loads the keyword target. Max ~60 chars.
   title: string;
+  // Optional SERP-only title when the editorial title would exceed search
+  // engine display guidance. The visible H1 remains the editorial headline.
+  seoTitle?: string;
   // SEO meta description. ~155 chars. Speaks to the search-intent
   // behind the post's keyword cluster.
   description: string;
@@ -277,6 +280,7 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: "rag-vs-fine-tuning-for-small-businesses",
     title: "RAG vs fine-tuning: which one your small business actually needs",
+    seoTitle: "RAG vs Fine-Tuning for Small Business",
     description:
       "Most small businesses are sold fine-tuning when they need RAG. A practical breakdown of when to use each, what they cost, and what the production tradeoffs look like.",
     headline: "RAG vs fine-tuning for small businesses: the honest comparison",
@@ -597,6 +601,7 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: "web-design-vs-custom-web-app",
     title: "Web design vs custom web app: knowing which you actually need",
+    seoTitle: "Web Design vs Custom Web App",
     description:
       "Most projects start as \"a website\" but end up needing custom backend logic. Five questions that tell you which budget bracket you're in before you start shopping for a vendor.",
     headline: "Web design vs custom web app: which one you actually need",
@@ -704,6 +709,7 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: "why-korents-ai-is-read-only",
     title: "Why Korent's AI is read-only (and what that decision actually costs)",
+    seoTitle: "Why Korent's AI Is Read-Only",
     description:
       "Korent's AI Operator Copilot answers questions and never modifies data — by design. A teardown of the autonomy decision behind one of our own SaaS products.",
     headline: "Why Korent's AI is strictly read-only — a teardown of one autonomy decision",

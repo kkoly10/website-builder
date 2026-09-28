@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import RawLink from "next/link";
 
 export default function SiteFooter() {
   const t = useTranslations("footer");
@@ -54,10 +55,10 @@ export default function SiteFooter() {
             <ul>
               {/* Blog is English-only — force locale="en" so /fr and /es
                   don't route to non-existent /fr/blog and 404. */}
-              <li><Link href="/blog" locale="en">{t("links.blog")}</Link></li>
+              <li><RawLink href="/blog">{t("links.blog")}</RawLink></li>
               <li><Link href="/faq">{t("links.faq")}</Link></li>
               {/* /locations is English-only too — same forcing as /blog. */}
-              <li><Link href="/locations" locale="en">{t("links.locations")}</Link></li>
+              <li><RawLink href="/locations">{t("links.locations")}</RawLink></li>
               <li><Link href="/coming-soon">{t("links.futureServices")}</Link></li>
             </ul>
           </div>

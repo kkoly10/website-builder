@@ -17,6 +17,7 @@ import {
   type BlogPost,
 } from "@/lib/blog/posts";
 import { routing } from "@/i18n/routing";
+import { englishOnlyAlternates } from "@/lib/seo/englishOnlyMetadata";
 
 export const dynamic = "force-dynamic";
 
@@ -39,8 +40,12 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { locale, slug } = await params;
+  const pageUrl = `/blog/${slug}`;
   if (!isSupportedLocale(locale)) {
-    return { robots: { index: false, follow: false } };
+    return {
+      robots: { index: false, follow: false },
+      alternates: englishOnlyAlternates(pageUrl),
+    };
   }
   const post = postBySlug(slug);
   if (!post) {
@@ -50,18 +55,22 @@ export async function generateMetadata({
     };
   }
   return {
-    title: `${post.title} | CrecyStudio`,
+    title: `${post.seoTitle ?? post.title} | CrecyStudio`,
     description: post.description,
+    alternates: englishOnlyAlternates(pageUrl),
     openGraph: {
-      title: post.title,
+      title: post.seoTitle ?? post.title,
       description: post.description,
+      url: pageUrl,
+      locale: "en_US",
+      alternateLocale: [],
       type: "article",
       publishedTime: post.publishedAt,
       ...(post.updatedAt && { modifiedTime: post.updatedAt }),
       tags: post.tags,
     },
     twitter: {
-      title: post.title,
+      title: post.seoTitle ?? post.title,
       description: post.description,
     },
   };

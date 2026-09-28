@@ -6,6 +6,7 @@ import StructuredData from "@/components/seo/StructuredData";
 import { breadcrumbListNode, siteGraph } from "@/lib/seo/structuredData";
 import { BLOG_POSTS } from "@/lib/blog/posts";
 import { routing } from "@/i18n/routing";
+import { englishOnlyAlternates } from "@/lib/seo/englishOnlyMetadata";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   if (!isSupportedLocale(locale)) {
-    return { robots: { index: false, follow: false } };
+    return {
+      robots: { index: false, follow: false },
+      alternates: englishOnlyAlternates("/blog"),
+    };
   }
   const title = "Blog — practical writing on AI, web, and how we build | CrecyStudio";
   const description =
@@ -32,7 +36,8 @@ export async function generateMetadata({
   return {
     title,
     description,
-    openGraph: { title, description },
+    alternates: englishOnlyAlternates("/blog"),
+    openGraph: { title, description, url: "/blog", locale: "en_US", alternateLocale: [] },
     twitter: { title, description },
   };
 }

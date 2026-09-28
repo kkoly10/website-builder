@@ -79,8 +79,6 @@ function localizedHref(siteUrl: string, locale: string, path: string) {
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com").replace(/\/$/, "");
-  const now = new Date().toISOString();
-
   return PAGES.flatMap((page) => {
     // Locales this page actually exists at. English-only paths
     // (/locations, /blog and their dynamic children) skip FR/ES
@@ -113,7 +111,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
     return emittedLocales.map((locale) => ({
       url: localizedHref(siteUrl, locale, page.path),
-      lastModified: page.lastModified ?? now,
+      ...(page.lastModified ? { lastModified: page.lastModified } : {}),
       changeFrequency: page.changeFrequency,
       priority: page.priority,
       alternates: { languages },

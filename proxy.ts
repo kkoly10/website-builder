@@ -25,7 +25,9 @@ function isLocaleAgnostic(pathname: string) {
     pathname.startsWith("/ai/") ||
     pathname === "/ai" ||
     pathname === "/sitemap.xml" ||
-    pathname === "/robots.txt"
+    pathname === "/robots.txt" ||
+    pathname === "/manifest.webmanifest" ||
+    pathname === "/apple-icon"
   );
 }
 
