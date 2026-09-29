@@ -75,6 +75,10 @@ function ContactContent({ typeKey }: { typeKey: ContactTypeKey }) {
             <p className="p">
               <a href={mailtoHref}>hello@crecystudio.com</a>
             </p>
+            <p className="pDark">{t("phoneLabel")}</p>
+            <p className="p">
+              <a href="tel:+15405738366">(540) 573-8366</a>
+            </p>
           </div>
         </article>
 

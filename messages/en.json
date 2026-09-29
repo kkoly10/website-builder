@@ -828,7 +828,8 @@
         "title": "Tell us what's broken on your current site",
         "description": "URL, what isn't working, and what you've already tried. Email us and we'll do a quick triage and propose audit or sprint scope."
       }
-    }
+    },
+    "phoneLabel": "Phone"
   },
   "privacy": {
     "metaTitle": "Privacy Policy | CrecyStudio",

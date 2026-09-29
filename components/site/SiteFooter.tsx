@@ -87,7 +87,10 @@ export default function SiteFooter() {
           <p className="footerCopyright">
             &copy; {new Date().getFullYear()} {tCommon("siteName")}. {t("rightsReserved")}
           </p>
-          <a className="footerEmail" href="mailto:hello@crecystudio.com">hello@crecystudio.com</a>
+          <div className="footerContactLinks">
+            <a className="footerEmail" href="mailto:hello@crecystudio.com">hello@crecystudio.com</a>
+            <a className="footerPhone" href="tel:+15405738366">(540) 573-8366</a>
+          </div>
           {/*
             Visible social links matching the sameAs entries in the
             Organization JSON-LD. Two reasons to render them visibly:

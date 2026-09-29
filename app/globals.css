@@ -1897,3 +1897,30 @@ body:has(.workInViewHome) .footerLanguages a:hover,
 body:has(.workInViewHome) .footerLanguages a:focus-visible {
   color: #ffffff;
 }
+
+
+.footerContactLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  align-items: center;
+}
+
+.footerPhone {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.footerPhone:hover,
+.footerPhone:focus-visible {
+  color: var(--ink);
+}
+
+body:has(.workInViewHome) .footerPhone {
+  color: #aeb6bf;
+}
+
+body:has(.workInViewHome) .footerPhone:hover,
+body:has(.workInViewHome) .footerPhone:focus-visible {
+  color: #ffffff;
+}

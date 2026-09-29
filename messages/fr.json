@@ -828,7 +828,8 @@
         "title": "Dites-nous ce qui est cassé sur votre site actuel",
         "description": "URL, ce qui ne fonctionne pas et ce que vous avez déjà essayé. Écrivez-nous et nous ferons un triage rapide en proposant un audit ou un périmètre de sprint."
       }
-    }
+    },
+    "phoneLabel": "Téléphone"
   },
   "privacy": {
     "metaTitle": "Politique de confidentialité | CrecyStudio",

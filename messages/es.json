@@ -828,7 +828,8 @@
         "title": "Cuéntenos qué está roto en su sitio actual",
         "description": "URL, qué no funciona y qué ha intentado ya. Escríbanos y haremos un triaje rápido proponiendo una auditoría o un alcance de sprint."
       }
-    }
+    },
+    "phoneLabel": "Teléfono"
   },
   "privacy": {
     "metaTitle": "Política de privacidad | CrecyStudio",
