@@ -159,7 +159,7 @@
     "metaTitle": "À propos de CrecyStudio | Studio web en Virginie",
     "metaDescription": "Découvrez CrecyStudio, studio indépendant en Virginie pour sites web, SaaS, applications sur mesure et intégrations IA en production.",
     "proof": {
-      "saas": "Plateformes SaaS en production",
+      "saas": "Produits du studio en production",
       "systems": "Systèmes d'entreprise livrés",
       "practitioner": "Praticien sur chaque projet — pas de juniors, pas de transferts"
     },
@@ -288,7 +288,7 @@
         },
         "aiIntegration": {
           "title": "Intégration IA",
-          "body": "Copilotes IA, couches de détection et flux intelligents — intégrés dans votre système dès le départ, comme Fleiko, Proveo, Korent et Kocre IT ont été construits."
+          "body": "Copilotes IA, assistance shopping, intake intelligent et intelligence opérationnelle — intégrés à de vrais workflows produit dans Korent, Couranr Market et Fleiko."
         },
         "portals": {
           "title": "Portails clients",
@@ -367,7 +367,7 @@
     "ventures": {
       "label": "Projets du studio",
       "title": "De vrais systèmes que nous avons livrés.",
-      "intro": "Je n'intègre pas seulement l'IA dans les projets clients — j'ai construit et lancé quatre produits SaaS propulsés par l'IA que je possède et exploite. Fleiko fait tourner un copilote IA pour des alertes flotte en temps réel. Proveo utilise la détection photo par IA pour automatiser les flux de travail des contractants. Korent embarque un Copilote Opérateur IA en lecture seule — une couche d'aide intégrée, flottante et contextuelle, propulsée par OpenAI et Anthropic Claude. Kocre IT exécute un helpdesk propulsé par l'IA pour le support informatique externalisé. C'est ce parcours que j'apporte à votre projet.",
+      "intro": "Les produits studio les plus solides aujourd’hui sont Korent, Couranr, Couranr Market et Fleiko. Ensemble, ils couvrent SaaS multi-tenant, livraison le jour même, e-commerce, gestion de flotte, paiements, workflows mobiles et IA en production.",
       "fleiko": {
         "name": "Fleiko",
         "tagline": "Plateforme de gestion de flotte pour PME",
@@ -434,7 +434,7 @@
       "name": "Komlan Kouhiko",
       "role": "Fondateur et praticien unique",
       "bio1": "Je ne suis pas passé par une agence ni par un cursus en informatique. En 2024, j'ai lancé une activité de location de voitures en Virginie du Nord avec 7 véhicules et une police d'assurance commerciale. Turo prélevait une part importante de chaque réservation, alors j'ai appris à construire ma propre plateforme — un système complet de réservation et de gestion de flotte — et j'ai gardé les bénéfices. J'ai opéré cette entreprise pendant plus d'un an, en gérant simultanément les opérations, les clients et le code.",
-      "bio2": "Quand les coûts opérationnels m'ont poussé à pivoter, j'ai publié sur Facebook Marketplace en proposant de construire des sites web. J'ai obtenu quelques clients. Ils ont apprécié le travail. Depuis, j'ai livré des plateformes opérationnelles pour un centre de réparation, une boutique de dropshipping, des services IT et la gestion de flotte — ainsi que quatre produits SaaS (Fleiko, Proveo, Korent, Kocre IT) en production aujourd'hui.",
+      "bio2": "Quand les coûts opérationnels m’ont poussé à pivoter, j’ai proposé de construire des sites web sur Facebook Marketplace. Quelques clients ont suivi. Depuis, j’ai livré des produits de plus en plus complexes — dont Korent, Couranr, Couranr Market et Fleiko — couvrant SaaS, logistique, e-commerce, opérations de flotte, paiements et IA.",
       "bio3": "Chaque projet chez CrecyStudio passe par moi. Pas de juniors, pas de transferts. Vous travaillez avec un constructeur qui s'est assis à votre place.",
       "linkedin": "Connectons-nous sur LinkedIn →",
       "linkedinHref": "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407"
@@ -495,37 +495,37 @@
       },
       "projects": {
         "open": "Ouvrir le produit",
+        "korent": {
+          "name": "Korent",
+          "short": "SaaS phare pour entreprises de location",
+          "body": "Le produit SaaS multi-tenant phare de CrecyStudio : vitrines et paiement en ligne, tableau de bord opérateur, stocks et commandes, acomptes, signatures électroniques, livraison et équipes terrain, constructeur de site, Stripe + Connect, interfaces multilingues et copilote IA contextuel.",
+          "ownership": "Produit du studio / SaaS multi-tenant",
+          "visualLabel": "Tableau de bord opérateur / données de démonstration fictives",
+          "imageAlt": "Tableau de bord Korent affichant une réservation confirmée avec paiements, documents, exécution et informations client"
+        },
+        "couranr": {
+          "name": "Couranr",
+          "short": "Système d’exploitation pour livraison le jour même",
+          "body": "Une plateforme de livraison le jour même couvrant les parcours particuliers et entreprises : devis déterministes, autorisation et capture du paiement, dispatch géré par Couranr, exécution chauffeur, suivi client, preuves de collecte et de remise, remise sécurisée et récupération opérationnelle.",
+          "ownership": "Produit du studio / Opérations de livraison",
+          "visualLabel": "Couranr for Business / produit public en ligne",
+          "imageAlt": "Plateforme Couranr for Business pour la livraison locale le jour même"
+        },
+        "couranrmarket": {
+          "name": "Couranr Market",
+          "short": "Plateforme e-commerce + livraison locale",
+          "body": "Commerce direct avec catalogue, panier et paiement, créneaux de livraison locale, suivi de commande, workflows admin et terrain, règles déterministes de prix, stock et retours, ainsi qu’un assistant IA capable de construire un panier depuis une conversation.",
+          "ownership": "Produit du studio / E-commerce + livraison locale",
+          "visualLabel": "Vitrine en ligne / catalogue public",
+          "imageAlt": "Vitrine Couranr Market présentant catégories et produits livrés localement"
+        },
         "fleiko": {
           "name": "Fleiko",
-          "short": "Logiciel d'opérations de flotte",
-          "body": "Logiciel d'opérations de flotte pour petites entreprises, avec dossiers véhicules, maintenance, conformité, visibilité des coûts et alertes opérationnelles.",
-          "ownership": "Produit du studio / Opérations de flotte",
-          "visualLabel": "Interface produit publique / données de démonstration",
-          "imageAlt": "Interface d'aperçu de flotte Fleiko"
-        },
-        "proveo": {
-          "name": "Proveo",
-          "short": "Plateforme pour entreprises de services",
-          "body": "Une plateforme pour entreprises de services réunissant page client, devis, réservation, preuve de travail, CRM et paiements.",
-          "ownership": "Produit du studio / Logiciel pour services",
-          "visualLabel": "Entreprise de démonstration publique / données fictives",
-          "imageAlt": "Page de démonstration Proveo pour une entreprise de peinture"
-        },
-        "kocre": {
-          "name": "Kocre IT",
-          "short": "Portail de services informatiques",
-          "body": "Support informatique géré présenté comme un système client cohérent : marketing, évaluation, demandes de support, santé système et portail client.",
-          "ownership": "Produit du studio / Opérations IT",
-          "visualLabel": "Site produit public / interface produit",
-          "imageAlt": "Site public Kocre IT et interface du portail client"
-        },
-        "crecyos": {
-          "name": "Crecy OS",
-          "short": "Système d'opérations locatives",
-          "body": "Logiciel d'opérations locatives reliant biens, résidents, propriétaires, paiements, maintenance, documents et données financières.",
-          "ownership": "Produit du studio / Opérations locatives",
-          "visualLabel": "Site produit public / données de démonstration",
-          "imageAlt": "Interface du produit d'opérations locatives Crecy OS"
+          "short": "SaaS flotte + dispatch",
+          "body": "Logiciel de flotte et dispatch pour petites opérations : véhicules, chauffeurs, maintenance, documents, carburant et dépenses, dispatch en direct, itinéraires, GPS, suivi client, preuve de livraison, workflows PWA mobile, copilote IA et résumés, avec plans autonomes ou gérés.",
+          "ownership": "Produit du studio / Flotte + dispatch",
+          "visualLabel": "Tableau de dispatch / données de démonstration illustratives",
+          "imageAlt": "Tableau de dispatch Fleiko avec carte en direct, statuts chauffeurs et indicateurs de livraison"
         }
       },
       "capabilities": {
@@ -534,22 +534,22 @@
         "websites": {
           "title": "Sites web",
           "body": "Des sites marketing crédibles qui expliquent l'offre et guident vers la prochaine action.",
-          "proof": "Voir : Proveo / Kocre IT"
+          "proof": "Voir : Korent / Couranr / Couranr Market"
         },
         "saas": {
           "title": "Produits SaaS",
           "body": "Applications multi-tenant avec comptes, flux, facturation et interfaces opérationnelles.",
-          "proof": "Voir : Fleiko / Crecy OS"
+          "proof": "Voir : Korent / Fleiko"
         },
         "ai": {
           "title": "Intégration IA",
           "body": "L'IA au cœur des flux produit pour les décisions, le triage, la détection et l'assistance opérationnelle.",
-          "proof": "Voir : produits du studio"
+          "proof": "Voir : Korent / Couranr Market / Fleiko"
         },
         "systems": {
           "title": "Systèmes sur mesure",
           "body": "Portails, tableaux de bord, outils internes, automatisation et interfaces adaptées au fonctionnement réel de l'entreprise.",
-          "proof": "Voir : espace client / portails"
+          "proof": "Voir : Couranr / Couranr Market"
         }
       },
       "workspace": {
@@ -2933,56 +2933,54 @@
   },
   "work": {
     "metaTitle": "Projets web, SaaS & IA | CrecyStudio",
-    "metaDescription": "Découvrez des sites web, produits SaaS et systèmes IA réellement construits par CrecyStudio, dont Fleiko, Proveo, Crecy OS et Kocre IT.",
+    "metaDescription": "Découvrez Korent, Couranr, Couranr Market et Fleiko — des produits SaaS, livraison, e-commerce et flotte conçus et exploités par CrecyStudio.",
     "kicker": "Sélection de réalisations",
     "title": "De vrais systèmes que nous avons livrés — <em>y compris les nôtres.</em>",
-    "subtitle": "Quatre produits du studio que nous avons construits et exploitons, plus du travail client dont les noms sont parfois anonymisés.",
+    "subtitle": "Avec Korent en tête — notre SaaS le plus complet à ce jour — plus trois produits opérationnels dans la livraison, l’e-commerce et la gestion de flotte.",
     "venturesLabel": "Projets du studio",
-    "venturesIntro": "Ce sont nos propres produits, conçus et exploités par le studio. Ils démontrent notre capacité d'ingénierie pour la voie Applications Web — ce ne sont pas des témoignages clients.",
+    "venturesIntro": "Ce sont des produits du studio que nous avons construits et exploitons. Korent est le produit phare ; Couranr, Couranr Market et Fleiko montrent l’étendue de notre travail en logistique, commerce et flotte.",
     "ventureBadge": "Projet du studio",
     "ventures": {
+      "korent": {
+        "name": "Korent",
+        "tagline": "SaaS de location multi-tenant phare, de la vitrine à l’exécution",
+        "summary": "Le produit le plus profond du portfolio actuel : vitrines de réservation, disponibilité et checkout, stocks et commandes, acomptes et soldes, documents avec signature électronique, livraison et équipes, constructeur de site, abonnements Stripe + Connect, interfaces multilingues, copilote opérateur IA, marketplace et analytique plateforme.",
+        "chip1": "SaaS multi-tenant",
+        "chip2": "Stripe + Connect",
+        "chip3": "Signatures électroniques",
+        "chip4": "Copilote opérateur IA",
+        "linkLabel": "Visiter korent.app"
+      },
+      "couranr": {
+        "name": "Couranr",
+        "tagline": "Infrastructure de livraison le jour même pour particuliers et entreprises locales",
+        "summary": "Un système d’exploitation de livraison couvrant l’intake particulier et entreprise, les devis serveur, l’autorisation et la capture du paiement, le dispatch géré par Couranr, l’exécution chauffeur, le suivi expéditeur et destinataire, les preuves de collecte/remise, les identifiants de remise sécurisée, les retours et les opérations.",
+        "chip1": "Intake même jour",
+        "chip2": "Dispatch + suivi",
+        "chip3": "Preuve + PIN",
+        "chip4": "Paiements",
+        "linkLabel": "Visiter couranr.com"
+      },
+      "couranrmarket": {
+        "name": "Couranr Market",
+        "tagline": "Commerce local avec livraison intégrée au modèle opérationnel",
+        "summary": "E-commerce direct pour produits du quotidien avec catalogue et recherche, panier et checkout, créneaux de livraison locale, suivi de commande, workflows admin et terrain, logique déterministe de prix, stock, livraison et retours, plus un assistant IA capable de construire un panier depuis une conversation.",
+        "chip1": "Moteur commerce",
+        "chip2": "Livraison locale",
+        "chip3": "Assistant panier IA",
+        "chip4": "Retours + stock",
+        "linkLabel": "Visiter couranrmarket.com"
+      },
       "fleiko": {
         "name": "Fleiko",
-        "tagline": "Plateforme de gestion de flotte pour PME",
-        "summary": "SaaS cloud de gestion de flotte pour les PME qui exploitent de 2 à 20 véhicules. Remplace les tableurs par un tableau de bord centralisé pour les dossiers véhicules, l'historique d'entretien et les documents de conformité. Le copilote IA repère les écarts de coûts et les besoins d'entretien à venir ; alertes automatisées pour l'expiration d'assurance, d'immatriculation et de contrôle technique ; suivi GPS en temps réel optionnel.",
-        "chip1": "Copilote IA flotte",
-        "chip2": "Alertes de conformité",
-        "chip3": "Suivi GPS",
-        "chip4": "Service géré",
+        "tagline": "Gestion de flotte + dispatch pour petites opérations",
+        "summary": "SaaS flotte et dispatch combinant véhicules et chauffeurs, maintenance, conformité, carburant et dépenses, dispatch en direct, itinéraires, GPS, PWA chauffeur, suivi client, preuve de livraison, copilote IA et résumés propriétaires, avec modes DIY et Managed.",
+        "chip1": "Flotte + dispatch",
+        "chip2": "GPS en direct",
+        "chip3": "PWA chauffeur",
+        "chip4": "Copilote IA",
         "linkLabel": "Visiter fleiko.com",
-        "caseStudyLink": "Plongée technique"
-      },
-      "proveo": {
-        "name": "Proveo",
-        "tagline": "Preuve photo + CRM pour contractants de service",
-        "summary": "SaaS pour les détailleurs auto, peintres et nettoyeurs. Détection photo par IA identifiant les paires avant/après, paliers de facturation freemium, pipeline CRM, prise de rendez-vous, e-mails automatisés de cycle de vie et de demande d'avis.",
-        "chip1": "Détection photo IA",
-        "chip2": "Facturation freemium",
-        "chip3": "Pipeline CRM",
-        "chip4": "E-mails automatisés",
-        "linkLabel": "Visiter proveohq.com",
-        "caseStudyLink": "Plongée technique"
-      },
-      "techdesk": {
-        "name": "Kocre IT Services",
-        "tagline": "Helpdesk IA pour les entreprises de support IT télécommande",
-        "summary": "SaaS de helpdesk pour opérateurs de support IT remote-first. Le triage IA classifie chaque ticket avec catégorie, score de confiance et indicateurs de risque à la création. Ghost Admin synthétise le contexte depuis des tickets similaires et la base de connaissances en quelques secondes. Un moteur de résolution automatique en six critères gère les demandes à faible risque sans intervention de l'opérateur. Le cron déterministe Sentinel surveille les sites clients et la conformité SLA toutes les heures.",
-        "chip1": "Ghost Admin IA",
-        "chip2": "Résolution auto en 6 critères",
-        "chip3": "Volant de connaissances",
-        "chip4": "Surveillance Sentinel",
-        "linkLabel": "Visiter kocreit.com",
-        "caseStudyLink": "Plongée technique"
-      },
-      "crecyos": {
-        "name": "Crecy OS",
-        "tagline": "Plateforme d’opérations locatives pour les équipes immobilières",
-        "summary": "Logiciel d’opérations locatives détenu par le studio qui relie biens, résidents, propriétaires, paiements, maintenance, documents et données financières dans un seul système. Conçu pour les équipes professionnelles et les propriétaires autonomes.",
-        "chip1": "Opérations locatives",
-        "chip2": "Paiements",
-        "chip3": "Maintenance",
-        "chip4": "Dossiers propriétaires",
-        "linkLabel": "Visiter crecyos.com"
+        "caseStudyLink": "Analyse d’ingénierie"
       }
     },
     "clientLabel": "Travail client",

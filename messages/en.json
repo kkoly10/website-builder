@@ -159,7 +159,7 @@
     "metaTitle": "About CrecyStudio | Virginia Web & Software Studio",
     "metaDescription": "Meet CrecyStudio, an independent Virginia studio building websites, SaaS products, custom web apps and production AI systems for growing businesses.",
     "proof": {
-      "saas": "SaaS platforms in production",
+      "saas": "Studio-owned products in production",
       "systems": "Business systems shipped",
       "practitioner": "Practitioner on every project — no juniors, no handoffs"
     },
@@ -288,7 +288,7 @@
         },
         "aiIntegration": {
           "title": "AI integration",
-          "body": "AI copilots, detection layers, and intelligent workflows — designed into your system from day one, the way Fleiko, Proveo, Korent, and Kocre IT were built."
+          "body": "AI copilots, shopping assistance, smart intake, and operational intelligence — designed into real product workflows across Korent, Couranr Market, and Fleiko."
         },
         "portals": {
           "title": "Client portals",
@@ -367,7 +367,7 @@
     "ventures": {
       "label": "Studio ventures",
       "title": "Real systems we’ve shipped.",
-      "intro": "I don't just integrate AI into client projects — I've built and shipped four AI-powered SaaS products I own and operate. Fleiko runs an AI copilot for real-time fleet alerts. Proveo uses AI photo detection to automate contractor workflows. Korent ships a read-only AI Operator Copilot — a floating, context-aware in-product help layer powered by OpenAI and Anthropic Claude. Kocre IT runs an AI-powered helpdesk for outsourced IT support. That track record is what I bring to your project.",
+      "intro": "The strongest current studio products are Korent, Couranr, Couranr Market, and Fleiko. Together they cover multi-tenant SaaS, same-day delivery operations, e-commerce, fleet management, payments, mobile workflows, and production AI.",
       "fleiko": {
         "name": "Fleiko",
         "tagline": "Fleet management platform for small businesses",
@@ -434,7 +434,7 @@
       "name": "Komlan Kouhiko",
       "role": "Founder & sole practitioner",
       "bio1": "I didn’t come up through an agency or a computer science program. In 2024, I launched a car rental business in Northern Virginia with 7 cars and a commercial insurance policy. Turo was taking a significant cut of every booking, so I taught myself to build my own platform — a full booking and fleet management system — and kept the profits. I ran that business for over a year, managing operations, customers, and the codebase simultaneously.",
-      "bio2": "When operational costs pushed me to pivot, I posted on Facebook Marketplace offering to build websites. Got a few clients. They liked the work. Since then I’ve shipped operating platforms for a repair center, a dropshipping store, IT services, and fleet management — and four SaaS products (Fleiko, Proveo, Korent, Kocre IT) that are live today.",
+      "bio2": "When operational costs pushed me to pivot, I posted on Facebook Marketplace offering to build websites. Got a few clients. They liked the work. Since then I’ve shipped increasingly complex products — including Korent, Couranr, Couranr Market, and Fleiko — spanning SaaS, logistics, e-commerce, fleet operations, payments, and AI.",
       "bio3": "Every project at CrecyStudio comes through me. No juniors, no handoffs. You get a builder who has sat on your side of the table.",
       "linkedin": "Connect on LinkedIn →",
       "linkedinHref": "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407"
@@ -495,37 +495,37 @@
       },
       "projects": {
         "open": "Open live product",
+        "korent": {
+          "name": "Korent",
+          "short": "Flagship rental-business SaaS",
+          "body": "CrecyStudio’s flagship multi-tenant rental SaaS: public storefronts and checkout, operator dashboards, inventory and orders, deposits, e-signatures, delivery and crew workflows, a live website builder, Stripe billing + Connect, multilingual product surfaces, and a context-aware AI copilot.",
+          "ownership": "Studio-owned product / Multi-tenant SaaS",
+          "visualLabel": "Operator order dashboard / fictional demonstration data",
+          "imageAlt": "Korent operator dashboard showing a confirmed rental booking with payments, documents, fulfillment, and customer details"
+        },
+        "couranr": {
+          "name": "Couranr",
+          "short": "Same-day delivery operating system",
+          "body": "A same-day delivery platform spanning consumer and business workflows: deterministic quotes, payment authorization and capture, Couranr-managed dispatch, driver execution, customer tracking, pickup and drop-off proof, secure handoff, and operational recovery.",
+          "ownership": "Studio-owned product / Delivery operations",
+          "visualLabel": "Couranr for Business / live public product",
+          "imageAlt": "Couranr for Business same-day local delivery platform"
+        },
+        "couranrmarket": {
+          "name": "Couranr Market",
+          "short": "Local e-commerce + delivery platform",
+          "body": "Direct-to-consumer commerce with catalog, cart and checkout, local delivery windows, order tracking, admin and field workflows, deterministic pricing, inventory and returns logic, plus an AI shopping assistant that can build a cart from conversation.",
+          "ownership": "Studio-owned product / E-commerce + local delivery",
+          "visualLabel": "Live storefront / public catalog",
+          "imageAlt": "Couranr Market storefront showing local-delivery categories and products"
+        },
         "fleiko": {
           "name": "Fleiko",
-          "short": "Fleet operations software",
-          "body": "Fleet operations software for small businesses, with vehicle records, maintenance, compliance, cost visibility, and operational alerts.",
-          "ownership": "Studio-owned product / Fleet operations",
-          "visualLabel": "Public product interface / demonstration data",
-          "imageAlt": "Fleiko fleet overview product interface"
-        },
-        "proveo": {
-          "name": "Proveo",
-          "short": "Service-business platform",
-          "body": "A service-business platform combining a customer-facing page with quote, booking, proof-of-work, CRM, and payment workflows.",
-          "ownership": "Studio-owned product / Service-business software",
-          "visualLabel": "Public demonstration business / fabricated demo data",
-          "imageAlt": "Proveo demonstration business page for a painting company"
-        },
-        "kocre": {
-          "name": "Kocre IT",
-          "short": "Managed IT portal",
-          "body": "Managed IT support presented as one coherent customer system: marketing, assessment, support requests, system health, and a client portal.",
-          "ownership": "Studio-owned product / IT operations",
-          "visualLabel": "Public product site / product UI",
-          "imageAlt": "Kocre IT public website and client portal interface"
-        },
-        "crecyos": {
-          "name": "Crecy OS",
-          "short": "Rental operations system",
-          "body": "Rental operations software connecting properties, residents, owners, payments, maintenance, documents, and financial records.",
-          "ownership": "Studio-owned product / Rental operations",
-          "visualLabel": "Public product site / demonstration data",
-          "imageAlt": "Crecy OS rental operations product interface"
+          "short": "Fleet + dispatch SaaS",
+          "body": "Fleet and dispatch software for small operators: vehicles, drivers, maintenance, documents, fuel and expenses, live dispatch, routes, GPS, customer tracking, proof of delivery, mobile PWA workflows, AI copilot and digests, and self-serve or managed plans.",
+          "ownership": "Studio-owned product / Fleet + dispatch",
+          "visualLabel": "Dispatch dashboard / illustrative demo data",
+          "imageAlt": "Fleiko dispatch dashboard with live map, driver statuses, and delivery metrics"
         }
       },
       "capabilities": {
@@ -534,22 +534,22 @@
         "websites": {
           "title": "Websites",
           "body": "High-trust marketing sites that explain the offer and move people toward the next action.",
-          "proof": "See: Proveo / Kocre IT"
+          "proof": "See: Korent / Couranr / Couranr Market"
         },
         "saas": {
           "title": "SaaS products",
           "body": "Multi-tenant applications with accounts, workflows, billing, and operational interfaces.",
-          "proof": "See: Fleiko / Crecy OS"
+          "proof": "See: Korent / Fleiko"
         },
         "ai": {
           "title": "AI integration",
           "body": "AI inside product workflows, supporting decisions, triage, detection, and operational assistance.",
-          "proof": "See: studio products"
+          "proof": "See: Korent / Couranr Market / Fleiko"
         },
         "systems": {
           "title": "Custom systems",
           "body": "Portals, dashboards, internal tools, automation, and interfaces tied to the way the business actually runs.",
-          "proof": "See: workspace / portals"
+          "proof": "See: Couranr / Couranr Market"
         }
       },
       "workspace": {
@@ -2933,56 +2933,54 @@
   },
   "work": {
     "metaTitle": "Web, SaaS & AI Projects | CrecyStudio",
-    "metaDescription": "Explore real websites, SaaS products and AI-enabled systems built by CrecyStudio, including Fleiko, Proveo, Crecy OS and Kocre IT.",
+    "metaDescription": "Explore Korent, Couranr, Couranr Market and Fleiko — production SaaS, delivery, e-commerce and fleet systems built and operated by CrecyStudio.",
     "kicker": "Selected work",
     "title": "Real systems we've shipped — <em>including our own.</em>",
-    "subtitle": "Four studio-owned products we built and operate, plus client work where names are sometimes anonymized.",
+    "subtitle": "Led by Korent — our most complete SaaS build to date — plus three operating products across delivery, e-commerce, and fleet management.",
     "venturesLabel": "Studio ventures",
-    "venturesIntro": "These are our own products, built and operated by the studio. They prove the engineering capability for the Web Apps lane — they're not client testimonials.",
+    "venturesIntro": "These are studio-owned products we built and operate. Korent is the flagship; Couranr, Couranr Market, and Fleiko show the range across logistics, commerce, and fleet operations.",
     "ventureBadge": "Studio venture",
     "ventures": {
+      "korent": {
+        "name": "Korent",
+        "tagline": "Flagship multi-tenant rental SaaS from storefront to fulfillment",
+        "summary": "The deepest product in the current portfolio: public booking storefronts, availability-aware checkout, inventory and order operations, deposits and balances, rental documents with e-signatures, delivery and crew workflows, a live website builder, Stripe subscriptions + Connect, multilingual product surfaces, an AI operator copilot, marketplace workflows, and platform-owner analytics.",
+        "chip1": "Multi-tenant SaaS",
+        "chip2": "Stripe + Connect",
+        "chip3": "E-signatures",
+        "chip4": "AI Operator Copilot",
+        "linkLabel": "Visit korent.app"
+      },
+      "couranr": {
+        "name": "Couranr",
+        "tagline": "Same-day delivery infrastructure for consumers and local businesses",
+        "summary": "A delivery operating system covering consumer and business intake, server-authoritative quotes, payment authorization and capture, Couranr-managed dispatch, driver execution, sender and recipient tracking, pickup/drop-off proof, secure handoff credentials, returns, cancellation recovery, and Operations control.",
+        "chip1": "Same-Day Intake",
+        "chip2": "Dispatch + Tracking",
+        "chip3": "Proof + PIN",
+        "chip4": "Payments",
+        "linkLabel": "Visit couranr.com"
+      },
+      "couranrmarket": {
+        "name": "Couranr Market",
+        "tagline": "Local commerce with delivery built into the operating model",
+        "summary": "Direct-to-consumer e-commerce for everyday goods with catalog and search, cart and checkout, local delivery windows, order tracking, admin and field workflows, deterministic money, pricing, delivery, inventory and returns logic, plus an AI shopping assistant that can build a cart from a conversation.",
+        "chip1": "Commerce Engine",
+        "chip2": "Local Delivery",
+        "chip3": "AI Cart Assistant",
+        "chip4": "Returns + Inventory",
+        "linkLabel": "Visit couranrmarket.com"
+      },
       "fleiko": {
         "name": "Fleiko",
-        "tagline": "Fleet management platform for small businesses",
-        "summary": "Cloud-based fleet management SaaS built for small businesses running 2–20 vehicles. Replaces spreadsheets with a centralized dashboard for vehicle records, maintenance history, and compliance documents. AI copilot flags cost outliers and upcoming maintenance needs; automated alerts for insurance, registration, and inspection expiry; optional real-time GPS tracking.",
-        "chip1": "AI Fleet Copilot",
-        "chip2": "Compliance Alerts",
-        "chip3": "GPS Tracking",
-        "chip4": "Managed Service",
+        "tagline": "Fleet management + dispatch for small operators",
+        "summary": "Fleet and dispatch SaaS for small operations managing vehicles and daily work. It combines vehicle and driver records, maintenance, compliance, fuel and expenses, live dispatch, routes, GPS tracking, a driver PWA, customer tracking, proof of delivery, AI copilot and owner digests, plus DIY and Managed operating modes.",
+        "chip1": "Fleet + Dispatch",
+        "chip2": "Live GPS",
+        "chip3": "Driver PWA",
+        "chip4": "AI Copilot",
         "linkLabel": "Visit fleiko.com",
         "caseStudyLink": "Engineering deep dive"
-      },
-      "proveo": {
-        "name": "Proveo",
-        "tagline": "Photo proof + CRM for service contractors",
-        "summary": "SaaS for auto detailers, painters, and cleaners. AI photo detection identifying before/after pairs, freemium billing tiers, CRM pipeline, appointment scheduling, automated lifecycle and review-request emails.",
-        "chip1": "AI photo detection",
-        "chip2": "Freemium billing",
-        "chip3": "CRM pipeline",
-        "chip4": "Automated emails",
-        "linkLabel": "Visit proveohq.com",
-        "caseStudyLink": "Engineering deep dive"
-      },
-      "techdesk": {
-        "name": "Kocre IT Services",
-        "tagline": "AI-powered helpdesk for remote IT support businesses",
-        "summary": "Helpdesk SaaS for remote-first IT support operators. AI triage classifies every ticket with category, confidence score, and risk flags on creation. Ghost Admin synthesizes context from similar tickets and the knowledge base in seconds. A six-gate auto-resolve engine handles low-risk requests without operator intervention. Deterministic Sentinel cron monitors client sites and SLA compliance every hour.",
-        "chip1": "Ghost Admin AI",
-        "chip2": "6-Gate Auto-Resolve",
-        "chip3": "Knowledge Flywheel",
-        "chip4": "Sentinel Monitoring",
-        "linkLabel": "Visit kocreit.com",
-        "caseStudyLink": "Engineering deep dive"
-      },
-      "crecyos": {
-        "name": "Crecy OS",
-        "tagline": "Rental operations platform for property teams",
-        "summary": "Studio-owned rental operations software connecting properties, residents, owners, payments, maintenance, documents, and financial records in one operating system. Built for professional property teams and simpler self-managing landlord workflows.",
-        "chip1": "Rental Operations",
-        "chip2": "Payments",
-        "chip3": "Maintenance",
-        "chip4": "Owner Records",
-        "linkLabel": "Visit crecyos.com"
       }
     },
     "clientLabel": "Client work",

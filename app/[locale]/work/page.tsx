@@ -21,19 +21,17 @@ export async function generateMetadata({
   };
 }
 
-const VENTURE_KEYS = ["fleiko", "proveo", "techdesk", "crecyos"] as const;
+const VENTURE_KEYS = ["korent", "couranr", "couranrmarket", "fleiko"] as const;
 
 const VENTURE_LIVE_URL: Record<(typeof VENTURE_KEYS)[number], string> = {
+  korent: "https://korent.app",
+  couranr: "https://couranr.com",
+  couranrmarket: "https://couranrmarket.com",
   fleiko: "https://fleiko.com",
-  proveo: "https://proveohq.com",
-  techdesk: "https://kocreit.com",
-  crecyos: "https://crecyos.com",
 };
 
 const VENTURE_CASE_STUDY_HREF: Partial<Record<(typeof VENTURE_KEYS)[number], string>> = {
   fleiko: "/work/fleiko",
-  proveo: "/work/proveo",
-  techdesk: "/work/techdesk",
 };
 
 export default async function WorkPage({

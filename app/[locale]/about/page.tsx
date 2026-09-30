@@ -33,7 +33,7 @@ export default async function AboutPage({
 }
 
 const CAPABILITY_KEYS = ["websites", "saas", "ai", "systems"] as const;
-const PROJECTS = ["Fleiko", "Proveo", "Kocre IT", "Crecy OS"] as const;
+const PROJECTS = ["Korent", "Couranr", "Couranr Market", "Fleiko"] as const;
 
 function AboutContent() {
   const t = useTranslations("about");
