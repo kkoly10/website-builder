@@ -278,6 +278,12 @@ export default function TopNav({
           )}
         </div>
 
+        {!userEmail ? (
+          <Link href="/start" className="mobileBookCall">
+            {tCommon("bookCall")}
+          </Link>
+        ) : null}
+
         <details className="mobileMenu" ref={mobileMenuRef}>
           <summary className="mobileMenuSummary" aria-label={tCommon("openMenu")}>
             <span />
@@ -341,6 +347,9 @@ export default function TopNav({
                 </>
               ) : (
                 <>
+                  <Link href="/start" className="btn btnAccent mobileMenuBookCall">
+                    {tCommon("bookCall")}
+                  </Link>
                   <Link href="/login" className="btn btnGhost mobileMenuSignout">
                     {tCommon("login")}
                   </Link>
