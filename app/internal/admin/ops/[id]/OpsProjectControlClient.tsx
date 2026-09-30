@@ -524,7 +524,7 @@ function GhostAdminChat({ opsIntakeId, starterPrompts }: { opsIntakeId: string; 
     <Panel title="Ghost Admin Chat" note="Project-aware AI operations advisor.">
       {messages.length === 0 ? <div><div className="fieldLabel">Starter Prompts</div><div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{starterPrompts.map((prompt) => <button key={prompt} type="button" className="btn btnGhost" style={{ fontSize: 13 }} onClick={() => send(prompt)} disabled={loading}>{prompt}</button>)}</div></div> : null}
       <div style={{ display: "grid", gap: 10, maxHeight: 520, overflowY: "auto" }}>
-        {messages.map((msg) => <div key={msg.id} style={{ padding: 14, borderRadius: 12, background: msg.role === "user" ? "var(--paper-2)" : "var(--success-bg)", border: msg.role === "user" ? "1px solid var(--rule)" : "1px solid var(--success)" }}><div className="smallNote" style={{ marginBottom: 6 }}>{msg.role === "user" ? "You" : "Ghost Admin"} • {fmtDate(msg.timestamp)}</div><div className="pDark" style={{ whiteSpace: "pre-wrap" }}>{msg.content}</div></div>)}
+        {messages.map((msg) => <div key={msg.id} style={{ padding: 14, borderRadius: 0, background: msg.role === "user" ? "var(--paper-2)" : "var(--success-bg)", border: msg.role === "user" ? "1px solid var(--rule)" : "1px solid var(--success)" }}><div className="smallNote" style={{ marginBottom: 6 }}>{msg.role === "user" ? "You" : "Ghost Admin"} • {fmtDate(msg.timestamp)}</div><div className="pDark" style={{ whiteSpace: "pre-wrap" }}>{msg.content}</div></div>)}
         {loading ? <div className="smallNote">Ghost Admin is thinking...</div> : null}
       </div>
       <div className="row" style={{ gap: 8 }}>

@@ -109,7 +109,7 @@ function ItemList({ items, lookupStatus }: {
       {items.map((item) => {
         const tone = statusTone(item.status);
         return (
-          <div key={item.id} style={{ border: `1px solid ${tone.border}`, background: tone.bg, borderRadius: 12, padding: "12px 14px" }}>
+          <div key={item.id} style={{ border: `1px solid ${tone.border}`, background: tone.bg, borderRadius: 0, padding: "12px 14px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
               <div style={{ color: "var(--fg)", fontWeight: 700, fontSize: 14 }}>{item.title}</div>
               <span style={{ padding: "4px 8px", borderRadius: 999, border: `1px solid ${tone.border}`, color: tone.color, fontSize: 10, fontWeight: 700 }}>{lookupStatus(item.status)}</span>
@@ -280,7 +280,7 @@ export default function EcomPortalClient({ data }: { data: EcommerceWorkspaceBun
             <Row label={tWorkspace("quoteStatus")} value={quoteStatusLabel} />
             <Row label={tWorkspace("waitingOn")} value={workspace.waitingOn} />
           </div>
-          <div style={{ marginTop: 14, padding: "14px 16px", borderRadius: 12, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
+          <div style={{ marginTop: 14, padding: "14px 16px", borderRadius: 0, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", marginBottom: 6 }}>{tWorkspace("serviceSummaryLabel")}</div>
             <div style={{ color: "var(--fg)", fontWeight: 700 }}>{workspace.serviceSummary}</div>
             {workspace.onboardingSummary ? <div style={{ marginTop: 6, color: "var(--muted)", lineHeight: 1.6, fontSize: 13 }}>{workspace.onboardingSummary}</div> : null}
@@ -299,7 +299,7 @@ export default function EcomPortalClient({ data }: { data: EcommerceWorkspaceBun
               />
               <MetricCard label={tProposal("monthlyFee")} value={money(quote?.estimate_monthly_fee, locale)} />
             </div>
-            <div style={{ padding: "14px 16px", borderRadius: 12, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
+            <div style={{ padding: "14px 16px", borderRadius: 0, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", marginBottom: 6 }}>{tProposal("fulfillmentLabel")}</div>
               <div style={{ color: "var(--fg)", fontWeight: 700 }}>{quote?.estimate_fulfillment_model || tProposal("fulfillmentTbc")}</div>
             </div>
@@ -361,7 +361,7 @@ export default function EcomPortalClient({ data }: { data: EcommerceWorkspaceBun
             </div>
             <div style={{ display: "grid", gap: 8 }}>
               {workspace.metrics.map((metric) => (
-                <div key={metric.id} style={{ border: "1px solid var(--stroke)", background: "var(--panel2)", borderRadius: 12, padding: "12px 14px" }}>
+                <div key={metric.id} style={{ border: "1px solid var(--stroke)", background: "var(--panel2)", borderRadius: 0, padding: "12px 14px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                     <div style={{ color: "var(--fg)", fontWeight: 700 }}>{metric.label}</div>
                     <div style={{ color: "var(--accent)", fontWeight: 700 }}>{metric.value || tMetrics("fallback")}</div>
@@ -405,7 +405,7 @@ export default function EcomPortalClient({ data }: { data: EcommerceWorkspaceBun
         <Row label={tAgreement("depositAmount")} value={money(workspace.depositAmount, locale)} />
         <Row label={tAgreement("paidAt")} value={fmtDate(workspace.depositPaidAt, locale)} />
         {workspace.agreementText ? (
-          <div style={{ marginTop: 10, padding: 12, borderRadius: 10, border: "1px solid var(--stroke)", background: "var(--panel2)", whiteSpace: "pre-wrap", lineHeight: 1.6, color: "var(--muted)", fontSize: 13 }}>{workspace.agreementText}</div>
+          <div style={{ marginTop: 10, padding: 12, borderRadius: 0, border: "1px solid var(--stroke)", background: "var(--panel2)", whiteSpace: "pre-wrap", lineHeight: 1.6, color: "var(--muted)", fontSize: 13 }}>{workspace.agreementText}</div>
         ) : null}
         <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
           {workspace.agreementStatus !== "accepted" ? (
@@ -446,7 +446,7 @@ export default function EcomPortalClient({ data }: { data: EcommerceWorkspaceBun
 
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ padding: "16px 18px", borderRadius: 12, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
+    <div style={{ padding: "16px 18px", borderRadius: 0, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)" }}>{label}</div>
       <div style={{ marginTop: 4, color: "var(--fg)", fontWeight: 800, fontSize: 24 }}>{value}</div>
     </div>
@@ -458,7 +458,7 @@ function SimpleList({ items, empty }: { items: string[]; empty: string }) {
   return (
     <div style={{ display: "grid", gap: 8 }}>
       {items.map((item) => (
-        <div key={item} style={{ padding: "12px 14px", borderRadius: 10, border: "1px solid var(--stroke)", background: "var(--panel2)", color: "var(--muted)", fontSize: 13, lineHeight: 1.55 }}>{item}</div>
+        <div key={item} style={{ padding: "12px 14px", borderRadius: 0, border: "1px solid var(--stroke)", background: "var(--panel2)", color: "var(--muted)", fontSize: 13, lineHeight: 1.55 }}>{item}</div>
       ))}
     </div>
   );

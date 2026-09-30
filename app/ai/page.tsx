@@ -5,7 +5,7 @@ export default function AIExplainerPage() {
         Not Ready for a Custom Website?
       </h1>
 
-      <p style={{ fontSize: 20, color: "#555", marginBottom: 32 }}>
+      <p style={{ fontSize: 20, color: "var(--muted)", marginBottom: 32 }}>
         Try our AI-Generated Website — a faster, more affordable way to launch
         a professional online presence.
       </p>
@@ -14,7 +14,7 @@ export default function AIExplainerPage() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
+          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
           gap: 24,
           marginBottom: 48,
         }}
@@ -22,14 +22,14 @@ export default function AIExplainerPage() {
         {/* CUSTOM */}
         <div
           style={{
-            border: "1px solid #e5e7eb",
-            borderRadius: 12,
+            border: "1px solid var(--rule)",
+            borderRadius: 0,
             padding: 24,
           }}
         >
           <h3>Custom Website</h3>
 
-          <ul style={{ lineHeight: 1.8, color: "#444" }}>
+          <ul style={{ lineHeight: 1.8, color: "var(--ink-2)" }}>
             <li>✔ Fully custom design</li>
             <li>✔ Human strategy & planning</li>
             <li>✔ Advanced features</li>
@@ -44,14 +44,14 @@ export default function AIExplainerPage() {
         {/* AI */}
         <div
           style={{
-            border: "2px solid #000",
-            borderRadius: 12,
+            border: "2px solid var(--ink)",
+            borderRadius: 0,
             padding: 24,
           }}
         >
           <h3>AI-Generated Website</h3>
 
-          <ul style={{ lineHeight: 1.8, color: "#444" }}>
+          <ul style={{ lineHeight: 1.8, color: "var(--ink-2)" }}>
             <li>✔ Industry-specific content</li>
             <li>✔ Goal-focused layout</li>
             <li>✔ Launch in minutes</li>
@@ -68,7 +68,7 @@ export default function AIExplainerPage() {
       <div>
         <h2>Who Is This For?</h2>
 
-        <ul style={{ lineHeight: 1.8, color: "#444" }}>
+        <ul style={{ lineHeight: 1.8, color: "var(--ink-2)" }}>
           <li>• Small businesses getting started</li>
           <li>• MVPs or validation projects</li>
           <li>• Budget-conscious founders</li>
@@ -79,8 +79,8 @@ export default function AIExplainerPage() {
       {/* CTA */}
       <div
         style={{
-          border: "1px solid #e5e7eb",
-          borderRadius: 12,
+          border: "1px solid var(--rule)",
+          borderRadius: 0,
           padding: 24,
           textAlign: "center",
         }}
@@ -99,9 +99,9 @@ export default function AIExplainerPage() {
           style={{
             display: "inline-block",
             padding: "14px 26px",
-            background: "#000",
+            background: "var(--ink)",
             color: "#fff",
-            borderRadius: 10,
+            borderRadius: 0,
             textDecoration: "none",
             fontSize: 16,
           }}
@@ -110,7 +110,7 @@ export default function AIExplainerPage() {
         </a>
 
         <div>
-          <a href="/build" style={{ color: "#555", fontSize: 14 }}>
+          <a href="/build" style={{ color: "var(--muted)", fontSize: 14 }}>
             Go back to custom quote
           </a>
         </div>

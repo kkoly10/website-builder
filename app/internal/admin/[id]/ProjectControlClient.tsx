@@ -427,7 +427,7 @@ function LaunchCheckItem({ label, done }: { label: string; done: boolean }) {
   return (
     <div style={{
       display: "flex", justifyContent: "space-between", alignItems: "center",
-      padding: "10px 14px", border: "1px solid var(--rule)", borderRadius: 10,
+      padding: "10px 14px", border: "1px solid var(--rule)", borderRadius: 0,
       background: done ? "var(--success-bg)" : "transparent",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1425,7 +1425,7 @@ export default function ProjectControlClient({
         <Stat label="Target" value={money(adjustedTarget)} accent />
         <Stat label="Launch" value={`${readiness.percent}%`} />
         <div style={{
-          padding: "12px 16px", background: "var(--paper-2)", borderRadius: 12,
+          padding: "12px 16px", background: "var(--paper-2)", borderRadius: 0,
           border: "1px solid var(--rule)", display: "flex", alignItems: "center", gap: 12,
         }}>
           <PieRing score={data.pie.score} size={46} />
@@ -1440,7 +1440,7 @@ export default function ProjectControlClient({
       {/* ── Message ── */}
       {message && (
         <div style={{
-          marginBottom: 16, padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+          marginBottom: 16, padding: "10px 16px", borderRadius: 0, fontSize: 13, fontWeight: 600,
           background: messageIsError ? "var(--accent-bg)" : "var(--success-bg)",
           border: `1px solid ${messageIsError ? "var(--accent)" : "var(--success)"}`,
           color: messageIsError ? "var(--accent)" : "var(--success)",
@@ -1456,7 +1456,7 @@ export default function ProjectControlClient({
       {activeTab === "overview" && (
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.3fr) minmax(0,0.7fr)", gap: 16 }}>
           {/* Pricing */}
-          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
             <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>Pricing controls</h3>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <Field label="Discount %"><input className="input" type="number" value={data.adminPricing.discountPercent}
@@ -1477,7 +1477,7 @@ export default function ProjectControlClient({
 
           {/* PIE + Proposal */}
           <div style={{ display: "grid", gap: 16 }}>
-            <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+            <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
               <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>PIE snapshot</h3>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <ReadOnly label="Score" value={data.pie.score != null ? String(data.pie.score) : "—"} />
@@ -1491,7 +1491,7 @@ export default function ProjectControlClient({
                   <div style={{ marginTop: 12 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 10, fontWeight: 600, color: "var(--muted-2)" }}>Route</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: routeColor, padding: "2px 8px", border: `1px solid ${routeColor}`, borderRadius: 6 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: routeColor, padding: "2px 8px", border: `1px solid ${routeColor}`, borderRadius: 0 }}>
                         {fp || "—"}
                       </span>
                       {isOverridden && (
@@ -1559,7 +1559,7 @@ export default function ProjectControlClient({
               )}
             </div>
 
-            <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+            <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
               <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>Proposal</h3>
               {data.proposalLifecycle && (() => {
                 const pl = data.proposalLifecycle;
@@ -1569,7 +1569,7 @@ export default function ProjectControlClient({
                 };
                 const sc = statusColor[pl.status] ?? "var(--muted-2)";
                 return (
-                  <div style={{ marginBottom: 12, padding: "10px 14px", background: "var(--paper-2)", borderRadius: 10, border: "1px solid var(--rule)" }}>
+                  <div style={{ marginBottom: 12, padding: "10px 14px", background: "var(--paper-2)", borderRadius: 0, border: "1px solid var(--rule)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: sc, padding: "2px 7px", border: `1px solid ${sc}`, borderRadius: 5 }}>{pl.status}</span>
                     </div>
@@ -1615,7 +1615,7 @@ export default function ProjectControlClient({
       {/* ═══ TAB: SCOPE ═══ */}
       {activeTab === "scope" && (
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 16 }}>
-          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
             <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>Scope snapshot</h3>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <Field label="Tier label"><input className="input" value={data.scopeSnapshot.tierLabel} onChange={(e) => setData((p) => ({ ...p, scopeSnapshot: { ...p.scopeSnapshot, tierLabel: e.target.value } }))} /></Field>
@@ -1642,19 +1642,19 @@ export default function ProjectControlClient({
 
           {/* Scope History + Change Orders */}
           <div style={{ display: "grid", gap: 16 }}>
-            <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+            <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
               <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>Scope history</h3>
               {data.workspaceHistory.scopeVersions.length === 0
                 ? <div style={{ fontSize: 13, color: "var(--muted-2)" }}>No saved versions yet.</div>
                 : data.workspaceHistory.scopeVersions.map((v) => (
-                  <div key={v.id} style={{ padding: "10px 14px", border: "1px solid var(--rule)", borderRadius: 10, background: "var(--paper-2)", marginBottom: 6 }}>
+                  <div key={v.id} style={{ padding: "10px 14px", border: "1px solid var(--rule)", borderRadius: 0, background: "var(--paper-2)", marginBottom: 6 }}>
                     <div style={{ fontWeight: 600, fontSize: 14, color: "var(--ink)" }}>{v.label}</div>
                     <div style={{ fontSize: 12, color: "var(--muted-2)", marginTop: 2 }}>{fmtDate(v.createdAt)} · {v.summary}</div>
                   </div>
                 ))}
             </div>
 
-            <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+            <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
               <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>Change orders</h3>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <Field label="Title"><input className="input" value={newChangeOrder.title} onChange={(e) => setNewChangeOrder((p) => ({ ...p, title: e.target.value }))} placeholder="Add booking flow" /></Field>
@@ -1670,7 +1670,7 @@ export default function ProjectControlClient({
               </div>
 
               {data.workspaceHistory.changeOrders.map((co) => (
-                <div key={co.id} style={{ padding: "12px 14px", border: "1px solid var(--rule)", borderRadius: 10, background: "var(--paper-2)", marginTop: 8 }}>
+                <div key={co.id} style={{ padding: "12px 14px", border: "1px solid var(--rule)", borderRadius: 0, background: "var(--paper-2)", marginTop: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 10 }}>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: 14, color: "var(--ink)" }}>{co.title}</div>
@@ -1699,7 +1699,7 @@ export default function ProjectControlClient({
           {/* Design Direction admin panel — only renders for website lane.
               Component handles legacy / non-website fallbacks itself. */}
           {data.projectType === "website" && data.designDirection ? (
-            <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+            <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
               <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>Design Direction</h3>
               <DesignDirectionAdminPanel
                 quoteId={data.quoteId}
@@ -1742,7 +1742,7 @@ export default function ProjectControlClient({
               Renders only when projectType is non-website AND there's a
               direction record. Legacy non-website portals get nothing. */}
           {data.projectType !== "website" && data.direction ? (
-            <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+            <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
               <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>
                 {data.direction.type === "product_direction" ? "Product Direction"
                   : data.direction.type === "workflow_direction" ? "Workflow Direction"
@@ -1798,7 +1798,7 @@ export default function ProjectControlClient({
           ) : null}
 
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 16 }}>
-          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
             <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>Publishing controls</h3>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <Field label="Preview URL"><input className="input" value={data.portalAdmin.previewUrl} onChange={(e) => setData((p) => ({ ...p, portalAdmin: { ...p.portalAdmin, previewUrl: e.target.value } }))} placeholder="https://preview.vercel.app" /></Field>
@@ -1825,7 +1825,7 @@ export default function ProjectControlClient({
 
           {/* State + Timeline */}
           <div style={{ display: "grid", gap: 16 }}>
-            <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+            <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
               <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 16px" }}>Workspace state</h3>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <Field label="Quote status"><select className="select" value={data.status} onChange={(e) => setData((p) => ({ ...p, status: e.target.value }))}>{statusOptions.map((o) => <option key={o} value={o}>{o}</option>)}</select></Field>
@@ -1833,7 +1833,7 @@ export default function ProjectControlClient({
                 <Field label="Deposit amount"><input className="input" type="number" value={data.portalStateAdmin.depositAmount} onChange={(e) => setData((p) => ({ ...p, portalStateAdmin: { ...p.portalStateAdmin, depositAmount: Number(e.target.value || 0) } }))} /></Field>
                 <div style={{ display: "flex", alignItems: "flex-end", gap: 8, flexWrap: "wrap" }}>
                   {data.depositStatus === "paid" ? (
-                    <div style={{ padding: "8px 14px", borderRadius: 8, background: "var(--success-bg)", border: "1px solid var(--success)", color: "var(--success)", fontSize: 12, fontWeight: 700 }}>
+                    <div style={{ padding: "8px 14px", borderRadius: 0, background: "var(--success-bg)", border: "1px solid var(--success)", color: "var(--success)", fontSize: 12, fontWeight: 700 }}>
                       Deposit paid ✓
                     </div>
                   ) : (
@@ -1853,13 +1853,13 @@ export default function ProjectControlClient({
               <div style={{ marginTop: 12 }}><Field label="Deposit notes"><textarea className="textarea" rows={2} value={data.portalStateAdmin.depositNotes} onChange={(e) => setData((p) => ({ ...p, portalStateAdmin: { ...p.portalStateAdmin, depositNotes: e.target.value } }))} /></Field></div>
             </div>
 
-            <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+            <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
               <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 14px" }}>Milestones</h3>
               <div style={{ display: "grid", gap: 6 }}>
                 {data.portalStateAdmin.milestones.map((m) => (
                   <label key={m.key} style={{
                     display: "flex", alignItems: "center", gap: 10, padding: "8px 12px",
-                    border: "1px solid var(--rule)", borderRadius: 8, background: m.done ? "var(--success-bg)" : "var(--paper-2)", cursor: "pointer",
+                    border: "1px solid var(--rule)", borderRadius: 0, background: m.done ? "var(--success-bg)" : "var(--paper-2)", cursor: "pointer",
                   }}>
                     <input type="checkbox" checked={m.done} onChange={() => toggleMilestone(m.key)} style={{ accentColor: "var(--accent)", width: 16, height: 16 }} />
                     <div style={{ flex: 1 }}>
@@ -1888,7 +1888,7 @@ export default function ProjectControlClient({
             />
           </div>
 
-          <div style={{ gridColumn: "1 / -1", background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+          <div style={{ gridColumn: "1 / -1", background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 16, flexWrap: "wrap", marginBottom: 18 }}>
               <div>
                 <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Invoices</h3>
@@ -1975,14 +1975,14 @@ export default function ProjectControlClient({
 
             <div style={{ display: "grid", gap: 10, marginTop: 18 }}>
               {data.invoices.length === 0 ? (
-                <div style={{ padding: "18px 16px", borderRadius: 12, background: "var(--paper-2)", border: "1px solid var(--rule)", color: "var(--muted-2)", fontSize: 13 }}>
+                <div style={{ padding: "18px 16px", borderRadius: 0, background: "var(--paper-2)", border: "1px solid var(--rule)", color: "var(--muted-2)", fontSize: 13 }}>
                   No invoices yet. Create the first invoice above.
                 </div>
               ) : (
                 data.invoices.map((invoice) => {
                   const tone = invoiceTone(invoice.status);
                   return (
-                    <div key={invoice.id} style={{ border: "1px solid var(--rule)", borderRadius: 12, background: "var(--paper-2)", padding: 16 }}>
+                    <div key={invoice.id} style={{ border: "1px solid var(--rule)", borderRadius: 0, background: "var(--paper-2)", padding: 16 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 12, flexWrap: "wrap" }}>
                         <div>
                           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -2100,7 +2100,7 @@ export default function ProjectControlClient({
       {/* ═══ TAB: AGREEMENT ═══ */}
       {activeTab === "agreement" && (
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 16 }}>
-          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
             <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>Pre-contract draft</h3>
             <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
               <button className="btn btnPrimary" disabled={busy} style={{ fontSize: 12, padding: "7px 14px" }} onClick={generatePreContract}>
@@ -2113,7 +2113,7 @@ export default function ProjectControlClient({
               onChange={(e) => setData((p) => ({ ...p, preContractDraft: e.target.value }))} placeholder="Generate a pre-contract draft to review and edit." />
           </div>
 
-          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
             <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: "0 0 12px" }}>Published agreement</h3>
             <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
               <button className="btn btnGhost" disabled={busy} style={{ fontSize: 12, padding: "7px 14px" }} onClick={copyDraftToPublished}>Copy from draft</button>
@@ -2141,7 +2141,7 @@ export default function ProjectControlClient({
               onChange={(e) => setData((p) => ({ ...p, publishedAgreementText: e.target.value }))} placeholder="Agreement text shown to the client once published." />
 
             {data.agreementAcceptance ? (
-              <div style={{ marginTop: 14, padding: 14, borderRadius: 12, border: "1px solid var(--rule)", background: "var(--paper-2)" }}>
+              <div style={{ marginTop: 14, padding: 14, borderRadius: 0, border: "1px solid var(--rule)", background: "var(--paper-2)" }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", marginBottom: 10 }}>
                   Acceptance audit
                 </div>
@@ -2203,7 +2203,7 @@ export default function ProjectControlClient({
       {/* ═══ TAB: LAUNCH ═══ */}
       {activeTab === "activity" && (
         <div style={{ maxWidth: 920 }}>
-          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22, marginBottom: 16 }}>
+          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22, marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 18 }}>
               <div>
                 <h3 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Project timeline</h3>
@@ -2237,12 +2237,12 @@ export default function ProjectControlClient({
 
             <div style={{ display: "grid", gap: 10 }}>
               {filteredActivity.length === 0 ? (
-                <div style={{ fontSize: 13, color: "var(--muted-2)", padding: 18, border: "1px dashed var(--rule)", borderRadius: 12, textAlign: "center" }}>
+                <div style={{ fontSize: 13, color: "var(--muted-2)", padding: 18, border: "1px dashed var(--rule)", borderRadius: 0, textAlign: "center" }}>
                   No activity matches the current filters.
                 </div>
               ) : (
                 filteredActivity.map((item) => (
-                  <div key={item.id} style={{ display: "grid", gridTemplateColumns: "84px minmax(0,1fr)", gap: 14, padding: "12px 14px", border: "1px solid var(--rule)", borderRadius: 12, background: item.actorRole === "system" ? "var(--paper-2)" : "var(--paper)" }}>
+                  <div key={item.id} style={{ display: "grid", gridTemplateColumns: "84px minmax(0,1fr)", gap: 14, padding: "12px 14px", border: "1px solid var(--rule)", borderRadius: 0, background: item.actorRole === "system" ? "var(--paper-2)" : "var(--paper)" }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: item.actorRole === "client" ? "var(--accent)" : item.actorRole === "studio" ? "var(--ink)" : "var(--muted-2)" }}>
                       {pretty(item.actorRole)}
                     </div>
@@ -2259,7 +2259,7 @@ export default function ProjectControlClient({
             </div>
           </div>
 
-          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
               <PieRing score={readiness.percent} size={64} />
               <div>
@@ -2290,7 +2290,7 @@ export default function ProjectControlClient({
             </div>
           </div>
 
-          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22, marginTop: 16 }}>
+          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22, marginTop: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", marginBottom: 18 }}>
               <div>
                 <h3 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Messages</h3>
@@ -2306,7 +2306,7 @@ export default function ProjectControlClient({
             <div style={{ display: "grid", gap: 16 }}>
               <div style={{ display: "grid", gap: 12, maxHeight: 560, overflowY: "auto", paddingRight: 4 }}>
                 {groupedMessages.length === 0 ? (
-                  <div style={{ fontSize: 13, color: "var(--muted-2)", padding: 18, border: "1px dashed var(--rule)", borderRadius: 12, textAlign: "center" }}>
+                  <div style={{ fontSize: 13, color: "var(--muted-2)", padding: 18, border: "1px dashed var(--rule)", borderRadius: 0, textAlign: "center" }}>
                     No messages yet.
                   </div>
                 ) : (
@@ -2327,7 +2327,7 @@ export default function ProjectControlClient({
                               gridTemplateColumns: "34px minmax(0, 1fr)",
                               gap: 12,
                               padding: "14px 16px",
-                              borderRadius: 14,
+                              borderRadius: 0,
                               border:
                                 entry.senderRole === "internal"
                                   ? "1px dashed color-mix(in srgb, var(--ink) 22%, var(--rule))"
@@ -2425,7 +2425,7 @@ export default function ProjectControlClient({
 
               <div style={{
                 padding: 16,
-                borderRadius: 14,
+                borderRadius: 0,
                 border: "1px solid var(--rule)",
                 background: messageMode === "internal" ? "var(--internal-bg)" : "var(--paper-2)",
               }}>
@@ -2497,7 +2497,7 @@ export default function ProjectControlClient({
       {activeTab === "activity" && (
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 16 }}>
           {/* Assets */}
-          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Submitted assets</h3>
               <span style={{ fontSize: 11, fontWeight: 600, color: "var(--muted-2)", background: "rgba(255,255,255,0.05)", padding: "3px 8px", borderRadius: 999 }}>
@@ -2505,9 +2505,9 @@ export default function ProjectControlClient({
               </span>
             </div>
             {data.clientSync.assets.length === 0
-              ? <div style={{ fontSize: 13, color: "var(--muted-2)", padding: 14, border: "1px dashed var(--rule)", borderRadius: 10, textAlign: "center" }}>No assets yet</div>
+              ? <div style={{ fontSize: 13, color: "var(--muted-2)", padding: 14, border: "1px dashed var(--rule)", borderRadius: 0, textAlign: "center" }}>No assets yet</div>
               : data.clientSync.assets.map((a) => (
-                <div key={a.id} style={{ padding: "12px 14px", border: "1px solid var(--rule)", borderRadius: 10, background: "var(--paper-2)", marginBottom: 6 }}>
+                <div key={a.id} style={{ padding: "12px 14px", border: "1px solid var(--rule)", borderRadius: 0, background: "var(--paper-2)", marginBottom: 6 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 10 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 600, fontSize: 14, color: "var(--ink)" }}>{a.label}</div>
@@ -2561,7 +2561,7 @@ export default function ProjectControlClient({
           </div>
 
           {/* Revisions */}
-          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+          <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Revision requests</h3>
               <span style={{ fontSize: 11, fontWeight: 600, color: "var(--muted-2)", background: "rgba(255,255,255,0.05)", padding: "3px 8px", borderRadius: 999 }}>
@@ -2569,10 +2569,10 @@ export default function ProjectControlClient({
               </span>
             </div>
             {data.clientSync.revisions.length === 0
-              ? <div style={{ fontSize: 13, color: "var(--muted-2)", padding: 14, border: "1px dashed var(--rule)", borderRadius: 10, textAlign: "center" }}>No revisions yet</div>
+              ? <div style={{ fontSize: 13, color: "var(--muted-2)", padding: 14, border: "1px dashed var(--rule)", borderRadius: 0, textAlign: "center" }}>No revisions yet</div>
               : data.clientSync.revisions.map((r) => (
                 <div key={r.id} style={{
-                  padding: "12px 14px", borderRadius: 10, background: "var(--paper-2)", marginBottom: 6,
+                  padding: "12px 14px", borderRadius: 0, background: "var(--paper-2)", marginBottom: 6,
                   borderLeft: `3px solid ${r.priority === "high" ? "var(--accent)" : r.status === "new" ? "var(--rule)" : "var(--rule)"}`,
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 10 }}>
@@ -2655,7 +2655,7 @@ export default function ProjectControlClient({
       {confirmAction && (
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)" }}
           onClick={() => setConfirmAction(null)}>
-          <div style={{ background: "var(--paper)", border: "1px solid var(--rule-2)", borderRadius: 18, padding: "28px 28px 22px", maxWidth: 460, width: "90%" }}
+          <div style={{ background: "var(--paper)", border: "1px solid var(--rule-2)", borderRadius: 0, padding: "28px 28px 22px", maxWidth: 460, width: "90%" }}
             onClick={(e) => e.stopPropagation()}>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 20, color: "var(--ink)" }}>{confirmAction.title}</div>
             <p style={{ marginTop: 10, fontSize: 14, color: "var(--muted)", lineHeight: 1.6 }}>{confirmAction.description}</p>

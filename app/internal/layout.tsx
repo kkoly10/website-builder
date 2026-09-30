@@ -18,7 +18,7 @@ export default async function InternalLayout({ children }: { children: ReactNode
   if (!admin) redirect("/portal");
 
   return (
-    <main className="container" style={{ paddingTop: 8 }}>
+    <main className="authenticatedTheme productAppTheme container" style={{ paddingTop: 8 }}>
       <section className="card">
         <div className="cardInner" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <div>

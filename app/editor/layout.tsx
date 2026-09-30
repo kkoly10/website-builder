@@ -42,7 +42,7 @@ export default async function EditorLayout({
           overflow: hidden;
         }
       `}</style>
-      {children}
+      <div className="authenticatedTheme productAppTheme">{children}</div>
     </>
   );
 }

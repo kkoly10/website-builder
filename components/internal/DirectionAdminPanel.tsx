@@ -65,7 +65,7 @@ export default function DirectionAdminPanel({
         style={{
           padding: 16,
           border: "1px solid var(--rule)",
-          borderRadius: 12,
+          borderRadius: 0,
           background: "var(--paper-2)",
           fontSize: 13,
           color: "var(--muted)",
@@ -82,7 +82,7 @@ export default function DirectionAdminPanel({
         style={{
           padding: 16,
           border: "1px solid var(--rule)",
-          borderRadius: 12,
+          borderRadius: 0,
           background: "var(--paper-2)",
           fontSize: 13,
           color: "var(--muted)",
@@ -164,7 +164,7 @@ export default function DirectionAdminPanel({
       </div>
 
       {schema && direction.status !== "not_started" && direction.status !== "waiting_on_client" ? (
-        <details style={{ border: "1px solid var(--rule)", borderRadius: 12, padding: 12, background: "var(--paper-2)" }}>
+        <details style={{ border: "1px solid var(--rule)", borderRadius: 0, padding: 12, background: "var(--paper-2)" }}>
           <summary style={{ cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--fg)" }}>
             Submitted answers
           </summary>
@@ -178,7 +178,7 @@ export default function DirectionAdminPanel({
           </div>
         </details>
       ) : (
-        <div style={{ fontSize: 13, color: "var(--muted)", padding: 12, border: "1px dashed var(--rule)", borderRadius: 12 }}>
+        <div style={{ fontSize: 13, color: "var(--muted)", padding: 12, border: "1px dashed var(--rule)", borderRadius: 0 }}>
           Client hasn&apos;t submitted the form yet.
         </div>
       )}
@@ -213,7 +213,7 @@ export default function DirectionAdminPanel({
             color: "var(--accent-2)",
             fontSize: 12,
             fontWeight: 700,
-            borderRadius: 8,
+            borderRadius: 0,
           }}
         >
           {error}

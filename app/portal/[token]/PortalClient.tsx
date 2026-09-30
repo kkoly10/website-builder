@@ -1135,7 +1135,7 @@ export default function PortalClient({
                   key={invoice.id}
                   style={{
                     border: "1px solid var(--rule)",
-                    borderRadius: 14,
+                    borderRadius: 0,
                     background: "var(--paper-2)",
                     padding: 16,
                   }}
@@ -1445,7 +1445,7 @@ export default function PortalClient({
             <div className="portalEmptyState">{tActivity("empty")}</div>
           ) : (
             bundle.activityFeed.map((item) => (
-              <div key={item.id} style={{ display: "grid", gridTemplateColumns: "72px minmax(0,1fr)", gap: 14, padding: "14px 16px", borderRadius: 14, border: "1px solid var(--rule)", background: "var(--paper-2)" }}>
+              <div key={item.id} style={{ display: "grid", gridTemplateColumns: "72px minmax(0,1fr)", gap: 14, padding: "14px 16px", borderRadius: 0, border: "1px solid var(--rule)", background: "var(--paper-2)" }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: item.actorRole === "client" ? "var(--accent)" : "var(--muted-2)" }}>
                   {lookup(tActivityActors, item.actorRole)}
                 </div>
@@ -1802,7 +1802,7 @@ export default function PortalClient({
         )}
         {bundle.scope.notes ? (
           <div style={{
-            marginTop: 8, padding: 12, borderRadius: 10,
+            marginTop: 8, padding: 12, borderRadius: 0,
             background: "var(--paper-2)", border: "1px solid var(--rule)",
           }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", marginBottom: 4 }}>
@@ -1849,7 +1849,7 @@ export default function PortalClient({
         ) : null}
         {bundle.quote.deposit.notes ? (
           <div style={{
-            marginTop: 8, padding: 12, borderRadius: 10,
+            marginTop: 8, padding: 12, borderRadius: 0,
             background: "var(--paper-2)", border: "1px solid var(--rule)",
           }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", marginBottom: 4 }}>
@@ -1860,7 +1860,7 @@ export default function PortalClient({
         ) : null}
         {bundle.agreement.publishedText ? (
           <div style={{
-            marginTop: 8, padding: 12, borderRadius: 10,
+            marginTop: 8, padding: 12, borderRadius: 0,
             background: "var(--paper-2)", border: "1px solid var(--rule)",
           }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", marginBottom: 10 }}>
@@ -1870,7 +1870,7 @@ export default function PortalClient({
             {bundle.agreement.status === "accepted" ? (
               <>
                 <div style={{
-                  marginBottom: 8, padding: 10, borderRadius: 10,
+                  marginBottom: 8, padding: 10, borderRadius: 0,
                   background: "var(--success-bg)", border: "1px solid var(--success)",
                   color: "var(--success)", fontSize: 13, fontWeight: 700,
                 }}>
@@ -1927,7 +1927,7 @@ export default function PortalClient({
           ))}
           {bundle.history.changeOrders.map((co) => (
             <div key={co.id} style={{
-              marginTop: 8, padding: 12, borderRadius: 10,
+              marginTop: 8, padding: 12, borderRadius: 0,
               background: "var(--paper-2)", border: "1px solid var(--rule)",
             }}>
               <div style={{ fontWeight: 700, color: "var(--ink)" }}>{co.title}</div>

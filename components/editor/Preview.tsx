@@ -15,7 +15,7 @@ export default function Preview({ page, selectSection }: Props) {
           key={section.id}
           onClick={() => selectSection(section.id)}
           style={{
-            border: "1px dashed #ccc",
+            border: "1px dashed var(--rule-2)",
             padding: 16,
             marginBottom: 16,
             cursor: "pointer",

@@ -17,7 +17,7 @@ export default function Sidebar({
   updateSection,
 }: Props) {
   return (
-    <aside style={{ width: 300, borderRight: "1px solid #e5e7eb", padding: 16 }}>
+    <aside style={{ width: 300, borderRight: "1px solid var(--rule)", padding: 16 }}>
       <h3>Pages</h3>
       {(["home", "about", "services", "contact"] as PageType[]).map((p) => (
         <button

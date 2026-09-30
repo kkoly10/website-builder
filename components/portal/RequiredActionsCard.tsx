@@ -155,7 +155,7 @@ export default function RequiredActionsCard({ actions, onComplete }: Props) {
           style={{
             marginBottom: 12,
             padding: 10,
-            borderRadius: 8,
+            borderRadius: 0,
             border: "1px solid var(--accent)",
             background: "var(--accent-bg)",
             color: "var(--accent-2)",
@@ -182,7 +182,7 @@ export default function RequiredActionsCard({ actions, onComplete }: Props) {
               style={{
                 border: "1px solid",
                 borderColor: action.status === "waiting_on_client" ? "var(--accent)" : "var(--rule)",
-                borderRadius: 14,
+                borderRadius: 0,
                 background: "var(--paper-2)",
                 padding: 16,
                 opacity: isDone ? 0.7 : 1,

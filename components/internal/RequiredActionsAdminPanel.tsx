@@ -84,7 +84,7 @@ export default function RequiredActionsAdminPanel({
   }
 
   return (
-    <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 14, padding: 22 }}>
+    <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
         <div>
           <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--ink)", margin: 0 }}>Required actions</h3>
@@ -101,7 +101,7 @@ export default function RequiredActionsAdminPanel({
       {/* List */}
       <div style={{ display: "grid", gap: 8, marginBottom: 16 }}>
         {actions.length === 0 ? (
-          <div style={{ fontSize: 13, color: "var(--muted-2)", padding: 14, border: "1px dashed var(--rule)", borderRadius: 10, textAlign: "center" }}>
+          <div style={{ fontSize: 13, color: "var(--muted-2)", padding: 14, border: "1px dashed var(--rule)", borderRadius: 0, textAlign: "center" }}>
             No required actions seeded for this portal yet.
           </div>
         ) : (
@@ -116,7 +116,7 @@ export default function RequiredActionsAdminPanel({
                 style={{
                   padding: "12px 14px",
                   border: "1px solid var(--rule)",
-                  borderRadius: 10,
+                  borderRadius: 0,
                   background: action.status === "complete" ? "var(--paper-2)" : "var(--paper)",
                   opacity: action.status === "complete" ? 0.7 : 1,
                 }}

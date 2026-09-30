@@ -2225,3 +2225,271 @@ body:has(.publicTheme) .footerBottom {
 .publicTheme .marketingPage {
   padding-inline: var(--gutter);
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Work in View — authenticated/product UI theme
+   Dense product layouts keep their structure; this layer changes the visual
+   language only. Public marketing pages use .publicTheme above.
+   ────────────────────────────────────────────────────────────────────────── */
+body:has(.authenticatedTheme),
+.authenticatedTheme {
+  --paper: #f6f7f8;
+  --paper-2: #ffffff;
+  --paper-3: #e7eaed;
+  --paper-4: #cdd2d8;
+  --surface: #ffffff;
+  --ink: #14171b;
+  --ink-2: #30363d;
+  --ink-3: #4b535c;
+  --muted: #626a73;
+  --muted-2: #7d858e;
+  --rule: #cdd2d8;
+  --rule-2: #aeb6bf;
+  --rule-on-ink: #343d47;
+  --accent: #c62f25;
+  --accent-2: #a9231d;
+  --accent-700: #922019;
+  --accent-soft: #e2aaa6;
+  --accent-bg: #f7e7e5;
+  --internal-bg: #eef0f2;
+
+  --success: #2b7650;
+  --success-bg: #e4efe8;
+  --warning: #8a6500;
+  --warning-bg: #f4edda;
+  --error: #aa3028;
+  --error-bg: #f7e6e4;
+  --font-display: var(--font-public-display), "Arial Narrow", sans-serif;
+  --font-body: var(--font-public-body), "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-public-body), "Helvetica Neue", Arial, sans-serif;
+  --radius-sm: 0px;
+  --radius: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --shadow-sm: 0 1px 2px rgba(20, 23, 27, 0.04);
+  --shadow: 0 12px 32px rgba(20, 23, 27, 0.08);
+  --shadow-lg: 0 18px 48px rgba(20, 23, 27, 0.12);
+  --shadow-xl: 0 28px 70px rgba(20, 23, 27, 0.16);
+  --cs-font-display: var(--font-public-display), "Arial Narrow", sans-serif;
+  --cs-font-body: var(--font-public-body), "Helvetica Neue", Arial, sans-serif;
+}
+
+body:has(.authenticatedTheme) {
+  background: #eef0f2;
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+body:has(.authenticatedTheme) .mainContent {
+  background: #eef0f2;
+}
+
+.authenticatedTheme {
+  min-height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+.productAppTheme {
+  width: 100%;
+}
+
+.productAppTheme :where(
+  .h1, .h2, .h3, .productTitle, .productEmptyTitle, .productLaneCount,
+  .portalStoryHeadline, .portalPanelTitle, .portalDepositLead h3,
+  .portalDepositAmount, .portalLaunchPercent, .portalLaunchInfo h4,
+  .portalHubCount
+) {
+  font-family: var(--font-display);
+  font-variation-settings: normal;
+}
+
+.productAppTheme :where(.kicker, .portalStoryKicker, .portalSectionLabel, .productSectionLabel) {
+  font: 600 11px/1.25 var(--font-body);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.productAppTheme :where(.card, .panel, .productCard, .portalPanel, .portalStory,
+  .portalJourney, .portalDepositBanner, .portalNote, .portalPreviewImg,
+  .portalInfoNote, .portalUploadZone, .portalRev, .portalDrawerToggle,
+  .portalDrawerContent, .productEmpty) {
+  border-radius: 0;
+  border-color: var(--rule);
+  box-shadow: none;
+}
+
+.productAppTheme :where(.card, .panel, .productCard, .portalPanel, .portalStory,
+  .portalJourney, .portalDepositBanner, .portalNote, .portalPreviewImg,
+  .portalInfoNote, .portalUploadZone, .portalRev, .portalDrawerToggle,
+  .portalDrawerContent) {
+  background: var(--surface);
+}
+
+.productAppTheme .portalStory {
+  border-top: 3px solid var(--accent);
+}
+
+.productAppTheme .portalHubCardPrimary {
+  background: var(--surface);
+  box-shadow: inset 0 3px 0 var(--accent);
+}
+
+.productAppTheme :where(a.card, a.panel, a.productCard):hover {
+  transform: none;
+  border-color: var(--ink);
+  box-shadow: none;
+}
+
+.productAppTheme :where(.input, .select, .textarea, input, select, textarea) {
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+.productAppTheme :where(.input, .select, .textarea, input, select, textarea):focus {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 16%, transparent);
+  outline-offset: 1px;
+}
+
+.productAppTheme :where(.btn, button) {
+  font-family: var(--font-body);
+}
+
+body:has(.authenticatedTheme) .btn {
+  border-radius: 0;
+}
+
+body:has(.authenticatedTheme) .btnPrimary,
+.productAppTheme .portalStoryCta {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #ffffff;
+}
+
+body:has(.authenticatedTheme) .btnPrimary:hover,
+.productAppTheme .portalStoryCta:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+body:has(.authenticatedTheme) .btnGhost {
+  border-color: var(--rule);
+  color: var(--ink);
+  background: transparent;
+}
+
+body:has(.authenticatedTheme) .btnGhost:hover {
+  border-color: var(--ink);
+  background: var(--surface);
+}
+
+.productAppTheme :where(.productChip, .pill, .portalHubStatus, .portalPill) {
+  font-family: var(--font-body);
+}
+
+.productAppTheme .portalPanelHeader {
+  border-bottom-color: var(--rule);
+}
+
+body:has(.authenticatedTheme) .topNav {
+  border-bottom-color: var(--rule);
+  background: color-mix(in srgb, #f6f7f8 96%, transparent);
+}
+
+body:has(.authenticatedTheme) .topNavInner {
+  max-width: 1600px;
+}
+
+body:has(.authenticatedTheme) .topNavLink {
+  color: #30363d;
+  font-family: var(--font-body);
+}
+
+body:has(.authenticatedTheme) .topNavLink:hover,
+body:has(.authenticatedTheme) .topNavLink:focus-visible,
+body:has(.authenticatedTheme) .topNavLinkActive {
+  color: #14171b;
+}
+
+body:has(.authenticatedTheme) :where(
+  .topNav .btn, .navServicesPanel, .navServicesItem,
+  .mobileMenuSummary, .mobileMenuPanel, .mobileMenuLinks a
+) {
+  border-radius: 0;
+}
+
+body:has(.authenticatedTheme) .footer {
+  border-top-color: #303944;
+  background: #0e1115;
+  color: #aeb6bf;
+}
+
+body:has(.authenticatedTheme) .footerKicker,
+body:has(.authenticatedTheme) .footerColumnHeading {
+  color: #f6f7f8;
+}
+
+body:has(.authenticatedTheme) :where(
+  .footerBlurb, .footerAddress, .footerServiceArea, .footerCopyright,
+  .footerEmail, .footerPhone, .footerSocial a, .footerColumn a,
+  .footerLanguages a
+) {
+  color: #aeb6bf;
+}
+
+body:has(.authenticatedTheme) :where(
+  .footerColumn a:hover, .footerEmail:hover, .footerPhone:hover,
+  .footerSocial a:hover, .footerLanguages a:hover
+) {
+  color: #ffffff;
+}
+
+body:has(.authenticatedTheme) .footerBottom {
+  border-top-color: #303944;
+}
+
+/* Keep semantic status shapes round even though product containers are square. */
+.productAppTheme :where(
+  .pill, .productChip, .portalHubStatus, .portalJourneyDot,
+  .portalJourneyDotInner, .portalStoryKickerDot, .productSectionDot,
+  .portalPreviewLiveDot, .portalNoteIcon, .portalLaunchCheckBoxInner
+) {
+  border-radius: 999px;
+}
+
+@media (max-width: 980px) {
+  .productAppTheme {
+    min-width: 0;
+  }
+}
+
+
+.productAppTheme :where(h1, h2, h3, h4) {
+  font-family: var(--font-display);
+  font-variation-settings: normal;
+  letter-spacing: -0.02em;
+}
+
+.productAppTheme button:not(.btn) {
+  min-height: 40px;
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+.productAppTheme button:not(.btn):hover:not(:disabled) {
+  border-color: var(--ink);
+}
+
+.productAppTheme button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

@@ -96,11 +96,11 @@ export default function EcommercePipelineClient({ initialRows }: { initialRows: 
                 </div>
 
                 <div className="grid2stretch" style={{ marginTop: 14 }}>
-                  <div style={{ border: "1px solid var(--stroke)", background: "var(--panel2)", borderRadius: 14, padding: 14 }}>
+                  <div style={{ border: "1px solid var(--stroke)", background: "var(--panel2)", borderRadius: 0, padding: 14 }}>
                     <div className="smallNote">Workspace summary</div>
                     <div style={{ marginTop: 8, color: "var(--fg)", fontWeight: 800 }}>{row.serviceSummary}</div>
                   </div>
-                  <div style={{ border: "1px solid var(--accent)", background: "var(--accent-bg)", borderRadius: 14, padding: 14 }}>
+                  <div style={{ border: "1px solid var(--accent)", background: "var(--accent-bg)", borderRadius: 0, padding: 14 }}>
                     <div className="smallNote">Pricing recommendation</div>
                     <div style={{ marginTop: 8, color: "var(--fg)", fontWeight: 800 }}>{row.recommendationTier}</div>
                     <div className="pDark" style={{ marginTop: 6 }}>{row.recommendationRange}</div>
@@ -127,7 +127,7 @@ export default function EcommercePipelineClient({ initialRows }: { initialRows: 
 
 function Tile({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ border: "1px solid var(--stroke)", borderRadius: 14, background: "var(--panel2)", padding: 14 }}>
+    <div style={{ border: "1px solid var(--stroke)", borderRadius: 0, background: "var(--panel2)", padding: 14 }}>
       <div style={{ color: "var(--muted)", fontSize: 12, fontWeight: 800, marginBottom: 6 }}>{label}</div>
       <div style={{ color: "var(--fg)", fontWeight: 800, fontSize: 15, lineHeight: 1.35 }}>{value}</div>
     </div>

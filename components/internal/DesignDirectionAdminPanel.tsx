@@ -55,7 +55,7 @@ export default function DesignDirectionAdminPanel({
         style={{
           padding: 16,
           border: "1px solid var(--rule)",
-          borderRadius: 12,
+          borderRadius: 0,
           background: "var(--paper-2)",
           fontSize: 13,
           color: "var(--muted)",
@@ -73,7 +73,7 @@ export default function DesignDirectionAdminPanel({
         style={{
           padding: 16,
           border: "1px solid var(--rule)",
-          borderRadius: 12,
+          borderRadius: 0,
           background: "var(--paper-2)",
           fontSize: 13,
           color: "var(--muted)",
@@ -163,7 +163,7 @@ export default function DesignDirectionAdminPanel({
           style={{
             padding: 10,
             border: "1px dashed var(--accent)",
-            borderRadius: 8,
+            borderRadius: 0,
             background: "var(--accent-bg)",
             fontSize: 12,
             color: "var(--accent-2)",
@@ -180,7 +180,7 @@ export default function DesignDirectionAdminPanel({
 
       {/* Submitted summary */}
       {designDirection.status !== "not_started" && designDirection.status !== "waiting_on_client" ? (
-        <details style={{ border: "1px solid var(--rule)", borderRadius: 12, padding: 12, background: "var(--paper-2)" }}>
+        <details style={{ border: "1px solid var(--rule)", borderRadius: 0, padding: 12, background: "var(--paper-2)" }}>
           <summary style={{ cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--fg)" }}>
             Submitted answers
           </summary>
@@ -194,7 +194,7 @@ export default function DesignDirectionAdminPanel({
           </div>
         </details>
       ) : (
-        <div style={{ fontSize: 13, color: "var(--muted)", padding: 12, border: "1px dashed var(--rule)", borderRadius: 12 }}>
+        <div style={{ fontSize: 13, color: "var(--muted)", padding: 12, border: "1px dashed var(--rule)", borderRadius: 0 }}>
           Client hasn&apos;t submitted the form yet.
         </div>
       )}
@@ -230,7 +230,7 @@ export default function DesignDirectionAdminPanel({
             color: "var(--accent-2)",
             fontSize: 12,
             fontWeight: 700,
-            borderRadius: 8,
+            borderRadius: 0,
           }}
         >
           {error}

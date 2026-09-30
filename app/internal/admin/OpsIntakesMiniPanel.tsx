@@ -86,7 +86,7 @@ export default async function OpsIntakesMiniPanel() {
       style={{
         marginTop: 14,
         border: "1px solid rgba(255,255,255,0.12)",
-        borderRadius: 12,
+        borderRadius: 0,
         background: "rgba(255,255,255,0.02)",
         overflow: "hidden",
       }}
@@ -114,7 +114,7 @@ export default async function OpsIntakesMiniPanel() {
             color: "white",
             textDecoration: "none",
             border: "1px solid rgba(255,255,255,0.14)",
-            borderRadius: 8,
+            borderRadius: 0,
             padding: "8px 10px",
             background: "rgba(255,255,255,0.04)",
             fontSize: 13,
@@ -189,7 +189,7 @@ export default async function OpsIntakesMiniPanel() {
                         color: "white",
                         textDecoration: "none",
                         border: "1px solid rgba(255,255,255,0.14)",
-                        borderRadius: 8,
+                        borderRadius: 0,
                         padding: "6px 8px",
                         background: "rgba(255,255,255,0.04)",
                         fontWeight: 700,

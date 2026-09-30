@@ -287,7 +287,7 @@ export default function DirectionForm({
           gap: 12,
           padding: 14,
           border: "1px solid var(--rule)",
-          borderRadius: 12,
+          borderRadius: 0,
           background: "var(--paper-2)",
           cursor: "pointer",
         }}
@@ -313,7 +313,7 @@ export default function DirectionForm({
             color: "var(--accent-2)",
             fontSize: 13,
             fontWeight: 700,
-            borderRadius: 8,
+            borderRadius: 0,
           }}
         >
           {error}

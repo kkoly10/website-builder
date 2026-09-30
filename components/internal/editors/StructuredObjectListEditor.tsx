@@ -61,7 +61,7 @@ export default function StructuredObjectListEditor<T extends Record<string, any>
       {!items.length ? <div className="smallNote">{emptyLabel}</div> : null}
 
       {items.map((item, index) => (
-        <div key={`${label}-${index}`} style={{ border: "1px solid var(--stroke)", background: "var(--panel2)", borderRadius: 12, padding: 14, display: "grid", gap: 12 }}>
+        <div key={`${label}-${index}`} style={{ border: "1px solid var(--stroke)", background: "var(--panel2)", borderRadius: 0, padding: 14, display: "grid", gap: 12 }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
             <div style={{ fontWeight: 800, color: "var(--fg)" }}>
               {getItemTitle ? getItemTitle(item, index) : `${label} ${index + 1}`}

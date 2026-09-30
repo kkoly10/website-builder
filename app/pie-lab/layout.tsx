@@ -27,5 +27,9 @@ export default async function PieLabLayout({
     redirect("/login?next=/pie-lab");
   }
 
-  return <>{children}</>;
+  return (
+    <div className="authenticatedTheme productAppTheme">
+      {children}
+    </div>
+  );
 }

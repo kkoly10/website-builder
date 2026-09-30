@@ -185,7 +185,7 @@ export default function DesignDirectionSummary({ value }: { value: WebsiteDesign
           style={{
             marginTop: 8,
             padding: 12,
-            borderRadius: 8,
+            borderRadius: 0,
             border: "1px solid var(--rule)",
             background: "var(--paper-2)",
             fontSize: 13,

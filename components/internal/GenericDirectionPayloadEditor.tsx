@@ -99,7 +99,7 @@ export default function GenericDirectionPayloadEditor({
       </button>
 
       {open ? (
-        <div style={{ marginTop: 12, padding: 16, border: "1px solid var(--rule)", borderRadius: 12, background: "var(--paper)", display: "grid", gap: 14 }}>
+        <div style={{ marginTop: 12, padding: 16, border: "1px solid var(--rule)", borderRadius: 0, background: "var(--paper)", display: "grid", gap: 14 }}>
           <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.6 }}>
             Fix typos or fill in answers the client sent over email. Logged as <code>{direction.type}_payload_edited</code>; status and timestamps are not affected.
           </div>
@@ -114,7 +114,7 @@ export default function GenericDirectionPayloadEditor({
           ))}
 
           {error ? (
-            <div style={{ fontSize: 12, color: "var(--accent)", padding: "8px 12px", border: "1px solid var(--accent)", borderRadius: 8 }}>
+            <div style={{ fontSize: 12, color: "var(--accent)", padding: "8px 12px", border: "1px solid var(--accent)", borderRadius: 0 }}>
               {error}
             </div>
           ) : null}

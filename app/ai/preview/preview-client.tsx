@@ -90,9 +90,9 @@ export default function PreviewClient() {
           onClick={generateDraft}
           style={{
             padding: "10px 16px",
-            background: "#000",
+            background: "var(--ink)",
             color: "#fff",
-            borderRadius: 10,
+            borderRadius: 0,
             cursor: "pointer",
           }}
           disabled={loading}
@@ -100,7 +100,7 @@ export default function PreviewClient() {
           {loading ? "Generating…" : generatedOnce ? "Regenerate" : "Generate"}
         </button>
 
-        <a href="/ai/builder" style={{ alignSelf: "center", color: "#555" }}>
+        <a href="/ai/builder" style={{ alignSelf: "center", color: "var(--muted)" }}>
           ← Back to AI Builder
         </a>
       </div>
@@ -110,10 +110,10 @@ export default function PreviewClient() {
           style={{
             marginBottom: 16,
             padding: 12,
-            borderRadius: 10,
-            border: "1px solid #fecaca",
-            background: "#fef2f2",
-            color: "#7f1d1d",
+            borderRadius: 0,
+            border: "1px solid var(--error)",
+            background: "var(--error-bg)",
+            color: "var(--error)",
           }}
         >
           {error}
@@ -123,8 +123,8 @@ export default function PreviewClient() {
       {/* EDIT FORM */}
       <section
         style={{
-          border: "1px solid #e5e7eb",
-          borderRadius: 12,
+          border: "1px solid var(--rule)",
+          borderRadius: 0,
           padding: 18,
           marginBottom: 24,
         }}
@@ -198,14 +198,14 @@ export default function PreviewClient() {
       {/* LIVE PREVIEW */}
       <section
         style={{
-          border: "1px solid #e5e7eb",
-          borderRadius: 12,
+          border: "1px solid var(--rule)",
+          borderRadius: 0,
           padding: 22,
         }}
       >
         <h3>Live Preview</h3>
 
-        <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 22 }}>
+        <div style={{ border: "1px solid var(--rule)", borderRadius: 0, padding: 22 }}>
           <div style={{ marginBottom: 18 }}>
             <div style={{ fontSize: 14, color: "var(--muted2)", marginBottom: 6 }}>
               {draft.industry} • {draft.goal} • Tone: {draft.tone}
@@ -213,7 +213,7 @@ export default function PreviewClient() {
             <h2 style={{ fontSize: 36, margin: "6px 0 10px" }}>
               {draft.heroHeadline || "Your headline will appear here"}
             </h2>
-            <p style={{ fontSize: 18, color: "#555" }}>
+            <p style={{ fontSize: 18, color: "var(--muted)" }}>
               {draft.heroSubheadline || "Your subheadline will appear here"}
             </p>
           </div>
@@ -221,12 +221,12 @@ export default function PreviewClient() {
           <hr  />
 
           <h4>About {draft.businessName || "your business"}</h4>
-          <p style={{ color: "#444", lineHeight: 1.7 }}>{draft.about || "About text…"}</p>
+          <p style={{ color: "var(--ink-2)", lineHeight: 1.7 }}>{draft.about || "About text…"}</p>
 
           <hr  />
 
           <h4>Services</h4>
-          <ul style={{ lineHeight: 1.8, color: "#444" }}>
+          <ul style={{ lineHeight: 1.8, color: "var(--ink-2)" }}>
             {(draft.services || []).filter(Boolean).length ? (
               draft.services.filter(Boolean).map((s, i) => <li key={i}>{s}</li>)
             ) : (
@@ -240,9 +240,9 @@ export default function PreviewClient() {
           <button
             style={{
               padding: "12px 18px",
-              background: "#000",
+              background: "var(--ink)",
               color: "#fff",
-              borderRadius: 10,
+              borderRadius: 0,
               cursor: "pointer",
             }}
           >
@@ -262,7 +262,7 @@ export default function PreviewClient() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div style={{ fontSize: 14, color: "#555", marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 14, color: "var(--muted)", marginBottom: 6 }}>{label}</div>
       {children}
     </div>
   );
@@ -272,6 +272,6 @@ const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: 12,
   fontSize: 16,
-  borderRadius: 10,
-  border: "1px solid #e5e7eb",
+  borderRadius: 0,
+  border: "1px solid var(--rule)",
 };

@@ -39,7 +39,7 @@ export default function StructuredStringListEditor({
       {!items.length ? <div className="smallNote">{emptyLabel}</div> : null}
 
       {items.map((item, index) => (
-        <div key={`${label}-${index}`} style={{ border: "1px solid var(--stroke)", background: "var(--panel2)", borderRadius: 12, padding: 12, display: "grid", gap: 8 }}>
+        <div key={`${label}-${index}`} style={{ border: "1px solid var(--stroke)", background: "var(--panel2)", borderRadius: 0, padding: 12, display: "grid", gap: 8 }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
             <div style={{ fontWeight: 800, color: "var(--fg)", fontSize: 13 }}>Item {index + 1}</div>
             <button type="button" className="btn btnGhost" style={{ fontSize: 12 }} onClick={() => removeItem(index)}>

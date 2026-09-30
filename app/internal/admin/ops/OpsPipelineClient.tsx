@@ -204,7 +204,7 @@ export default function OpsPipelineClient({
                     marginTop: 14,
                     border: "1px solid var(--stroke)",
                     background: "var(--panel2)",
-                    borderRadius: 14,
+                    borderRadius: 0,
                     padding: 14,
                   }}
                 >
@@ -257,7 +257,7 @@ function InfoTile({ label, value }: { label: string; value: string }) {
     <div
       style={{
         border: "1px solid var(--stroke)",
-        borderRadius: 14,
+        borderRadius: 0,
         background: "var(--panel2)",
         padding: 14,
       }}

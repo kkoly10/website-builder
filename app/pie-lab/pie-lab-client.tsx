@@ -93,7 +93,7 @@ export default function PieLabClient() {
             rows={18}
             style={{
               width: "100%",
-              borderRadius: 12,
+              borderRadius: 0,
               padding: 12,
               background: "rgba(255,255,255,0.04)",
               color: "white",
@@ -115,7 +115,7 @@ export default function PieLabClient() {
               className="input"
               style={{
                 width: "100%",
-                borderRadius: 12,
+                borderRadius: 0,
                 padding: 10,
                 background: "rgba(255,255,255,0.04)",
                 color: "white",
@@ -149,7 +149,7 @@ export default function PieLabClient() {
           {error ? (
             <div
               style={{
-                borderRadius: 12,
+                borderRadius: 0,
                 padding: 12,
                 border: "1px solid rgba(255,80,80,0.35)",
                 background: "rgba(255,80,80,0.08)",
@@ -162,7 +162,7 @@ export default function PieLabClient() {
           {responseId ? (
             <div
               style={{
-                borderRadius: 12,
+                borderRadius: 0,
                 padding: 12,
                 border: "1px solid rgba(255,255,255,0.12)",
                 background: "rgba(255,255,255,0.03)",
@@ -184,7 +184,7 @@ export default function PieLabClient() {
                   margin: 0,
                   whiteSpace: "pre-wrap",
                   wordBreak: "break-word",
-                  borderRadius: 12,
+                  borderRadius: 0,
                   padding: 12,
                   background: "rgba(255,255,255,0.04)",
                   border: "1px solid rgba(255,255,255,0.12)",

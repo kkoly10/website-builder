@@ -154,10 +154,10 @@ export default function AIBuilderPage() {
             marginTop: 16,
             marginBottom: 16,
             padding: 12,
-            borderRadius: 8,
-            border: "1px solid var(--accent, #a8362b)",
-            background: "var(--accent-bg, #fbeae7)",
-            color: "var(--accent-2, #8a2a1e)",
+            borderRadius: 0,
+            border: "1px solid var(--accent, var(--accent))",
+            background: "var(--accent-bg, var(--accent-bg))",
+            color: "var(--accent-2, var(--accent-2))",
             fontSize: 14,
             fontWeight: 600,
           }}
@@ -184,9 +184,9 @@ export default function AIBuilderPage() {
             onClick={generate}
             style={{
               padding: "12px 22px",
-              background: "#000",
+              background: "var(--ink)",
               color: "#fff",
-              borderRadius: 10,
+              borderRadius: 0,
               cursor: "pointer",
             }}
           >

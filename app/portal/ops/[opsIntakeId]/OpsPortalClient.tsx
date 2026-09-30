@@ -248,7 +248,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
           </div>
 
           {bundle.intake.painPoints.length > 0 && (
-            <div style={{ marginTop: 14, padding: "14px 16px", borderRadius: 12, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
+            <div style={{ marginTop: 14, padding: "14px 16px", borderRadius: 0, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", marginBottom: 8 }}>{tFound("painPointsLabel")}</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {bundle.intake.painPoints.map((p) => (
@@ -281,7 +281,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
           </div>
 
           {bundle.workspace.nextActions.length > 0 && (
-            <div style={{ marginTop: 12, padding: "14px 16px", borderRadius: 12, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
+            <div style={{ marginTop: 12, padding: "14px 16px", borderRadius: 0, border: "1px solid var(--stroke)", background: "var(--panel2)" }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", marginBottom: 8 }}>{tProgress("nextSteps")}</div>
               {bundle.workspace.nextActions.slice(0, 3).map((a) => (
                 <div key={a} style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, paddingLeft: 12, borderLeft: "2px solid var(--rule)", marginBottom: 6 }}>{a}</div>
@@ -336,7 +336,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
             {bundle.workspace.automationBacklog.map((auto) => {
               const meta = autoMeta(auto.status);
               return (
-                <div key={auto.id} style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: 14, alignItems: "center", padding: "14px 16px", border: `1px solid ${meta.border}`, borderRadius: 12, background: meta.bg }}>
+                <div key={auto.id} style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: 14, alignItems: "center", padding: "14px 16px", border: `1px solid ${meta.border}`, borderRadius: 0, background: meta.bg }}>
                   <div>
                     <div style={{ fontSize: 15, fontWeight: 600, color: "var(--fg)" }}>{auto.name}</div>
                     <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 3, lineHeight: 1.5 }}>{auto.purpose}</div>
@@ -397,7 +397,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
               </div>
               <div style={{ display: "grid", gap: 8 }}>
                 {bundle.pie.clientQuestions.map((q) => (
-                  <div key={q} style={{ padding: "10px 14px", borderRadius: 10, border: "1px solid var(--stroke)", background: "var(--panel2)", fontSize: 14, color: "var(--muted)", lineHeight: 1.5 }}>{q}</div>
+                  <div key={q} style={{ padding: "10px 14px", borderRadius: 0, border: "1px solid var(--stroke)", background: "var(--panel2)", fontSize: 14, color: "var(--muted)", lineHeight: 1.5 }}>{q}</div>
                 ))}
               </div>
             </div>
@@ -409,7 +409,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
                 <h2 className="portalPanelTitle">{tApprovals("panelTitle")}</h2>
               </div>
               {bundle.workspace.approvals.map((a) => (
-                <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderRadius: 10, border: "1px solid var(--stroke)", background: "transparent", marginBottom: 6 }}>
+                <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderRadius: 0, border: "1px solid var(--stroke)", background: "transparent", marginBottom: 6 }}>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)" }}>{a.label}</div>
                     {a.notes && <div style={{ fontSize: 12, color: "var(--muted2)", marginTop: 2 }}>{a.notes}</div>}
@@ -485,7 +485,7 @@ export default function OpsPortalClient({ initialData }: { initialData: Enriched
         <div className="portalDrawerRow"><span className="portalDrawerKey">{tAgreement("agreementStatus")}</span><span className="portalDrawerVal">{lookupStatus(bundle.workspace.agreementStatus || "pending")}</span></div>
         <div className="portalDrawerRow"><span className="portalDrawerKey">{tAgreement("accepted")}</span><span className="portalDrawerVal">{fmtDate(bundle.workspace.agreementAcceptedAt, locale)}</span></div>
         {(bundle.workspace as any).agreementText ? (
-          <div style={{ marginTop: 8, padding: 12, borderRadius: 10, background: "var(--panel2)", border: "1px solid var(--stroke)" }}>
+          <div style={{ marginTop: 8, padding: 12, borderRadius: 0, background: "var(--panel2)", border: "1px solid var(--stroke)" }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", marginBottom: 6 }}>{tAgreement("agreementHeader")}</div>
             <div style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{(bundle.workspace as any).agreementText}</div>
           </div>
