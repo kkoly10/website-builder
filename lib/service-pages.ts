@@ -981,7 +981,7 @@ customWebAppsData.en = {
   eyebrow: "Custom web apps",
   title: "When a website isn't enough, we build the system that runs the business.",
   intro:
-    "We've shipped Fleiko, Proveo, Korent, and Kocre IT ourselves — four SaaS products we own and operate across fleet management, contractor CRM, party rentals, and IT services. When we build your SaaS, web app, or internal tool, we treat it the same way: real architecture, documented handoff, and nothing we'd be embarrassed to run ourselves.",
+    "CrecyStudio builds custom software for businesses that have outgrown spreadsheets, disconnected tools, or off-the-shelf limits. Product strategy, architecture, implementation, launch, and handoff are handled as one system.",
   heroStats: [
     "Discovery sprint from $2,500",
     "MVP from $18K",
@@ -990,20 +990,20 @@ customWebAppsData.en = {
   ],
   primaryCta: { label: "Plan a custom app", href: "/custom-app-intake" },
   secondaryCta: { label: "See our work", href: "/work" },
-  whoItsForTitle: "Best for founders, operators, and growth-stage teams who need a senior architect-builder.",
+  whoItsForTitle: "Best for teams that need senior product and engineering ownership from scope through launch.",
   whoItsFor: [
     "You have a process that lives across spreadsheets, Notion, and a dozen browser tabs.",
     "You've validated a software idea and need someone to actually build it.",
     "You need a tool your customers will log into, not just a marketing site.",
     "Your team spends more time managing workarounds than serving customers.",
-    "You're at a growth-stage company and need a senior architect-builder — not an agency that pitches senior talent and hands the project to juniors.",
+    "You're at a growth-stage company and need senior product and engineering ownership from scope through launch.",
   ],
-  problemsTitle: "Four signs you need a custom system, not another SaaS subscription.",
+  problemsTitle: "Four signs the business has outgrown off-the-shelf software.",
   problems: [
-    "You've outgrown off-the-shelf SaaS but every contractor quote starts at $80K.",
-    "You need a real software system — with or without a CTO in the room.",
-    "You've been burned by a freelancer who shipped half a product and disappeared.",
-    "You're paying for five tools that still don't talk to each other.",
+    "Your workflow spans tools that were never designed to work together.",
+    "Off-the-shelf software forces workarounds instead of matching how the business actually runs.",
+    "An existing app is incomplete, brittle, or difficult to extend.",
+    "Customers or staff need one reliable system instead of five disconnected tools.",
   ],
   includesTitle: "From scope to handoff — everything in one build.",
   includes: [
@@ -1021,7 +1021,7 @@ customWebAppsData.en = {
       items: [
         "Next.js + Supabase by default",
         "Auth, role-based access, payments, integrations",
-        "AI copilots, detection layers, and intelligent workflows — same stack as Fleiko, Proveo, Korent, and Kocre IT. We're not learning AI on your project.",
+        "AI copilots, classification, extraction, and intelligent workflows where they materially improve the product.",
         "Milestone-based delivery with full workspace visibility",
       ],
     },
@@ -1103,9 +1103,9 @@ customWebAppsData.en = {
         "Next.js + Supabase by default: TypeScript, React, PostgreSQL, auth, file storage, and real-time built in. We adapt for specific requirements.",
     },
     {
-      question: "How is this different from hiring a freelancer?",
+      question: "What makes the CrecyStudio process different?",
       answer:
-        "Structured process, documented handoff, milestone-based payments, and a shared workspace you have full access to throughout. No disappearing after launch.",
+        "Strategy, architecture, implementation, and launch stay connected through one delivery process, with milestone-based payments, documented handoff, and a shared workspace throughout.",
     },
     {
       question: "How do I know this won't go over budget or timeline?",
@@ -1130,12 +1130,12 @@ customWebAppsData.en = {
     {
       question: "What happens if this engagement falls apart mid-project?",
       answer:
-        "Your code lives in your own repository from day one — not ours. Every milestone ships with documentation so any developer can pick up where we left off. The handoff plan is part of the contract before work starts, not an afterthought at the end. You're never dependent on a single point of failure.",
+        "Your code lives in a repository you control from day one. Every milestone includes documentation, and the handoff plan is defined before work starts so another qualified developer can continue the system if needed.",
     },
     {
-      question: "Who actually touches my code?",
+      question: "Who is responsible for delivery?",
       answer:
-        "Only me. No account managers, no junior developers handed the project after the kickoff call. The person you scope with is the person who builds it, reviews it, and ships it. That's the promise agencies can't make — and it's the main reason clients come here after being burned by one.",
+        "CrecyStudio is founder-led, so the person responsible for scope and architecture stays directly involved through implementation and launch. You have a clear owner for the outcome throughout the engagement.",
     },
     {
       question: "What's the process when scope changes mid-project?",
@@ -1159,11 +1159,11 @@ customWebAppsData.en = {
   crossLinks: CROSS_LINKS.custom_web_apps,
   finalTitle: "Tell us what you're building.",
   finalText:
-    "30 minutes. No pitch. We'll map out what you need, what it would cost, and what to do first — whether you hire us or not. We take 2–3 projects per quarter. If the scope and timeline fit, we'll know by the end of the call.",
+    "A 30-minute working session to map the system, priorities, likely budget, and the best first step. If the scope and timeline fit, the next move will be clear by the end of the call.",
   finalPrimaryCta: { label: "Book a free 30-min scoping call", href: "/custom-app-intake" },
-  finalSecondaryCta: { label: "See products we've shipped", href: "/work" },
+  finalSecondaryCta: { label: "See selected work", href: "/work" },
   founderCallout: true,
-  riskReversal: "Not sure we're a fit? The discovery call has no commitment — I'll tell you honestly if this project isn't right for us.",
+  riskReversal: "The discovery call has no commitment. If a different approach is better for the project, we'll say so.",
 };
 
 // ─── Client Portals ──────────────────────────────────────────────────────────
@@ -1174,7 +1174,7 @@ clientPortalsData.en = {
   eyebrow: "Client portals",
   title: "A private workspace your customers actually use.",
   intro:
-    "Every CrecyStudio client logs into a portal built on this exact system. We didn't build it to sell it — we built it because nothing else worked for us. Now we build it for your business: branded to you, wired to your workflow, owned by you completely.",
+    "Give clients one branded place for milestones, files, messages, approvals, invoices, and project status. CrecyStudio designs the portal around your workflow, connects it to the systems you already use, and delivers it as software you own.",
   heroStats: [
     "Branded to your business",
     "Your code, your data",
@@ -1338,7 +1338,7 @@ clientPortalsData.en = {
     "B2C businesses where customers never need to log in",
   ],
   crossLinks: CROSS_LINKS.client_portals,
-  finalTitle: "See the portal we use with our own clients.",
+  finalTitle: "See what a modern client workspace looks like.",
   finalText:
     "20-minute walkthrough — you'll see the actual system before we talk scope or pricing. No pitch. If it fits your workflow, we'll scope a version built for your business.",
   finalPrimaryCta: { label: "Book a 20-min portal demo", href: "/portal-intake" },
@@ -1670,11 +1670,11 @@ const aiIntegrationData: Partial<Record<Locale, ServiceData>> = {};
 
 aiIntegrationData.en = {
   eyebrow: "AI integration",
-  title: "Anyone can demo AI. We build the version that holds up in production.",
+  title: "Production AI built into the way your business actually works.",
   intro:
-    "The hard part of AI was never the demo — it's everything after: what happens when the model is wrong, how it connects to your real tools, and whether you can trust it unattended. That's the part most vendors skip. We don't, because we've had to solve it for our own products. We've shipped AI integration into four SaaS products we own and operate (Fleiko, Proveo, Korent, Kocre IT) across four different verticals, and we build them the way serious AI has to be built — confidence-gated autonomy, guardrails, a human in the loop where mistakes are costly, and audit trails you can inspect.",
+    "CrecyStudio integrates AI into products and operations where it can save time, improve decisions, or automate repeatable work. The production standard is clear: connect it to the right data, define when it may act, log what it does, and route uncertain or high-risk cases to a human. Korent, Couranr Market, and Fleiko already use AI in live product workflows.",
   heroStats: [
-    "4 production AI-powered SaaS products we built & run",
+    "AI embedded in live product workflows",
     "Guardrails + audit trails built in",
     "Human-in-the-loop by default",
     "You own the code, data & prompts",
@@ -1685,15 +1685,15 @@ aiIntegrationData.en = {
   whoItsFor: [
     "You've seen what AI can do and want it wired into your actual tools and workflow — not another browser tab.",
     "Your team burns hours every week on work a well-built agent could handle: triage, follow-up, lookups, data entry.",
-    "You tried an off-the-shelf tool or a freelancer's bot — impressive for a week, then it quietly broke.",
+    "An existing AI workflow is brittle, difficult to monitor, or disconnected from the systems your team actually uses.",
     "You want AI that's accountable: logged, reviewable, supervised — not a black box you can't trust with customers.",
   ],
-  problemsTitle: "Why most business AI never makes it past the demo.",
+  problemsTitle: "Where production AI usually breaks down.",
   problems: [
-    "It was built to impress in a pitch, not to survive real inputs, edge cases, and volume.",
-    "Nobody designed for the AI being wrong — no confidence gate, no review step, no audit trail.",
+    "The workflow was designed around a happy path instead of real inputs, edge cases, and operating volume.",
+    "There is no clear policy for uncertainty — no confidence gate, review step, or audit trail.",
     "It lives in a silo, disconnected from your CRM, inbox, and database, so it never actually saves time.",
-    "When the person who set it up leaves, it becomes an unmaintainable mystery nobody can touch.",
+    "The system lacks documentation, observability, and a maintainable path for future changes.",
   ],
   includesTitle: "What we build into your business",
   includes: [
@@ -1702,7 +1702,7 @@ aiIntegrationData.en = {
       items: [
         "Agents that act across your tools — qualify a lead, update a record, draft the reply, flag the exception",
         "Confidence thresholds and guardrails so an agent only acts when it's safe, and escalates when it isn't",
-        "Preview-before-execute on anything that changes real data, the way our Fleiko copilot works",
+        "Preview-before-execute for actions that change real business data",
       ],
     },
     {
@@ -1710,7 +1710,7 @@ aiIntegrationData.en = {
       items: [
         "A support assistant that answers from your live account, ticket, and policy data — not generic guesses",
         "Autonomous resolution of low-risk, high-confidence requests; everything else routed to a human with context",
-        "Agent-assist that drafts replies so your team answers faster, all running today in kocreit",
+        "Agent-assist that drafts replies so teams can respond faster while keeping a review path",
       ],
     },
     {
@@ -1733,37 +1733,37 @@ aiIntegrationData.en = {
       title: "Computer vision & authenticity verification",
       items: [
         "Automated image analysis — before/after detection, condition checks, photo verification",
-        "Provenance audit trails behind every verified result, so a claim can be trusted — this is Proveo's TrustAudit engine",
-        "A capability almost no small studio can deliver — we ship it in production",
+        "Provenance and audit trails behind verified results so the system can explain how a conclusion was reached",
+        "Verification workflows can combine model output with deterministic trust rules and auditable history",
       ],
     },
   ],
   proof: {
-    label: "Proof, not promises",
-    title: "We don't sell demos. We run four of our own production AI-powered SaaS products.",
+    label: "AI in production",
+    title: "AI connected to real product workflows.",
     intro:
-      "And we build them the way serious AI has to be built: confidence gates, guardrails, human-in-the-loop, and audit trails. Not buzzwords — the actual architecture we run. See them in our work.",
+      "Korent, Couranr Market, and Fleiko use AI for operational assistance, shopping support, and fleet workflows. The same production patterns — guardrails, review paths, and clear authority boundaries — carry into client work.",
     items: [
       {
-        name: "kocreit",
+        name: "Korent",
         detail:
-          "A managed IT-support platform whose AI autonomously resolves tickets only above 90% confidence on safe categories, and escalates everything else to a human.",
+          "A context-aware operator copilot that answers from live business data and keeps sensitive write actions behind explicit confirmation.",
+      },
+      {
+        name: "Couranr Market",
+        detail:
+          "A conversational shopping assistant that helps customers build a cart while pricing, inventory, delivery rules, and final order authority remain server-controlled.",
       },
       {
         name: "Fleiko",
         detail:
-          "An agentic fleet copilot that previews actions and enforces guardrails before it ever touches your data.",
-      },
-      {
-        name: "Proveo",
-        detail:
-          "AI authenticity verification with a full provenance audit trail behind every “verified” badge.",
+          "Fleet AI assistance and operational digests layered into vehicle, maintenance, cost, and dispatch workflows.",
       },
     ],
   },
-  pricingTitle: "Priced on what it takes to run in production — not what it takes to demo.",
+  pricingTitle: "Priced for production use, risk, and operating volume.",
   pricingIntro:
-    "Every build is scoped on autonomy, risk, data sensitivity, and volume — you see the price before you commit, and $0 is due until scope is approved. We define the outcome we're moving and validate it on your real data before the full build, so you're never betting on a number we made up. Production AI also has real ongoing costs (monitoring, tuning, tokens, infrastructure), available as an optional ops retainer.",
+    "Every build is scoped around autonomy, risk, data sensitivity, and expected volume. We define the target outcome, validate representative data early, and make ongoing token, infrastructure, monitoring, and tuning costs visible before launch.",
   pricingCards: [
     {
       label: "SINGLE INTEGRATION",
@@ -1784,9 +1784,9 @@ aiIntegrationData.en = {
         "A full AI layer for your operation — multi-agent orchestration, custom models, and the infrastructure to run it reliably at scale.",
     },
   ],
-  processTitle: "From use case to production — without the demo trap.",
+  processTitle: "From use case to production.",
   processIntro:
-    "We don't start with the model. We start with the job to be done, the cost of getting it wrong, and how you'll know it worked.",
+    "We start with the job to be done, the cost of error, and how success will be measured. Model choice follows those constraints.",
   process: [
     {
       step: "01 — WEEK 1",
@@ -1798,7 +1798,7 @@ aiIntegrationData.en = {
       step: "02 — WEEK 1–2",
       title: "Prove it on your data",
       detail:
-        "We validate against your real inputs and edge cases before committing to a full build. Honest results, not a cherry-picked demo.",
+        "We validate against representative inputs and edge cases before committing to the full build.",
     },
     {
       step: "03 — BUILD",
@@ -1813,11 +1813,11 @@ aiIntegrationData.en = {
         "We track the metric we promised, tune it, and optionally run ongoing ops so it keeps working as your business changes.",
     },
   ],
-  bestFitTitle: "Start here if you want AI that runs your business — not one that impresses at a meeting.",
+  bestFitTitle: "Best when AI has a defined job, data source, and business outcome.",
   bestFit: [
     "You have a specific, repetitive, expensive workflow you want AI to own.",
     "You want accountable AI — gated, logged, reviewable — handling real customers or real data.",
-    "You want a partner who's still on the hook when it's live, not just at the demo.",
+    "You want a delivery partner that can support the system after launch as workflows and data change.",
   ],
   notFitTitle: "Probably not the right first move if…",
   notFit: [
@@ -1835,17 +1835,17 @@ aiIntegrationData.en = {
     {
       question: "What happens when the AI gets something wrong?",
       answer:
-        "We assume it will. Every build has confidence thresholds and a human-in-the-loop step wherever a mistake is costly, plus logging so you can see exactly what it did and why. Our own kocreit system, for example, only auto-acts above 90% confidence and escalates the rest.",
+        "We design for that from the start. Every build uses confidence thresholds, review paths, and logging wherever a mistake has meaningful cost, so uncertain cases can be inspected instead of silently accepted.",
     },
     {
       question: "Isn't this just an “AI agent” wrapper on a chatbot?",
       answer:
-        "No agent-washing here. We only call something an agent if it genuinely plans and takes actions. If a simple automation solves your problem, we'll build that and charge you less.",
+        "We use agentic patterns only when the system genuinely needs to plan or take actions. If a simpler automation is safer, faster, and less expensive, we recommend that instead.",
     },
     {
       question: "Do I own what you build?",
       answer:
-        "Yes — the code, the prompts, the data, the integrations. No lock-in. The optional retainer is for clients who want us to keep running it, not a leash.",
+        "Yes — the code, prompts, data, and integrations are yours. Ongoing support is optional and scoped separately.",
     },
     {
       question: "How do I know it'll save money, not just cost it?",
@@ -1860,13 +1860,13 @@ aiIntegrationData.en = {
     {
       question: "Can you prove you've actually done this?",
       answer:
-        "Yes. kocreit, Fleiko, and Proveo are three AI products we built and run — you can see them in our work. Most of the market shows you a demo; we show you live systems.",
+        "Yes. Korent, Couranr Market, and Fleiko use AI in live product workflows. You can review those products in our selected work.",
     },
   ],
   crossLinks: CROSS_LINKS.ai_integration,
   finalTitle: "Tell us the workflow that's costing you the most.",
   finalText:
-    "We'll tell you honestly whether AI should own it — and if it should, what it'll take to put it in production, gated and safe. Scoped and priced within 48 hours.",
+    "We'll assess whether AI is the right tool for the workflow and, if it is, define the controls, integration work, and production scope required to launch it safely.",
   finalPrimaryCta: { label: "Scope your AI build", href: "/build/intro" },
   finalSecondaryCta: { label: "See recent work", href: "/work" },
   projectType: "ai_integration",
@@ -1874,30 +1874,30 @@ aiIntegrationData.en = {
 
 saasData.en = {
   eyebrow: "SaaS development",
-  title: "We've shipped four SaaS products of our own. Yours is next.",
+  title: "SaaS built to operate after launch.",
   intro:
-    "Most agencies have never run a SaaS. Most freelancers have never shipped one. We've shipped four — Fleiko (fleet management), Proveo (contractor photo proof), Korent (in-product AI copilot), and Kocre IT (AI-powered helpdesk) — and we still operate them. You get a builder who has lived the billing arguments, the churn analyses, the support tickets, and the 2am infrastructure scares. Not just code — the whole product.",
+    "CrecyStudio builds multi-tenant products with the commercial and operational layer included: authentication, billing, permissions, onboarding, notifications, admin tooling, analytics, and support workflows. Korent and Fleiko are live examples of that product discipline.",
   heroStats: [
-    "4 SaaS products we built & run",
+    "Multi-tenant product architecture",
     "Multi-tenant + billing on day one",
     "Retention loops, not just features",
     "$0 due until scope is approved",
   ],
   primaryCta: { label: "Start a Discovery Sprint", href: "/build/intro" },
-  secondaryCta: { label: "See our SaaS products", href: "/work" },
-  whoItsForTitle: "Best for founders who want to ship a SaaS, not pitch one.",
+  secondaryCta: { label: "See selected work", href: "/work" },
+  whoItsForTitle: "Best for founders and teams ready to turn a validated product idea into operating software.",
   whoItsFor: [
-    "You're a founder with a SaaS idea and want a builder who has actually shipped one — not a generalist agency learning on your money.",
+    "You have a validated SaaS idea and need senior product and engineering ownership through launch.",
     "You've tried no-code, hit the ceiling, and need a real product foundation that scales past 50 users.",
     "You have an existing SaaS that's stalled, breaking, or unmaintainable, and you need someone to take it over.",
-    "You want a partner who has lived the same problems you'll face — pricing, churn, support, infrastructure — not just code.",
+    "You want product decisions, architecture, billing, onboarding, and post-launch operations considered together.",
   ],
-  problemsTitle: "Why most SaaS builds stall before the first paying customer.",
+  problemsTitle: "Where SaaS builds become expensive to fix later.",
   problems: [
-    "The builder treated it like a website — no multi-tenancy, no billing, no auth model. Full rebuild required at month 6.",
-    "The agency shipped a demo that worked on three users and broke at fifty. Database, queries, infrastructure all wrong.",
-    "Nobody planned for the boring SaaS parts — Stripe, trial logic, churn handling, RBAC. Six months of extra work after launch.",
-    "The builder vanished post-launch. Nobody knows the codebase, nobody can fix bugs, nobody can ship features.",
+    "Multi-tenancy, billing, or permissions were deferred until the product already had customers.",
+    "The first version works at low volume but the data model and queries do not support real usage growth.",
+    "Trials, billing states, role-based access, lifecycle messaging, and admin tooling were treated as afterthoughts.",
+    "The product launched without documentation, observability, or a clear path for ongoing ownership.",
   ],
   includesTitle: "What we build into your SaaS — from day one, not as an afterthought.",
   includes: [
@@ -1906,7 +1906,7 @@ saasData.en = {
       items: [
         "Tenant isolation at the database layer with Row Level Security — not just app-level checks that leak when a query is rewritten",
         "One codebase, many customers — without the painful rewrite at customer #50",
-        "Built the way Fleiko, Korent, and Kocre IT run today",
+        "Architecture patterns proven in Korent and Fleiko",
       ],
     },
     {
@@ -1914,7 +1914,7 @@ saasData.en = {
       items: [
         "Stripe-powered subscriptions, trial logic, plan upgrades, and dunning flows that actually retain — not a bolt-on after launch",
         "Auth with role-based access control, team invites, and admin tooling from the first sprint",
-        "The boring-but-essential SaaS layer most agencies skip until it's a problem",
+        "The commercial and identity layer designed before it becomes a migration project",
       ],
     },
     {
@@ -1922,56 +1922,56 @@ saasData.en = {
       items: [
         "Onboarding flows, lifecycle email, and in-product nudges designed before the build, not patched in after churn shows up",
         "Activation metric defined up front, instrumented from week one",
-        "Built the way Proveo's freemium → paid conversion runs today",
+        "Lifecycle and activation flows designed around the product's actual conversion path",
       ],
     },
     {
       title: "Production-safe AI where it earns its keep",
       items: [
-        "Confidence-gated AI in the product when it solves a real job — not as a buzzword to put on a deck",
-        "Guardrails, human-in-the-loop, and audit trails — the way all four of our SaaS products are built",
-        "If AI is the centerpiece of your build, see /ai-integration for the deeper engineering",
+        "Confidence-gated AI when it solves a defined product or operational job",
+        "Guardrails, human review, and audit trails where AI has meaningful operational impact",
+        "If AI is central to the product, the AI Integration service covers the deeper production requirements",
       ],
     },
   ],
   proof: {
-    label: "Proof, not promises",
-    title: "We don't sell demos. We run four production SaaS products of our own.",
+    label: "Product experience",
+    title: "Live SaaS experience behind the work.",
     intro:
-      "Built and operated by the same hands that'll build yours. In production today, generating real usage and real lessons that come back into your build.",
+      "Korent and Fleiko demonstrate the same product concerns client SaaS work requires: multi-tenancy, billing, permissions, onboarding, operations, and post-launch ownership.",
     items: [
-      {
-        name: "Fleiko",
-        detail:
-          "Live in production since 2026 — fleet management SaaS with an AI copilot for cost & maintenance alerts, compliance tracking, and GPS monitoring. Multi-tenant, Stripe-billed.",
-      },
-      {
-        name: "Proveo",
-        detail:
-          "Live in production since 2026 — photo proof + CRM for service contractors. AI-detected before/after with cryptographic provenance. Freemium → paid conversion live.",
-      },
       {
         name: "Korent",
         detail:
-          "Live in production since 2026 — floating, context-aware AI Operator Copilot, a read-only help layer embedded inside other products. Powered by OpenAI and Anthropic Claude.",
+          "Multi-tenant rental operations SaaS with public storefronts, checkout, subscriptions, Stripe Connect, e-signatures, delivery workflows, website management, and an operator copilot.",
       },
       {
-        name: "Kocre IT",
+        name: "Fleiko",
         detail:
-          "Live in production since 2026 — AI-powered helpdesk for outsourced IT support. Auto-resolves tickets only above 90% confidence, escalates the rest. Multi-tenant by client org.",
+          "Fleet and dispatch SaaS with role-aware portals, subscriptions, GPS, driver workflows, proof of delivery, mobile surfaces, and AI assistance.",
+      },
+      {
+        name: "Couranr",
+        detail:
+          "A delivery operations platform with customer and business workflows, payments, dispatch, tracking, proof, and operational control.",
+      },
+      {
+        name: "Couranr Market",
+        detail:
+          "A local e-commerce platform combining storefront, checkout, delivery windows, order operations, inventory and returns, with AI shopping assistance.",
       },
     ],
   },
-  pricingTitle: "Priced for what it takes to ship — not what it takes to demo.",
+  pricingTitle: "Priced around product scope, launch risk, and operating complexity.",
   pricingIntro:
-    "Every track starts with the Discovery Sprint — a fixed-price scope of your actual build. You walk away with a real proposal whether you continue with us or not. After Discovery, $0 is due on the larger engagement until scope is approved. We publish bands so you can self-qualify instead of burning 90 minutes on a sales call.",
+    "Every track starts with a Discovery Sprint: a fixed-price definition of product scope, architecture, delivery sequence, and budget. You receive the written plan whether or not you continue into the larger build.",
   pricingCards: [
     {
       label: "DISCOVERY SPRINT",
       value: "Starting at $4,000",
       detail:
-        "1–2 weeks fixed-price. We scope your SaaS for real — architecture, multi-tenancy model, billing plan, sequencing, and a fixed-price proposal for the full build. Yours to keep whether you continue or not.",
-      meta: "The front door",
+        "1–2 weeks, fixed-price. Architecture, multi-tenancy model, billing plan, sequencing, and a fixed-price proposal for the full build.",
+      meta: "Starting point",
     },
     {
       label: "MVP SPRINT",
@@ -1984,7 +1984,7 @@ saasData.en = {
       label: "BUILD & OPERATE",
       value: "Starting at $6,000 / mo",
       detail:
-        "Monthly retainer. A senior builder on retainer for ongoing features, infrastructure, and on-call. Sized to your real velocity, not a fixed contractor headcount.",
+        "Ongoing product delivery, infrastructure monitoring, and support sized to your roadmap and release cadence.",
       meta: "Post-launch or long-arc builds",
     },
     {
@@ -1995,7 +1995,7 @@ saasData.en = {
       meta: "For existing SaaS",
     },
   ],
-  processTitle: "From idea to paying customer — without the MVP-that-stalls trap.",
+  processTitle: "From product definition to paying customer.",
   processIntro:
     "Every track starts the same way: we scope the real work first, validate before committing to a full build, and ship with the boring-but-essential SaaS plumbing in place from day one.",
   process: [
@@ -2021,7 +2021,7 @@ saasData.en = {
       step: "04 — LAUNCH",
       title: "Go live",
       detail:
-        "Production deploy. Payment live, billing wired, retention flows triggering. Real paying customers — not a demo URL with three test accounts.",
+        "Production deploy with payments, billing, lifecycle messaging, monitoring, and launch verification in place.",
     },
     {
       step: "05 — OPERATE",
@@ -2030,10 +2030,10 @@ saasData.en = {
         "Monthly retainer to keep shipping features, monitoring infrastructure, and tuning retention loops while you focus on growth. Not a leash — opt in or out anytime.",
     },
   ],
-  bestFitTitle: "Start here if you want to ship paying customers, not just an MVP that sits.",
+  bestFitTitle: "Best when the goal is a SaaS product that can be operated, sold, and extended after launch.",
   bestFit: [
     "You have a real audience or first ten customers in mind — not a 'build it and they'll come' bet.",
-    "You want a builder who'll be on the hook past launch, not just at the demo.",
+    "You want a delivery partner that can stay involved after launch as the product and infrastructure evolve.",
     "You're OK paying for a Discovery Sprint to scope the real work before committing to a build.",
   ],
   notFitTitle: "Probably not the right first move if…",
@@ -2041,9 +2041,9 @@ saasData.en = {
     "You mainly need a marketing website or e-commerce store — start with our /websites or /ecommerce lane.",
     "You want the cheapest possible MVP and don't care if it survives past ten users.",
     "You don't have a clear use case or audience yet — start with our automation audit or a strategy call before committing to a build.",
-    "You expect equity-only — we don't take equity-only as a solo studio. Cash engagements only.",
+    "The engagement is equity-only; CrecyStudio works on paid project or retainer engagements.",
   ],
-  faqTitle: "What founders ask before committing to a SaaS build.",
+  faqTitle: "SaaS build FAQ",
   faqs: [
     {
       question: "How is this different from your Custom Web Apps service?",
@@ -2053,7 +2053,7 @@ saasData.en = {
     {
       question: "Do you take equity?",
       answer:
-        "No equity-only deals. We're a solo operating studio, not a co-founder. Cash engagements only — that keeps incentives clean and lets us deliver to multiple founders at once. If you're looking for a technical co-founder, we're happy to refer you instead.",
+        "CrecyStudio works on paid project and retainer engagements rather than equity-only arrangements. If you need a technical co-founder instead of a delivery partner, that is a different engagement model.",
     },
     {
       question: "What if I already have a half-built SaaS that's broken or stalled?",
@@ -2066,9 +2066,9 @@ saasData.en = {
         "Yes — Build & Operate is the retainer track. We keep shipping features, monitoring infrastructure, tuning retention loops, and being on-call. Sized to your real velocity, not a fixed contractor headcount.",
     },
     {
-      question: "Why should I trust you with my SaaS over an agency?",
+      question: "What SaaS experience does CrecyStudio bring?",
       answer:
-        "Because we've shipped four of our own — Fleiko, Proveo, Korent, Kocre IT — and still operate them. We've lived the billing arguments, churn analyses, support tickets, and infrastructure scares. Most agencies have shipped websites and apps; we've shipped products and run them at 2am. That difference shows up at month 6 of your build.",
+        "Korent and Fleiko are live multi-role products with billing, permissions, onboarding, operational dashboards, and post-launch workflows. That experience informs how CrecyStudio scopes architecture, commercial logic, support surfaces, and long-term ownership from the start.",
     },
     {
       question: "Do you publish prices because you're cheap?",
@@ -2084,13 +2084,13 @@ saasData.en = {
   crossLinks: CROSS_LINKS.saas,
   finalTitle: "Tell us the SaaS you're trying to ship.",
   finalText:
-    "We'll tell you honestly whether we're the right partner — and if we are, the Discovery Sprint scopes the real build for a fixed fee. No discovery-call obligation, no equity ask.",
+    "The Discovery Sprint defines the product, architecture, delivery sequence, and budget for a fixed fee, giving you a concrete build plan before the larger engagement begins.",
   finalPrimaryCta: { label: "Start a Discovery Sprint", href: "/build/intro" },
   finalSecondaryCta: { label: "See our SaaS products", href: "/work" },
   projectType: "saas",
   founderCallout: true,
   riskReversal:
-    "$0 due until Discovery Sprint scope is signed. No equity, no retainer commitment from the audit or the discovery.",
+    "The Discovery Sprint is fixed-scope and stands on its own; there is no retainer commitment required to receive the build plan.",
 };
 
 export function getServicePageData(locale: string, id: ServiceId): ServiceData {

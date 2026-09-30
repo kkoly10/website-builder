@@ -100,7 +100,7 @@ function AboutContent() {
                 <div key={project} className={styles.projectRow}>
                   <span>0{index + 1}</span>
                   <strong>{project}</strong>
-                  <span>{t("evidenceLabel")}</span>
+                  <span>{t("evidenceProductLabel")}</span>
                 </div>
               ))}
             </div>

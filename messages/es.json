@@ -159,22 +159,22 @@
     "metaTitle": "Acerca de CrecyStudio | Estudio web en Virginia",
     "metaDescription": "Conoce CrecyStudio, estudio independiente de Virginia para sitios web, SaaS, aplicaciones a medida e integraciones de IA en producción.",
     "proof": {
-      "saas": "Productos propios en producción",
+      "saas": "Productos en producción",
       "systems": "Sistemas empresariales entregados",
-      "practitioner": "Practicante en cada proyecto — sin juniors, sin traspasos"
+      "practitioner": "Entrega senior directa desde alcance hasta lanzamiento"
     },
     "ctaLabel": "Por dónde seguir",
     "ctaLowTicket": "Obtener estimación de sitio web",
     "ctaHighTicket": "Hablar de un proyecto más grande",
     "wontTake": {
-      "0": "Proyectos que necesitan un equipo de 5 o más personas — soy un practicante independiente, no una agencia, y no lo fingiré.",
-      "1": "Clientes que quieren check-ins diarios o no están cómodos con comunicación principalmente asíncrona.",
-      "2": "Plazos ajustados combinados con un alcance indefinido — prefiero retrasar el inicio que apresurar un mal resultado.",
-      "3": "Trabajo solo de diseño sin participación en la implementación — el valor que aporto es estrategia y construcción, no entrega de livrables.",
-      "4": "Proyectos donde el brief cambia significativamente después de acordar el alcance — mantengo el alcance para que obtengas el precio cotizado.",
-      "label": "El trabajo que rechazo",
-      "title": "Lo que CrecyStudio no acepta.",
-      "intro": "La selectividad es cómo mantengo la calidad en cada proyecto. No son limitaciones — son decisiones deliberadas."
+      "0": "Programas grandes que requieren varios equipos de entrega en paralelo o un equipo de desarrollo de 5 personas o más.",
+      "1": "Proyectos que dependen de reuniones síncronas diarias en lugar de colaboración asíncrona documentada.",
+      "2": "Plazos comprimidos antes de definir alcance, dependencias y ruta de decisión.",
+      "3": "Trabajos solo de diseño donde CrecyStudio no participa en la implementación.",
+      "4": "Proyectos que esperan absorber cambios importantes de alcance después del precio sin un proceso formal de cambio.",
+      "label": "Límites de encaje",
+      "title": "Cuándo CrecyStudio no es la opción adecuada.",
+      "intro": "Criterios claros de encaje protegen la calidad, el alcance y los plazos."
     },
     "kicker": "Acerca de CrecyStudio",
     "heroTitle": "El estudio detrás del trabajo.",
@@ -199,28 +199,29 @@
         "body": "Portales de clientes, herramientas internas, automatización y aplicaciones web construidas alrededor de la operación real."
       }
     },
-    "evidenceLabel": "Evidencia antes que promesas",
-    "evidenceTitle": "El portafolio es software en funcionamiento.",
-    "evidenceBody": "Nuestros productos propios no son testimonios de clientes. Son evidencia de ingeniería: sistemas que diseñamos, construimos, lanzamos y seguimos operando.",
-    "evidenceCta": "Explorar trabajo seleccionado",
+    "evidenceLabel": "Construido de extremo a extremo",
+    "evidenceTitle": "Software moldeado por operaciones reales.",
+    "evidenceBody": "Korent, Couranr, Couranr Market y Fleiko abarcan renta, entrega, comercio y operaciones de flota. CrecyStudio diseña, desarrolla, lanza y mantiene cada producto de extremo a extremo.",
+    "evidenceCta": "Ver trabajo seleccionado",
     "founderLabel": "Contexto del estudio",
     "founderTitle": "Pequeño por diseño. Cerca de la construcción.",
-    "founderIntro": "CrecyStudio está dirigido por su fundador, pero no es un portafolio personal. La ventaja es la continuidad: estrategia, diseño, ingeniería y lanzamiento permanecen conectados en lugar de pasar entre departamentos.",
-    "closingTitle": "¿Tienes algo que valga la pena construir?"
+    "founderIntro": "CrecyStudio está dirigido por su fundador, lo que mantiene conectadas estrategia, diseño e ingeniería desde el alcance hasta el lanzamiento. Los clientes trabajan directamente con la persona responsable de la arquitectura y la entrega.",
+    "closingTitle": "¿Tienes algo que valga la pena construir?",
+    "evidenceProductLabel": "Producto CrecyStudio"
   },
   "start": {
     "metaTitle": "Reservar una llamada de descubrimiento gratuita | CrecyStudio",
-    "metaDescription": "Reserva una llamada de descubrimiento gratuita de 20 minutos con Komlan. Cuéntame qué estás construyendo — sin pitch, sin compromiso.",
+    "metaDescription": "Reserva una llamada de descubrimiento gratuita de 20 minutos con CrecyStudio para hablar de alcance, viabilidad, calendario y el siguiente paso adecuado.",
     "heroLabel": "Llamada gratuita de 20 min",
     "heroTitle": "Hablemos de lo que estás construyendo.",
-    "heroSub": "Sin presentación de ventas. Una conversación directa sobre tu proyecto — alcance, viabilidad y si somos compatibles.",
+    "heroSub": "Una conversación enfocada de 20 minutos sobre alcance, viabilidad, calendario y encaje.",
     "stepsLabel": "Qué pasa después",
     "step1Title": "Envías el formulario corto",
     "step1Body": "Nombre, email y unas líneas sobre tu proyecto. Menos de dos minutos.",
-    "step2Title": "Reviso y respondo en 24 horas",
-    "step2Body": "Confirmaré un horario o propondré dos opciones. Sin bots de programación automática.",
+    "step2Title": "Revisamos y respondemos en 24 horas",
+    "step2Body": "Recibirás una confirmación directa o dos horarios alternativos.",
     "step3Title": "Hablamos 20 minutos",
-    "step3Body": "Hago preguntas precisas. Obtienes retroalimentación honesta sobre alcance, plazos y rango de precio.",
+    "step3Body": "Usamos la llamada para aclarar alcance, prioridades, calendario y rango de presupuesto, y luego recomendamos el siguiente paso adecuado.",
     "anchorsLabel": "Qué cuesta",
     "anchor1Value": "Gratis",
     "anchor1Label": "La llamada de descubrimiento — sin tarjeta de crédito, sin compromiso",
@@ -228,7 +229,7 @@
     "anchor2Label": "Sitios web — precio fijo, propiedad total",
     "anchor3Value": "A medida",
     "anchor3Label": "Apps, portales y automatizaciones — definidos juntos en la llamada",
-    "riskReversal": "Si no somos compatibles después de la llamada, te orientaré hacia quien sí lo sea. Sin presión comercial.",
+    "riskReversal": "Si CrecyStudio no es la opción adecuada, te lo diremos y, cuando podamos, te orientaremos hacia una mejor alternativa.",
     "formLabel": "Reserva tu llamada",
     "nameLabel": "Tu nombre",
     "namePlaceholder": "María García",
@@ -255,13 +256,13 @@
     "slotLabelFormat": "{day} a las {time} (ET)",
     "slotRequired": "Por favor elige una fecha y hora.",
     "successBodyScheduled": "Tu llamada está confirmada. Una invitación de Google Calendar está en camino.",
-    "submit": "Solicitar mi llamada de descubrimiento",
+    "submit": "Solicitar una llamada de descubrimiento",
     "submitting": "Enviando…",
     "errorInvalidEmail": "Por favor introduce una dirección de email válida.",
     "errorNameRequired": "Por favor introduce tu nombre.",
     "errorGeneric": "Algo salió mal. Por favor inténtalo de nuevo o envía un email a hello@crecystudio.com.",
     "successTitle": "Solicitud recibida.",
-    "successBody": "Me pondré en contacto en 24 horas para confirmar un horario. Una copia de tu solicitud está en camino a tu bandeja de entrada.",
+    "successBody": "Haremos seguimiento en 24 horas para confirmar un horario. Una copia de tu solicitud llegará a tu correo.",
     "successDetail": "Mientras tanto, descubre cómo funciona el estudio.",
     "successCta": "Ver el proceso"
   },
@@ -280,7 +281,7 @@
       "cards": {
         "saas": {
           "title": "Desarrollo SaaS",
-          "body": "SaaS multi-tenant con facturación, retención e IA segura en producción desde el primer día — por un fundador que opera cuatro productos SaaS propios."
+          "body": "SaaS multi-tenant con facturación, onboarding, permisos e IA lista para producción cuando aporta valor real."
         },
         "webApps": {
           "title": "Apps web a medida",
@@ -355,14 +356,14 @@
       "delivery": "Productos en uso real, no demos",
       "ownershipValue": "De punta a punta",
       "ownership": "De la estrategia al lanzamiento, internamente",
-      "noUpfrontValue": "Por el fundador",
-      "noUpfront": "Sin juniors, sin subcontratistas",
+      "noUpfrontValue": "Entrega senior",
+      "noUpfront": "La estrategia se mantiene conectada hasta el lanzamiento",
       "workspaceValue": "Portal en vivo",
       "workspace": "Vea su proyecto avanzar en tiempo real"
     },
     "positioning": {
       "kicker": "La diferencia CrecyStudio",
-      "statement": "No me limito a crear sitios web. Doy a mis clientes un espacio de trabajo estructurado donde el alcance, la dirección de diseño, los archivos, los comentarios, las facturas, las aprobaciones y los pasos de lanzamiento se gestionan en un solo lugar."
+      "statement": "Cada proyecto de CrecyStudio incluye un espacio estructurado para alcance, dirección de diseño, archivos, feedback, facturas, aprobaciones y lanzamiento."
     },
     "ventures": {
       "label": "Proyectos del estudio",
@@ -432,10 +433,10 @@
     "founder": {
       "label": "Con quién está trabajando",
       "name": "Komlan Kouhiko",
-      "role": "Fundador y único profesional",
+      "role": "Fundador, Producto e Ingeniería",
       "bio1": "No vengo de una agencia ni de un programa de ciencias de la computación. En 2024 lancé un negocio de alquiler de coches en el norte de Virginia con 7 vehículos y una póliza de seguro comercial. Turo se llevaba una parte significativa de cada reserva, así que aprendí a construir mi propia plataforma — un sistema completo de reservas y gestión de flota — y me quedé con las ganancias. Operé ese negocio durante más de un año, gestionando simultáneamente las operaciones, los clientes y el código.",
       "bio2": "Cuando los costos operativos me empujaron a pivotar, ofrecí construir sitios web en Facebook Marketplace. Llegaron algunos clientes. Desde entonces he lanzado productos cada vez más complejos — incluidos Korent, Couranr, Couranr Market y Fleiko — que abarcan SaaS, logística, e-commerce, operaciones de flota, pagos e IA.",
-      "bio3": "Cada proyecto en CrecyStudio pasa por mí. Sin juniors, sin traspasos. Trabaja con un constructor que se ha sentado en su lado de la mesa.",
+      "bio3": "La entrega dirigida por el fundador mantiene conectadas la estrategia de producto, el diseño y la ingeniería desde el alcance hasta el lanzamiento. Los clientes tienen acceso directo a la persona responsable del resultado.",
       "linkedin": "Conectemos en LinkedIn →",
       "linkedinHref": "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407"
     },
@@ -460,7 +461,7 @@
         "label": "Estudio digital independiente / Virginia, EE. UU.",
         "line1": "Trabajo que",
         "line2": "tiene que funcionar.",
-        "body": "Sitios web, productos SaaS y sistemas con IA, diseñados y desarrollados como productos reales en funcionamiento, no como piezas de presentación.",
+        "body": "Sitios web, productos SaaS y sistemas con IA diseñados y desarrollados para respaldar operaciones empresariales reales.",
         "workCta": "Ver trabajos seleccionados",
         "projectCta": "Iniciar un proyecto"
       },
@@ -472,7 +473,7 @@
       "evidence": {
         "software": {
           "title": "Software en producción",
-          "body": "Productos reales, no maquetas estáticas"
+          "body": "Software de producción construido para uso real"
         },
         "web": {
           "title": "Web + aplicación",
@@ -489,42 +490,42 @@
       },
       "work": {
         "label": "01 / Trabajo seleccionado",
-        "title": "Abre la prueba. Luego lee el discurso.",
-        "body": "Los productos de abajo son públicos y funcionan. No se trata de decorar un portafolio con capturas, sino de mostrar el nivel de pensamiento de producto, diseño de interfaz e ingeniería que CrecyStudio puede aportar a un proyecto de cliente.",
-        "disclosure": "Divulgación: estos productos pertenecen al estudio y demuestran capacidad de ingeniería. No se presentan como testimonios de clientes ni como recomendaciones de terceros."
+        "title": "Productos construidos para operaciones reales.",
+        "body": "Desde operaciones de renta y entrega el mismo día hasta e-commerce y gestión de flotas, estos productos muestran cómo CrecyStudio convierte workflows complejos en software claro y confiable.",
+        "disclosure": "Diseñados, desarrollados, lanzados y mantenidos por CrecyStudio."
       },
       "projects": {
         "open": "Abrir producto en vivo",
         "korent": {
           "name": "Korent",
-          "short": "SaaS insignia para negocios de renta",
-          "body": "El SaaS multi-tenant insignia de CrecyStudio: storefronts y checkout públicos, paneles de operador, inventario y pedidos, depósitos, firmas electrónicas, entregas y equipos de campo, constructor de sitios, Stripe + Connect, superficies multilingües y un copiloto de IA con contexto operativo.",
-          "ownership": "Producto propio / SaaS multi-tenant",
-          "visualLabel": "Panel del operador / datos ficticios de demostración",
+          "short": "SaaS para operaciones de renta",
+          "body": "Una plataforma de renta multi-tenant que conecta storefronts, disponibilidad, checkout, pedidos, pagos, documentos firmados, entrega, gestión del sitio, experiencias multilingües y asistencia de IA.",
+          "ownership": "SaaS / Operaciones de renta",
+          "visualLabel": "Panel de Korent / datos de ejemplo",
           "imageAlt": "Panel de Korent mostrando una reserva confirmada con pagos, documentos, cumplimiento y datos del cliente"
         },
         "couranr": {
           "name": "Couranr",
           "short": "Sistema operativo de entrega el mismo día",
-          "body": "Plataforma de entrega el mismo día para flujos de consumidores y negocios: cotizaciones deterministas, autorización y captura de pago, despacho gestionado por Couranr, ejecución del conductor, seguimiento, pruebas de recogida y entrega, entrega segura y recuperación operativa.",
-          "ownership": "Producto propio / Operaciones de entrega",
-          "visualLabel": "Couranr for Business / producto público en vivo",
+          "body": "Couranr coordina la entrega el mismo día desde la solicitud hasta la entrega, con cotizaciones, pagos, despacho, flujos del conductor, seguimiento en vivo, pruebas de recogida y entrega, entrega segura y soporte operativo.",
+          "ownership": "Entrega el mismo día / Operaciones",
+          "visualLabel": "Couranr for Business",
           "imageAlt": "Plataforma Couranr for Business para entrega local el mismo día"
         },
         "couranrmarket": {
           "name": "Couranr Market",
           "short": "Plataforma e-commerce + entrega local",
-          "body": "Comercio directo con catálogo, carrito y checkout, ventanas de entrega local, seguimiento de pedidos, flujos admin y de campo, reglas deterministas de precios, inventario y devoluciones, más un asistente de IA que puede construir un carrito desde una conversación.",
-          "ownership": "Producto propio / E-commerce + entrega local",
-          "visualLabel": "Tienda en vivo / catálogo público",
+          "body": "Couranr Market combina tienda local, catálogo y búsqueda, carrito y checkout, ventanas de entrega, seguimiento de pedidos, inventario, devoluciones, flujos admin y un asistente de compras conversacional con IA.",
+          "ownership": "E-commerce / Entrega local",
+          "visualLabel": "Tienda Couranr Market",
           "imageAlt": "Tienda de Couranr Market mostrando categorías y productos con entrega local"
         },
         "fleiko": {
           "name": "Fleiko",
           "short": "SaaS de flota + despacho",
-          "body": "Software de flota y despacho para pequeños operadores: vehículos, conductores, mantenimiento, documentos, combustible y gastos, despacho en vivo, rutas, GPS, seguimiento al cliente, prueba de entrega, PWA móvil, copiloto de IA y resúmenes, con planes autogestionados o administrados.",
-          "ownership": "Producto propio / Flota + despacho",
-          "visualLabel": "Panel de despacho / datos ilustrativos de demostración",
+          "body": "Fleiko reúne vehículos, conductores, mantenimiento, documentos, combustible y gastos, despacho en vivo, rutas, GPS, seguimiento al cliente, prueba de entrega, flujos móviles del conductor y asistencia de IA.",
+          "ownership": "Gestión de flota / Despacho",
+          "visualLabel": "Panel de despacho Fleiko / datos de ejemplo",
           "imageAlt": "Panel de despacho Fleiko con mapa en vivo, estados de conductores y métricas de entrega"
         }
       },
@@ -534,22 +535,22 @@
         "websites": {
           "title": "Sitios web",
           "body": "Sitios de marketing confiables que explican la oferta y llevan a la siguiente acción.",
-          "proof": "Ver: Korent / Couranr / Couranr Market"
+          "proof": "Destacado en: Korent / Couranr / Couranr Market"
         },
         "saas": {
           "title": "Productos SaaS",
           "body": "Aplicaciones multiusuario con cuentas, flujos, facturación e interfaces operativas.",
-          "proof": "Ver: Korent / Fleiko"
+          "proof": "Destacado en: Korent / Fleiko"
         },
         "ai": {
           "title": "Integración de IA",
           "body": "IA dentro de los flujos del producto para apoyar decisiones, clasificación, detección y asistencia operativa.",
-          "proof": "Ver: Korent / Couranr Market / Fleiko"
+          "proof": "Destacado en: Korent / Couranr Market / Fleiko"
         },
         "systems": {
           "title": "Sistemas a medida",
           "body": "Portales, paneles, herramientas internas, automatización e interfaces conectadas con la forma real de operar del negocio.",
-          "proof": "Ver: Couranr / Couranr Market"
+          "proof": "Destacado en: Couranr / Fleiko"
         }
       },
       "workspace": {
@@ -557,7 +558,7 @@
         "title": "Sin desaparecer después del inicio.",
         "body": "Cada proyecto tiene un espacio privado para alcance, archivos, hitos, facturas, enlaces de vista previa, comentarios, aprobaciones y estado de lanzamiento.",
         "cta": "Ver cómo avanzan los proyectos",
-        "visualLabel": "Vista previa del espacio / datos de demostración",
+        "visualLabel": "Vista previa del espacio de cliente",
         "imageAlt": "Vista previa del espacio de cliente de CrecyStudio"
       },
       "process": {
@@ -750,29 +751,29 @@
     "label": "Proceso",
     "title": "Un proceso simple con hitos claros.",
     "intro": "Cada vía usa el mismo ritmo de ejecución para que el alcance se mantenga visible, el precio entendible, y nadie se pregunte qué pasa después.",
-    "lead": "El objetivo no es que el proceso parezca elegante. El objetivo es que sea difícil que el trabajo desaparezca en silencio.",
+    "lead": "Un alcance claro, hitos visibles y decisiones documentadas mantienen el trabajo en movimiento y reducen sorpresas durante la entrega.",
     "step1": {
       "step": "01 - Recepción",
       "title": "Cuéntanos qué necesita el negocio",
-      "body": "Envías el intake específico de tu vía — objetivos, restricciones, ejemplos y urgencia. Komlan lo revisa personalmente y vuelve en 24 horas con preguntas o un borrador de alcance. No se requiere llamada de ventas para empezar."
+      "body": "Envías el intake específico del proyecto — objetivos, restricciones, ejemplos y urgencia. CrecyStudio lo revisa en 24 horas y responde con preguntas o un borrador de alcance."
     },
     "step2": {
       "step": "02 - Alcance",
       "title": "Recibe una estimación real",
-      "body": "Komlan envía un alcance por escrito: páginas o funcionalidades, rango de precio fijo, plazo y supuestos. Nada empieza hasta que lo hayas revisado y aprobado por escrito — sin acuerdos verbales."
+      "body": "Recibes un alcance escrito con páginas o funciones, rango de precio, calendario y supuestos. Nada comienza hasta que el alcance se revisa y aprueba por escrito."
     },
     "step3": {
       "step": "03 - Construcción",
       "title": "Revísalo todo en el espacio de trabajo",
-      "body": "El trabajo pasa por tu espacio privado. Ves cada hito a medida que se entrega, envías comentarios en un solo lugar y apruebas antes de que nada salga en vivo. Komlan es la única persona construyendo — sin subcontratistas, sin traspasos."
+      "body": "El trabajo se gestiona desde tu espacio privado. Ves cada hito a medida que se entrega, centralizas feedback y apruebas antes de publicar. Estrategia, diseño e ingeniería permanecen conectados hasta el lanzamiento."
     },
     "step4": {
       "step": "04 - Lanzamiento",
       "title": "Sal en vivo con un traspaso limpio",
-      "body": "QA, configuración del dominio, analíticas y un traspaso documentado de todo lo que necesitas para mantener el trabajo. Eres dueño de todos los archivos. Si quieres soporte continuo, hay un plan de cuidado disponible — sin presión ni atadura."
+      "body": "QA, configuración de dominio, analítica y un handoff documentado de todo lo necesario para mantener el trabajo. Hay planes de soporte opcionales para equipos que quieren acompañamiento continuo."
     },
-    "founderNoteLabel": "Quién hace el trabajo",
-    "founderNote": "Cada proyecto en CrecyStudio pasa por Komlan Kouhiko — no un gerente de proyecto, no un desarrollador junior. Cuando envías un intake, Komlan lo lee. Cuando tienes una pregunta, Komlan responde. Cuando el trabajo se entrega, Komlan lo construyó.",
+    "founderNoteLabel": "Responsabilidad de entrega",
+    "founderNote": "CrecyStudio está dirigido por su fundador. Komlan Kouhiko sigue directamente involucrado en alcance, arquitectura, implementación y lanzamiento, con un responsable claro desde el primer brief hasta el handoff.",
     "byLaneLabel": "Por vía",
     "byLaneTitle": "El ritmo se mantiene, lo que cambia es el alcance.",
     "byLaneKicker": "Lo que cambia",
@@ -1148,9 +1149,9 @@
     "alsoOffered": "También ofrecemos",
     "exploreLane": "Explorar",
     "founderCallout": {
-      "name": "Komlan Kouhiko — Fundador & Único Practicante",
-      "body": "Cada proyecto en CrecyStudio pasa por mí — no un gerente de proyecto, no un junior. He lanzado plataformas SaaS, construido herramientas internas para negocios reales y gestionado operaciones yo mismo. Puedes contactarme directamente en cualquier etapa del proyecto.",
-      "link": "Leer la historia completa →"
+      "name": "Komlan Kouhiko — Fundador, Producto e Ingeniería",
+      "body": "CrecyStudio está dirigido por su fundador, por lo que estrategia, arquitectura, implementación y lanzamiento permanecen conectados. Trabajas directamente con la persona responsable del resultado.",
+      "link": "Acerca de CrecyStudio"
     }
   },
   "crossLinks": {
@@ -1171,7 +1172,7 @@
     },
     "aiIntegration": {
       "metaTitle": "Integración de IA para empresas | CrecyStudio",
-      "metaDescription": "Integración de IA en producción con umbrales de confianza, barreras de seguridad y supervisión humana para flujos empresariales reales."
+      "metaDescription": "Integración de IA en producción para empresas de servicios, equipos SaaS y sistemas internos, con barreras de seguridad, umbrales de confianza, revisión humana y controles operativos claros."
     },
     "websites": {
       "metaTitle": "Diseño de sitios web para empresas | CrecyStudio",
@@ -2935,16 +2936,16 @@
     "metaTitle": "Proyectos web, SaaS e IA | CrecyStudio",
     "metaDescription": "Explora Korent, Couranr, Couranr Market y Fleiko — productos SaaS, entrega, e-commerce y flota construidos y operados por CrecyStudio.",
     "kicker": "Trabajo seleccionado",
-    "title": "Sistemas reales que hemos lanzado — <em>incluidos los nuestros.</em>",
-    "subtitle": "Encabezado por Korent — nuestro SaaS más completo hasta hoy — junto con tres productos operativos de entrega, e-commerce y gestión de flotas.",
-    "venturesLabel": "Proyectos del estudio",
-    "venturesIntro": "Son productos propios que construimos y operamos. Korent es el producto insignia; Couranr, Couranr Market y Fleiko muestran el alcance en logística, comercio y operaciones de flota.",
-    "ventureBadge": "Proyecto del estudio",
+    "title": "Software construido para <em>operaciones reales.</em>",
+    "subtitle": "Korent, Couranr, Couranr Market y Fleiko abarcan operaciones de renta, entrega el mismo día, e-commerce y gestión de flotas.",
+    "venturesLabel": "Productos destacados",
+    "venturesIntro": "Una muestra del software que CrecyStudio diseña, desarrolla, lanza y mantiene para operaciones reales.",
+    "ventureBadge": "Producto CrecyStudio",
     "ventures": {
       "korent": {
         "name": "Korent",
-        "tagline": "SaaS multi-tenant insignia para renta, del storefront al cumplimiento",
-        "summary": "El producto más profundo del portafolio actual: storefronts de reservas, disponibilidad y checkout, inventario y pedidos, depósitos y saldos, documentos con firma electrónica, entrega y equipos, constructor de sitios, suscripciones Stripe + Connect, superficies multilingües, copiloto de IA, marketplace y analítica de plataforma.",
+        "tagline": "SaaS de renta desde storefront hasta cumplimiento",
+        "summary": "Korent reúne storefronts, disponibilidad, checkout, pedidos, pagos, documentos firmados, workflows de entrega, gestión del sitio, facturación Stripe, experiencias multilingües y asistencia de IA en una plataforma de renta multi-tenant.",
         "chip1": "SaaS multi-tenant",
         "chip2": "Stripe + Connect",
         "chip3": "Firmas electrónicas",
@@ -2953,8 +2954,8 @@
       },
       "couranr": {
         "name": "Couranr",
-        "tagline": "Infraestructura de entrega el mismo día para consumidores y negocios locales",
-        "summary": "Sistema operativo de entrega que cubre intake de consumidores y negocios, cotizaciones autoritativas del servidor, autorización y captura de pagos, despacho gestionado por Couranr, ejecución del conductor, seguimiento, pruebas de recogida/entrega, credenciales seguras de entrega, devoluciones y control operativo.",
+        "tagline": "Operaciones de entrega el mismo día para consumidores y negocios locales",
+        "summary": "Couranr coordina la entrega el mismo día desde la solicitud hasta la entrega, con cotización, pago, despacho, ejecución del conductor, seguimiento, pruebas de recogida/entrega, entrega segura y control operativo.",
         "chip1": "Intake mismo día",
         "chip2": "Despacho + seguimiento",
         "chip3": "Prueba + PIN",
@@ -2963,8 +2964,8 @@
       },
       "couranrmarket": {
         "name": "Couranr Market",
-        "tagline": "Comercio local con entrega integrada al modelo operativo",
-        "summary": "E-commerce directo de productos cotidianos con catálogo y búsqueda, carrito y checkout, ventanas de entrega local, seguimiento, flujos admin y de campo, lógica determinista de dinero, precios, entrega, inventario y devoluciones, más un asistente de IA que puede construir un carrito desde una conversación.",
+        "tagline": "E-commerce local con entrega integrada",
+        "summary": "Couranr Market combina tienda local, catálogo y búsqueda, carrito y checkout, ventanas de entrega, seguimiento, inventario, devoluciones, flujos admin y un asistente de compras con IA.",
         "chip1": "Motor e-commerce",
         "chip2": "Entrega local",
         "chip3": "Asistente de carrito IA",
@@ -2973,14 +2974,14 @@
       },
       "fleiko": {
         "name": "Fleiko",
-        "tagline": "Gestión de flota + despacho para pequeños operadores",
-        "summary": "SaaS de flota y despacho para operaciones pequeñas que combina vehículos y conductores, mantenimiento, cumplimiento, combustible y gastos, despacho en vivo, rutas, GPS, PWA del conductor, seguimiento al cliente, prueba de entrega, copiloto de IA y resúmenes, con modos DIY y Managed.",
+        "tagline": "Gestión de flota y despacho para pequeños operadores",
+        "summary": "Fleiko reúne vehículos y conductores, mantenimiento, cumplimiento, combustible y gastos, despacho en vivo, rutas, GPS, seguimiento al cliente, prueba de entrega, workflows móviles y asistencia de IA.",
         "chip1": "Flota + despacho",
         "chip2": "GPS en vivo",
         "chip3": "PWA del conductor",
         "chip4": "Copiloto IA",
         "linkLabel": "Visitar fleiko.com",
-        "caseStudyLink": "Análisis de ingeniería"
+        "caseStudyLink": "Leer caso de estudio"
       }
     },
     "clientLabel": "Trabajo con clientes",
@@ -3497,7 +3498,7 @@
     }
   },
   "workFleiko": {
-    "metaTitle": "Copiloto IA Fleiko — Arquitectura técnica | CrecyStudio",
+    "metaTitle": "Caso de estudio Fleiko AI Copilot | CrecyStudio",
     "metaDescription": "Cómo construimos un copiloto IA seguro para Fleiko: contexto instantáneo, capa de validación y confirmaciones en dos fases.",
     "back": "Volver al trabajo",
     "kicker": "Caso de estudio técnico / Fleiko",

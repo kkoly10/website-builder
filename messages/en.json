@@ -159,22 +159,22 @@
     "metaTitle": "About CrecyStudio | Virginia Web & Software Studio",
     "metaDescription": "Meet CrecyStudio, an independent Virginia studio building websites, SaaS products, custom web apps and production AI systems for growing businesses.",
     "proof": {
-      "saas": "Studio-owned products in production",
+      "saas": "Products in production",
       "systems": "Business systems shipped",
-      "practitioner": "Practitioner on every project — no juniors, no handoffs"
+      "practitioner": "Direct senior delivery from scope through launch"
     },
     "ctaLabel": "Where to go next",
     "ctaLowTicket": "Get a website estimate",
     "ctaHighTicket": "Discuss a bigger project",
     "wontTake": {
-      "label": "The work I turn down",
-      "title": "What CrecyStudio won't take on.",
-      "intro": "Selectivity is how I keep quality high on every project. These aren't limitations — they're design choices.",
-      "0": "Projects that need a team of 5+ people — I'm a solo practitioner, not an agency, and I won't pretend otherwise.",
-      "1": "Clients who want daily check-ins or aren't comfortable with async-first communication.",
-      "2": "Tight deadlines paired with an undefined scope — I'd rather delay the start than rush a bad outcome.",
-      "3": "Design-only work with no involvement in implementation — the value I provide is strategy and build, not deliverable handoff.",
-      "4": "Projects where the brief changes significantly after scope is agreed — I hold to the scope so you get the price I quoted."
+      "label": "Fit boundaries",
+      "title": "Where CrecyStudio is not the right fit.",
+      "intro": "Clear fit criteria protect delivery quality, scope, and timelines.",
+      "0": "Large programs that require several parallel delivery teams or a 5+ person build team.",
+      "1": "Engagements that depend on daily synchronous check-ins instead of documented async collaboration.",
+      "2": "Compressed deadlines before the scope, dependencies, and decision path are defined.",
+      "3": "Design-only engagements where CrecyStudio has no role in implementation.",
+      "4": "Projects that expect major scope changes to be absorbed after pricing without a formal change process."
     },
     "kicker": "About CrecyStudio",
     "heroTitle": "The studio behind the work.",
@@ -199,28 +199,29 @@
         "body": "Client portals, internal tools, workflow automation, and web applications built around how the business actually operates."
       }
     },
-    "evidenceLabel": "Evidence over claims",
-    "evidenceTitle": "The portfolio is operating software.",
-    "evidenceBody": "Our studio-owned products are not client testimonials. They are engineering proof: systems we designed, built, launched, and continue to operate.",
-    "evidenceCta": "Explore selected work",
+    "evidenceLabel": "Built end to end",
+    "evidenceTitle": "Software shaped by real operations.",
+    "evidenceBody": "Korent, Couranr, Couranr Market, and Fleiko span rental, delivery, commerce, and fleet operations. CrecyStudio designs, engineers, launches, and maintains each product end to end.",
+    "evidenceCta": "View selected work",
     "founderLabel": "Studio context",
     "founderTitle": "Small by design. Close to the build.",
-    "founderIntro": "CrecyStudio is founder-led, but the business is not a personal portfolio. The advantage is continuity: strategy, design, engineering, and launch decisions stay connected instead of being handed between departments.",
-    "closingTitle": "Have something worth building?"
+    "founderIntro": "CrecyStudio is founder-led, which keeps strategy, design, and engineering connected from scope through launch. Clients work directly with the person accountable for architecture and delivery.",
+    "closingTitle": "Have something worth building?",
+    "evidenceProductLabel": "CrecyStudio product"
   },
   "start": {
     "metaTitle": "Book a free discovery call | CrecyStudio",
-    "metaDescription": "Book a free 20-minute discovery call with Komlan. Tell me what you're building — no pitch, no commitment.",
+    "metaDescription": "Book a free 20-minute discovery call with CrecyStudio to discuss scope, feasibility, timeline, and the right next step.",
     "heroLabel": "Free 20-min call",
     "heroTitle": "Let's talk about what you're building.",
-    "heroSub": "No pitch deck, no sales script. A direct conversation about your project — scope, feasibility, and whether we're a fit.",
+    "heroSub": "A focused 20-minute conversation about scope, feasibility, timeline, and fit.",
     "stepsLabel": "What happens next",
     "step1Title": "You submit the short form",
     "step1Body": "Name, email, and a few lines about your project. Takes under two minutes.",
-    "step2Title": "I review and reply within 24 hours",
-    "step2Body": "I'll confirm a time or propose two options. No auto-scheduling bots.",
+    "step2Title": "We review and reply within 24 hours",
+    "step2Body": "You’ll get a direct confirmation or two alternative times.",
     "step3Title": "We talk for 20 minutes",
-    "step3Body": "I ask sharp questions. You get honest feedback on scope, timeline, and price range — then we decide together.",
+    "step3Body": "We use the call to clarify scope, priorities, timeline, and budget range, then recommend the right next step.",
     "anchorsLabel": "What it costs",
     "anchor1Value": "Free",
     "anchor1Label": "The discovery call — no credit card, no commitment",
@@ -228,7 +229,7 @@
     "anchor2Label": "Websites — fixed price, full ownership",
     "anchor3Value": "Custom",
     "anchor3Label": "Web apps, portals, and automations — scoped together on the call",
-    "riskReversal": "If we're not a fit after the call, I'll point you toward who is. No hard sell.",
+    "riskReversal": "If CrecyStudio is not the right fit, we’ll say so and point you toward a better path when we can.",
     "formLabel": "Book your call",
     "nameLabel": "Your name",
     "namePlaceholder": "Jane Smith",
@@ -255,13 +256,13 @@
     "slotLabelFormat": "{day} at {time} ET",
     "slotRequired": "Please pick a date and time.",
     "successBodyScheduled": "Your call is booked. A Google Calendar invite is on its way to your inbox.",
-    "submit": "Request my discovery call",
+    "submit": "Request a discovery call",
     "submitting": "Sending…",
     "errorInvalidEmail": "Please enter a valid email address.",
     "errorNameRequired": "Please enter your name.",
     "errorGeneric": "Something went wrong. Please try again or email hello@crecystudio.com.",
-    "successTitle": "You're on the list.",
-    "successBody": "I'll be in touch within 24 hours to confirm a time. A copy of your request is on its way to your inbox.",
+    "successTitle": "Request received.",
+    "successBody": "We’ll follow up within 24 hours to confirm a time. A copy of your request is on its way to your inbox.",
     "successDetail": "In the meantime, take a look at how the studio works.",
     "successCta": "See the process"
   },
@@ -280,7 +281,7 @@
       "cards": {
         "saas": {
           "title": "SaaS development",
-          "body": "Multi-tenant SaaS with billing, retention, and production-safe AI from day one — by a founder shipping four SaaS products of his own."
+          "body": "Multi-tenant SaaS with billing, onboarding, permissions, and production-safe AI where it adds real value."
         },
         "webApps": {
           "title": "Custom web apps",
@@ -355,14 +356,14 @@
       "delivery": "Live products in use, not demos",
       "ownershipValue": "End-to-end",
       "ownership": "Strategy through launch, in-house",
-      "noUpfrontValue": "Founder-built",
-      "noUpfront": "No juniors, no subcontractors",
+      "noUpfrontValue": "Senior delivery",
+      "noUpfront": "Strategy through launch stays connected",
       "workspaceValue": "Live portal",
       "workspace": "See your project ship in real time"
     },
     "positioning": {
       "kicker": "The CrecyStudio difference",
-      "statement": "I don't just build websites. I give clients a structured workspace where scope, design direction, files, feedback, invoices, approvals, and launch steps are all managed in one place."
+      "statement": "Every CrecyStudio project includes a structured workspace for scope, design direction, files, feedback, invoices, approvals, and launch steps."
     },
     "ventures": {
       "label": "Studio ventures",
@@ -432,10 +433,10 @@
     "founder": {
       "label": "Who you’re working with",
       "name": "Komlan Kouhiko",
-      "role": "Founder & sole practitioner",
+      "role": "Founder, Product & Engineering",
       "bio1": "I didn’t come up through an agency or a computer science program. In 2024, I launched a car rental business in Northern Virginia with 7 cars and a commercial insurance policy. Turo was taking a significant cut of every booking, so I taught myself to build my own platform — a full booking and fleet management system — and kept the profits. I ran that business for over a year, managing operations, customers, and the codebase simultaneously.",
       "bio2": "When operational costs pushed me to pivot, I posted on Facebook Marketplace offering to build websites. Got a few clients. They liked the work. Since then I’ve shipped increasingly complex products — including Korent, Couranr, Couranr Market, and Fleiko — spanning SaaS, logistics, e-commerce, fleet operations, payments, and AI.",
-      "bio3": "Every project at CrecyStudio comes through me. No juniors, no handoffs. You get a builder who has sat on your side of the table.",
+      "bio3": "Founder-led delivery keeps product strategy, design, and engineering connected from scope through launch. Clients have direct access to the person accountable for the result.",
       "linkedin": "Connect on LinkedIn →",
       "linkedinHref": "https://www.linkedin.com/in/komlan-crecy-olympe-kouhiko-60aa85407"
     },
@@ -460,7 +461,7 @@
         "label": "Independent digital product studio / Virginia, USA",
         "line1": "Work that",
         "line2": "has to work.",
-        "body": "Websites, SaaS products, and AI-enabled systems designed and engineered as real working products, not presentation pieces.",
+        "body": "Websites, SaaS products, and AI-enabled systems designed and engineered to support real business operations.",
         "workCta": "See selected work",
         "projectCta": "Start a project"
       },
@@ -472,7 +473,7 @@
       "evidence": {
         "software": {
           "title": "Production software",
-          "body": "Working products, not static mockups"
+          "body": "Production software built for real use"
         },
         "web": {
           "title": "Web + application",
@@ -489,42 +490,42 @@
       },
       "work": {
         "label": "01 / Selected work",
-        "title": "Open the proof. Then read the pitch.",
-        "body": "The products below are public and working. The point is not to decorate a portfolio with screenshots. It is to show the level of product thinking, interface design, and engineering CrecyStudio can bring to a client build.",
-        "disclosure": "Ownership disclosure: these featured products are studio-owned ventures and demonstrations of engineering capability. They are not presented as client testimonials or third-party endorsements."
+        "title": "Products built for real operations.",
+        "body": "From rental operations and same-day delivery to e-commerce and fleet management, these products show how CrecyStudio turns complex workflows into clear, dependable software.",
+        "disclosure": "Designed, engineered, launched, and maintained by CrecyStudio."
       },
       "projects": {
         "open": "Open live product",
         "korent": {
           "name": "Korent",
-          "short": "Flagship rental-business SaaS",
-          "body": "CrecyStudio’s flagship multi-tenant rental SaaS: public storefronts and checkout, operator dashboards, inventory and orders, deposits, e-signatures, delivery and crew workflows, a live website builder, Stripe billing + Connect, multilingual product surfaces, and a context-aware AI copilot.",
-          "ownership": "Studio-owned product / Multi-tenant SaaS",
-          "visualLabel": "Operator order dashboard / fictional demonstration data",
+          "short": "Rental operations SaaS",
+          "body": "A multi-tenant rental platform connecting storefronts, availability, checkout, orders, payments, signed documents, delivery workflows, website management, multilingual experiences, and AI assistance.",
+          "ownership": "SaaS / Rental operations",
+          "visualLabel": "Korent operator dashboard / sample data",
           "imageAlt": "Korent operator dashboard showing a confirmed rental booking with payments, documents, fulfillment, and customer details"
         },
         "couranr": {
           "name": "Couranr",
           "short": "Same-day delivery operating system",
-          "body": "A same-day delivery platform spanning consumer and business workflows: deterministic quotes, payment authorization and capture, Couranr-managed dispatch, driver execution, customer tracking, pickup and drop-off proof, secure handoff, and operational recovery.",
-          "ownership": "Studio-owned product / Delivery operations",
-          "visualLabel": "Couranr for Business / live public product",
+          "body": "Couranr coordinates same-day delivery from request to handoff, combining quotes, payments, dispatch, driver workflows, live tracking, pickup and drop-off evidence, secure handoff, and operations support.",
+          "ownership": "Same-day delivery / Operations",
+          "visualLabel": "Couranr for Business",
           "imageAlt": "Couranr for Business same-day local delivery platform"
         },
         "couranrmarket": {
           "name": "Couranr Market",
           "short": "Local e-commerce + delivery platform",
-          "body": "Direct-to-consumer commerce with catalog, cart and checkout, local delivery windows, order tracking, admin and field workflows, deterministic pricing, inventory and returns logic, plus an AI shopping assistant that can build a cart from conversation.",
-          "ownership": "Studio-owned product / E-commerce + local delivery",
-          "visualLabel": "Live storefront / public catalog",
+          "body": "Couranr Market combines a local storefront with catalog and search, cart and checkout, delivery windows, order tracking, inventory, returns, admin workflows, and a conversational AI shopping assistant.",
+          "ownership": "E-commerce / Local delivery",
+          "visualLabel": "Couranr Market storefront",
           "imageAlt": "Couranr Market storefront showing local-delivery categories and products"
         },
         "fleiko": {
           "name": "Fleiko",
           "short": "Fleet + dispatch SaaS",
-          "body": "Fleet and dispatch software for small operators: vehicles, drivers, maintenance, documents, fuel and expenses, live dispatch, routes, GPS, customer tracking, proof of delivery, mobile PWA workflows, AI copilot and digests, and self-serve or managed plans.",
-          "ownership": "Studio-owned product / Fleet + dispatch",
-          "visualLabel": "Dispatch dashboard / illustrative demo data",
+          "body": "Fleiko brings vehicles, drivers, maintenance, documents, fuel and expenses, live dispatch, routes, GPS, customer tracking, proof of delivery, mobile driver workflows, and AI assistance into one fleet platform.",
+          "ownership": "Fleet management / Dispatch",
+          "visualLabel": "Fleiko dispatch dashboard / sample data",
           "imageAlt": "Fleiko dispatch dashboard with live map, driver statuses, and delivery metrics"
         }
       },
@@ -534,22 +535,22 @@
         "websites": {
           "title": "Websites",
           "body": "High-trust marketing sites that explain the offer and move people toward the next action.",
-          "proof": "See: Korent / Couranr / Couranr Market"
+          "proof": "Featured in: Korent / Couranr / Couranr Market"
         },
         "saas": {
           "title": "SaaS products",
           "body": "Multi-tenant applications with accounts, workflows, billing, and operational interfaces.",
-          "proof": "See: Korent / Fleiko"
+          "proof": "Featured in: Korent / Fleiko"
         },
         "ai": {
           "title": "AI integration",
           "body": "AI inside product workflows, supporting decisions, triage, detection, and operational assistance.",
-          "proof": "See: Korent / Couranr Market / Fleiko"
+          "proof": "Featured in: Korent / Couranr Market / Fleiko"
         },
         "systems": {
           "title": "Custom systems",
           "body": "Portals, dashboards, internal tools, automation, and interfaces tied to the way the business actually runs.",
-          "proof": "See: Couranr / Couranr Market"
+          "proof": "Featured in: Couranr / Fleiko"
         }
       },
       "workspace": {
@@ -557,7 +558,7 @@
         "title": "No disappearing act after kickoff.",
         "body": "Every project gets one private workspace for scope, files, milestones, invoices, preview links, feedback, approvals, and launch status.",
         "cta": "See how projects run",
-        "visualLabel": "Workspace preview / demonstration project data",
+        "visualLabel": "Client workspace preview",
         "imageAlt": "CrecyStudio client workspace preview"
       },
       "process": {
@@ -750,29 +751,29 @@
     "label": "Process",
     "title": "A simple process with clear milestones.",
     "intro": "Every lane uses the same execution rhythm so the scope stays visible, the pricing stays understandable, and nobody wonders what happens next.",
-    "lead": "The point is not to make the process feel fancy. The point is to make it hard for work to disappear into silence.",
+    "lead": "Clear scope, visible milestones, and documented decisions keep the work moving and keep surprises out of delivery.",
     "step1": {
       "step": "01 - Intake",
       "title": "Tell us what the business needs",
-      "body": "You submit the lane-specific intake — goals, constraints, examples, and urgency. Komlan reviews it personally and comes back within 24 hours with questions or a scope draft. No sales call required to get started."
+      "body": "You submit the lane-specific intake — goals, constraints, examples, and urgency. CrecyStudio reviews it within 24 hours and follows up with questions or a scope draft."
     },
     "step2": {
       "step": "02 - Scope",
       "title": "Get a real estimate",
-      "body": "Komlan sends a written scope: pages or features, fixed price range, timeline, and assumptions. Nothing starts until you've reviewed and approved it in writing — no verbal agreements."
+      "body": "You receive a written scope covering pages or features, price range, timeline, and assumptions. Nothing starts until the scope is reviewed and approved in writing."
     },
     "step3": {
       "step": "03 - Build",
       "title": "Review everything in the workspace",
-      "body": "Work runs through your private workspace. You see every milestone as it ships, submit feedback in one place, and approve before anything goes live. Komlan is the only person building — no subcontractors, no handoffs."
+      "body": "Work runs through your private workspace. You see every milestone as it ships, submit feedback in one place, and approve before anything goes live. Strategy, design, and engineering stay connected through launch."
     },
     "step4": {
       "step": "04 - Launch",
       "title": "Go live with a clean handoff",
-      "body": "QA, domain setup, analytics, and a documented handoff of everything you need to maintain the work. You own all the files. If you want ongoing support, a care plan is available — but there's no pressure or lock-in."
+      "body": "QA, domain setup, analytics, and a documented handoff of everything you need to maintain the work. Optional care plans are available for teams that want ongoing support."
     },
-    "founderNoteLabel": "Who does the work",
-    "founderNote": "Every project at CrecyStudio runs through Komlan Kouhiko — not a project manager, not a junior developer. When you submit an intake, Komlan reviews it. When you have a question, Komlan answers it. When the work ships, Komlan built it.",
+    "founderNoteLabel": "Delivery ownership",
+    "founderNote": "CrecyStudio is founder-led. Komlan Kouhiko stays directly involved in scope, architecture, implementation, and launch, giving every engagement one accountable owner from first brief through handoff.",
     "byLaneLabel": "By lane",
     "byLaneTitle": "The rhythm stays the same, the scope changes.",
     "byLaneKicker": "What changes",
@@ -1148,9 +1149,9 @@
     "alsoOffered": "Also offered",
     "exploreLane": "Explore",
     "founderCallout": {
-      "name": "Komlan Kouhiko — Founder & Sole Practitioner",
-      "body": "Every project at CrecyStudio comes through me — not a project manager, not a junior. I've shipped SaaS platforms, built internal tools for real businesses, and run operations myself. You can reach me directly at any stage of the project.",
-      "link": "Read the full story →"
+      "name": "Komlan Kouhiko — Founder, Product & Engineering",
+      "body": "CrecyStudio is founder-led, so strategy, architecture, implementation, and launch stay connected. You work directly with the person accountable for the result.",
+      "link": "About CrecyStudio"
     }
   },
   "crossLinks": {
@@ -1171,7 +1172,7 @@
     },
     "aiIntegration": {
       "metaTitle": "AI Integration | Production AI, Built With Guardrails",
-      "metaDescription": "Production AI integration for service businesses. Confidence-gated, guardrailed, human-in-the-loop. We build the systems we use to run our own products."
+      "metaDescription": "Production AI integration for service businesses, SaaS teams, and internal systems — with guardrails, confidence gates, human review, and clear operational controls."
     },
     "websites": {
       "metaTitle": "Website Building | Premium, Conversion-Focused Websites",
@@ -2935,16 +2936,16 @@
     "metaTitle": "Web, SaaS & AI Projects | CrecyStudio",
     "metaDescription": "Explore Korent, Couranr, Couranr Market and Fleiko — production SaaS, delivery, e-commerce and fleet systems built and operated by CrecyStudio.",
     "kicker": "Selected work",
-    "title": "Real systems we've shipped — <em>including our own.</em>",
-    "subtitle": "Led by Korent — our most complete SaaS build to date — plus three operating products across delivery, e-commerce, and fleet management.",
-    "venturesLabel": "Studio ventures",
-    "venturesIntro": "These are studio-owned products we built and operate. Korent is the flagship; Couranr, Couranr Market, and Fleiko show the range across logistics, commerce, and fleet operations.",
-    "ventureBadge": "Studio venture",
+    "title": "Software built for <em>real operations.</em>",
+    "subtitle": "Korent, Couranr, Couranr Market, and Fleiko span rental operations, same-day delivery, e-commerce, and fleet management.",
+    "venturesLabel": "Featured products",
+    "venturesIntro": "A cross-section of the software CrecyStudio designs, engineers, launches, and maintains for real operational use.",
+    "ventureBadge": "CrecyStudio product",
     "ventures": {
       "korent": {
         "name": "Korent",
-        "tagline": "Flagship multi-tenant rental SaaS from storefront to fulfillment",
-        "summary": "The deepest product in the current portfolio: public booking storefronts, availability-aware checkout, inventory and order operations, deposits and balances, rental documents with e-signatures, delivery and crew workflows, a live website builder, Stripe subscriptions + Connect, multilingual product surfaces, an AI operator copilot, marketplace workflows, and platform-owner analytics.",
+        "tagline": "Rental operations SaaS from storefront to fulfillment",
+        "summary": "Korent brings storefronts, availability, checkout, orders, payments, signed documents, delivery workflows, website management, Stripe billing, multilingual experiences, and AI assistance into one multi-tenant rental platform.",
         "chip1": "Multi-tenant SaaS",
         "chip2": "Stripe + Connect",
         "chip3": "E-signatures",
@@ -2953,8 +2954,8 @@
       },
       "couranr": {
         "name": "Couranr",
-        "tagline": "Same-day delivery infrastructure for consumers and local businesses",
-        "summary": "A delivery operating system covering consumer and business intake, server-authoritative quotes, payment authorization and capture, Couranr-managed dispatch, driver execution, sender and recipient tracking, pickup/drop-off proof, secure handoff credentials, returns, cancellation recovery, and Operations control.",
+        "tagline": "Same-day delivery operations for consumers and local businesses",
+        "summary": "Couranr coordinates same-day delivery from request to handoff, with quotes, payment, dispatch, driver execution, live tracking, pickup and drop-off evidence, secure handoff, and operations controls.",
         "chip1": "Same-Day Intake",
         "chip2": "Dispatch + Tracking",
         "chip3": "Proof + PIN",
@@ -2963,8 +2964,8 @@
       },
       "couranrmarket": {
         "name": "Couranr Market",
-        "tagline": "Local commerce with delivery built into the operating model",
-        "summary": "Direct-to-consumer e-commerce for everyday goods with catalog and search, cart and checkout, local delivery windows, order tracking, admin and field workflows, deterministic money, pricing, delivery, inventory and returns logic, plus an AI shopping assistant that can build a cart from a conversation.",
+        "tagline": "Local e-commerce with delivery built in",
+        "summary": "Couranr Market combines a local storefront with catalog and search, cart and checkout, delivery windows, order tracking, inventory, returns, admin workflows, and an AI shopping assistant that can build a cart from a conversation.",
         "chip1": "Commerce Engine",
         "chip2": "Local Delivery",
         "chip3": "AI Cart Assistant",
@@ -2973,14 +2974,14 @@
       },
       "fleiko": {
         "name": "Fleiko",
-        "tagline": "Fleet management + dispatch for small operators",
-        "summary": "Fleet and dispatch SaaS for small operations managing vehicles and daily work. It combines vehicle and driver records, maintenance, compliance, fuel and expenses, live dispatch, routes, GPS tracking, a driver PWA, customer tracking, proof of delivery, AI copilot and owner digests, plus DIY and Managed operating modes.",
+        "tagline": "Fleet management and dispatch for small operators",
+        "summary": "Fleiko brings vehicle and driver records, maintenance, compliance, fuel and expenses, live dispatch, routes, GPS, customer tracking, proof of delivery, mobile driver workflows, and AI assistance into one fleet platform.",
         "chip1": "Fleet + Dispatch",
         "chip2": "Live GPS",
         "chip3": "Driver PWA",
         "chip4": "AI Copilot",
         "linkLabel": "Visit fleiko.com",
-        "caseStudyLink": "Engineering deep dive"
+        "caseStudyLink": "Read case study"
       }
     },
     "clientLabel": "Client work",
@@ -3497,7 +3498,7 @@
     }
   },
   "workFleiko": {
-    "metaTitle": "Fleiko AI Copilot — Engineering Deep Dive | CrecyStudio",
+    "metaTitle": "Fleiko AI Copilot Case Study | CrecyStudio",
     "metaDescription": "How we built a production-safe AI copilot for Fleiko: snapshot context, proposal/guardrail pattern, and two-phase writes that prevent AI-caused data loss.",
     "back": "Back to work",
     "kicker": "Engineering case study / Fleiko",

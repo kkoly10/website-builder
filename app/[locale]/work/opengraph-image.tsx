@@ -15,7 +15,7 @@ export default async function OgImage({
   const t = await getTranslations({ locale, namespace: "work" });
   return renderOgImage({
     eyebrow: "Selected work",
-    headline: "Real systems we've shipped — including our own.",
+    headline: "Software built for real operations.",
     tagline: t("metaDescription"),
   });
 }
