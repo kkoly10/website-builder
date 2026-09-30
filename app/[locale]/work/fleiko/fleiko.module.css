@@ -223,3 +223,94 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* Work in View sitewide override */
+.page {
+  padding-bottom: 0;
+  background: var(--paper);
+}
+
+.backLink,
+.kicker,
+.guardrailNum {
+  font: 600 11px/1.25 var(--font-body);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.hero {
+  padding: clamp(4rem, 7vw, 6rem) 0 clamp(3.5rem, 6vw, 5rem);
+  border-bottom: 1px solid var(--rule);
+}
+
+.title,
+.sectionTitle,
+.closingTitle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.title {
+  max-width: 15ch;
+  font-size: clamp(3.8rem, 7.5vw, 6.7rem);
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+}
+
+.body {
+  max-width: 880px;
+  gap: 0;
+}
+
+.section {
+  padding: clamp(3.5rem, 6vw, 5.5rem) 0;
+  border-top: 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.sectionTitle,
+.closingTitle {
+  font-size: clamp(2.6rem, 4.5vw, 4rem);
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+}
+
+.guardrailCard,
+.scoreCard,
+.callout {
+  background: var(--surface);
+  border-color: var(--rule);
+  border-radius: 0;
+}
+
+.chip {
+  background: var(--paper-3);
+  border-color: var(--rule);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+}
+
+.callout {
+  border-left: 3px solid var(--accent);
+  font-style: normal;
+}
+
+.closing {
+  padding: clamp(4rem, 7vw, 6rem) 0;
+  border-top: 0;
+  background: var(--accent);
+  color: #fff;
+}
+
+.closingTitle,
+.closingBody {
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .title {
+    font-size: clamp(3rem, 13vw, 3.5rem);
+  }
+}

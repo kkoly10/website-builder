@@ -582,3 +582,163 @@
 .founderCalloutLink { font: 500 13px/1 var(--font-body); color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 560px) { .founderCalloutInner { flex-direction: column; } }
 .riskReversal { margin-top: .75rem; font-size: .82rem; color: var(--muted); line-height: 1.5; }
+
+/* Work in View sitewide override */
+.page {
+  padding-bottom: 0;
+  background: var(--paper);
+}
+
+.hero {
+  padding: clamp(4.5rem, 8vw, 7rem) 0 clamp(3.5rem, 6vw, 5rem);
+  border-bottom: 1px solid var(--rule);
+}
+
+.eyebrow,
+.sectionLabel,
+.pricingLabel,
+.darkLabel,
+.fitNoteLabel,
+.problemIndex,
+.pricingMeta,
+.processStep {
+  font: 600 11px/1.25 var(--font-body);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.heroTitle,
+.sectionTitle,
+.darkTitle,
+.finalTitle,
+.pricingValue {
+  font-family: var(--font-display);
+  font-variation-settings: normal;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.heroTitle {
+  max-width: 14ch;
+  margin-top: 1.2rem;
+  font-size: clamp(3.8rem, 7.2vw, 6.6rem);
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+}
+
+.heroIntro {
+  max-width: 50ch;
+  color: var(--ink-2);
+  font-size: clamp(1.05rem, 1.5vw, 1.22rem);
+  line-height: 1.6;
+}
+
+.primaryButton,
+.secondaryButton {
+  border-radius: 0;
+}
+
+.proofBar {
+  background: var(--surface);
+}
+
+.section {
+  padding: clamp(4.5rem, 7vw, 6.5rem) 0;
+}
+
+.sectionTitle,
+.darkTitle,
+.finalTitle {
+  max-width: 18ch;
+  font-size: clamp(2.8rem, 5vw, 4.7rem);
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+}
+
+.fitCard,
+.notFitCard,
+.problemGrid,
+.problemCard,
+.includesGrid,
+.includeCard,
+.processCard,
+.pricingCard,
+.faqCard,
+.finalCard,
+.crossLinkCard {
+  border-radius: 0;
+}
+
+.fitCard,
+.problemCard,
+.includeCard,
+.pricingCard,
+.faqCard,
+.crossLinkCard {
+  background: var(--surface);
+}
+
+.notFitCard,
+.problemGrid,
+.pricingSection {
+  background: var(--paper-3);
+}
+
+.fitCard:hover,
+.notFitCard:hover,
+.problemCard:hover,
+.includeCard:hover,
+.pricingCard:hover,
+.faqCard:hover,
+.finalCard:hover,
+.crossLinkCard:hover {
+  transform: none;
+  border-color: var(--ink);
+  box-shadow: none;
+}
+
+.processBand {
+  background: #10151c;
+}
+
+.processCard {
+  border-color: #343d47;
+  background: #1a2028;
+}
+
+.finalCard {
+  padding: clamp(2.2rem, 5vw, 4.5rem);
+  border: 0;
+  background: var(--accent);
+  color: #fff;
+}
+
+.finalCard .sectionLabel,
+.finalCard .finalTitle,
+.finalCard .sectionIntro,
+.finalCard .riskReversal {
+  color: #fff;
+}
+
+.finalCard .primaryButton {
+  border-color: #fff;
+  background: #fff;
+  color: var(--ink);
+}
+
+.finalCard .secondaryButton {
+  border-color: rgba(255,255,255,.7);
+  color: #fff;
+}
+
+@media (max-width: 720px) {
+  .heroTitle {
+    font-size: clamp(3rem, 13vw, 3.4rem);
+  }
+
+  .sectionTitle,
+  .darkTitle,
+  .finalTitle {
+    font-size: clamp(2.5rem, 11vw, 3.35rem);
+  }
+}

@@ -118,7 +118,7 @@
     }
   },
   "footer": {
-    "blurb": "Estudio web independiente que construye sitios web premium y sistemas web personalizados. Un espacio de trabajo del alcance al lanzamiento.",
+    "blurb": "Estudio digital independiente que construye sitios web, productos SaaS, aplicaciones a medida y sistemas de IA en producción. Un espacio de trabajo del alcance al lanzamiento.",
     "address": "Stafford, Virginia · Estados Unidos",
     "serviceArea": "Al servicio del DMV — DC, Maryland y Virginia.",
     "rightsReserved": "Todos los derechos reservados.",
@@ -175,7 +175,38 @@
       "label": "El trabajo que rechazo",
       "title": "Lo que CrecyStudio no acepta.",
       "intro": "La selectividad es cómo mantengo la calidad en cada proyecto. No son limitaciones — son decisiones deliberadas."
-    }
+    },
+    "kicker": "Acerca de CrecyStudio",
+    "heroTitle": "El estudio detrás del trabajo.",
+    "heroIntro": "CrecyStudio es un estudio digital independiente de Virginia que construye sitios web, productos SaaS, aplicaciones a medida y sistemas de IA en producción. El trabajo se mantiene cerca desde el alcance hasta el lanzamiento.",
+    "capabilitiesLabel": "Lo que construimos",
+    "capabilitiesTitle": "Un estudio. Cuatro líneas de trabajo.",
+    "capabilities": {
+      "websites": {
+        "title": "Sitios web",
+        "body": "Sitios de marketing creíbles y orientados a conversión con estrategia, diseño, ingeniería y lanzamiento conectados."
+      },
+      "saas": {
+        "title": "Productos SaaS",
+        "body": "Software multi-tenant, onboarding, facturación, paneles y los detalles operativos que convierten una idea en producto."
+      },
+      "ai": {
+        "title": "Integración de IA",
+        "body": "IA en producción dentro de workflows reales, con umbrales de confianza, revisión humana y controles deterministas."
+      },
+      "systems": {
+        "title": "Sistemas a medida",
+        "body": "Portales de clientes, herramientas internas, automatización y aplicaciones web construidas alrededor de la operación real."
+      }
+    },
+    "evidenceLabel": "Evidencia antes que promesas",
+    "evidenceTitle": "El portafolio es software en funcionamiento.",
+    "evidenceBody": "Nuestros productos propios no son testimonios de clientes. Son evidencia de ingeniería: sistemas que diseñamos, construimos, lanzamos y seguimos operando.",
+    "evidenceCta": "Explorar trabajo seleccionado",
+    "founderLabel": "Contexto del estudio",
+    "founderTitle": "Pequeño por diseño. Cerca de la construcción.",
+    "founderIntro": "CrecyStudio está dirigido por su fundador, pero no es un portafolio personal. La ventaja es la continuidad: estrategia, diseño, ingeniería y lanzamiento permanecen conectados en lugar de pasar entre departamentos.",
+    "closingTitle": "¿Tienes algo que valga la pena construir?"
   },
   "start": {
     "metaTitle": "Reservar una llamada de descubrimiento gratuita | CrecyStudio",
@@ -2905,7 +2936,7 @@
     "metaDescription": "Explora sitios web, productos SaaS y sistemas con IA construidos por CrecyStudio, incluidos Fleiko, Proveo, Crecy OS y Kocre IT.",
     "kicker": "Trabajo seleccionado",
     "title": "Sistemas reales que hemos lanzado — <em>incluidos los nuestros.</em>",
-    "subtitle": "Tres proyectos studio que construimos, lanzamos y operamos. Más trabajo de clientes donde los nombres a veces están anonimizados.",
+    "subtitle": "Cuatro productos propios que construimos y operamos, más trabajo de clientes donde los nombres a veces están anonimizados.",
     "venturesLabel": "Proyectos del estudio",
     "venturesIntro": "Estos son nuestros propios productos, construidos y operados por el estudio. Demuestran la capacidad de ingeniería para la línea de Aplicaciones Web — no son testimonios de clientes.",
     "ventureBadge": "Proyecto del estudio",
@@ -2942,6 +2973,16 @@
         "chip4": "Monitoreo Sentinel",
         "linkLabel": "Visitar kocreit.com",
         "caseStudyLink": "Análisis técnico en profundidad"
+      },
+      "crecyos": {
+        "name": "Crecy OS",
+        "tagline": "Plataforma de operaciones de alquiler para equipos inmobiliarios",
+        "summary": "Software propio del estudio que conecta propiedades, residentes, propietarios, pagos, mantenimiento, documentos y registros financieros en un solo sistema operativo. Diseñado para equipos profesionales y propietarios que se autogestionan.",
+        "chip1": "Operaciones de alquiler",
+        "chip2": "Pagos",
+        "chip3": "Mantenimiento",
+        "chip4": "Registros de propietarios",
+        "linkLabel": "Visitar crecyos.com"
       }
     },
     "clientLabel": "Trabajo con clientes",
@@ -3475,7 +3516,7 @@
     "s2Title": "El patrón instantáneo — cerrar la superficie de inyección",
     "s2Body": "En lugar de acceso directo, compilamos el estado completo de la flota en un bloque de texto determinístico antes de cada solicitud:\n\n— Lista completa de vehículos con estado, kilometraje y matrícula\n— Puntuación de salud de la flota (0–100) calculada sobre 12 señales ponderadas\n— 10 prioridades principales ordenadas por gravedad y fecha de vencimiento\n— Reparaciones abiertas, mantenimientos atrasados, documentos por vencer\n— Estado de licencias de conductores y resúmenes de costos por vehículo\n\nEl modelo lee este instantáneo y razona sobre él — pero nunca consulta la base de datos. La superficie de inyección está cerrada por diseño.",
     "s3Title": "El patrón propuesta/guardianes",
-    "s3Intro": "El modelo puede sugerir operaciones de escritura — pero solo añadiendo un bloque <action_proposal> estructurado a su respuesta. El servidor analiza este bloque a través de cuatro capas de guardianes antes de que ocurra cualquier cosa:",
+    "s3Intro": "El modelo puede sugerir operaciones de escritura — pero solo añadiendo un bloque action_proposal estructurado a su respuesta. El servidor analiza este bloque a través de cuatro capas de guardianes antes de que ocurra cualquier cosa:",
     "guardrail1Num": "Capa 1",
     "guardrail1Title": "Lista de bloqueo absoluta",
     "guardrail1Body": "hard_delete, delete_company, billing.change, user.change_role, bulk_destructive_edit — bloqueados independientemente de lo que genere el modelo. No existe ruta de código que los ejecute.",

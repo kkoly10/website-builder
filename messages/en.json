@@ -118,7 +118,7 @@
     }
   },
   "footer": {
-    "blurb": "Independent web studio building premium websites and custom web systems. One workspace from scope to launch.",
+    "blurb": "Independent digital product studio building websites, SaaS products, custom web applications, and production AI systems. One workspace from scope to launch.",
     "address": "Stafford, Virginia · United States",
     "serviceArea": "Serving the DMV — DC, Maryland, and Virginia.",
     "rightsReserved": "All rights reserved.",
@@ -175,7 +175,38 @@
       "2": "Tight deadlines paired with an undefined scope — I'd rather delay the start than rush a bad outcome.",
       "3": "Design-only work with no involvement in implementation — the value I provide is strategy and build, not deliverable handoff.",
       "4": "Projects where the brief changes significantly after scope is agreed — I hold to the scope so you get the price I quoted."
-    }
+    },
+    "kicker": "About CrecyStudio",
+    "heroTitle": "The studio behind the work.",
+    "heroIntro": "CrecyStudio is an independent Virginia digital product studio building websites, SaaS products, custom web applications, and production AI systems. The work stays close from scope through launch.",
+    "capabilitiesLabel": "What we build",
+    "capabilitiesTitle": "One studio. Four working lanes.",
+    "capabilities": {
+      "websites": {
+        "title": "Websites",
+        "body": "Credible, conversion-focused marketing sites with the strategy, design, engineering, and launch handled together."
+      },
+      "saas": {
+        "title": "SaaS products",
+        "body": "Multi-tenant software, onboarding, billing, dashboards, and the operational details that turn an idea into a product."
+      },
+      "ai": {
+        "title": "AI integration",
+        "body": "Production AI inside real workflows, with confidence gates, human review, and deterministic controls where they matter."
+      },
+      "systems": {
+        "title": "Custom systems",
+        "body": "Client portals, internal tools, workflow automation, and web applications built around how the business actually operates."
+      }
+    },
+    "evidenceLabel": "Evidence over claims",
+    "evidenceTitle": "The portfolio is operating software.",
+    "evidenceBody": "Our studio-owned products are not client testimonials. They are engineering proof: systems we designed, built, launched, and continue to operate.",
+    "evidenceCta": "Explore selected work",
+    "founderLabel": "Studio context",
+    "founderTitle": "Small by design. Close to the build.",
+    "founderIntro": "CrecyStudio is founder-led, but the business is not a personal portfolio. The advantage is continuity: strategy, design, engineering, and launch decisions stay connected instead of being handed between departments.",
+    "closingTitle": "Have something worth building?"
   },
   "start": {
     "metaTitle": "Book a free discovery call | CrecyStudio",
@@ -2905,7 +2936,7 @@
     "metaDescription": "Explore real websites, SaaS products and AI-enabled systems built by CrecyStudio, including Fleiko, Proveo, Crecy OS and Kocre IT.",
     "kicker": "Selected work",
     "title": "Real systems we've shipped — <em>including our own.</em>",
-    "subtitle": "Three studio ventures we built, run, and operate. Plus client work where the names are sometimes anonymized.",
+    "subtitle": "Four studio-owned products we built and operate, plus client work where names are sometimes anonymized.",
     "venturesLabel": "Studio ventures",
     "venturesIntro": "These are our own products, built and operated by the studio. They prove the engineering capability for the Web Apps lane — they're not client testimonials.",
     "ventureBadge": "Studio venture",
@@ -2942,6 +2973,16 @@
         "chip4": "Sentinel Monitoring",
         "linkLabel": "Visit kocreit.com",
         "caseStudyLink": "Engineering deep dive"
+      },
+      "crecyos": {
+        "name": "Crecy OS",
+        "tagline": "Rental operations platform for property teams",
+        "summary": "Studio-owned rental operations software connecting properties, residents, owners, payments, maintenance, documents, and financial records in one operating system. Built for professional property teams and simpler self-managing landlord workflows.",
+        "chip1": "Rental Operations",
+        "chip2": "Payments",
+        "chip3": "Maintenance",
+        "chip4": "Owner Records",
+        "linkLabel": "Visit crecyos.com"
       }
     },
     "clientLabel": "Client work",
@@ -3475,7 +3516,7 @@
     "s2Title": "The snapshot pattern — closing the injection surface",
     "s2Body": "Instead of live query access, we compile the entire relevant fleet state into a deterministic text block before every request:\n\n— Full vehicle list with status, mileage, and plate (up to 50 vehicles)\n— Fleet health score (0–100) computed from 12 weighted signals\n— Top 10 priority items sorted by severity and nearest due date\n— Open repairs, overdue maintenance, expiring documents\n— Driver license status and all-time cost summaries per vehicle\n\nThe model reads this snapshot and reasons over it — but never queries the database. The database state cannot inject instructions because the model only receives a structured summary built by trusted server code. The injection surface is closed by design.",
     "s3Title": "The proposal/guardrail pattern",
-    "s3Intro": "The model can suggest write operations — but only by appending a structured <action_proposal> block to its response. The server parses this block through four guardrail layers before anything can happen:",
+    "s3Intro": "The model can suggest write operations — but only by appending a structured action_proposal block to its response. The server parses this block through four guardrail layers before anything can happen:",
     "guardrail1Num": "Layer 1",
     "guardrail1Title": "Absolute deny list",
     "guardrail1Body": "hard_delete, delete_company, billing.change, user.change_role, bulk_destructive_edit — blocked regardless of what the model generates. No code path executes them.",

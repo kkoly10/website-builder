@@ -19,6 +19,6 @@ export default async function OpenGraphImage({
 
   return renderOgImage({
     headline: tHome("metaTitle").replace(/^CrecyStudio\s*\|\s*/, ""),
-    tagline: "Independent web studio. Premium craft.",
+    tagline: tHome("workInView.hero.body"),
   });
 }

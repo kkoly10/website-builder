@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
-import styles from "../home.module.css";
+import styles from "./about.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -32,43 +32,108 @@ export default async function AboutPage({
   return <AboutContent />;
 }
 
+const CAPABILITY_KEYS = ["websites", "saas", "ai", "systems"] as const;
+const PROJECTS = ["Fleiko", "Proveo", "Kocre IT", "Crecy OS"] as const;
+
 function AboutContent() {
+  const t = useTranslations("about");
   const tHome = useTranslations("home");
-  const tAbout = useTranslations("about");
 
   const proofItems = [
-    { value: "2",  label: tAbout("proof.saas") },
-    { value: "5+", label: tAbout("proof.systems") },
-    { value: "1",  label: tAbout("proof.practitioner") },
+    { value: "4", label: t("proof.saas") },
+    { value: "5+", label: t("proof.systems") },
+    { value: "1", label: t("proof.practitioner") },
   ];
 
   return (
-    <main>
+    <main className={styles.page}>
+      <section className={styles.hero}>
+        <div className="container">
+          <div className={styles.heroGrid}>
+            <p className={styles.marker}>{t("kicker")}</p>
+            <div className={styles.heroCopy}>
+              <h1 className={styles.heroTitle}>{t("heroTitle")}</h1>
+              <p className={styles.heroIntro}>{t("heroIntro")}</p>
+            </div>
+          </div>
+          <div className={styles.proofGrid}>
+            {proofItems.map((item) => (
+              <article key={item.label} className={styles.proofItem}>
+                <p className={styles.proofValue}>{item.value}</p>
+                <p className={styles.proofLabel}>{item.label}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.capabilities}>
+        <div className="container">
+          <div className={styles.sectionHead}>
+            <p className={styles.marker}>{t("capabilitiesLabel")}</p>
+            <h2 className={styles.sectionTitle}>{t("capabilitiesTitle")}</h2>
+          </div>
+          <div className={styles.capabilityRows}>
+            {CAPABILITY_KEYS.map((key, index) => (
+              <article key={key} className={styles.capabilityRow}>
+                <span className={styles.rowIndex}>0{index + 1}</span>
+                <h3>{t(`capabilities.${key}.title`)}</h3>
+                <p>{t(`capabilities.${key}.body`)}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section className={styles.evidence}>
+        <div className="container">
+          <div className={styles.evidenceGrid}>
+            <div>
+              <p className={styles.darkMarker}>{t("evidenceLabel")}</p>
+              <h2 className={styles.evidenceTitle}>{t("evidenceTitle")}</h2>
+              <p className={styles.evidenceBody}>{t("evidenceBody")}</p>
+              <Link href="/work" className={styles.evidenceLink}>
+                {t("evidenceCta")}
+              </Link>
+            </div>
+            <div className={styles.projectList}>
+              {PROJECTS.map((project, index) => (
+                <div key={project} className={styles.projectRow}>
+                  <span>0{index + 1}</span>
+                  <strong>{project}</strong>
+                  <span>{t("evidenceLabel")}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className={styles.founder}>
         <div className="container">
-          <div className={styles.founderInner}>
+          <div className={styles.founderGrid}>
             <div className={styles.founderPhotoWrap}>
               <Image
                 src="/about/komlan.jpg"
                 alt="Komlan Kouhiko, founder of CrecyStudio"
-                width={220}
-                height={220}
+                width={280}
+                height={280}
                 className={styles.founderImg}
-                priority
               />
             </div>
-            <div className={styles.founderContent}>
-              <p className={styles.sectionLabel}>{tHome("founder.label")}</p>
-              <h1 className={styles.founderName}>{tHome("founder.name")}</h1>
-              <p className={styles.founderRole}>{tHome("founder.role")}</p>
-              <p className={styles.founderBio}>{tHome("founder.bio1")}</p>
-              <p className={styles.founderBio}>{tHome("founder.bio2")}</p>
-              <p className={styles.founderBio}>{tHome("founder.bio3")}</p>
+            <div className={styles.founderCopy}>
+              <p className={styles.marker}>{t("founderLabel")}</p>
+              <h2 className={styles.sectionTitle}>{t("founderTitle")}</h2>
+              <p className={styles.founderIntro}>{t("founderIntro")}</p>
+              <div className={styles.founderIdentity}>
+                <strong>{tHome("founder.name")}</strong>
+                <span>{tHome("founder.role")}</span>
+              </div>
+              <p className={styles.founderNote}>{tHome("founder.bio3")}</p>
               <a
                 href={tHome("founder.linkedinHref")}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={styles.founderLinkedIn}
+                className={styles.textLink}
               >
                 {tHome("founder.linkedin")}
               </a>
@@ -76,79 +141,39 @@ function AboutContent() {
           </div>
         </div>
       </section>
-
-      <section className={styles.proof}>
-        <div
-          className={`container ${styles.proofGrid}`}
-          style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}
-        >
-          {proofItems.map((item) => (
-            <article key={item.label} className={styles.proofItem}>
-              <p className={styles.proofValue}>{item.value}</p>
-              <p className={styles.proofLabel}>{item.label}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className={styles.ventures}>
+      <section className={styles.fit}>
         <div className="container">
-          <p className={styles.venturesLabel}>{tHome("ventures.label")}</p>
-          <h2 className={styles.venturesTitle}>{tHome("ventures.title")}</h2>
-          <p className={styles.venturesIntro}>{tHome("ventures.intro")}</p>
-          <div className={styles.venturesGrid}>
-            <article className={styles.ventureCard}>
-              <p className={styles.ventureName}>{tHome("ventures.fleiko.name")}</p>
-              <p className={styles.ventureTagline}>{tHome("ventures.fleiko.tagline")}</p>
-              <p className={styles.ventureDetail}>{tHome("ventures.fleiko.detail")}</p>
-              <div className={styles.ventureChips}>
-                <span className={styles.ventureChip}>{tHome("ventures.fleiko.chip1")}</span>
-                <span className={styles.ventureChip}>{tHome("ventures.fleiko.chip2")}</span>
+          <div className={styles.sectionHead}>
+            <p className={styles.marker}>{t("wontTake.label")}</p>
+            <h2 className={styles.sectionTitle}>{t("wontTake.title")}</h2>
+            <p className={styles.fitIntro}>{t("wontTake.intro")}</p>
+          </div>
+          <div className={styles.fitRows}>
+            {(["0", "1", "2", "3", "4"] as const).map((key, index) => (
+              <div key={key} className={styles.fitRow}>
+                <span>0{index + 1}</span>
+                <p>{t(`wontTake.${key}`)}</p>
               </div>
-            </article>
-            <article className={styles.ventureCard}>
-              <p className={styles.ventureName}>{tHome("ventures.proveo.name")}</p>
-              <p className={styles.ventureTagline}>{tHome("ventures.proveo.tagline")}</p>
-              <p className={styles.ventureDetail}>{tHome("ventures.proveo.detail")}</p>
-              <div className={styles.ventureChips}>
-                <span className={styles.ventureChip}>{tHome("ventures.proveo.chip1")}</span>
-                <span className={styles.ventureChip}>{tHome("ventures.proveo.chip2")}</span>
-              </div>
-            </article>
+            ))}
           </div>
         </div>
       </section>
 
-      <section style={{ padding: "3rem 0", borderTop: "1px solid var(--rule)" }}>
+      <section className={styles.closing}>
         <div className="container">
-          <p className={styles.sectionLabel}>{tAbout("wontTake.label")}</p>
-          {/* sectionTitle, not venturesTitle. The latter is the DARK ventures
-              heading (color: var(--paper)) and this section sits on the light
-              canvas, so the heading rendered invisible — white on white under
-              the old palette too, which is why it was never noticed. */}
-          <h2 className={styles.sectionTitle}>{tAbout("wontTake.title")}</h2>
-          <p className={styles.founderBio} style={{ marginBottom: "1.25rem" }}>{tAbout("wontTake.intro")}</p>
-          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: ".6rem" }}>
-            {(["0","1","2","3","4"] as const).map((i) => (
-              <li key={i} style={{ display: "flex", gap: ".75rem", alignItems: "baseline" }}>
-                <span style={{ font: "500 13px/1 var(--font-body)", color: "var(--muted)", flexShrink: 0 }}>✕</span>
-                <span style={{ fontSize: ".95rem", color: "var(--ink)", lineHeight: 1.65 }}>{tAbout(`wontTake.${i}`)}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      <section style={{ padding: "3.5rem 0", borderTop: "1px solid var(--rule)" }}>
-        <div className="container">
-          <p className={styles.sectionLabel}>{tAbout("ctaLabel")}</p>
-          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginTop: "1rem" }}>
-            <Link href="/build/intro" className="btn btnPrimary">
-              {tAbout("ctaLowTicket")}
-            </Link>
-            <Link href="/contact" className="btn">
-              {tAbout("ctaHighTicket")}
-            </Link>
+          <div className={styles.closingGrid}>
+            <div>
+              <p className={styles.closingMarker}>{t("ctaLabel")}</p>
+              <h2>{t("closingTitle")}</h2>
+            </div>
+            <div className={styles.closingActions}>
+              <Link href="/build/intro" className={styles.closingButton}>
+                {t("ctaLowTicket")}
+              </Link>
+              <Link href="/contact" className={styles.closingButton}>
+                {t("ctaHighTicket")}
+              </Link>
+            </div>
           </div>
         </div>
       </section>

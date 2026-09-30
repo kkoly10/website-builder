@@ -1924,3 +1924,304 @@ body:has(.workInViewHome) .footerPhone:hover,
 body:has(.workInViewHome) .footerPhone:focus-visible {
   color: #ffffff;
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Work in View — sitewide public marketing theme
+   The homepage is the reference. Locale/public routes opt into this boundary;
+   portal/internal product surfaces intentionally remain on their own UI system.
+   ────────────────────────────────────────────────────────────────────────── */
+body:has(.publicTheme),
+.publicTheme {
+  --paper: #f6f7f8;
+  --paper-2: #ffffff;
+  --paper-3: #e7eaed;
+  --paper-4: #cdd2d8;
+  --surface: #ffffff;
+  --ink: #14171b;
+  --ink-2: #30363d;
+  --ink-3: #4b535c;
+  --muted: #626a73;
+  --muted-2: #7d858e;
+  --rule: #cdd2d8;
+  --rule-2: #aeb6bf;
+  --rule-on-ink: #343d47;
+  --accent: #c62f25;
+  --accent-2: #a9231d;
+  --accent-700: #922019;
+  --accent-soft: #e2aaa6;
+  --accent-bg: #f7e7e5;
+
+  --font-display: var(--font-public-display), "Arial Narrow", sans-serif;
+  --font-body: var(--font-public-body), "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-public-body), "Helvetica Neue", Arial, sans-serif;
+  --radius-sm: 0px;
+  --radius: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --shadow-sm: 0 1px 2px rgba(20, 23, 27, 0.04);
+  --shadow: 0 12px 32px rgba(20, 23, 27, 0.08);
+  --shadow-lg: 0 18px 48px rgba(20, 23, 27, 0.12);
+  --shadow-xl: 0 28px 70px rgba(20, 23, 27, 0.16);
+  --max: 1440px;
+  --gutter: clamp(20px, 4vw, 64px);
+  --header-h: 74px;
+  --cs-font-display: var(--font-public-display), "Arial Narrow", sans-serif;
+  --cs-font-body: var(--font-public-body), "Helvetica Neue", Arial, sans-serif;
+  --cs-size-h1: clamp(3.6rem, 7vw, 6.8rem);
+  --cs-leading-h1: 0.9;
+  --cs-tracking-h1: -0.045em;
+  --cs-size-h2: clamp(2.7rem, 5vw, 4.8rem);
+  --cs-leading-h2: 0.94;
+  --cs-tracking-h2: -0.035em;
+}
+
+body:has(.publicTheme) {
+  background: #eef0f2;
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+body:has(.publicTheme) .mainContent {
+  background: #eef0f2;
+}
+
+.publicTheme {
+  width: 100%;
+  max-width: 1600px;
+  min-height: 60vh;
+  margin-inline: auto;
+  border-inline: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+.publicTheme:has(.workInViewHome) {
+  max-width: none;
+  border-inline: 0;
+  background: transparent;
+}
+
+.publicTheme .container {
+  max-width: 1440px;
+}
+
+.publicTheme :where(.h1, .h2) {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-variation-settings: normal;
+  text-transform: uppercase;
+}
+
+.publicTheme :where(.kicker, .metaLabel) {
+  font: 600 11px/1.25 var(--font-body);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.publicTheme :where(.btn, .card, .panel, input, select, textarea, button) {
+  border-radius: 0;
+}
+
+.publicTheme :where(.card, .panel) {
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.publicTheme :where(a.card, a.panel):hover {
+  transform: none;
+  border-color: var(--ink);
+  box-shadow: none;
+}
+
+.publicTheme .sectionAlt {
+  background: var(--surface);
+}
+
+.publicTheme .sectionInk {
+  background: #10151c;
+}
+
+body:has(.publicTheme) .topNav {
+  border-bottom-color: var(--rule);
+  background: color-mix(in srgb, #f6f7f8 96%, transparent);
+}
+
+body:has(.publicTheme) .topNavInner {
+  max-width: 1600px;
+  min-height: 74px;
+  padding-inline: clamp(20px, 4vw, 64px);
+}
+
+body:has(.publicTheme) .topNavLink {
+  min-height: 74px;
+  color: #30363d;
+  font-family: var(--font-body);
+}
+
+body:has(.publicTheme) .topNavLink:hover,
+body:has(.publicTheme) .topNavLink:focus-visible,
+body:has(.publicTheme) .topNavLinkActive {
+  color: #14171b;
+}
+
+body:has(.publicTheme) .topNavLinkActive::after {
+  background: #c62f25;
+}
+
+body:has(.publicTheme) :where(.topNav .btn, .navServicesPanel, .navServicesItem,
+  .mobileMenuSummary, .mobileMenuPanel, .mobileMenuLinks a) {
+  border-radius: 0;
+}
+
+body:has(.publicTheme) .navServicesPanel {
+  border-color: var(--rule);
+  box-shadow: 0 14px 40px rgba(20, 23, 27, 0.10);
+}
+
+body:has(.publicTheme) .btnPrimary {
+  background: #14171b;
+  color: #ffffff;
+}
+
+body:has(.publicTheme) .btnPrimary:hover {
+  background: #c62f25;
+}
+
+body:has(.publicTheme) .btnGhost {
+  border-color: var(--rule);
+  color: #14171b;
+}
+
+body:has(.publicTheme) .footer {
+  border-top-color: #303944;
+  background: #0e1115;
+  color: #aeb6bf;
+}
+
+body:has(.publicTheme) .footerKicker,
+body:has(.publicTheme) .footerColumnHeading {
+  color: #f6f7f8;
+}
+
+body:has(.publicTheme) :where(
+  .footerBlurb, .footerAddress, .footerServiceArea, .footerCopyright,
+  .footerEmail, .footerPhone, .footerSocial a, .footerColumn a,
+  .footerLanguages a
+) {
+  color: #aeb6bf;
+}
+
+body:has(.publicTheme) :where(
+  .footerColumn a:hover, .footerEmail:hover, .footerPhone:hover,
+  .footerSocial a:hover, .footerLanguages a:hover
+) {
+  color: #ffffff;
+}
+
+body:has(.publicTheme) .footerBottom {
+  border-top-color: #303944;
+}
+
+@media (max-width: 980px) {
+  body:has(.publicTheme) .topNavInner {
+    min-height: 64px;
+  }
+  .publicTheme {
+    border-inline: 0;
+  }
+}
+
+/* Public utility/support pages follow Work in View too. */
+.publicTheme .marketingPage {
+  max-width: 1440px;
+  padding-top: 0;
+  padding-bottom: clamp(4.5rem, 7vw, 6.5rem);
+}
+
+.publicTheme .marketingHero {
+  gap: 1rem;
+  padding: clamp(4.5rem, 8vw, 7rem) 0 clamp(3.5rem, 6vw, 5rem);
+  border-bottom: 1px solid var(--rule);
+}
+
+.publicTheme .marketingHero .h1 {
+  max-width: 15ch;
+  font-size: clamp(3.8rem, 7vw, 6.6rem);
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+}
+
+.publicTheme .marketingHero .p {
+  max-width: 64ch;
+  font-size: clamp(1.04rem, 1.5vw, 1.2rem);
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.publicTheme .marketingStackLg {
+  margin-top: 0;
+  padding: clamp(3.5rem, 6vw, 5rem) 0;
+  gap: 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.publicTheme .marketingStackLg > * {
+  border-radius: 0;
+}
+
+.publicTheme .marketingActions {
+  margin-top: 0;
+  padding-top: clamp(2rem, 4vw, 3.5rem);
+}
+
+.publicTheme .supportTimelineItem::before {
+  width: 1px;
+  background: var(--rule);
+}
+
+.publicTheme .supportTimelineInner::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 0;
+  background: var(--accent);
+}
+
+.publicTheme .supportFaqRow {
+  grid-template-columns: 72px 1fr;
+  padding: 1.2rem 0;
+  border-top-color: var(--ink);
+}
+
+.publicTheme .supportFaqQuestion {
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  font-weight: 600;
+  line-height: 0.98;
+  text-transform: uppercase;
+}
+
+.publicTheme :where(.input, .select, .textarea) {
+  border-radius: 0;
+  border-color: var(--rule);
+  background: var(--surface);
+}
+
+.publicTheme :where(.input, .select, .textarea):focus {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 16%, transparent);
+  outline-offset: 1px;
+}
+
+@media (max-width: 720px) {
+  .publicTheme .marketingHero .h1 {
+    font-size: clamp(3.2rem, 16vw, 5rem);
+  }
+}
+
+/* Public routes that combine .container + .section must keep the horizontal
+   Work in View gutter; the legacy section shorthand resets inline padding. */
+.publicTheme .container.section,
+.publicTheme .marketingPage {
+  padding-inline: var(--gutter);
+}

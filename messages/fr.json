@@ -118,7 +118,7 @@
     }
   },
   "footer": {
-    "blurb": "Studio web indépendant qui construit des sites web premium et des systèmes web sur mesure. Un seul espace de travail du cadrage au lancement.",
+    "blurb": "Studio produit numérique indépendant qui construit des sites web, des produits SaaS, des applications sur mesure et des systèmes IA en production. Un seul espace de travail du cadrage au lancement.",
     "address": "Stafford, Virginie · États-Unis",
     "serviceArea": "Au service de la région DMV — DC, Maryland et Virginie.",
     "rightsReserved": "Tous droits réservés.",
@@ -175,7 +175,38 @@
       "label": "Le travail que je refuse",
       "title": "Ce que CrecyStudio ne prend pas en charge.",
       "intro": "La sélectivité est ma façon de maintenir la qualité sur chaque projet. Ce ne sont pas des limitations — ce sont des choix délibérés."
-    }
+    },
+    "kicker": "À propos de CrecyStudio",
+    "heroTitle": "Le studio derrière le travail.",
+    "heroIntro": "CrecyStudio est un studio produit numérique indépendant en Virginie qui construit des sites web, des produits SaaS, des applications sur mesure et des systèmes IA en production. Le travail reste proche du cadrage au lancement.",
+    "capabilitiesLabel": "Ce que nous construisons",
+    "capabilitiesTitle": "Un studio. Quatre domaines concrets.",
+    "capabilities": {
+      "websites": {
+        "title": "Sites web",
+        "body": "Des sites marketing crédibles et orientés conversion, avec stratégie, design, ingénierie et lancement réunis."
+      },
+      "saas": {
+        "title": "Produits SaaS",
+        "body": "Logiciels multi-tenant, onboarding, facturation, tableaux de bord et détails opérationnels qui transforment une idée en produit."
+      },
+      "ai": {
+        "title": "Intégration IA",
+        "body": "De l’IA en production dans de vrais workflows, avec seuils de confiance, validation humaine et contrôles déterministes."
+      },
+      "systems": {
+        "title": "Systèmes sur mesure",
+        "body": "Portails clients, outils internes, automatisation et applications web construits autour des opérations réelles de l’entreprise."
+      }
+    },
+    "evidenceLabel": "Des preuves plutôt que des promesses",
+    "evidenceTitle": "Le portfolio est composé de logiciels en activité.",
+    "evidenceBody": "Nos produits studio ne sont pas des témoignages clients. Ce sont des preuves d’ingénierie : des systèmes conçus, construits, lancés et toujours exploités par nous.",
+    "evidenceCta": "Voir les réalisations",
+    "founderLabel": "Contexte du studio",
+    "founderTitle": "Petit par choix. Proche de la construction.",
+    "founderIntro": "CrecyStudio est dirigé par son fondateur, mais ce n’est pas un portfolio personnel. L’avantage est la continuité : stratégie, design, ingénierie et lancement restent reliés au lieu de passer d’un département à l’autre.",
+    "closingTitle": "Vous avez quelque chose qui mérite d’être construit ?"
   },
   "start": {
     "metaTitle": "Réserver un appel découverte gratuit | CrecyStudio",
@@ -2905,7 +2936,7 @@
     "metaDescription": "Découvrez des sites web, produits SaaS et systèmes IA réellement construits par CrecyStudio, dont Fleiko, Proveo, Crecy OS et Kocre IT.",
     "kicker": "Sélection de réalisations",
     "title": "De vrais systèmes que nous avons livrés — <em>y compris les nôtres.</em>",
-    "subtitle": "Trois produits studio que nous avons construits, lançons et exploitons. Plus du travail client dont les noms sont parfois anonymisés.",
+    "subtitle": "Quatre produits du studio que nous avons construits et exploitons, plus du travail client dont les noms sont parfois anonymisés.",
     "venturesLabel": "Projets du studio",
     "venturesIntro": "Ce sont nos propres produits, conçus et exploités par le studio. Ils démontrent notre capacité d'ingénierie pour la voie Applications Web — ce ne sont pas des témoignages clients.",
     "ventureBadge": "Projet du studio",
@@ -2942,6 +2973,16 @@
         "chip4": "Surveillance Sentinel",
         "linkLabel": "Visiter kocreit.com",
         "caseStudyLink": "Plongée technique"
+      },
+      "crecyos": {
+        "name": "Crecy OS",
+        "tagline": "Plateforme d’opérations locatives pour les équipes immobilières",
+        "summary": "Logiciel d’opérations locatives détenu par le studio qui relie biens, résidents, propriétaires, paiements, maintenance, documents et données financières dans un seul système. Conçu pour les équipes professionnelles et les propriétaires autonomes.",
+        "chip1": "Opérations locatives",
+        "chip2": "Paiements",
+        "chip3": "Maintenance",
+        "chip4": "Dossiers propriétaires",
+        "linkLabel": "Visiter crecyos.com"
       }
     },
     "clientLabel": "Travail client",
@@ -3475,7 +3516,7 @@
     "s2Title": "Le pattern instantané — fermer la surface d'injection",
     "s2Body": "Au lieu d'un accès direct, nous compilons l'état complet de la flotte en un bloc de texte déterministe avant chaque requête :\n\n— Liste complète des véhicules avec statut, kilométrage et plaque\n— Score de santé de la flotte (0–100) calculé sur 12 signaux pondérés\n— 10 priorités principales triées par gravité et date d'échéance\n— Réparations ouvertes, maintenances en retard, documents expirant\n— Statut des permis de conduire et résumés de coûts par véhicule\n\nLe modèle lit cet instantané et raisonne dessus — mais n'interroge jamais la base de données. La surface d'injection est fermée par conception.",
     "s3Title": "Le pattern proposition/garde-fous",
-    "s3Intro": "Le modèle peut suggérer des opérations d'écriture — mais uniquement en ajoutant un bloc <action_proposal> structuré à sa réponse. Le serveur analyse ce bloc à travers quatre couches de garde-fous avant que quoi que ce soit ne se passe :",
+    "s3Intro": "Le modèle peut suggérer des opérations d'écriture — mais uniquement en ajoutant un bloc action_proposal structuré à sa réponse. Le serveur analyse ce bloc à travers quatre couches de garde-fous avant que quoi que ce soit ne se passe :",
     "guardrail1Num": "Couche 1",
     "guardrail1Title": "Liste de blocage absolue",
     "guardrail1Body": "hard_delete, delete_company, billing.change, user.change_role, bulk_destructive_edit — bloqués quels que soient les résultats du modèle. Aucun chemin de code ne les exécute.",

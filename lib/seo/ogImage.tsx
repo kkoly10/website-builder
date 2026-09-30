@@ -8,49 +8,57 @@ export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png" as const;
 
 const COLORS = {
-  background: "#ffffff",
-  ink: "#0d0d0d",
-  muted: "#6e6e73",
-  accent: "#a8362b",
+  background: "#f6f7f8",
+  surface: "#ffffff",
+  ink: "#14171b",
+  muted: "#626a73",
+  line: "#cdd2d8",
+  accent: "#c62f25",
 };
 
-// Inter is the site's display font (app/globals.css). Fetching at render
-// time avoids dragging webpack/turbopack config in to bundle a TTF;
-// Vercel caches the rendered PNG so this fetch only runs on first
-// generation per (locale, headline) pair. Inside a warm container we cache
-// the buffer in module scope so repeat renders skip the fetch entirely.
-const fontCache: Partial<Record<400 | 700, ArrayBuffer>> = {};
+// Social cards use the same two faces as the public Work in View site.
+// Fetching at render time keeps font files out of the app bundle; Vercel
+// caches generated cards, and module caching avoids duplicate fetches.
+const fontCache = new Map<string, ArrayBuffer>();
 
-async function loadInter(weight: 400 | 700): Promise<ArrayBuffer> {
-  if (fontCache[weight]) return fontCache[weight]!;
+async function loadGoogleFont(
+  family: "Archivo" | "Archivo Narrow",
+  weight: 400 | 600 | 700,
+): Promise<ArrayBuffer> {
+  const cacheKey = `${family}-${weight}`;
+  const cached = fontCache.get(cacheKey);
+  if (cached) return cached;
 
-  // Older UA forces Google Fonts to serve TTF rather than WOFF2 — Satori's
-  // WOFF2 support is version-dependent and silently falling back to "no
-  // font found" produces a blank-looking OG card. TTF is universally safe.
+  const familyQuery = family.replace(/ /g, "+");
   const css = await fetch(
-    `https://fonts.googleapis.com/css2?family=Inter:wght@${weight}&display=swap`,
+    `https://fonts.googleapis.com/css2?family=${familyQuery}:wght@${weight}&display=swap`,
     {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/26.0.1410.65 Safari/537.36",
       },
-    }
-  ).then((r) => r.text());
+    },
+  ).then((response) => response.text());
 
-  // Prefer truetype/opentype URLs over woff/woff2 in case the CSS still
-  // contains multiple formats. Walk all `src: url(...) format('...')`
-  // declarations and pick the first ttf/otf.
-  const sources = [...css.matchAll(/src:\s*url\(([^)]+)\)\s*format\('([^']+)'\)/g)];
+  const sources = [
+    ...css.matchAll(/src:\s*url\(([^)]+)\)\s*format\('([^']+)'\)/g),
+  ];
   const preferred =
-    sources.find(([, , fmt]) => fmt === "truetype" || fmt === "opentype") ?? sources[0];
+    sources.find(([, , format]) =>
+      format === "truetype" || format === "opentype"
+    ) ?? sources[0];
+
   if (!preferred) {
-    throw new Error(`Failed to parse Inter ${weight} from Google Fonts CSS`);
+    throw new Error(`Failed to parse ${family} ${weight} from Google Fonts CSS`);
   }
 
-  const res = await fetch(preferred[1]);
-  if (!res.ok) throw new Error(`Failed to fetch Inter ${weight}: ${res.status}`);
-  const buffer = await res.arrayBuffer();
-  fontCache[weight] = buffer;
+  const response = await fetch(preferred[1]);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${family} ${weight}: ${response.status}`);
+  }
+
+  const buffer = await response.arrayBuffer();
+  fontCache.set(cacheKey, buffer);
   return buffer;
 }
 
@@ -60,9 +68,10 @@ export async function renderOgImage(opts: {
   // Optional eyebrow above the headline (e.g. "Case study" for /work/* OGs).
   eyebrow?: string;
 }): Promise<ImageResponse> {
-  const [interBold, interRegular] = await Promise.all([
-    loadInter(700),
-    loadInter(400),
+  const [displaySemibold, bodyRegular, bodyBold] = await Promise.all([
+    loadGoogleFont("Archivo Narrow", 600),
+    loadGoogleFont("Archivo", 400),
+    loadGoogleFont("Archivo", 700),
   ]);
 
   return new ImageResponse(
@@ -75,8 +84,9 @@ export async function renderOgImage(opts: {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          padding: "72px 96px",
-          fontFamily: "Inter",
+          padding: "64px 76px",
+          border: `1px solid ${COLORS.line}`,
+          fontFamily: "Archivo",
         }}
       >
         {/* Top row: brand mark + crecystudio wordmark */}
@@ -100,12 +110,12 @@ export async function renderOgImage(opts: {
             <div
               style={{
                 display: "flex",
-                fontSize: 22,
-                color: COLORS.accent,
-                letterSpacing: 2,
+                fontSize: 18,
+                color: COLORS.muted,
+                letterSpacing: 2.4,
                 fontWeight: 700,
                 textTransform: "uppercase",
-                marginBottom: 18,
+                marginBottom: 20,
               }}
             >
               {opts.eyebrow}
@@ -114,12 +124,14 @@ export async function renderOgImage(opts: {
           <div
             style={{
               display: "flex",
-              fontSize: 76,
-              lineHeight: 1.05,
-              fontWeight: 700,
+              fontFamily: "Archivo Narrow",
+              fontSize: 86,
+              lineHeight: 0.92,
+              fontWeight: 600,
               color: COLORS.ink,
-              letterSpacing: -2.5,
-              maxWidth: 980,
+              letterSpacing: -3.2,
+              textTransform: "uppercase",
+              maxWidth: 1020,
             }}
           >
             {opts.headline}
@@ -139,15 +151,26 @@ export async function renderOgImage(opts: {
           </div>
         </div>
 
-        {/* Brand accent stripe */}
-        <div style={{ display: "flex", height: 6, width: 96, background: COLORS.accent }} />
+        {/* Work in View footer rule + accent marker */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            borderTop: `1px solid ${COLORS.line}`,
+            paddingTop: 18,
+          }}
+        >
+          <div style={{ display: "flex", height: 4, width: 48, background: COLORS.accent }} />
+        </div>
       </div>
     ),
     {
       ...OG_SIZE,
       fonts: [
-        { name: "Inter", data: interBold, weight: 700 },
-        { name: "Inter", data: interRegular, weight: 400 },
+        { name: "Archivo Narrow", data: displaySemibold, weight: 600 },
+        { name: "Archivo", data: bodyRegular, weight: 400 },
+        { name: "Archivo", data: bodyBold, weight: 700 },
       ],
     }
   );

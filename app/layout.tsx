@@ -8,7 +8,7 @@ import CookieConsentBanner from "@/components/site/CookieConsentBanner";
 import { createSupabaseServerClient, isAdminUser } from "@/lib/supabase/server";
 import { routing } from "@/i18n/routing";
 import { Analytics } from "@vercel/analytics/next";
-import { Fraunces, Manrope, Sora } from "next/font/google";
+import { Archivo, Archivo_Narrow, Fraunces, Manrope, Sora } from "next/font/google";
 
 /* Three faces, three jobs (brand/BRAND.md §3). Loaded through next/font so the
  * files are self-hosted and hashed into the build — the previous
@@ -52,20 +52,37 @@ const sora = Sora({
   display: "swap",
 });
 
-const fontVars = `${fraunces.variable} ${manrope.variable} ${sora.variable}`;
+// Public marketing system. The Work in View homepage established Archivo
+// Narrow + Archivo as the visual voice; keep Fraunces/Manrope available for
+// non-public product surfaces while exposing these variables to public pages.
+const archivoPublic = Archivo({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-public-body",
+  display: "swap",
+});
+
+const archivoNarrowPublic = Archivo_Narrow({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-public-display",
+  display: "swap",
+});
+
+const fontVars = `${fraunces.variable} ${manrope.variable} ${sora.variable} ${archivoPublic.variable} ${archivoNarrowPublic.variable}`;
 
 // Page-level alternates.languages live in app/[locale]/layout.tsx so they
 // reflect the current path (e.g. /websites <-> /fr/websites <-> /es/websites)
 // rather than always pointing at the homepage.
 export const metadata: Metadata = {
-  title: "CrecyStudio | Websites, E-commerce & Workflow Automation",
+  title: "CrecyStudio | Websites, SaaS, AI & Custom Software",
   description:
-    "Premium websites, e-commerce systems, and workflow automation for growth-focused businesses.",
+    "Independent digital product studio building websites, SaaS products, custom web applications, and production AI systems.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://crecystudio.com"),
   openGraph: {
-    title: "CrecyStudio | Websites, E-commerce & Workflow Automation",
+    title: "CrecyStudio | Websites, SaaS, AI & Custom Software",
     description:
-      "Premium websites, e-commerce systems, and workflow automation for growth-focused businesses.",
+      "Independent digital product studio building websites, SaaS products, custom web applications, and production AI systems.",
     url: "/",
     siteName: "CrecyStudio",
     type: "website",
@@ -77,9 +94,9 @@ export const metadata: Metadata = {
     // the type here is harmless until the images ship and avoids a sweep
     // across every page's metadata later.
     card: "summary_large_image",
-    title: "CrecyStudio | Websites, E-commerce & Workflow Automation",
+    title: "CrecyStudio | Websites, SaaS, AI & Custom Software",
     description:
-      "Premium websites, e-commerce systems, and workflow automation for growth-focused businesses.",
+      "Independent digital product studio building websites, SaaS products, custom web applications, and production AI systems.",
   },
   // Search Console / Webmaster Tools verification tokens. Env-driven so
   // the actual values stay in Vercel rather than the repo; the meta tags
@@ -97,7 +114,7 @@ export const metadata: Metadata = {
 // (separate from `metadata`) per Next 14+ convention.
 export const viewport: Viewport = {
   // Brand vermilion, matching the logo master (crecy-icon.svg).
-  themeColor: "#c43e2b",
+  themeColor: "#c62f25",
 };
 
 export const dynamic = "force-dynamic";

@@ -2,26 +2,11 @@ import { useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import Image from "next/image";
-import { Archivo, Archivo_Narrow } from "next/font/google";
 import { Link } from "@/i18n/navigation";
 import TrackLink from "@/components/site/TrackLink";
 import styles from "./home.module.css";
 
 export const dynamic = "force-dynamic";
-
-const archivo = Archivo({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-home-body",
-  display: "swap",
-});
-
-const archivoNarrow = Archivo_Narrow({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-home-display",
-  display: "swap",
-});
 
 export async function generateMetadata({
   params,
@@ -106,12 +91,7 @@ function HomeContent() {
 
   return (
     <div
-      className={[
-        "workInViewHome",
-        styles.workInViewPage,
-        archivo.variable,
-        archivoNarrow.variable,
-      ].join(" ")}
+      className={["workInViewHome", styles.workInViewPage].join(" ")}
     >
       <header className={styles.hero}>
         <div className={styles.heroGrid}>

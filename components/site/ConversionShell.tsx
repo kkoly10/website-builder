@@ -36,7 +36,7 @@ export default function ConversionShell({
       className="container"
       style={{ padding: "80px 0", maxWidth, margin: "0 auto" }}
     >
-      <div className="card" style={{ border: "1px solid var(--accent)" }}>
+      <div className="card" style={{ border: "1px solid var(--ink)" }}>
         <div className="cardInner">
           <div>
             {kicker ? (
@@ -56,7 +56,7 @@ export default function ConversionShell({
           {flash ? (
             <div
               style={{
-                borderRadius: 8,
+                borderRadius: 0,
                 padding: 12,
                 border: "1px solid var(--stroke)",
                 background: "var(--panel2)",

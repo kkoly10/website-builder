@@ -14,8 +14,8 @@
   --home-dark-2: #1a2028;
   --home-dark-line: #343d47;
   --home-pad: clamp(20px, 4vw, 64px);
-  --home-display: var(--font-home-display), "Arial Narrow", sans-serif;
-  --home-body: var(--font-home-body), "Helvetica Neue", Arial, sans-serif;
+  --home-display: var(--font-public-display), "Arial Narrow", sans-serif;
+  --home-body: var(--font-public-body), "Helvetica Neue", Arial, sans-serif;
 
   width: 100%;
   max-width: 1600px;

@@ -110,7 +110,7 @@ export default async function LocaleLayout({
   return (
     <>
       <StructuredData graph={baseGraph} />
-      {children}
+      <div className="publicTheme">{children}</div>
     </>
   );
 }

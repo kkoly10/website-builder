@@ -21,12 +21,13 @@ export async function generateMetadata({
   };
 }
 
-const VENTURE_KEYS = ["fleiko", "proveo", "techdesk"] as const;
+const VENTURE_KEYS = ["fleiko", "proveo", "techdesk", "crecyos"] as const;
 
 const VENTURE_LIVE_URL: Record<(typeof VENTURE_KEYS)[number], string> = {
   fleiko: "https://fleiko.com",
   proveo: "https://proveohq.com",
   techdesk: "https://kocreit.com",
+  crecyos: "https://crecyos.com",
 };
 
 const VENTURE_CASE_STUDY_HREF: Partial<Record<(typeof VENTURE_KEYS)[number], string>> = {
