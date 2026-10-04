@@ -194,6 +194,18 @@ section { scroll-margin-top: calc(var(--header-h) + 20px); }
 
 .navDesktop { display: flex; align-items: center; gap: 1rem; }
 .navDesktopCta { justify-content: flex-end; }
+.navPhoneLink {
+  font-weight: 650;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.navPhoneLink::before {
+  content: "Call";
+  margin-right: .4rem;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
 .navLinks { display: flex; flex-wrap: wrap; gap: 0; align-items: center; }
 /* Nav links: body face at a readable 14.5px, sentence case. The old 11px
    mono-uppercase was both the AI tell and below a comfortable reading size. */

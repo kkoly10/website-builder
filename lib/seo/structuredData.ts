@@ -29,7 +29,7 @@ const SERVICE_AREA_RADIUS_METERS = 80_000; // ~50 mi
 // Optional contact signals — set via env so they can be filled in
 // without a code edit. The phone number is a strong local-SEO signal
 // and required for some rich results.
-const BUSINESS_PHONE = process.env.NEXT_PUBLIC_BUSINESS_PHONE?.trim() || null;
+const BUSINESS_PHONE = process.env.NEXT_PUBLIC_BUSINESS_PHONE?.trim() || "+15405738366";
 const GBP_URL = process.env.NEXT_PUBLIC_GBP_URL?.trim() || "https://share.google/1vArXT26e2XEdqj0h";
 
 // External profiles the Organization controls. Listed in schema.org `sameAs`
@@ -54,14 +54,26 @@ const SAME_AS_URLS = [
 // Mirrored by the city landing pages under /locations/* so the
 // structured-data claim is backed by indexable content.
 const SERVED_PLACES = [
-  { type: "City", name: "Stafford, Virginia" },
-  { type: "City", name: "Fredericksburg, Virginia" },
   { type: "City", name: "Richmond, Virginia" },
+  { type: "City", name: "Glen Allen, Virginia" },
   { type: "City", name: "Ashland, Virginia" },
+  { type: "City", name: "Fredericksburg, Virginia" },
+  { type: "City", name: "Spotsylvania Courthouse, Virginia" },
+  { type: "City", name: "Stafford, Virginia" },
+  { type: "City", name: "Quantico, Virginia" },
+  { type: "City", name: "Dumfries, Virginia" },
+  { type: "City", name: "Woodbridge, Virginia" },
+  { type: "City", name: "Lorton, Virginia" },
+  { type: "City", name: "Springfield, Virginia" },
+  { type: "City", name: "Alexandria, Virginia" },
+  { type: "City", name: "Arlington, Virginia" },
+  { type: "City", name: "Tysons, Virginia" },
+  { type: "City", name: "McLean, Virginia" },
+  { type: "City", name: "Fairfax, Virginia" },
   { type: "City", name: "Washington, D.C." },
-  { type: "AdministrativeArea", name: "Northern Virginia" },
-  { type: "AdministrativeArea", name: "Maryland" },
-  { type: "AdministrativeArea", name: "DMV (DC, Maryland, Virginia)" },
+  { type: "City", name: "Bethesda, Maryland" },
+  { type: "City", name: "Rockville, Maryland" },
+  { type: "City", name: "Gaithersburg, Maryland" },
 ] as const;
 
 // English-speaking countries the studio actively serves remotely.

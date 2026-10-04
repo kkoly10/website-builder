@@ -254,6 +254,15 @@ export default function TopNav({
         </nav>
 
         <div className="navDesktop navDesktopCta">
+          {!userEmail ? (
+            <a
+              href="tel:+15405738366"
+              className="topNavLink navPhoneLink"
+              aria-label="Call CrecyStudio at (540) 573-8366"
+            >
+              (540) 573-8366
+            </a>
+          ) : null}
           <LocaleSwitcher locale={locale} availableLocales={availableLocales} />
           {userEmail ? (
             <>
@@ -279,9 +288,13 @@ export default function TopNav({
         </div>
 
         {!userEmail ? (
-          <Link href="/start" className="mobileBookCall">
-            {tCommon("bookCall")}
-          </Link>
+          <a
+            href="tel:+15405738366"
+            className="mobileBookCall"
+            aria-label="Call CrecyStudio at (540) 573-8366"
+          >
+            (540) 573-8366
+          </a>
         ) : null}
 
         <details className="mobileMenu" ref={mobileMenuRef}>
